@@ -344,6 +344,72 @@ function _cartesian_ida_center_tensor(ham::CartesianIDAHamiltonian)
     return tensor
 end
 
+const _CARTESIAN_COULOMB_EXPANSION_SUMMARY_KEYS =
+    (:policy, :doacc, :term_count, :del, :s, :c, :maxu)
+
+function _cartesian_coulomb_expansion_preset_summary(policy)
+    (policy isa Symbol || policy isa AbstractString) ||
+        throw(ArgumentError("Coulomb expansion policy must be :compact or :high"))
+    value = Symbol(policy)
+    value === :compact && return (;
+        policy = value, doacc = false, term_count = 45,
+        del = 0.6, s = 0.5, c = 0.03, maxu = 27.0)
+    value === :high && return (;
+        policy = value, doacc = true, term_count = 135,
+        del = 1.0, s = 0.16, c = 0.01, maxu = 135.0)
+    throw(ArgumentError("Coulomb expansion policy must be :compact or :high"))
+end
+
+function _cartesian_validate_coulomb_expansion_summary(summary)
+    all(name -> hasproperty(summary, name), _CARTESIAN_COULOMB_EXPANSION_SUMMARY_KEYS) ||
+        throw(ArgumentError("Coulomb expansion summary is incomplete"))
+    expected = _cartesian_coulomb_expansion_preset_summary(summary.policy)
+    actual = (;
+        policy = Symbol(summary.policy),
+        doacc = summary.doacc,
+        term_count = Int(summary.term_count),
+        del = Float64(summary.del),
+        s = Float64(summary.s),
+        c = Float64(summary.c),
+        maxu = Float64(summary.maxu))
+    actual.doacc isa Bool || throw(ArgumentError("Coulomb expansion doacc must be Bool"))
+    actual == expected || throw(ArgumentError(
+        "Coulomb expansion summary does not match the named deterministic preset"))
+    return actual
+end
+
+function _cartesian_coulomb_expansion_summary(policy, expansion::CoulombGaussianExpansion)
+    summary = (;
+        policy = Symbol(policy),
+        doacc = Symbol(policy) === :high,
+        term_count = length(expansion),
+        del = expansion.del,
+        s = expansion.s,
+        c = expansion.c,
+        maxu = expansion.maxu)
+    return _cartesian_validate_coulomb_expansion_summary(summary)
+end
+
+function _cartesian_write_coulomb_expansion_summary!(file, summary;
+    prefix::AbstractString = "coulomb_expansion")
+    value = _cartesian_validate_coulomb_expansion_summary(summary)
+    for name in _CARTESIAN_COULOMB_EXPANSION_SUMMARY_KEYS
+        file["$(prefix)/$(name)"] = getproperty(value, name)
+    end
+    return value
+end
+
+function _cartesian_read_coulomb_expansion_summary(file;
+    prefix::AbstractString = "coulomb_expansion")
+    present = map(name -> haskey(file, "$(prefix)/$(name)"),
+        _CARTESIAN_COULOMB_EXPANSION_SUMMARY_KEYS)
+    any(present) || return nothing
+    all(present) || throw(ArgumentError("Coulomb expansion summary is incomplete"))
+    summary = (; (name => file["$(prefix)/$(name)"] for
+        name in _CARTESIAN_COULOMB_EXPANSION_SUMMARY_KEYS)...)
+    return _cartesian_validate_coulomb_expansion_summary(summary)
+end
+
 """
     write_cartesian_ida_hamiltonian(path, ham::CartesianIDAHamiltonian)
 
@@ -634,6 +700,7 @@ function write_protected_localized_ida_hamiltonian(
     provenance,
     basis_controls,
     geometry_inputs,
+    coulomb_expansion,
     localized_ordering = (;),
     row_locality = nothing,
 )
@@ -653,6 +720,8 @@ function write_protected_localized_ida_hamiltonian(
     size(positions, 1) == length(charges) ||
         throw(DimensionMismatch("protected-localized center count mismatch"))
     counts = _protected_localized_sector_counts(sector_counts, dimension)
+    expansion_summary =
+        _cartesian_validate_coulomb_expansion_summary(coulomb_expansion)
     locality = isnothing(row_locality) ? nothing :
         _protected_localized_validate_row_locality(row_locality, counts)
     foreach(key -> _protected_localized_prop(provenance, key, "provenance"),
@@ -680,6 +749,7 @@ function write_protected_localized_ida_hamiltonian(
         _protected_localized_write_simple_group(file, "provenance", provenance)
         _protected_localized_write_simple_group(file, "basis_controls", basis_controls)
         _protected_localized_write_simple_group(file, "geometry_inputs", geometry_inputs)
+        _cartesian_write_coulomb_expansion_summary!(file, expansion_summary)
         _protected_localized_write_simple_group(
             file, "localized_ordering", _protected_localized_ordering(localized_ordering))
         if !isnothing(locality)
@@ -734,6 +804,7 @@ function read_protected_localized_ida_hamiltonian(path)
             sector_ranges = _protected_localized_read_ranges(file),
             diagnostics,
             provenance,
+            coulomb_expansion = _cartesian_read_coulomb_expansion_summary(file),
             row_locality = _protected_localized_read_row_locality(file, counts),
             metadata...)
     end

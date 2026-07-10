@@ -19,6 +19,14 @@ function moment_matched_gaussians(operators, residual)
 end
 function _mwg_axis_pairs(bundles, expansion, residual_centers, residual_widths)
     bundle(axis) = axis == 1 ? bundles.bundle_x : axis == 2 ? bundles.bundle_y : bundles.bundle_z
+    expansion isa getfield(_RG_PARENT, :CoulombGaussianExpansion) ||
+        throw(ArgumentError("residual MWG requires a producer-owned Coulomb expansion"))
+    for axis in 1:3
+        pgdg = bundle(axis).pgdg_intermediate
+        length(pgdg.exponents) == length(expansion) &&
+            pgdg.exponents == expansion.exponents ||
+            throw(ArgumentError("residual MWG PGDG Coulomb exponent sequence mismatch"))
+    end
     effective = getfield(_RG_PARENT, :_qwrg_effective_gaussians)(residual_centers, residual_widths)
     split = ntuple(axis -> getfield(_RG_PARENT, :_qwrg_split_block_matrices)(
         bundle(axis), effective[axis], expansion), 3)
@@ -75,15 +83,13 @@ function _mwg_residual_residual(pair_terms, coefficients)
     end
     return V_MM
 end
-_mwg_default_expansion(expansion) = isnothing(expansion) ? getfield(_RG_PARENT, :coulomb_gaussian_expansion)(doacc = false) : throw(ArgumentError("residual MWG interaction rejects custom expansion because base V_GG has no expansion provenance"))
-function assemble_residual_ida_interaction(base_V_GG, basis, bundles, residual, augmented_operators; expansion = nothing)
+function assemble_residual_ida_interaction(base_V_GG, basis, bundles, residual, augmented_operators; expansion)
     nG, nR = residual.base_dimension, residual.residual_dimension
     size(base_V_GG) == (nG, nG) || throw(DimensionMismatch("residual MWG base V_GG dimension mismatch"))
     centers, widths = moment_matched_gaussians(augmented_operators, residual)
-    expansion_value = _mwg_default_expansion(expansion)
-    pair_terms = _mwg_axis_pairs(bundles, expansion_value, centers, widths)
-    V_GM = _terminal_mwg_fixed_residual(basis, bundles, pair_terms, expansion_value.coefficients)
-    V_MM = _mwg_residual_residual(pair_terms, expansion_value.coefficients)
+    pair_terms = _mwg_axis_pairs(bundles, expansion, centers, widths)
+    V_GM = _terminal_mwg_fixed_residual(basis, bundles, pair_terms, expansion.coefficients)
+    V_MM = _mwg_residual_residual(pair_terms, expansion.coefficients)
     V = zeros(Float64, nG + nR, nG + nR); residual_range = (nG + 1):(nG + nR)
     B = residual.injected_G
     if isnothing(B)

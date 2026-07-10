@@ -50,8 +50,9 @@ end
 
 function _plb_recipe_from_artifact(path::AbstractString)
     jldopen(path, "r") do file
+        expansion = _cartesian_read_coulomb_expansion_summary(file)
         locations = file["recipe_provenance/atom_locations"]
-        return (;
+        recipe = (;
             source_artifact = String(path),
             source_commit = _plb_source_commit(path),
             atom_symbols = String.(file["recipe_provenance/atom_symbols"]),
@@ -77,6 +78,8 @@ function _plb_recipe_from_artifact(path::AbstractString)
             tau_neg_rel = Float64(file["supplement_provenance/tau_neg_rel"]),
             tau_merge_abs = Float64(file["supplement_provenance/tau_merge_abs"]),
             tau_merge_rel = Float64(file["supplement_provenance/tau_merge_rel"]))
+        return isnothing(expansion) ? recipe :
+            merge(recipe, (; coulomb_accuracy = expansion.policy))
     end
 end
 
@@ -95,6 +98,7 @@ function _plb_basis_spec(recipe)
     if hasproperty(recipe, :radius)
         return (; q = recipe.ns, core_spacing = recipe.core_spacing,
             s_factor = _plb_get(recipe, :s_factor, 1.0),
+            coulomb_accuracy = _plb_get(recipe, :coulomb_accuracy, :compact),
             radius = recipe.radius,
             reference_spacing = _plb_get(recipe, :reference_spacing, 1.0),
             d = recipe.core_spacing)
@@ -103,6 +107,7 @@ function _plb_basis_spec(recipe)
         nesting = _plb_get(recipe, :nesting, :pqs),
         core_spacing = recipe.core_spacing,
         s_factor = _plb_get(recipe, :s_factor, 1.0),
+        coulomb_accuracy = _plb_get(recipe, :coulomb_accuracy, :compact),
         xmax_parallel = recipe.xmax_parallel,
         xmax_transverse = recipe.xmax_transverse,
         parent_axis_family = _plb_get(recipe, :parent_axis_family, :G10))
@@ -293,6 +298,9 @@ function _plb_write_member_artifact(case, path::AbstractString, source_artifact,
         geometry_inputs = (; atom_symbols = recipe.atom_symbols,
             nuclear_charges = recipe.nuclear_charges,
             atom_locations = recipe.atom_locations),
+        coulomb_expansion = _cartesian_coulomb_expansion_summary(
+            case.inputs.base.input.coulomb_accuracy,
+            case.inputs.base.coulomb_expansion),
         localized_ordering = (; matrix_order = :native,
             convention = _PROTECTED_LOCALIZED_LADDER_BUNDLE_CONVENTION),
         row_locality = case.row_locality)
@@ -510,7 +518,7 @@ function _plb_member_row(case, artifact_path::AbstractString)
         Vee_finite = all(isfinite, case.V))
 end
 
-function _plb_write_manifest(path, rows)
+function _plb_write_manifest(path, rows; coulomb_expansion)
     jldopen(path, "w") do file
         file["artifact_kind"] = _PROTECTED_LOCALIZED_LADDER_BUNDLE_KIND
         file["format_version"] = 1
@@ -519,6 +527,7 @@ function _plb_write_manifest(path, rows)
         for (name, value) in pairs(rows)
             file[String(name)] = value
         end
+        _cartesian_write_coulomb_expansion_summary!(file, coulomb_expansion)
     end
     return path
 end
@@ -569,11 +578,21 @@ function build_protected_localized_ladder_bundle(
     cases = Dict{Int,Any}()
     member_rows = NamedTuple[]
     member_paths = Dict{Int,String}()
+    coulomb_expansion = nothing
     for ns in ns_list
         recipe = _plb_with_ns(recipe0, ns)
         case = _plb_stage!(stages, "build ns$(ns) protected-localized member", () ->
             _plb_build_member(recipe, stages))
         cases[ns] = case
+        member_expansion = _cartesian_coulomb_expansion_summary(
+            case.inputs.base.input.coulomb_accuracy,
+            case.inputs.base.coulomb_expansion)
+        if isnothing(coulomb_expansion)
+            coulomb_expansion = member_expansion
+        else
+            member_expansion == coulomb_expansion || throw(ArgumentError(
+                "protected ladder members use different Coulomb expansions"))
+        end
         member_path = joinpath(output_dir, "members", "ns$(ns)",
             "protected_localized_hamiltonian.jld2")
         _plb_write_member_artifact(case, member_path, source_artifact,
@@ -677,7 +696,8 @@ function build_protected_localized_ladder_bundle(
         basisname = String(recipe0.basisname),
         lmax = Int(recipe0.lmax),
         parent_lattice_ok = all(row -> row.ok, parent_rows),
-        summary_dir = joinpath(output_dir, "summaries")))
+        summary_dir = joinpath(output_dir, "summaries"));
+        coulomb_expansion)
     return read_protected_localized_ladder_bundle(output_dir)
 end
 
@@ -703,6 +723,7 @@ function read_protected_localized_ladder_bundle(path; load_members::Bool = false
             member_paths = String.(file["member_paths"]),
             transfer_paths = String.(file["transfer_paths"]),
             restart_paths = String.(file["restart_paths"]),
+            coulomb_expansion = _cartesian_read_coulomb_expansion_summary(file),
             parent_lattice_ok = Bool(file["parent_lattice_ok"]),
             summary_dir = String(file["summary_dir"]))
     end

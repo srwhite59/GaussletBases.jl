@@ -1,5 +1,6 @@
 using LinearAlgebra
 using Test
+using JLD2
 
 using GaussletBases
 
@@ -29,6 +30,24 @@ function _packet_roundtrip_smoke(spec, label)
     @test readback.rhf_coulomb_expansion_doacc === true
     @test readback.rhf_coulomb_expansion_terms == packet.rhf_diagnostics.coulomb_expansion_terms
     @test readback.rhf_coulomb_expansion_maxu == packet.rhf_diagnostics.coulomb_expansion_maxu
+    @test readback.coulomb_expansions.rhf.policy === :high
+    @test readback.coulomb_expansions.rhf.term_count == 135
+    @test readback.coulomb_expansions.density_self_energy.policy === :compact
+    @test readback.coulomb_expansions.density_self_energy.term_count == 45
+    @test readback.coulomb_expansions.potential_tail_scaffold.policy === :compact
+    @test readback.coulomb_expansions.potential_tail_scaffold.term_count == 45
+    legacy_path = joinpath(dirname(path), "$(label)_legacy_packet.jld2")
+    cp(path, legacy_path; force = true)
+    JLD2.jldopen(legacy_path, "r+") do file
+        for role in (:rhf, :density_self_energy, :potential_tail_scaffold),
+                name in GaussletBases._CARTESIAN_COULOMB_EXPANSION_SUMMARY_KEYS
+            delete!(file, "coulomb_expansion/$(role)/$(name)")
+        end
+    end
+    legacy = CRD.read_atomic_hf_reference_packet(legacy_path)
+    @test isnothing(legacy.coulomb_expansions.rhf)
+    @test isnothing(legacy.coulomb_expansions.density_self_energy)
+    @test isnothing(legacy.coulomb_expansions.potential_tail_scaffold)
     @test abs(p0.trace - spec.electron_count) < 1.0e-10
     @test sum(p0.q_AA) > 0.0
     return readback

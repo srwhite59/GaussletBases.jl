@@ -3,7 +3,8 @@ const _CARTESIAN_BASE_SIZE_KEYS = Set((:ns, :q))
 const _CARTESIAN_BASE_H_BASIS_REQUIRED_KEYS = Set((:core_spacing, :radius))
 const _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS = Set((:core_spacing, :xmax_parallel, :xmax_transverse))
 const _CARTESIAN_BASE_OPTIONAL_BASIS_KEYS = Set((:parent_axis_family,
-    :reference_spacing, :tail_spacing, :nesting, :source_span, :s_factor))
+    :reference_spacing, :tail_spacing, :nesting, :source_span, :s_factor,
+    :coulomb_accuracy))
 const _CARTESIAN_BASE_H_OPTIONAL_BASIS_KEYS = union(_CARTESIAN_BASE_OPTIONAL_BASIS_KEYS, Set((:d,)))
 _cartesian_base_check_keys(input, expected, label) =
     Set(Symbol.(keys(input))) == expected ||
@@ -44,6 +45,22 @@ function _cartesian_base_source_span(basis, nesting)
     source_span === :mapped_comx && nesting === :wl &&
         throw(ArgumentError("basis.source_span=:mapped_comx is supported only with nesting=:pqs"))
     return source_span
+end
+
+function _cartesian_base_coulomb_accuracy(basis)
+    value = haskey(basis, :coulomb_accuracy) ? basis.coulomb_accuracy : :compact
+    (value isa Symbol || value isa AbstractString) ||
+        throw(ArgumentError("basis.coulomb_accuracy must be :compact or :high"))
+    policy = Symbol(value)
+    policy in (:compact, :high) ||
+        throw(ArgumentError("basis.coulomb_accuracy must be :compact or :high"))
+    return policy
+end
+
+function _cartesian_base_resolve_coulomb_expansion(policy::Symbol)
+    policy in (:compact, :high) ||
+        throw(ArgumentError("Coulomb expansion policy must be :compact or :high"))
+    return coulomb_gaussian_expansion(doacc = policy === :high)
 end
 
 function _cartesian_base_positive(value, label)
@@ -121,6 +138,7 @@ function _cartesian_base_diatomic_basis_parts(basis)
         xmax_parallel = _cartesian_base_positive(basis.xmax_parallel, "basis.xmax_parallel"),
         xmax_transverse = _cartesian_base_positive(basis.xmax_transverse, "basis.xmax_transverse"),
         nesting, source_span,
+        coulomb_accuracy = _cartesian_base_coulomb_accuracy(basis),
         parent_axis_family = _cartesian_base_parent_axis_family(basis),
         reference_spacing = _cartesian_base_get_positive(basis, :reference_spacing, 1.0),
         tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0))
@@ -179,6 +197,7 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
             radius = _cartesian_base_positive(basis.radius, "basis.radius"),
             d = _cartesian_base_atom_mapping_d(basis, core_spacing), xmax_parallel = nothing,
             xmax_transverse = nothing, nesting, source_span,
+            coulomb_accuracy = _cartesian_base_coulomb_accuracy(basis),
             parent_axis_family = _cartesian_base_parent_axis_family(basis),
             reference_spacing = _cartesian_base_get_positive(basis, :reference_spacing, 1.0),
             tail_spacing = _cartesian_base_get_positive(basis, :tail_spacing, 10.0)))
@@ -244,7 +263,7 @@ function _cartesian_base_atom_parent_axis_counts(input)
     return (x = side, y = side, z = side)
 end
 
-function _cartesian_base_stages(input)
+function _cartesian_base_stages(input, coulomb_expansion::CoulombGaussianExpansion)
     atom_symbols = Tuple(Symbol.(input.symbols))
     nuclear_charges = Tuple(input.charges)
     atom_locations = Tuple(input.locations)
@@ -255,6 +274,7 @@ function _cartesian_base_stages(input)
         xmax_parallel = input.xmax_parallel, xmax_transverse = input.xmax_transverse)
     parent_inputs = (;
         parent_axis_bundle_backend = :pgdg_localized_experimental, parent_axis_family = input.parent_axis_family,
+        coulomb_expansion,
         parent_mapping_tail_spacing = input.tail_spacing,
         parent_mapping_rule = input.kind === :h ? :white_lindsey_atomic_mapping : :identity_mapping,
         parent_mapping_Z = input.kind === :h ? only(input.charges) : nothing,
@@ -810,7 +830,8 @@ function _cartesian_recipe_provenance(input, parent, base_dimension;
     return (;
         provenance_version = 1, producer, nesting = input.nesting, route,
         ns = input.ns, q = input.q, q_rule = input.q_rule, ns_source = input.ns_source,
-        core_spacing = input.core_spacing, padding = input.kind === :h ? input.radius : input.xmax_transverse,
+        core_spacing = input.core_spacing,
+        padding = input.kind === :h ? input.radius : input.xmax_transverse,
         s_factor = input.s_factor,
         mapping_s_factor = input.s_factor,
         mapping_s_standard = _cartesian_base_mapping_s_standard(input),
@@ -839,6 +860,8 @@ function _cartesian_write_hamiltonian_manifest(path, base, ham; residual = nothi
         base.terminal_basis.final_dimension; residual_dimension =
         isnothing(residual) ? 0 : residual.residual_dimension,
         supplement_input, producer, route)
+    coulomb_summary = _cartesian_coulomb_expansion_summary(
+        base.input.coulomb_accuracy, base.coulomb_expansion)
     jldopen(String(path), "r+") do file
         file["hamiltonian_manifest/manifest_version"] = 1
         _cartesian_write_sidecar_values!(file, "hamiltonian_manifest/final_basis_labels", labels)
@@ -854,6 +877,7 @@ function _cartesian_write_hamiltonian_manifest(path, base, ham; residual = nothi
                 file, "hamiltonian_manifest/final_basis_source_relations", relations)
         end
         _cartesian_write_sidecar_values!(file, "recipe_provenance", recipe)
+        _cartesian_write_coulomb_expansion_summary!(file, coulomb_summary)
     end
     return path
 end
@@ -915,8 +939,6 @@ function cartesian_base_hamiltonian(
     return cartesian_base_hamiltonian_assembly(base; hamfile)
 end
 
-_cartesian_base_expansion() = coulomb_gaussian_expansion(doacc = false)
-
 _cartesian_base_pgdg(base) =
     Tuple(_nested_axis_pgdg(base.parent.parent_axis_bundle_object, axis) for axis in (:x, :y, :z))
 
@@ -930,7 +952,9 @@ end
 function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple, supplemented::Bool = false)
     input = supplemented ? _cartesian_supplemented_inputs(system, basis) :
         _cartesian_base_inputs(system, basis)
-    parent, transforms = _cartesian_base_stages(input)
+    coulomb_expansion =
+        _cartesian_base_resolve_coulomb_expansion(input.coulomb_accuracy)
+    parent, transforms = _cartesian_base_stages(input, coulomb_expansion)
     source_mode_provenance = _cartesian_source_mode_provenance(transforms)
     basis_realization = transforms.terminal_basis_realization
     terminal_inventory = isnothing(basis_realization) ? nothing :
@@ -939,7 +963,8 @@ function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple, sup
     terminal_due_diligence = isnothing(basis_realization) ? nothing :
         _cartesian_terminal_due_diligence_report(input, parent, transforms)
     return (; input, parent, terminal_basis = transforms.terminal_basis_realization,
-        source_mode_provenance, terminal_inventory, terminal_due_diligence)
+        coulomb_expansion, source_mode_provenance, terminal_inventory,
+        terminal_due_diligence)
 end
 
 cartesian_base_products(base) =
@@ -947,11 +972,11 @@ cartesian_base_products(base) =
 
 cartesian_base_unit_nuclear(base) =
     _pqs_source_box_route_driver_terminal_unit_nuclear(_cartesian_base_terminal_basis(base),
-        _cartesian_base_expansion(), _cartesian_base_pgdg(base), base.input.locations)
+        base.coulomb_expansion, _cartesian_base_pgdg(base), base.input.locations)
 
 cartesian_base_vee(base) =
     _pqs_source_box_route_driver_terminal_vee(_cartesian_base_terminal_basis(base),
-        _cartesian_base_expansion(), _cartesian_base_pgdg(base))
+        base.coulomb_expansion, _cartesian_base_pgdg(base))
 
 function cartesian_base_hamiltonian_assembly(base; hamfile::Union{Nothing,AbstractString} = nothing)::CartesianIDAHamiltonian{Float64}
     products = cartesian_base_products(base)
@@ -1110,7 +1135,8 @@ function cartesian_residual_gto_augmented_products(base, supplement_basis, resid
     return C.pqs_terminal_residual_gto_augmented_products(
         base.terminal_basis, parent.parent_axis_bundle_object,
         parent.parent_basis_object, supplement_basis.basis, residual,
-        input.locations, input.charges; base_kinetic)
+        input.locations, input.charges;
+        expansion = base.coulomb_expansion, base_kinetic)
 end
 
 function cartesian_residual_gto_augmented_unit_nuclear(base, residual, augmented_products; base_unit_nuclear = nothing)
@@ -1120,7 +1146,7 @@ function cartesian_residual_gto_augmented_unit_nuclear(base, residual, augmented
     return C.pqs_terminal_residual_gto_augmented_unit_nuclear(
         base.terminal_basis, parent.parent_axis_bundle_object,
         residual, input.locations, input.charges, augmented_products;
-        base_unit_nuclear)
+        expansion = base.coulomb_expansion, base_unit_nuclear)
 end
 
 _cartesian_residual_augmented_operator_pack(products, unit_nuclear) =
@@ -1131,7 +1157,9 @@ function cartesian_residual_gto_augmented_vee(base, base_ham::CartesianIDAHamilt
     C = CartesianFinalBasisRealization
     return C.pqs_terminal_residual_gto_augmented_vee(
         base_ham, base.terminal_basis, base.parent.parent_axis_bundle_object,
-        residual, _cartesian_residual_augmented_operator_pack(augmented_products, augmented_unit_nuclear))
+        residual, _cartesian_residual_augmented_operator_pack(
+            augmented_products, augmented_unit_nuclear);
+        expansion = base.coulomb_expansion)
 end
 
 function cartesian_residual_gto_mwg_hamiltonian_assembly(base, base_ham::CartesianIDAHamiltonian{Float64}, supplement_basis, residual, augmented_products, augmented_unit_nuclear, augmented_vee; hamfile::Union{Nothing,AbstractString} = nothing)::CartesianIDAHamiltonian{Float64}
@@ -1145,16 +1173,17 @@ function cartesian_residual_gto_mwg_hamiltonian_assembly(base, base_ham::Cartesi
         operators.nuclear_attraction_unit_by_center, augmented_vee, base_ham.nup,
         base_ham.ndn; nuclear_charges = base_ham.nuclear_charges,
         nuclear_positions = base_ham.nuclear_positions)
-    h2_fixture = _cartesian_r3_h2_validation_fixture(input, supplement_input)
+    compact_h2_fixture = input.coulomb_accuracy === :compact &&
+        _cartesian_r3_h2_validation_fixture(input, supplement_input)
     isnothing(hamfile) || C.write_pqs_terminal_residual_gto_augmented_hamiltonian(
         String(hamfile), ham, residual;
         basis_by_center = supplement_input.basis_by_center,
         lmax = supplement_input.lmax,
         uncontracted = supplement_input.uncontracted,
         width_filtering = supplement_input.width_filtering,
-        validation_check_labels = h2_fixture ?
+        validation_check_labels = compact_h2_fixture ?
             (:h2_lowest_augmented_one_body_orbital_ida_self_coulomb,) : (),
-        h2_validation_self_coulomb = h2_fixture ? 0.4574265214362075 : nothing)
+        h2_validation_self_coulomb = compact_h2_fixture ? 0.4574161883692301 : nothing)
     isnothing(hamfile) || _cartesian_write_hamiltonian_manifest(
         String(hamfile), base, ham; residual, augmented_products, supplement_input,
         producer = :cartesian_residual_gto_mwg_hamiltonian,

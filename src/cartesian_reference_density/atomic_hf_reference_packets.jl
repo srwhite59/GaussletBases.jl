@@ -328,8 +328,25 @@ function _generalized_lowest_orbitals(F, S)
     return eig.values, C
 end
 
+function _atomic_reference_coulomb_expansion(policy::Symbol)
+    policy in (:compact, :high) ||
+        throw(ArgumentError("atomic reference Coulomb policy must be :compact or :high"))
+    return getfield(_GB_PARENT, :coulomb_gaussian_expansion)(
+        doacc = policy === :high)
+end
+
 _atomic_reference_rhf_coulomb_expansion() =
-    getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = true)
+    _atomic_reference_coulomb_expansion(:high)
+
+function _atomic_reference_coulomb_summaries()
+    summary = getfield(_GB_PARENT, :_cartesian_coulomb_expansion_summary)
+    return (;
+        rhf = summary(:high, _atomic_reference_coulomb_expansion(:high)),
+        density_self_energy = summary(
+            :compact, _atomic_reference_coulomb_expansion(:compact)),
+        potential_tail_scaffold = summary(
+            :compact, _atomic_reference_coulomb_expansion(:compact)))
+end
 
 function solve_atomic_supplement_rhf(
     supplement,
@@ -399,9 +416,9 @@ function solve_atomic_supplement_rhf(
         density_symmetry_error = norm(density - transpose(density), Inf))
 end
 
-function _supplement_self_energy(supplement, density)
+function _supplement_self_energy(supplement, density, expansion)
     pair = getfield(_GB_PARENT, :gaussian_coulomb_pair_matrix)(
-        supplement; max_orbitals = length(supplement.orbitals))
+        supplement; expansion, max_orbitals = length(supplement.orbitals))
     n = size(density, 1)
     value = 0.0
     for a in 1:n, b in 1:n, c in 1:n, d in 1:n
@@ -425,10 +442,11 @@ function _cloud_supplement(betas, spec::AtomicHFReferencePacketSpec)
         :atomic_hf_reference_density_fit_cloud, orbitals, metadata)
 end
 
-function _cloud_self_energy(betas, weights, spec::AtomicHFReferencePacketSpec)
+function _cloud_self_energy(betas, weights, spec::AtomicHFReferencePacketSpec,
+    expansion)
     cloud = _cloud_supplement(betas, spec)
     pair = getfield(_GB_PARENT, :gaussian_coulomb_pair_matrix)(
-        cloud; max_orbitals = length(betas))
+        cloud; expansion, max_orbitals = length(betas))
     n = length(betas)
     value = 0.0
     for a in 1:n, b in 1:n
@@ -557,7 +575,8 @@ function fit_atomic_reference_density(
     target = Float64[_reference_radial_density(
         supplement, rhf.occupied_orbitals, rhf.occupations, radius) for radius in r]
     target_charge = sum(rhf.occupations)
-    exact_self = _supplement_self_energy(supplement, rhf.density_total)
+    expansion = _atomic_reference_coulomb_expansion(:compact)
+    exact_self = _supplement_self_energy(supplement, rhf.density_total, expansion)
     A0 = Matrix{Float64}(undef, length(r), length(betas))
     for (j, beta) in pairs(betas)
         A0[:, j] .= _normalized_s_density.(beta, r)
@@ -583,7 +602,7 @@ function fit_atomic_reference_density(
         potential_fit .+= weight .* _gaussian_density_potential.(beta, r)
     end
     potential_residual = potential_fit .- potential_target
-    fit_self = _cloud_self_energy(betas, weights, spec)
+    fit_self = _cloud_self_energy(betas, weights, spec, expansion)
     row = (; fit_kind = :signed_svd_log_width_grid,
         base_width_min = options.base_width_min,
         base_width_max = options.base_width_max,
@@ -674,7 +693,7 @@ function fit_atomic_reference_potential(
     density_fit::AtomicReferenceDensityFit;
     options::AtomicPotentialFitOptions = AtomicPotentialFitOptions(),
 )
-    expansion = getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false)
+    expansion = _atomic_reference_coulomb_expansion(:compact)
     term_count = length(expansion.coefficients)
     fixed = options.fixed_broad_terms
     drop = options.drop_tight_terms
@@ -863,6 +882,17 @@ function write_atomic_hf_reference_packet(path::AbstractString,
     mkpath(dirname(path))
     jldopen(path, "w") do f
         _write_common_packet_fields(f, packet)
+        summaries = _atomic_reference_coulomb_summaries()
+        packet.rhf_diagnostics.coulomb_expansion_doacc == summaries.rhf.doacc &&
+            packet.rhf_diagnostics.coulomb_expansion_terms == summaries.rhf.term_count &&
+            packet.rhf_diagnostics.coulomb_expansion_maxu == summaries.rhf.maxu ||
+            throw(ArgumentError("atomic packet RHF Coulomb provenance mismatch"))
+        write_summary = getfield(_GB_PARENT,
+            :_cartesian_write_coulomb_expansion_summary!)
+        for role in propertynames(summaries)
+            write_summary(f, getproperty(summaries, role);
+                prefix = "coulomb_expansion/$(role)")
+        end
         hf = packet.rhf_diagnostics
         f["hf/occupied_coefficients_AA"] = packet.occupied_coefficients
         f["hf/occupations"] = packet.occupations
@@ -931,6 +961,14 @@ end
 
 function read_atomic_hf_reference_packet(path::AbstractString)
     return jldopen(path, "r") do f
+        read_summary = getfield(_GB_PARENT,
+            :_cartesian_read_coulomb_expansion_summary)
+        coulomb_expansions = (;
+            rhf = read_summary(f; prefix = "coulomb_expansion/rhf"),
+            density_self_energy = read_summary(
+                f; prefix = "coulomb_expansion/density_self_energy"),
+            potential_tail_scaffold = read_summary(
+                f; prefix = "coulomb_expansion/potential_tail_scaffold"))
         fit_row = (; charge = Float64(f["density_fit/charge"]),
             charge_error = Float64(f["density_fit/charge_error"]),
             exact_self_energy = Float64(f["density_fit/exact_self_energy"]),
@@ -979,13 +1017,20 @@ function read_atomic_hf_reference_packet(path::AbstractString)
             rhf_iterations = Int(f["hf/iterations"]),
             rhf_coulomb_expansion_doacc =
                 haskey(f, "hf/coulomb_expansion_doacc") ?
-                    Bool(f["hf/coulomb_expansion_doacc"]) : false,
+                    Bool(f["hf/coulomb_expansion_doacc"]) :
+                    isnothing(coulomb_expansions.rhf) ? nothing :
+                        coulomb_expansions.rhf.doacc,
             rhf_coulomb_expansion_terms =
                 haskey(f, "hf/coulomb_expansion_terms") ?
-                    Int(f["hf/coulomb_expansion_terms"]) : 45,
+                    Int(f["hf/coulomb_expansion_terms"]) :
+                    isnothing(coulomb_expansions.rhf) ? nothing :
+                        coulomb_expansions.rhf.term_count,
             rhf_coulomb_expansion_maxu =
                 haskey(f, "hf/coulomb_expansion_maxu") ?
-                    Float64(f["hf/coulomb_expansion_maxu"]) : 27.0,
+                    Float64(f["hf/coulomb_expansion_maxu"]) :
+                    isnothing(coulomb_expansions.rhf) ? nothing :
+                        coulomb_expansions.rhf.maxu,
+            coulomb_expansions,
             density_fit = (; betas = Vector{Float64}(f["density_fit/betas"]),
                 widths = Vector{Float64}(f["density_fit/widths"]),
                 weights = Vector{Float64}(f["density_fit/weights"]),
@@ -1102,7 +1147,7 @@ function atomic_reference_packet_terminal_hartree_gg(
             base.terminal_basis, base.parent.parent_axis_bundle_object, cloud, density)
         return result.GG
     elseif source == :potential_fit
-        template = getfield(_GB_PARENT, :coulomb_gaussian_expansion)(doacc = false)
+        template = _atomic_reference_coulomb_expansion(:compact)
         expansion = _GB_PARENT.CoulombGaussianExpansion(
             packet.potential_fit.coefficients,
             packet.potential_fit.exponents;

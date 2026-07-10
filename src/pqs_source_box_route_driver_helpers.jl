@@ -292,18 +292,27 @@ end
 
 function _cartesian_axis_bundle_from_parent_basis_object(parent_basis_object, parent_inputs)
     axes = CartesianParentGaussletBases.parent_axes(parent_basis_object)
-    expansion = coulomb_gaussian_expansion(doacc = false)
+    hasproperty(parent_inputs, :coulomb_expansion) ||
+        throw(ArgumentError("Cartesian parent inputs require a producer-owned Coulomb expansion"))
+    expansion = parent_inputs.coulomb_expansion
+    expansion isa CoulombGaussianExpansion ||
+        throw(ArgumentError("Cartesian parent Coulomb expansion has the wrong type"))
     backend =
         hasproperty(parent_inputs, :parent_axis_bundle_backend) ?
         parent_inputs.parent_axis_bundle_backend :
         :pgdg_localized_experimental
     function _axis_bundle(axis)
-        return _mapped_ordinary_gausslet_1d_bundle(
+        bundle = _mapped_ordinary_gausslet_1d_bundle(
             axis;
             exponents = expansion.exponents,
             center = 0.0,
             backend,
         )
+        pgdg = bundle.pgdg_intermediate
+        length(pgdg.exponents) == length(expansion) &&
+            pgdg.exponents == expansion.exponents ||
+            throw(ArgumentError("parent PGDG Coulomb exponent sequence mismatch"))
+        return bundle
     end
     return _CartesianNestedAxisBundles3D(
         _axis_bundle(axes.x),

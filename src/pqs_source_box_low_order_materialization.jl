@@ -137,6 +137,16 @@ function _pqs_source_box_route_driver_centered_factor_terms(pgdg, expansion, cen
     return ops.gaussian_factors
 end
 
+function _pqs_source_box_route_driver_validate_pgdg_expansion(pgdg, expansion)
+    length(pgdg) == 3 || throw(DimensionMismatch("PQS IDA requires three PGDG axes"))
+    for (axis_name, axis) in zip((:x, :y, :z), pgdg)
+        length(axis.exponents) == length(expansion) &&
+            axis.exponents == expansion.exponents ||
+            throw(ArgumentError("PQS $(axis_name)-axis Coulomb exponent sequence mismatch"))
+    end
+    return nothing
+end
+
 function _pqs_source_box_route_driver_terminal_products(terminal_basis_realization, pgdg)
     S = Tuple(axis.overlap for axis in pgdg)
     T = Tuple(axis.kinetic for axis in pgdg)
@@ -150,6 +160,7 @@ function _pqs_source_box_route_driver_terminal_products(terminal_basis_realizati
 end
 
 function _pqs_source_box_route_driver_terminal_unit_nuclear(terminal_basis_realization, expansion, pgdg, atom_locations::Vector{NTuple{3,Float64}})
+    _pqs_source_box_route_driver_validate_pgdg_expansion(pgdg, expansion)
     n = terminal_basis_realization.final_dimension
     C = CartesianFinalBasisRealization
     U = Matrix{Float64}[]
@@ -166,10 +177,7 @@ function _pqs_source_box_route_driver_terminal_unit_nuclear(terminal_basis_reali
 end
 
 function _pqs_source_box_route_driver_terminal_vee(terminal_basis_realization, expansion, pgdg)
-    for axis in pgdg
-        axis.exponents == Float64.(expansion.exponents) ||
-            throw(ArgumentError("PQS IDA raw pair tensor exponent ordering mismatch"))
-    end
+    _pqs_source_box_route_driver_validate_pgdg_expansion(pgdg, expansion)
     V = zeros(Float64, terminal_basis_realization.final_dimension,
         terminal_basis_realization.final_dimension)
     CartesianFinalBasisRealization.assemble_terminal_ida_interaction!(
@@ -178,25 +186,4 @@ function _pqs_source_box_route_driver_terminal_vee(terminal_basis_realization, e
         pgdg[3].pair_factor_terms_raw,
         pgdg[1].weights, pgdg[2].weights, pgdg[3].weights)
     return V
-end
-
-function _cartesian_base_ida_hamiltonian(
-    terminal_basis_realization,
-    parent_axis_bundle_object,
-    atom_locations::Vector{NTuple{3,Float64}},
-    nuclear_charges::Vector{Float64},
-    nup::Int,
-    ndn::Int,
-)::CartesianIDAHamiltonian{Float64}
-    expansion = coulomb_gaussian_expansion(doacc = false)
-    pgdg = Tuple(_nested_axis_pgdg(parent_axis_bundle_object, axis)
-        for axis in (:x, :y, :z))
-    products = _pqs_source_box_route_driver_terminal_products(
-        terminal_basis_realization, pgdg)
-    U = _pqs_source_box_route_driver_terminal_unit_nuclear(
-        terminal_basis_realization, expansion, pgdg, atom_locations)
-    V = _pqs_source_box_route_driver_terminal_vee(
-        terminal_basis_realization, expansion, pgdg)
-    return CartesianIDAHamiltonian(products.kinetic, U, V, nup, ndn;
-        nuclear_charges, nuclear_positions = atom_locations)
 end

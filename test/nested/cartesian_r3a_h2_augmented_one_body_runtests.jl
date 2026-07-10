@@ -9,66 +9,7 @@ const EXPECTED_LABELS = [
     "a_s1", "a_s2", "a_s3", "a_px1", "a_py1", "a_pz1", "a_px2", "a_py2", "a_pz2",
     "b_s1", "b_s2", "b_s3", "b_px1", "b_py1", "b_pz1", "b_px2", "b_py2", "b_pz2",
 ]
-const R3B_OWNER_LOCAL_SELF_COULOMB = 0.4574265214362075
-
-function terminal_h2()
-    route_inputs = (;
-        route_family = :pqs_source_box,
-        route_kind = :bond_aligned_diatomic_independent_pqs_source_box_core_shell,
-        route_shape = (:atom_contact_core, :shared_shell_1, :shared_shell_2),
-        product_body_rule = :centered_single_z_slab,
-        pqs_retained_rule = :boundary_comx_product_mode_selection,
-        product_retained_rule = :product_doside_retained_unit,
-        terms = (:overlap,),
-        pair_factor_normalization = :density_normalized,
-        white_lindsey_route_shape = (:standard_cartesian_units, :low_order_comx_coarsening),
-        white_lindsey_mapping_rule = :standard_unit_backbone_mapping_family,
-        white_lindsey_nesting_rule = :unit_box_low_order_comx_coarsening,
-        white_lindsey_retained_rule = :low_order_unit_comx_retained_basis,
-        white_lindsey_operator_rule = :low_order_unit_operator_blocks,
-        supplement_policy = nothing,
-        run_final_basis = true,
-        run_h1 = false,
-        run_h1_j = false,
-    )
-    system_inputs = (;
-        atom_symbols = ("H", "H"),
-        nuclear_charges = (1, 1),
-        atom_locations = Tuple(NUCLEI),
-        nup = 1,
-        ndn = 1,
-        bond_axis = :z,
-        bond_length = 4.0,
-        radius = 4.0,
-        parent_axis_counts = nothing,
-        map_backend = :pgdg_localized_experimental,
-    )
-    spacing_inputs = (;
-        q = 5,
-        n_s = 5,
-        reference_spacing = 1.0,
-        tail_spacing = 10.0,
-        q_to_core_spacing_rule = :standard_pqs_ns_equals_q,
-        core_spacing = 0.5,
-        xmax_parallel = 6.0,
-        xmax_transverse = 4.0,
-    )
-    parent_inputs = (;
-        parent_axis_bundle_backend = :pgdg_localized_experimental,
-        parent_axis_family = :G10,
-        parent_mapping_rule = :identity_mapping,
-        parent_mapping_Z = nothing,
-        parent_mapping_d = nothing,
-        parent_mapping_tail_spacing = 10.0,
-    )
-    system = GaussletBases.cartesian_system(system_inputs)
-    recipe = GaussletBases.cartesian_recipe(route_inputs)
-    parent = GaussletBases.cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
-    shells = GaussletBases.cartesian_shells(parent, spacing_inputs, recipe)
-    units = GaussletBases.cartesian_units(parent, shells, recipe)
-    transforms = GaussletBases.cartesian_transforms(units, recipe)
-    return parent, transforms.terminal_basis_realization
-end
+const R3B_OWNER_LOCAL_SELF_COULOMB = 0.4574161883692301
 
 function product_matrix(C, basis, ax, ay, az)
     matrix = zeros(Float64, basis.final_dimension, basis.final_dimension)
@@ -76,29 +17,14 @@ function product_matrix(C, basis, ax, ay, az)
     return matrix
 end
 
-function centered_factor_terms(axis, expansion, center)
-    center == axis.center && return axis.gaussian_factor_terms
-    return GaussletBases.mapped_ordinary_one_body_operators(
-        axis.basis; exponents = expansion.exponents, center, backend = axis.backend).gaussian_factors
-end
-
-function base_blocks(C, parent, basis)
+function base_blocks(C, base)
+    parent = base.parent
+    basis = base.terminal_basis
     pgdg = Tuple(GaussletBases._nested_axis_pgdg(parent.parent_axis_bundle_object, axis)
         for axis in (:x, :y, :z))
     S = Tuple(axis.overlap for axis in pgdg)
-    K =
-        product_matrix(C, basis, pgdg[1].kinetic, S[2], S[3]) +
-        product_matrix(C, basis, S[1], pgdg[2].kinetic, S[3]) +
-        product_matrix(C, basis, S[1], S[2], pgdg[3].kinetic)
-    expansion = GaussletBases.coulomb_gaussian_expansion(doacc = false)
-    U = Matrix{Float64}[]
-    for location in NUCLEI
-        matrix = zeros(Float64, basis.final_dimension, basis.final_dimension)
-        factors = ntuple(axis -> centered_factor_terms(pgdg[axis], expansion, location[axis]), 3)
-        C._accumulate_terminal_gaussian_sum!(
-            matrix, basis, expansion.coefficients, factors[1], factors[2], factors[3])
-        push!(U, matrix)
-    end
+    K = GaussletBases.cartesian_base_products(base).kinetic
+    U = GaussletBases.cartesian_base_unit_nuclear(base)
     position = (;
         x = product_matrix(C, basis, pgdg[1].position, S[2], S[3]),
         y = product_matrix(C, basis, S[1], pgdg[2].position, S[3]),
@@ -197,13 +123,16 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     raw_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
         "H", "cc-pVTZ", NUCLEI; lmax = 1, uncontracted = false, max_width = nothing)
     supplement = basis_representation(raw_supplement)
-    parent, basis = terminal_h2()
+    base_working = GaussletBases.cartesian_base_working_basis(
+        FACADE_SYSTEM; basis = FACADE_BASIS, supplemented = true)
+    parent, basis = base_working.parent, base_working.terminal_basis
+    expansion = base_working.coulomb_expansion
     C = GaussletBases.CartesianFinalBasisRealization
     residual = C.pqs_terminal_residual_gto_augmentation(
         basis, parent.parent_axis_bundle_object, supplement, NUCLEI)
     operators = C.pqs_terminal_residual_gto_augmented_operators(
         basis, parent.parent_axis_bundle_object, parent.parent_basis_object,
-        supplement, residual, NUCLEI, [1.0, 1.0])
+        supplement, residual, NUCLEI, [1.0, 1.0]; expansion)
 
     X = C._terminal_residual_mixed_overlap(basis, parent.parent_axis_bundle_object, supplement)
     S_AA = GaussletBases._cartesian_supplement_cross_overlap(supplement, supplement)
@@ -218,11 +147,11 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     @test residual.residual_source_owner_indices == vcat(fill(1, 9), fill(2, 9))
     @test residual.owner_retained_counts == [9, 9]
     @test residual.occupation_cutoff == 1.0e-6
-    @test residual.base_dimension == 471
+    @test residual.base_dimension == 487
     @test residual.residual_dimension == 18
-    @test size(operators.kinetic) == (489, 489)
-    @test minimum(residual.residual_occupations) ≈ 5.809976169475061e-4 atol = 1.0e-14
-    @test maximum(residual.residual_occupations) ≈ 1.3455087681603393e-2 atol = 1.0e-14
+    @test size(operators.kinetic) == (505, 505)
+    @test minimum(residual.residual_occupations) ≈ 5.102500905664382e-4 atol = 1.0e-14
+    @test maximum(residual.residual_occupations) ≈ 1.2243126230584132e-2 atol = 1.0e-14
     @test norm(residual.T_G + X * residual.T_A, Inf) <= 1.0e-10
     @test norm(RSR - I, Inf) <= 1.0e-10
 
@@ -234,7 +163,7 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
         @test symmetry_error(matrix) <= 1.0e-9
     end
 
-    base = base_blocks(C, parent, basis)
+    base = base_blocks(C, base_working)
     nG = residual.base_dimension
     @test norm(operators.kinetic[1:nG, 1:nG] - base.K, Inf) <= 1.0e-10
     @test norm(operators.nuclear_attraction_unit_by_center[1][1:nG, 1:nG] - base.U[1], Inf) <= 1.0e-10
@@ -252,17 +181,16 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     @test E_aug ≈ -0.7959028345077851 atol = 1.0e-10
     @test E_aug <= E_base + 1.0e-10
 
-    base_ham = GaussletBases._cartesian_base_ida_hamiltonian(
-        basis, parent.parent_axis_bundle_object, NUCLEI, [1.0, 1.0], 1, 1)
+    base_ham = GaussletBases.cartesian_base_hamiltonian_assembly(base_working)
     ham = C.pqs_terminal_residual_gto_augmented_hamiltonian(
-        base_ham, basis, parent.parent_axis_bundle_object, residual, operators)
+        base_ham, basis, parent.parent_axis_bundle_object, residual, operators;
+        expansion)
     @test ham isa CartesianIDAHamiltonian{Float64}
-    @test size(ham.electron_electron_ida) == (489, 489)
+    @test size(ham.electron_electron_ida) == (505, 505)
     @test symmetry_error(ham.electron_electron_ida) <= 1.0e-10
     @test norm(ham.electron_electron_ida[1:nG, 1:nG] -
                base_ham.electron_electron_ida, Inf) <= 1.0e-12
 
-    expansion = GaussletBases.coulomb_gaussian_expansion(doacc = false)
     centers, widths = CRG.moment_matched_gaussians(operators, residual)
     pair_terms = CRG._mwg_axis_pairs(parent.parent_axis_bundle_object, expansion,
         centers, widths)
@@ -279,11 +207,22 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     r3b_self_coulomb = self_coulomb(ham.electron_electron_ida, orbital)
     @test r3b_self_coulomb ≈ R3B_OWNER_LOCAL_SELF_COULOMB atol = 1.0e-10
 
-    println("r3a_h2_augmented_dimensions base=471 residual=18 augmented=489")
+    println("r3a_h2_augmented_dimensions base=487 residual=18 augmented=505")
     println("r3a_h2_augmented_energies E_base=", E_base, " E_aug=", E_aug)
     println("r3b_h2_self_coulomb=", r3b_self_coulomb,
         " delta=", r3b_self_coulomb - R3B_OWNER_LOCAL_SELF_COULOMB)
     println("r3b_h2_vgm_errors direct=", direct_vgm_error, " pqs=", pqs_vgm_error)
+    due = base_working.terminal_due_diligence
+    println("r3a_h2_due_diligence=", (;
+        bounds = due.geometry.parent_physical_bounds,
+        axes = due.geometry.parent_axis_counts,
+        padding = due.geometry.xmax_transverse,
+        final_dimension = due.dimensions.base_final_dimension,
+        retained = [row.retained_count for row in due.terminal_rows],
+        topology = [row.region_kind for row in due.terminal_rows],
+        source_shapes = [row.source_mode_shape for row in due.terminal_rows],
+        row_warnings = [row.warning_summary for row in due.terminal_rows],
+        warnings = due.warnings))
 end
 
 println("cartesian_r3a_h2_augmented_one_body_elapsed_s=", elapsed)
@@ -294,7 +233,7 @@ facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
         FACADE_SYSTEM; basis = FACADE_BASIS, supplement = FACADE_SUPPLEMENT,
         hamfile = artifact)
     @test ham isa CartesianIDAHamiltonian{Float64}
-    @test size(ham.electron_electron_ida) == (489, 489)
+    @test size(ham.electron_electron_ida) == (505, 505)
     H = one_body_hamiltonian(ham)
     eig = eigen(Symmetric(H))
     orbital = eig.vectors[:, argmin(eig.values)]
@@ -334,6 +273,8 @@ facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
         @test file["recipe_provenance/route"] === :z_axis_diatomic_pqs_residual_gto_mwg
         @test file["recipe_provenance/nesting"] === :pqs
         @test file["recipe_provenance/producer"] === :cartesian_residual_gto_mwg_hamiltonian
+        @test file["coulomb_expansion/policy"] === :compact
+        @test file["coulomb_expansion/term_count"] == 45
 
         values = Dict{Symbol,Any}()
         for key in required
@@ -349,9 +290,9 @@ facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
         @test values[:width_filtering] === nothing
         @test values[:candidate_count] == 18
         @test values[:owner_counts] == [9, 9]
-        @test values[:base_dimension] == 471
+        @test values[:base_dimension] == 487
         @test values[:residual_dimension] == 18
-        @test values[:augmented_dimension] == 489
+        @test values[:augmented_dimension] == 505
         @test values[:augmented_basis_order] === :base_then_residual
         @test values[:residual_basis_convention] === :owner_local_residual_occupation_final_merge_lowdin
         @test values[:rank_rule] === :owner_local_residual_occupation

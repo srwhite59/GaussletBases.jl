@@ -26920,3 +26920,52 @@ Carrying-cost result:
   the ignored audit until producer-wide wiring lands.
 - exact remaining blocker: implement producer-wide expansion ownership,
   parity checks, artifact provenance, and packet role-qualified provenance.
+
+## Cartesian Hamiltonian Producer Pass 343 - Producer-Wide Coulomb Accuracy Implementation
+
+Commit(s):
+- this commit - carry one Coulomb expansion through the Cartesian producer.
+
+Summary:
+- Implemented optional `coulomb_accuracy = :compact | :high`, default
+  `:compact`, on the base/supplemented basis input. One resolved
+  `CoulombGaussianExpansion` is now carried through parent PGDG construction,
+  base nuclear/IDA matrices, residual-GTO exact blocks, and MWG assembly.
+- Deleted all producer-local compact selectors and the stale
+  `_cartesian_base_ida_hamiltonian` helper. The augmented test now uses the
+  active aspect-aware base construction.
+- Added one validated Hamiltonian-wide artifact summary, protected member and
+  ladder readback, and role-qualified atomic packet summaries for high RHF and
+  compact density/self-energy and potential-tail scaffolds. Legacy summary
+  absence remains unavailable; legacy ladder reconstruction uses the normal
+  new-construction compact default without claiming source provenance.
+
+Validation / evidence:
+- Manager reran the public base test (`128/128`, `39.2` s), augmented one-body
+  and MWG tests (`52/52` and `69/69`, about `39.1` s total), atomic packet
+  roundtrip (`54/54`, `26.5` s), the artifact smoke (`3.0` s), and the
+  source-backed high H/H2 supplemented audit (`42.0` s).
+- Omitted and explicit compact matrices are exactly equal. High H/H2 use 135
+  terms with exact axis parity and finite/symmetric base, nuclear, augmented,
+  and MWG matrices. High artifacts correctly omit the compact H2 scalar
+  endpoint reference. `git diff --check` passed.
+- Due diligence retained bounded H `(9,9,9)` dimension `321` and H2
+  `(9,9,15)` dimension `487`; existing H2 aspect-balance and large-identity
+  advisories remain visible with no new padding or weight anomaly.
+
+Goal advancement / guardrail:
+- LT1/LT4/LT5 and MT4: Cr/Cr2 consumers can now request a coherent high
+  Coulomb approximation without mixed compact augmentation. This changes no
+  default, solver, protected-localized interaction convention, screening,
+  EGOI, shellification, or transfer rule. Scientific Cr/Cr2 rebuilding is a
+  downstream consumer task.
+
+Carrying-cost result:
+- deleted: five independent compact selectors/fallbacks and one stale base
+  helper, plus obsolete test construction.
+- simplified: one construction expansion object and serialization-only
+  summaries replace repeated policy choices.
+- quarantined: legacy missing provenance remains `nothing`; compact H2 scalar
+  validation remains compact-only.
+- exact remaining blocker: no source blocker; CR2 must rebuild matched high
+  Hamiltonians and rerun scientific comparisons.
