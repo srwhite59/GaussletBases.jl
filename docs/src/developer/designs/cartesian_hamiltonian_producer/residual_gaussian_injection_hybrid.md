@@ -10,9 +10,11 @@ preservation-only compatibility surface under `HP-RG-INJECT-FN-01`. The
 current direction is occupied-first/protected-main injection. Its geometry is
 source-backed under `HP-RG-OCC-FIRST-INJECT-FN-01` and
 governed by [Occupied-first injection geometry](occupied_first_injection.md).
-Protected-original staging remains separately source-backed under
-`HP-RG-PROTECT-INJECT-FN-01`; protected one-body, artifact/locality, retained-
-GTO EGOI, and ladder facilities have their own source IDs later in this memo.
+Protected-original staging, exact one-body transformation, and inherited-site
+interaction semantics are governed by
+[Protected-localized basis convention](protected_localized_basis.md).
+Artifact/locality, retained-GTO EGOI, and ladder facilities have their own
+source IDs later in this memo.
 `HP-RG-PROTECT-ADDREF-*` governs the prospective combined additive-reference
 consumer. This top-level summary does not broaden any of those lanes.
 
@@ -346,9 +348,9 @@ problem. A later spectral stop-and-report gate may still be needed.
 Status: historical default-off `G`-injection source authority. It is not the
 current compact-first implementation target and must not be used to turn on
 the existing injection path as-is for the protected-original design below.
-Any implementation blurb for the current Cr2 compact-first direction must use
-`HP-RG-PROTECT-INJECT-DESIGN-01` as governing design and must name a fresh
-source surface or source-amendment authority.
+Current protected work uses the implemented protected geometry/one-body IDs
+and the canonical protected-localized basis contract below; this historical
+direct-`G` authority does not broaden them.
 
 Approved source surface:
 
@@ -457,160 +459,19 @@ compact-main construction, changing the production default, artifact
 provenance, driver workflow, public API, full HF, Cr2 artifact/workflow, or
 spectral pruning policy.
 
-## HP-RG-PROTECT-INJECT-DESIGN-01 - Protected-Original Injection Over Compact Main Space
+## Protected Compact-Main Design Contract
 
-Status: approved design authority only. This is a docs-only amendment before
-any implementation blurb. It approves no source edits, no tests, no artifact
-schema/provenance changes, no driver input, no public API, and no Cr2
-production claim.
+`HP-RG-PROTECT-INJECT-DESIGN-01` supplied the compact-first rationale that is
+now implemented by the protected geometry and one-body source lanes. Its
+canonical numerical contract has moved to
+[Protected-localized basis convention](protected_localized_basis.md).
 
-### Purpose
-
-The previous injection framing treated injection as replacement inside the
-original gausslet sector `G`. That is not the right construction for the
-compact-first Cr2 path. The compact-first selector first builds a protected
-local correction space from narrow residual Gaussians. Injection should then
-ask whether the original Gaussian supplement can be represented by that
-improved main space.
-
-Plainly:
-
-```text
-build compact RGs first;
-define M = [G, R_compact];
-inject original Gaussian functions by replacing directions inside M;
-do not make broad non-injectable originals into MWG residual Gaussians.
-```
-
-### Definitions
-
-- `G`: the original orthonormal terminal gausslet/final-PQS basis.
-- `R_compact`: compact or narrow residual-Gaussian functions selected first by
-  the existing ordered compact-first selector. This design does not change the
-  current ordered selector behavior.
-- `M = [G, R_compact]`: the compact main space used as the parent space for
-  injection. `M` is the space whose directions may be replaced.
-- `A_all`: the original supplement Gaussian candidates, before residualizing
-  against `G` or `M`.
-- `A_protected`: the original Gaussian functions corresponding to the accepted
-  compact/narrow RGs. These are protected originals.
-- `A_broad`: remaining original supplement Gaussian candidates after the
-  protected originals are identified.
-- `Z_protected`: an orthonormal basis for `A_protected` in the original GTO
-  overlap metric. It is built without subtracting `M`.
-- `Z_broad`: accepted remaining original directions after orthogonalization
-  against `Z_protected`, Gaussian Gram cleanup, and representability testing.
-- `Z = [Z_protected, Z_broad]`: the full injected original-Gaussian block.
-- `B = M' S Z`: the projection of injected originals into the compact main
-  space.
-- `Q_perp`: an orthonormal complement to `B` inside the coordinate space of
-  `M`, satisfying `B' Q_perp = 0`.
-- `F = [Z, M Q_perp]`: the injected fixed sector. This is replacement, not
-  append.
-
-### Algorithm
-
-1. Build compact/narrow RGs first using the existing ordered compact-first
-   selector. Do not change that selector in this design pass.
-2. Define `M = [G, R_compact]`.
-3. Use the original supplement Gaussians as injection candidates, including
-   originals corresponding to accepted compact RGs.
-4. Put protected narrow originals first. Orthonormalize them among themselves
-   in original GTO overlap. Do not subtract `M` from this protected block.
-5. Orthogonalize all remaining original Gaussians against the protected block.
-6. Gram-rank-clean the remaining block in its own Gaussian overlap metric,
-   using a candidate-overlap rule such as
-   `max(candidate_overlap_atol, candidate_overlap_rtol * maxeig)`. This
-   removes linearly dependent Gaussian directions only.
-7. Test injection representability in the compact main space by forming
-   `B = M' S Z`. `B` must be full rank and acceptably conditioned.
-8. If representability passes, inject by replacement:
-
-   ```text
-   F = [Z, M Q_perp]
-   ```
-
-   not by appending `Z` to `M`.
-9. Build any remaining MWG residual channels only from compact/local
-   directions that remain approved as true residuals. Broad non-injectable
-   candidates must not become MWG RGs.
-
-### Gaussian Gram Cleanup Versus Injection Representability
-
-These are different tests:
-
-- Gaussian Gram cleanup asks whether an original Gaussian candidate direction
-  is a real independent direction in the supplement overlap metric. Tiny
-  eigenvalues here mean raw Gaussian linear dependence or numerical junk.
-- Injection representability asks whether a real Gaussian direction is stably
-  represented by the compact main space `M`. This is tested by `B = M' S Z`.
-
-A direction can pass Gaussian Gram cleanup and still fail injection
-representability. That failure must not be interpreted as an opportunity to
-make a broad residual-Gaussian/MWG channel.
-
-### Failure Interpretation
-
-If a good-norm original Gaussian direction is not stably represented by
-`M = [G, R_compact]`, stop and report:
-
-```text
-insufficient compact main-basis support for desired Gaussian addition
-```
-
-For Cr2 `lmax = 2`, this is a useful diagnostic. At small `ns` such as `4` or
-`5`, `d`-like original directions may be real Gaussian directions but poorly
-represented by the current main basis. The correct action is to report the
-failed owner/channel and improve the main gausslet basis, for example by
-increasing `ns`, not to force a broad RG/MWG residual.
-
-### Protected-Span Preservation
-
-The invariant is protected-span preservation, not exact column identity.
-`Z_protected` should remain the protected narrow original span. A final
-well-conditioned Lowdin or inverse-square-root cleanup may make a tiny
-rotation, but diagnostics must show that the protected subspace overlap before
-and after cleanup is near identity and that broad directions did not
-substantially rotate the protected span away.
-
-Required diagnostic:
-
-```text
-sigma(proj(final_Z_protected_span, initial_Z_protected_span))
-```
-
-or an equivalent principal-angle/subspace-overlap report, plus the final
-orthonormality and condition of the cleanup.
-
-### Cr2 `lmax = 2` Diagnostics
-
-A Cr2 `lmax = 2` protected-original injection audit or future implementation
-handoff must report:
-
-- `ns`, `lmax`, owners, and candidate labels/channels;
-- protected original counts by owner and angular channel;
-- Gaussian Gram eigenvalue ranges and discarded Gram-null directions;
-- broad remaining counts by owner/channel after protected-block
-  orthogonalization;
-- failed representability directions by owner/channel, especially `d`-like
-  channels;
-- rank and condition of `B = M' S Z`, globally and by useful owner/channel
-  summaries;
-- protected-span preservation before and after final cleanup;
-- final `F' S F`, `F' S R`, and `R' S R` errors if an in-memory construction
-  is attempted;
-- explicit statement that broad non-injectable candidates were not converted
-  into MWG residual channels.
-
-### Forbidden In This Design
-
-- source edits;
-- public API or driver changes;
-- artifact/provenance/schema changes;
-- changing current ordered compact-first selector behavior;
-- turning on the existing `G`-injection implementation as-is;
-- broad non-injectable candidates becoming MWG RGs;
-- Cr2 production claims.
+Historical design and measurement evidence remains in manager running-log
+Passes 235-253 and in
+`docs/src/developer/reports/cr2_staged_subspace_filter_870498b54/`. The durable
+rules are replacement over `M = [G, R_compact]`, separate Gaussian Gram and
+representability gates, protected-span preservation, and rejection of
+unsupported broad directions without creating MWG residual channels.
 
 ## Occupied-First Injection History And Contract
 
@@ -632,460 +493,29 @@ is not a direct replacement for staged protected-original geometry over
 `HP-RG-PROTECT-ADDREF-*` and
 [Protected additive atomic reference correction](protected_additive_reference_correction.md).
 
-## HP-RG-PROTECT-INJECT-FN-01 - Staged Protected-Original Geometry Prototype
-
-Status: approved narrow source authority for an internal, default-off,
-in-memory geometry prototype only. This is not public driver/API authority, not
-artifact/provenance authority, not a Hamiltonian writer path, not Cr2 HF, and
-not a production default.
-
-### Measurement Basis
-
-The staged-filter report in
-`docs/src/developer/reports/cr2_staged_subspace_filter_870498b54/` changes the
-source direction. Scalar per-mode fake/representability cuts and combined
-score prefixes failed because they allowed collectively weak injected
-subspaces. The viable geometry applied subspace filters in this order:
-
-```text
-1. representability subspace filter in W using B = M' S W;
-2. optional localization/shape filter;
-3. fake-RDM eigenspace filter in the surviving subspace.
-```
-
-The best measurement variant was:
-
-```text
-s_cut       = 0.95
-shape       = none
-occ_cut     = 0.003
-broad dim   = 87
-Z dim       = 117
-B_min       = 0.9934658245
-B < 0.99    = 0
-fake trace  = 93.3726973285
-```
-
-This is geometry authority only. The result does not prove that a production
-Hamiltonian, artifact, or HF workflow should use this construction.
-
-### Approved Source Surface
-
-Approved file:
-
-```text
-src/cartesian_residual_gaussians/residual_basis.jl
-```
-
-Approved work:
-
-- add private helpers for protected-original staged injection geometry;
-- reuse the existing ordered compact-first selector to construct
-  `R_compact`;
-- identify protected original candidate indices corresponding to accepted
-  compact RGs;
-- build `M = [G, R_compact]` in the existing mixed `(G,A)` coordinate
-  convention;
-- build the broad original subspace `W` by orthogonalizing remaining original
-  supplement Gaussians against protected originals and Gaussian Gram cleaning;
-- apply a representability subspace filter using singular values of
-  `B = M' S W`, with private parameters such as `s_cut`;
-- optionally localize and classify shape for diagnostics only;
-- apply a fake-RDM eigenspace filter with private parameter `occ_cut`;
-- form the geometry diagnostics for
-
-  ```text
-  Z = [Z_protected, Z_broad]
-  F = [Z, M Q_perp]
-  ```
-
-- report `B` singular values, fake-RDM trace retained/dropped, protected-span
-  preservation, `Z' S M Q_perp`, sampled or block-estimated `F' S F`, and
-  dropped-direction summaries.
-
-The implementation may add compact internal helper return records inside
-`residual_basis.jl` if needed to avoid parsing labels for compact source
-indices. These records must stay private and must not become artifact,
-manifest, public API, or driver payload shapes.
-
-### Explicitly Not Approved
-
-- public driver/API/input keywords;
-- exports or broad module API;
-- artifact schema, artifact writing, provenance keys, or reader support;
-- exact one-body or IDA/MWG Hamiltonian transformation for the protected
-  geometry;
-- Cr2 HF, solver work, or production Cr2 claim;
-- screened-reference/rho0 work;
-- changing the default residual basis;
-- enabling this construction through existing `residual_injection_cutoff`;
-- converting rejected broad directions into MWG residual channels;
-- source files outside `src/cartesian_residual_gaussians/residual_basis.jl`
-  without a later amendment.
-
-### Failure Rule
-
-If the geometry prototype cannot reproduce the staged-filter measurement
-within roundoff, or if implementation requires operator/Hamiltonian plumbing,
-artifact state, public wiring, or source files outside the approved surface,
-stop and report the exact missing object. Do not broaden this ID in source.
-
-Line budget: target at most `220` added source lines in
-`src/cartesian_residual_gaussians/residual_basis.jl`. If the implementation
-needs a larger helper layer, persistent result object surface, or cross-file
-plumbing to reproduce the measured geometry, stop and request a follow-up
-amendment.
-
-## HP-RG-PROTECT-INJECT-TEST-01 - Staged Geometry Validation
-
-Approved validation for `HP-RG-PROTECT-INJECT-FN-01`:
-
-- `git diff --check`;
-- package load;
-- H2 residual endpoint/facade smoke showing default behavior unchanged;
-- ignored Cr2 staged-geometry probe comparing source-backed geometry against
-  the measurement report values for at least the best variant:
-
-  ```text
-  s_cut = 0.95, shape = none, occ_cut = 0.003
-  ```
-
-- no Cr2 HF;
-- no artifact write/readback for protected-original injection;
-- no committed tests unless a later source-review pass requests one.
-
-## HP-RG-PROTECT-ONEBODY-AUDIT-01 - Protected Fixed-Sector One-Body Audit
-
-Status: approved measurement-only audit authority. This is not source
-implementation authority and does not approve production Hamiltonian
-construction.
-
-### Purpose
-
-The source-backed staged protected-original geometry now reproduces the
-measured Cr2 target:
-
-```text
-Z = [Z_protected, Z_broad]
-F = [Z, M Q_perp]
-M = [G, R_compact]
-```
-
-The next question is whether exact one-body operators can be transformed
-consistently into the injected fixed sector `F`, using only existing geometry
-and existing exact one-body data available in the Cartesian/Cr2 construction
-path. The audit should clarify the operator dataflow before any source helper
-or ownership decision is made.
-
-### Answered Design Questions
-
-The first pass is measurement-only:
-
-- use an ignored `tmp/work/*.jl` probe;
-- do not approve a source helper yet;
-- do not approve changes to `augmented_operators.jl`,
-  `residual_basis.jl`, terminal residual code, artifacts, or public wiring.
-
-If a later source lane is justified, likely ownership for exact one-body
-transformation is `src/cartesian_residual_gaussians/augmented_operators.jl`,
-not `residual_basis.jl`. `residual_basis.jl` remains the geometry owner. This
-audit may discover a missing geometry/export seam, but it must report that
-seam rather than adding source instrumentation.
-
-The accepted comparison target is not an energy or a production Hamiltonian.
-The target is in-memory consistency of exact one-body blocks in the protected
-fixed sector:
-
-- `F' S F - I`;
-- finite/symmetric `F' K F`;
-- finite/symmetric `F' U_A F` for each available nuclear unit block;
-- finite/symmetric `F' H1 F`;
-- protected original block `H1` before and after replacement/cleanup;
-- compact RG block `H1` before and after replacement;
-- trace and low-spectrum diagnostics for `K`, each `U_A`, and `H1`;
-- low-mode weights in protected original, accepted broad, and
-  `M Q_perp` complement pieces;
-- protected-span preservation before and after any final cleanup;
-- `B = M' S Z` singular values and `Q_perp` orthogonality diagnostics.
-
-Coordinate and second-moment transforms may be included if they are already
-available through the same exact one-body dataflow, but they are not required
-for the first audit.
-
-Cr2 is the primary target because it is where the staged protected-original
-geometry was measured. A bounded H2 or H2+ sanity run is useful if cheap and
-already available, but it is not a committed endpoint or a prerequisite for
-the Cr2 audit.
-
-### Approved Surfaces
-
-Allowed:
-
-- ignored `tmp/work/*.jl` probes;
-- durable measurement output under `/Users/srw/dmrgtmp/...` or a bounded
-  report directory if later accepted by manager review;
-- consume the current source-backed staged geometry helper;
-- consume existing exact one-body matrices or raw blocks already obtainable in
-  the Cr2/Cartesian path;
-- build in-memory transformed one-body matrices for `F`;
-- report symmetry, orthogonality, trace, low-spectrum, protected-span, and
-  block-composition diagnostics.
-
-Forbidden:
-
-- production source changes;
-- public driver/API/input wiring or exports;
-- artifact schema, provenance, writer, reader, or manifest changes;
-- exact IDA/MWG interaction transform;
-- screened-reference/rho0 work;
-- Cr2 HF, solver work, or production Cr2 Hamiltonian claim;
-- changing residual defaults;
-- changing the staged geometry selector;
-- treating rejected broad directions as MWG residuals;
-- committed tests or fixtures.
-
-Failure rule: if the audit cannot construct the fixed-sector one-body blocks
-from the existing source-backed geometry and available exact one-body data,
-stop and report the exact missing reusable seam. Do not add source
-instrumentation, artifact fields, public wiring, or a temporary operator
-helper under this audit ID.
-
-## HP-RG-PROTECT-ONEBODY-FN-01 - Protected Fixed-Sector Exact One-Body Transform
-
-Status: approved narrow internal source authority. This is not public
-driver/API authority, not artifact/provenance authority, not IDA/MWG
-interaction authority, not Cr2 HF, and not a production default.
-
-### Measurement Basis
-
-The audit recorded in
-`docs/src/developer/reports/cr2_protected_onebody_audit_eaf05a38c/` showed
-that the source-backed staged geometry can receive exact one-body operators
-from existing in-memory data:
-
-```text
-F' K F
-F' U_A F by nuclear center
-F' H1 F
-```
-
-The source geometry matched the staged-filter target with `Z = 117`,
-`F = 6945`, `B_min = 0.993465824505872`, and `B < 0.99 = 0`. The in-memory
-checks reported `F' S F - I` block estimate `1.164e-9`,
-`Z' S M Qperp = 9.873e-16`, finite/symmetric one-body blocks, and converged
-low `H1_FF` values. The lowest `H1_FF` modes were dominated by protected
-originals, with no obvious low-`H1` broad injected mode before any IDA/MWG
-design.
-
-### Approved Source Surface
-
-Primary file:
-
-```text
-src/cartesian_residual_gaussians/augmented_operators.jl
-```
-
-Optional only if transform-ready geometry fields or accessors are missing:
-
-```text
-src/cartesian_residual_gaussians/residual_basis.jl
-```
-
-`residual_basis.jl` remains the geometry owner. `augmented_operators.jl` owns
-the exact one-body transformation once the geometry is available.
-
-### Approved Behavior
-
-- add private helper(s) to transform exact dense one-body matrices/blocks into
-  the protected fixed sector `F = [Z, M Qperp]`;
-- consume the source-backed protected geometry from `residual_basis.jl`;
-- support exact kinetic `K`, per-center uncharged nuclear `U_A`, and assembled
-  `H1`;
-- produce in-memory dense transformed matrices and diagnostics only;
-- keep the path internal/default-off and unreachable from public driver/API or
-  artifact writing;
-- preserve the existing default Residual Gaussian behavior and existing
-  `[G, R]` exact operator transforms when protected-original geometry is not
-  explicitly used;
-- report or expose internal diagnostics needed for symmetry,
-  orthogonality, low-spectrum replay, protected-span behavior, and block
-  composition.
-
-The first source lane is a dense in-memory transform lane. It does not approve
-a new matrix-vector action framework. If Cr2 replay requires a general action
-interface, stop and request a follow-up amendment.
-
-### Explicitly Not Approved
-
-- public driver/API/input keywords or exports;
-- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
-- exact IDA/MWG interaction transform;
-- screened-reference/rho0 work;
-- Cr2 HF, solver work, or production Cr2 Hamiltonian claim;
-- residual default changes;
-- staged geometry selector changes;
-- using rejected broad directions as MWG residual channels;
-- source files outside the approved surface;
-- committed tests or fixtures by default.
-
-### Failure Rule
-
-If exact protected fixed-sector one-body transformation cannot be implemented
-as private internal helpers in `augmented_operators.jl`, with only narrow
-geometry access in `residual_basis.jl` if needed, stop and report the missing
-object. Do not add artifact state, public wiring, route/terminal/raw-block
-changes, a matrix-action framework, or IDA/MWG interaction plumbing under this
-ID.
-
-Line budget: target at most `180` added source lines across the approved files.
-
-## HP-RG-PROTECT-ONEBODY-TEST-01 - Protected One-Body Transform Validation
-
-Approved validation for `HP-RG-PROTECT-ONEBODY-FN-01`:
-
-- `git diff --check`;
-- package load;
-- H2 default residual/facade smoke unchanged;
-- ignored Cr2 one-body replay reproducing the audit geometry:
-  protected `30`, broad `87`, `Z = 117`, `F = 6945`,
-  `B_min = 0.993465824505872`, and `B < 0.99 = 0`;
-- replay `F' S F - I`, `Z' S M Qperp`, one-body symmetry, trace, and low
-  `H1_FF` diagnostics against the audit report within reviewed numerical
-  tolerances;
-- finite/symmetric dense in-memory `K`, per-center `U_A`, and `H1` transformed
-  blocks;
-- no protected-original injection artifact write/readback;
-- no IDA/MWG interaction transform;
-- no Cr2 HF;
-- no committed tests unless a later source-review pass requests one.
-
-## HP-RG-PROTECT-VEE-AUDIT-01 - Protected Fixed-Sector Vee Interaction Audit
-
-Status: approved measurement-only audit authority, now interpreted through the
-recorded audit results. The direct `C' V C` protected interaction transform
-was invalidated and must not be reused. The viable convention from the later
-protected-localized probe is angular-gausslet-style: build a protected
-localized injected basis `L`, use exact one-body operators in `L`, and inherit
-the pre-injection site-order `Vee_M` interaction. This is not source
-implementation authority, not source-backed IDA/MWG authority, not artifact
-authority, and not production Hamiltonian authority.
-
-### Purpose
-
-After `HP-RG-PROTECT-ONEBODY-FN-01`, exact dense one-body transforms into the
-protected fixed sector are source-backed for
-
-```text
-F = [Z, M Qperp]
-M = [G, R_compact]
-```
-
-The next question is whether an in-memory electron-electron interaction
-candidate for the same protected-original fixed sector is numerically sane
-before any source implementation. The audit should test the interaction
-interpretation, block costs, and broad-injection incentives without changing
-production Hamiltonian construction.
-
-### Interaction Interpretation
-
-For this audit only:
-
-- the `G`/base part of `M` keeps the current IDA interaction;
-- `R_compact` keeps the current compact residual/MWG interaction;
-- injected original directions replace a subspace of `M`; they are not
-  appended on top of it;
-- rejected broad directions do not become residual MWG channels;
-- the in-memory Vee candidate is built by transforming the available
-  `M`-space interaction through `F = [Z, M Qperp]`.
-
-This is a measurement model for the protected-original interaction problem. It
-does not approve a production IDA/MWG convention or a Hamiltonian workflow.
-
-### Approved Surfaces
-
-Allowed:
-
-- ignored `tmp/work/*.jl` probes only;
-- outputs under `/Users/srw/dmrgtmp/...`;
-- consume current source-backed protected geometry and one-body helpers;
-- consume existing in-memory interaction data already available through the
-  Cr2/Cartesian path;
-- build in-memory transformed Vee candidates for `F`;
-- compute diagnostics only;
-- optionally run one bounded in-memory Cr2 HF replay in the same measurement
-  lane, but only after the Vee diagnostics pass the gate below.
-
-Forbidden:
-
-- tracked source edits;
-- public driver/API/input wiring or exports;
-- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
-- production Hamiltonian workflow;
-- source-backed IDA/MWG interaction implementation;
-- screened-reference/rho0 work;
-- treating Vee scaling as the primary fix;
-- treating rejected broad directions as MWG residual channels;
-- Cr2 production claims;
-- committed tests or fixtures.
-
-### Required Diagnostics
-
-The audit must report:
-
-- geometry dimensions: `G`, `R_compact`, `M`, `Z`, `Qperp`, and `F`;
-- singular spectrum of `B = M' S Z`;
-- finite and symmetry checks for the Vee candidate;
-- block diagnostics by protected-`Z`, broad-`Z`, and `Qperp` sectors;
-- diagonal ranges or self-costs for protected-`Z` and broad-`Z` directions;
-- low eigenvalues or representative quadratic-form checks;
-- broad-`Z` interaction costs compared to compact-RG and default residual
-  costs;
-- interaction self-costs of low `H1_FF` modes;
-- a residual/broad-`Z` occupation incentive proxy;
-- comparison to the default bad residual sector, compact-only sector, and the
-  protected one-body audit.
-
-### Gate
-
-If the Vee candidate is finite, symmetric, and the broad-`Z` directions are not
-anomalously cheap, the same measurement lane may run one bounded in-memory Cr2
-HF replay. That replay remains an audit result, not a production workflow or
-artifact claim.
-
-If broad-`Z` remains too cheap, Vee has bad low modes, or the transform needs
-source/Hamiltonian/artifact plumbing, stop and report the protected-original
-interaction design as the blocker. Do not add source instrumentation,
-artifact fields, public wiring, Hamiltonian helpers, or source-backed IDA/MWG
-plumbing under this audit ID.
-
-### Output Policy
-
-The first pass may use only ignored probes plus `/Users/srw/dmrgtmp/...`
-tables. A compact committed report under `docs/src/developer/reports/` is not
-required for the initial measurement, but should be added before using the
-result to justify source authority.
-
-### Recorded Outcome
-
-The `C' V C` interaction transform for the replacement fixed sector failed
-the algebraic null/projected energy checks. A two-index IDA/MWG
-density-density matrix cannot be rotated as `V_F = C' V_M C` for arbitrary
-`F = [Z, M Qperp]` densities and expected to preserve many-electron energies.
-Do not resume that lane or interpret the resulting broad-`Z` occupation as a
-basis-fate signal.
-
-The current viable protected interaction baseline is the protected-localized
-inherited-site-order convention:
-
-```text
-M = [G, R_compact]
-L = protected localized injected basis
-one-body(L) = exact transformed one-body operators
-Vee(L) = inherited pre-injection site-order Vee_M
-```
-
-This baseline is judged by bounded physics diagnostics, not by arbitrary
-interaction rotation invariance.
+## Protected Geometry, One-Body, And Interaction History
+
+The implemented staged geometry under `HP-RG-PROTECT-INJECT-FN-01` /
+`HP-RG-PROTECT-INJECT-TEST-01` and exact one-body transformation under
+`HP-RG-PROTECT-ONEBODY-FN-01` / `HP-RG-PROTECT-ONEBODY-TEST-01` are governed
+by [Protected-localized basis convention](protected_localized_basis.md).
+
+The completed one-body audit and source replay remain documented in manager
+running-log Passes 254, 255, and 259 and in
+`docs/src/developer/reports/cr2_protected_onebody_audit_eaf05a38c/`.
+
+The completed `HP-RG-PROTECT-VEE-AUDIT-01` record is intentionally retained as
+negative and positive evidence rather than active measurement authority:
+
+- Pass 269 rejected direct `C' V C` interaction rotation because it fails
+  null/projected many-electron energy invariance.
+- Pass 270 established localized `L`, exact `H1_L`, and inherited
+  pre-injection site-order `Vee_M` as the viable protected-localized
+  convention.
+
+Artifact persistence, row-locality metadata, EGOI, ladder facilities, and
+rho0/reference-density work remain in their separate sections below and are
+not part of this extracted basis contract.
 
 ## HP-RG-PROTECT-ART-FN-01 - Protected-Localized Hamiltonian Artifact Variant
 
@@ -1098,21 +528,11 @@ opt-in `.jld2` artifact variant so solver and MP2-NO consumers can resume
 from the current Cr2 protected-localized Hamiltonian without rebuilding the
 geometry, one-body transform, and inherited-site interaction in memory.
 
-The artifact records the positive angular-gausslet-style convention:
-
-```text
-M = [G, R_compact]
-Z = protected original injected directions
-L = localized protected replacement basis
-H1_L = exact one-body Hamiltonian transformed into L
-Vee_L = inherited localized-site IDA/MWG interaction matrix in L site order
-```
-
-Protected injection is a small localized one-particle improvement. The
-IDA/MWG density interaction remains attached to the localized gausslet-like
-site basis. This lane does not revive `C' V C`, does not define alternative
-interaction rotations, and does not create a general all-injection artifact
-contract.
+The persisted numerical semantics are owned by
+[Protected-localized basis convention](protected_localized_basis.md). This
+artifact section owns persistence only; it does not redefine the basis,
+revive `C' V C`, authorize alternative interaction rotations, or create a
+general all-injection contract.
 
 ### Approved Source Surface
 

@@ -40,19 +40,15 @@ The current protected builder in
 `staged_protected_original_injection_geometry(...)`. The implemented
 [occupied-first injection geometry](occupied_first_injection.md) is tested but
 not wired into that builder. It is not a direct replacement because the
-protected path operates over:
-
-```text
-M = [G, R_compact]
-```
+protected path operates over `M = [G, R_compact]` under the existing
+[protected-localized basis convention](protected_localized_basis.md).
 
 Existing reusable owners already provide:
 
 - raw exact reference Hartree `GG`, `GA`, and `AA` blocks in
   `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`;
-- protected fixed-sector operator transformation in
-  `src/cartesian_residual_gaussians/augmented_operators.jl`;
-- the localized transform `W` and native-order inherited-site `Vee_L`;
+- protected fixed-sector and localized one-body transformation from the
+  protected-localized basis owner;
 - the existing `ScreenedHartreeCorrection` algebra in
   `src/cartesian_reference_density/screened_hartree_correction.jl`.
 

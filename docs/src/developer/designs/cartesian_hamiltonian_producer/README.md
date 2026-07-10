@@ -38,9 +38,10 @@ shapes, retained counts, and warning flags before interpreting energies or
 residual/injection behavior. `HP-PQS-ASPECTSHELL-*` separately approves the
 future source-policy lane that may change PQS complete shells from cubic
 `(q,q,q)` source modes to explicit aspect-aware `(q,q,L)` source modes.
-`HP-RG-PROTECT-ART-*` approves a narrow opt-in protected-localized injection
-Hamiltonian artifact variant so the accepted `L`, `H1_L`, inherited-site
-`Vee_L` convention can be read back without in-memory reconstruction.
+The implemented [protected-localized basis convention](protected_localized_basis.md)
+owns compact-main replacement, localized `L`, exact `H1_L`, and inherited-site
+`Vee_L`. `HP-RG-PROTECT-ART-*` separately approves a narrow opt-in artifact
+variant so that convention can be read back without in-memory reconstruction.
 `HP-RG-PROTECT-ARTLOC-*` approves native-order row-locality metadata for that
 artifact: diagonal position-expectation centers, deterministic z-order
 permutations, and per-row sector labels without changing matrix order.
@@ -162,8 +163,11 @@ ID or subsystem.
   for the narrow final residual identity-check robustness, tolerance, and
   cutoff-policy lanes
 - [Residual Gaussian injection hybrid memo](residual_gaussian_injection_hybrid.md)
-  for the optional near-gausslet injection proposal, protected-original
-  compact-main design, and the narrow staged geometry source prototype
+  for the historical optional near-gausslet proposal and protected-injection
+  design/audit evidence
+- [Protected-localized basis convention](protected_localized_basis.md)
+  for compact-first protected-original replacement, exact localized one-body
+  operators, inherited-site `Vee`, and the rejection of direct `C' V C`
 - [Occupied-first injection geometry](occupied_first_injection.md)
   for mandatory occupied protection, physical capture validation, optional
   supplement selection, and the current unwired-consumer boundary

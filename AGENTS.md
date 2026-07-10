@@ -1201,78 +1201,20 @@ Approved Residual Gaussian module surfaces:
   counterpoise, compact/high transfer, `Vee` rotation, solver, EGOI, exchange,
   or Cr2 production claim is approved. CR2 may consume the path only after Be2
   manager acceptance.
-- `HP-RG-PROTECT-INJECT-DESIGN-01` is design-only authority for the current
-  compact-first injection direction. It does not belong in the approved source
-  ID list and does not approve implementation. The design builds compact/narrow
-  RGs first, defines `M = [G, R_compact]`, then injects original supplement
-  Gaussian directions by replacement `F = [Z, M Q_perp]`. Protected narrow
-  originals are orthonormalized first in original GTO overlap without
-  subtracting `M`; remaining originals are orthogonalized against that block,
-  Gram-cleaned in Gaussian overlap, and tested by `B = M' S Z` for
-  representability in the compact main space. A good-norm original that fails
-  this representability test is an insufficient-main-basis diagnostic and must
-  not become a broad MWG residual Gaussian. Do not turn on the existing direct
-  `G`-injection path as-is for this design; any source work needs a fresh
-  source amendment with exact files, validation, and line budget.
-- `HP-RG-PROTECT-INJECT-FN-01` and `HP-RG-PROTECT-INJECT-TEST-01` approve only
-  a narrow internal staged protected-original geometry prototype in
-  `src/cartesian_residual_gaussians/residual_basis.jl`. The approved source
-  work may build `M = [G, R_compact]`, protected originals, the broad original
-  subspace `W`, representability filtering by singular values of
-  `B = M' S W`, optional localization/shape diagnostics, fake-RDM eigenspace
-  filtering, and final geometry diagnostics for
-  `Z = [Z_protected, Z_broad]` and `F = [Z, M Q_perp]`. It does not approve
-  public driver/API wiring, exports, artifact schema/provenance, artifact
-  writing, exact one-body or IDA/MWG protected-injection Hamiltonian
-  transformation, Cr2 HF, default behavior changes, source files outside
-  `residual_basis.jl`, or MWG channels for rejected broad directions. Later
-  implementation line budget is target `220` added source lines in
-  `residual_basis.jl`; if the measured geometry cannot be reproduced inside
-  that narrow file-local surface, stop and request a follow-up amendment.
-- `HP-RG-PROTECT-ONEBODY-AUDIT-01` approves only ignored measurement probes
-  for exact one-body transformation into the protected fixed sector
-  `F = [Z, M Q_perp]`. It may consume the source-backed staged geometry helper
-  and existing exact one-body data to build in-memory diagnostics such as
-  `F' K F`, `F' U_A F`, and `F' H1 F`. It does not approve source helpers,
-  `augmented_operators.jl` edits, public wiring, artifacts/provenance,
-  exact IDA/MWG transforms, Cr2 HF, residual default changes, or production
-  Hamiltonian claims. If a later source lane is justified, likely exact
-  one-body ownership is `src/cartesian_residual_gaussians/augmented_operators.jl`,
-  but that decision is deferred until after the audit.
-- `HP-RG-PROTECT-ONEBODY-FN-01` and `HP-RG-PROTECT-ONEBODY-TEST-01` approve
-  only narrow internal exact one-body transformation for the protected fixed
-  sector. Primary source ownership is
-  `src/cartesian_residual_gaussians/augmented_operators.jl`; optional
-  `src/cartesian_residual_gaussians/residual_basis.jl` edits are allowed only
-  for transform-ready geometry fields or accessors. The source path may
-  transform exact dense in-memory `K`, per-center uncharged `U_A`, and
-  assembled `H1` into `F = [Z, M Qperp]`, with diagnostics for symmetry,
-  orthogonality, traces, and low `H1_FF` replay. It does not approve public
-  driver/API/export changes, artifacts/provenance/writers/readers/manifests,
-  exact IDA/MWG interaction transforms, matrix-vector action frameworks,
-  screened-reference/rho0 work, Cr2 HF, production Hamiltonian claims, residual
-  default changes, staged-geometry selector changes, rejected broad directions
-  as MWG residual channels, committed tests by default, or more than target
-  `180` added source lines across the approved files.
-- `HP-RG-PROTECT-VEE-AUDIT-01` approves only ignored measurement probes for an
-  in-memory protected-original Vee candidate in the fixed sector
-  `F = [Z, M Qperp]`, `M = [G, R_compact]`. It may consume current
-  source-backed protected geometry, one-body helpers, and existing in-memory
-  interaction data, and it may run one bounded in-memory Cr2 HF replay only
-  after the Vee diagnostics show finite/symmetric blocks and no anomalously
-  cheap broad-`Z` directions. It does not approve tracked source edits, public
-  driver/API/export changes, artifacts/provenance/writers/readers/manifests,
-  source-backed IDA/MWG interaction implementation, production Hamiltonian
-  workflow, screened-reference/rho0 work, Vee scaling as the primary fix,
-  rejected broad directions as MWG residual channels, committed tests, or Cr2
-  production claims. Because this is measurement-only authority, do not add it
-  to the approved source-ID list.
-  The recorded outcome invalidated the direct `C' V C` protected interaction
-  transform; do not reuse or source-back that convention. The current viable
-  protected interaction baseline is protected-localized injection: exact
-  one-body operators in localized injected basis `L`, with inherited
-  pre-injection site-order `Vee_M` IDA/MWG interaction, judged by bounded
-  physics diagnostics.
+- `HP-RG-PROTECT-INJECT-DESIGN-01`,
+  `HP-RG-PROTECT-INJECT-FN-01` / `TEST-01`, and
+  `HP-RG-PROTECT-ONEBODY-FN-01` / `TEST-01` are governed by
+  `docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_basis.md`.
+  The source-backed internal/default-off convention builds
+  `M = [G, R_compact]`, replaces a represented subspace with protected
+  originals, transforms exact one-body operators through localized `L`, and
+  inherits pre-injection site-order `Vee_M` as `Vee_L`. Gaussian Gram cleanup
+  and compact-main representability are separate gates; unsupported broad
+  directions are rejected and never become MWG residual channels. The
+  completed `HP-RG-PROTECT-VEE-AUDIT-01` invalidated direct `C' V C`; it is
+  not an alternative or diagnostic option. This contract does not approve
+  public/default workflow, artifact/schema changes, EGOI, ladder behavior,
+  screened-reference work, solver/HF, or Cr2 production claims.
 - `HP-RG-PROTECT-ART-FN-01` and `HP-RG-PROTECT-ART-TEST-01` approve only a
   narrow opt-in protected-localized Hamiltonian artifact variant. Primary
   source ownership is

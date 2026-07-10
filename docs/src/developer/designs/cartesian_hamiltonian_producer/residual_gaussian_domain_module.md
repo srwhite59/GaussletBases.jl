@@ -62,25 +62,20 @@ module, or object names in the new owner.
 - `HP-RG-INJECT-AUDIT-01` - measurement-only optional injection audit.
 - `HP-RG-INJECT-FN-01` - default-off in-memory injection-plus-RG
   implementation.
-- `HP-RG-PROTECT-INJECT-DESIGN-01` - design-only protected-original
-  injection over compact main space.
+- `HP-RG-PROTECT-INJECT-DESIGN-01` - completed compact-main rationale for the
+  implemented protected-localized basis convention.
 - `HP-RG-OCC-FIRST-INJECT-AUDIT-01` - completed historical measurement for
   occupied-first global injection.
 - `HP-RG-OCC-FIRST-INJECT-FN-01` / `HP-RG-OCC-FIRST-INJECT-TEST-01` -
   implemented occupied-first geometry governed by
   `occupied_first_injection.md`.
-- `HP-RG-PROTECT-INJECT-FN-01` - narrow internal staged
-  protected-original geometry prototype.
-- `HP-RG-PROTECT-INJECT-TEST-01` - validation gates for the staged geometry
-  prototype.
-- `HP-RG-PROTECT-ONEBODY-AUDIT-01` - measurement-only audit for exact
-  one-body transformation into the protected fixed sector.
-- `HP-RG-PROTECT-ONEBODY-FN-01` - narrow internal exact one-body transform for
-  the protected fixed sector.
-- `HP-RG-PROTECT-ONEBODY-TEST-01` - validation gates for the protected
-  one-body transform replay.
-- `HP-RG-PROTECT-VEE-AUDIT-01` - measurement-only protected fixed-sector Vee
-  interaction audit.
+- `HP-RG-PROTECT-INJECT-FN-01` / `HP-RG-PROTECT-INJECT-TEST-01` and
+  `HP-RG-PROTECT-ONEBODY-FN-01` / `HP-RG-PROTECT-ONEBODY-TEST-01` -
+  implemented internal geometry and one-body convention governed by
+  `protected_localized_basis.md`.
+- `HP-RG-PROTECT-ONEBODY-AUDIT-01` and
+  `HP-RG-PROTECT-VEE-AUDIT-01` - completed historical evidence for that
+  convention.
 - `HP-RG-PROTECT-ART-FN-01` - opt-in protected-localized Hamiltonian artifact
   variant.
 - `HP-RG-PROTECT-ART-TEST-01` - validation gates for the protected artifact
@@ -326,15 +321,11 @@ production RG behavior must remain unchanged within roundoff. This ID does not
 approve driver input, public API, artifact schema/provenance changes,
 production-default changes, full HF, Cr2 workflow, or spectral pruning.
 
-`HP-RG-PROTECT-INJECT-DESIGN-01` records the current compact-first direction:
-build compact/narrow RGs first, define `M = [G, R_compact]`, then inject
-original supplement Gaussians by replacement `F = [Z, M Q_perp]`. Protected
-narrow originals are orthonormalized first in original GTO overlap, remaining
-originals are Gram-cleaned separately from injection representability, and
-`B = M' S Z` must be full rank and well conditioned. If a good-norm broad
-original is not represented by `M`, that is an insufficient-main-basis
-diagnostic, not permission to make the candidate a MWG residual Gaussian. This
-ID is design-only and requires a later source amendment before implementation.
+`HP-RG-PROTECT-INJECT-DESIGN-01` supplied the completed compact-first
+rationale now governed by
+[Protected-localized basis convention](protected_localized_basis.md). It is not
+source authority by itself; the implemented geometry and one-body IDs below
+own the source surface.
 
 `HP-RG-OCC-FIRST-INJECT-AUDIT-01` is completed historical measurement
 evidence. The implemented geometry and validation contract is owned by
@@ -349,52 +340,18 @@ directions into MWG residual channels. It is not wired into staged
 protected-original geometry; composition over `M = [G, R_compact]` belongs to
 `HP-RG-PROTECT-ADDREF-*`.
 
-`HP-RG-PROTECT-INJECT-FN-01` approves only an internal geometry prototype for
-the staged protected-original construction in `residual_basis.jl`. It may
-source-back the measured sequence: construct `M`, protected originals, and the
-broad original subspace `W`; filter by representability singular values of
-`B = M' S W`; optionally localize and classify shape for diagnostics; filter
-by fake-RDM eigenspace occupancy; and report geometry diagnostics for
-`Z = [Z_protected, Z_broad]` and `F = [Z, M Q_perp]`. It does not approve
-operator/Hamiltonian transformation, inherited IDA/MWG for protected-original
-injection, artifact support, public wiring, Cr2 HF, or default behavior
-changes.
+`HP-RG-PROTECT-INJECT-FN-01` / `HP-RG-PROTECT-INJECT-TEST-01`
+and `HP-RG-PROTECT-ONEBODY-FN-01` / `HP-RG-PROTECT-ONEBODY-TEST-01`
+implement the internal/default-off geometry and exact one-body parts of
+[Protected-localized basis convention](protected_localized_basis.md).
+`residual_basis.jl` owns staged geometry; `augmented_operators.jl` owns exact
+fixed-sector and localized one-body transforms.
 
-`HP-RG-PROTECT-ONEBODY-AUDIT-01` approves only an ignored measurement audit
-that consumes the source-backed staged geometry and existing exact one-body
-data to test in-memory fixed-sector transforms such as `F' K F`, `F' U_A F`,
-and `F' H1 F`. It does not approve source helpers, artifact/provenance
-changes, public wiring, IDA/MWG interaction transforms, Cr2 HF, residual
-default changes, or production Hamiltonian claims. If a later source lane is
-needed, exact one-body ownership likely belongs in `augmented_operators.jl`,
-while `residual_basis.jl` remains the geometry owner.
-
-`HP-RG-PROTECT-ONEBODY-FN-01` approves that narrow source lane after the
-successful audit. `augmented_operators.jl` owns private exact dense in-memory
-transforms of `K`, per-center uncharged `U_A`, and assembled `H1` into the
-protected fixed sector `F = [Z, M Qperp]`. `residual_basis.jl` may change only
-if transform-ready geometry accessors or fields are missing. This lane does
-not approve IDA/MWG interaction transforms, artifact support, public wiring,
-matrix-action frameworks, Cr2 HF, residual default changes, or production
-Hamiltonian claims.
-
-`HP-RG-PROTECT-VEE-AUDIT-01` approves only an ignored measurement audit for an
-in-memory Vee candidate in the same protected fixed sector. It may consume the
-source-backed protected geometry, one-body helpers, and existing in-memory
-interaction data to test whether transforming the `M = [G, R_compact]`
-interaction through `F = [Z, M Qperp]` is finite, symmetric, and not
-anomalously cheap for broad-`Z` directions. A bounded in-memory Cr2 HF replay
-is allowed only after that Vee diagnostic gate passes. This ID does not approve
-source edits, source-backed IDA/MWG interaction implementation, artifact
-support, public wiring, production Hamiltonian workflow, screened-reference/
-rho0 work, Vee scaling as the primary fix, rejected broad directions as MWG
-residual channels, or Cr2 production claims.
-
-The recorded protected-Vee audit invalidated the direct `C' V C` interaction
-transform and that convention must not be reused. The viable protected
-interaction baseline is protected-localized injection: build localized injected
-basis `L`, transform exact one-body operators into `L`, and inherit the
-pre-injection site-order `Vee_M` interaction.
+The one-body audit is completed historical evidence. The completed
+`HP-RG-PROTECT-VEE-AUDIT-01` rejected direct `C' V C` interaction rotation
+and established localized `L`, exact `H1_L`, and inherited pre-injection
+site-order `Vee_M` as the viable convention. Rejected broad directions remain
+basis-insufficiency diagnostics and never become MWG residual channels.
 
 `HP-RG-PROTECT-ART-FN-01` approves a narrow opt-in artifact variant for that
 protected-localized baseline. The artifact may persist `H1_L`, inherited-site

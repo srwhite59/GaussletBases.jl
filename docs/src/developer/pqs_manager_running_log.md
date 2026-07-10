@@ -27214,3 +27214,56 @@ Goal advancement / guardrail:
 - The exact blocker remains implementation and padded-Be2 acceptance of
   `HP-RG-PROTECT-ADDREF-*`, which owns occupied-first composition with the
   shared compact residual basis and additive packet references.
+
+## Cartesian Hamiltonian Producer Pass 350 - Canonical Protected-Localized Basis Contract
+
+Commit(s):
+- this commit - extract the protected-localized basis convention.
+
+Summary:
+- Moved compact-first `M = [G, R_compact]`, protected/broad Gaussian
+  selection, Gram-versus-representability policy, replacement
+  `F = [Z, M Q_perp]`, exact fixed-sector one-body transforms, localized `L`,
+  and inherited-site `Vee_L` into `protected_localized_basis.md` as their
+  single canonical home.
+- Reduced the transitional injection memo, registry, current status,
+  `AGENTS.md`, and residual-domain page to lifecycle, ownership, evidence,
+  navigation, and hard execution guards. Artifact, row-locality, EGOI,
+  ladder, rho0, occupied-first, and additive-reference contracts remain
+  separate.
+- Preserved the decisive interaction result: direct `C' V C` is invalid, not
+  an alternative; the viable convention is exact `H1_L` with inherited
+  pre-injection site-order `Vee_M`.
+
+Validation / evidence:
+- Compared the contract with live `residual_basis.jl` and
+  `augmented_operators.jl`, verified every source, replay, report, and
+  dependency path, scanned lifecycle wording and all active `C' V C`
+  references, and confirmed the excluded subsystem sections remain intact.
+  `git diff --check` passed. No Julia test was needed for this docs-only pass.
+- Before this log entry, the touched active documentation shrank by 707 net
+  lines. Concurrent additive-reference source/test WIP remained untouched.
+
+Goal advancement / guardrail:
+- LT2/LT3/LT5 and MT4/MT5: gives the protected basis one durable contract
+  without changing numerical behavior, authority, source, tests, artifacts,
+  APIs, or workflows.
+- The exact physics blocker remains implementation and padded-Be2 acceptance
+  of `HP-RG-PROTECT-ADDREF-*`.
+
+### Medium-Term Goal Checkpoint After Pass 350
+
+- MT1 fake-PQS quarantine: completed/maintained. No current protected or
+  reference lane revives fake-PQS producer authority.
+- MT2 independent PQS recovery: completed for the supported canonical path;
+  current work concerns protected reference composition, not route recovery.
+- MT3 common physical support vocabulary: active/maintained through mandatory
+  terminal due diligence for molecular acceptance gates.
+- MT4 supplement staging: active. The immediate target is the shared compact
+  residual plus mandatory packet occupied protection and additive
+  screened-Hartree assembly under `HP-RG-PROTECT-ADDREF-*`.
+- MT5 cleanup pressure: active. Single-home documentation extraction is
+  parallel carrying-cost cleanup; it must not block, replace, or delay the
+  additive-reference implementation and padded-Be2 gate.
+- MT6 old flat-path classification: maintenance. No old route or interaction
+  alternative was promoted; direct `C' V C` remains retired.
