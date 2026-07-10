@@ -1170,23 +1170,14 @@ Approved Residual Gaussian module surfaces:
   default-off code; it is not authority to extend that algorithm or substitute
   it for the occupied-first/protected-main direction.
 - `HP-RG-OCC-FIRST-INJECT-FN-01` and
-  `HP-RG-OCC-FIRST-INJECT-TEST-01` approve only the internal occupied-first
-  geometry/selection helper in
-  `src/cartesian_residual_gaussians/residual_basis.jl`, with narrow packet or
-  external-import access only if already-owned occupied coefficients are
-  needed. Mandatory `Y_occ` directions are included before optional global
-  supplement injection. Pre-inclusion capture is reported as
-  `svdvals(X_GA * Y_occ)` and kept distinct from roundoff recovery after
-  mandatory inclusion; poor pre-capture is diagnostic, not rejection in this
-  pass. Require `lambda_min(S_AA - X_GA' * X_GA) >= -capture_tol` and full and
-  complement capture eigenvalues within `[-capture_tol, 1 + capture_tol]`;
-  only tolerance-sized reporting clamps are allowed. Delete
-  `weakest_occupied_capture` without a compatibility alias. Test authority is
-  a tiny synthetic contract gate in `test/misc/runtests.jl` plus the existing
-  nested Be/Ne `ns = 5` gate rebuilt with real PQS mixed overlap, packet
-  `Y_occ`, and terminal due-diligence inspection. No `ns = 7` gate, final
-  consumer wiring, screened-Hartree change, artifact/public workflow,
-  shell-local injection, EGOI, exchange, solver, or Cr/Cr2 work is approved.
+  `HP-RG-OCC-FIRST-INJECT-TEST-01` authorize only the implemented helper
+  governed by
+  `docs/src/developer/designs/cartesian_hamiltonian_producer/occupied_first_injection.md`.
+  Identified `Y_occ` is mandatory; pre-inclusion capture and post-inclusion
+  recovery remain distinct; malformed complement/capture geometry fails; weak
+  optional directions are rejected and never become MWG residual channels.
+  The helper is not wired into the protected builder and is not a direct
+  substitute for staged geometry over `M = [G, R_compact]`.
 - `HP-RG-PROTECT-ADDREF-FN-01` and
   `HP-RG-PROTECT-ADDREF-TEST-01` approve the first internal protected-localized
   occupied-reference consumer. Build compact `R` once, make the full-rank

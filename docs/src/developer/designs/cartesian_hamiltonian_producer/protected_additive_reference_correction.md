@@ -37,9 +37,10 @@ own additive contribution to `P0`.
 
 The current protected builder in
 `src/cartesian_protected_ladder_bundle.jl` calls
-`staged_protected_original_injection_geometry(...)`. The newer
-`occupied_first_injection_geometry(...)` is currently a contract/test helper
-and is not a direct replacement because the protected path operates over:
+`staged_protected_original_injection_geometry(...)`. The implemented
+[occupied-first injection geometry](occupied_first_injection.md) is tested but
+not wired into that builder. It is not a direct replacement because the
+protected path operates over:
 
 ```text
 M = [G, R_compact]

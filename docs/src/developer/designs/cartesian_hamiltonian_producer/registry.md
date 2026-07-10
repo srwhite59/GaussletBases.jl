@@ -4996,283 +4996,56 @@ failure rule. Do not implement protected-original compact-main injection under
 
 ### HP-RG-OCC-FIRST-INJECT-AUDIT-01 — occupied-first global injection measurement audit
 
-Status: approved measurement/design audit authority. This is not source
-authority.
+Status: completed historical measurement record; not active source authority.
 
-Purpose: make atom-local pure-GTO RHF occupied orbitals mandatory reference
-directions before ordinary RG/injection decisions, so screened-Hartree `P0` and
-`q0` can be formed from an exactly retained determinant instead of relying on
-label picks or residual cutoffs.
+Purpose: established mandatory occupied protection and capture-spectrum
+selection on Be/Ne before the source-backed helper was approved. Evidence is
+retained in manager running-log Passes 323-324 and summarized by the canonical
+contract below.
 
-Motivation: Ne fitted-cloud work clarified that `P0`/`q0` on the IDA side
-should come from the actual atom-local RHF determinant projected into the
-gausslet+supplement working basis, while `J0_G`/`E0_G` may come from a
-near-exact compressed Gaussian fit to that same determinant density. Hard-coded
-occupied labels such as `s1,s4,px3,py3,pz3` are not a robust construction rule.
+### HP-RG-OCC-FIRST-INJECT-FN-01 / HP-RG-OCC-FIRST-INJECT-TEST-01 — occupied-first injection geometry
 
-Core construction:
+Status: implemented internal facility.
 
-- for one-center atoms, build the atom-local pure-GTO RHF occupied subspace
-  `Y_occ` in the supplement metric;
-- `Y_occ` directions are mandatory, not ordinary residual candidates, and
-  cannot be rejected by cutoff;
-- build `M = span(current gausslet final basis + mandatory Y_occ
-  residual/protected directions)`;
-- after `M` is formed, analyze the full supplement span against `M`;
-- distinguish base-only occupied capture before inclusion,
-  `svdvals(X_GA * Y_occ)`, from occupied recovery after mandatory inclusion;
-- validate the mixed-overlap physicality through
-  `S_AA - X_GA' * X_GA >= 0` within a stated numerical tolerance, and require
-  capture eigenvalues to lie in `[0, 1]` within that tolerance;
-- in an orthonormal supplement basis, diagonalize the projection/overlap
-  operator into `M`;
-- `Y_occ` directions should appear as eigenvalue-`1` directions up to
-  roundoff;
-- select optional global injection directions from the full supplement by
-  projection eigenvalue, for example keeping eigenvectors with
-  `lambda >= cutoff`;
-- first audit cutoff may use `0.99` or the existing protected-injection cutoff
-  convention.
+Owner: `CartesianResidualGaussians` occupied-first geometry in
+`residual_basis.jl`.
 
-Mandatory invariant: `Y_occ` must be represented/recoverable at roundoff. If
-any occupied RHF direction is not eigenvalue-`1`/recoverable after adding it to
-`M`, stop and report a construction bug. The cutoff must never be the only
-thing protecting `Y_occ`.
+Canonical contract:
 
-Approved measurement surfaces:
-
-- ignored `tmp/work/*.jl` probes only;
-- durable `/Users/srw/dmrgtmp` outputs.
-
-First bounded fixtures:
-
-- Be RHF, cc-pV5Z, `lmax = 1`;
-- Ne RHF, cc-pV5Z, `lmax = 1`;
-- standard-scaled `ns = 5`;
-- `ns = 7` only if feasible.
-
-Required measurement sequence:
-
-1. Solve pure-GTO atom-local RHF in the supplement span.
-2. Build `Y_occ` from the RHF occupied orbitals, orthonormal in the supplement
-   metric.
-3. Add `Y_occ` as mandatory residual/protected directions to define `M`.
-4. Build the full-supplement projection spectrum into `M`.
-5. Select optional injection directions with `lambda >= cutoff`.
-6. Inject selected directions with the current global injection machinery only.
-7. Report whether the final basis recovers `Y_occ` at roundoff.
-8. If feasible, rerun the screened-Hartree endpoint using determinant `P0`/`q0`
-   from `Y_occ` and fitted-cloud `J0_G`/`E0_G` from a near-exact compression of
-   the same RHF determinant density.
-
-Required reporting:
-
-- RHF occupied orbital count and occupations;
-- supplement metric orthogonality of `Y_occ`;
-- `occupied_base_capture_singular_values = svdvals(X_GA * Y_occ)` and
-  `occupied_base_capture_min` before mandatory inclusion;
-- `occupied_recovery_after_mandatory_inclusion_singular_values` and
-  `occupied_recovery_after_mandatory_inclusion_loss` after inclusion;
-- complement-metric minimum eigenvalue, capture tolerance, and validated
-  full/complement capture ranges;
-- supplement projection eigenvalue spectrum into `M`;
-- number of optional injection directions above cutoff;
-- angular/channel makeup of kept and rejected directions;
-- rotation/protected-overlap diagnostics;
-- final basis dimension and sector counts;
-- `P0`/`q0` trace and determinant representation loss;
-- if endpoint is run: uncorrected/screened RHF energies, anchor errors,
-  low-mode diagnostics, and fitted-cloud mismatch diagnostics;
-- exact probe/script paths and key functions used.
-
-Forbidden:
-
-- shell-local injection;
-- fake-RDM hierarchy;
-- EGOI target expansion;
-- source edits;
-- artifacts or public workflow;
-- solver/driver integration;
-- Cr/Cr2;
-- exchange correction;
-- rho0/P0 row-gauge shortcuts;
-- label-based occupied selection as the accepted construction rule;
-- treating fitted density Gaussian terms as protected orbitals.
-
-Decision rule: green only if `Y_occ` is recovered at roundoff and optional
-injection directions are selected by a clear projection spectrum without large
-rotations or low-mode pathologies. If `Y_occ` is not exactly retained, stop
-before endpoint interpretation.
-
-Review rule: doer must name exact scripts/functions implementing `Y_occ`, `M`,
-the projection eigenproblem, and injection selection. Manager review should
-inspect probe code before accepting endpoint interpretation.
-
-Forbidden promotion: no source-backed RG/injection changes from this audit
-alone. A later source lane may be requested only after measurement shows the
-occupied-first construction is stable and simpler than the current
-label/cutoff-dependent path.
-
-### HP-RG-OCC-FIRST-INJECT-FN-01 / HP-RG-OCC-FIRST-INJECT-TEST-01 — occupied-first injection source geometry
-
-Status: approved narrow internal source/design authority. This is not public
-driver/API authority, not artifact/provenance authority, not Hamiltonian
-correction authority, and not a production default.
-
-Purpose: source-back the occupied-first injection geometry/selection rule
-validated by `HP-RG-OCC-FIRST-INJECT-AUDIT-01`. The helper makes atom-local
-pure-GTO RHF occupied orbitals mandatory reference directions before ordinary
-RG/injection decisions, then uses the full supplement capture spectrum to
-choose optional injection directions. The goal is to replace label-based
-occupied choices and cutoff accidents with a reproducible construction.
+- [Occupied-first injection geometry](occupied_first_injection.md)
 
 Approved source surface:
 
-- `src/cartesian_residual_gaussians/residual_basis.jl`
-
-Optional narrow inputs only, if needed to consume already-owned packet/import
-objects:
-
-- `src/cartesian_reference_density/atomic_hf_reference_packets.jl`
-- `src/cartesian_external_gto_import.jl`
-
-No new source file is approved by this lane.
-
-Approved inputs:
-
-- final/base gausslet or represented fixed span data `G`;
-- full supplement basis `A`;
-- supplement metric `S_AA`;
-- mixed overlap/capture data such as `X_GA = <G|A>`, or the equivalent
-  existing representation data;
-- HF occupied coefficients `Y_occ` from an `AtomicHFReferencePacket` or
-  external-GTO import packet;
-- existing compact/RG selection data only if needed to form the current
-  represented span `M`.
-
-`Y_occ` must be orthonormal in the supplement metric and must carry packet or
-import provenance. Raw label picks are not an accepted construction rule.
-
-Approved operation:
-
-1. validate `Y_occ` in `S_AA`;
-2. validate that the mixed overlap is physically compatible with the
-   supplement metric by requiring
-   `lambda_min(S_AA - X_GA' * X_GA) >= -capture_tol`;
-3. before mandatory inclusion, compute the base-only occupied capture
-   singular values exactly as `svdvals(X_GA * Y_occ)` and report poor capture
-   without rejecting it in this pass;
-4. force `Y_occ` into the mandatory retained/protected reference span;
-5. form the current represented span `M`;
-6. build and diagonalize the full-supplement projection/capture operator into
-   `M` in an orthonormal supplement basis;
-7. require every full and complement capture eigenvalue to lie in
-   `[-capture_tol, 1 + capture_tol]`. Values outside that interval are a
-   material physical-contract failure; tolerance-sized roundoff may be clamped
-   only in reported values, not in the construction used to hide a failure;
-8. verify the occupied subspace is recovered at roundoff after mandatory
-   inclusion;
-9. select optional global injection directions only when
-   `lambda >= cutoff`;
-10. reject and report weak-capture supplement directions instead of silently
-   converting them into MWG residual channels;
-11. return compact diagnostics and transform-ready geometry for later internal
-   consumers.
-
-The cutoff gates optional injection only. It must never be the only mechanism
-protecting `Y_occ`. `capture_tol` is a private numerical contract tolerance,
-not a public physics input.
-
-Required diagnostics:
-
-- source of `Y_occ` and provenance fingerprint;
-- supplement metric orthogonality of `Y_occ`;
-- `occupied_base_capture_singular_values = svdvals(X_GA * Y_occ)`;
-- `occupied_base_capture_min`;
-- `occupied_recovery_after_mandatory_inclusion_singular_values`;
-- `occupied_recovery_after_mandatory_inclusion_loss`;
-- minimum eigenvalue of `S_AA - X_GA' * X_GA`, `capture_tol`, and the unclamped
-  full/complement capture ranges used for physical validation;
-- capture eigenvalue spectrum;
-- number and channel/owner makeup of optional accepted directions;
-- rejected weak-capture directions and angular/channel labels when available;
-- final rank, sector counts, and any rotation/protected-overlap diagnostics;
-- packet/import mismatch failures.
-
-The existing `weakest_occupied_capture` diagnostic is misleading because it
-measures post-inclusion recovery, which is near one by construction. Delete
-that name; do not retain it through a compatibility alias. The four explicit
-pre/post diagnostics above are the canonical distinction.
+- `src/cartesian_residual_gaussians/residual_basis.jl`;
+- optional read-only consumption of already-owned coefficients from
+  `src/cartesian_reference_density/atomic_hf_reference_packets.jl` and
+  `src/cartesian_external_gto_import.jl`, without changing either contract.
 
 Approved test surface:
 
-- `test/misc/runtests.jl` for a tiny synthetic helper-contract test that does
-  not construct atomic packets;
-- `test/nested/cartesian_occupied_first_injection_runtests.jl` for the bounded
-  real PQS gate.
+- `test/misc/runtests.jl` for the tiny pre/post and malformed-capture contract;
+- `test/nested/cartesian_occupied_first_injection_runtests.jl` for the real
+  bounded Be/Ne packet-driven PQS gate and terminal due diligence.
 
-The synthetic test belongs to the normal local suite and covers distinct
-pre-inclusion capture and post-inclusion recovery diagnostics, plus rejection
-of a materially non-positive complement metric and out-of-range capture
-eigenvalues.
+Dependencies:
 
-The nested test scope is:
+- `HP-PQS-ATOMREF-PACKET-*` or `HP-REP-XGTO-IMPORT-*` supplies identified
+  occupied coefficients;
+- `HP-RG-PROTECT-ADDREF-*` owns the separate protected-localized consumer over
+  `M = [G, R_compact]`.
 
-- bounded Be and Ne one-center fixtures with `cc-pV5Z`, `lmax = 1`, and
-  `ns = 5` only;
-- actual PQS final/base-to-supplement mixed overlap, not a manufactured
-  capture matrix;
-- packet-provenance `Y_occ`;
-- `Y_occ` recovery at roundoff after mandatory inclusion;
-- full supplement capture spectrum sanity;
-- rejection/reporting of weak-capture optional directions;
-- packet/import mismatch failure;
-- explicit inspection and reporting of terminal due diligence, including
-  parent bounds, axis counts, padding/radius, final dimension, retained counts,
-  shell/slab topology, and warning flags before interpreting capture results.
+Permission summary: validate physical mixed-overlap geometry, make supplied
+`Y_occ` mandatory, distinguish pre-inclusion capture from post-inclusion
+recovery, and select/report optional supplement directions by capture cutoff.
+Weak rejected directions do not become MWG residual channels.
 
-No `ns = 7` committed gate is required by this authority.
+Current boundary: `occupied_first_injection_geometry(...)` is implemented and
+tested but is not wired into the protected-localized builder and is not a
+direct substitute for staged protected-original geometry.
 
-Forbidden:
-
-- screened-Hartree correction changes;
-- EGOI changes or target expansion;
-- solver workflow;
-- public driver/API/export/defaults;
-- artifacts, schema, provenance, writer, or reader changes;
-- shell-local injection;
-- fake-RDM hierarchy changes;
-- exchange correction;
-- rho0/P0 row-gauge shortcuts;
-- automatic physics defaults;
-- label-based occupied selection as the source-backed construction rule;
-- treating fitted density or potential terms as protected orbitals;
-- silently promoting weak-capture broad directions into MWG RGs;
-- Cr/Cr2 production claims.
-
-Decision rule: if `Y_occ` cannot be recovered at roundoff after mandatory
-inclusion, stop and report the exact packet/import/metric/construction
-failure. If optional directions have weak capture, report them as insufficient
-main-basis support rather than creating broad residual-MWG channels. If the
-helper needs source outside the approved files or a persistent artifact/public
-shape, stop and request a new docs-only authority amendment.
-
-Validation for this source lane:
-
-- `git diff --check`;
-- package load;
-- focused occupied-first injection test/probe;
-- tiny synthetic pre/post/physical-capture contract checks in
-  `test/misc/runtests.jl`;
-- real Be/Ne `ns = 5` packet-driven PQS mixed-overlap and occupied-recovery
-  checks with terminal due-diligence inspection;
-- capture spectrum and weak-capture reporting checks;
-- no screened-Hartree endpoint required;
-- no Cr/Cr2 run.
-
-These occupied-first IDs alone do not approve the strict actual-packet
-screened-Hartree anchor. The combined final-basis consumer is separately
-governed by `HP-RG-PROTECT-ADDREF-*` below.
+Non-goals: screened-Hartree changes, protected-builder composition under these
+IDs, EGOI, shell-local injection, fake-RDM changes, artifacts, public workflow,
+automatic defaults, solver, exchange, row-gauge rho0/P0, or Cr/Cr2 claims.
 
 ### HP-RG-PROTECT-ADDREF-FN-01 / HP-RG-PROTECT-ADDREF-TEST-01 - protected additive atomic reference correction
 

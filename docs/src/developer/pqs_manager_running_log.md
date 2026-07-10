@@ -27180,3 +27180,37 @@ Goal advancement / guardrail:
 - Exact next blocker remains implementation and Be2 acceptance of the
   protected additive-reference contract; further documentation extraction is
   separate cleanup work, not permission to delay that physics target.
+
+## Cartesian Hamiltonian Producer Pass 349 - Canonical Occupied-First Injection Contract
+
+Commit(s):
+- this commit - extract the occupied-first injection geometry contract.
+
+Summary:
+- Moved mandatory `Y_occ`, packet/import provenance, pre-inclusion capture,
+  post-inclusion recovery, complement/capture validation, optional cutoff,
+  weak-direction rejection, failure behavior, and consumer boundaries into
+  `occupied_first_injection.md` as their single canonical home.
+- Reduced the transitional injection memo to historical Pass 323-324 evidence,
+  and reduced the registry, current status, `AGENTS.md`, and residual-domain
+  page to lifecycle, ownership, navigation, and execution-critical guards.
+- Preserved the key boundary: `occupied_first_injection_geometry(...)` is
+  implemented and tested but remains unwired; it is not a direct substitute
+  for staged protected geometry over `M = [G, R_compact]`.
+
+Validation / evidence:
+- Reviewed the live helper and both approved tests, verified every canonical,
+  dependency, source, and test path, scanned out stale measurement-only
+  lifecycle wording, and confirmed the unwired-consumer warning remains on all
+  active navigation surfaces. Detailed capture formulas now occur only in the
+  canonical contract. `git diff --check` passed; no Julia test was needed for
+  this docs-only extraction.
+- Before this log entry, the touched active documentation shrank by 384 net
+  lines.
+
+Goal advancement / guardrail:
+- LT2/LT3/LT5 and MT5: continues the single-home authority cleanup without
+  changing source authority, numerics, tests, artifacts, APIs, or workflows.
+- The exact blocker remains implementation and padded-Be2 acceptance of
+  `HP-RG-PROTECT-ADDREF-*`, which owns occupied-first composition with the
+  shared compact residual basis and additive packet references.

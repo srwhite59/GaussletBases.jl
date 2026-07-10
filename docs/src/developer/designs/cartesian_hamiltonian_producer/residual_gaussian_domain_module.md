@@ -64,12 +64,11 @@ module, or object names in the new owner.
   implementation.
 - `HP-RG-PROTECT-INJECT-DESIGN-01` - design-only protected-original
   injection over compact main space.
-- `HP-RG-OCC-FIRST-INJECT-AUDIT-01` - measurement/design audit for
-  occupied-first global injection on one-center atoms.
-- `HP-RG-OCC-FIRST-INJECT-FN-01` - narrow internal source-backed
-  occupied-first injection geometry/selection helper.
-- `HP-RG-OCC-FIRST-INJECT-TEST-01` - validation gates for occupied-first
-  injection source helper.
+- `HP-RG-OCC-FIRST-INJECT-AUDIT-01` - completed historical measurement for
+  occupied-first global injection.
+- `HP-RG-OCC-FIRST-INJECT-FN-01` / `HP-RG-OCC-FIRST-INJECT-TEST-01` -
+  implemented occupied-first geometry governed by
+  `occupied_first_injection.md`.
 - `HP-RG-PROTECT-INJECT-FN-01` - narrow internal staged
   protected-original geometry prototype.
 - `HP-RG-PROTECT-INJECT-TEST-01` - validation gates for the staged geometry
@@ -337,37 +336,18 @@ original is not represented by `M`, that is an insufficient-main-basis
 diagnostic, not permission to make the candidate a MWG residual Gaussian. This
 ID is design-only and requires a later source amendment before implementation.
 
-`HP-RG-OCC-FIRST-INJECT-AUDIT-01` approves only measurement/design probes for
-occupied-first global injection on one-center atoms. Pure-GTO RHF occupied
-subspaces `Y_occ` are mandatory reference directions for Be/Ne-style screened
-Hartree endpoints: they must be represented at roundoff before ordinary
-RG/injection decisions, and cutoff must never be the only protection for them.
-The audit may examine the full supplement projection spectrum into
-`M = span(G + mandatory Y_occ residual/protected directions)` and choose
-optional global injection directions by projection eigenvalue. It does not
-approve source edits, shell-local injection, fake-RDM hierarchy, artifacts,
-driver/solver workflow, Cr/Cr2, exchange, EGOI, or row-gauge rho0/P0 changes.
-
+`HP-RG-OCC-FIRST-INJECT-AUDIT-01` is completed historical measurement
+evidence. The implemented geometry and validation contract is owned by
+[Occupied-first injection geometry](occupied_first_injection.md) under
 `HP-RG-OCC-FIRST-INJECT-FN-01` and
-`HP-RG-OCC-FIRST-INJECT-TEST-01` approve the narrow source-backed follow-up in
-`residual_basis.jl`. The helper may consume `Y_occ` from atomic reference
-packets or external-GTO import, validate it in `S_AA`, force it into the
-mandatory retained/protected reference span, compute the supplement capture
-spectrum into `M`, and select optional injection eigenvectors by cutoff.
-It must separately report base-only occupied capture as
-`svdvals(X_GA * Y_occ)` and roundoff recovery after mandatory inclusion. It
-must reject a materially non-positive `S_AA - X_GA' * X_GA` or capture
-eigenvalues materially outside `[0, 1]`; tolerance-sized clamping is
-reporting-only. The post-inclusion `weakest_occupied_capture` name is deleted.
-Approved validation is a tiny synthetic contract gate in `test/misc/runtests.jl`
-plus real packet-driven Be/Ne `ns = 5` PQS mixed-overlap checks with terminal
-due-diligence inspection in the existing nested test; no `ns = 7` gate is
-required.
-Rejected weak-capture supplement directions must be reported and must not
-become MWG residual channels. This lane does not approve screened-Hartree
-correction changes, EGOI, solver workflow, public driver/API/defaults,
-artifacts, shell-local injection, fake-RDM hierarchy, exchange, row-gauge
-rho0/P0, automatic physics defaults, or Cr/Cr2 claims.
+`HP-RG-OCC-FIRST-INJECT-TEST-01`.
+
+The helper makes identified `Y_occ` mandatory before optional capture
+selection, distinguishes pre-inclusion capture from post-inclusion recovery,
+rejects malformed complement/capture geometry, and does not turn rejected weak
+directions into MWG residual channels. It is not wired into staged
+protected-original geometry; composition over `M = [G, R_compact]` belongs to
+`HP-RG-PROTECT-ADDREF-*`.
 
 `HP-RG-PROTECT-INJECT-FN-01` approves only an internal geometry prototype for
 the staged protected-original construction in `residual_basis.jl`. It may

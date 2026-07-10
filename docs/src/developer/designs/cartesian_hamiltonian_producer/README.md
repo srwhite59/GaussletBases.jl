@@ -164,6 +164,9 @@ ID or subsystem.
 - [Residual Gaussian injection hybrid memo](residual_gaussian_injection_hybrid.md)
   for the optional near-gausslet injection proposal, protected-original
   compact-main design, and the narrow staged geometry source prototype
+- [Occupied-first injection geometry](occupied_first_injection.md)
+  for mandatory occupied protection, physical capture validation, optional
+  supplement selection, and the current unwired-consumer boundary
 - [Protected additive atomic reference correction](protected_additive_reference_correction.md)
   for the internal occupied-union, additive packet `P0/J0/E0`, and native
   protected-localized screened-Hartree correction lane

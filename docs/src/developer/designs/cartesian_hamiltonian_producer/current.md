@@ -376,48 +376,15 @@ Approved Residual Gaussian robustness lane:
   not be converted into broad MWG RG channels. Do not turn on the existing
   direct `G`-injection path as-is for this design, and do not issue source
   work without a fresh implementation authority.
-- `HP-RG-OCC-FIRST-INJECT-AUDIT-01` approves only measurement/design audit
-  authority for occupied-first global injection on one-center atoms. Be/Ne
-  pure-GTO RHF occupied subspaces `Y_occ` are mandatory reference directions:
-  they must be added before ordinary RG/injection decisions, recovered at
-  roundoff, and never protected only by cutoff. The audit may inspect the full
-  supplement projection spectrum into
-  `M = span(G + mandatory Y_occ residual/protected directions)`, select
-  optional global injection directions by projection eigenvalue, and rerun
-  screened-Hartree endpoints if feasible. It does not approve source edits,
-  shell-local injection, fake-RDM hierarchy, EGOI expansion, artifacts,
-  solver/driver workflow, Cr/Cr2, exchange, row-gauge rho0/P0 shortcuts,
-  label-based occupied selection as the construction rule, or treating fitted
-  density Gaussian terms as protected orbitals.
 - `HP-RG-OCC-FIRST-INJECT-FN-01` and
-  `HP-RG-OCC-FIRST-INJECT-TEST-01` approve a narrow internal source-backed
-  occupied-first injection geometry/selection helper in
-  `src/cartesian_residual_gaussians/residual_basis.jl`. The helper consumes
-  packet/import-provenance HF occupied coefficients `Y_occ`, supplement metric
-  `S_AA`, mixed overlap/capture data, and the current represented span `M`;
-  it forces `Y_occ` into the mandatory retained/protected reference span,
-  diagonalizes the full supplement capture spectrum into `M`, and selects
-  optional injection directions only when `lambda >= cutoff`. The cutoff gates
-  optional injection only and must never be the only thing protecting
-  `Y_occ`. Pre-inclusion base capture is reported separately as
-  `svdvals(X_GA * Y_occ)` and is not a rejection criterion in this pass;
-  post-inclusion recovery must remain roundoff-accurate. The helper must reject
-  a materially non-positive complement metric `S_AA - X_GA' * X_GA` and
-  materially out-of-range capture eigenvalues, allowing only tolerance-sized
-  reporting clamps. The misleading post-inclusion
-  `weakest_occupied_capture` name is deleted without a compatibility alias.
-  Test authority covers a tiny synthetic contract gate in
-  `test/misc/runtests.jl` and a real Be/Ne `ns = 5` PQS mixed-overlap gate in
-  `test/nested/cartesian_occupied_first_injection_runtests.jl`, including
-  terminal due-diligence inspection; `ns = 7` is not required. Weak-capture
-  directions are reported/rejected, not silently
-  converted into MWG residual channels. This does not approve
-  screened-Hartree correction changes, EGOI, solver workflow, public
-  driver/API/defaults, artifacts, shell-local injection, fake-RDM hierarchy,
-  exchange, row-gauge rho0/P0, automatic physics defaults, or Cr/Cr2 claims.
-  This occupied-first helper alone does not approve the strict actual-packet
-  screened-Hartree anchor; the combined final-basis consumer is governed by
-  `HP-RG-PROTECT-ADDREF-*` below.
+  `HP-RG-OCC-FIRST-INJECT-TEST-01` implement the internal
+  [occupied-first injection geometry](occupied_first_injection.md). It makes
+  identified `Y_occ` mandatory, reports pre-inclusion base capture separately
+  from roundoff post-inclusion recovery, validates physical complement/capture
+  spectra, and rejects weak optional directions without creating MWG residual
+  channels. The helper is tested but not wired into the protected-localized
+  builder; composition over `M = [G, R_compact]` belongs to
+  `HP-RG-PROTECT-ADDREF-*`.
 - `HP-RG-PROTECT-ADDREF-FN-01` and
   `HP-RG-PROTECT-ADDREF-TEST-01` approve that first real internal consumer for
   homonuclear protected-localized molecules. It is explicit internal opt-in;
