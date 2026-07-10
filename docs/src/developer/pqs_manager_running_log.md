@@ -27599,3 +27599,43 @@ Carrying-cost result:
   deleted as an acceptance predicate and retained only in one nested summary.
 - Exact next step: CR2 may construct the strict high-accuracy additive member
   and run the already-approved same-basis correction-off/on measurement.
+
+## Cartesian Hamiltonian Producer Pass 358 - Screened-Hartree Contract Compression
+
+Commit(s):
+- this commit - compress screened-Hartree formalism, API, and historical
+  measurement authority into their canonical homes.
+
+Summary:
+- Made `screened_hartree_residual_density.md` the durable physics contract:
+  Galerkin `Vnuc`, determinant-defined `P0/q0`, density-fit reference cloud and
+  `E0`, potential-fit-only `J0` acceleration, and direct-interaction
+  `Delta_J0 + C` accounting.
+- Made `screened_hartree_correction_assembly.md` the implemented API contract
+  matching committed `ScreenedHartreeCorrection`, its core/packet/additive
+  entry points, diagnostics, anchor gates, and failure behavior.
+- Closed lifecycle drift. The H/Be/Be2, fitted-cloud, and potential-fit audits
+  are completed historical measurements. The original direct Ne lane is
+  historical and operationally superseded by the packet-driven fitted-cloud
+  path. Detailed evidence remains in Passes 317-331.
+
+Validation / evidence:
+- Compared lifecycle against Passes 317-339 and API wording against committed
+  source and the focused nested correction test. Focused ID/formula/path scans,
+  Documenter, GitHub docs workflow, and `git diff --check` are the acceptance
+  gates. No source or test behavior changes in this pass.
+
+Goal advancement / guardrail:
+- MT5: removes duplicated active lane specifications while preserving the
+  current internal correction facility. Documentation cleanup remains parallel
+  work; the active physics direction is still the controlled CR2 same-basis
+  screened-Hartree off/on measurement.
+- No public workflow, corrected artifact, solver, exchange, EGOI, interaction
+  transform, or Cr2 production authority is added.
+
+Carrying-cost result:
+- Deleted the full historical Ne/fitted-cloud/potential-fit specifications from
+  active status and registry surfaces; retained one compact evidence ledger.
+- Documentation delta including this record is `+287/-733`, net `-446` lines.
+- Exact remaining boundary: downstream workflow and endpoint validation, not
+  correction algebra or packet representation.

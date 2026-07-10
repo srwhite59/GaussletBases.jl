@@ -1,13 +1,14 @@
 # Screened Hartree Correction Assembly
 
-Status: approved narrow internal source/design authority under
+Status: implemented internal facility under
 `HP-PQS-SCREEN-HARTREE-CORR-FN-01` and
 `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`.
 
-This lane promotes the screened-Hartree residual-density machinery from
-ignored probes to a source-backed internal helper that consumers such as CR2
-can call naturally. It does not approve public driver support, production
-artifacts, solver workflow, or endpoint claims.
+This page is the canonical contract for the source-backed in-memory correction
+API. The durable physics identity is owned by
+[Screened Hartree residual-density formalism](screened_hartree_residual_density.md).
+This facility does not provide public driver support, production artifacts,
+solver workflow, or endpoint claims.
 
 ## Purpose
 
@@ -26,18 +27,22 @@ reference Hartree field.
 identity, determinant/density/potential roles, convergence, and validation.
 This page owns only correction assembly from valid represented packet data.
 
-The returned object should contain:
+The returned object contains:
 
 ```text
 ScreenedHartreeCorrection:
-    delta_one_body      # Delta_J0
-    energy_constant     # C
+    delta_one_body       # Delta_J0
+    energy_constant      # C
     q0
-    P0 diagnostics
-    J0_G diagnostics
-    E0_G diagnostics
-    anchor checks
-    packet/provenance summary
+    P0
+    J0_G
+    f_app_direct         # Diagonal(V_IDA * q0)
+    Vq0
+    E0_G
+    q0Vq0
+    energy_accounting
+    diagnostics
+    packet_summary
 ```
 
 `Delta_J0 + C` is part of the screened direct electron-electron interaction in
@@ -45,41 +50,52 @@ energy accounting, even though it is represented operationally as a one-body
 matrix plus scalar constant. It is not a change to the physical
 kinetic-plus-nuclear Hamiltonian and not an arbitrary energy offset.
 
-## Inputs
+## Implemented API And Inputs
 
-Approved inputs:
+The core entry point is:
 
-- final orthonormal working basis/operators;
-- `V_IDA` in the same final basis and site/order convention;
-- one or more `AtomicHFReferencePacket` objects placed on molecule centers;
-- imported/protected occupied reference coefficients defining `P0` and `q0`.
+```text
+build_screened_hartree_correction(
+    V_IDA, J0_G, E0_G, represented_coefficients, occupations)
+```
 
-For molecules, each one-center packet placement must be explicit. The atom,
-charge, electron count, center, basis, `lmax`, and fill-shell/spin convention
-come from packet/provenance data and caller placement facts, not element-table
-inference.
+All matrices and represented coefficients must use one orthonormal final-basis
+dimension and ordering. `V_IDA` is the direct IDA/MWG matrix in that basis;
+`J0_G` is the Galerkin reference Hartree field in the same basis; and `E0_G`
+is the no-half reference self-energy for the same density.
 
-The occupied packet orbitals define `P0/q0`. Fitted density and
-fitted-potential terms only evaluate `J0_G` and `E0_G`; they are not
-supplement orbitals and not protected basis content.
+`build_atomic_packet_screened_hartree_correction(...)` is the one-packet
+wrapper. It validates a converged packet, evaluates `J0_G` from either its
+fitted potential or density fit, takes `E0_G` from the packet density fit, and
+delegates to the core entry point. Packet placement is explicit when the
+reference is not at its saved center.
+
+`build_additive_screened_hartree_correction(...)` accepts separate represented
+coefficient and occupation blocks, sums their density matrices, and preserves
+per-block validation. It does not globally orthogonalize physically distinct
+packet blocks. Molecular construction of placed fields, cross self-energy,
+and native protected-localized coefficients belongs to
+[Protected additive atomic reference correction](protected_additive_reference_correction.md).
+
+The occupied packet orbitals define `P0/q0`. The density fit defines the
+compressed reference cloud and `E0_G`; fitted-potential terms are only a fast
+`J0_G` evaluator. Neither fit is supplement or protected basis content.
 
 Every consumed packet's in-memory or readback RHF convergence flag must be
-explicitly true. Reject an unconverged packet before using its occupied
-coefficients, density fit, or potential fit. Validation metadata is not
-permission to continue with an unconverged reference.
+explicitly true. An unconverged packet is rejected before its occupied
+coefficients or fitted fields are used, including in diagnostic-only mode.
 
 ## Operation
 
-Build `q0` from the represented reference determinant:
+The core builds `q0` from the represented reference determinant:
 
 ```text
 q0 = diag(P0)
 ```
 
-Build `J0_G` and `E0_G` from the same packet density. Use validated fitted
-potential terms for fast `J0_G` where available and where their packet
-diagnostics pass. Fall back to the exact density-fit Galerkin path only where
-the source pass explicitly supports it and reports the cost.
+`J0_G`, `E0_G`, and `q0` must refer to the same reference density. The packet
+wrapper may use validated fitted-potential terms for fast `J0_G`; the density
+fit remains the reference cloud and self-energy authority.
 
 Return:
 
@@ -115,7 +131,7 @@ corrected artifact. The detailed source and Be2 gates are in
 
 ## Source Surface
 
-Approved source surface:
+Implemented source surface:
 
 - `src/cartesian_reference_density/CartesianReferenceDensity.jl`;
 - `src/cartesian_reference_density/screened_hartree_correction.jl`;
@@ -130,15 +146,16 @@ but they do not own this correction object.
 
 ## Diagnostics
 
-Required diagnostics:
+Implemented diagnostics include:
 
-- packet identity/provenance and placement facts;
-- explicit packet RHF convergence status;
-- electron count and `q0` charge by packet and total;
-- `P0` trace and final-basis representation/capture loss;
-- `J0_G` finite/symmetry checks;
-- `E0_G` diagnostics and packet self-energy consistency;
-- `Delta_J0` finite/symmetry checks;
+- correction source and bounded packet identity/provenance summary;
+- represented dimension, orbital count, `P0` trace/trace loss, occupation sum,
+  and occupied orthogonality error;
+- total `q0` charge and its minimum/maximum entries;
+- input and resulting symmetry/finite checks for `V_IDA`, `J0_G`, and
+  `Delta_J0`;
+- `E0_G`, `q0' * V_IDA * q0`, current direct energy, correction expectation,
+  and corrected direct energy;
 - direct anchor identity:
 
   ```text
@@ -151,17 +168,23 @@ Required diagnostics:
   F_current_direct[P0] + Delta_J0 == J0_G
   ```
 
-- potential-fit-vs-density-fit agreement when both are evaluated;
-- row/sector/locality summaries sufficient for due-diligence review.
+- optional fitted-potential-versus-density-fit matrix relative-Frobenius and
+  maximum-entry differences when both are evaluated;
+- for additive references, block count/traces and maximum inter-block occupied
+  overlap.
+
+Packet placement, protected-basis capture, row/sector locality, and terminal
+due diligence belong to the packet embedding and protected additive-reference
+consumer, not this correction object.
 
 ## Tests
 
-Approved test surface:
+Implemented test surface:
 
 - `test/nested/cartesian_screened_hartree_correction_runtests.jl`
 
-Tests are correctness-only. They should use small Be/Ne-style packets and
-bounded constructions.
+Tests are correctness-only and use small Be/Ne-style packets and bounded
+constructions.
 
 Required test coverage:
 
@@ -172,10 +195,23 @@ Required test coverage:
 - direct energy/derivative anchor identities;
 - potential-fit agreement with the exact density-fit `J0_G` path on a small
   case;
+- additive blocks remain separate while their density matrices sum;
 - rejection or clear failure on mismatched packet/working-basis facts.
 
 No Be2/Cr2 energy assertions, SCF convergence gates, solver tests, or
 production endpoint claims are approved.
+
+## Failure Behavior
+
+Dimension mismatch, nonfinite inputs, negative occupations, and unconverged
+packet consumption are hard failures. Normal construction also rejects input
+asymmetry, reference trace/orthogonality loss, negative `q0`, and failed direct
+energy or derivative anchors at the configured tolerances.
+
+`diagnostic_only = true` may retain a numerically imperfect represented
+reference for explicit diagnosis. It does not permit dimension/nonfinite
+errors or unconverged packet consumption, and it does not make the result
+valid for endpoint interpretation.
 
 ## Explicit Exclusions
 

@@ -131,50 +131,20 @@ Implemented base path:
   support remaining, shellification emits the bond-axis leftovers as planned
   `:angular_z_extension_slab` stack regions. Lowering those slabs remains
   deferred to `HP-COMP-THINSLAB-*`.
-- `HP-PQS-SCREEN-HARTREE-AUDIT-01` approves only measurement of the screened
-  Hartree residual-density formalism in
-  `screened_hartree_residual_density.md`. It starts from
-  `rho_hat = rho0 + delta_rho_hat`, keeps `Vnuc_G` exact/Galerkin, protects a
-  pure-GTO reference determinant exactly in the final basis, and applies
-  IDA/MWG only to `1/2 * (q - q0)' * V_IDA * (q - q0)`. It may use ignored
-  probes on H/Be/Be2 and optional Cr atom after small cases pass. It keeps the
-  nuclear attraction Galerkin and does not approve source edits, artifacts,
-  solver workflow, Cr2, production corrected Hamiltonians, exchange,
-  row-gauge rho0 shortcuts, discarding reference GTO directions, or EGOI
-  changes.
-- `HP-PQS-SCREEN-HARTREE-NE-AUDIT-01` approves only a narrow Ne endpoint
-  measurement under the same screened Hartree residual-density formalism. The
-  fixture is Ne closed-shell RHF, cc-pV5Z, `lmax = 1`, all-electron screening
-  by a protected pure-GTO `1s^2 2s^2 2p^6` determinant, and standard-scaled
-  PQS points `ns = 5` (`core_spacing = 0.030`) and `ns = 7`
-  (`core_spacing = 0.020`) if feasible. It compares against
-  `E_ref = -128.547098109 Ha` and does not approve source edits, artifacts,
-  solver/driver integration, Cr/Cr2, exchange correction, EGOI, rho0/P0
-  revival, mapping-default changes, or broad first-row endpoint claims.
-- `HP-PQS-SCREEN-HARTREE-NE-FITCLOUD-AUDIT-01` approves only a measurement
-  variant of the Ne endpoint where the all-electron Ne reference density is fit
-  to a compact atom-centered spherical Gaussian density cloud. The exact
-  determinant-density path is an oracle/validation path; the fitted cloud is
-  the practical endpoint path. The fit must be a near-exact compression of the
-  pure-GTO reference density, targeting about `1e-8` relative error in
-  Coulomb-relevant diagnostics unless limited by singular math. Endpoint
-  interpretation is forbidden if fit error is comparable to the observed
-  screened-Hartree shift. This does not approve source edits, artifacts, solver
-  or driver integration, Cr/Cr2, exchange correction, EGOI, row-gauge rho0/P0,
-  unreported fits, discarding protected cloud directions, or broad first-row
-  claims.
-- `HP-PQS-SCREEN-HARTREE-POTFIT-AUDIT-01` approves only a
-  measurement/prototype fitted-potential amendment for faster screened-Hartree
-  `J0_G` construction. The saved HF determinant remains the definition of
-  `P0/q0`, and the near-exact density fit remains the reference cloud and
-  self-energy object. The optional ignored-packet `potential_fit/*` object is
-  only a radial Gaussian representation of that cloud's Hartree potential, with
-  the far `Q/r` tail protected by the repo Coulomb Gaussian expansion. It may
-  be consumed for Be/Ne and Be2 screened-Hartree probes after packet gates pass,
-  but it does not approve source edits, production artifact schema/readers,
-  solver/public workflow, determinant-convention changes, treating
-  potential-fit Gaussians as protected orbitals, row-gauge rho0/P0, EGOI,
-  exchange, or Cr/Cr2 claims.
+- `HP-PQS-SCREEN-HARTREE-CORR-FN-01` and
+  `HP-PQS-SCREEN-HARTREE-CORR-TEST-01` implement the internal in-memory
+  correction described by
+  [the durable residual-density formalism](screened_hartree_residual_density.md)
+  and [the assembly contract](screened_hartree_correction_assembly.md).
+  `Vnuc_G` remains Galerkin; represented occupied determinants define
+  `P0/q0`; the density fit defines the compressed cloud and `E0_G`; and the
+  potential fit is only a fast `J0_G` evaluator. The H/Be/Be2, Ne
+  fitted-cloud, and potential-fit audit IDs are completed historical evidence;
+  the original direct Ne lane is historical and operationally superseded by
+  the packet path. The facility remains internal and in memory. Its current
+  boundary is downstream workflow and endpoint validation: no public default,
+  corrected artifact, solver integration, exchange, interaction transform,
+  `C' V C`, or Cr2 production claim is implemented.
 - `HP-PQS-ATOMREF-PACKET-FN-01` and
   `HP-PQS-ATOMREF-PACKET-TEST-01` implement reusable one-center atomic HF
   reference packets under
@@ -204,21 +174,6 @@ Implemented base path:
   transforms, `C' V C`, `Vee`/source transforms, solver workflow,
   screened-Hartree/EGOI changes, residual/injection policy changes, PySCF
   dependency in repo tests, or Cr2 production claims.
-- `HP-PQS-SCREEN-HARTREE-CORR-FN-01` and
-  `HP-PQS-SCREEN-HARTREE-CORR-TEST-01` approve only a narrow internal
-  source-backed screened-Hartree correction assembly helper. It consumes a
-  final orthonormal working basis/operators, same-basis `V_IDA`, and explicit
-  placed `AtomicHFReferencePacket` reference determinants to return
-  `Delta_J0 = J0_G - Diagonal(V_IDA * q0)` and
-  `C = 0.5 * q0' * V_IDA * q0 - 0.5 * E0_G`, with anchor checks and packet
-  diagnostics. Packet-driven assembly must reject an unconverged atomic HF
-  reference packet before consuming its determinant or fitted fields.
-  `Delta_J0 + C` belongs to screened direct electron-electron
-  accounting even though it is represented as one-body plus scalar. This does
-  not approve public driver defaults, production artifact schema/readers,
-  solver workflow, Cr2 claims, exchange, EGOI, rho0 row-gauge shortcuts,
-  fitted terms as protected orbitals, Hamiltonian/source transforms, `Vee`
-  transforms, or `C' V C` interaction rotation.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the

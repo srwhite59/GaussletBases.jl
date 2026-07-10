@@ -794,16 +794,19 @@ must not depend on PySCF. This does not approve Hamiltonian or `Vee` transforms,
 `C' V C`, generalized final-basis overlap workflows, solver workflow,
 screened-Hartree/EGOI changes, or Cr2 production claims.
 `HP-PQS-SCREEN-HARTREE-CORR-FN-01` and
-`HP-PQS-SCREEN-HARTREE-CORR-TEST-01` approve only the internal in-memory
-screened direct-Hartree correction in
+`HP-PQS-SCREEN-HARTREE-CORR-TEST-01` implement only the internal in-memory
+screened direct-Hartree correction specified by
+`docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartree_correction_assembly.md`
+and owned by
 `src/cartesian_reference_density/screened_hartree_correction.jl`, its module
 wiring, and small correctness tests. The helper returns
 `Delta_J0 = J0_G - Diagonal(V_IDA * q0)` and
-`C = 0.5*q0'V_IDA*q0 - 0.5*E0_G` from represented, converged atomic packet
-determinants and validated same-packet density/potential fields. It must reject
-unconverged packets before consumption and validate the energy/field anchors.
-This does not approve public workflow, artifacts, solver integration, exchange,
-EGOI, source/interaction transforms, `C' V C`, or Cr2 production claims.
+`C = 0.5*q0'V_IDA*q0 - 0.5*E0_G` from represented, converged determinants and
+same-basis fields. `Vnuc` remains Galerkin; the density fit owns `E0_G`; the
+potential fit only evaluates `J0_G`; and `Delta_J0 + C` is direct
+electron-electron accounting. Reject unconverged packets and failed anchors.
+No public workflow, corrected artifact, solver integration, exchange, EGOI,
+source/interaction transform, `C' V C`, or Cr2 production claim is approved.
 `HP-R1-WIRE-01` approves
 only the report-free shared base constructor seam and the approved callers.
 `HP-R1-ART-01` approves only the fixed `producer_provenance/` schema in the

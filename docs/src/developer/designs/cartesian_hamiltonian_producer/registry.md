@@ -2081,295 +2081,91 @@ This is Slice C1 only: it produces final-basis `electron_electron_ida`. It does
 not authorize Hamiltonian construction, route wiring, artifacts, or a pair
 payload/cache.
 
-## Approved Reference-Density Measurements And Internal Facilities
+## Reference-Density Measurements And Internal Facilities
 
-### HP-PQS-SCREEN-HARTREE-AUDIT-01 — protected-GTO screened Hartree residual-density audit
+### HP-PQS-SCREEN-HARTREE-AUDIT-01 - protected-GTO screened Hartree residual-density audit
 
-Status: approved measurement-only authority. This is not source authority.
+Status: completed historical H/Be/Be2 measurement; not active source
+authority.
 
-Purpose: audit the protected-GTO screened Hartree residual-density formalism
-recorded in `screened_hartree_residual_density.md`.
+Owner: Cartesian Hamiltonian producer screened-Hartree formalism.
 
-Core formalism:
+Canonical contract:
 
-```text
-rho_hat = rho0 + delta_rho_hat
-```
+- [Screened Hartree residual-density formalism](screened_hartree_residual_density.md)
 
-Approximate only the residual direct Coulomb term with IDA/MWG:
+Committed source/test surfaces: none. The completed work used ignored
+measurement probes; evidence is retained in manager Passes 317-319.
 
-```text
-E_screen[P] =
-    Tr(P * (T + Vnuc_G + J0_G))
-  + 1/2 * (q(P) - q0)' * V_IDA * (q(P) - q0)
-  - 1/2 * E0_G
-```
+Dependencies: exact/Galerkin nuclear attraction, represented occupied
+determinants, Galerkin reference Hartree fields, and same-basis IDA/MWG.
 
-Equivalently, relative to current direct IDA Hartree:
+Exclusions: source or workflow authority, artifacts, solver integration,
+exchange, EGOI, row-gauge substitutions, and Cr2 production claims.
 
-```text
-Delta_J0 = J0_G - Diagonal(V_IDA * q0)
-C = 1/2 * q0' * V_IDA * q0 - 1/2 * E0_G
-```
+### HP-PQS-SCREEN-HARTREE-NE-AUDIT-01 - Ne screened Hartree endpoint measurement
 
-The point nucleus remains Galerkin. IDA/MWG is used only for residual density
-fluctuations.
+Status: historical and operationally superseded by the fitted-cloud,
+packet-driven practical path. The direct occupied-pair construction remains an
+oracle, not a normal workflow.
 
-Approved measurement surfaces:
+Owner: Cartesian Hamiltonian producer screened-Hartree formalism.
 
-- ignored `tmp/work/*.jl` probes only;
-- durable `/Users/srw/dmrgtmp` outputs;
-- H, Be, and Be2 first;
-- optional Cr atom only after small cases pass.
+Canonical contract:
 
-Allowed measurement behavior:
+- [Screened Hartree residual-density formalism](screened_hartree_residual_density.md)
 
-- build a pure-GTO closed-shell atomic RHF reference density once;
-- explicitly protect/reference occupied GTO directions so the determinant is
-  exactly represented in the final basis;
-- construct `P0_final` and `q0 = diag(P0_final)`;
-- construct `J0_G` and `E0_G` from the same `rho0`;
-- form `Delta_J0` and `C`;
-- validate the direct Hartree energy/derivative identity;
-- report low-mode, locality, spectra, and orbital-expectation diagnostics.
+Committed source/test surfaces: none. Evidence and the superseding endpoint
+record are retained in manager Passes 320 and 326.
 
-Forbidden:
+Dependencies: the completed small-system audit and the Ne closed-shell
+pure-GTO reference determinant.
 
-- tracked source edits;
-- artifacts, schema, or public workflow;
-- solver workflow;
-- Cr2;
-- production corrected Hamiltonian;
-- exchange correction;
-- row-gauge rho0 shortcuts;
-- discarding reference GTO directions;
-- EGOI changes.
+Exclusions: active measurement authority, source/workflow changes, broad
+first-row claims, exchange, EGOI, and Cr/Cr2 production claims.
 
-Decision rule: continue only if `P0` is represented exactly or at roundoff,
-`J0_G`, `E0_G`, and `q0` refer to the same `rho0`, `Delta_J0` is
-core-local/moderate, and H/Be/Be2 low modes remain benign.
+### HP-PQS-SCREEN-HARTREE-NE-FITCLOUD-AUDIT-01 - Ne fitted-cloud measurement
 
-Stop if the protected reference determinant cannot be represented exactly,
-`J0_G`, `E0_G`, and `q0` come from mismatched densities, or the correction
-creates broad or valence-destabilizing modes.
+Status: completed historical measurement; not active source authority.
 
-### HP-PQS-SCREEN-HARTREE-NE-AUDIT-01 — Ne screened Hartree endpoint measurement
+Owner: Cartesian Hamiltonian producer screened-Hartree formalism.
 
-Status: approved measurement-only authority. This is not source authority.
+Canonical contract:
 
-Purpose: run one narrow Ne atom endpoint measurement under the screened
-Hartree residual-density formalism.
+- [Screened Hartree residual-density formalism](screened_hartree_residual_density.md)
 
-Scope:
+Committed source/test surfaces: none. Evidence is retained in manager
+Passes 321-326.
 
-- ignored `tmp/work/*.jl` probe only;
-- durable `/Users/srw/dmrgtmp` output;
-- Ne atom only;
-- closed-shell RHF;
-- cc-pV5Z supplement;
-- `lmax = 1`;
-- screen by all electrons: protect the pure-GTO all-electron Ne reference
-  determinant `1s^2 2s^2 2p^6` in the final basis.
+Dependencies: the represented Ne occupied determinant and the
+determinant-density oracle.
 
-Required formalism:
+Exclusions: a tunable model cloud, fit Gaussians as protected orbitals, public
+workflow, artifacts, solver integration, exchange, EGOI, and Cr/Cr2 claims.
 
-- keep `Vnuc_G` Galerkin;
-- construct `J0_G`, `E0_G`, and `q0` from the protected GTO determinant;
-- use IDA/MWG only on `q - q0`;
-- compare against radial-gausslet reference
-  `E_ref(Ne) = -128.547098109 Ha`.
+### HP-PQS-SCREEN-HARTREE-POTFIT-AUDIT-01 - fitted-potential measurement
 
-Required standard-scaled PQS points:
+Status: completed historical measurement; its durable packet semantics are now
+implemented under the atomic reference packet contract.
 
-```text
-core_spacing = 1.2 / (Z * (ns - 1)), Z = 10
-ns = 5: core_spacing = 0.030
-ns = 7: core_spacing = 0.020
-```
+Owner: historical screened-Hartree measurement; durable fit semantics are
+owned by the `CartesianReferenceDensity` atomic packet subsystem.
 
-Run at least `ns = 5`; run `ns = 7` if feasible.
+Canonical contracts:
 
-Required reporting:
+- [Screened Hartree residual-density formalism](screened_hartree_residual_density.md)
+- [Atomic HF reference packets](atomic_hf_reference_packets.md)
 
-- dimensions, residual counts, and candidate counts;
-- protected determinant representation loss;
-- `Tr(P0)`, `q0` charge, and per-orbital projection loss;
-- anchor energy and derivative errors;
-- uncorrected RHF energy/error;
-- screened-Hartree RHF energy/error;
-- screened minus uncorrected shift;
-- `Delta_J0` eigenvalue range, diagonal range, and low-mode
-  locality/sector makeup;
-- whether `lmax = 1` residual directions are actually retained.
+Committed source/test surfaces: none for this historical audit. Evidence is
+retained in manager Passes 327-329; packet source ownership begins with
+Passes 330-331.
 
-Forbidden:
+Dependencies: a determinant-defined reference, its validated density fit, and
+the density-fit Galerkin `J0_G` oracle.
 
-- tracked source edits;
-- artifacts or public workflow;
-- solver/driver integration;
-- Cr/Cr2;
-- exchange correction;
-- EGOI changes;
-- rho0/P0 revival;
-- mapping default or fitting-policy changes;
-- treating Ne as a broad first-row endpoint claim before this bounded
-  measurement is reviewed.
-
-### HP-PQS-SCREEN-HARTREE-NE-FITCLOUD-AUDIT-01 — Ne fitted-cloud screened Hartree endpoint measurement
-
-Status: approved measurement-only authority. This is not source authority.
-
-Purpose: allow the practical Ne screened-Hartree endpoint path using a
-near-exact compressed Gaussian fit to the pure-GTO all-electron reference
-density.
-
-Interpretation:
-
-- the exact determinant-density path is an oracle/validation path;
-- the fitted compact Gaussian cloud is the practical endpoint path;
-- the fitted cloud is not a tunable physical model and not a rough screening
-  approximation;
-- the fit exists for computational compression, not for changing the physics.
-
-Scope:
-
-- ignored `tmp/work/*.jl` probe only;
-- durable `/Users/srw/dmrgtmp` output;
-- Ne atom only;
-- closed-shell RHF endpoint;
-- cc-pV5Z supplement;
-- `lmax = 1`;
-- standard-scaled `ns = 5` and `ns = 7` if feasible;
-- fit the all-electron Ne reference density, total charge `10e`, to a compact
-  atom-centered sum of spherical Gaussian density terms;
-- protect/represent exactly the GTO/cloud generators used by the fit so the
-  fitted density is exactly reproducible in the gausslet+supplement working
-  space;
-- build `J0_G`, `E0_G`, and `q0` from the fitted cloud, not from all occupied
-  determinant pair densities;
-- compare endpoint RHF energies to `E_ref(Ne) = -128.547098109 Ha`.
-
-Fit standard:
-
-- increase the number/flexibility of Gaussian density terms until the fit
-  reaches about `1e-8` relative error in Coulomb-relevant diagnostics, or until
-  the fit is clearly singular/ill-conditioned;
-- endpoint energies may be interpreted only if fit error is well below the
-  observed screened-Hartree energy shift and below the target mHa-scale endpoint
-  discussion.
-
-Required fit diagnostics:
-
-- number of Gaussian density terms;
-- fit rank and condition/singular spectrum;
-- max/min Gaussian exponents or widths;
-- total fitted charge error;
-- radial/enclosed-charge error if available;
-- density residual norm or sampled radial residual;
-- Coulomb self-energy absolute/relative error versus the exact
-  determinant-density oracle where feasible, at least on `ns = 5` or a small
-  oracle check;
-- `J0_G` matrix/action error versus the exact determinant-density oracle on the
-  smallest feasible point;
-- representation/protection loss of every cloud generator;
-- whether the stop was accuracy-satisfied or singular-math-limited.
-
-Required endpoint diagnostics:
-
-- uncorrected RHF energy/error;
-- screened-fitted-cloud RHF energy/error;
-- screened minus uncorrected shift;
-- anchor energy/derivative errors for the fitted cloud;
-- `Delta_J0` eigenvalue and diagonal range;
-- low-mode locality/sector makeup;
-- retained residual counts, including p-channel confirmation.
-
-Forbidden:
-
-- tracked source edits;
-- artifacts or public workflow;
-- solver/driver integration;
-- Cr/Cr2;
-- exchange correction;
-- EGOI changes;
-- rho0/P0 row-gauge shortcuts;
-- unreported density fits;
-- discarding any protected cloud direction;
-- broad first-row claims.
-
-Decision rule: if the fitted cloud differs materially from the exact
-determinant density, report the difference as fit error before interpreting
-energy shifts.
-
-### HP-PQS-SCREEN-HARTREE-POTFIT-AUDIT-01 — fitted-potential screened Hartree measurement amendment
-
-Status: approved measurement/prototype authority. This is not source authority.
-
-Purpose: speed up Galerkin `J0_G` construction for screened-Hartree endpoint
-probes without changing the physics object. The saved HF determinant remains
-the definition of `P0` and `q0`; the near-exact density fit remains the
-reference cloud and self-energy object. The fitted-potential object is only a
-fast radial Gaussian representation of that cloud's Hartree potential.
-
-Scope:
-
-- ignored `tmp/work/*.jl` probes only;
-- durable `/Users/srw/dmrgtmp` outputs;
-- atomic one-center reference packets first;
-- Be, Ne, and Be2 consumption allowed after packet gates pass;
-- optional `potential_fit/*` in the ignored atomic HF reference density-fit
-  packet shape;
-- use only as a faster `J0_G` builder in screened-Hartree probes.
-
-Construction convention:
-
-1. Start from the saved atomic HF determinant and its near-exact spherical
-   Gaussian density fit.
-2. Evaluate the analytic radial Hartree potential of that density fit:
-
-   ```text
-   J0(r) = sum_i w_i * erf(sqrt(beta_i) * r) / r
-   ```
-
-   with the `r = 0` limit handled analytically.
-3. Use the repo Coulomb Gaussian expansion scaled by total cloud charge as the
-   fixed long-range tail scaffold.
-4. Fit only the short/intermediate residual, or add/refit local terms, so the
-   far `Q/r` tail is protected.
-5. Fit on a radial grid out to a large radius, for example `100` bohr.
-6. Drive the potential-fit error to about `1e-8` in Coulomb-relevant
-   diagnostics unless the linear algebra becomes singular or ill-conditioned.
-
-Required packet/probe diagnostics:
-
-- charge and density-fit provenance;
-- Coulomb expansion or tail scaffold identity/fingerprint;
-- potential-fit term count, exponents, coefficients, and signed/positive
-  status;
-- radial absolute and relative errors, including near-core and tail bins;
-- `r * J_fit(r) -> Q` tail check;
-- self-energy or anchor mismatch;
-- matrix-level `J0_G` comparison against the existing density-fit exact
-  Galerkin path on at least one small case;
-- endpoint sensitivity only if the fit error is far below the
-  screened-Hartree shift.
-
-Forbidden:
-
-- tracked source edits;
-- production artifact schema or reader changes;
-- solver or public workflow;
-- changes to the saved HF determinant convention;
-- treating potential-fit Gaussians as supplement or protected orbitals;
-- rho0/P0 row-gauge shortcuts;
-- EGOI or exchange changes;
-- Cr/Cr2 production claims.
-
-Decision rule: if the fitted potential cannot make matrix/anchor errors
-negligible compared with endpoint shifts, stop and report fit limitations. If
-it passes, it may be used as the fast `J0_G` builder in the next Be2 or Ne
-screened-Hartree measurement, while the density fit remains the reference
-cloud.
+Exclusions: fitted potential terms as a density or protected orbitals, source
+authority from this audit ID, public workflow, corrected artifacts, solver
+integration, exchange, EGOI, and Cr/Cr2 production claims.
 
 ### HP-PQS-ATOMREF-PACKET-FN-01 / HP-PQS-ATOMREF-PACKET-TEST-01 — reusable atomic HF reference packets
 
@@ -2587,114 +2383,49 @@ If correct import requires Hamiltonian transformation, interaction rotation,
 generalized final-basis metric logic, or PySCF-dependent repo tests, stop and
 request a new design amendment.
 
-### HP-PQS-SCREEN-HARTREE-CORR-FN-01 / HP-PQS-SCREEN-HARTREE-CORR-TEST-01 — internal screened-Hartree correction assembly
+### HP-PQS-SCREEN-HARTREE-CORR-FN-01 / HP-PQS-SCREEN-HARTREE-CORR-TEST-01 - internal screened-Hartree correction assembly
 
-Status: approved narrow internal source/design authority. This is not public
-driver, artifact, or solver workflow authority.
+Status: implemented internal facility.
 
-Purpose: promote the screened-Hartree residual-density machinery from ignored
-probes to a source-backed internal facility usable by consumers such as CR2.
-The facility assembles the screened direct-Hartree correction object:
+Owner and canonical contract:
 
-```text
-ScreenedHartreeCorrection:
-    delta_one_body      # Delta_J0
-    energy_constant     # C
-    q0
-    P0 diagnostics
-    J0_G diagnostics
-    E0_G diagnostics
-    anchor checks
-    packet/provenance summary
-```
+- `CartesianReferenceDensity`;
+- [Screened Hartree correction assembly](screened_hartree_correction_assembly.md).
 
-Energy accounting: `Delta_J0 + C` belongs to the screened direct
-electron-electron interaction, even though it is represented operationally as a
-one-body matrix plus scalar constant. It is not a change to the physical
-kinetic-plus-nuclear Hamiltonian and not an arbitrary energy offset.
-
-Approved inputs:
-
-- final orthonormal working basis/operators;
-- `V_IDA` in the same final basis and site/order convention;
-- one or more `AtomicHFReferencePacket` objects placed on molecule centers;
-- imported/protected occupied reference coefficients defining `P0` and `q0`.
-
-Required operation:
-
-- reject every atomic reference packet whose RHF convergence flag is not
-  explicitly true, before consuming occupied coefficients, density-fit data,
-  or potential-fit data;
-- build `q0 = diag(P0)` from the represented reference determinant;
-- build `J0_G` and `E0_G` from the same packet density;
-- use validated fitted-potential terms for fast `J0_G` where available;
-- return
-
-  ```text
-  Delta_J0 = J0_G - Diagonal(V_IDA * q0)
-  C        = 0.5 * q0' * V_IDA * q0 - 0.5 * E0_G
-  ```
-
-- report anchor/derivative checks and projection/capture diagnostics;
-- keep the correction in memory unless a later artifact authority is approved.
-
-Approved source surface:
+Implemented source surfaces:
 
 - `src/cartesian_reference_density/CartesianReferenceDensity.jl`;
 - `src/cartesian_reference_density/screened_hartree_correction.jl`;
-- `src/GaussletBases.jl` only for include/qualified access wiring;
-- optional narrow use of
-  `src/cartesian_reference_density/atomic_hf_reference_packets.jl` for packet
-  readback/validation helpers.
+- `src/cartesian_reference_density/atomic_hf_reference_packets.jl` for narrow
+  packet validation and field evaluation;
+- `src/GaussletBases.jl` for module wiring.
 
-Approved test surface:
+Implemented test surface:
 
-- `test/nested/cartesian_screened_hartree_correction_runtests.jl`
+- `test/nested/cartesian_screened_hartree_correction_runtests.jl`.
 
-Required diagnostics and tests:
+Dependencies:
 
-- packet identity/provenance and placement facts;
-- explicit packet RHF convergence status and rejection of an unconverged
-  packet;
-- electron count and `q0` charge by packet and total;
-- `P0` trace and final-basis representation/capture loss;
-- `J0_G`, `Delta_J0`, and `E0_G` finite/symmetry/consistency checks;
-- direct energy anchor:
+- [Screened Hartree residual-density formalism](screened_hartree_residual_density.md);
+- [Atomic HF reference packets](atomic_hf_reference_packets.md);
+- [Protected additive atomic reference correction](protected_additive_reference_correction.md)
+  for molecular protected-localized construction.
 
-  ```text
-  E_current_direct[P0] + Tr(P0 * Delta_J0) + C == E_exact_direct[P0]
-  ```
+Permission summary: consume represented, converged reference determinants and
+same-basis `V_IDA`, `J0_G`, and `E0_G`; validate representation, symmetry,
+and direct energy/field anchors; and return
 
-- derivative/field anchor:
+```text
+Delta_J0 = J0_G - Diagonal(V_IDA * q0)
+C = 0.5 * q0' * V_IDA * q0 - 0.5 * E0_G
+```
 
-  ```text
-  F_current_direct[P0] + Delta_J0 == J0_G
-  ```
+as an in-memory `ScreenedHartreeCorrection`. These terms belong to direct
+electron-electron/Hartree accounting, not physical kinetic/nuclear `H1`.
 
-- potential-fit agreement with exact density-fit `J0_G` on a small case;
-- rejection or clear failure on mismatched packet/working-basis facts;
-- no Be2/Cr2 energy assertions, SCF convergence gates, solver tests, or
-  production endpoint claims.
-
-Explicit exclusions:
-
-- public driver defaults or polished public workflow;
-- production artifact schema, writer, or reader changes;
-- solver workflow;
-- Cr2 production claims;
-- exchange correction;
-- EGOI changes;
-- rho0/P0 row-gauge shortcuts;
-- fitted density or fitted-potential terms as protected orbitals;
-- Hamiltonian source transforms;
-- `Vee` source transforms;
-- `C' V C` interaction rotation.
-
-Decision rule: if the correction can be assembled from represented packet
-determinants, validated packet density/potential fields, and same-basis
-`V_IDA` with clean anchor checks, proceed. If it requires artifact schema,
-solver integration, source interaction transforms, exchange correction, or
-row-gauge substitutions, stop and request a new design amendment.
+Exclusions: public driver/default behavior, corrected artifacts, solver
+integration, exchange, EGOI, row-gauge substitutions, source or interaction
+transforms, `C' V C`, and Cr2 production claims.
 
 ## Approved Final Base Construction And Historical Handoff
 

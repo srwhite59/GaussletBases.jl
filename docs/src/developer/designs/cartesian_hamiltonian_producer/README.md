@@ -197,14 +197,14 @@ ID or subsystem.
 - [R3 unit-nuclear U_GG Gaussian sum](r3_unit_nuclear_ugg_gaussian_sum.md)
   for the narrow terminal final-basis unit-nuclear `U_GG` optimization lane
 - [Screened Hartree residual-density formalism](screened_hartree_residual_density.md)
-  for the measurement-only protected-GTO Hartree branch: keep `Vnuc_G`
-  Galerkin and use IDA/MWG only for residual density fluctuations `q - q0`
+  for the durable physics contract: keep `Vnuc_G` Galerkin and use IDA/MWG
+  only for residual density fluctuations `q - q0`
 - [Atomic HF reference packets](atomic_hf_reference_packets.md)
   for the canonical determinant, density-fit, potential-fit, identity, and
   validation contract of reusable one-center packet references
 - [Screened Hartree correction assembly](screened_hartree_correction_assembly.md)
-  for the internal source-backed `Delta_J0`/`C` correction object built from
-  atomic reference packets and same-basis `V_IDA`
+  for the implemented internal `Delta_J0`/`C` correction API built from
+  represented references and same-basis `V_IDA`
 - [External GTO orbital import](external_gto_orbital_import.md)
   for the representation-transfer facility that imports explicit external AO
   orbitals into an orthonormal final basis by `C_F = <F|G> C_G`
