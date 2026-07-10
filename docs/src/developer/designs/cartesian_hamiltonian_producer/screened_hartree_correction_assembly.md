@@ -104,7 +104,7 @@ Delta_J0 = J0_G - Diagonal(V_IDA * q0)
 C        = 0.5 * q0' * V_IDA * q0 - 0.5 * E0_G
 ```
 
-The helper must report anchor/derivative checks and projection/capture
+The helper must report anchor/derivative checks and represented-reference
 diagnostics. It must keep the correction in memory unless a later artifact
 authority is approved.
 
