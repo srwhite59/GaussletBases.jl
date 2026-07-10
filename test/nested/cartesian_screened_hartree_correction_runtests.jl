@@ -22,6 +22,14 @@ function _packet_with_occupations(packet, occupations)
         packet.validation, packet.provenance)
 end
 
+function _packet_with_overlap_fingerprint(packet, fingerprint)
+    return typeof(packet)(packet.spec, packet.supplement, packet.overlap,
+        String(fingerprint), packet.occupied_coefficients,
+        packet.occupations, packet.orbital_energies, packet.density_matrix,
+        packet.rhf_diagnostics, packet.density_fit, packet.potential_fit,
+        packet.validation, packet.provenance)
+end
+
 function _be_core_fixture()
     spec = CRD.be_core_reference_packet_spec(ns = 3, core_spacing = 0.15)
     packet = CRD.build_atomic_hf_reference_packet(spec)
@@ -114,6 +122,86 @@ end
         ones(Int, packet_count); owner_index = 1, center = fixture.spec.center,
         supplement_indices = 1:packet_count)
     @test sum(packet_embedding.occupations) == fixture.spec.electron_count
+    exact_mapping = packet_embedding.overlap_mapping
+    @test exact_mapping.stored_packet_fingerprint == fixture.packet.overlap_fingerprint
+    @test exact_mapping.recomputed_packet_fingerprint == fixture.packet.overlap_fingerprint
+    @test exact_mapping.mapped_block_fingerprint == fixture.packet.overlap_fingerprint
+    @test exact_mapping.mapped_fingerprint_exact_match
+    @test exact_mapping.max_abs_error == 0.0
+    @test exact_mapping.inf_error == 0.0
+    @test exact_mapping.overlap_atol == 1.0e-10
+    corrupt_fingerprint = _packet_with_overlap_fingerprint(fixture.packet, "corrupt")
+    @test_throws ArgumentError CRD.atomic_reference_packet_occupied_embedding(
+        corrupt_fingerprint, fixture.packet.supplement, fixture.packet.overlap,
+        ones(Int, packet_count); owner_index = 1, center = fixture.spec.center,
+        supplement_indices = 1:packet_count)
+    @test_throws ArgumentError CRD.atomic_reference_packet_occupied_embedding(
+        fixture.packet, fixture.packet.supplement, fixture.packet.overlap,
+        ones(Int, packet_count); owner_index = 1, center = fixture.spec.center,
+        supplement_indices = 1:packet_count, overlap_atol = NaN)
+    @test_throws ArgumentError CRD.atomic_reference_packet_occupied_embedding(
+        fixture.packet, fixture.packet.supplement, fixture.packet.overlap,
+        ones(Int, packet_count); owner_index = 1, center = fixture.spec.center,
+        supplement_indices = 1:packet_count, overlap_atol = Inf)
+    @test_throws ArgumentError CRD.atomic_reference_packet_occupied_embedding(
+        fixture.packet, fixture.packet.supplement, fixture.packet.overlap,
+        ones(Int, packet_count); owner_index = 1, center = fixture.spec.center,
+        supplement_indices = 1:packet_count, overlap_atol = -1.0)
+
+    orbital_type = GaussletBases.CartesianGaussianShellOrbitalRepresentation3D
+    centers = ((0.0, 0.0, -2.0), (0.0, 0.0, 2.0))
+    molecular_orbitals = orbital_type[]
+    for (prefix, center) in zip(("a_", "b_"), centers), orbital in fixture.packet.supplement.orbitals
+        push!(molecular_orbitals, orbital_type(prefix * orbital.label,
+            orbital.angular_powers, center, copy(orbital.exponents),
+            copy(orbital.coefficients), orbital.primitive_normalization))
+    end
+    molecular_supplement = typeof(fixture.packet.supplement)(
+        fixture.packet.supplement.supplement_kind, molecular_orbitals,
+        fixture.packet.supplement.metadata)
+    molecular_overlap = Matrix{Float64}(GaussletBases._cartesian_supplement_cross_overlap(
+        molecular_supplement, molecular_supplement))
+    molecular_owners = vcat(fill(1, packet_count), fill(2, packet_count))
+    owner2 = (packet_count + 1):(2packet_count)
+    mapped_fingerprint = CRD._matrix_fingerprint(molecular_overlap[owner2, owner2])
+    equivalent_overlap = copy(molecular_overlap)
+    if mapped_fingerprint == fixture.packet.overlap_fingerprint
+        # Exact translation can reproduce the same bytes; one symmetric ULP makes
+        # the numerical-equivalence branch deterministic without changing physics.
+        equivalent_overlap[first(owner2), first(owner2)] =
+            nextfloat(equivalent_overlap[first(owner2), first(owner2)])
+    end
+    translated_embedding = CRD.atomic_reference_packet_occupied_embedding(
+        fixture.packet, molecular_supplement, equivalent_overlap, molecular_owners;
+        owner_index = 2, center = centers[2], supplement_indices = owner2)
+    translated_mapping = translated_embedding.overlap_mapping
+    @test !translated_mapping.mapped_fingerprint_exact_match
+    @test translated_mapping.mapped_block_fingerprint !=
+        translated_mapping.stored_packet_fingerprint
+    @test translated_mapping.inf_error < 1.0e-10
+    @test translated_mapping.max_abs_error <= translated_mapping.inf_error
+    @test norm(transpose(translated_embedding.Y) * equivalent_overlap *
+        translated_embedding.Y - I, Inf) < 1.0e-10
+    @test sum(translated_embedding.occupations) == fixture.spec.electron_count
+    too_different = copy(equivalent_overlap)
+    too_different[first(owner2), first(owner2)] += 2.0e-10
+    @test_throws ArgumentError CRD.atomic_reference_packet_occupied_embedding(
+        fixture.packet, molecular_supplement, too_different, molecular_owners;
+        owner_index = 2, center = centers[2], supplement_indices = owner2)
+    @test_throws ArgumentError CRD.atomic_reference_packet_occupied_embedding(
+        fixture.packet, molecular_supplement, equivalent_overlap, molecular_owners;
+        owner_index = 1, center = centers[2], supplement_indices = owner2)
+    @test_throws ArgumentError CRD.atomic_reference_packet_occupied_embedding(
+        fixture.packet, molecular_supplement, equivalent_overlap, molecular_owners;
+        owner_index = 2, center = (0.0, 0.0, 2.1), supplement_indices = owner2)
+    wrong_basis_metadata = merge(molecular_supplement.metadata,
+        (; basis_name = "wrong-basis"))
+    wrong_basis_supplement = typeof(molecular_supplement)(
+        molecular_supplement.supplement_kind, molecular_orbitals,
+        wrong_basis_metadata)
+    @test_throws ArgumentError CRD.atomic_reference_packet_occupied_embedding(
+        fixture.packet, wrong_basis_supplement, equivalent_overlap, molecular_owners;
+        owner_index = 2, center = centers[2], supplement_indices = owner2)
     packet_labels = string.(getproperty.(fixture.packet.supplement.orbitals, :label))
     px = findfirst(label -> startswith(label, "px"), packet_labels)
     py = findfirst(==("py" * packet_labels[px][3:end]), packet_labels)
@@ -248,6 +336,7 @@ end
         ones(Int, packet_count); owner_index = 1, center = fixture.spec.center,
         supplement_indices = 1:packet_count)
     @test readback_embedding.Y == packet_embedding.Y
+    @test readback_embedding.overlap_mapping == packet_embedding.overlap_mapping
     unconverged_readback = merge(readback, (; rhf_converged = false))
     @test_throws ArgumentError CRD.build_atomic_packet_screened_hartree_correction(
         fixture.base,

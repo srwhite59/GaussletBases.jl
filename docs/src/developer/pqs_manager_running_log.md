@@ -27559,3 +27559,43 @@ Carrying-cost result:
   and this record; duplicated transitional contract prose was removed.
 - Exact next cleanup blocker: none. The immediate physics blocker remains the
   separately authorized packet-embedding source fix before CR2 preflight.
+
+## Cartesian Hamiltonian Producer Pass 357 - Packet Embedding Numerical Equivalence
+
+Commit(s):
+- this commit - implement owner-local packet overlap equivalence.
+
+Summary:
+- Split packet integrity from molecular representation as authorized in Pass
+  355. The helper still recomputes and exactly matches the stored packet
+  fingerprint, then requires exact owner, placement, atom/basis, label,
+  angular-power, and column-order mapping. The translated owner-local overlap
+  block now passes only when its matrix infinity-norm error is at most the
+  unchanged `1e-10`; its raw-byte hash is nested diagnostic provenance.
+- Cr2 mapping preflight now accepts both real translated Cr `18e` packet
+  blocks. Each has overlap error `3.98e-13`, occupied orthogonality error
+  `9.93e-14`, and charge `18`, while retaining distinct mapped fingerprints.
+  No Hamiltonian or HF calculation ran.
+
+Validation / evidence:
+- Manager reviewed the full source/test diff and tightened two edge cases:
+  tolerance finiteness is checked after `Float64` conversion, and packet atom
+  and basis metadata are mandatory rather than optional. Structural checks now
+  precede mapped-overlap acceptance.
+- Package load passed in `0.448s`; the focused screened-Hartree/embedding suite
+  passed `81/81` in `72.0s`; the mapping-only Cr2 packet table was inspected;
+  `git diff --check` passed.
+
+Goal advancement / guardrail:
+- LT2/LT5/LT8 and MT4: removes the final representation gate before the
+  controlled same-basis Cr2 screened-Hartree correction-off/on measurement.
+- Packet corruption, missing identity metadata, reordered structure, wrong
+  owner/center, nonfinite tolerance, and overlap error above `1e-10` remain
+  hard failures. No public API, artifact, Hamiltonian, solver, EGOI, or Cr2
+  endpoint authority changed.
+
+Carrying-cost result:
+- Source is `+26/-11`; focused tests add `89` lines. The mapped-block hash was
+  deleted as an acceptance predicate and retained only in one nested summary.
+- Exact next step: CR2 may construct the strict high-accuracy additive member
+  and run the already-approved same-basis correction-off/on measurement.

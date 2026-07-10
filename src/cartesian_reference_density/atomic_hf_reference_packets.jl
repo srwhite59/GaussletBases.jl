@@ -1259,25 +1259,29 @@ end
 function atomic_reference_packet_occupied_embedding(packet, supplement, S_AA, owner_indices;
     owner_index::Integer, center, supplement_indices, overlap_atol::Real = 1.0e-10)
     _require_atomic_reference_converged(packet, "protected occupied packet embedding")
+    tolerance = Float64(overlap_atol)
+    isfinite(tolerance) && tolerance >= 0 ||
+        throw(ArgumentError("overlap_atol must be finite and nonnegative"))
+    S_packet = Matrix{Float64}(packet.overlap)
+    stored_packet_fingerprint = String(packet.overlap_fingerprint)
+    recomputed_packet_fingerprint = _matrix_fingerprint(S_packet)
+    stored_packet_fingerprint == recomputed_packet_fingerprint ||
+        throw(ArgumentError("packet self-overlap fingerprint mismatch"))
     indices = Int.(collect(supplement_indices))
     length(unique(indices)) == length(indices) ||
         throw(ArgumentError("packet supplement indices must be unique"))
-    S_packet = Matrix{Float64}(packet.overlap)
-    length(indices) == size(S_packet, 1) ||
+    size(S_packet) == (length(indices), length(indices)) ||
         throw(DimensionMismatch("packet and owner-local supplement counts differ"))
     all(index -> owner_indices[index] == Int(owner_index), indices) ||
         throw(ArgumentError("packet supplement indices cross owner boundaries"))
     placement = ntuple(axis -> Float64(center[axis]), 3)
     all(index -> maximum(abs(supplement.orbitals[index].center[axis] - placement[axis])
-        for axis in 1:3) <= overlap_atol, indices) ||
+        for axis in 1:3) <= tolerance, indices) ||
         throw(ArgumentError("packet supplement indices do not match placement center"))
     spec, metadata = _packet_density_fit_spec(packet, placement), supplement.metadata
-    (isnothing(metadata.atom) || String(metadata.atom) == spec.atom) &&
-        (isnothing(metadata.basis_name) || String(metadata.basis_name) == spec.basis_name) ||
+    !isnothing(metadata.atom) && String(metadata.atom) == spec.atom &&
+        !isnothing(metadata.basis_name) && String(metadata.basis_name) == spec.basis_name ||
         throw(ArgumentError("packet atom/basis does not match supplement metadata"))
-    S_block = Matrix{Float64}(S_AA[indices, indices])
-    _matrix_fingerprint(S_block) == String(packet.overlap_fingerprint) ||
-        throw(ArgumentError("packet basis/order fingerprint mismatch"))
     order = hasproperty(packet, :labels) ?
         (; labels = String.(packet.labels), powers = Matrix{Int}(packet.angular_powers)) :
         _orbital_arrays(packet.supplement)
@@ -1291,17 +1295,28 @@ function atomic_reference_packet_occupied_embedding(packet, supplement, S_AA, ow
                 ntuple(axis -> order.powers[axis, column], 3) ||
             throw(ArgumentError("packet supplement basis/order mismatch at column $(column)"))
     end
+    S_block = Matrix{Float64}(S_AA[indices, indices])
+    mapped_block_fingerprint = _matrix_fingerprint(S_block)
+    overlap_delta = S_block - S_packet
+    max_abs_error = maximum(abs, overlap_delta)
+    inf_error = norm(overlap_delta, Inf)
+    inf_error <= tolerance || throw(ArgumentError(
+        "packet owner-local overlap mismatch $(inf_error) exceeds $(tolerance)"))
     C = hasproperty(packet, :C_occ) ? Matrix{Float64}(packet.C_occ) : Matrix{Float64}(packet.occupied_coefficients)
     occupations = Vector{Float64}(packet.occupations)
-    abs(sum(occupations) - spec.electron_count) <= overlap_atol ||
+    abs(sum(occupations) - spec.electron_count) <= tolerance ||
         throw(ArgumentError("packet occupations do not recover its electron count"))
     Y = zeros(Float64, size(S_AA, 1), size(C, 2))
     Y[indices, :] .= C
     orthogonality_error = norm(transpose(Y) * S_AA * Y - I, Inf)
-    orthogonality_error <= overlap_atol ||
+    orthogonality_error <= tolerance ||
         throw(ArgumentError("embedded packet occupied block is not S_AA-orthonormal"))
+    overlap_mapping = (; stored_packet_fingerprint, recomputed_packet_fingerprint,
+        mapped_block_fingerprint,
+        mapped_fingerprint_exact_match = mapped_block_fingerprint == stored_packet_fingerprint,
+        max_abs_error, inf_error, overlap_atol = tolerance)
     return (; packet, owner_index = Int(owner_index), center = placement,
-        supplement_indices = indices, Y, occupations)
+        supplement_indices = indices, Y, occupations, overlap_mapping)
 end
 function _packet_density_cloud_terms(packet, center)
     _require_atomic_reference_converged(packet, "atomic reference density-cloud evaluation")
