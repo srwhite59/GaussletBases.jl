@@ -455,9 +455,9 @@ cartesian_system
 -> cartesian_materialization
 ```
 
-`cartesian_materialization` and the paired route-driver print/save wrappers are
-now approved for retirement under `HP-RETIRE-DRV-MAT-*`. Do not copy this old
-spine into the canonical driver or future public workflow.
+`cartesian_materialization` and the paired route-driver print/save wrappers
+were removed by `e2e164e9b` under the completed `HP-RETIRE-DRV-MAT-*` lane. Do
+not copy this old spine into the canonical driver or future public workflow.
 
 The R1 facade should instead map to:
 

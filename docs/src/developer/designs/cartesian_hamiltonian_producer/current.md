@@ -1,86 +1,29 @@
 # Current Cartesian Hamiltonian Producer Authority
 
-This page is the compact live status page for future agents. It is not the
-algorithm manual. Read it first to understand what is implemented and where the
-current authority lives.
+This page owns live implementation status, active lanes, blockers, and next
+work. It is not the algorithm manual and does not independently grant source
+authority. It remains a transitional long-form ledger pending the approved
+topology compression; consult only the task-relevant status after startup.
 
 Normal startup reading:
 
 - `README.md` for orientation;
 - `current.md` for live status;
-- `registry.md` for approved IDs, ownership, files, and function surfaces;
+- the assigned ID entry in `registry.md` for permission, lifecycle, ownership,
+  and approved surfaces;
 - `invariants.md` for architecture-wide guardrails;
-- `residual_gaussian_domain_module.md` for the canonical Residual Gaussian
-  algorithm contract;
-- `residual_gaussian_orthogonality_robustness.md` for the narrow final
-  residual identity-check robustness lane;
-- `residual_gaussian_injection_hybrid.md` for the protected-original
-  compact-main injection, protected-localized artifact, EGOI, and
-  ladder-transfer measurement lanes;
-- `cartesian_gaussian_raw_blocks_nuclear.md` for the neutral uncharged nuclear
-  raw-block owner;
-- `cartesian_gaussian_raw_blocks_non_nuclear.md` for the neutral
-  overlap/kinetic/moment raw-block owner;
-- `r3_terminal_gg_product_matrices.md` for the narrow R3/RG terminal `G-G`
-  product-matrix optimization lane;
-- `r3_remaining_exact_operator_allocation_audit.md` for the measurement-only
-  decision on remaining exact-operator allocation after terminal `G-G`
-  workspace reuse;
-- `r3_unit_nuclear_ugg_gaussian_sum.md` for the narrow terminal final-basis
-  unit-nuclear `U_GG` Gaussian-sum allocation lane;
-- `screened_hartree_residual_density.md` for the measurement-only Hartree
-  protected-GTO residual-density audit that keeps `Vnuc_G` Galerkin and uses
-  IDA/MWG only on `q - q0` fluctuations;
-- `screened_hartree_correction_assembly.md` for the internal source-backed
-  screened-Hartree `Delta_J0`/`C` correction object built from atomic
-  reference packets and same-basis `V_IDA`;
-- `external_gto_orbital_import.md` for the external-GTO orbital import
-  facility that uses final/external cross overlaps to import PySCF-style AO
-  orbitals into an orthonormal final basis;
-- `pqs_mapping_s_factor.md` for the expert `s_factor` mapping-strength knob;
-- `coulomb_accuracy_policy.md` for the producer-wide compact/high Coulomb
-  expansion policy and provenance contract;
-- `r1_one_center_base_atoms.md` for explicit origin-centered all-electron
-  one-center base atoms beyond H;
-- `cartesian_driver_usability_workflow.md` for the compact artifact-producing
-  canonical driver lane;
-- `cartesian_driver_atom_workflow.md` for explicit origin-centered base atom
-  driver inputs;
-- `r3_homonuclear_diatomic_supplemented_workflow.md` for the explicit
-  homonuclear z-axis diatomic supplemented facade/driver relaxation;
-- `white_lindsey_terminal_basis_realization.md` for the narrow terminal-basis
-  seam required by the `nesting = :wl` construction family;
-- `nesting_supplement_composition_plan.md` for the target 2 x 2 x 2
-  composition matrix over geometry, nesting, and supplement state;
-- `public_ns_core_side_parity.md` for direct nucleus-centered core side
-  parity from public `ns`;
-- `common_terminal_shell_decomposition.md` for route-family-free common
-  shell/core region decomposition before PQS/WL retained realization;
-- `mapped_comx_source_span.md` for the protected-`P2` plus mapped Chebyshev
-  source-span option at the existing nested doside / COMX seam;
-- `cartesian_hamiltonian_artifact_manifest.md` for compact Hamiltonian
-  artifact sidecar groups and recipe provenance;
-- `route_inventory_type_surface_cleanup.md` for the first route-inventory
-  type-surface cleanup lane;
-- `raw_product_source_mode_inventory_cleanup.md` for the raw product
-  source-mode inventory cleanup lane;
-- `contract_plan_vector_cleanup.md` for terminal-lowering and retained-unit
-  transform contract-plan vector cleanup;
-- `route_stage_type_surface_cleanup.md` for Be2 q5 compile-attributed
-  route/stage compatibility-inventory cleanup;
-- `route_stage_carrier_cleanup.md` for the post-cleanup route/stage carrier
-  and plan-signature cleanup lane;
-- `complete_core_shell_rhf_retirement.md` for the narrow stale
-  complete-core-shell RHF payload-stack deletion lane;
-- `route_driver_materialization_retirement.md` for retiring the old
-  route-driver materialization/report/save wrapper workflow and stale tool/test
-  pressure;
-- `docs/src/developer/algorithm_implementation_index.md` for existing kernels
-  and donor paths.
+- the one subsystem contract linked by that registry entry.
+
+Before numerical implementation, also consult
+`docs/src/developer/algorithm_implementation_index.md`. Endpoint/probe work has
+the additional operational and due-diligence reading required by `AGENTS.md`.
+The longer link catalog in `README.md` is task-specific navigation, not startup
+reading.
 
 Historical design and review material remains under `history/`, `reviews/`,
-and the R3 amendment pages. Those files are evidence and rationale, not normal
-startup authority when they conflict with the compact current files.
+completed retirement records, and planning/implementation ledgers. Those files
+are evidence and rationale, not normal startup authority when they conflict
+with the compact current files.
 
 ## Live Status
 
@@ -96,7 +39,8 @@ Implemented base path:
 - Slice B final-basis one-body assembly;
 - Slice C localized IDA matrix assembly and existing
   `CartesianIDAHamiltonian` construction;
-- Slice D base PQS materialization handoff;
+- direct staged base Hamiltonian construction and optional artifact writing;
+- historical Slice D route-driver materialization wrapper retired;
 - R1 public base facade for the approved H/H2 scope and fixed
   `producer_provenance/` artifact group.
 - R1 one-center base atom relaxation for explicit origin-centered all-electron
@@ -294,7 +238,7 @@ Implemented base path:
   `bin/cartesian_ham_builder.jl` and the staged base/facade path. Public values
   are `:ordinary` and `:mapped_comx`; ordinary remains the default, and
   `:mapped_comx` is currently PQS-only.
-- `HP-DRV-INV-*` approves a compact terminal-region / shellification inventory
+- `HP-DRV-INV-*` implements a compact terminal-region / shellification inventory
   summary in the canonical driver output. This is bounded human-facing output:
   region label, kind, lowering or realization kind, support rows, final
   columns, compression ratio, shell index, index ranges for `x`/`y`/`z`,
@@ -304,7 +248,7 @@ Implemented base path:
   transverse physical scale against the bond-axis margin. This does not
   approve new driver inputs, route diagnostics, source-mode or pair dumps,
   artifact schema changes, numerical construction changes, or Cr2 workflow.
-- `HP-DRV-SHELLDD-*` approves a standard terminal due-diligence report for
+- `HP-DRV-SHELLDD-*` implements a standard terminal due-diligence report for
   Cartesian/PQS terminal bases. The report is the live replacement for the old
   "driver printed enough for a human to inspect" practice: consumers are
   expected to inspect the derived system, parent axes/box, gausslet/IDA weight
@@ -318,11 +262,12 @@ Implemented base path:
   classification, index and physical boxes, physical side lengths and aspect
   ratios, actual and expected aspect-balanced source-mode shapes, source-mode
   count, retained count, final column range, lowering/retained/realization
-  rules, slab metadata, and advisory warning flags. The first implementation
-  seam is extending or wrapping
+  rules, slab metadata, and advisory warning flags. The implemented report
+  extends
   `_cartesian_terminal_inventory_rows(...)` in
   `src/cartesian_base_hamiltonian.jl` and joining existing terminal inventory
-  rows with terminal retained-rule plan/support records. This does not approve
+  rows with terminal retained-rule plan/support records; the canonical driver
+  prints the resulting bounded report. This does not approve
   artifact schema changes, public semantics changes, shellification policy
   changes, aspect-balanced source-mode implementation, dense coefficient/
   transform/support dumps, or Cr2 workflow.
@@ -717,16 +662,14 @@ Approved Residual Gaussian robustness lane:
   `HP-RHO0-FAPP-TEST-01` requires package load plus compact alpha/beta
   finite-difference validation, with H/Be/Be2-only ignored endpoint replay if
   the helper is consumed by the rho0 audit.
-- `HP-RHO0-ANCHOR-FN-01` is implemented but superseded for Hartree-correction
-  physics/stability interpretation. It formed `Delta_F0_alpha/beta` by
-  subtracting the full approximate interaction Fock, including the current
-  same-spin exchange-like term, from `F_exact_Hartree[P0]`. That source helper
-  remains useful plumbing evidence, but its `Delta_F0` must not be used as the
-  Hartree reference-density correction.
-- `HP-RHO0-CORR-AUDIT-01` remains measurement-only, but it is suspended until
-  `HP-RHO0-JANCHOR-*` is implemented. Any small-system corrected-Hamiltonian
-  audit using the old full-interaction `Delta_F0_alpha/beta` is invalid as
-  Hartree-correction physics/stability evidence.
+- `HP-RHO0-ANCHOR-FN-01` is implemented, superseded, and closed to new source
+  work. It subtracted the full approximate interaction Fock, including the
+  current same-spin exchange-like term, from `F_exact_Hartree[P0]`; its
+  `Delta_F0` must not be used as the Hartree reference-density correction.
+- `HP-RHO0-CORR-AUDIT-01` is historical measurement evidence. Its original
+  full-interaction-anchor run is invalid. `HP-RHO0-JANCHOR-*` is implemented,
+  and the later direct-Hartree H/Be/Be2 behavior remains a stop-signal pending
+  `HP-RHO0-XPAIR-AUDIT-01`.
 - `HP-RHO0-JANCHOR-FN-01` / `HP-RHO0-JANCHOR-TEST-01` approve the direct-
   Hartree replacement. `src/cartesian_ida_hamiltonian.jl` may add private
   direct-only helpers with `q = diag(P_alpha) + diag(P_beta)`,
@@ -769,41 +712,25 @@ Approved Residual Gaussian robustness lane:
   public workflow, solver integration, exact exchange correction, and
   production Hamiltonian integration remain later lanes.
 
-Approved stale complete-core-shell RHF retirement:
+Completed stale complete-core-shell RHF retirement:
 
-- `HP-RETIRE-CCS-RHF-FN-01` approves only removing the include for
-  `src/pqs_multilayer_complete_core_shell_rhf.jl` from `src/GaussletBases.jl`
-  and deleting that RHF payload-stack file;
-- the path is stale route-era workflow machinery with no live source/bin/test/
-  tool caller found outside the file itself, while current CR2-facing work
-  consumes canonical driver `CartesianIDAHamiltonian` artifacts;
-- do not add replacements, adapters, compatibility wrappers, new status or
-  payload objects, driver changes, artifact changes, route/shellification/
-  terminal-lowering/raw-block/RG/MWG/IDA changes, or Cr2 workflow;
-- do not change the older complete-core-shell H1/final-basis files or
-  source-box materialization under this ID.
+- `28e9b2c84` removed the include and deleted
+  `src/pqs_multilayer_complete_core_shell_rhf.jl`;
+- `HP-RETIRE-CCS-RHF-*` is now historical deletion evidence, not active
+  source/test authority;
+- do not restore the payload stack or add a replacement/compatibility layer
+  without a new docs-only amendment.
 
-Approved route-driver materialization/report/save retirement:
+Completed route-driver materialization/report/save retirement:
 
-- `HP-RETIRE-DRV-MAT-FN-01` approves only removing the old
-  `cartesian_materialization`, `cartesian_print_summary`,
-  `cartesian_print_details`, `cartesian_save`, and matching underscored
-  route-driver materialization/report/save helpers;
-- `HP-RETIRE-DRV-MAT-TOOL-01` approves only deleting or quarantining old tools
-  that exist to drive that retired wrapper workflow;
-- `HP-RETIRE-DRV-MAT-DOC-01` approves only active docs/index cleanup that stops
-  presenting the wrapper workflow as canonical or active authority;
-- `HP-RETIRE-DRV-MAT-TEST-01` approves only focused live-reference scans,
-  canonical base/supplemented artifact smokes, unchanged H2 RG endpoint, and
-  removal/update of stale docs-policy wrapper assertions;
-- the canonical staged driver and current staged producer/artifact path must
-  remain unchanged.
-- `HP-RETIRE-LADDER-RUNNERS-FN-01` approves only deleting
-  `tools/run_cartesian_driver_ladder.jl` and
-  `tools/run_cartesian_line_ladder.jl`, the two dangling runner entrypoints
-  into the retired ladder workflow. It does not approve edits to the canonical
-  driver, source files, tests, artifacts, or the quarantined
-  `tools/cartesian_driver_ladder_lib.jl`.
+- `e2e164e9b` removed the old materialization/report/save wrappers and their
+  stale tool/test pressure;
+- `77fa2700b` removed the two dangling ladder runners;
+- `HP-RETIRE-DRV-MAT-*` and `HP-RETIRE-LADDER-RUNNERS-*` are historical
+  deletion evidence, not active source/test/tool/docs authority;
+- the canonical staged driver and current producer/artifact path remain the
+  only live workflow. Do not restore wrappers, runners, or adapters without a
+  new docs-only amendment.
 
 Approved neutral Cartesian Gaussian raw-block owner:
 
@@ -1352,7 +1279,8 @@ Deferred lanes:
 - Cr2-specific workflow, committed Cr2 gates, and Cr2 support decisions beyond
   the generic explicit homonuclear z-axis path;
 - non-base/supplement public workflow;
-- ECP/EGOI/RHF/solver/HamV6 work;
+- ECP, broad EGOI workflow beyond the approved retained-GTO helper, public RHF
+  workflow, solver, and HamV6 work;
 - artifact/public API decisions beyond the approved compact provenance groups.
 
 Before implementation, confirm the approved ID and source surface in

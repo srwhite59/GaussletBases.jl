@@ -4,6 +4,23 @@ Only entries marked approved/implemented authorize work on the exact surface
 they describe. Measurement-only entries do not authorize production source
 edits. Candidate or rejected entries do not authorize implementation.
 
+This registry is the authority lookup, not the algorithm manual. An entry's
+explicit permission and lifecycle govern when present; surrounding section
+headings are navigation only. During this transition, a legacy entry without
+an explicit `Status:` remains source-bearing only when it is also on the
+active `AGENTS.md` whitelist and its prose grants that exact surface.
+Permission and lifecycle are distinct: an entry may be
+measurement-only, design-only, validation-only, or source-bearing, and may be
+approved, implemented, superseded, retired, suspended, or rejected. Closed,
+superseded, rejected, and completed-retirement entries remain here as records
+without remaining on the active source whitelist in `AGENTS.md`; a historical
+implementation may remain preservation-only only when its entry says so and it
+is still whitelisted. Numerical formulas, behavioral invariants, and rationale
+belong in the linked canonical subsystem document. A heading
+that currently lists a source/test pair is one shared lane record and applies
+to both IDs; a later machine-registry pass must normalize the IDs without
+dropping either one.
+
 ## Approved And Implemented
 
 ### HP-OBJ-01 — `CartesianTerminalBasisBlock`
@@ -1994,6 +2011,8 @@ No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
 approved.
 
+## Approved Base Assembly Completion
+
 ### HP-FN-03 — blockwise one-body assembly
 
 Approved file:
@@ -2061,6 +2080,8 @@ assemble_terminal_ida_interaction!(
 This is Slice C1 only: it produces final-basis `electron_electron_ida`. It does
 not authorize Hamiltonian construction, route wiring, artifacts, or a pair
 payload/cache.
+
+## Approved Reference-Density Measurements And Internal Facilities
 
 ### HP-PQS-SCREEN-HARTREE-AUDIT-01 — protected-GTO screened Hartree residual-density audit
 
@@ -2701,6 +2722,8 @@ determinants, validated packet density/potential fields, and same-basis
 solver integration, source interaction transforms, exchange correction, or
 row-gauge substitutions, stop and request a new design amendment.
 
+## Approved Final Base Construction And Historical Handoff
+
 ### HP-FN-05 — final Hamiltonian construction
 
 Approved as the narrow Slice C2 construction boundary for the existing
@@ -2725,6 +2748,9 @@ constructor directly if no helper is needed.
 
 ### HP-WIRE-02 — historical direct materialization Hamiltonian handoff
 
+Status: retired by `e2e164e9b`. This entry is historical and no longer
+authorizes source work.
+
 Historically approved and implemented Slice D wrapper boundary:
 
 ```julia
@@ -2735,10 +2761,10 @@ cartesian_materialization(
 )::Union{Nothing,CartesianIDAHamiltonian{Float64}}
 ```
 
-This old route-driver wrapper workflow is now approved for retirement under
-`HP-RETIRE-DRV-MAT-*`. Current canonical producer work should use the staged
-driver-facing producer functions and `CartesianIDAHamiltonian` artifact path,
-not add new callers to `cartesian_materialization`.
+This old route-driver wrapper workflow was retired under
+`HP-RETIRE-DRV-MAT-*`. Current canonical producer work uses the staged
+driver-facing producer functions and `CartesianIDAHamiltonian` artifact path;
+do not restore `cartesian_materialization` or add compatibility callers.
 
 The call site passes `transforms.terminal_basis_realization` directly. The
 terminal basis must not be embedded in `cartesian_report`, reconstructed from
@@ -4897,9 +4923,10 @@ as part of this lane.
 
 ### HP-RG-INJECT-FN-01 — default-off injection-plus-RG implementation
 
-Status: historical default-off direct `G`-injection source authority. This is
-not the current compact-first implementation target and is not approval for a
-production default or public workflow.
+Status: implemented preservation-only compatibility authority for the
+historical default-off direct `G`-injection path. This is not the current
+compact-first implementation target and is not approval for feature expansion,
+a production default, or public workflow.
 
 Decision: the first injection audit did not remove the current Cr2 low-H1
 residual sector, but injection remains the better general construction because
@@ -7037,8 +7064,8 @@ Required validation:
 
 ### HP-RHO0-ANCHOR-FN-01 — Hartree reference correction anchor
 
-Status: implemented but superseded for Hartree-correction physics and
-stability interpretation by `HP-RHO0-JANCHOR-FN-01`.
+Status: implemented, superseded, and closed to new source work. Current
+direct-Hartree correction authority is `HP-RHO0-JANCHOR-FN-01`.
 
 Correction note: this lane validated the algebra for the object it built, but
 the object subtracted the full approximate interaction Fock, including the
@@ -7114,7 +7141,8 @@ or a broad reference-density framework.
 
 ### HP-RHO0-ANCHOR-TEST-01 — Hartree reference correction anchor validation
 
-Status: approved validation gates for `HP-RHO0-ANCHOR-FN-01`.
+Status: historical validation evidence for the superseded anchor; closed to
+new test work.
 
 Required validation:
 
@@ -7134,8 +7162,9 @@ Required validation:
 
 ### HP-RHO0-CORR-AUDIT-01 — corrected-Hamiltonian small-system audit
 
-Status: approved docs-only / measurement-only audit, but suspended until
-`HP-RHO0-JANCHOR-*` replaces the old full-interaction anchor.
+Status: historical measurement-only audit. The old full-interaction-anchor run
+is invalid; `HP-RHO0-JANCHOR-*` is implemented, and the later H/Be/Be2 rerun
+remains a stop-signal pending `HP-RHO0-XPAIR-AUDIT-01`.
 
 Correction note: any result using old `Delta_F0_alpha/beta` is invalid as a
 Hartree-correction physics/stability result. A valid rerun must use
@@ -8259,7 +8288,7 @@ solver run, or diagnostic harness is approved by this ID.
 
 ### HP-DRV-INV-FN-01 — canonical driver terminal-region inventory
 
-Status: approved.
+Status: implemented.
 
 Approved source files:
 
@@ -8339,7 +8368,7 @@ seam.
 
 ### HP-DRV-INV-TEST-01 — terminal-region inventory validation
 
-Status: approved.
+Status: implemented validation coverage.
 
 Approved validation:
 
@@ -8363,8 +8392,8 @@ by this ID.
 
 ### HP-DRV-SHELLDD-FN-01 — terminal shellification due-diligence report
 
-Status: approved for future implementation. No source is implemented by the
-approving docs pass.
+Status: implemented. The canonical base working construction carries the
+in-memory report and the canonical driver prints it.
 
 Design note:
 
@@ -8516,7 +8545,7 @@ separate source-policy fix. Do not mix that with this reporting lane.
 
 ### HP-DRV-SHELLDD-TEST-01 — terminal shellification due-diligence validation
 
-Status: approved.
+Status: implemented validation coverage.
 
 Approved validation:
 
@@ -8800,14 +8829,19 @@ Failure rule: if removing the hidden `d` field requires any visible driver
 contract change or producer/source change, make no source commit and report the
 blocker.
 
-## Approved For Complete-Core-Shell RHF Retirement
+## Completed Complete-Core-Shell RHF Retirement
 
-This section approves only the deletion lane recorded in
+Status: completed and closed by `28e9b2c84`. The entries below are historical
+deletion authority and no longer authorize source or test work.
+
+This section records the deletion lane in
 `complete_core_shell_rhf_retirement.md`. The old complete-core-shell RHF stack
-is stale route-era workflow machinery, not a live Cartesian Hamiltonian
+was stale route-era workflow machinery, not a live Cartesian Hamiltonian
 producer path.
 
 ### HP-RETIRE-CCS-RHF-FN-01 — remove stale RHF payload stack
+
+Status: completed and closed by `28e9b2c84`.
 
 Approved source files:
 
@@ -8826,9 +8860,9 @@ Approved behavior:
 - add no replacements, adapters, compatibility wrappers, status objects,
   payload objects, reports, or tests.
 
-Evidence: focused search found no live `src`, `bin`, `test`, or `tool` caller
-outside the file itself and the root include. The file carries old payload and
-blocked-status vocabulary such as
+Pre-deletion evidence: focused search found no live `src`, `bin`, `test`, or
+`tool` caller outside the file itself and the root include. The file carried
+old payload and blocked-status vocabulary such as
 `pqs_multilayer_complete_core_shell_rhf_input_contract`,
 `pqs_multilayer_complete_core_shell_rhf_scf_payload`, and
 `pqs_multilayer_complete_core_shell_rhf_one_step_payload`. The current
@@ -8844,11 +8878,13 @@ changes, artifact schema/provenance/reader changes, route/shellification/
 terminal-lowering/raw-block/RG/MWG/IDA changes, Hamiltonian assembly changes,
 committed tests/fixtures, or Cr2 workflow.
 
-Failure rule: if any live `src`, `bin`, `test`, or `tool` caller depends on the
-RHF stack, make no source commit and report the exact caller. Do not preserve
-the path through an adapter.
+Historical failure rule: if any live `src`, `bin`, `test`, or `tool` caller
+depends on the RHF stack, make no source commit and report the exact caller.
+Do not preserve the path through an adapter.
 
 ### HP-RETIRE-CCS-RHF-TEST-01 — retirement validation
+
+Status: completed validation evidence; closed to new test work.
 
 Approved validation:
 
@@ -8864,15 +8900,21 @@ Approved validation:
 No committed test, fixture, replacement path, adapter, status/report/payload
 object, artifact-schema validation, or Cr2 workflow is approved.
 
-## Approved For Route-Driver Materialization Workflow Retirement
+## Completed Route-Driver Materialization Workflow Retirement
 
-This section approves only the retirement/quarantine lane recorded in
+Status: completed and closed by `e2e164e9b`; the ladder-runner follow-up was
+completed by `77fa2700b`. The entries below are historical deletion authority
+and no longer authorize source, test, tool, or docs work.
+
+This section records the retirement/quarantine lane in
 `route_driver_materialization_retirement.md`. The old route-driver
 materialization/report/save wrapper workflow is not the canonical Cartesian
 producer path; the current path is the staged human-facing driver plus
 `CartesianIDAHamiltonian` artifacts.
 
 ### HP-RETIRE-DRV-MAT-FN-01 — remove old materialization/report/save wrappers
+
+Status: completed and closed by `e2e164e9b`.
 
 Approved source files:
 
@@ -8898,11 +8940,11 @@ Approved behavior:
 - do not add replacement wrappers, adapters, status fields, payload objects, or
   tests.
 
-Evidence: focused search found no hits for the audited names in
-`bin/cartesian_ham_builder.jl`. Current CR2-facing artifact workflow uses the
-canonical staged producer and `CartesianIDAHamiltonian` artifacts. Live hits are
-old wrapper definitions, old tools/harnesses, stale docs-policy assertions, and
-stale compact-doc references.
+Pre-deletion evidence: focused search found no hits for the audited names in
+`bin/cartesian_ham_builder.jl`. The CR2-facing artifact workflow used the
+canonical staged producer and `CartesianIDAHamiltonian` artifacts. Remaining
+hits were old wrapper definitions, tools/harnesses, stale docs-policy
+assertions, and stale compact-doc references.
 
 This ID does not approve canonical driver changes, current staged producer
 function changes, artifact schema/provenance/reader/manifest changes, route,
@@ -8913,12 +8955,14 @@ Hamiltonian assembly changes, changes to
 retirement, replacement wrappers, adapters, status fields, payloads, new tests,
 or Cr2 workflow.
 
-Failure rule: if any current canonical producer path or public artifact
-workflow depends on these wrappers, make no source commit and report the exact
-dependency. Do not preserve the wrapper workflow through compatibility
+Historical failure rule: if any current canonical producer path or public
+artifact workflow depends on these wrappers, make no source commit and report
+the exact dependency. Do not preserve the wrapper workflow through compatibility
 adapters.
 
 ### HP-RETIRE-DRV-MAT-TOOL-01 — old wrapper-tool quarantine
+
+Status: completed and closed by `e2e164e9b`.
 
 Approved tool files:
 
@@ -8939,6 +8983,8 @@ Approved behavior:
 
 ### HP-RETIRE-DRV-MAT-DOC-01 — active docs cleanup
 
+Status: completed and closed by `e2e164e9b`.
+
 Approved docs files:
 
 ```text
@@ -8958,6 +9004,8 @@ Approved behavior:
   unchanged.
 
 ### HP-RETIRE-DRV-MAT-TEST-01 — retirement validation
+
+Status: completed validation evidence; closed to new test work.
 
 Approved test file:
 
@@ -8987,6 +9035,8 @@ No new committed test or fixture is approved.
 
 ### HP-RETIRE-LADDER-RUNNERS-FN-01 — delete dangling ladder runners
 
+Status: completed and closed by `77fa2700b`.
+
 Approved tool files:
 
 ```text
@@ -9002,18 +9052,20 @@ Approved behavior:
 - do not modify `tools/cartesian_driver_ladder_lib.jl` unless a later
   docs-only amendment explicitly approves deleting that quarantined library.
 
-These scripts are only entrypoints into the retired route-driver ladder
+These scripts were only entrypoints into the retired route-driver ladder
 workflow after `HP-RETIRE-DRV-MAT-*`. This ID does not approve canonical driver
 changes, source changes, test changes except validation scans, artifact/
 provenance/reader changes, route/shellification/terminal-lowering/raw-block/
 RG/MWG/IDA/Hamiltonian assembly changes, new wrappers, adapters, status fields,
 payloads, reports, tools, tests, or Cr2 workflow.
 
-Failure rule: if any live source, canonical workflow, or approved tool still
-depends on these runner scripts, make no commit and report the exact
-dependency. Do not preserve them through an adapter.
+Historical failure rule: if any live source, canonical workflow, or approved
+tool still depends on these runner scripts, make no commit and report the
+exact dependency. Do not preserve them through an adapter.
 
 ### HP-RETIRE-LADDER-RUNNERS-TEST-01 — ladder runner deletion validation
+
+Status: completed validation evidence; closed to new test work.
 
 Approved validation:
 

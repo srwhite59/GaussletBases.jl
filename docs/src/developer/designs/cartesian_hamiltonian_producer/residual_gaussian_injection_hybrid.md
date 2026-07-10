@@ -1,28 +1,18 @@
 # Residual Gaussian Injection Hybrid Memo
 
-Status: design memo plus approved measurement-only audit authority under
-`HP-RG-INJECT-AUDIT-01`, historical default-off `G`-injection authority under
-`HP-RG-INJECT-FN-01`, and the current protected-original compact-main design
-authority under `HP-RG-PROTECT-INJECT-DESIGN-01`. The protected-original design
-is the current direction for compact-first RG/injection work. Measurement-only
-protected fixed-sector one-body and Vee audits are approved under
-`HP-RG-PROTECT-ONEBODY-AUDIT-01` and
-`HP-RG-PROTECT-VEE-AUDIT-01`; protected-localized EGOI measurement is
-approved under `HP-RG-PROTECT-EGOI-AUDIT-01`, and the first retained-GTO
-local-product EGOI helper is approved under `HP-RG-PROTECT-EGOI-FN-01`;
-same-parent protected-localized ladder transfer is approved as a
-measurement-only audit under `HP-RG-PROTECT-LADDER-XFER-AUDIT-01`;
-the reusable opt-in ladder bundle facility is approved under
-`HP-RG-PROTECT-LADDER-BUNDLE-FN-01`;
-rho0/Galerkin IDA correction measurement is approved under
-`HP-RG-RHO0-GAL-AUDIT-01`, with the successor reference-density-matrix target
-recorded in
-`rho0_reference_density_matrix.md` under `HP-RHO0-REFDENS-AUDIT-01`. This
-document does not approve source edits for the rho0/reference-density design,
-production defaults, artifact schema changes, driver inputs, public API, full
-HF, solver workflow, or Cr2 production workflow.
-Occupied-first global injection is approved only as a measurement/design audit
-under `HP-RG-OCC-FIRST-INJECT-AUDIT-01`.
+Document role: transitional multi-lane design/history ledger pending subsystem
+split. It is not the owner of current status or a single source-authority
+contract. Each section's exact registry entry and canonical subsystem document
+govern; rejected alternatives and measurements remain here as rationale.
+
+The historical default-off direct-`G` implementation remains a
+preservation-only compatibility surface under `HP-RG-INJECT-FN-01`. The
+current direction is occupied-first/protected-main injection. Its geometry is
+source-backed under `HP-RG-OCC-FIRST-INJECT-FN-01` and
+`HP-RG-PROTECT-INJECT-FN-01`; protected one-body, artifact/locality, retained-
+GTO EGOI, and ladder facilities have their own source IDs later in this memo.
+`HP-RG-PROTECT-ADDREF-*` governs the prospective combined additive-reference
+consumer. This top-level summary does not broaden any of those lanes.
 
 ## Motivation
 

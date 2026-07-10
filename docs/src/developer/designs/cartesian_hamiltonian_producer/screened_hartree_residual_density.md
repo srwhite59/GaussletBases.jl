@@ -1,8 +1,12 @@
 # Screened Hartree Residual-Density Formalism
 
-Status: approved measurement-only audit authority under
-`HP-PQS-SCREEN-HARTREE-AUDIT-01`. This page records the crystallized
-Hartree-only screened-density branch. It is not source authority.
+Document role: canonical screened-Hartree residual-density formalism plus a
+transitional history of its measurement lanes. The formalism/audit itself is
+measurement-only under `HP-PQS-SCREEN-HARTREE-AUDIT-01`; the atomic packet
+section later in this page records separately implemented source authority
+under `HP-PQS-ATOMREF-PACKET-*` and will be extracted into its own subsystem
+contract in a later topology pass. This page does not independently broaden
+either authority.
 
 The point nucleus remains an exact/Galerkin one-body operator. IDA/MWG is used
 only for the residual fluctuation density.
@@ -480,10 +484,10 @@ cloud.
 
 ## Reusable Atomic HF Reference Packets
 
-`HP-PQS-ATOMREF-PACKET-FN-01` and `HP-PQS-ATOMREF-PACKET-TEST-01` approve a
-narrow source/design lane for reusable one-center atomic HF reference packets.
-The purpose is to replace ignored ad hoc packets with a standard atom/basis
-reference object for screened-Hartree probes.
+`HP-PQS-ATOMREF-PACKET-FN-01` and `HP-PQS-ATOMREF-PACKET-TEST-01` govern the
+implemented reusable one-center atomic HF reference packet facility. It
+replaces ignored ad hoc packets with a standard atom/basis reference object for
+screened-Hartree probes.
 
 This packet is analogous to defining a standard atom/basis reference:
 
@@ -536,7 +540,7 @@ Initial scope:
 - small Be/Ne smoke consumption that builds `P0/q0` and `J0_G` from packet
   contents.
 
-Approved source surface for later implementation:
+Implemented source surface:
 
 - `src/cartesian_reference_density/CartesianReferenceDensity.jl`;
 - `src/cartesian_reference_density/atomic_hf_reference_packets.jl`;

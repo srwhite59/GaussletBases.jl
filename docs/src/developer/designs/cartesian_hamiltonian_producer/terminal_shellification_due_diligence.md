@@ -1,13 +1,13 @@
 # Terminal Shellification Due Diligence
 
-Status: design and future source authority under `HP-DRV-SHELLDD-FN-01` and
-`HP-DRV-SHELLDD-TEST-01`. This document approves no production implementation
-in this pass and no artifact schema change.
+Status: implemented producer/driver reporting contract under
+`HP-DRV-SHELLDD-FN-01` and `HP-DRV-SHELLDD-TEST-01`. It changes no numerical
+construction or artifact schema.
 
 ## Purpose
 
 Basis due diligence is part of the Cartesian/PQS producer contract. The repo
-should expose a standard compact due-diligence report from driver/producer
+exposes a standard compact due-diligence report from driver/producer
 workflows so repo consumers can confirm the derived system, parent axes,
 weights, dimensions, and shellification before interpreting energies,
 residual occupations, injection behavior, or Cr2-style failure modes.
@@ -58,9 +58,9 @@ The due-diligence report should have four compact sections:
 3. final-basis dimension and compression accounting;
 4. shell-by-shell terminal region table.
 
-The first implementation may print compact summaries with wrapped rows. It
-should still build an in-memory row/section representation so later callers
-can inspect the same facts without scraping text.
+The implemented report may print compact summaries with wrapped rows. It also
+builds an in-memory row/section representation so callers can inspect the same
+facts without scraping text.
 
 ## System And Geometry Header
 
@@ -161,9 +161,9 @@ columns before inspecting detailed shell rows.
 ## Required Shell Table Fields
 
 The due-diligence table should include one row per terminal region or shell
-unit at the granularity needed to review shellification. The first
-implementation may use compact rows and wrapped printing, but the in-memory
-row must carry these facts where available:
+unit at the granularity needed to review shellification. The implemented
+report uses compact rows and wrapped printing, while the in-memory row carries
+these facts where available:
 
 ```text
 terminal_order
@@ -243,28 +243,28 @@ This list is not a new enforcement policy. It is a bounded diagnostic
 vocabulary so humans and repo consumers can see suspicious construction facts
 consistently.
 
-## Intended Implementation Seam
+## Implemented Seam
 
-The first source pass should extend or wrap
+The implementation extends
 `src/cartesian_base_hamiltonian.jl`'s
 `_cartesian_terminal_inventory_rows(...)`.
 
-Implementation shape:
+Current shape:
 
-- join existing terminal inventory rows with terminal retained-rule
+- joins existing terminal inventory rows with terminal retained-rule
   plan/support records;
-- gather normalized system/geometry context and parent-axis summaries from
+- gathers normalized system/geometry context and parent-axis summaries from
   existing staged producer objects;
-- gather gausslet/IDA weight statistics only from existing weights already
+- gathers gausslet/IDA weight statistics only from existing weights already
   present in the construction path;
-- produce an in-memory/report object first;
-- have the canonical driver print the bounded due-diligence report through the
+- produces an in-memory/report object;
+- has the canonical driver print the bounded due-diligence report through the
   existing driver summary path;
-- keep the report compact enough for normal driver output, with bounded
+- keeps the report compact enough for normal driver output, with bounded
   previews for long axis-center lists;
-- do not change artifact schema in the first implementation.
+- does not change artifact schema.
 
-Approved source surface for the later implementation:
+Implemented source surface:
 
 ```text
 src/cartesian_base_hamiltonian.jl
@@ -312,17 +312,17 @@ Forbidden:
 - dense coefficient, transform, pair, or raw support dumps;
 - automatic failure on warning flags unless a later policy approves it.
 
-Failure rule: if the due-diligence report cannot be built by extending/wrapping
-`_cartesian_terminal_inventory_rows(...)` and compact accessors without adding
-a broad report/payload framework, artifact fields, or shellification policy
-changes, stop and report the missing seam.
+Ongoing guardrail: maintenance must keep using
+`_cartesian_terminal_inventory_rows(...)` and compact accessors. If a requested
+extension would require a broad report/payload framework, artifact fields, or
+shellification policy changes, stop and request new authority.
 
-Line budget: target at most `180` added `src`/`bin` lines. This should be a
-small report/table surface, not a new reporting subsystem.
+Historical implementation budget: the accepted lane targeted at most `180`
+added `src`/`bin` lines for one report/table surface, not a reporting subsystem.
 
 ### HP-DRV-SHELLDD-TEST-01
 
-Approved validation:
+Implemented validation contract:
 
 - `git diff --check`;
 - package load if source is touched;

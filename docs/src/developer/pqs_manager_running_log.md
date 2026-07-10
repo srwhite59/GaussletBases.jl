@@ -27105,3 +27105,43 @@ Carrying-cost result:
   residual object; quarantined: atom/counterpoise/transfer; exact next blocker:
   implement within the six approved files and pass the padded Be2 two-packet
   recovery, cross-energy, anchor, and due-diligence gate.
+
+## Cartesian Hamiltonian Producer Pass 347 - Documentation Authority Lifecycle Reconciliation
+
+Commit(s):
+- this commit - reconcile producer documentation roles and closed authority.
+
+Summary:
+- Established a fail-closed transition rule: `AGENTS.md` is the execution
+  whitelist, `registry.md` owns permission/lifecycle/surfaces, subsystem pages
+  own numerical contracts, and silence in concise `current.md` is neutral.
+- Reduced mandatory startup from full registry/index traversal to README,
+  current status, invariants, the assigned registry entry, and one relevant
+  contract. Marked implementation/planning mega-docs as historical ledgers.
+- Removed 11 retired or superseded IDs from the active whitelist, repaired the
+  malformed registry hierarchy, and reconciled implemented terminal inventory/
+  due-diligence, occupied-first, packet, and rho0 lifecycle wording.
+- Compressed the completed RHF and route-wrapper retirement documents into
+  durable deletion records without reopening their authority.
+
+Validation / evidence:
+- Verified deletion commits `28e9b2c84`, `e2e164e9b`, and `77fa2700b`, then
+  confirmed no retired wrapper/RHF/runner symbol remains in live source, bin,
+  test, or tools.
+- Two independent read-only diff reviews found and then cleared lifecycle and
+  precedence contradictions. Focused scans found 185 active IDs and 222
+  registry IDs, with no duplicates and no active ID missing from the registry;
+  closed IDs are absent from the active whitelist. `git diff --check` passed.
+
+Goal advancement / guardrail:
+- LT2/LT3/LT5 and MT5: reduces conceptual drift and startup burden while
+  preserving every live scientific contract. No source, numerical, artifact,
+  API, driver, test, or tooling authority changed. Machine-readable authority
+  remains deferred until lifecycle and canonical-document mapping are stable.
+
+Carrying-cost result:
+- source/test/tool line delta: 0; active docs are net smaller by more than 250
+  lines before this log entry. Deleted: stale retirement plans and duplicate
+  startup instructions. Simplified: authority precedence and completed-lane
+  status. Exact next step: bounded extraction of the atomic HF packet contract,
+  followed by subsystem splits before any shadow TOML registry.

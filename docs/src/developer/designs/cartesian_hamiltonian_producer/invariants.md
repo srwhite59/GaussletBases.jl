@@ -6,12 +6,31 @@ Gaussian work.
 
 ## Authority
 
-- `registry.md` owns approved IDs, files, functions, and source ownership.
-- `current.md` owns live status and startup direction.
-- `residual_gaussian_domain_module.md` owns the canonical Residual Gaussian
-  math/algorithm contract.
-- Historical design and review files are rationale unless explicitly promoted
-  by the compact current authority.
+- `AGENTS.md` supplies the deny-by-default execution whitelist and repo-wide
+  operating rules. Presence there is necessary but not sufficient for source
+  work.
+- `registry.md` owns each ID's permission, lifecycle, owner, approved source or
+  test surface, and canonical contract link. Registry section nesting is
+  navigation only; an entry's own status governs.
+- `current.md` owns concise live status: implemented facilities, active lanes,
+  blockers, and next work. It does not restate full contracts.
+- subsystem design pages own normative mathematics, object semantics,
+  invariants, failure behavior, and validation contracts. In particular,
+  `residual_gaussian_domain_module.md` owns the canonical Residual Gaussian
+  algorithm contract.
+- `README.md` and `algorithm_implementation_index.md` are navigation. They do
+  not independently authorize source work.
+- `implementation_slices.md`, planning memos, `history/`, `reviews/`, reports,
+  and the manager running log are decision/evidence records unless explicitly
+  promoted by current authority.
+
+An ID authorizes source work only when the `AGENTS.md` whitelist, registry
+permission/lifecycle, and canonical subsystem contract agree and `current.md`
+does not explicitly contradict them. Silence in the concise current-status
+page is neutral; an explicit conflict is not. On conflict, fail closed: make no
+source edit and request a docs-only authority reconciliation. This transition
+rule remains in force until a later amendment establishes one machine-readable
+authority source.
 
 ## Terminal Basis
 

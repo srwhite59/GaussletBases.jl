@@ -1,5 +1,11 @@
 # Implementation Slices
 
+Document role: historical implementation/decision ledger. This file is not
+live status and does not independently authorize new work. Section-level
+`Status:` lines record the state when each slice was written and may be stale;
+use `current.md`, the exact `registry.md` entry, `invariants.md`, and the linked
+subsystem contract for current authority. It is not normal startup reading.
+
 ## Slice A — Terminal Basis Realization
 
 Status: implemented.
@@ -199,8 +205,8 @@ Deferred gates:
 
 ## Slice D — Base Materialization Handoff
 
-Status: HP-WIRE-02 implemented historically; the route-driver wrapper workflow
-is approved for retirement under `HP-RETIRE-DRV-MAT-*`.
+Status: historical. The `HP-WIRE-02` route-driver wrapper workflow was removed
+by `e2e164e9b`; `HP-RETIRE-DRV-MAT-*` is completed and closed.
 
 Historical wrapper boundary:
 

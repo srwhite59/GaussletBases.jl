@@ -1,11 +1,14 @@
 # Reference-Density Rho0 Implementation Plan
 
-Status: planning memo for review. This is not source authority, artifact
-authority, public API authority, solver authority, or Cr2 production authority.
+Document role: historical planning/review memo. It is not live status or
+current source authority. Several narrow source lanes proposed later in this
+memo were subsequently implemented; use `current.md`, `registry.md`,
+`rho0_reference_density_matrix.md`, and
+`screened_hartree_correction_assembly.md` for current contracts.
 
 This memo records the intended implementation shape for the
-reference-density-matrix correction lane before source work begins. It should
-be reviewed before approving any source ID.
+reference-density-matrix correction lane before source work began. It is kept
+to preserve design rationale and review decisions, not as startup reading.
 
 Revision note: this version incorporates the initial design-manager review and
 the external ChatGPT review saved on 2026-07-03. The main change is that the
@@ -13,15 +16,15 @@ first source target is now explicitly `GG`-only. The full `GG` / `GA` / `AA`,
 protected-transform, approximate-Fock, and constant-assembly path remains the
 longer plan, not the first implementation slice.
 
-Governing authority today remains:
+The governing authority when this plan was first written was:
 
 - `HP-RHO0-REFDENS-AUDIT-01` - measurement-only fixed `P0` audit;
 - `HP-RHO0-REFDENS-MIXH-AUDIT-01` - measurement-only mixed Hartree seam audit.
 
-Candidate future IDs such as `HP-RHO0-REFDENS-FN-01` and
-`HP-RHO0-REFDENS-ERI-01` are not approved.
+Candidate IDs named here did not gain authority merely by appearing in this
+plan; later approved IDs are recorded in `registry.md`.
 
-## Current Conclusion
+## Historical Planning Conclusion
 
 The rho0 correction should be built around a fixed reference density matrix
 `P0`, not a scalar row-gauge test. The correction is:

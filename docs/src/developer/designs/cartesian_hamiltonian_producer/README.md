@@ -1,10 +1,17 @@
 # Cartesian Hamiltonian Producer
 
-This directory is the compact current authority for the Cartesian/PQS
-Hamiltonian producer.
+This page is navigation and orientation for the Cartesian/PQS Hamiltonian
+producer. It does not independently grant source authority: `current.md` owns
+live status, `registry.md` owns ID permission/lifecycle/surfaces,
+`invariants.md` owns cross-subsystem guardrails, and linked subsystem pages own
+their numerical contracts. On disagreement, follow the fail-closed rule in
+`invariants.md`.
 
-Status: Slice A, Slice B, Slice C1, Slice C2, and Slice D base handoff are
-implemented for the internal base PQS Hamiltonian path. R1 public base
+## Orientation
+
+Status: Slice A, Slice B, Slice C1, Slice C2, and the direct staged base
+Hamiltonian construction are implemented for the internal base PQS path. The
+historical Slice D route-driver wrapper is retired. R1 public base
 producer implementation is approved for the H/H2 scope recorded in
 `r1_public_base_producer.md`, with a narrow explicit origin-centered
 one-center all-electron atom relaxation recorded in
@@ -20,10 +27,10 @@ Gaussian-sum allocation lane is approved after the remaining-allocation audit.
 The canonical Cartesian driver usability lane is approved so the standard
 driver can directly produce base and supported supplemented Hamiltonian
 artifacts from visible public `system`, `basis`, and optional `supplement`
-contracts. `HP-DRV-INV-*` approves a bounded terminal-region inventory summary
+contracts. `HP-DRV-INV-*` implements a bounded terminal-region inventory summary
 in the canonical driver output so users can see region kind, support rows,
 final columns, compression, and identity-vs-compact realization without
-turning the driver into a route diagnostic dump. `HP-DRV-SHELLDD-*` approves
+turning the driver into a route diagnostic dump. `HP-DRV-SHELLDD-*` implements
 a standard terminal due-diligence report so consumers can review derived
 system/geometry facts, parent axes and 1D centers, gausslet/IDA weight stats,
 dimension accounting, shell-by-shell physical aspect ratios, source-mode
@@ -124,13 +131,11 @@ consumer/benchmark lane, not the owner of the installed facility.
 mapped-COMX axis facts can define PQS shell seed coefficients. `HP-MCOMX-DRV-*`
 approves only a compact `source_span` driver/facade construction choice for
 `:ordinary` versus `:mapped_comx`.
-The old complete-core-shell RHF payload stack is approved for retirement under
-`HP-RETIRE-CCS-RHF-*`; the current CR2-facing producer path is the canonical
-driver plus `CartesianIDAHamiltonian` artifacts, not the stale RHF payload
-workflow.
-The old route-driver materialization/report/save wrapper workflow is approved
-for retirement/quarantine under `HP-RETIRE-DRV-MAT-*`; the canonical producer
-path is the staged human-facing driver plus `CartesianIDAHamiltonian` artifacts.
+The old complete-core-shell RHF payload stack was removed by `28e9b2c84` under
+`HP-RETIRE-CCS-RHF-*`. The route-driver materialization/report/save wrappers
+were removed by `e2e164e9b`, and the dangling ladder runners by `77fa2700b`.
+Those IDs are historical deletion records; the canonical producer path is the
+staged human-facing driver plus `CartesianIDAHamiltonian` artifacts.
 The row-gauge `rho0/Galerkin` measurement lane remains historical evidence
 only. The current screened-correction target is the reference-density-matrix
 path in `rho0_reference_density_matrix.md`: fixed `P0`, exact Hartree side,
@@ -142,12 +147,15 @@ the remaining blocker exchange/direct pairing, not unrepresented `P0`;
 public workflow, Cr2 production, and exact exchange correction remain
 deferred.
 
-Agents should read first:
+## Documentation Map
+
+Normal startup is the compact set in `AGENTS.md`. The list below is a
+task-specific contract index; read only the documents relevant to the assigned
+ID or subsystem.
 
 - [current.md](current.md)
 - [registry.md](registry.md)
 - [invariants.md](invariants.md)
-- [implementation_slices.md](implementation_slices.md)
 - [Residual Gaussian domain module](residual_gaussian_domain_module.md) for
   current RG algorithm authority
 - [Residual Gaussian orthogonality robustness](residual_gaussian_orthogonality_robustness.md)
@@ -231,14 +239,14 @@ Agents should read first:
   cleanup lane
 - [Route/stage carrier cleanup](route_stage_carrier_cleanup.md)
   for the post-cleanup route/stage carrier and plan-signature cleanup lane
-- [Complete-core-shell RHF retirement](complete_core_shell_rhf_retirement.md)
-  for the narrow deletion lane for the stale RHF payload stack
-- [Route-driver materialization workflow retirement](route_driver_materialization_retirement.md)
-  for retiring the old route-driver materialization/report/save wrapper
+- [Completed complete-core-shell RHF retirement record](complete_core_shell_rhf_retirement.md)
+  records deletion of the stale RHF payload stack
+- [Completed route-driver materialization retirement record](route_driver_materialization_retirement.md)
+  records deletion of the old route-driver materialization/report/save wrapper
   workflow and stale tool/test pressure
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
-Approved amendments:
+## Contracts, Amendments, And Completed Records
 
 - [R1 public base producer](r1_public_base_producer.md) defines the approved
   minimal public base Hamiltonian producer surface for first origin-centered H
@@ -310,15 +318,13 @@ Approved amendments:
   driver/facade selection, and bounded real-atom validation gates. It does not
   import high-order scaffolding, add a CRPS numerical builder, change source
   defaults, or change artifacts.
-- [Complete-core-shell RHF retirement](complete_core_shell_rhf_retirement.md)
-  approves only deleting the stale `pqs_multilayer_complete_core_shell_rhf.jl`
-  stack and root include, with no replacements, adapters, new status/payload
-  objects, or workflow changes.
-- [Route-driver materialization workflow retirement](route_driver_materialization_retirement.md)
-  approves only retiring the old `cartesian_materialization`,
+- [Completed complete-core-shell RHF retirement record](complete_core_shell_rhf_retirement.md)
+  records deletion of the stale `pqs_multilayer_complete_core_shell_rhf.jl`
+  stack and root include without replacements or adapters.
+- [Completed route-driver materialization retirement record](route_driver_materialization_retirement.md)
+  records retirement of the old `cartesian_materialization`,
   `cartesian_print_summary`, `cartesian_print_details`, and `cartesian_save`
-  wrapper workflow plus stale tool/test/docs pressure. It does not change the
-  canonical driver, staged producer functions, artifacts, or numerical kernels.
+  wrapper workflow plus stale tool/test/docs pressure.
 - [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md)
   approves only explicit origin-centered one-center base atom driver inputs
   through the existing base facade. Current validation remains the

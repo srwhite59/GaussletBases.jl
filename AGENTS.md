@@ -203,9 +203,13 @@ For Cartesian Hamiltonian producer work, normal startup reading is:
 
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/README.md`
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/current.md`
-- `docs/src/developer/designs/cartesian_hamiltonian_producer/registry.md`
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md`
-- `docs/src/developer/algorithm_implementation_index.md`
+
+Then read only the assigned ID entry in
+`docs/src/developer/designs/cartesian_hamiltonian_producer/registry.md` and its
+linked subsystem contract. Before numerical implementation, also consult
+`docs/src/developer/algorithm_implementation_index.md`. Do not traverse the
+full registry or every subsystem page as startup reading.
 
 The full historical design and review rounds remain available under:
 
@@ -488,6 +492,17 @@ The full June 2026 design and reviews are historical material under
 `docs/src/developer/designs/cartesian_hamiltonian_producer/reviews/`; do not
 use them as normal startup reading.
 
+The list below is the deny-by-default execution whitelist for source-bearing
+producer work. `registry.md` owns each ID's permission and lifecycle, while
+the linked subsystem document owns its numerical/behavioral contract. An ID
+must be present below and remain active in `registry.md` before it authorizes
+source work. `current.md` need not enumerate every active ID; silence there is
+neutral. If the whitelist, registry lifecycle, an explicit current-status
+statement, and canonical contract disagree, make no source edit and request a
+docs-only reconciliation. Historical, superseded, rejected, measurement-only,
+and completed-retirement IDs may remain documented in the registry without
+being source-authorized here.
+
 Cartesian Hamiltonian producer source work is currently authorized only for
 these approved design IDs:
 
@@ -501,7 +516,6 @@ these approved design IDs:
 - `HP-FN-03`
 - `HP-FN-04`
 - `HP-FN-05`
-- `HP-WIRE-02`
 - `HP-R1-FILE-01`
 - `HP-R1-FN-01`
 - `HP-R1-CORE-FN-01`
@@ -588,8 +602,6 @@ these approved design IDs:
 - `HP-RHO0-MIXH-FEXACT-TEST-01`
 - `HP-RHO0-FAPP-FN-01`
 - `HP-RHO0-FAPP-TEST-01`
-- `HP-RHO0-ANCHOR-FN-01`
-- `HP-RHO0-ANCHOR-TEST-01`
 - `HP-RHO0-JANCHOR-FN-01`
 - `HP-RHO0-JANCHOR-TEST-01`
 - `HP-CGRB-FILE-01`
@@ -679,14 +691,6 @@ these approved design IDs:
 - `HP-WLDIAT-COMPACT-TEST-01`
 - `HP-WLDIAT-PARITY-FN-01`
 - `HP-WLDIAT-PARITY-TEST-01`
-- `HP-RETIRE-CCS-RHF-FN-01`
-- `HP-RETIRE-CCS-RHF-TEST-01`
-- `HP-RETIRE-DRV-MAT-FN-01`
-- `HP-RETIRE-DRV-MAT-TOOL-01`
-- `HP-RETIRE-DRV-MAT-DOC-01`
-- `HP-RETIRE-DRV-MAT-TEST-01`
-- `HP-RETIRE-LADDER-RUNNERS-FN-01`
-- `HP-RETIRE-LADDER-RUNNERS-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -701,13 +705,10 @@ handoff.
 
 `HP-FN-04` approves only the internal Slice C1 localized IDA matrix assembly
 surface. `HP-FN-05` approves only the narrow Slice C2 construction boundary
-for the existing `CartesianIDAHamiltonian`. `HP-WIRE-02` approves only the
-narrow Slice D base Hamiltonian materialization handoff: return `nothing` when
-no base Hamiltonian is requested, return the existing
-`CartesianIDAHamiltonian` on success, and use the existing Hamiltonian writer
-when artifact output is requested. It does not authorize new artifact shapes,
-route-stage/report fields, wrapper payloads, persistent factor caches, solver
-work, or broad public-driver polish.
+for the existing `CartesianIDAHamiltonian`. `HP-WIRE-02` is historical: its
+route-driver materialization wrapper was removed by `e2e164e9b` and is no
+longer source authority. Do not restore that wrapper, its report/save
+choreography, or compatibility adapters without a new docs-only amendment.
 
 `HP-R1-FILE-01` approves only `src/cartesian_base_hamiltonian.jl`.
 `HP-R1-FN-01` approves only the public `cartesian_base_hamiltonian` facade with
@@ -1175,6 +1176,9 @@ Approved Residual Gaussian module surfaces:
   artifact writing, MWG channels for injected directions, global residual
   selection, spectral pruning, full HF, dense Vee/solver work, Cr2 artifact or
   workflow, route/shellification/raw-block changes, or committed tests.
+  This remains a preservation-only compatibility contract for live
+  default-off code; it is not authority to extend that algorithm or substitute
+  it for the occupied-first/protected-main direction.
 - `HP-RG-OCC-FIRST-INJECT-FN-01` and
   `HP-RG-OCC-FIRST-INJECT-TEST-01` approve only the internal occupied-first
   geometry/selection helper in
@@ -1543,14 +1547,16 @@ Approved Residual Gaussian module surfaces:
   physics/stability interpretation. It formed `Delta_F0_alpha/beta` by
   subtracting the full approximate interaction Fock, including the current
   same-spin exchange-like term, from `F_exact_Hartree[P0]`. It remains
-  source-plumbing evidence only; do not use its `Delta_F0_alpha/beta` as the
-  Hartree reference-density correction.
-- `HP-RHO0-CORR-AUDIT-01` approves only ignored measurement probes for applying
-  the anchored Hartree correction to current in-memory Cartesian IDA H/Be/Be2
-  systems, but this authority is suspended until `HP-RHO0-JANCHOR-*` replaces
-  the old full-interaction anchor. Any audit using old `Delta_F0_alpha/beta`
-  is invalid as Hartree-correction physics/stability evidence. Because this is
-  measurement-only authority, do not add it to the approved source-ID list.
+  source-plumbing evidence only and is closed to new source work together with
+  `HP-RHO0-ANCHOR-TEST-01`; do not use its `Delta_F0_alpha/beta` as the
+  Hartree reference-density correction. Current direct-Hartree anchor work is
+  governed by `HP-RHO0-JANCHOR-*`.
+- `HP-RHO0-CORR-AUDIT-01` is historical measurement authority for applying an
+  anchored Hartree correction to in-memory H/Be/Be2 systems. Any run using old
+  `Delta_F0_alpha/beta` is invalid. `HP-RHO0-JANCHOR-*` is implemented, and
+  the later direct-Hartree rerun remains a stop-signal pending
+  `HP-RHO0-XPAIR-AUDIT-01`. This is not source authority and must not appear in
+  the approved source-ID list.
 - `HP-RHO0-JANCHOR-FN-01` approves only a narrow direct-Hartree replacement
   for the reference anchor. Approved source files are
   `src/cartesian_ida_hamiltonian.jl` for private/internal direct-only
@@ -2036,7 +2042,7 @@ existing facade fields. The driver must not expose private route-stage
 choreography as a substitute for constructing public `system`, `basis`, and
 optional `supplement` objects.
 
-`HP-DRV-INV-FN-01` and `HP-DRV-INV-TEST-01` approve only a compact
+`HP-DRV-INV-FN-01` and `HP-DRV-INV-TEST-01` govern the implemented compact
 terminal-region / shellification inventory summary in the canonical driver
 output. Approved files are `bin/cartesian_ham_builder.jl` and
 `src/cartesian_base_hamiltonian.jl`, with optional compact accessors in
@@ -2058,17 +2064,17 @@ payload, source-mode dump, pair inventory, raw-block dump, all-row listing, or
 full metadata dump. It must not change numerical construction, shellification,
 terminal lowering, retained units, transform contracts, terminal realization,
 RG/MWG/IDA, Hamiltonian assembly, artifacts/readers, public exports, Cr2
-workflow, stage sequence, or driver inputs. Later implementation line budget
-is target `80` added `src`/`bin` lines.
+workflow, stage sequence, or driver inputs. The implementation line-budget
+target was `80` added `src`/`bin` lines.
 
-`HP-DRV-SHELLDD-FN-01` and `HP-DRV-SHELLDD-TEST-01` approve only a standard
-terminal due-diligence report for Cartesian/PQS terminal bases,
+`HP-DRV-SHELLDD-FN-01` and `HP-DRV-SHELLDD-TEST-01` govern the implemented
+standard terminal due-diligence report for Cartesian/PQS terminal bases,
 as recorded in
 `docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_shellification_due_diligence.md`.
-The first implementation seam is extending or wrapping
+The implementation extends
 `src/cartesian_base_hamiltonian.jl`'s `_cartesian_terminal_inventory_rows(...)`
 and joining existing terminal inventory rows with terminal retained-rule
-plan/support records. `bin/cartesian_ham_builder.jl` may print the bounded
+plan/support records. `bin/cartesian_ham_builder.jl` prints the bounded
 report through the canonical driver summary path. `src/pqs_source_box_route_driver_helpers.jl`
 is optional only if a compact accessor is directly required. The report must
 include normalized system/geometry facts, validated atom locations, bond axis/
@@ -2598,68 +2604,13 @@ explicit Cr2 may be used only as an ignored/user-run homonuclear z-axis stress
 through `HP-R3U-ZDI-*` after H2/Be2 validation. Diagnostics and ladder probing
 belong in `tools/` or ignored `tmp/work` probes, not in the canonical driver.
 
-`HP-RETIRE-CCS-RHF-FN-01` approves only removing the stale complete-core-shell
-RHF payload stack: delete `src/pqs_multilayer_complete_core_shell_rhf.jl` and
-remove its include from `src/GaussletBases.jl`. Minimal docs/index cleanup is
-allowed only for references that incorrectly describe that stack as active
-current code. Do not add replacements, adapters, compatibility wrappers,
-reports, status objects, payload objects, tests, driver changes, artifact
-changes, route/shellification/terminal-lowering/raw-block/RG/MWG/IDA changes,
-or Cr2 workflow. Do not change `pqs_multilayer_complete_core_shell_h1.jl`,
-`pqs_complete_core_shell_final_basis.jl`, or
-`pqs_source_box_low_order_materialization.jl` under this ID.
-`HP-RETIRE-CCS-RHF-TEST-01` approves only package load, focused reference scan,
-canonical small base and supplemented artifact/readback smokes, unchanged H2 RG
-endpoint, and no Cr2 run. If any live `src`, `bin`, `test`, or `tool` caller
-depends on the RHF stack, stop without a source commit and report the caller.
-
-`HP-RETIRE-DRV-MAT-FN-01` approves only retirement of the old route-driver
-materialization/report/save wrapper workflow in
-`src/pqs_source_box_route_driver_helpers.jl`,
-`src/pqs_source_box_low_order_materialization.jl`, and
-`src/pqs_source_box_route_driver_reporting.jl`, with `src/GaussletBases.jl`
-allowed only if the reporting include becomes unused. The retired wrappers are
-`cartesian_materialization`, `cartesian_print_summary`,
-`cartesian_print_details`, `cartesian_save`,
-`_pqs_source_box_route_driver_materialization`,
-`_pqs_source_box_route_driver_print_materialization`, and
-`_pqs_source_box_route_driver_save`.
-`HP-RETIRE-DRV-MAT-TOOL-01` approves deleting or quarantining only old tools
-that drive that retired wrapper workflow:
-`tools/cartesian_driver_harness.jl`, `tools/cr2_cartesian_ida_stage_probe.jl`,
-`tools/cartesian_driver_ladder_lib.jl`, and
-`tools/h2_pqs_base_hamiltonian_smoke.jl`.
-`HP-RETIRE-DRV-MAT-DOC-01` approves only active docs/index cleanup that stops
-describing the old wrapper workflow as canonical or active authority.
-`HP-RETIRE-DRV-MAT-TEST-01` approves only validation through package load,
-focused live-reference scans, canonical small base and supplemented artifact
-readback smokes, unchanged H2 RG endpoint, and removal/update of stale
-route-wrapper assertions in `test/docs/cartesian_ham_builder_policy_runtests.jl`.
-This lane does not approve changes to `bin/cartesian_ham_builder.jl`, current
-staged producer functions, artifact schema/provenance/reader/manifest, route,
-shellification, terminal lowering, raw blocks, Residual Gaussian, MWG, IDA,
-Hamiltonian assembly, complete-core-shell H1/final-basis files, broad ordinary
-or Qiu-White donor kernels, replacement wrappers, adapters, status fields,
-payloads, new tests, or Cr2 workflow. If any current canonical producer path
-or public artifact workflow depends on these wrappers, stop without a source
-commit and report the exact dependency.
-
-`HP-RETIRE-LADDER-RUNNERS-FN-01` approves only deleting the two dangling
-route-driver ladder runner scripts left after `HP-RETIRE-DRV-MAT-*`:
-`tools/run_cartesian_driver_ladder.jl` and
-`tools/run_cartesian_line_ladder.jl`. Do not add replacements, do not modify
-`bin/cartesian_ham_builder.jl`, and do not modify
-`tools/cartesian_driver_ladder_lib.jl` unless a later amendment explicitly
-approves deleting that quarantined library. `HP-RETIRE-LADDER-RUNNERS-TEST-01`
-approves only `git diff --check`, package load, focused scans for the two
-runner names and `cartesian_driver_ladder_lib`, canonical small base
-artifact/readback smoke, and no Cr2 run. This lane does not approve source
-changes, test changes except validation scans, artifact/provenance/reader
-changes, route/shellification/terminal-lowering/raw-block/RG/MWG/IDA/
-Hamiltonian assembly changes, new wrappers, adapters, status fields, payloads,
-reports, tools, tests, or Cr2 workflow. If any live source, canonical workflow,
-or approved tool still depends on these runner scripts, stop without a commit
-and report the exact dependency.
+The `HP-RETIRE-CCS-RHF-*`, `HP-RETIRE-DRV-MAT-*`, and
+`HP-RETIRE-LADDER-RUNNERS-*` lanes are completed and closed. Commits
+`28e9b2c84`, `e2e164e9b`, and `77fa2700b` removed the RHF payload stack, old
+materialization/report/save wrapper workflow, and dangling ladder runners.
+Their registry/design entries are historical deletion records, not active
+source authority. Do not restore those files, wrappers, tools, reports,
+payloads, or compatibility adapters without a new docs-only amendment.
 
 ## Basis bundle policy
 

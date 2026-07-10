@@ -802,8 +802,8 @@ Required validation:
 
 ## HP-RHO0-ANCHOR-FN-01
 
-Status: implemented but superseded for Hartree-correction physics and
-stability interpretation by `HP-RHO0-JANCHOR-FN-01`.
+Status: implemented, superseded, and closed to new source work. Current
+direct-Hartree anchor authority is `HP-RHO0-JANCHOR-FN-01`.
 
 Correction note: this lane validated the algebra for the object it built, but
 the object was the wrong Hartree-only correction object. It subtracted the full
@@ -898,7 +898,8 @@ framework.
 
 ## HP-RHO0-ANCHOR-TEST-01
 
-Status: approved validation gates for `HP-RHO0-ANCHOR-FN-01`.
+Status: historical validation evidence for the superseded anchor; closed to
+new test work.
 
 Required validation:
 
@@ -918,9 +919,11 @@ Required validation:
 
 ## HP-RHO0-CORR-AUDIT-01
 
-Status: approved docs-only / measurement-only corrected-Hamiltonian audit, but
-suspended until the direct-Hartree anchor replacement in `HP-RHO0-JANCHOR-*`
-is implemented.
+Status: historical measurement-only corrected-Hamiltonian audit. Its original
+full-interaction-anchor run is invalid for Hartree-correction interpretation;
+the direct-Hartree replacement `HP-RHO0-JANCHOR-*` is implemented, and the
+subsequent H/Be/Be2 behavior remains a stop-signal pending the separately
+approved exchange/direct-pairing audit.
 
 Correction note: any corrected-Hamiltonian audit using the old
 `Delta_F0_alpha/beta` from the full approximate interaction Fock is invalid as
