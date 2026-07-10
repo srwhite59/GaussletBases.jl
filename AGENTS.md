@@ -769,7 +769,11 @@ packet facility recorded in the registry and
 `docs/src/developer/designs/cartesian_hamiltonian_producer/atomic_hf_reference_packets.md`.
 Unconverged packets are rejected. Fitted density/potential terms are not
 protected orbitals. Density-fit `J0_G` must receive its role-qualified compact
-Coulomb expansion explicitly. No production correction, solver, public
+Coulomb expansion explicitly. The stored overlap fingerprint is an exact
+packet self-integrity check. Translated owner-local embedding keeps exact
+atom/basis/count/owner/center/order checks but compares overlap numerically at
+the unchanged `norm(..., Inf) <= 1e-10`; mapped raw-byte hash mismatch alone
+is not a failure. No production correction, solver, public
 default, exchange, EGOI, row-gauge rho0/P0, or Cr/Cr2 claim is approved.
 `HP-PQS-ATOMREF-POTMOM-FN-01` and
 `HP-PQS-ATOMREF-POTMOM-TEST-01` authorize only the implemented fixed-policy
@@ -1196,9 +1200,12 @@ Approved Residual Gaussian module surfaces:
   `M = [G,R_compact]`, and apply current optional staged selection only after
   that mandatory block. Keep each original packet block separate for
   `P0 = sum_a P_a`; do not globally orthogonalize packet blocks when forming
-  the reference density. Build placed fitted-potential `GG/GA/AA` through the
-  neutral raw-block owner, transform `J0` through the existing protected
-  fixed-sector and localized `W` helpers, include
+  the reference density. Packet self-fingerprints and structural owner-local
+  mapping remain exact hard failures; the mapped overlap block uses the
+  unchanged numerical `1e-10` infinity-norm gate and reports any raw hash
+  mismatch only in one nested internal summary. Build placed fitted-potential
+  `GG/GA/AA` through the neutral raw-block owner, transform `J0` through the
+  existing protected fixed-sector and localized `W` helpers, include
   `E0 = sum_a E_aa + 2*sum_{a<b}E_ab`, and call the existing in-memory
   `ScreenedHartreeCorrection` with native `Vee_L`. Approved files are
   `residual_basis.jl`, `augmented_operators.jl`,

@@ -27448,3 +27448,71 @@ Carrying-cost result:
 - Exact next blocker: a separate manager review and implementation pass is
   required before the pending retained-GTO helper or validation can become
   committed source.
+
+## Cartesian Hamiltonian Producer Pass 355 - Packet Embedding Equivalence Authority
+
+Commit(s):
+- this commit - distinguish packet self-integrity from mapped overlap
+  equivalence.
+
+Summary:
+- Amended the existing `HP-PQS-ATOMREF-PACKET-*` and
+  `HP-RG-PROTECT-ADDREF-*` contracts without creating a new lane. A packet's
+  stored overlap fingerprint remains an exact self-integrity check. Molecular
+  embedding still requires exact atom/basis, function-count, owner, placement,
+  label, angular-power, and column-order mapping.
+- The translated or reconstructed owner-local overlap block is now correctly
+  treated as a numerical representation: it must satisfy the unchanged
+  `norm(S_block - S_packet, Inf) <= 1e-10` gate, but need not reproduce the
+  packet matrix's raw-byte SHA-256 fingerprint.
+- Approved one nested internal mapping summary containing stored, recomputed,
+  and mapped fingerprints, the mapped exact-match boolean, maximum absolute
+  and infinity-norm differences, and tolerance. No public, staged, or artifact
+  field cloud is approved.
+
+Validation / evidence:
+- Design review inspected the live packet embedding helper and confirmed that
+  its current mapped-block hash equality is the narrow incorrect gate. The two
+  Cr owner-local blocks map uniquely and differ from packet overlap by only
+  `3.98e-13`, while their raw-byte hashes differ and all other preflight gates
+  pass.
+- Focused authority, tolerance, fingerprint, and source-surface scans plus
+  docs-only scope review and `git diff --check` passed. No Julia test was run
+  because this pass changes documentation authority only.
+
+Goal advancement / guardrail:
+- LT2/LT5/LT8 and MT4: unblocks the already-approved Cr2 additive-reference
+  measurement without weakening packet identity. Corrupt packet storage,
+  reordered basis facts, wrong owner/center, or overlap error above `1e-10`
+  remain hard failures.
+- No tolerance, public API, artifact, Hamiltonian, solver, endpoint, or EGOI
+  authority changed. CR2 must not bypass the repo helper and may rerun preflight
+  only after focused packet/additive-reference source tests pass.
+- The unrelated uncommitted `src/hamiltonian_corrections.jl` EGOI WIP and two
+  handoff documents remain outside this authority and untouched.
+
+Carrying-cost result:
+- source/test line delta: `0` in this docs-only pass; no new ID, persistent
+  object, or compatibility alias was introduced.
+- simplified target: one exact packet-integrity gate, one exact structural
+  mapping gate, and one numerical mapped-overlap gate.
+- exact next blocker: implement the narrow embedding check and nested summary,
+  pass focused failure/equivalence tests, then rerun Cr2 preflight.
+
+### Medium-Term Goal Checkpoint After Pass 355
+
+- MT1 fake-PQS quarantine: completed/maintained. No packet or protected-
+  reference work revives fake-PQS construction.
+- MT2 independent PQS recovery: completed for the supported producer; this
+  amendment changes only packet-to-molecular representation validation.
+- MT3 common physical support vocabulary: active/maintained. Exact owner,
+  placement, order, and terminal due diligence remain prerequisites for the
+  molecular reference measurement.
+- MT4 supplement staging: active. The additive-reference construction is
+  implemented; the immediate correctness blocker is the mapped-overlap
+  equivalence fix and focused tests before Cr2 preflight.
+- MT5 cleanup pressure: active. Single-home documentation extraction continues
+  in parallel, with the next accepted cleanup pass numbered 356; it must not
+  delay the packet embedding fix.
+- MT6 old flat-path classification: maintenance. No interaction transform,
+  row-gauge correction, EGOI WIP, or public workflow was promoted.

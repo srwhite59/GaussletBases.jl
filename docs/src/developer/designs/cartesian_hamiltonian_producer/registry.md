@@ -2399,13 +2399,25 @@ Approved test surface:
 
 - `test/nested/cartesian_atomic_hf_reference_packet_runtests.jl`;
 - `test/nested/cartesian_screened_hartree_correction_runtests.jl` only for
-  unconverged packet-consumer rejection;
+  unconverged packet-consumer rejection and protected owner-local embedding
+  equivalence/failure coverage;
 - `test/misc/runtests.jl` only for the vendored-basis identity/parser
   regression.
 
 Permission summary: build, validate, write/read, and boundedly consume the
 implemented Be-core and Ne-all-electron one-center packet references under the
-canonical determinant/density/potential contract.
+canonical determinant/density/potential contract. Stored packet overlap
+fingerprints remain exact self-integrity checks. A translated/reconstructed
+owner-local supplement block must match all identity/order/owner/placement
+facts exactly, but its overlap is accepted by the unchanged numerical
+`norm(..., Inf) <= 1e-10` gate rather than raw-byte fingerprint equality. One
+nested internal mapping summary may carry the three fingerprints, mapped exact-
+match boolean, two overlap differences, and tolerance.
+
+Amendment source limit: the embedding-equivalence follow-on may edit only
+`src/cartesian_reference_density/atomic_hf_reference_packets.jl`, plus the
+existing private additive-reference caller if the nested diagnostic must be
+forwarded. This does not reopen the other packet or correction surfaces.
 
 Non-goals: production corrected Hamiltonians, artifact integration beyond the
 packet, public defaults, solver workflow, exchange, EGOI, row-gauge rho0/P0,
@@ -5086,9 +5098,12 @@ Required construction:
 
 1. Build ordered compact-first `R_compact` once and define
    `M = [G,R_compact]`.
-2. Embed each packet's original occupied block `Y_a` into the combined
-   supplement by explicit owner-local indices, placement, basis order, and
-   fingerprint.
+2. Validate each packet's stored overlap fingerprint exactly, then embed its
+   original occupied block `Y_a` by exact owner-local atom/basis, count,
+   indices, placement, labels, angular powers, and column order. Accept the
+   mapped overlap block only when its matrix infinity-norm difference from the
+   packet overlap is at most the unchanged `1e-10`; mapped raw-byte hash
+   equality is diagnostic, not required.
 3. Form a full-rank `S_AA`-orthonormal union `Y_union` for basis protection.
 4. Make `Y_union` mandatory first, then add current compact-original protected
    directions after orthogonalizing them against that union.
@@ -5165,6 +5180,11 @@ records rather than copied as a flat stage field cloud. Target source budget is
 at most `350` added lines across the approved files, with duplicate compact
 selection deletion reported separately.
 
+For this embedding-equivalence amendment only, source edits are limited to
+`src/cartesian_reference_density/atomic_hf_reference_packets.jl` and the
+existing private additive-reference caller if nested diagnostic forwarding is
+directly required. The other implemented addref surfaces are not reopened.
+
 Approved committed test surface:
 
 - `test/misc/runtests.jl` for a tiny mandatory-union/additive-density contract;
@@ -5172,6 +5192,13 @@ Approved committed test surface:
   block validation and anchor algebra.
 
 Do not add a new committed test file or binary fixture.
+
+The existing nested test may also cover the owner-local embedding distinction:
+exact packet self-integrity and structural mapping remain hard failures, while
+a numerically equivalent translated/reconstructed overlap block may have a
+different mapped fingerprint. Differences above `1e-10`, corrupt packet
+fingerprints, reordered labels/powers, wrong owners, and wrong centers must
+fail. Cr2 preflight follows only after focused source tests pass.
 
 First end-to-end acceptance is an ignored, source-backed, physically padded
 Be2 construction with two converged Be core `2e` cc-pV5Z, `lmax = 1` packets.
@@ -5218,7 +5245,8 @@ of `X`, `S_AA`, compact residual geometry, protected `G_L/A_L`, native
 ordering, and exact final-basis cross overlap. A historical final-row mismatch
 does not establish a Coulomb-accuracy basis change.
 
-Decision rule: if exact packet mapping, mandatory recovery, neutral
+Decision rule: if exact packet self-integrity, exact structural owner-local
+mapping, numerical mapped-overlap equivalence, mandatory recovery, neutral
 fitted-potential blocks, compact cross energy, and existing correction reuse
 cannot all fit this in-memory surface, stop and report the exact missing native
 fact. Do not solve the blocker with public/artifact/solver wiring or a second

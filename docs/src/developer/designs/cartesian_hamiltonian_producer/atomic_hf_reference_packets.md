@@ -75,9 +75,52 @@ The packet records:
   supplied, and role-qualified Coulomb-expansion summaries.
 
 The ordered supplement and its fingerprint are part of packet identity.
-Consumers must match the packet to the current supplement by explicit order,
-overlap, and fingerprint facts. Label-only orbital selection is not a packet
-mapping contract.
+Label-only orbital selection is not a packet mapping contract.
+
+## Packet Integrity And Owner-Local Embedding
+
+Packet self-integrity and molecular embedding equivalence are separate gates.
+Before any embedding, recompute the stored overlap fingerprint and require
+
+```text
+fingerprint(packet.overlap) == packet.overlap_fingerprint
+```
+
+exactly. A stale or corrupted stored packet must fail. This check is not
+relaxed by an embedding tolerance.
+
+Mapping a packet into a translated or reconstructed owner-local molecular
+supplement must still match exactly on atom and basis identity, packet function
+count, owner indices, placement center within the existing tolerance, ordered
+labels, angular powers, and packet-to-molecular column order. After those
+structural checks, compare the mapped owner-local overlap block numerically:
+
+```text
+S_packet = packet.overlap
+S_block  = S_AA[packet_to_molecular_order, packet_to_molecular_order]
+
+norm(S_block - S_packet, Inf) <= overlap_atol
+```
+
+`overlap_atol` defaults to `1e-10` and must be finite and nonnegative. The raw
+SHA-256 fingerprint of `S_block` is diagnostic only: translation or equivalent
+reconstruction may change final `Float64` bits without changing the physical
+overlap matrix. A mapped-block fingerprint mismatch is therefore not a failure
+when every structural check and the numerical overlap bound passes.
+
+Embedding returns one nested internal overlap-mapping summary containing:
+
+- stored packet fingerprint;
+- recomputed packet fingerprint;
+- mapped-block fingerprint;
+- whether the mapped-block fingerprint exactly matches the packet fingerprint;
+- maximum absolute element difference;
+- matrix infinity-norm difference;
+- `overlap_atol`.
+
+Do not copy these into flat stage, artifact, or public-result fields. Packet
+self-integrity remains a hard prerequisite even when the mapped block is
+numerically equivalent.
 
 ## Convergence And Occupancy
 
@@ -192,7 +235,12 @@ Required packet checks are:
 - occupied-metric orthogonality and density trace;
 - density reconstructed from occupied coefficients agrees with the stored
   density;
-- current supplement ordering, overlap, and fingerprint match;
+- exact stored-packet overlap-fingerprint integrity;
+- exact owner-local atom/basis, function-count, owner, placement, ordered-label,
+  angular-power, and column-order mapping;
+- mapped owner-local overlap infinity-norm error at most the unchanged
+  `overlap_atol = 1e-10`; a numerically equivalent reconstructed block may have
+  a different raw fingerprint;
 - density-fit charge and self-energy errors are reported and within the
   intended fit tolerance;
 - potential-fit radial and far-tail diagnostics are reported;
@@ -207,8 +255,9 @@ Required packet checks are:
   occupancy convention.
 
 Fail rather than fitting, writing, or consuming when convergence, packet
-identity, occupied orthogonality, density trace, or required fit validation is
-not satisfied. Do not repair packet mismatch by relabeling orbitals, changing
+self-integrity, exact owner-local mapping, numerical overlap equivalence,
+occupied orthogonality, density trace, or required fit validation is not
+satisfied. Do not repair packet mismatch by relabeling orbitals, changing
 occupations, treating fit terms as orbitals, or silently choosing another
 Coulomb expansion.
 
@@ -216,8 +265,15 @@ Coulomb expansion.
 
 Implementation and test ownership is recorded in the compact registry entry
 for `HP-PQS-ATOMREF-PACKET-*`. The bounded tests cover packet roundtrip,
-validation, unconverged-reference rejection, Be/Ne consumption, explicit
-compact expansion passage, and the vendored basis-data regression.
+validation, unconverged-reference rejection, exact and numerically equivalent
+owner-local embedding, structural mapping failures, Be/Ne consumption,
+explicit compact expansion passage, and the vendored basis-data regression.
+
+For the embedding-equivalence follow-on, source edits are limited to
+`src/cartesian_reference_density/atomic_hf_reference_packets.jl`. The existing
+private additive-reference caller may forward the one nested mapping summary
+only if directly needed. No other packet, correction, artifact, or workflow
+surface is reopened by this amendment.
 
 The packet facility depends on the historical basis collection described in
 [Legacy BasisSets provenance](../../legacy_basissets_provenance.md).

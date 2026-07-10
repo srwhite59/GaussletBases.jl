@@ -108,8 +108,26 @@ Y_a in A coordinates
 n_a = packet occupations
 ```
 
-Mapping must use explicit packet basis order/fingerprint, placement center,
-and owner-local supplement indices. Label-only picks are forbidden.
+Packet self-integrity must first be established by exactly recomputing the
+stored packet overlap fingerprint. Mapping must then use exact packet atom and
+basis identity, function count, owner-local supplement indices, placement
+center, ordered labels, angular powers, and packet-to-molecular column order.
+Label-only picks are forbidden.
+
+The translated or reconstructed owner-local molecular overlap block is an
+equivalent numerical representation, not packet storage bytes. After the exact
+structural checks, require
+
+```text
+norm(S_AA[indices, indices] - packet.overlap, Inf) <= overlap_atol
+```
+
+with the unchanged default `overlap_atol = 1e-10`. A different mapped-block
+SHA-256 fingerprint is diagnostic and is not by itself a failure. Return one
+nested internal overlap-mapping summary with the stored, recomputed, and mapped
+fingerprints; mapped exact-match boolean; maximum absolute and infinity-norm
+differences; and tolerance. Do not flatten these diagnostics into staged or
+artifact fields.
 
 Validate each packet block separately:
 
@@ -117,7 +135,9 @@ Validate each packet block separately:
 Y_a' S_AA Y_a = I
 sum(n_a) = packet electron count
 packet RHF converged
-packet basis/order/fingerprint matches the owner-local supplement block
+packet self-fingerprint is exact
+packet identity/order/owner/placement maps exactly
+owner-local overlap agrees numerically within overlap_atol
 ```
 
 Form a full-rank `S_AA`-orthonormal basis for the union:
@@ -275,6 +295,9 @@ memory for an explicit off/on comparison. No corrected artifact is approved.
   - add one neutral explicit fitted-potential `GG/GA/AA` entry point reusing
     existing factor/block kernels.
 - `src/cartesian_reference_density/atomic_hf_reference_packets.jl`
+  - validate packet self-integrity and exact owner-local mapping;
+  - accept only numerically equivalent mapped overlap blocks and return one
+    nested overlap-mapping summary;
   - validate/place packet occupied blocks;
   - expose placed fitted-potential raw blocks through the neutral owner;
   - evaluate compact density-cloud cross energies.
@@ -289,6 +312,12 @@ memory for an explicit off/on comparison. No corrected artifact is approved.
 No new source file, public export, artifact schema, or persistent workflow
 object is approved. Related diagnostics must be nested in compact module-owned
 records rather than added as a flat staged field cloud.
+
+The embedding-equivalence follow-on itself may edit only
+`src/cartesian_reference_density/atomic_hf_reference_packets.jl` and, if
+diagnostic forwarding is directly required, the existing private additive-
+reference caller. The amendment does not reopen the other implemented source
+surfaces above.
 
 The no-reference protected member path must remain numerically unchanged.
 
@@ -306,6 +335,14 @@ Committed correctness coverage may extend only:
   block validation and anchor algebra.
 
 Do not add a new committed test file or binary fixture in this lane.
+
+Focused embedding coverage must prove that exact same-packet mapping passes;
+a numerically equivalent translated/reconstructed block with a different hash
+passes; an infinity-norm difference above `1e-10` fails; and a corrupted stored
+packet fingerprint fails. Reordered labels or powers, wrong owner, wrong
+center, or changed packet-to-molecular order remain hard failures. Rerun Cr2
+preflight only after these focused source tests and existing packet/additive-
+reference tests pass.
 
 The first end-to-end acceptance gate is an ignored, source-backed, physically
 padded Be2 construction using two converged Be core `2e` cc-pV5Z, `lmax = 1`
@@ -343,8 +380,11 @@ measurement. That is not a production claim or repo test.
 
 Stop and report if:
 
-- packet basis/order/fingerprint cannot map exactly to owner-local supplement
-  rows;
+- stored packet overlap fingerprint cannot be reproduced exactly;
+- packet atom/basis, function count, owner, placement, labels, angular powers,
+  or packet-to-molecular order does not map exactly;
+- mapped owner-local overlap differs from packet overlap by more than
+  `overlap_atol` in matrix infinity norm;
 - a packet occupied block is not separately recovered at roundoff;
 - the mandatory union is not stably representable by `M`;
 - fitted-potential `GA/AA` requires duplicated Gaussian kernels rather than the

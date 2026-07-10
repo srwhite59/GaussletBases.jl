@@ -182,7 +182,10 @@ Implemented base path:
   bounded references are Be core `2e` and Ne all-electron `10e`, cc-pV5Z,
   `lmax = 1`. Unconverged packets are rejected; fitted density/potential terms
   are not protected orbitals; and density-fit `J0_G` receives the explicit
-  role-qualified compact Coulomb expansion.
+  role-qualified compact Coulomb expansion. Packet overlap fingerprints remain
+  exact self-integrity checks, while translated owner-local molecular overlap
+  blocks use exact identity/order mapping plus the unchanged numerical
+  `norm(..., Inf) <= 1e-10` equivalence gate.
 - `HP-PQS-ATOMREF-POTMOM-FN-01` and
   `HP-PQS-ATOMREF-POTMOM-TEST-01` implement the fixed-policy determinant-
   moment polish for those packet potential fits. It preserves all `33`
@@ -396,6 +399,9 @@ Approved Residual Gaussian robustness lane:
   gate is a physically padded Be2 construction with two Be `2e` packets,
   separate packet recovery/trace checks, total charge `4`, explicit cross
   energy, anchors, unchanged unscreened matrices, and terminal due diligence.
+  Stored packet fingerprints and structural mapping remain hard failures;
+  mapped overlap hash equality is diagnostic when the numerical equivalence
+  gate passes.
   No public input, corrected artifact, solver, endpoint claim, protected atom,
   counterpoise, compact/high transfer, EGOI, exchange, or Cr2 production
   workflow is approved. The strict padded Be2 gate passed; CR2 may consume the
