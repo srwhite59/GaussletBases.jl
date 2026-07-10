@@ -488,30 +488,11 @@ Approved robustness lane:
   native order: do not mutate `H1_L`/`Vee_L`, do not write only z-sorted
   matrices under the existing convention ID, and do not treat native sector
   ranges as contiguous after z sorting.
-- `HP-RG-PROTECT-EGOI-AUDIT-01` approves only a measurement audit for existing
-  matrix-level EGOI routines applied to protected-localized artifacts. The
-  audit may use ignored probes, `/Users/srw/dmrgtmp` outputs, H/Be/Be2 first,
-  reconstructed `Qtarget`, exact Gaussian target Coulomb for selected target
-  orbitals, and existing `egoi_*` matrix routines. It must report target
-  definition, residual before/after, `DeltaV` norms, product-matrix
-  rank/singular values, finite/symmetric corrected `Vee`, low Fock spectra,
-  and H/Be/Be2 behavior against rho0/P0 audit evidence. It does not approve
-  source edits, artifact variants, public/solver workflow, selection changes,
-  protected-artifact convention changes, rho0/P0 revival, or Cr2 before small
-  cases pass.
-- `HP-RG-PROTECT-EGOI-FN-01` / `HP-RG-PROTECT-EGOI-TEST-01` approve the first
-  source-backed retained-GTO local-product EGOI helper. The approved target is
-  owner-balanced retained original supplement `s1+s2` mapped from compact
-  retained source indices. The helper may build target metadata, `Qtarget`,
-  symmetric local products excluding AB overlap products as first-class
-  targets, the AA-BB local-product Coulomb acceptance block, the `M2` local
-  mask, in-memory `DeltaV`, and compact diagnostics. Primary source owner is
-  `src/hamiltonian_corrections.jl`; optional
-  `src/cartesian_residual_gaussians/augmented_operators.jl` and
-  `src/cartesian_residual_gaussians/residual_basis.jl` edits are allowed only
-  for retained-source mapping or transform-ready `Qtarget`. No artifacts,
-  public workflow, solver integration, selection changes, rho0/P0,
-  broad protected-Z, AB-overlap default targets, or `s3`/`p`/`d` promotion.
+- `HP-RG-PROTECT-EGOI-AUDIT-01` is completed historical measurement
+  evidence. `HP-RG-PROTECT-EGOI-FN-01` /
+  `HP-RG-PROTECT-EGOI-TEST-01` are approved but pending. Their sole active
+  contract is [retained-GTO local-product EGOI](retained_gto_egoi.md); no
+  protected retained-GTO helper is implemented in committed source.
 - `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only a same-parent
   protected-localized ladder transfer audit. It may use ignored probes and
   `/Users/srw/dmrgtmp` outputs to build same-geometry/same-parent `ns = 7`

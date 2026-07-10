@@ -419,31 +419,14 @@ Approved Residual Gaussian robustness lane:
   [protected-localized artifact contract](protected_localized_artifact.md).
   Ordinary artifact semantics, public/default workflow, solver behavior,
   selection policy, screening, and Cr2 production claims remain excluded.
-- `HP-RG-PROTECT-EGOI-AUDIT-01` approves only a measurement audit of existing
-  matrix-level EGOI routines on protected-localized artifacts. It may use
-  ignored probes, `/Users/srw/dmrgtmp` outputs, H/Be/Be2 first, reconstructed
-  `Qtarget` from current protected/injection geometry, exact Gaussian target
-  Coulomb for selected target orbitals, and existing
-  `egoi_target_product_matrix`, `egoi_target_coulomb_matrix`,
-  `egoi_density_density_correction`, and
-  `egoi_stationary_hamiltonian_correction`. It does not approve source edits,
-  artifact variants, public workflow, solver workflow, Cr2 production claims,
-  selection changes, protected-artifact convention changes, or rho0/P0 revival.
-  Do not run Cr2 until H/Be/Be2 diagnostics are sane.
-- `HP-RG-PROTECT-EGOI-FN-01` and `HP-RG-PROTECT-EGOI-TEST-01` approve a
-  narrow internal source lane for retained original-GTO local-product EGOI.
-  The approved first target is owner-balanced retained `s1+s2` original
-  supplement GTOs mapped from compact retained source indices, in the
-  protected-localized native basis, using molecular local-product constraints
-  with the `M2` mask. Local products on each atom are first-class targets, the
-  AA-BB local-product Coulomb block is included in the acceptance metric, AB
-  overlap products are not default targets, and long-range/disallowed
-  `DeltaV` remains exactly zero. Source surface is
-  `src/hamiltonian_corrections.jl`, with optional
-  `augmented_operators.jl`/`residual_basis.jl` wiring only for retained-source
-  mapping or `Qtarget`. This lane does not approve public workflow, artifacts,
-  solver integration, selection changes, atom-HF/P0/rho0, broad protected-Z
-  targets, `s3`/`p`/`d` target promotion, or Cr2 production claims.
+- `HP-RG-PROTECT-EGOI-AUDIT-01` is a completed historical measurement,
+  summarized in manager running-log Passes 302-308.
+- `HP-RG-PROTECT-EGOI-FN-01` and `HP-RG-PROTECT-EGOI-TEST-01` are approved
+  pending internal source and validation authority. The retained-original
+  `s1+s2`, local-product, `M2`, exactly local `DeltaV` contract is canonical
+  in [retained-GTO local-product EGOI](retained_gto_egoi.md). No protected
+  retained-GTO helper or focused test is implemented in committed source;
+  current uncommitted `hamiltonian_corrections.jl` work is not authoritative.
 - `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only a measurement-first
   same-parent protected-localized ladder transfer audit. It may build
   `ns = 7 -> 9` and optional `9 -> 11` protected-localized inherited-site

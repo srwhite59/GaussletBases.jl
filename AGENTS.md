@@ -1245,46 +1245,18 @@ Approved Residual Gaussian module surfaces:
   lane does not approve label-derived centers, new second-moment construction,
   matrix reordering, public/solver workflow, EGOI, additive-reference,
   screening, rho0, committed tests by default, or Cr2 production claims.
-- `HP-RG-PROTECT-EGOI-AUDIT-01` approves only ignored measurement probes for
-  existing matrix-level EGOI routines over protected-localized artifacts. It
-  may use `/Users/srw/dmrgtmp` outputs, H/Be/Be2 first, reconstructed
-  `Qtarget` from current protected/injection geometry, exact Gaussian target
-  Coulomb for selected target orbitals, and existing
-  `egoi_target_product_matrix`, `egoi_target_coulomb_matrix`,
-  `egoi_density_density_correction`, and
-  `egoi_stationary_hamiltonian_correction`. It must report target definition,
-  `Qtarget` dimension/Gram/orthogonality, representability/projection loss,
-  target Coulomb construction, EGOI residual before/after, `DeltaV`
-  max/Frobenius/relative size, product-matrix rank/singular values,
-  finite/symmetric corrected `Vee`, low Fock spectra, H one-electron and
-  self-interaction checks, and Be/Be2 behavior compared to rho0/P0 audit
-  evidence. It does not approve source edits, artifact/schema changes,
-  EGOI-corrected artifact variants, public driver/API/export or solver
-  workflow, RG/injection selection changes, protected-localized artifact
-  convention changes, rho0/P0 revival, rejected broad directions as MWG
-  residual channels, committed tests, or Cr2 production claims. Do not run Cr2
-  until H/Be/Be2 diagnostics pass. Because this is measurement-only authority,
-  do not add it to the approved source-ID list.
-- `HP-RG-PROTECT-EGOI-FN-01` and `HP-RG-PROTECT-EGOI-TEST-01` approve only a
-  narrow internal retained-GTO local-product EGOI helper. Primary source
-  ownership is `src/hamiltonian_corrections.jl`; optional
-  `src/cartesian_residual_gaussians/augmented_operators.jl` and
-  `src/cartesian_residual_gaussians/residual_basis.jl` edits are allowed only
-  to obtain protected-localized retained source mapping or transform-ready
-  `Qtarget`. The approved target is owner-balanced retained original
-  supplement `s1+s2` mapped from compact retained source indices, not broad
-  protected-`Z`, atom-HF orbitals, final basis rows, or residualized RG
-  functions. The helper may build target metadata, `Qtarget`, symmetric
-  local-product targets excluding AB overlap products as default first-class
-  products, AA-BB local-product Coulomb acceptance blocks, the `M2` local mask,
-  in-memory `DeltaV`, and compact diagnostics. Disallowed/long-range
-  `DeltaV` must remain exactly zero. This lane does not approve public
-  API/export/driver workflow, artifacts/schema/provenance/writer/reader
-  changes, corrected protected-localized artifact variants, solver/HF/MP2-NO
-  workflow integration, Cr2 production claims, RG/injection selection-policy
-  changes, broad protected-Z targets, atom-HF/P0/rho0 revival, AB overlap
-  products as default targets, `s3`/`p`/`d` target promotion, or committed
-  large Cr2 tests/fixtures.
+- `HP-RG-PROTECT-EGOI-AUDIT-01` is completed historical measurement
+  evidence, not active implementation authority.
+- `HP-RG-PROTECT-EGOI-FN-01` and `HP-RG-PROTECT-EGOI-TEST-01` are approved
+  but pending; the canonical contract is
+  `docs/src/developer/designs/cartesian_hamiltonian_producer/retained_gto_egoi.md`.
+  No protected retained-GTO helper or focused test is implemented in committed
+  source, and uncommitted `src/hamiltonian_corrections.jl` additions are not
+  authoritative. The only approved first target is owner-balanced retained
+  original `s1+s2`, local symmetric products with `AA-BB` Coulomb acceptance,
+  the `M2` mask, and exactly zero disallowed/long-range `DeltaV`. This does not
+  approve AB overlap products, `s3`/`p`/`d`, artifacts, public/solver workflow,
+  rho0/screened-Hartree changes, or Cr2 production claims.
 - `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only ignored measurement
   probes for same-parent protected-localized ladder transfer. It may use
   `/Users/srw/dmrgtmp` outputs, existing protected-localized inherited-site

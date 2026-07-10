@@ -189,7 +189,8 @@ This contract does not own or authorize:
 
 - protected-basis numerical construction or alternative interaction rules;
 - ladder manifests, transfers, restart sidecars, or bundle summaries;
-- EGOI targets or corrections;
+- EGOI targets or corrections, which remain governed by
+  [retained-GTO local-product EGOI](retained_gto_egoi.md);
 - occupied-first or additive-reference construction;
 - rho0, screened-Hartree, or corrected artifact variants;
 - solver behavior or public-driver/default workflow;

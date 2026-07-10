@@ -27407,3 +27407,44 @@ Carrying-cost result:
   added.
 - Exact next step: CR2 may consume two Cr `18e` packets through this private
   path for a controlled same-basis correction-off versus correction-on audit.
+
+## Cartesian Hamiltonian Producer Pass 354 - Canonical Retained-GTO EGOI Contract
+
+Commit(s):
+- this commit - extract the retained-GTO local-product EGOI contract.
+
+Summary:
+- Moved retained-source selection, native-`L` `Qtarget`, local symmetric
+  products, `AA-AA` / `BB-BB` / `AA-BB` acceptance, the exact-local `M2`
+  mask, diagnostics, failure behavior, and exclusions into
+  `retained_gto_egoi.md` as their single canonical home.
+- Corrected lifecycle drift: `HP-RG-PROTECT-EGOI-AUDIT-01` is completed
+  historical measurement, while `HP-RG-PROTECT-EGOI-FN-01` and
+  `HP-RG-PROTECT-EGOI-TEST-01` remain approved but pending. Pass 309 recorded
+  transient uncommitted WIP; it did not make the protected helper part of
+  committed source.
+- Reduced the registry, current status, `AGENTS.md`, implementation slices,
+  residual-domain page, and transitional injection memo to lifecycle, links,
+  ownership, and execution-critical boundaries.
+
+Validation / evidence:
+- Compared the new contract with committed `HEAD` generic EGOI APIs and
+  confirmed that no retained-GTO helper or focused test exists in committed
+  source. Preserved the completed numerical record in Passes 302-308 without
+  promoting machine-local output paths into the contract.
+- Focused lifecycle, exact-zero locality, source/test surface, link, docs-build,
+  docs-only scope, and `git diff --check` validation passed.
+
+Goal advancement / guardrail:
+- LT3/LT5 and MT5: continues single-home authority cleanup with no scientific
+  or source-authority change. The uncommitted
+  `src/hamiltonian_corrections.jl` WIP remains explicitly outside this pass.
+- Artifact variants, ladder behavior, solver/HF/MP2-NO integration,
+  screened-Hartree, broader targets, and Cr2 production remain excluded.
+
+Carrying-cost result:
+- Active docs are `+401/-501`, net `-100` lines including the canonical page
+  and this record; duplicated transitional contract prose was removed.
+- Exact next blocker: a separate manager review and implementation pass is
+  required before the pending retained-GTO helper or validation can become
+  committed source.

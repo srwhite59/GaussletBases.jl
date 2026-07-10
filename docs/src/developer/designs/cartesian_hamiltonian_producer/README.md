@@ -44,9 +44,11 @@ owns compact-main replacement, localized `L`, exact `H1_L`, and inherited-site
 [protected-localized artifact contract](protected_localized_artifact.md) owns
 its opt-in persistence, native-order locality metadata, compatibility, and
 readback failure behavior.
-`HP-RG-PROTECT-EGOI-*` approves the first retained-original-GTO local-product
-EGOI helper as an internal in-memory correction primitive, not an artifact or
-solver workflow. `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only a
+The retained-GTO EGOI audit is complete;
+[`HP-RG-PROTECT-EGOI-*`](retained_gto_egoi.md) records the approved but
+unimplemented retained-original-GTO local-product helper and validation
+contract. It is not an artifact or solver workflow.
+`HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only a
 same-parent protected-localized ladder transfer measurement audit, using
 final-basis cross overlaps to move occupied orbitals between comparable
 Cr2 ladder bases. `HP-RG-PROTECT-LADDER-BUNDLE-*` approves an opt-in
@@ -167,6 +169,9 @@ ID or subsystem.
 - [Protected-localized basis convention](protected_localized_basis.md)
   for compact-first protected-original replacement, exact localized one-body
   operators, inherited-site `Vee`, and the rejection of direct `C' V C`
+- [Retained-GTO local-product EGOI](retained_gto_egoi.md) for the completed
+  measurement and approved-pending retained-original `s1+s2`, local-product,
+  `M2` correction helper
 - [Occupied-first injection geometry](occupied_first_injection.md)
   for mandatory occupied protection, physical capture validation, optional
   supplement selection, and the current unwired-consumer boundary

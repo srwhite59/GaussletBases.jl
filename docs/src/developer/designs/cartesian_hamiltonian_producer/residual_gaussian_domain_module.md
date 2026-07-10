@@ -82,11 +82,10 @@ module, or object names in the new owner.
 - `HP-RG-PROTECT-ARTLOC-FN-01` / `HP-RG-PROTECT-ARTLOC-TEST-01` - implemented
   row-locality metadata governed by the
   [protected-localized artifact contract](protected_localized_artifact.md).
-- `HP-RG-PROTECT-EGOI-AUDIT-01` - measurement-only EGOI audit over
-  protected-localized artifacts.
-- `HP-RG-PROTECT-EGOI-FN-01` - retained-GTO local-product EGOI helper.
-- `HP-RG-PROTECT-EGOI-TEST-01` - validation gates for the retained-GTO EGOI
-  helper.
+- `HP-RG-PROTECT-EGOI-AUDIT-01` - completed retained-GTO EGOI measurement.
+- `HP-RG-PROTECT-EGOI-FN-01` / `HP-RG-PROTECT-EGOI-TEST-01` - approved
+  pending helper and validation governed by
+  [retained-GTO local-product EGOI](retained_gto_egoi.md).
 - `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` - measurement-only same-parent
   protected-localized ladder transfer audit.
 - `HP-RG-PROTECT-LADDER-BUNDLE-FN-01` - opt-in protected-localized ladder
@@ -358,27 +357,14 @@ That contract owns artifact identity, native ordering, row locality,
 compatibility, and failure behavior. It does not expand this module's basis,
 interaction, public-workflow, solver, EGOI, screening, or ladder authority.
 
-`HP-RG-PROTECT-EGOI-AUDIT-01` approves only ignored measurement probes for
-existing matrix-level EGOI routines over the protected-localized artifact
-objects. It may reconstruct `Qtarget` from current protected/injection
-geometry, build exact Gaussian target Coulomb for selected target orbitals,
-and report H/Be/Be2 diagnostics before any optional bounded Cr2 diagnostic.
-It does not approve source edits, artifact variants, public workflow, solver
-workflow, RG/injection selection changes, protected-artifact convention
-changes, rho0/P0 revival, or Cr2 production claims.
-
-`HP-RG-PROTECT-EGOI-FN-01` approves the first source-backed retained-GTO EGOI
-helper. The target is owner-balanced retained original supplement `s1+s2`
-GTOs mapped from compact retained source indices, not broad protected-`Z`,
-atom-HF orbitals, final rows, or residualized RG functions. The source lane is
-internal and in-memory: local atom products are first-class targets, the
-AA-BB local-product Coulomb block is included in the acceptance metric, AB
-overlap products are not default targets, and disallowed/long-range `DeltaV`
-must remain zero. Primary ownership is `hamiltonian_corrections.jl`, with
-`augmented_operators.jl` and `residual_basis.jl` optional only for retained
-source mapping or transform-ready `Qtarget`. The lane does not approve
-artifacts, public workflow, solver integration, selection changes, rho0/P0,
-or `s3`/`p`/`d` target promotion.
+`HP-RG-PROTECT-EGOI-AUDIT-01` is completed historical evidence.
+`HP-RG-PROTECT-EGOI-FN-01` and `HP-RG-PROTECT-EGOI-TEST-01` remain
+approved but pending. Their retained-source mapping, native `Qtarget`,
+local-product acceptance, `M2` mask, exact-zero locality rule, diagnostics,
+and exclusions are canonical in
+[retained-GTO local-product EGOI](retained_gto_egoi.md). The pending helper
+does not broaden this module's selection, artifact, workflow, screening, or
+solver authority.
 
 `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only a measurement-first
 same-parent protected-localized ladder transfer audit. It may use ignored
