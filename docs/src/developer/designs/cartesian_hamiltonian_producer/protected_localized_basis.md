@@ -12,8 +12,9 @@ This page is the canonical numerical contract for protected-original
 replacement, its localized one-particle basis, and the inherited-site
 two-index interaction convention. The registry owns permission, lifecycle,
 and exact implementation surfaces. Separate subsystem pages own persistence,
-row-locality metadata, EGOI, ladder transfer/bundles, occupied-first reference
-geometry, and additive screened-Hartree assembly.
+[row-locality metadata and artifact behavior](protected_localized_artifact.md),
+EGOI, ladder transfer/bundles, occupied-first reference geometry, and additive
+screened-Hartree assembly.
 
 ## Purpose
 
@@ -301,7 +302,8 @@ This contract does not own or approve:
 - occupied-first selection beyond the dependency link above;
 - protected additive-reference construction beyond its dependency link;
 - artifact schema, readback, convention-version fields, or row-locality
-  metadata;
+  metadata, which belong to the
+  [protected-localized artifact contract](protected_localized_artifact.md);
 - EGOI targets or corrections;
 - ladder transfer, cross overlaps, bundles, or restart sidecars;
 - rho0/reference-density history or screened-Hartree formula changes;

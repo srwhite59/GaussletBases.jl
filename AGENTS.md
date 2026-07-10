@@ -1226,51 +1226,25 @@ Approved Residual Gaussian module surfaces:
   not an alternative or diagnostic option. This contract does not approve
   public/default workflow, artifact/schema changes, EGOI, ladder behavior,
   screened-reference work, solver/HF, or Cr2 production claims.
-- `HP-RG-PROTECT-ART-FN-01` and `HP-RG-PROTECT-ART-TEST-01` approve only a
-  narrow opt-in protected-localized Hamiltonian artifact variant. Primary
-  source ownership is
+- `HP-RG-PROTECT-ART-FN-01` and `HP-RG-PROTECT-ART-TEST-01` govern only the
+  implemented opt-in protected-localized Hamiltonian artifact contract in
+  `docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_artifact.md`.
+  Source ownership remains
   `src/cartesian_residual_gaussians/augmented_operators.jl` and
-  `src/cartesian_ida_hamiltonian.jl`; optional
-  `src/cartesian_residual_gaussians/residual_basis.jl` and
-  `src/cartesian_base_hamiltonian.jl` edits are allowed only for
-  already-computed geometry, diagnostics, or producer plumbing. The artifact
-  may persist `H1_L`, inherited-site `Vee_L`, `nup`, `ndn`, final dimension, a
-  recognized protected-localized convention/version ID, source
-  recipe/provenance, source/current commit facts, basis controls, compact-RG
-  and injection counts, localized ordering, sector maps for `G`/base,
-  compact-`R`, protected-`Z`, broad-`Z`, and `Qperp`/localized complement,
-  representability diagnostics including `B_min` and singular counts,
-  orthogonality/localization diagnostics, and inherited-site interaction
-  diagnostics. Readback must reject missing or unrecognized
-  convention/version fields before Cr2 or MP2-NO consumers use the file. This
-  lane does not approve changing default producer behavior, replacing ordinary
-  PQS/WL/RG artifact semantics, rho0, broad public workflow, driver flags,
-  exported API, solver methods, paper or production energy claims,
-  RG/injection selection changes, rejected broad directions as MWG residual
-  channels, `C' V C` or alternative interaction rotations, artifact schema
-  changes for existing default artifacts, committed tests by default, or
-  Cr2-specific branches.
+  `src/cartesian_ida_hamiltonian.jl`. The canonical page owns artifact
+  identity, native sector/order law, readback compatibility, and rejection
+  behavior. This lane does not approve ordinary artifact changes,
+  public/default workflow, driver/API/solver behavior, selection changes,
+  EGOI, rho0 or screened-Hartree, alternative interaction transforms,
+  committed tests by default, or Cr2-specific production behavior.
 - `HP-RG-PROTECT-ARTLOC-FN-01` and
-  `HP-RG-PROTECT-ARTLOC-TEST-01` approve only protected-localized artifact
-  row-locality metadata. Primary source ownership is
-  `src/cartesian_residual_gaussians/augmented_operators.jl` and
-  `src/cartesian_ida_hamiltonian.jl`; optional
-  `src/cartesian_residual_gaussians/residual_basis.jl` and
-  `src/cartesian_base_hamiltonian.jl` edits are allowed only for
-  already-computed transform or position data. Centers must be diagonal
-  position expectations in the actual native `L` basis, using
-  `diag(ML' * X_M * ML)`, `diag(ML' * Y_M * ML)`, and
-  `diag(ML' * Z_M * ML)`, not construction labels, route metadata, or
-  manifest centers. The artifact may add native-order `center_x/y/z`,
-  deterministic `z_order_to_native` and `native_to_z_order` permutations,
-  per-row sector labels or native-sector indices, and optional
-  `spread_x/y/z` diagnostics only when second moments already exist without a
-  new raw-block lane. `H1_L` and `Vee_L` remain native-order canonical
-  matrices. This lane does not approve matrix reordering, z-sorted-only
-  matrices under the existing convention ID, reusing native contiguous sector
-  ranges after z sorting, RG/injection/localization/Vee semantic changes,
-  driver/API/solver workflow, rho0, new second-moment construction, committed
-  tests by default, or Cr2 production energy claims.
+  `HP-RG-PROTECT-ARTLOC-TEST-01` govern the implemented native-order locality
+  metadata in the same canonical artifact contract. Centers come from actual
+  `L`-basis position expectations; deterministic inverse z permutations are
+  metadata only and never reorder canonical matrices or native ranges. This
+  lane does not approve label-derived centers, new second-moment construction,
+  matrix reordering, public/solver workflow, EGOI, additive-reference,
+  screening, rho0, committed tests by default, or Cr2 production claims.
 - `HP-RG-PROTECT-EGOI-AUDIT-01` approves only ignored measurement probes for
   existing matrix-level EGOI routines over protected-localized artifacts. It
   may use `/Users/srw/dmrgtmp` outputs, H/Be/Be2 first, reconstructed

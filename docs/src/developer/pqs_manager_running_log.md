@@ -27161,7 +27161,7 @@ Summary:
   terms as protected orbitals, and pass compact density-fit Coulomb authority
   explicitly.
 - Kept vendored-basis hashes and licensing facts in
-  `docs/legacy_basissets_provenance.md` and numerical evidence in Passes 325,
+  `docs/src/developer/legacy_basissets_provenance.md` and numerical evidence in Passes 325,
   330, 331, and 345 rather than creating another evidence page.
 
 Validation / evidence:
@@ -27313,3 +27313,49 @@ Carrying-cost result:
   no public controls or extra Gaussian terms.
 - exact next blocker: implement the packet polish, rebuild Be/Ne packets, and
   rerun the padded Be2 gate with `diagnostic_only = false`.
+
+## Cartesian Hamiltonian Producer Pass 352 - Canonical Protected-Localized Artifact Contract
+
+Commit(s):
+- this commit - extract the protected-localized artifact contract and restore
+  the documentation build.
+
+Summary:
+- Moved implemented artifact identity, persistence, compatibility, native row
+  locality, and failure behavior into
+  `protected_localized_artifact.md` as their single canonical home. Reduced
+  the registry, current status, `AGENTS.md`, residual-domain page, and
+  transitional injection memo to lifecycle, ownership, links, and boundaries.
+- Manager review corrected an important ordering ambiguity: `base_G` /
+  `compact_R` follow inherited `M` site order, while `protected_Z` /
+  `broad_Z` / `Qperp` are fixed-`F` construction ranges and are not contiguous
+  localized-`L` sectors after `W`. Matrices and locality vectors remain native
+  `L` order; z permutations remain metadata only.
+- Moved the existing legacy BasisSets provenance page under `docs/src` and
+  repaired its packet-contract link, closing the Documenter failure introduced
+  with Pass 348 without duplicating the page.
+
+Validation / evidence:
+- Compared the contract directly with the protected writer/reader, row-locality
+  implementation, bundle call site, commits `fd105b751` / `3fe2af697`, and
+  manager Passes 299 / 301. Verified ordinary-reader rejection, legacy missing
+  Coulomb/locality behavior, all-or-none spreads, basis-specific ranges, and
+  deterministic inverse permutations.
+- `julia --project=docs docs/make.jl` passed with only existing size/deployment
+  warnings; focused path/lifecycle scans and `git diff --check` passed. No
+  source or test behavior changed.
+
+Goal advancement / guardrail:
+- LT2/LT3/LT5 and MT5: completes another single-home subsystem extraction and
+  restores green documentation construction. This remains parallel cleanup;
+  it does not delay or enlarge the active additive-reference and packet-polish
+  physics lanes.
+- Artifact schema, numerical construction, ladder, EGOI, screened-Hartree,
+  solver, and public-driver authority remain unchanged.
+
+Carrying-cost result:
+- Deleted 518 lines of duplicated contract prose and replaced them with one
+  187-line canonical page plus compact links and this decision record; the pass
+  remains materially line-negative.
+- Exact next blocker: finish and review the concurrent packet moment polish and
+  strict padded-Be2 additive-reference gate.

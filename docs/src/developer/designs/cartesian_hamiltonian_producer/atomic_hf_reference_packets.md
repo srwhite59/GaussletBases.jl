@@ -220,7 +220,7 @@ validation, unconverged-reference rejection, Be/Ne consumption, explicit
 compact expansion passage, and the vendored basis-data regression.
 
 The packet facility depends on the historical basis collection described in
-[Legacy BasisSets provenance](../../../../legacy_basissets_provenance.md).
+[Legacy BasisSets provenance](../../legacy_basissets_provenance.md).
 That page owns snapshot hashes, parser counts, mixed provenance, unresolved
 licensing status, and loader policy. Those data facts are not packet
 semantics.

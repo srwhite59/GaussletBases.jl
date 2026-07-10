@@ -411,29 +411,14 @@ Approved Residual Gaussian robustness lane:
   `H1_L`, and inherited pre-injection site-order `Vee_M` as the viable
   convention. Public/default workflow, artifacts, EGOI, ladder behavior,
   screening, solver, and production claims remain separately governed.
-- `HP-RG-PROTECT-ART-FN-01` and `HP-RG-PROTECT-ART-TEST-01` approve a narrow
-  opt-in protected-localized Hamiltonian artifact variant. It persists
-  `H1_L`, inherited-site `Vee_L`, electron counts, convention/version ID,
-  source recipe/provenance, basis controls, compact-RG and injection counts,
-  localized ordering, sector maps, representability diagnostics, and
-  orthogonality/localization diagnostics so solver and MP2-NO consumers can
-  resume without rebuilding the current protected-localized Hamiltonian in
-  memory. Source scope is `augmented_operators.jl` and
-  `cartesian_ida_hamiltonian.jl`, with `residual_basis.jl` and
-  `cartesian_base_hamiltonian.jl` optional only for already-computed geometry,
-  diagnostics, or producer plumbing. The lane must remain default-off/opt-in,
-  must reject missing or unrecognized convention/version fields, and must not
-  change ordinary PQS/WL/RG artifact semantics, driver/public workflow, rho0,
-  solver methods, selection policy, or Cr2 production claims.
-- `HP-RG-PROTECT-ARTLOC-FN-01` and `HP-RG-PROTECT-ARTLOC-TEST-01` approve a
-  narrow row-locality metadata amendment for protected-localized artifacts.
-  Centers are diagonal position expectations in the actual `L` basis from
-  `X_M`, `Y_M`, and `Z_M`, not manifest labels. The artifact may add
-  native-order `center_x/y/z`, deterministic z-order permutations, per-row
-  sector labels or native-sector indices, and optional spread diagnostics only
-  when second-moment data already exist. `H1_L` and `Vee_L` remain native-order
-  canonical matrices; z-order metadata must not silently permute matrices or
-  native contiguous sector ranges.
+- `HP-RG-PROTECT-ART-FN-01` / `HP-RG-PROTECT-ART-TEST-01` and
+  `HP-RG-PROTECT-ARTLOC-FN-01` / `HP-RG-PROTECT-ARTLOC-TEST-01` are
+  implemented. The opt-in artifact identity, native-order sector and matrix
+  law, row-locality metadata, compatibility, and rejection behavior are
+  canonical in
+  [protected-localized artifact contract](protected_localized_artifact.md).
+  Ordinary artifact semantics, public/default workflow, solver behavior,
+  selection policy, screening, and Cr2 production claims remain excluded.
 - `HP-RG-PROTECT-EGOI-AUDIT-01` approves only a measurement audit of existing
   matrix-level EGOI routines on protected-localized artifacts. It may use
   ignored probes, `/Users/srw/dmrgtmp` outputs, H/Be/Be2 first, reconstructed

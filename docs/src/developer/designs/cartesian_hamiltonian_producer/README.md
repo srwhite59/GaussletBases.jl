@@ -40,11 +40,10 @@ future source-policy lane that may change PQS complete shells from cubic
 `(q,q,q)` source modes to explicit aspect-aware `(q,q,L)` source modes.
 The implemented [protected-localized basis convention](protected_localized_basis.md)
 owns compact-main replacement, localized `L`, exact `H1_L`, and inherited-site
-`Vee_L`. `HP-RG-PROTECT-ART-*` separately approves a narrow opt-in artifact
-variant so that convention can be read back without in-memory reconstruction.
-`HP-RG-PROTECT-ARTLOC-*` approves native-order row-locality metadata for that
-artifact: diagonal position-expectation centers, deterministic z-order
-permutations, and per-row sector labels without changing matrix order.
+`Vee_L`. The implemented
+[protected-localized artifact contract](protected_localized_artifact.md) owns
+its opt-in persistence, native-order locality metadata, compatibility, and
+readback failure behavior.
 `HP-RG-PROTECT-EGOI-*` approves the first retained-original-GTO local-product
 EGOI helper as an internal in-memory correction primitive, not an artifact or
 solver workflow. `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only a

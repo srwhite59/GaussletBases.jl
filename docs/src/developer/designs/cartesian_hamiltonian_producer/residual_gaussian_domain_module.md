@@ -76,14 +76,12 @@ module, or object names in the new owner.
 - `HP-RG-PROTECT-ONEBODY-AUDIT-01` and
   `HP-RG-PROTECT-VEE-AUDIT-01` - completed historical evidence for that
   convention.
-- `HP-RG-PROTECT-ART-FN-01` - opt-in protected-localized Hamiltonian artifact
-  variant.
-- `HP-RG-PROTECT-ART-TEST-01` - validation gates for the protected artifact
-  variant.
-- `HP-RG-PROTECT-ARTLOC-FN-01` - row-locality metadata for protected
-  artifacts.
-- `HP-RG-PROTECT-ARTLOC-TEST-01` - validation gates for protected artifact
-  row-locality metadata.
+- `HP-RG-PROTECT-ART-FN-01` / `HP-RG-PROTECT-ART-TEST-01` - implemented
+  opt-in artifact persistence governed by the
+  [protected-localized artifact contract](protected_localized_artifact.md).
+- `HP-RG-PROTECT-ARTLOC-FN-01` / `HP-RG-PROTECT-ARTLOC-TEST-01` - implemented
+  row-locality metadata governed by the
+  [protected-localized artifact contract](protected_localized_artifact.md).
 - `HP-RG-PROTECT-EGOI-AUDIT-01` - measurement-only EGOI audit over
   protected-localized artifacts.
 - `HP-RG-PROTECT-EGOI-FN-01` - retained-GTO local-product EGOI helper.
@@ -353,29 +351,12 @@ and established localized `L`, exact `H1_L`, and inherited pre-injection
 site-order `Vee_M` as the viable convention. Rejected broad directions remain
 basis-insufficiency diagnostics and never become MWG residual channels.
 
-`HP-RG-PROTECT-ART-FN-01` approves a narrow opt-in artifact variant for that
-protected-localized baseline. The artifact may persist `H1_L`, inherited-site
-`Vee_L`, electron counts, a recognized convention/version ID, recipe and
-commit provenance, basis controls, compact-RG and injection counts, localized
-ordering, sector maps, representability diagnostics, and
-orthogonality/localization diagnostics. Primary ownership is
-`augmented_operators.jl` and `cartesian_ida_hamiltonian.jl`; `residual_basis.jl`
-and `cartesian_base_hamiltonian.jl` are optional only for already-computed
-geometry, diagnostics, or producer plumbing. The lane does not approve driver
-or public API work, default producer changes, rho0, solver methods, artifact
-semantic changes for ordinary PQS/WL/RG files, selection-policy changes,
-`C' V C`, or Cr2 production claims. Readback must reject missing or
-unrecognized convention/version fields before any consumer uses the file.
-
-`HP-RG-PROTECT-ARTLOC-FN-01` approves row-locality metadata for the same
-artifact. Centers must be diagonal position expectations in the actual
-protected-localized `L` basis, computed from inherited main-space position
-operators and the native `ML` transform. The artifact may add native-order
-`center_x/y/z`, deterministic `z_order_to_native` and `native_to_z_order`
-permutations, per-row sector labels or native-sector indices, and optional
-spread diagnostics when second moments already exist. `H1_L` and `Vee_L`
-remain native-order canonical matrices; z sorting is metadata for consumers
-and must not mutate matrix order or native sector ranges.
+The implemented `HP-RG-PROTECT-ART-*` and `HP-RG-PROTECT-ARTLOC-*`
+facilities persist this baseline under the separate
+[protected-localized artifact contract](protected_localized_artifact.md).
+That contract owns artifact identity, native ordering, row locality,
+compatibility, and failure behavior. It does not expand this module's basis,
+interaction, public-workflow, solver, EGOI, screening, or ladder authority.
 
 `HP-RG-PROTECT-EGOI-AUDIT-01` approves only ignored measurement probes for
 existing matrix-level EGOI routines over the protected-localized artifact

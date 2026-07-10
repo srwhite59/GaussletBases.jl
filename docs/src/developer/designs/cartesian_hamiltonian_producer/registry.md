@@ -2392,7 +2392,7 @@ Approved source surface:
   `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` for validation
   and bounded packet consumption without changing their contract;
 - `data/legacy/BasisSets` header only and
-  `docs/legacy_basissets_provenance.md` for the bounded vendored-data
+  `docs/src/developer/legacy_basissets_provenance.md` for the bounded vendored-data
   provenance correction; the scientific body is not editable under this ID.
 
 Approved test surface:
@@ -5325,204 +5325,112 @@ screened-reference changes, or Cr2 production claims.
 
 ### HP-RG-PROTECT-ART-FN-01 — protected-localized Hamiltonian artifact variant
 
-Status: approved narrow source/artifact authority.
+Status: implemented.
 
-Purpose: persist the protected-localized injection Hamiltonian as an explicit,
-opt-in `.jld2` artifact variant so solver and MP2-NO consumers can resume from
-the current protected-localized Hamiltonian without reconstructing it in
-memory.
+Owner: `src/cartesian_ida_hamiltonian.jl`, with artifact inputs supplied by
+`src/cartesian_residual_gaussians/augmented_operators.jl`.
 
-The persisted basis and interaction semantics are owned by
-[Protected-localized basis convention](protected_localized_basis.md). This
-artifact lane records that convention; it does not redefine it, revive
-`C' V C`, or authorize alternative interaction rotations.
+Canonical contract:
+[Protected-localized artifact contract](protected_localized_artifact.md).
 
-Approved source surface:
+Source paths:
 
-- `src/cartesian_residual_gaussians/augmented_operators.jl`;
 - `src/cartesian_ida_hamiltonian.jl`;
-- optional only for already-computed geometry, diagnostics, or producer
-  plumbing:
-  - `src/cartesian_residual_gaussians/residual_basis.jl`;
-  - `src/cartesian_base_hamiltonian.jl`.
+- `src/cartesian_residual_gaussians/augmented_operators.jl`.
 
-No driver, public API, or export surface is approved.
+Test/evidence paths: `test/ida/cartesian_ida_hamiltonian_runtests.jl` and
+`docs/src/developer/pqs_manager_running_log.md` Pass 299; implementation
+evidence is commit `fd105b751`.
 
-Required artifact contents:
+Dependencies: the implemented
+[protected-localized basis convention](protected_localized_basis.md) and its
+already-computed native `H1_L`, inherited-site `Vee_L`, sectors, diagnostics,
+and provenance.
 
-- recognized artifact variant and convention/version ID;
-- `H1_L`;
-- `Vee_L`;
-- `nup`, `ndn`;
-- final dimension;
-- source recipe/artifact provenance;
-- source commit and current commit;
-- public basis controls and geometry inputs;
-- compact RG count and selection metadata;
-- protected original count;
-- broad injected count;
-- localized basis ordering;
-- sector maps for `G`/base, compact-`R`, protected-`Z`, broad-`Z`, and
-  `Qperp`/localized complement;
-- representability diagnostics including `B_min`, singular thresholds, and
-  singular counts;
-- orthogonality/localization diagnostics;
-- inherited-site interaction diagnostics.
+Permission: write and read the recognized, versioned, opt-in
+protected-localized artifact without changing its native matrix order.
 
-Required readback checks:
-
-- recognized variant, convention ID, and version;
-- dimension consistency for matrices, final dimension, and sector maps;
-- finite/symmetric `H1_L`;
-- finite/symmetric `Vee_L`;
-- electron-count consistency;
-- sector counts sum to the final dimension;
-- source provenance present;
-- `B_min`, singular-count, and orthogonality diagnostics present.
-
-If existing readers cannot safely distinguish this convention from ordinary
-PQS/WL/RG artifacts, add the minimal convention/version field and reject
-unrecognized or missing conventions. Do not silently read a
-protected-localized artifact as an ordinary Cartesian IDA Hamiltonian.
-
-Forbidden:
-
-- changing default producer behavior;
-- replacing existing PQS, WL, or ordinary RG artifact semantics;
-- rho0/reference-density correction work;
-- broad public workflow, driver flags, or exported API;
-- new solver methods;
-- paper or production energy claims;
-- changes to RG/injection selection policy;
-- rejected broad directions as MWG residual channels;
-- `C' V C` or other alternative interaction rotations;
-- artifact schema changes for existing default artifacts;
-- Cr2-specific branches.
-
-Decision rule: approve implementation only if it fits as a clearly versioned
-opt-in variant of the existing `.jld2` Hamiltonian family. If this requires
-broad reader/schema redesign, stop and report the exact blocker.
+Exclusions: ordinary artifact semantics, public/default driver workflow,
+solver behavior, RG/injection selection, EGOI, rho0 or screened-Hartree,
+alternative interaction transforms, and Cr2-specific production behavior.
 
 ### HP-RG-PROTECT-ART-TEST-01 — protected artifact validation
 
-Status: approved.
+Status: implemented validation contract.
 
-Approved validation:
+Owner and canonical contract:
+`src/cartesian_ida_hamiltonian.jl` and
+[Protected-localized artifact contract](protected_localized_artifact.md).
 
-- `git diff --check`;
-- package load;
-- one H or Be small smoke if convenient;
-- one bounded Cr2 protected-localized artifact write/readback or
-  readback/resume smoke;
-- compare loaded `.jld2` `H1_L`, `Vee_L`, dimensions, sector maps, and
-  occupations against the current in-memory protected-localized replay;
-- confirm unrecognized or missing convention/version fields are rejected;
-- no converged Cr2 energy claim;
-- no public workflow, solver method, rho0, or production default validation.
+Test/evidence paths: `test/ida/cartesian_ida_hamiltonian_runtests.jl` and
+`docs/src/developer/pqs_manager_running_log.md` Pass 299. No dedicated
+committed protected-artifact test file exists; commit `fd105b751` records the
+accepted bounded write/readback and rejection smokes.
+
+Dependencies: `HP-RG-PROTECT-ART-FN-01` and the ordinary reader's strict
+artifact-kind boundary.
+
+Permission: validate matrix/count/metadata roundtrip and reject wrong or
+missing protected artifact identity and convention data.
+
+Exclusions: solver, endpoint, public workflow, rho0, production-default, or
+converged Cr2 claims.
 
 ### HP-RG-PROTECT-ARTLOC-FN-01 — protected artifact row-locality metadata
 
-Status: approved narrow source/artifact amendment.
+Status: implemented.
 
-Purpose: add row-locality metadata to the protected-localized Hamiltonian
-artifact so consumers can derive z-ordered solver or MP2-NO working copies
-without reconstructing geometry in memory and without relying on stale
-manifest labels.
+Owner: `protected_localized_row_locality` in
+`src/cartesian_residual_gaussians/augmented_operators.jl`, with validation and
+persistence in `src/cartesian_ida_hamiltonian.jl`.
 
-The canonical matrices remain native-order:
+Canonical contract:
+[Protected-localized artifact contract](protected_localized_artifact.md).
 
-```text
-H1_L[native, native]
-Vee_L[native, native]
-```
-
-Z-order data is metadata only. It must not imply that `H1_L`, `Vee_L`, sector
-ranges, or sector counts were permuted.
-
-Center definition: row centers are diagonal position expectations in the
-actual protected-localized basis. With inherited main-space position operators
-`X_M`, `Y_M`, `Z_M` and native protected-localized transform `ML`:
-
-```text
-center_x = diag(ML' * X_M * ML)
-center_y = diag(ML' * Y_M * ML)
-center_z = diag(ML' * Z_M * ML)
-```
-
-Approved source surface:
+Source paths:
 
 - `src/cartesian_residual_gaussians/augmented_operators.jl`;
-- `src/cartesian_ida_hamiltonian.jl`;
-- optional only for already-computed transform or position data:
-  - `src/cartesian_residual_gaussians/residual_basis.jl`;
-  - `src/cartesian_base_hamiltonian.jl`.
+- `src/cartesian_ida_hamiltonian.jl`.
 
-Required metadata:
+Test/evidence paths: `test/ida/cartesian_ida_hamiltonian_runtests.jl` and
+`docs/src/developer/pqs_manager_running_log.md` Pass 301; implementation
+evidence is commit `3fe2af697`.
 
-- native-order `center_x`, `center_y`, and `center_z`;
-- per-row sector label or native-sector index;
-- `z_order_to_native`, where entry `k` is the native row index at sorted
-  position `k`;
-- `native_to_z_order`, the inverse permutation.
+Dependencies: `HP-RG-PROTECT-ART-FN-01`, native `M` position operators, and
+the implemented protected-localized transform.
 
-The z sort must be deterministic: sort by `center_z`, then native row index
-as tie-breaker unless a later reviewed source pass approves a more specific
-localized tie rule.
+Permission: attach validated native-order center, sector, inverse-permutation,
+and optional all-or-none spread metadata to the protected artifact.
 
-Optional diagnostics are approved only when existing second-moment data are
-already available without new raw-block or operator construction:
-
-- `spread_x`;
-- `spread_y`;
-- `spread_z`.
-
-Do not synthesize centers or spreads from labels, source regions, or manifest
-metadata.
-
-Readback checks:
-
-- locality vector lengths equal final dimension;
-- centers are finite;
-- spreads, when present, are finite and nonnegative;
-- z-order vectors are inverse permutations of `1:dim`;
-- centers are monotone under `z_order_to_native`, with native-index tie
-  breaks;
-- per-row sector labels or indices agree with native sector counts;
-- native-order `H1_L` and `Vee_L` matrix checks remain authoritative.
-
-Forbidden:
-
-- mutating the artifact matrix order;
-- writing only z-sorted matrices under the existing convention ID;
-- reusing native contiguous sector ranges as if they remained contiguous after
-  z sorting;
-- changing RG/injection selection, localization, or Vee semantics;
-- new driver/API/solver workflow;
-- new raw-block or second-moment construction;
-- rho0/reference-density work;
-- Cr2 production energy claims.
-
-Decision rule: if native position operators or `ML` are unavailable at the
-artifact seam, stop and report the missing source fact. Do not fall back to
-manifest labels or route metadata as numerical center authority.
+Exclusions: matrix or range reordering, label-derived centers, new
+second-moment construction, artifact consumers, EGOI, additive-reference,
+rho0 or screened-Hartree, solver/public-driver behavior, and Cr2 production
+claims.
 
 ### HP-RG-PROTECT-ARTLOC-TEST-01 — row-locality validation
 
-Status: approved.
+Status: implemented validation contract.
 
-Approved validation:
+Owner and canonical contract:
+`src/cartesian_residual_gaussians/augmented_operators.jl`,
+`src/cartesian_ida_hamiltonian.jl`, and
+[Protected-localized artifact contract](protected_localized_artifact.md).
 
-- `git diff --check`;
-- package load;
-- protected-localized artifact write/readback smoke;
-- readback confirms center lengths, finite centers, inverse permutations,
-  monotone z order, and sector-label/count consistency;
-- if spreads are present, readback confirms finite nonnegative spreads;
-- compare stored centers and z permutation against centers recomputed from
-  the in-memory `ML' * X_M/Y_M/Z_M * ML` diagonal constructions;
-- confirm loaded `H1_L`/`Vee_L` still match native-order in-memory replay;
-- no Cr2 converged energy claim, public workflow, solver method, rho0, or
-  production default validation.
+Test/evidence paths: `test/ida/cartesian_ida_hamiltonian_runtests.jl` and
+`docs/src/developer/pqs_manager_running_log.md` Pass 301. No dedicated
+committed row-locality test file exists; commit `3fe2af697` records the
+accepted center, inverse-permutation, sector, spread, and legacy-no-locality
+smokes.
+
+Dependencies: `HP-RG-PROTECT-ARTLOC-FN-01` and native-order artifact
+roundtrip under `HP-RG-PROTECT-ART-TEST-01`.
+
+Permission: validate native centers and sectors, deterministic inverse
+permutations, optional all-or-none spreads, and legacy
+`row_locality = nothing` readback.
+
+Exclusions: z-sorted canonical matrices, solver/public workflow, rho0,
+production defaults, or converged Cr2 claims.
 
 ### HP-RG-PROTECT-EGOI-AUDIT-01 — protected-localized EGOI measurement audit
 

@@ -519,267 +519,34 @@ not part of this extracted basis contract.
 
 ## HP-RG-PROTECT-ART-FN-01 - Protected-Localized Hamiltonian Artifact Variant
 
-Status: approved narrow source/artifact authority.
+Status: implemented.
 
-### Goal
-
-Persist the protected-localized injection Hamiltonian as an explicit,
-opt-in `.jld2` artifact variant so solver and MP2-NO consumers can resume
-from the current Cr2 protected-localized Hamiltonian without rebuilding the
-geometry, one-body transform, and inherited-site interaction in memory.
-
-The persisted numerical semantics are owned by
-[Protected-localized basis convention](protected_localized_basis.md). This
-artifact section owns persistence only; it does not redefine the basis,
-revive `C' V C`, authorize alternative interaction rotations, or create a
-general all-injection contract.
-
-### Approved Source Surface
-
-Primary approved files:
-
-- `src/cartesian_residual_gaussians/augmented_operators.jl`
-- `src/cartesian_ida_hamiltonian.jl`
-
-Optional only if directly required to expose already-computed
-protected-localized geometry, diagnostics, or producer plumbing:
-
-- `src/cartesian_residual_gaussians/residual_basis.jl`
-- `src/cartesian_base_hamiltonian.jl`
-
-No driver or public API surface is approved in this lane. If a later consumer
-needs a command-line entry point, design-manager must approve that separately.
-
-### Required Artifact Contract
-
-The artifact must be versioned and convention-identified before any consumer
-uses it. Minimal required convention facts:
-
-- artifact variant, for example
-  `:protected_localized_injection_hamiltonian`;
-- convention ID, for example `:protected_localized_injection_v1`;
-- variant/schema version.
-
-Required numerical datasets:
-
-- `H1_L`;
-- `Vee_L`;
-- `nup`, `ndn`;
-- final dimension.
-
-Required provenance and controls:
-
-- source recipe/artifact provenance;
-- source commit and current commit;
-- public basis controls and geometry inputs;
-- basis/injection convention ID;
-- compact RG count and selection metadata;
-- protected original count;
-- broad injected count;
-- localized basis ordering.
-
-Required maps and diagnostics:
-
-- sector maps for `G`/base, compact-`R`, protected-`Z`, broad-`Z`, and
-  `Qperp`/localized complement;
-- representability diagnostics including `B_min`, singular-value thresholds,
-  and singular counts;
-- orthogonality and localization diagnostics;
-- inherited-site interaction diagnostics.
-
-### Readback Checks
-
-Readback must validate:
-
-- recognized artifact variant, convention ID, and version;
-- dimension consistency for `H1_L`, `Vee_L`, sector maps, and final dimension;
-- finite/symmetric `H1_L`;
-- finite/symmetric `Vee_L`;
-- `nup`/`ndn` present and consistent with the recorded system;
-- sector counts sum to the final dimension;
-- source recipe/provenance present;
-- `B_min`, singular-count, and orthogonality diagnostics present.
-
-If the existing reader cannot safely distinguish the protected-localized
-variant from ordinary Cartesian IDA Hamiltonian artifacts, the implementation
-must add the minimal convention/version field and reject unrecognized or
-missing conventions before Cr2 consumers use the file. It must not silently
-load this variant as a standard PQS/WL/RG artifact.
-
-### Forbidden
-
-- changing default producer behavior;
-- replacing existing PQS, WL, or ordinary RG artifact semantics;
-- rho0/reference-density correction work;
-- broad public workflow, driver flags, or exported API;
-- new solver methods;
-- paper or production energy claims;
-- changes to RG/injection selection policy;
-- treating rejected broad directions as MWG residual channels;
-- `C' V C` or other alternative interaction rotations;
-- artifact schema changes for existing default artifacts;
-- Cr2-specific branches.
-
-### Decision Rule
-
-Approve implementation only if it fits as a clearly versioned opt-in artifact
-variant of the existing `.jld2` Hamiltonian family. If that is not possible
-without broad reader/schema redesign, stop and report the exact reader or
-schema blocker rather than creating a compatibility wrapper.
+The artifact identity, native sector/order law, writer/readback behavior, and
+exclusions are canonical in
+[Protected-localized artifact contract](protected_localized_artifact.md).
+The persisted basis numerics remain governed by
+[Protected-localized basis convention](protected_localized_basis.md).
 
 ## HP-RG-PROTECT-ART-TEST-01 - Protected Artifact Validation
 
-Status: approved validation gates for `HP-RG-PROTECT-ART-FN-01`.
-
-Approved validation:
-
-- `git diff --check`;
-- package load;
-- one H or Be small smoke if convenient;
-- one bounded Cr2 protected-localized artifact write/readback or
-  readback/resume smoke;
-- compare loaded `.jld2` `H1_L`, `Vee_L`, dimensions, sector maps, and
-  occupations against the current in-memory protected-localized replay;
-- confirm unrecognized or missing convention/version fields are rejected;
-- no converged Cr2 energy claim required;
-- no public workflow, solver method, rho0, or production default validation.
+Status: implemented validation contract. Exact validation and historical
+evidence are indexed by the
+[canonical artifact contract](protected_localized_artifact.md) and registry.
 
 ## HP-RG-PROTECT-ARTLOC-FN-01 - Protected Artifact Row-Locality Metadata
 
-Status: approved narrow source/artifact amendment.
+Status: implemented.
 
-### Goal
-
-Add row-locality metadata to the protected-localized Hamiltonian artifact so
-Cr2 solver and MP2-NO consumers can make z-ordered working copies without
-reconstructing protected-localized geometry in memory or relying on stale
-manifest labels.
-
-The canonical matrices remain native-order:
-
-```text
-H1_L[native, native]
-Vee_L[native, native]
-```
-
-Any z-order information is metadata for consumers. It must not silently imply
-that `H1_L`, `Vee_L`, sector ranges, or existing sector counts have been
-permuted.
-
-### Center Definition
-
-The row centers are diagonal position expectations in the actual
-protected-localized working basis. Given inherited main-space position
-operators `X_M`, `Y_M`, `Z_M` and the native protected-localized transform
-`ML`, define:
-
-```text
-center_x = diag(ML' * X_M * ML)
-center_y = diag(ML' * Y_M * ML)
-center_z = diag(ML' * Z_M * ML)
-```
-
-Do not use construction labels, source-region labels, or manifest center
-metadata as numerical authority for these centers.
-
-### Approved Source Surface
-
-Primary approved files:
-
-- `src/cartesian_residual_gaussians/augmented_operators.jl`
-- `src/cartesian_ida_hamiltonian.jl`
-
-Optional only if directly required to expose already-computed transform or
-position data:
-
-- `src/cartesian_residual_gaussians/residual_basis.jl`
-- `src/cartesian_base_hamiltonian.jl`
-
-### Required Metadata
-
-Required native-order vectors:
-
-- `center_x`;
-- `center_y`;
-- `center_z`;
-- a per-row sector label or native-sector index, so consumers do not have to
-  reinterpret contiguous native sector ranges after z sorting.
-
-Required z-order vectors:
-
-- `z_order_to_native`, where entry `k` is the native row index at z-sorted
-  position `k`;
-- `native_to_z_order`, the inverse permutation.
-
-The z sort must be deterministic. Sort by `center_z`, then by native row index
-as the tie-breaker unless a later source review approves a more specific
-localized-order tie rule.
-
-Approved optional diagnostics, when existing second-moment data are already
-available without new raw-block or operator construction:
-
-- `spread_x`;
-- `spread_y`;
-- `spread_z`.
-
-Spreads should be finite, nonnegative diagnostics such as
-`sqrt(max(<axis^2> - center_axis^2, 0))`. If second moments are not already
-available in the approved path, do not synthesize spreads from labels or add a
-new raw-block lane under this ID; record the missing spread diagnostic as out
-of scope.
-
-### Readback Checks
-
-Readback must validate:
-
-- locality vector lengths equal the final dimension;
-- centers are finite;
-- spreads, when present, are finite and nonnegative;
-- `z_order_to_native` and `native_to_z_order` are inverse permutations of
-  `1:dim`;
-- z-order centers are monotone under the recorded permutation, with native
-  index tie-breaks;
-- per-row sector labels or indices are present and agree with the native
-  sector counts;
-- native-order `H1_L` and `Vee_L` dimensions and symmetry checks remain the
-  authoritative matrix checks.
-
-### Forbidden
-
-- mutating the existing artifact matrix order;
-- writing only z-sorted matrices under the existing convention ID;
-- reusing native contiguous sector ranges as if they remained contiguous after
-  z sorting;
-- changing RG/injection selection, localization, or Vee semantics;
-- new driver/API/solver workflow;
-- new raw-block or position-second-moment construction;
-- rho0/reference-density work;
-- Cr2 production energy claims.
-
-### Decision Rule
-
-If native position operators or the `ML` transform are not available at the
-protected artifact seam, stop and report the exact missing source fact. Do not
-fall back to manifest labels or route metadata as numerical center authority.
+The native-center calculation, deterministic inverse permutations,
+native-sector labels, optional spreads, compatibility behavior, and strict
+matrix-order boundary are canonical in
+[Protected-localized artifact contract](protected_localized_artifact.md).
 
 ## HP-RG-PROTECT-ARTLOC-TEST-01 - Row-Locality Validation
 
-Status: approved validation gates for `HP-RG-PROTECT-ARTLOC-FN-01`.
-
-Approved validation:
-
-- `git diff --check`;
-- package load;
-- one protected-localized artifact write/readback smoke;
-- readback confirms center vector lengths, finite centers, permutation inverse
-  checks, monotone z order, and sector-label/count consistency;
-- if spreads are present, readback confirms finite nonnegative spreads;
-- compare stored centers and z permutation against centers recomputed from the
-  in-memory `ML' * X_M/Y_M/Z_M * ML` diagonal constructions for the same
-  fixture;
-- confirm loaded `H1_L`/`Vee_L` still match native-order in-memory replay;
-- no Cr2 converged energy claim, public workflow, solver method, rho0, or
-  production default validation.
+Status: implemented validation contract. Exact validation and historical
+evidence are indexed by the
+[canonical artifact contract](protected_localized_artifact.md) and registry.
 
 ## HP-RG-PROTECT-EGOI-AUDIT-01 - Protected-Localized EGOI Measurement Audit
 
