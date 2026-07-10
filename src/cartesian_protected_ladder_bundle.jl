@@ -284,6 +284,12 @@ function _plb_additive_reference_raw_blocks(inputs, embeddings, stages)
                 CartesianReferenceDensity.atomic_reference_packet_fitted_potential_raw_blocks(
                     inputs.base, inputs.supplement, embedding.packet;
                     center = embedding.center)) for embedding in embeddings]
+    densities = [CartesianReferenceDensity.atomic_reference_packet_p0_q0(
+        embedding.packet).P_AA for embedding in embeddings]
+    component_field_expectations = [sum(densities[a] .*
+        raw_blocks[b].AA[embeddings[a].supplement_indices,
+            embeddings[a].supplement_indices])
+        for a in eachindex(embeddings), b in eachindex(embeddings)]
     GG, GA, AA = copy(first(raw_blocks).GG), copy(first(raw_blocks).GA),
         copy(first(raw_blocks).AA)
     for raw in raw_blocks[2:end]
@@ -291,7 +297,7 @@ function _plb_additive_reference_raw_blocks(inputs, embeddings, stages)
         GA .+= raw.GA
         AA .+= raw.AA
     end
-    return (; GG, GA, AA)
+    return (; summed = (; GG, GA, AA), component_field_expectations)
 end
 function _plb_build_additive_reference_member(
     recipe, stages, placements; correction_options = (;))
@@ -312,14 +318,17 @@ function _plb_build_additive_reference_member(
     raw = _plb_additive_reference_raw_blocks(inputs, embeddings, stages)
     hartree = _plb_stage!(stages, "ns$(recipe.ns) additive reference J0 in F/L", () ->
         CartesianResidualGaussians.transform_protected_original_localized_exact_hartree(
-            raw, geometry, member.localized.transform))
+            raw.summed, geometry, member.localized.transform))
     energy = _plb_stage!(stages, "ns$(recipe.ns) additive reference density energy", () ->
         CartesianReferenceDensity.atomic_reference_packet_additive_density_energy(embeddings))
     correction = _plb_stage!(stages, "ns$(recipe.ns) additive screened-Hartree correction", () ->
         CartesianReferenceDensity.build_additive_screened_hartree_correction(
             member.V, hartree.J0_L, energy.total, represented.coefficient_blocks,
             [entry.occupations for entry in embeddings];
-            packets = [entry.packet for entry in embeddings], correction_options...))
+            packets = [entry.packet for entry in embeddings],
+            component_field_expectations = raw.component_field_expectations,
+            density_pair_energies = energy.pair_energies,
+            correction_options...))
     reference = (; represented = represented.diagnostics,
         hartree = hartree.diagnostics, energy,
         geometry = geometry.additive_reference)

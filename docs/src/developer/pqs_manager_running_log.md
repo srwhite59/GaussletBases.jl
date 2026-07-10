@@ -27755,3 +27755,50 @@ Carrying-cost result:
   source/test/docs carrying cost; single-home rho0 compression remains queued.
 - MT6 old flat-path classification: maintenance. No row-gauge, interaction
   rotation, EGOI WIP, or compatibility adapter is promoted.
+
+## Cartesian Hamiltonian Producer Pass 361 - Remove Retired Potential Polish
+
+Commit(s):
+- this commit - delete determinant-moment potential polishing and restore the
+  ordinary atomic density-fit / radial-potential-fit packet path.
+
+Summary:
+- Removed the fixed 13-separation polish, its packet serialization/readback,
+  and the `diagnostic_only` validation bypass. Packets carrying retired polish
+  provenance now fail with an explicit regeneration requirement.
+- Packet construction records the ordinary fitted-potential consistency error
+  `Tr(P0*J0_fit)-E0_fit` without changing coefficients. Generic and
+  density-fit correction assembly remains strictly energy anchored. A
+  potential-fit approximation is accepted only through a validated packet
+  path whose represented determinant reproduces the packet-owned consistency
+  error; an optional density-fit oracle is anchored independently.
+- Additive packet references require owner-resolved field expectations and
+  density pair energies. Every self term must reproduce its packet value, and
+  self/cross terms must reconstruct the assembled total. Their magnitude is
+  reported rather than forced below `1e-8 Ha`.
+
+Validation / evidence:
+- Doer reported package load, atomic packet `98/98`, screened-Hartree `87/87`,
+  misc `52/52`, exact no-reference parity, and the physically padded Be2 gate.
+  Manager reviewed the complete source/test diff and caller boundaries, and
+  ran `git diff --check`; no duplicate field transform or source-label bypass
+  remains.
+- Ordinary consistency errors are Be `+4.81417e-8 Ha`, Ne `-3.91844e-7 Ha`,
+  and Be2 `1.2860338e-7 Ha`. Be2 self/cross decomposition closes within
+  `3.18e-12 Ha`; `H1_L` and `Vee_L` remain unchanged.
+
+Goal advancement / guardrail:
+- LT2/LT5/LT8 and MT4: restores the generic atomic fit and unblocks packet
+  regeneration for the controlled CR2 off/on measurement. Fitted-potential
+  error is not a scalar correction, a molecular fit, or permission to weaken
+  exact identities. CR2 must regenerate its retired polished packet before
+  continuing.
+
+Carrying-cost result:
+- Task source delta is `+227/-159`, net `+68`; focused tests are `+155/-52`,
+  net `+103`. This misses the preferred line-negative retirement target, but
+  the growth is the explicit packet-identity, oracle-anchor, and additive
+  decomposition validation required to avoid silently accepting a wrong
+  determinant. No new fit policy, artifact, or workflow surface was added.
+- Exact remaining blocker: regenerate the Cr packet through the ordinary path;
+  there is no Be/Ne/Be2 source blocker.

@@ -30,6 +30,18 @@ function _packet_with_overlap_fingerprint(packet, fingerprint)
         packet.validation, packet.provenance)
 end
 
+function _retired_polish_packet(packet)
+    fit0 = packet.potential_fit
+    fit = typeof(fit0)(fit0.coefficients, fit0.exponents, fit0.radial_grid,
+        fit0.radial_exact, fit0.radial_fit, fit0.radial_error,
+        merge(fit0.row, (; moment_polish = (; policy_id = :retired_test,))))
+    return typeof(packet)(packet.spec, packet.supplement, packet.overlap,
+        packet.overlap_fingerprint, packet.occupied_coefficients,
+        packet.occupations, packet.orbital_energies, packet.density_matrix,
+        packet.rhf_diagnostics, packet.density_fit, fit,
+        packet.validation, packet.provenance)
+end
+
 function _be_core_fixture()
     spec = CRD.be_core_reference_packet_spec(ns = 3, core_spacing = 0.15)
     packet = CRD.build_atomic_hf_reference_packet(spec)
@@ -69,10 +81,27 @@ function _orthonormal_packet_reference(packet)
     J_AA, _ = CRD._coulomb_exchange_matrices(pair, packet.density_matrix)
     J_final = Sinvsqrt' * J_AA * Sinvsqrt
     E0 = sum(packet.density_matrix .* J_AA)
+    raw = GaussletBases.CartesianGaussianRawBlocks
+    donor = GaussletBases.CartesianFinalBasisRealization._r3a_qw_supplement(
+        packet.supplement)
+    inventory = raw._axis_family_inventory(donor)
+    cloud, cloud_density = CRD._packet_cloud_from_readback(packet)
+    cloud_terms, _ = raw._atomic_reference_pair_density_terms(cloud, cloud_density)
+    density_terms = raw._atomic_reference_hartree_potential_terms(
+        cloud_terms, CRD._atomic_reference_coulomb_expansion(:compact))
+    J_density_AA = raw._mixed_hartree_aa_block(donor, inventory, density_terms)
+    term_type = raw._AtomicReferenceHartreePotentialTerm
+    potential_terms = term_type[term_type(coefficient, exponent,
+        packet.spec.center, (0, 0, 0)) for (coefficient, exponent) in
+        zip(packet.potential_fit.coefficients, packet.potential_fit.exponents)]
+    J_fit_AA = raw._mixed_hartree_aa_block(donor, inventory, potential_terms)
     V = Matrix{Float64}(I, size(J_final, 1), size(J_final, 2)) .+
         0.01 .* abs.(0.5 .* (J_final .+ transpose(J_final)))
     V = 0.5 .* (V .+ transpose(V))
-    return (; C_final, occupations = packet.occupations, J_final, V, E0)
+    return (; C_final, occupations = packet.occupations, J_final, V, E0,
+        J_density_final = Sinvsqrt' * J_density_AA * Sinvsqrt,
+        J_fit_final = Sinvsqrt' * J_fit_AA * Sinvsqrt,
+        E0_fit = packet.density_fit.row.fit_self_energy)
 end
 
 function _terminal_control_reference(J)
@@ -115,6 +144,27 @@ end
     @test correction.packet_summary.density_fit_self_energy_relative_error < 1.0e-8
     @test packet_reference.E0 ≈
         fixture.packet.density_fit.row.exact_self_energy atol = 1.0e-8
+
+    packet_fit = CRD._build_validated_atomic_packet_screened_hartree_correction(
+        packet_reference.V, packet_reference.J_fit_final, packet_reference.E0_fit,
+        packet_reference.C_final, packet_reference.occupations, fixture.packet;
+        source = :potential_fit,
+        J0_G_exact = packet_reference.J_density_final)
+    @test packet_fit.diagnostics.potential_fit_consistency_error ≈
+        fixture.packet.potential_fit.row.consistency_error atol = 1.0e-10
+    @test packet_fit.diagnostics.potential_fit_consistency_validation_error ≈
+        0.0 atol = 1.0e-10
+    @test abs(packet_fit.diagnostics.exact_reference_energy_identity_error) <= 1.0e-8
+    @test_throws ArgumentError CRD.build_screened_hartree_correction(
+        packet_reference.V, packet_reference.J_fit_final, packet_reference.E0_fit,
+        packet_reference.C_final, packet_reference.occupations;
+        source = :potential_fit)
+    bad_oracle = packet_reference.J_density_final +
+        1.0e-4 .* Matrix{Float64}(I, size(packet_reference.J_density_final)...)
+    @test_throws ArgumentError CRD._build_validated_atomic_packet_screened_hartree_correction(
+        packet_reference.V, packet_reference.J_fit_final, packet_reference.E0_fit,
+        packet_reference.C_final, packet_reference.occupations, fixture.packet;
+        source = :potential_fit, J0_G_exact = bad_oracle)
 
     packet_count = length(fixture.packet.supplement.orbitals)
     packet_embedding = CRD.atomic_reference_packet_occupied_embedding(
@@ -237,11 +287,55 @@ end
     @test additive.diagnostics.additive_reference.block_traces ≈ [2.0, 2.0]
     @test additive.diagnostics.additive_reference.interpacket_occupied_overlap_max ≈ 0.6
     @test additive.diagnostics.direct_hartree_energy_anchor_error ≈ 0.0 atol = 1.0e-12
+    @test isnan(additive.diagnostics.potential_fit_consistency_error)
     @test additive.diagnostics.derivative_anchor_error ≈ 0.0 atol = 1.0e-12
     @test additive_V == V_before
     @test additive_J == J_before
     @test_throws ArgumentError CRD.build_additive_screened_hartree_correction(
         additive_V, additive_J, additive_E0, [C_A, 1.1 .* C_B], occupations)
+
+    packet_expectation = sum(packet_fit.P0 .* packet_reference.J_fit_final)
+    packet_fields = fill(packet_expectation, 2, 2)
+    packet_energies = fill(packet_reference.E0_fit, 2, 2)
+    packet_additive = CRD.build_additive_screened_hartree_correction(
+        packet_reference.V, 2.0 .* packet_reference.J_fit_final,
+        4.0 * packet_reference.E0_fit,
+        [packet_reference.C_final, packet_reference.C_final],
+        [packet_reference.occupations, packet_reference.occupations];
+        packets = [fixture.packet, fixture.packet],
+        component_field_expectations = packet_fields,
+        density_pair_energies = packet_energies)
+    packet_report = packet_additive.diagnostics.additive_reference
+    @test packet_report.self_consistency_errors ≈
+        fill(fixture.packet.potential_fit.row.consistency_error, 2) atol = 1.0e-10
+    @test maximum(abs, packet_report.self_consistency_validation_errors) <= 1.0e-10
+    @test packet_report.consistency_decomposition_total ≈
+        packet_report.consistency_assembled_total atol = 1.0e-10
+    @test_throws ArgumentError CRD.build_additive_screened_hartree_correction(
+        packet_reference.V, 2.0 .* packet_reference.J_fit_final,
+        4.0 * packet_reference.E0_fit,
+        [packet_reference.C_final, packet_reference.C_final],
+        [packet_reference.occupations, packet_reference.occupations];
+        packets = [fixture.packet, fixture.packet])
+    bad_packet_fields = copy(packet_fields)
+    bad_packet_fields[1, 1] += 1.0e-4
+    @test_throws ArgumentError CRD.build_additive_screened_hartree_correction(
+        packet_reference.V, 2.0 .* packet_reference.J_fit_final,
+        4.0 * packet_reference.E0_fit,
+        [packet_reference.C_final, packet_reference.C_final],
+        [packet_reference.occupations, packet_reference.occupations];
+        packets = [fixture.packet, fixture.packet],
+        component_field_expectations = bad_packet_fields,
+        density_pair_energies = packet_energies)
+    @test_throws ArgumentError CRD.build_additive_screened_hartree_correction(
+        packet_reference.V, 2.0 .* packet_reference.J_fit_final,
+        4.0 * packet_reference.E0_fit,
+        [packet_reference.C_final, packet_reference.C_final],
+        [packet_reference.occupations, packet_reference.occupations];
+        packets = [fixture.packet, fixture.packet],
+        component_field_expectations = packet_fields,
+        density_pair_energies = packet_energies,
+        consistency_atol = NaN)
 
     placements = [(; packet = fixture.packet, center = (-2.0, 0.0, 0.0)),
         (; packet = fixture.packet, center = (2.0, 0.0, 0.0))]
@@ -259,27 +353,10 @@ end
     @test norm(packet_raw.GG - transpose(packet_raw.GG), Inf) < 1.0e-10
     @test norm(packet_raw.AA - transpose(packet_raw.AA), Inf) < 1.0e-10
     @test abs(sum(fixture.packet.density_matrix .* packet_raw.AA) -
-        fixture.packet.density_fit.row.fit_self_energy) <= 1.0e-9
+        fixture.packet.density_fit.row.fit_self_energy) ≈
+        fixture.packet.potential_fit.row.consistency_error atol = 1.0e-10
 
     terminal_C, terminal_occ = _terminal_control_reference(fixture.J0)
-    terminal_diagnostic = CRD.build_atomic_packet_screened_hartree_correction(
-        fixture.base,
-        fixture.ham,
-        fixture.packet;
-        reference_coefficients = terminal_C,
-        occupations = terminal_occ,
-        check_density_fit_matrix = true,
-        diagnostic_only = true,
-    )
-    @test terminal_diagnostic.E0_G ==
-        fixture.packet.density_fit.row.fit_self_energy
-    @test all(isfinite, terminal_diagnostic.J0_G)
-    @test all(isfinite, terminal_diagnostic.delta_one_body)
-    @test terminal_diagnostic.diagnostics.derivative_anchor_error ≈
-        0.0 atol = 1.0e-12
-    @test terminal_diagnostic.diagnostics.potential_fit_exact_relative_fro < 1.0e-3
-    @test abs(terminal_diagnostic.diagnostics.direct_hartree_energy_anchor_error) > 1.0e-6
-
     @test_throws ArgumentError CRD.build_atomic_packet_screened_hartree_correction(
         fixture.base,
         fixture.ham,
@@ -318,15 +395,19 @@ end
         packet_reference.E0,
         packet_reference.C_final,
         packet_reference.occupations;
-        packet = unconverged,
-        diagnostic_only = true)
+        packet = unconverged)
     @test_throws ArgumentError CRD.build_atomic_packet_screened_hartree_correction(
         fixture.base,
         fixture.ham,
         unconverged;
         reference_coefficients = terminal_C,
-        occupations = terminal_occ,
-        diagnostic_only = true)
+        occupations = terminal_occ)
+    retired = _retired_polish_packet(fixture.packet)
+    @test_throws ArgumentError CRD.atomic_reference_packet_fitted_potential_raw_blocks(
+        fixture.base, fixture.packet.supplement, retired)
+    @test_throws ArgumentError CRD.build_atomic_packet_screened_hartree_correction(
+        fixture.base, fixture.ham, retired;
+        reference_coefficients = terminal_C, occupations = terminal_occ)
 
     packet_path = joinpath(mktempdir(), "screened_hartree_packet.jld2")
     CRD.write_atomic_hf_reference_packet(packet_path, fixture.packet)
@@ -343,8 +424,7 @@ end
         fixture.ham,
         unconverged_readback;
         reference_coefficients = terminal_C,
-        occupations = terminal_occ,
-        diagnostic_only = true)
+        occupations = terminal_occ)
 
     bad_reference = copy(packet_reference.C_final)
     bad_reference[:, 1] .*= 1.1
@@ -361,7 +441,8 @@ end
         packet_reference.J_final,
         1.1 * packet_reference.E0,
         packet_reference.C_final,
-        packet_reference.occupations,
+        packet_reference.occupations;
+        source = :density_fit,
     )
 
     asymmetric_J = copy(packet_reference.J_final)
@@ -373,17 +454,6 @@ end
         packet_reference.C_final,
         packet_reference.occupations,
     )
-    asym_diagnostic = CRD.build_screened_hartree_correction(
-        packet_reference.V,
-        asymmetric_J,
-        packet_reference.E0,
-        packet_reference.C_final,
-        packet_reference.occupations;
-        diagnostic_only = true,
-    )
-    @test asym_diagnostic.diagnostics.J0_G_input_symmetry_error > 0.0
-    @test asym_diagnostic.diagnostics.Delta_J0_input_symmetry_error > 0.0
-
     @test_throws DimensionMismatch CRD.build_screened_hartree_correction(
         packet_reference.V[1:(end - 1), 1:(end - 1)],
         packet_reference.J_final,

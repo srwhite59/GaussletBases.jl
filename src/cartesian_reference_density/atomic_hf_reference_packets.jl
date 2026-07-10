@@ -354,6 +354,26 @@ function _require_atomic_reference_converged(value, context::AbstractString)
     return true
 end
 
+function _reject_retired_potential_moment_polish(value, context::AbstractString)
+    hasproperty(value, :potential_fit) || return nothing
+    fit = value.potential_fit
+    hasproperty(fit, :row) || return nothing
+    hasproperty(fit.row, :moment_polish) && throw(ArgumentError(
+        "$(context) rejects retired potential_fit/moment_polish provenance; regenerate the packet"))
+    return nothing
+end
+
+function _packet_potential_fit_consistency_error(value, context::AbstractString)
+    hasproperty(value, :potential_fit) && hasproperty(value.potential_fit, :row) &&
+        hasproperty(value.potential_fit.row, :consistency_error) ||
+        throw(ArgumentError(
+            "$(context) requires ordinary potential-fit consistency fields; regenerate the packet"))
+    error = Float64(value.potential_fit.row.consistency_error)
+    isfinite(error) || throw(ArgumentError(
+        "$(context) requires a finite ordinary potential-fit consistency error"))
+    return error
+end
+
 function _atomic_reference_coulomb_summaries()
     summary = getfield(_GB_PARENT, :_cartesian_coulomb_expansion_summary)
     return (;
@@ -801,78 +821,22 @@ function fit_atomic_reference_potential(
         Vector{Float64}(errors.err), row)
 end
 
-const _POTENTIAL_MOMENT_DISTANCES =
-    (0.0, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0, 20.0)
-
-function _determinant_potential_moments(supplement, density, exponents, center)
+function _ordinary_potential_fit_consistency(
+    supplement, density, density_fit, potential_fit, center)
     raw_owner = _GB_PARENT.CartesianGaussianRawBlocks
     donor = getfield(_GB_PARENT.CartesianFinalBasisRealization,
         :_r3a_qw_supplement)(supplement)
     inventory = getfield(raw_owner, :_axis_family_inventory)(donor)
     term_type = getfield(raw_owner, :_AtomicReferenceHartreePotentialTerm)
-    moments = Matrix{Float64}(undef, length(_POTENTIAL_MOMENT_DISTANCES), length(exponents))
-    for (row, distance) in pairs(_POTENTIAL_MOMENT_DISTANCES),
-            (column, exponent) in pairs(exponents)
-        placement = (center[1] + distance, center[2], center[3])
-        term = term_type(1.0, Float64(exponent), placement, (0, 0, 0))
-        AA = getfield(raw_owner, :_mixed_hartree_aa_block)(
-            donor, inventory, term_type[term])
-        moments[row, column] = sum(density .* AA)
-    end
-    return moments
-end
-
-function _polish_atomic_reference_potential(supplement, rhf, density_fit,
-    potential_fit, spec)
-    length(potential_fit.coefficients) == 33 && length(potential_fit.exponents) == 33 ||
-        throw(ArgumentError("determinant-moment polish requires 33 retained potential terms"))
-    potential_fit.row.fixed_broad_terms == 5 ||
-        throw(ArgumentError("determinant-moment polish requires five fixed broad terms"))
-    fixed, free = 1:5, 6:33
-    coefficients0, exponents0 = copy(potential_fit.coefficients), copy(potential_fit.exponents)
-    moments = _determinant_potential_moments(
-        supplement, rhf.density_total, exponents0, spec.center)
-    expansion = _atomic_reference_coulomb_expansion(:compact)
-    origin_terms = _density_fit_cloud_terms(density_fit, spec, spec.center)
-    targets = Float64[_density_cloud_terms_energy(origin_terms,
-        _density_fit_cloud_terms(density_fit, spec,
-            (spec.center[1] + distance, spec.center[2], spec.center[3])), expansion)
-        for distance in _POTENTIAL_MOMENT_DISTANCES]
-    radial = hcat([exp.(-exponent .* potential_fit.radial_grid.^2)
-        for exponent in exponents0[free]]...)
-    design = vcat(radial, moments[:, free])
-    target = vcat(zeros(Float64, length(potential_fit.radial_grid)),
-        targets - moments * coefficients0)
-    weights = vcat(_radial_fit_weights(
-        potential_fit.radial_grid, potential_fit.radial_exact), fill(1.0e4, length(targets)))
-    delta, _, rank = _solve_weighted_svd(design, target, weights; rtol = 1.0e-12)
-    rank == 28 || throw(ArgumentError(
-        "determinant-moment polish retained rank $(rank), expected 28"))
-    coefficients = copy(coefficients0)
-    coefficients[free] .+= delta
-    coefficients[fixed] == coefficients0[fixed] ||
-        throw(ArgumentError("determinant-moment polish changed fixed broad coefficients"))
-    fit_values = potential_fit.radial_fit + radial * delta
-    errors = _potential_fit_errors(potential_fit.radial_grid,
-        potential_fit.radial_exact, fit_values, density_fit.row.charge)
-    moment_max_abs_error = maximum(abs, moments * coefficients - targets)
-    moment_max_abs_error <= 1.0e-9 || throw(ArgumentError(
-        "determinant-moment polish error $(moment_max_abs_error) exceeds 1e-9 Ha"))
-    errors.absmax <= potential_fit.row.absmax + 1.0e-9 &&
-        errors.tail_charge_error <= potential_fit.row.tail_charge_error + 1.0e-9 ||
-        throw(ArgumentError("determinant-moment polish materially regressed radial/tail accuracy"))
-    polish = (; policy_id = :determinant_densityfit_coulomb_moment_v1,
-        retained_rank = rank, coefficient_delta_max = maximum(abs, delta),
-        moment_max_abs_error)
-    row = merge(potential_fit.row, (; coefficient_min = minimum(coefficients),
-        coefficient_max = maximum(coefficients),
-        negative_coefficient_count = count(<(0.0), coefficients),
-        errors.absmax, errors.relmax, errors.relrms, errors.core_relmax,
-        errors.mid_relmax, errors.tail_relmax, errors.tail_charge_error,
-        moment_polish = polish))
-    return AtomicReferencePotentialFit(coefficients, exponents0,
-        copy(potential_fit.radial_grid), copy(potential_fit.radial_exact),
-        fit_values, Vector{Float64}(errors.err), row)
+    terms = term_type[term_type(Float64(coefficient), Float64(exponent),
+        center, (0, 0, 0)) for (coefficient, exponent) in
+        zip(potential_fit.coefficients, potential_fit.exponents)]
+    AA = getfield(raw_owner, :_mixed_hartree_aa_block)(donor, inventory, terms)
+    expectation = Float64(sum(density .* AA))
+    E0 = Float64(density_fit.row.fit_self_energy)
+    return (; determinant_field_expectation = expectation,
+        density_fit_self_energy = E0,
+        consistency_error = expectation - E0)
 end
 
 function _packet_validation(spec, supplement, rhf, density_fit, potential_fit)
@@ -895,8 +859,7 @@ function _packet_validation(spec, supplement, rhf, density_fit, potential_fit)
         potential_fit_matrix_check_status = :not_run,
         potential_fit_matrix_relative_fro = NaN,
         potential_fit_matrix_max_abs = NaN,
-        potential_fit_anchor_status = :not_run,
-        potential_fit_anchor_error = NaN)
+        potential_fit_consistency_error = potential_fit.row.consistency_error)
 end
 
 function build_atomic_hf_reference_packet(
@@ -911,8 +874,13 @@ function build_atomic_hf_reference_packet(
         supplement, rhf, spec; options = density_options)
     potential_fit0 = fit_atomic_reference_potential(
         density_fit; options = potential_options)
-    potential_fit = _polish_atomic_reference_potential(
-        supplement, rhf, density_fit, potential_fit0, spec)
+    consistency = _ordinary_potential_fit_consistency(
+        supplement, rhf.density_total, density_fit, potential_fit0, spec.center)
+    potential_fit = AtomicReferencePotentialFit(
+        potential_fit0.coefficients, potential_fit0.exponents,
+        potential_fit0.radial_grid, potential_fit0.radial_exact,
+        potential_fit0.radial_fit, potential_fit0.radial_error,
+        merge(potential_fit0.row, consistency))
     validation = _packet_validation(spec, supplement, rhf, density_fit, potential_fit)
     provenance = (; git_commit = _git_commit(),
         construction_timestamp = string(time()),
@@ -985,6 +953,7 @@ end
 function write_atomic_hf_reference_packet(path::AbstractString,
     packet::AtomicHFReferencePacket)
     _require_atomic_reference_converged(packet, "atomic reference packet write")
+    _reject_retired_potential_moment_polish(packet, "atomic reference packet write")
     mkpath(dirname(path))
     jldopen(path, "w") do f
         _write_common_packet_fields(f, packet)
@@ -1044,14 +1013,8 @@ function write_atomic_hf_reference_packet(path::AbstractString,
         f["potential_fit/radial_fit"] = pf.radial_fit
         f["potential_fit/radial_error"] = pf.radial_error
         for name in propertynames(pf.row)
-            name in (:fit_kind, :moment_polish) && continue
+            name == :fit_kind && continue
             f["potential_fit/$(String(name))"] = getproperty(pf.row, name)
-        end
-        if hasproperty(pf.row, :moment_polish) && !isnothing(pf.row.moment_polish)
-            for name in propertynames(pf.row.moment_polish)
-                f["potential_fit/moment_polish/$(String(name))"] =
-                    getproperty(pf.row.moment_polish, name)
-            end
         end
 
         for name in propertynames(packet.validation)
@@ -1073,6 +1036,18 @@ end
 
 function read_atomic_hf_reference_packet(path::AbstractString)
     return jldopen(path, "r") do f
+        potential_group = f["potential_fit"]
+        "moment_polish" in String.(collect(keys(potential_group))) &&
+            throw(ArgumentError(
+                "atomic reference packet contains retired potential_fit/moment_polish provenance; regenerate it"))
+        required_potential_fields = ("source_coulomb_terms", "retained_rank",
+            "core_relmax", "mid_relmax", "tail_relmax",
+            "determinant_field_expectation", "density_fit_self_energy",
+            "consistency_error")
+        missing = filter(name -> !haskey(f, "potential_fit/$(name)"),
+            required_potential_fields)
+        isempty(missing) || throw(ArgumentError(
+            "atomic reference packet lacks ordinary potential-fit fields $(join(missing, ", ")); regenerate it"))
         read_summary = getfield(_GB_PARENT,
             :_cartesian_read_coulomb_expansion_summary)
         coulomb_expansions = (;
@@ -1096,23 +1071,25 @@ function read_atomic_hf_reference_packet(path::AbstractString)
             term_count = Int(f["density_fit/term_count"]),
             retained_rank = Int(f["density_fit/retained_rank"]),
             negative_weight_count = Int(f["density_fit/negative_weight_count"]))
-        moment_polish = haskey(f, "potential_fit/moment_polish/policy_id") ? (;
-            policy_id = Symbol(f["potential_fit/moment_polish/policy_id"]),
-            retained_rank = Int(f["potential_fit/moment_polish/retained_rank"]),
-            coefficient_delta_max =
-                Float64(f["potential_fit/moment_polish/coefficient_delta_max"]),
-            moment_max_abs_error =
-                Float64(f["potential_fit/moment_polish/moment_max_abs_error"])) : nothing
         pot_row = (; charge = Float64(f["potential_fit/charge"]),
+            source_coulomb_terms = Int(f["potential_fit/source_coulomb_terms"]),
             total_terms = Int(f["potential_fit/total_terms"]),
             fixed_broad_terms = Int(f["potential_fit/fixed_broad_terms"]),
+            retained_rank = Int(f["potential_fit/retained_rank"]),
             drop_tight_terms = Int(f["potential_fit/drop_tight_terms"]),
             refit_after_trim = Bool(f["potential_fit/refit_after_trim"]),
             absmax = Float64(f["potential_fit/absmax"]),
             relmax = Float64(f["potential_fit/relmax"]),
             relrms = Float64(f["potential_fit/relrms"]),
+            core_relmax = Float64(f["potential_fit/core_relmax"]),
+            mid_relmax = Float64(f["potential_fit/mid_relmax"]),
+            tail_relmax = Float64(f["potential_fit/tail_relmax"]),
             tail_charge_error = Float64(f["potential_fit/tail_charge_error"]),
-            moment_polish)
+            determinant_field_expectation =
+                Float64(f["potential_fit/determinant_field_expectation"]),
+            density_fit_self_energy =
+                Float64(f["potential_fit/density_fit_self_energy"]),
+            consistency_error = Float64(f["potential_fit/consistency_error"]))
         return (;
             path = String(path),
             artifact_kind = f["artifact_kind"],
@@ -1163,6 +1140,8 @@ function read_atomic_hf_reference_packet(path::AbstractString)
 end
 
 function validate_atomic_hf_reference_packet(packet)
+    _reject_retired_potential_moment_polish(packet,
+        "atomic reference packet validation")
     S = packet.overlap
     C = packet.occupied_coefficients
     P = C * Diagonal(packet.occupations) * transpose(C)
@@ -1178,7 +1157,9 @@ function validate_atomic_hf_reference_packet(packet)
             packet.density_fit.row.self_energy_relative_error,
         potential_fit_tail_charge_error =
             packet.potential_fit.row.tail_charge_error,
-        potential_fit_radial_relmax = packet.potential_fit.row.relmax)
+        potential_fit_radial_relmax = packet.potential_fit.row.relmax,
+        potential_fit_consistency_error =
+            packet.potential_fit.row.consistency_error)
 end
 
 function validate_atomic_hf_reference_packet(path::AbstractString)
@@ -1200,10 +1181,13 @@ function validate_atomic_hf_reference_packet(path::AbstractString)
             packet.density_fit.row.self_energy_relative_error,
         potential_fit_tail_charge_error =
             packet.potential_fit.row.tail_charge_error,
-        potential_fit_radial_relmax = packet.potential_fit.row.relmax)
+        potential_fit_radial_relmax = packet.potential_fit.row.relmax,
+        potential_fit_consistency_error =
+            packet.potential_fit.row.consistency_error)
 end
 
 function atomic_reference_packet_p0_q0(packet)
+    _reject_retired_potential_moment_polish(packet, "atomic reference packet P0/q0 consumption")
     C = hasproperty(packet, :C_occ) ? packet.C_occ : packet.occupied_coefficients
     occupations = packet.occupations
     P = _sym(C * Diagonal(occupations) * transpose(C))
@@ -1259,6 +1243,7 @@ end
 function atomic_reference_packet_occupied_embedding(packet, supplement, S_AA, owner_indices;
     owner_index::Integer, center, supplement_indices, overlap_atol::Real = 1.0e-10)
     _require_atomic_reference_converged(packet, "protected occupied packet embedding")
+    _reject_retired_potential_moment_polish(packet, "protected occupied packet embedding")
     tolerance = Float64(overlap_atol)
     isfinite(tolerance) && tolerance >= 0 ||
         throw(ArgumentError("overlap_atol must be finite and nonnegative"))
@@ -1320,6 +1305,8 @@ function atomic_reference_packet_occupied_embedding(packet, supplement, S_AA, ow
 end
 function _packet_density_cloud_terms(packet, center)
     _require_atomic_reference_converged(packet, "atomic reference density-cloud evaluation")
+    _reject_retired_potential_moment_polish(packet,
+        "atomic reference density-cloud evaluation")
     return _density_fit_cloud_terms(
         packet.density_fit, _packet_density_fit_spec(packet, center), center)
 end
@@ -1336,6 +1323,8 @@ function atomic_reference_packet_additive_density_energy(placements)
         combined_cloud_oracle = oracle)
 end
 function _packet_potential_expansion(packet)
+    _reject_retired_potential_moment_polish(packet,
+        "atomic reference fitted-potential consumption")
     template = _atomic_reference_coulomb_expansion(:compact)
     return _GB_PARENT.CoulombGaussianExpansion(packet.potential_fit.coefficients,
         packet.potential_fit.exponents; del = template.del, s = template.s, c = template.c,

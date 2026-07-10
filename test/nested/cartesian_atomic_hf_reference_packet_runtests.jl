@@ -15,10 +15,20 @@ function _packet_with_convergence(packet, converged::Bool)
         packet.validation, packet.provenance)
 end
 
+function _packet_with_potential_row(packet, row)
+    fit0 = packet.potential_fit
+    fit = typeof(fit0)(fit0.coefficients, fit0.exponents, fit0.radial_grid,
+        fit0.radial_exact, fit0.radial_fit, fit0.radial_error, row)
+    return typeof(packet)(packet.spec, packet.supplement, packet.overlap,
+        packet.overlap_fingerprint, packet.occupied_coefficients,
+        packet.occupations, packet.orbital_energies, packet.density_matrix,
+        packet.rhf_diagnostics, packet.density_fit, fit,
+        packet.validation, packet.provenance)
+end
+
 function _packet_roundtrip_smoke(spec, label)
     packet = CRD.build_atomic_hf_reference_packet(spec)
     accepted_potential = CRD.fit_atomic_reference_potential(packet.density_fit)
-    polish = packet.potential_fit.row.moment_polish
     path = joinpath(mktempdir(), "$(label)_atomic_hf_reference_packet.jld2")
     CRD.write_atomic_hf_reference_packet(path, packet)
     readback = CRD.read_atomic_hf_reference_packet(path)
@@ -42,14 +52,17 @@ function _packet_roundtrip_smoke(spec, label)
     @test validation.potential_fit_radial_relmax < 1.0e-4
     @test length(packet.potential_fit.coefficients) == 33
     @test packet.potential_fit.exponents == accepted_potential.exponents
-    @test packet.potential_fit.coefficients[1:5] == accepted_potential.coefficients[1:5]
-    @test polish.policy_id == :determinant_densityfit_coulomb_moment_v1
-    @test polish.retained_rank == 28
-    @test polish.moment_max_abs_error <= 1.0e-9
-    @test packet.potential_fit.row.absmax <= accepted_potential.row.absmax + 1.0e-9
-    @test packet.potential_fit.row.tail_charge_error <=
-        accepted_potential.row.tail_charge_error + 1.0e-9
-    @test readback.potential_fit.row.moment_polish == polish
+    @test packet.potential_fit.coefficients == accepted_potential.coefficients
+    @test packet.potential_fit.row.source_coulomb_terms == 45
+    @test packet.potential_fit.row.total_terms == 33
+    @test packet.potential_fit.row.absmax == accepted_potential.row.absmax
+    @test packet.potential_fit.row.tail_charge_error ==
+        accepted_potential.row.tail_charge_error
+    @test isfinite(packet.potential_fit.row.consistency_error)
+    @test validation.potential_fit_consistency_error ==
+        packet.potential_fit.row.consistency_error
+    @test readback.potential_fit.row.consistency_error ==
+        packet.potential_fit.row.consistency_error
     @test packet.rhf_diagnostics.coulomb_expansion_doacc === true
     @test packet.rhf_diagnostics.coulomb_expansion_terms >= 100
     @test packet.rhf_diagnostics.coulomb_expansion_maxu >= 100.0
@@ -69,18 +82,38 @@ function _packet_roundtrip_smoke(spec, label)
                 name in GaussletBases._CARTESIAN_COULOMB_EXPANSION_SUMMARY_KEYS
             delete!(file, "coulomb_expansion/$(role)/$(name)")
         end
-        for name in (:policy_id, :retained_rank, :coefficient_delta_max,
-                :moment_max_abs_error)
-            delete!(file, "potential_fit/moment_polish/$(name)")
-        end
     end
     legacy = CRD.read_atomic_hf_reference_packet(legacy_path)
     @test isnothing(legacy.coulomb_expansions.rhf)
     @test isnothing(legacy.coulomb_expansions.density_self_energy)
     @test isnothing(legacy.coulomb_expansions.potential_tail_scaffold)
-    @test isnothing(legacy.potential_fit.row.moment_polish)
     @test abs(p0.trace - spec.electron_count) < 1.0e-10
     @test sum(p0.q_AA) > 0.0
+
+    retired = _packet_with_potential_row(packet,
+        merge(packet.potential_fit.row, (;
+            moment_polish = (; policy_id = :retired_test,))))
+    @test_throws ArgumentError CRD.write_atomic_hf_reference_packet(
+        joinpath(dirname(path), "$(label)_retired_polish_packet.jld2"), retired)
+    polished_path = joinpath(dirname(path), "$(label)_file_polished_packet.jld2")
+    cp(path, polished_path; force = true)
+    JLD2.jldopen(polished_path, "r+") do file
+        file["potential_fit/moment_polish/policy_id"] = :retired_test
+    end
+    @test_throws ArgumentError CRD.read_atomic_hf_reference_packet(polished_path)
+    incomplete_path = joinpath(dirname(path), "$(label)_incomplete_ordinary_packet.jld2")
+    cp(path, incomplete_path; force = true)
+    JLD2.jldopen(incomplete_path, "r+") do file
+        delete!(file, "potential_fit/consistency_error")
+    end
+    incomplete_error = try
+        CRD.read_atomic_hf_reference_packet(incomplete_path)
+        nothing
+    catch error
+        error
+    end
+    @test incomplete_error isa ArgumentError
+    @test occursin("regenerate", sprint(showerror, incomplete_error))
 
     unconverged = _packet_with_convergence(packet, false)
     @test CRD.validate_atomic_hf_reference_packet(unconverged).rhf_converged === false
