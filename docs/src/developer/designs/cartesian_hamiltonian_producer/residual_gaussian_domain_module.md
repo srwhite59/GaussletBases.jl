@@ -354,6 +354,15 @@ driver/solver workflow, Cr/Cr2, exchange, EGOI, or row-gauge rho0/P0 changes.
 packets or external-GTO import, validate it in `S_AA`, force it into the
 mandatory retained/protected reference span, compute the supplement capture
 spectrum into `M`, and select optional injection eigenvectors by cutoff.
+It must separately report base-only occupied capture as
+`svdvals(X_GA * Y_occ)` and roundoff recovery after mandatory inclusion. It
+must reject a materially non-positive `S_AA - X_GA' * X_GA` or capture
+eigenvalues materially outside `[0, 1]`; tolerance-sized clamping is
+reporting-only. The post-inclusion `weakest_occupied_capture` name is deleted.
+Approved validation is a tiny synthetic contract gate in `test/misc/runtests.jl`
+plus real packet-driven Be/Ne `ns = 5` PQS mixed-overlap checks with terminal
+due-diligence inspection in the existing nested test; no `ns = 7` gate is
+required.
 Rejected weak-capture supplement directions must be reported and must not
 become MWG residual channels. This lane does not approve screened-Hartree
 correction changes, EGOI, solver workflow, public driver/API/defaults,

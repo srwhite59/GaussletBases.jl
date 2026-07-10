@@ -241,10 +241,18 @@ Implemented base path:
   is only a fast representation of that same cloud's Hartree potential.
   Initial scope is Be core `2e` and Ne all-electron `10e`, cc-pV5Z,
   `lmax = 1`, writer/readback/validation helpers, and small packet-consumption
-  smokes. This does not approve screened-Hartree production Hamiltonians,
-  artifact workflow integration beyond the packet itself, public driver
-  defaults, solver workflow, EGOI, exchange, row-gauge rho0/P0, Cr/Cr2 claims,
-  or treating fitted density/potential terms as protected GTOs.
+  smokes. Packet construction and writing require converged RHF; validation
+  and readback report convergence explicitly, and packet-driven
+  screened-Hartree consumption rejects unconverged packets. There is no
+  `allow_unconverged` builder option. The density-fit `J0_G` path must pass the
+  role-qualified compact Coulomb expansion explicitly rather than inherit a
+  helper default. The test authority also permits a header/provenance-only
+  correction for `data/legacy/BasisSets` plus a cheap normalized-body hash and
+  parser-count regression in `test/misc/runtests.jl`; the scientific data body
+  must not change. This does not approve screened-Hartree production
+  Hamiltonians, artifact workflow integration beyond the packet itself,
+  public driver defaults, solver workflow, EGOI, exchange, row-gauge rho0/P0,
+  Cr/Cr2 claims, or treating fitted density/potential terms as protected GTOs.
 - `HP-REP-XGTO-IMPORT-FN-01` and `HP-REP-XGTO-IMPORT-TEST-01` approve only a
   representation-transfer facility for importing explicit external Gaussian AO
   orbitals into an orthonormal GaussletBases final working basis. The rule is
@@ -263,7 +271,9 @@ Implemented base path:
   placed `AtomicHFReferencePacket` reference determinants to return
   `Delta_J0 = J0_G - Diagonal(V_IDA * q0)` and
   `C = 0.5 * q0' * V_IDA * q0 - 0.5 * E0_G`, with anchor checks and packet
-  diagnostics. `Delta_J0 + C` belongs to screened direct electron-electron
+  diagnostics. Packet-driven assembly must reject an unconverged atomic HF
+  reference packet before consuming its determinant or fitted fields.
+  `Delta_J0 + C` belongs to screened direct electron-electron
   accounting even though it is represented as one-body plus scalar. This does
   not approve public driver defaults, production artifact schema/readers,
   solver workflow, Cr2 claims, exchange, EGOI, rho0 row-gauge shortcuts,
@@ -458,11 +468,24 @@ Approved Residual Gaussian robustness lane:
   diagonalizes the full supplement capture spectrum into `M`, and selects
   optional injection directions only when `lambda >= cutoff`. The cutoff gates
   optional injection only and must never be the only thing protecting
-  `Y_occ`. Weak-capture directions are reported/rejected, not silently
+  `Y_occ`. Pre-inclusion base capture is reported separately as
+  `svdvals(X_GA * Y_occ)` and is not a rejection criterion in this pass;
+  post-inclusion recovery must remain roundoff-accurate. The helper must reject
+  a materially non-positive complement metric `S_AA - X_GA' * X_GA` and
+  materially out-of-range capture eigenvalues, allowing only tolerance-sized
+  reporting clamps. The misleading post-inclusion
+  `weakest_occupied_capture` name is deleted without a compatibility alias.
+  Test authority covers a tiny synthetic contract gate in
+  `test/misc/runtests.jl` and a real Be/Ne `ns = 5` PQS mixed-overlap gate in
+  `test/nested/cartesian_occupied_first_injection_runtests.jl`, including
+  terminal due-diligence inspection; `ns = 7` is not required. Weak-capture
+  directions are reported/rejected, not silently
   converted into MWG residual channels. This does not approve
   screened-Hartree correction changes, EGOI, solver workflow, public
   driver/API/defaults, artifacts, shell-local injection, fake-RDM hierarchy,
   exchange, row-gauge rho0/P0, automatic physics defaults, or Cr/Cr2 claims.
+  The strict actual-packet screened-Hartree anchor remains a later gate after
+  occupied-first geometry has a real final-basis consumer.
 - `HP-RG-PROTECT-INJECT-FN-01` and `HP-RG-PROTECT-INJECT-TEST-01` approve
   only a narrow internal source-backed geometry prototype for staged
   protected-original injection in

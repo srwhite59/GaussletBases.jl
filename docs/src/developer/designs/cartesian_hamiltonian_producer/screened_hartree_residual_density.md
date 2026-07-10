@@ -497,6 +497,12 @@ This packet is analogous to defining a standard atom/basis reference:
 Required conventions:
 
 - HF occupied orbitals define `P0` and `q0`;
+- packet construction requires converged RHF and must stop before fitting when
+  RHF is unconverged;
+- packet writing rejects an in-memory unconverged packet, validation/readback
+  report convergence explicitly, and packet-driven screened-Hartree
+  consumption rejects an unconverged packet;
+- no `allow_unconverged` packet-builder option is approved;
 - the density fit defines the reference cloud and self-energy;
 - the potential fit is only a fast representation of that same cloud's Hartree
   potential;
@@ -535,26 +541,54 @@ Approved source surface for later implementation:
 - `src/cartesian_reference_density/CartesianReferenceDensity.jl`;
 - `src/cartesian_reference_density/atomic_hf_reference_packets.jl`;
 - `src/GaussletBases.jl` only for include/qualified access wiring;
+- `src/cartesian_reference_density/screened_hartree_correction.jl` only for
+  rejecting an unconverged packet at the consumption boundary;
 - optional narrow calls to existing exact Hartree helpers in
   `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` for validation,
   without changing their numerical contract.
+
+The density-fit `J0_G` path must obtain the packet-local compact Coulomb
+expansion by its documented role and pass that exact object explicitly to the
+mixed-Hartree helper. A helper default must not choose this approximation.
 
 Approved test surface:
 
 - `test/nested/cartesian_atomic_hf_reference_packet_runtests.jl`, limited to
   packet roundtrip, validation helpers, and small Be/Ne consumption smokes with
-  temporary packet output and no committed binary fixtures.
+  temporary packet output and no committed binary fixtures;
+- `test/nested/cartesian_screened_hartree_correction_runtests.jl`, only for
+  unconverged-packet consumer rejection;
+- `test/misc/runtests.jl`, only for the vendored-basis hash/parser regression
+  below.
 
 Validation requirements:
 
 - packet readback roundtrip;
+- unconverged RHF builder failure, in-memory packet write rejection, explicit
+  convergence reporting, and packet-consumer rejection;
 - occupied orthogonality and density trace;
 - current supplement overlap/fingerprint match;
 - density-fit charge and self-energy errors;
 - potential-fit radial tail and matrix/anchor checks against exact
   density-fit `J0_G`;
 - small Be/Ne smoke consuming packet to build `P0/q0` and `J0_G`;
+- explicit compact Coulomb expansion passage for density-fit `J0_G`;
 - no committed large binary fixtures.
+
+Vendored-basis reconciliation under `HP-PQS-ATOMREF-PACKET-TEST-01` is limited
+to correcting the header of `data/legacy/BasisSets`, correcting
+`docs/legacy_basissets_provenance.md`, and adding a cheap regression in
+`test/misc/runtests.jl`. The normalized scientific body must remain unchanged.
+Its SHA-256 is
+`b83883f4589234dd512eb760c95280854a2f42d007ab6e3533abda39a2829051`;
+the full current file at `6cfe15d0c` is
+`b40763c17cdbd8825cecf05aedbf34b35084fec7a3375661a65b49e749d33251`
+and contains `60` basis blocks. The regression checks the normalized-body hash
+and parser counts for H cc-pVTZ (`6/8` shells/rows), H cc-pVQZ (`10/12`), Be
+cc-pV5Z (`21/42`), Ne cc-pV5Z (`21/54`), and Cr cc-pV5Z (`32/434`). Mixed
+historical provenance and unresolved license/redistribution status must be
+reported honestly; do not claim every custom block came from Basis Set
+Exchange.
 
 Explicit exclusions:
 

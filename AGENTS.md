@@ -509,6 +509,12 @@ these approved design IDs:
 - `HP-PQS-MAP-SFACTOR-TEST-01`
 - `HP-PQS-COULOMB-ACCURACY-FN-01`
 - `HP-PQS-COULOMB-ACCURACY-TEST-01`
+- `HP-PQS-ATOMREF-PACKET-FN-01`
+- `HP-PQS-ATOMREF-PACKET-TEST-01`
+- `HP-REP-XGTO-IMPORT-FN-01`
+- `HP-REP-XGTO-IMPORT-TEST-01`
+- `HP-PQS-SCREEN-HARTREE-CORR-FN-01`
+- `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`
 - `HP-R1-WIRE-01`
 - `HP-R1-ART-01`
 - `HP-R1-TEST-01`
@@ -558,6 +564,8 @@ these approved design IDs:
 - `HP-RG-CUTOFF-FN-02`
 - `HP-RG-CUTOFF-TEST-02`
 - `HP-RG-INJECT-FN-01`
+- `HP-RG-OCC-FIRST-INJECT-FN-01`
+- `HP-RG-OCC-FIRST-INJECT-TEST-01`
 - `HP-RG-PROTECT-INJECT-FN-01`
 - `HP-RG-PROTECT-INJECT-TEST-01`
 - `HP-RG-PROTECT-ONEBODY-FN-01`
@@ -750,6 +758,44 @@ stable determinant and pairwise weighted-distance forms in
 in `test/core/runtests.jl`. This is not authority for clamping, exponent
 truncation, scaled/log PGDG carriers, new stage objects, terminal contraction
 changes, or a broad analytic-integral rewrite.
+`HP-PQS-ATOMREF-PACKET-FN-01` and
+`HP-PQS-ATOMREF-PACKET-TEST-01` approve only reusable one-center atomic HF
+reference packets in
+`src/cartesian_reference_density/atomic_hf_reference_packets.jl`, module
+include/qualified wiring, and existing mixed-Hartree validation calls. Be core
+`2e` and Ne all-electron `10e`, cc-pV5Z, `lmax = 1`, are the bounded initial
+scope. Packet construction and writing require converged RHF; validation and
+readback report convergence, and packet-driven screened-Hartree consumption
+rejects unconverged packets. No `allow_unconverged` knob is approved. The
+density-fit `J0_G` path must pass its role-qualified compact Coulomb expansion
+explicitly. Test authority covers the existing packet test, narrow
+unconverged-consumer coverage in the screened-Hartree correction test, and a
+cheap `test/misc/runtests.jl` vendored-basis body-hash/parser regression. It
+also permits only a provenance/header correction to `data/legacy/BasisSets`;
+the normalized scientific body must not change. This does not approve a
+screened-Hartree production workflow, solver, public driver default, EGOI,
+exchange, row-gauge rho0/P0, Cr/Cr2 claim, or fitted terms as protected
+orbitals.
+`HP-REP-XGTO-IMPORT-FN-01` and `HP-REP-XGTO-IMPORT-TEST-01` approve only the
+external-GTO representation-transfer facility in
+`src/cartesian_external_gto_import.jl`, narrow include/shared-overlap wiring,
+and its existing correctness test. Import uses
+`S_FG = <F|G_external>` and `C_F = S_FG * C_G`; external `S_GG` is validation
+only. Explicit packet basis/order/fingerprint data are required, and repo tests
+must not depend on PySCF. This does not approve Hamiltonian or `Vee` transforms,
+`C' V C`, generalized final-basis overlap workflows, solver workflow,
+screened-Hartree/EGOI changes, or Cr2 production claims.
+`HP-PQS-SCREEN-HARTREE-CORR-FN-01` and
+`HP-PQS-SCREEN-HARTREE-CORR-TEST-01` approve only the internal in-memory
+screened direct-Hartree correction in
+`src/cartesian_reference_density/screened_hartree_correction.jl`, its module
+wiring, and small correctness tests. The helper returns
+`Delta_J0 = J0_G - Diagonal(V_IDA * q0)` and
+`C = 0.5*q0'V_IDA*q0 - 0.5*E0_G` from represented, converged atomic packet
+determinants and validated same-packet density/potential fields. It must reject
+unconverged packets before consumption and validate the energy/field anchors.
+This does not approve public workflow, artifacts, solver integration, exchange,
+EGOI, source/interaction transforms, `C' V C`, or Cr2 production claims.
 `HP-R1-WIRE-01` approves
 only the report-free shared base constructor seam and the approved callers.
 `HP-R1-ART-01` approves only the fixed `producer_provenance/` schema in the
@@ -1127,6 +1173,24 @@ Approved Residual Gaussian module surfaces:
   artifact writing, MWG channels for injected directions, global residual
   selection, spectral pruning, full HF, dense Vee/solver work, Cr2 artifact or
   workflow, route/shellification/raw-block changes, or committed tests.
+- `HP-RG-OCC-FIRST-INJECT-FN-01` and
+  `HP-RG-OCC-FIRST-INJECT-TEST-01` approve only the internal occupied-first
+  geometry/selection helper in
+  `src/cartesian_residual_gaussians/residual_basis.jl`, with narrow packet or
+  external-import access only if already-owned occupied coefficients are
+  needed. Mandatory `Y_occ` directions are included before optional global
+  supplement injection. Pre-inclusion capture is reported as
+  `svdvals(X_GA * Y_occ)` and kept distinct from roundoff recovery after
+  mandatory inclusion; poor pre-capture is diagnostic, not rejection in this
+  pass. Require `lambda_min(S_AA - X_GA' * X_GA) >= -capture_tol` and full and
+  complement capture eigenvalues within `[-capture_tol, 1 + capture_tol]`;
+  only tolerance-sized reporting clamps are allowed. Delete
+  `weakest_occupied_capture` without a compatibility alias. Test authority is
+  a tiny synthetic contract gate in `test/misc/runtests.jl` plus the existing
+  nested Be/Ne `ns = 5` gate rebuilt with real PQS mixed overlap, packet
+  `Y_occ`, and terminal due-diligence inspection. No `ns = 7` gate, final
+  consumer wiring, screened-Hartree change, artifact/public workflow,
+  shell-local injection, EGOI, exchange, solver, or Cr/Cr2 work is approved.
 - `HP-RG-PROTECT-INJECT-DESIGN-01` is design-only authority for the current
   compact-first injection direction. It does not belong in the approved source
   ID list and does not approve implementation. The design builds compact/narrow

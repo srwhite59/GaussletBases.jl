@@ -2363,6 +2363,10 @@ near-exact density fit, and fast fitted potential for `J0_G`.
 Required conventions:
 
 - HF occupied orbitals define `P0` and `q0`;
+- only a converged RHF solution may define a packet. Packet construction must
+  fail before density/potential fitting when RHF is unconverged, packet writing
+  must reject an in-memory packet marked unconverged, and no
+  `allow_unconverged` packet-builder option is approved;
 - the density fit defines the reference cloud and self-energy;
 - the potential fit is only a fast representation of that same cloud's Hartree
   potential;
@@ -2403,25 +2407,70 @@ Approved source surface:
 - `src/cartesian_reference_density/CartesianReferenceDensity.jl`;
 - `src/cartesian_reference_density/atomic_hf_reference_packets.jl`;
 - `src/GaussletBases.jl` only for include/qualified access wiring;
+- `src/cartesian_reference_density/screened_hartree_correction.jl` only for a
+  narrow packet-convergence rejection at the packet-consumption boundary;
 - optional narrow use of existing exact Hartree helpers in
   `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` for validation
   and packet-consumption smokes, without changing their numerical contract.
+
+The packet density-fit `J0_G` call must pass the documented role-qualified
+compact `CoulombGaussianExpansion` explicitly into the existing mixed-Hartree
+helper. It must not depend on that helper's default expansion selection.
 
 Approved test surface:
 
 - `test/nested/cartesian_atomic_hf_reference_packet_runtests.jl`, limited to
   packet roundtrip, validation helpers, and small Be/Ne consumption smokes with
-  temporary packet output and no committed binary fixtures.
+  temporary packet output and no committed binary fixtures;
+- `test/nested/cartesian_screened_hartree_correction_runtests.jl`, only for
+  rejection of an unconverged packet at the packet-driven correction boundary;
+- `test/misc/runtests.jl`, only for the cheap vendored-basis provenance/parser
+  regression described below.
+
+This reconciliation also approves a header-only correction to
+`data/legacy/BasisSets` and the corresponding provenance correction in
+`docs/legacy_basissets_provenance.md`. The scientific body beginning at the
+first `#BASIS SET:` line must remain byte-for-byte equal to the normalized
+historical body. The provenance contract records:
+
+- historical source `/Users/srw/Dropbox/GaussletModules/BasisSets`, copied on
+  `2026-07-08` (observed source mtime `2026-04-17 22:19:26 -0700`);
+- normalization limited to removing trailing ASCII spaces/tabs from every
+  source line while preserving line order, blank lines, LF endings, and the
+  final newline, followed by prepending the repo header;
+- historical raw-source SHA-256
+  `9c5c0e96917a88b3ccdf713696437b0094e9da60834175ff22e682dc8b90b737`;
+- current full-file SHA-256 at `6cfe15d0c`
+  `b40763c17cdbd8825cecf05aedbf34b35084fec7a3375661a65b49e749d33251`;
+- normalized scientific-body SHA-256
+  `b83883f4589234dd512eb760c95280854a2f42d007ab6e3533abda39a2829051`;
+- `60` parsed `#BASIS SET:` blocks;
+- mixed historical provenance. The repo must not claim every custom block came
+  from Basis Set Exchange, and license/redistribution status remains unresolved
+  unless verified evidence is added.
+
+The `test/misc/runtests.jl` regression must compute the normalized-body hash
+from the first `#BASIS SET:` line and check these parser facts:
+
+- H cc-pVTZ: `6` shells, `8` primitive rows;
+- H cc-pVQZ: `10` shells, `12` primitive rows;
+- Be cc-pV5Z: `21` shells, `42` primitive rows;
+- Ne cc-pV5Z: `21` shells, `54` primitive rows;
+- Cr cc-pV5Z: `32` shells, `434` primitive rows.
 
 Approved validation:
 
 - packet readback roundtrip;
+- packet construction failure after an unconverged RHF result, in-memory
+  unconverged-packet write rejection, explicit convergence reporting from
+  validation/readback, and screened-Hartree consumer rejection;
 - occupied orthogonality and density trace;
 - current supplement overlap/fingerprint match;
 - density-fit charge and self-energy errors;
 - potential-fit radial tail and matrix/anchor checks against exact
   density-fit `J0_G`;
 - small Be/Ne smoke consuming packet to build `P0/q0` and `J0_G`;
+- explicit compact-expansion passage on the density-fit `J0_G` path;
 - no committed large binary fixtures.
 
 Explicit exclusions:
@@ -2578,6 +2627,9 @@ Approved inputs:
 
 Required operation:
 
+- reject every atomic reference packet whose RHF convergence flag is not
+  explicitly true, before consuming occupied coefficients, density-fit data,
+  or potential-fit data;
 - build `q0 = diag(P0)` from the represented reference determinant;
 - build `J0_G` and `E0_G` from the same packet density;
 - use validated fitted-potential terms for fast `J0_G` where available;
@@ -2607,6 +2659,8 @@ Approved test surface:
 Required diagnostics and tests:
 
 - packet identity/provenance and placement facts;
+- explicit packet RHF convergence status and rejection of an unconverged
+  packet;
 - electron count and `q0` charge by packet and total;
 - `P0` trace and final-basis representation/capture loss;
 - `J0_G`, `Delta_J0`, and `E0_G` finite/symmetry/consistency checks;
@@ -5035,6 +5089,11 @@ Core construction:
 - build `M = span(current gausslet final basis + mandatory Y_occ
   residual/protected directions)`;
 - after `M` is formed, analyze the full supplement span against `M`;
+- distinguish base-only occupied capture before inclusion,
+  `svdvals(X_GA * Y_occ)`, from occupied recovery after mandatory inclusion;
+- validate the mixed-overlap physicality through
+  `S_AA - X_GA' * X_GA >= 0` within a stated numerical tolerance, and require
+  capture eigenvalues to lie in `[0, 1]` within that tolerance;
 - in an orthonormal supplement basis, diagonalize the projection/overlap
   operator into `M`;
 - `Y_occ` directions should appear as eigenvalue-`1` directions up to
@@ -5080,7 +5139,12 @@ Required reporting:
 
 - RHF occupied orbital count and occupations;
 - supplement metric orthogonality of `Y_occ`;
-- projection/recovery loss of `Y_occ` before and after mandatory inclusion;
+- `occupied_base_capture_singular_values = svdvals(X_GA * Y_occ)` and
+  `occupied_base_capture_min` before mandatory inclusion;
+- `occupied_recovery_after_mandatory_inclusion_singular_values` and
+  `occupied_recovery_after_mandatory_inclusion_loss` after inclusion;
+- complement-metric minimum eigenvalue, capture tolerance, and validated
+  full/complement capture ranges;
 - supplement projection eigenvalue spectrum into `M`;
 - number of optional injection directions above cutoff;
 - angular/channel makeup of kept and rejected directions;
@@ -5162,45 +5226,82 @@ import provenance. Raw label picks are not an accepted construction rule.
 Approved operation:
 
 1. validate `Y_occ` in `S_AA`;
-2. force `Y_occ` into the mandatory retained/protected reference span;
-3. form the current represented span `M`;
-4. build the full-supplement projection/capture operator into `M`;
-5. diagonalize that capture operator in an orthonormal supplement basis;
-6. verify the occupied subspace is recovered at roundoff;
-7. select optional global injection directions only when
+2. validate that the mixed overlap is physically compatible with the
+   supplement metric by requiring
+   `lambda_min(S_AA - X_GA' * X_GA) >= -capture_tol`;
+3. before mandatory inclusion, compute the base-only occupied capture
+   singular values exactly as `svdvals(X_GA * Y_occ)` and report poor capture
+   without rejecting it in this pass;
+4. force `Y_occ` into the mandatory retained/protected reference span;
+5. form the current represented span `M`;
+6. build and diagonalize the full-supplement projection/capture operator into
+   `M` in an orthonormal supplement basis;
+7. require every full and complement capture eigenvalue to lie in
+   `[-capture_tol, 1 + capture_tol]`. Values outside that interval are a
+   material physical-contract failure; tolerance-sized roundoff may be clamped
+   only in reported values, not in the construction used to hide a failure;
+8. verify the occupied subspace is recovered at roundoff after mandatory
+   inclusion;
+9. select optional global injection directions only when
    `lambda >= cutoff`;
-8. reject and report weak-capture supplement directions instead of silently
+10. reject and report weak-capture supplement directions instead of silently
    converting them into MWG residual channels;
-9. return compact diagnostics and transform-ready geometry for later internal
+11. return compact diagnostics and transform-ready geometry for later internal
    consumers.
 
 The cutoff gates optional injection only. It must never be the only mechanism
-protecting `Y_occ`.
+protecting `Y_occ`. `capture_tol` is a private numerical contract tolerance,
+not a public physics input.
 
 Required diagnostics:
 
 - source of `Y_occ` and provenance fingerprint;
 - supplement metric orthogonality of `Y_occ`;
-- occupied recovery before and after mandatory inclusion;
+- `occupied_base_capture_singular_values = svdvals(X_GA * Y_occ)`;
+- `occupied_base_capture_min`;
+- `occupied_recovery_after_mandatory_inclusion_singular_values`;
+- `occupied_recovery_after_mandatory_inclusion_loss`;
+- minimum eigenvalue of `S_AA - X_GA' * X_GA`, `capture_tol`, and the unclamped
+  full/complement capture ranges used for physical validation;
 - capture eigenvalue spectrum;
 - number and channel/owner makeup of optional accepted directions;
 - rejected weak-capture directions and angular/channel labels when available;
 - final rank, sector counts, and any rotation/protected-overlap diagnostics;
 - packet/import mismatch failures.
 
+The existing `weakest_occupied_capture` diagnostic is misleading because it
+measures post-inclusion recovery, which is near one by construction. Delete
+that name; do not retain it through a compatibility alias. The four explicit
+pre/post diagnostics above are the canonical distinction.
+
 Approved test surface:
 
-- `test/nested/cartesian_occupied_first_injection_runtests.jl`
+- `test/misc/runtests.jl` for a tiny synthetic helper-contract test that does
+  not construct atomic packets;
+- `test/nested/cartesian_occupied_first_injection_runtests.jl` for the bounded
+  real PQS gate.
 
-Test scope:
+The synthetic test belongs to the normal local suite and covers distinct
+pre-inclusion capture and post-inclusion recovery diagnostics, plus rejection
+of a materially non-positive complement metric and out-of-range capture
+eigenvalues.
 
-- bounded Be and Ne one-center fixtures with `cc-pV5Z`, `lmax = 1`;
-- `ns = 5` as the required bounded check;
-- `ns = 7` only if bounded, otherwise ignored/probe-only;
+The nested test scope is:
+
+- bounded Be and Ne one-center fixtures with `cc-pV5Z`, `lmax = 1`, and
+  `ns = 5` only;
+- actual PQS final/base-to-supplement mixed overlap, not a manufactured
+  capture matrix;
+- packet-provenance `Y_occ`;
 - `Y_occ` recovery at roundoff after mandatory inclusion;
 - full supplement capture spectrum sanity;
 - rejection/reporting of weak-capture optional directions;
-- packet/import mismatch failure.
+- packet/import mismatch failure;
+- explicit inspection and reporting of terminal due diligence, including
+  parent bounds, axis counts, padding/radius, final dimension, retained counts,
+  shell/slab topology, and warning flags before interpreting capture results.
+
+No `ns = 7` committed gate is required by this authority.
 
 Forbidden:
 
@@ -5231,10 +5332,16 @@ Validation for this source lane:
 - `git diff --check`;
 - package load;
 - focused occupied-first injection test/probe;
-- Be/Ne packet or external-import occupied recovery checks;
+- tiny synthetic pre/post/physical-capture contract checks in
+  `test/misc/runtests.jl`;
+- real Be/Ne `ns = 5` packet-driven PQS mixed-overlap and occupied-recovery
+  checks with terminal due-diligence inspection;
 - capture spectrum and weak-capture reporting checks;
 - no screened-Hartree endpoint required;
 - no Cr/Cr2 run.
+
+The strict actual-packet screened-Hartree anchor is a later gate. It is not
+approved until occupied-first geometry has a real final-basis consumer.
 
 ### HP-RG-PROTECT-INJECT-FN-01 — staged protected-original geometry prototype
 

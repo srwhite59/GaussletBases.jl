@@ -59,6 +59,11 @@ The occupied packet orbitals define `P0/q0`. Fitted density and
 fitted-potential terms only evaluate `J0_G` and `E0_G`; they are not
 supplement orbitals and not protected basis content.
 
+Every consumed packet's in-memory or readback RHF convergence flag must be
+explicitly true. Reject an unconverged packet before using its occupied
+coefficients, density fit, or potential fit. Validation metadata is not
+permission to continue with an unconverged reference.
+
 ## Operation
 
 Build `q0` from the represented reference determinant:
@@ -103,6 +108,7 @@ but they do not own this correction object.
 Required diagnostics:
 
 - packet identity/provenance and placement facts;
+- explicit packet RHF convergence status;
 - electron count and `q0` charge by packet and total;
 - `P0` trace and final-basis representation/capture loss;
 - `J0_G` finite/symmetry checks;
@@ -135,6 +141,7 @@ bounded constructions.
 Required test coverage:
 
 - packet consistency and fingerprint validation;
+- rejection of an unconverged packet;
 - `q0` charge and `P0` trace;
 - finite/symmetric `Delta_J0`;
 - direct energy/derivative anchor identities;

@@ -26969,3 +26969,42 @@ Carrying-cost result:
   validation remains compact-only.
 - exact remaining blocker: no source blocker; CR2 must rebuild matched high
   Hamiltonians and rerun scientific comparisons.
+
+## Cartesian Hamiltonian Producer Pass 344 - Occupied-First And Atomic-Packet Authority Reconciliation
+
+Commit(s):
+- this commit - reconcile occupied-first, packet, import, correction, and
+  vendored-basis authority against `6cfe15d0c`.
+
+Summary:
+- Amended `HP-RG-OCC-FIRST-INJECT-*` to distinguish base-only occupied capture
+  `svdvals(X_GA * Y_occ)` from mandatory post-inclusion recovery. The next
+  source pass must validate the physical complement metric and `[0,1]` capture
+  spectrum, delete `weakest_occupied_capture`, add a tiny synthetic contract
+  gate, and replace the manufactured nested overlap with real Be/Ne `ns=5` PQS
+  overlap plus terminal due diligence.
+- Amended `HP-PQS-ATOMREF-PACKET-*` so unconverged RHF cannot be built, written,
+  or consumed, and density-fit `J0_G` receives compact Coulomb explicitly.
+  Restored packet, external-GTO import, screened-Hartree correction, and
+  occupied-first IDs to `AGENTS.md`; this creates no new authority.
+- Corrected the stale four-block provenance story. The vendored file has 60
+  mixed-provenance blocks; the normalized historical body is fixed by SHA-256
+  and representative parser counts. License/redistribution remains unresolved.
+
+Validation / evidence:
+- Verified HEAD `6cfe15d0c`, inspected live helper/caller/test seams, matched
+  source and vendored normalized-body hashes, counted 60 blocks, and parsed the
+  five approved shell/primitive fixtures through the repo parser. Focused ID
+  scans and docs `git diff --check` passed; no Julia test was required.
+
+Goal advancement / guardrail:
+- LT1/LT5 and MT4: turns misleading success diagnostics and unconverged packet
+  continuation into explicit scientific-contract failures. No final-basis
+  injection consumer, strict packet anchor, artifact, driver, solver, EGOI,
+  exchange, Cr/Cr2, source, test, or scientific-data edit is approved here.
+
+Carrying-cost result:
+- source line delta: 0; deleted: stale provenance claims only; simplified:
+  canonical pre/post capture vocabulary; quarantined: the strict actual-packet
+  screened-Hartree anchor; exact remaining blocker: implement and validate the
+  amended helper, packet, consumer, header, and bounded test contracts.

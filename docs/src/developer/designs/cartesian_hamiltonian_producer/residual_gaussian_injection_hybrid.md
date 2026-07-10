@@ -660,6 +660,24 @@ orthonormal supplement basis, diagonalize the projection/overlap operator into
 `M`. The `Y_occ` directions should appear as eigenvalue-`1` directions up to
 roundoff.
 
+Two diagnostics must not be conflated. Before mandatory inclusion, report the
+base-only occupied capture:
+
+```text
+occupied_base_capture_singular_values = svdvals(X_GA * Y_occ)
+occupied_base_capture_min = minimum(occupied_base_capture_singular_values)
+```
+
+Poor base-only capture is informative and is not an automatic rejection in
+this pass because the occupied directions are mandatory. After inclusion,
+report the separate occupied recovery singular values and loss; those must be
+roundoff-accurate.
+
+The mixed overlap must also be physically admissible. Require
+`lambda_min(S_AA - X_GA' * X_GA) >= -capture_tol`, and require every capture
+eigenvalue to lie in `[-capture_tol, 1 + capture_tol]`. Material violations
+fail. Tolerance-sized roundoff may be clamped only for reporting.
+
 Optional global injection directions are then selected from the full supplement
 by projection eigenvalue:
 
@@ -709,7 +727,12 @@ For each case:
 
 - RHF occupied orbital count and occupations;
 - supplement metric orthogonality of `Y_occ`;
-- projection/recovery loss of `Y_occ` before and after mandatory inclusion;
+- `occupied_base_capture_singular_values = svdvals(X_GA * Y_occ)` and
+  `occupied_base_capture_min` before mandatory inclusion;
+- `occupied_recovery_after_mandatory_inclusion_singular_values` and
+  `occupied_recovery_after_mandatory_inclusion_loss` after inclusion;
+- minimum eigenvalue of `S_AA - X_GA' * X_GA`, `capture_tol`, and the
+  validated unclamped capture ranges;
 - supplement projection eigenvalue spectrum into `M`;
 - number of optional injection directions above cutoff;
 - angular/channel makeup of kept and rejected directions;
@@ -802,21 +825,29 @@ not an accepted construction rule.
 The helper should:
 
 1. validate `Y_occ` in `S_AA`;
-2. force `Y_occ` into the retained/protected reference span;
-3. form the current represented span `M`, including the final/base gausslet
+2. require `lambda_min(S_AA - X_GA' * X_GA) >= -capture_tol`;
+3. compute and report `svdvals(X_GA * Y_occ)` before mandatory inclusion;
+4. force `Y_occ` into the retained/protected reference span;
+5. form the current represented span `M`, including the final/base gausslet
    span and any mandatory occupied residual/protected directions;
-4. compute the full supplement capture/projection operator into `M` in an
+6. compute the full supplement capture/projection operator into `M` in an
    `S_AA`-orthonormal supplement basis;
-5. diagonalize the supplement capture spectrum;
-6. verify that occupied directions are recovered at roundoff/eigenvalue `1`;
-7. select optional global injection eigenvectors with `lambda >= cutoff`;
-8. reject/report weak-capture directions instead of converting them into
+7. diagonalize the supplement capture spectrum and reject any full or
+   complement capture eigenvalue outside
+   `[-capture_tol, 1 + capture_tol]`; reporting may clamp only
+   tolerance-sized roundoff;
+8. verify that occupied directions are recovered at roundoff after mandatory
+   inclusion;
+9. select optional global injection eigenvectors with `lambda >= cutoff`;
+10. reject/report weak-capture directions instead of converting them into
    residual-GTO/MWG channels;
-9. return compact geometry/selection diagnostics and transform-ready
+11. return compact geometry/selection diagnostics and transform-ready
    coefficient data for later consumers.
 
 The cutoff gates optional injection only. It must never be the only thing
-protecting `Y_occ`.
+protecting `Y_occ`. Poor pre-inclusion occupied capture is reported, not
+automatically rejected. `capture_tol` is internal numerical validation, not a
+public physics input.
 
 ### Approved Source Surface
 
@@ -835,35 +866,59 @@ Required diagnostics:
 
 - source of `Y_occ` and provenance fingerprint;
 - supplement metric orthogonality of `Y_occ`;
-- occupied recovery loss before and after mandatory inclusion;
+- `occupied_base_capture_singular_values = svdvals(X_GA * Y_occ)`;
+- `occupied_base_capture_min`;
+- `occupied_recovery_after_mandatory_inclusion_singular_values`;
+- `occupied_recovery_after_mandatory_inclusion_loss`;
+- complement-metric minimum eigenvalue, `capture_tol`, and the unclamped
+  full/complement capture ranges;
 - full supplement capture eigenvalue spectrum;
 - optional injection cutoff and kept/rejected counts;
 - angular/channel makeup of kept and rejected directions;
-- weakest occupied and weakest optional-candidate captures;
+- weakest optional-candidate capture;
 - final rank and sector counts;
 - projection/capture loss by spin or owner where applicable;
 - clear list of weak directions that were not injected;
 - assertion that rejected broad/weak-capture directions did not become MWG
   residual channels.
 
+Delete the existing `weakest_occupied_capture` diagnostic. It measures
+post-inclusion recovery, which is near one by construction, and must not be
+retained through a compatibility alias.
+
 ### Tests
 
 Approved test surface:
 
-- `test/nested/cartesian_occupied_first_injection_runtests.jl`
+- `test/misc/runtests.jl` for the tiny synthetic helper contract;
+- `test/nested/cartesian_occupied_first_injection_runtests.jl` for the real
+  bounded PQS gate.
 
-Tests should be correctness-only and bounded:
+The synthetic test is part of the normal local suite and does not construct an
+atomic packet. It must distinguish pre-inclusion capture from post-inclusion
+recovery and reject materially malformed complement/capture geometry.
 
-- Be and Ne one-center fixtures, cc-pV5Z, `lmax = 1`;
+The nested test is correctness-only and bounded:
+
+- Be and Ne one-center fixtures, cc-pV5Z, `lmax = 1`, `ns = 5`;
+- actual PQS final/base-to-supplement mixed overlap and packet `Y_occ`, not a
+  manufactured mixed-overlap matrix;
 - `Y_occ` recovery at roundoff after mandatory inclusion;
-- supplement capture spectrum and optional injection count for `ns = 5`;
-- `ns = 7` only if bounded enough for the local test budget, otherwise an
-  ignored probe;
+- supplement capture spectrum and optional injection count;
 - rejection/reporting of weak-capture optional directions;
-- mismatch/fingerprint failure for inconsistent packet/import data.
+- mismatch/fingerprint failure for inconsistent packet/import data;
+- terminal due-diligence inspection and reporting of parent bounds, axis
+  counts, padding/radius, final dimension, retained counts, shell/slab
+  topology, and warning flags.
+
+No `ns = 7` committed gate is required.
 
 No endpoint energy assertions, SCF convergence claims, Cr2 gates, or
 production artifact tests are approved.
+
+The strict actual-packet screened-Hartree anchor remains a later gate after
+this geometry is consumed by a real final working basis. It is not part of the
+current source or test lane.
 
 ### Explicit Exclusions
 
@@ -898,8 +953,9 @@ Approved validation for `HP-RG-OCC-FIRST-INJECT-FN-01`:
 
 - `git diff --check`;
 - package load;
-- focused occupied-first injection test/probe;
-- Be/Ne packet/import-driven occupied recovery checks;
+- synthetic pre/post and malformed-capture checks in `test/misc/runtests.jl`;
+- real Be/Ne `ns = 5` packet-driven PQS occupied-recovery checks with terminal
+  due-diligence inspection;
 - supplement capture spectrum report;
 - no Cr/Cr2 run;
 - no screened-Hartree endpoint run required.
