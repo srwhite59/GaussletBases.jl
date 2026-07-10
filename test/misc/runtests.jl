@@ -1,3 +1,62 @@
+using SHA
+
+@testset "occupied-first capture contract" begin
+    CRG = GaussletBases.CartesianResidualGaussians
+    S = Matrix{Float64}(I, 3, 3)
+    X = [0.5 0.0 0.0; 0.0 0.8 0.0; 0.0 0.0 0.2; 0.0 0.0 0.0]
+    Y = reshape([1.0, 0.0, 0.0], 3, 1)
+    result = CRG.occupied_first_injection_geometry(
+        4, X, S, Y; optional_capture_cutoff = 0.5)
+    diagnostics = result.diagnostics
+    @test diagnostics.occupied_base_capture_singular_values == [0.5]
+    @test diagnostics.occupied_base_capture_min == 0.25
+    @test diagnostics.occupied_recovery_after_mandatory_inclusion_singular_values ≈ [1.0]
+    @test diagnostics.occupied_recovery_after_mandatory_inclusion_loss <=
+        diagnostics.capture_tol
+    @test diagnostics.complement_metric_minimum_eigenvalue ≈ 0.36
+    @test diagnostics.raw_full_capture_range[1] >= -diagnostics.capture_tol
+    @test diagnostics.raw_full_capture_range[2] <= 1 + diagnostics.capture_tol
+    @test collect(diagnostics.raw_complement_capture_range) ≈ [0.04, 0.64]
+    @test result.capture_eigenvalues ≈ [0.64, 0.04]
+
+    malformed_X = copy(X)
+    malformed_X[1, 1] = 1.1
+    @test_throws ArgumentError CRG.occupied_first_injection_geometry(
+        4, malformed_X, S, Y)
+    @test_throws ArgumentError CRG._rg_validate_capture_eigenvalues(
+        [-0.01, 0.5], diagnostics.capture_tol, "synthetic capture")
+    @test_throws ArgumentError CRG._rg_validate_capture_eigenvalues(
+        [0.5, 1.01], diagnostics.capture_tol, "synthetic capture")
+end
+
+@testset "vendored legacy BasisSets provenance" begin
+    path = joinpath(_PROJECT_ROOT, "data", "legacy", "BasisSets")
+    text = read(path, String)
+    body_start = findfirst("#BASIS SET:", text)
+    @test body_start !== nothing
+    body = text[first(body_start):end]
+    normalized_body = join((replace(line, r"[ \t]+$" => "")
+        for line in split(body, '\n'; keepempty = true)), '\n')
+    @test bytes2hex(sha256(codeunits(normalized_body))) ==
+        "b83883f4589234dd512eb760c95280854a2f42d007ab6e3533abda39a2829051"
+    @test count(line -> startswith(line, "#BASIS SET:"), eachline(path)) == 60
+
+    expected = [
+        ("H", "cc-pVTZ", 6, 8),
+        ("H", "cc-pVQZ", 10, 12),
+        ("Be", "cc-pV5Z", 21, 42),
+        ("Ne", "cc-pV5Z", 21, 54),
+        ("Cr", "cc-pV5Z", 32, 434),
+    ]
+    for (atom, basis, shell_count, primitive_count) in expected
+        shells, parsed_path = GaussletBases._legacy_basis_shells(
+            atom, basis; basisfile = path)
+        @test parsed_path == path
+        @test length(shells) == shell_count
+        @test sum(length(shell[2]) for shell in shells) == primitive_count
+    end
+end
+
 @testset "REPL displays" begin
     (
         family,

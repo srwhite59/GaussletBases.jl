@@ -338,6 +338,22 @@ end
 _atomic_reference_rhf_coulomb_expansion() =
     _atomic_reference_coulomb_expansion(:high)
 
+function _require_atomic_reference_converged(value, context::AbstractString)
+    converged = if hasproperty(value, :rhf_diagnostics)
+        diagnostics = value.rhf_diagnostics
+        hasproperty(diagnostics, :converged) ? diagnostics.converged : nothing
+    elseif hasproperty(value, :rhf_converged)
+        value.rhf_converged
+    elseif hasproperty(value, :converged)
+        value.converged
+    else
+        nothing
+    end
+    converged === true || throw(ArgumentError(
+        "$(context) requires explicitly converged atomic RHF reference data"))
+    return true
+end
+
 function _atomic_reference_coulomb_summaries()
     summary = getfield(_GB_PARENT, :_cartesian_coulomb_expansion_summary)
     return (;
@@ -779,6 +795,7 @@ function _packet_validation(spec, supplement, rhf, density_fit, potential_fit)
     C = Matrix{Float64}(rhf.occupied_orbitals)
     P = C * Diagonal(rhf.occupations) * transpose(C)
     return (;
+        rhf_converged = rhf.converged === true,
         occupied_orthogonality_error = norm(transpose(C) * S * C -
             Matrix{Float64}(I, size(C, 2), size(C, 2)), Inf),
         density_trace = tr(P * S),
@@ -804,6 +821,7 @@ function build_atomic_hf_reference_packet(
 )
     supplement = build_atomic_reference_supplement(spec)
     rhf = solve_atomic_supplement_rhf(supplement, spec)
+    _require_atomic_reference_converged(rhf, "atomic reference packet construction")
     density_fit = fit_atomic_reference_density(
         supplement, rhf, spec; options = density_options)
     potential_fit = fit_atomic_reference_potential(
@@ -879,6 +897,7 @@ end
 
 function write_atomic_hf_reference_packet(path::AbstractString,
     packet::AtomicHFReferencePacket)
+    _require_atomic_reference_converged(packet, "atomic reference packet write")
     mkpath(dirname(path))
     jldopen(path, "w") do f
         _write_common_packet_fields(f, packet)
@@ -1047,6 +1066,7 @@ function validate_atomic_hf_reference_packet(packet)
     C = packet.occupied_coefficients
     P = C * Diagonal(packet.occupations) * transpose(C)
     return (;
+        rhf_converged = packet.rhf_diagnostics.converged === true,
         occupied_orthogonality_error = norm(transpose(C) * S * C -
             Matrix{Float64}(I, size(C, 2), size(C, 2)), Inf),
         density_trace = tr(P * S),
@@ -1068,6 +1088,7 @@ function validate_atomic_hf_reference_packet(path::AbstractString)
     return (;
         artifact_kind = packet.artifact_kind,
         convention_id = packet.convention_id,
+        rhf_converged = packet.rhf_converged === true,
         occupied_orthogonality_error = norm(transpose(C) * S * C -
             Matrix{Float64}(I, size(C, 2), size(C, 2)), Inf),
         density_trace = tr(P * S),
@@ -1143,8 +1164,10 @@ function atomic_reference_packet_terminal_hartree_gg(
     placement = ntuple(axis -> Float64(center[axis]), 3)
     if source == :density_fit
         cloud, density = _packet_cloud_from_readback(packet; center = placement)
+        expansion = _atomic_reference_coulomb_expansion(:compact)
         result = _GB_PARENT.CartesianGaussianRawBlocks.atomic_reference_hartree_gg_block(
-            base.terminal_basis, base.parent.parent_axis_bundle_object, cloud, density)
+            base.terminal_basis, base.parent.parent_axis_bundle_object, cloud, density;
+            expansion)
         return result.GG
     elseif source == :potential_fit
         template = _atomic_reference_coulomb_expansion(:compact)

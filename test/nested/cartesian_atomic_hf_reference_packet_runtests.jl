@@ -6,17 +6,31 @@ using GaussletBases
 
 const CRD = GaussletBases.CartesianReferenceDensity
 
+function _packet_with_convergence(packet, converged::Bool)
+    diagnostics = merge(packet.rhf_diagnostics, (; converged))
+    return typeof(packet)(packet.spec, packet.supplement, packet.overlap,
+        packet.overlap_fingerprint, packet.occupied_coefficients,
+        packet.occupations, packet.orbital_energies, packet.density_matrix,
+        diagnostics, packet.density_fit, packet.potential_fit,
+        packet.validation, packet.provenance)
+end
+
 function _packet_roundtrip_smoke(spec, label)
     packet = CRD.build_atomic_hf_reference_packet(spec)
     path = joinpath(mktempdir(), "$(label)_atomic_hf_reference_packet.jld2")
     CRD.write_atomic_hf_reference_packet(path, packet)
     readback = CRD.read_atomic_hf_reference_packet(path)
     validation = CRD.validate_atomic_hf_reference_packet(path)
+    in_memory_validation = CRD.validate_atomic_hf_reference_packet(packet)
     p0 = CRD.atomic_reference_packet_p0_q0(readback)
 
     @test readback.artifact_kind == :atomic_hf_reference_density_fit
     @test readback.convention_id == :atomic_hf_reference_density_fit_v1
     @test readback.electron_count == spec.electron_count
+    @test packet.rhf_diagnostics.converged === true
+    @test readback.rhf_converged === true
+    @test validation.rhf_converged === true
+    @test in_memory_validation.rhf_converged === true
     @test size(readback.C_occ, 2) == div(spec.electron_count, 2)
     @test validation.occupied_orthogonality_error < 1.0e-10
     @test abs(validation.density_trace_error) < 1.0e-10
@@ -50,6 +64,21 @@ function _packet_roundtrip_smoke(spec, label)
     @test isnothing(legacy.coulomb_expansions.potential_tail_scaffold)
     @test abs(p0.trace - spec.electron_count) < 1.0e-10
     @test sum(p0.q_AA) > 0.0
+
+    unconverged = _packet_with_convergence(packet, false)
+    @test CRD.validate_atomic_hf_reference_packet(unconverged).rhf_converged === false
+    @test_throws ArgumentError CRD.write_atomic_hf_reference_packet(
+        joinpath(dirname(path), "$(label)_unconverged_packet.jld2"), unconverged)
+    @test_throws ArgumentError CRD._require_atomic_reference_converged(
+        (; converged = false), "atomic reference packet construction")
+
+    altered_path = joinpath(dirname(path), "$(label)_altered_unconverged_packet.jld2")
+    cp(path, altered_path; force = true)
+    JLD2.jldopen(altered_path, "r+") do file
+        delete!(file, "hf/converged")
+        file["hf/converged"] = false
+    end
+    @test CRD.validate_atomic_hf_reference_packet(altered_path).rhf_converged === false
     return readback
 end
 

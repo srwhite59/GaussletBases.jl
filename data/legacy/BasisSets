@@ -1,8 +1,10 @@
-# Full legacy-style BasisSets file vendored by GaussletBases.
-# Source snapshot copied from /Users/srw/Dropbox/GaussletModules/BasisSets
-# on 2026-07-08 for the atomic reference packet and Cartesian/PQS
-# supplement loaders. Keep this as data; do not add runtime-generated
-# environments or package-manager state here.
+# Mixed-provenance historical BasisSets collection vendored by GaussletBases.
+# Copied from /Users/srw/Dropbox/GaussletModules/BasisSets on 2026-07-08;
+# observed source mtime: 2026-04-17 22:19:26 -0700.
+# Scientific-body normalization removed trailing ASCII spaces/tabs only.
+# Normalized-body SHA-256: b83883f4589234dd512eb760c95280854a2f42d007ab6e3533abda39a2829051.
+# Individual block origins and license/redistribution status remain unresolved;
+# do not assume that every block came from Basis Set Exchange.
 
 #BASIS SET: H onegau
 H    S

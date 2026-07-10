@@ -163,6 +163,8 @@ function build_screened_hartree_correction(
     anchor_atol::Real = 1.0e-8,
     diagnostic_only::Bool = false,
 )
+    packet === nothing || _require_atomic_reference_converged(
+        packet, "screened-Hartree packet consumption")
     V, V_input_symmetry_error = _screened_hartree_matrix("V_IDA", V_IDA)
     J, J_input_symmetry_error = _screened_hartree_matrix("J0_G", J0_G)
     _screened_hartree_check(
@@ -297,6 +299,8 @@ function build_atomic_packet_screened_hartree_correction(
     center = nothing,
     kwargs...,
 )
+    _require_atomic_reference_converged(
+        packet, "screened-Hartree atomic packet consumption")
     source in (:potential_fit, :density_fit) ||
         throw(ArgumentError("source must be :potential_fit or :density_fit"))
     J0 = isnothing(center) ?

@@ -27008,3 +27008,46 @@ Carrying-cost result:
   canonical pre/post capture vocabulary; quarantined: the strict actual-packet
   screened-Hartree anchor; exact remaining blocker: implement and validate the
   amended helper, packet, consumer, header, and bounded test contracts.
+
+## Cartesian Hamiltonian Producer Pass 345 - Occupied-First And Packet Correctness Implementation
+
+Commit(s):
+- this commit - close occupied-capture, packet-convergence, and vendored-data
+  correctness gaps.
+
+Summary:
+- `occupied_first_injection_geometry` now reports base-only occupied capture
+  from `svdvals(X_GA * Y_occ)` separately from mandatory post-inclusion
+  recovery. It validates `S_AA - X_GA' * X_GA` and raw full/complement capture
+  spectra before selection, and deletes the misleading legacy diagnostic.
+- Atomic packet construction and writing now require explicitly converged RHF;
+  packet validation reports convergence, screened-Hartree consumers reject
+  unconverged packets before using fitted fields, and density-fit `J0_G`
+  receives the compact expansion explicitly.
+- The vendored `BasisSets` header and regression now preserve the normalized
+  scientific body by SHA-256 while recording mixed provenance and unresolved
+  licensing.
+
+Validation / evidence:
+- Manager reran the misc group (`46/46`, `6.4` s), real Be/Ne occupied-first
+  gate (`64/64`, `28.5` s), atomic packet roundtrip (`70/70`, `27.1` s), and
+  screened-Hartree correction gate (`37/37`, `72.4` s). `git diff --check`
+  passed.
+- Be/Ne base occupied capture minima are `0.9998426343` and `0.9995960719`;
+  mandatory recovery losses are `1.89e-15` and `7.44e-15`. Real optional
+  counts remain `15/4` and `12/4`. Due diligence shows one direct core plus
+  complete shells, no slabs or shell warnings, with only bounded center-table
+  truncation.
+
+Goal advancement / guardrail:
+- LT1/LT5 and MT4: occupied-first geometry can no longer conceal a large
+  mandatory rotation behind a constructed unit recovery, and reusable packet
+  consumers cannot silently use unconverged reference data. This adds no
+  final-basis consumer, endpoint claim, public workflow, or Cr/Cr2 behavior.
+
+Carrying-cost result:
+- deleted: misleading occupied-capture aliases and manufactured nested-overlap
+  helpers; simplified: one convergence guard and real Be/Ne overlap fixtures;
+  quarantined: unresolved mixed-data licensing and the strict actual-packet
+  screened-Hartree anchor; exact remaining blocker: wire occupied-first
+  geometry into a reviewed final-basis consumer before endpoint interpretation.

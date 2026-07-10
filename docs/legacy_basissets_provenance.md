@@ -22,9 +22,9 @@ The source file's observed modification time was
 
 The only normalization applied to the historical scientific body was removal
 of trailing ASCII spaces and tabs from each line. Line order, blank lines, LF
-line endings, and the final newline were preserved. A six-line repo provenance
-header was then prepended; no basis exponent, contraction coefficient, shell
-header, basis label, or block order was changed.
+line endings, and the final newline were preserved. A repo provenance header
+was then prepended; no basis exponent, contraction coefficient, shell header,
+basis label, or block order was changed.
 
 The normalized scientific body begins at the first `#BASIS SET:` line. Its
 SHA-256 is:
@@ -33,16 +33,21 @@ SHA-256 is:
 b83883f4589234dd512eb760c95280854a2f42d007ab6e3533abda39a2829051
 ```
 
-At the `6cfe15d0c` reconciliation baseline, the complete vendored file,
-including its current header, has SHA-256:
+At the `6cfe15d0c` reconciliation baseline, the complete vendored file had
+SHA-256:
 
 ```text
 b40763c17cdbd8825cecf05aedbf34b35084fec7a3375661a65b49e749d33251
 ```
 
-A later approved header-only correction will change the full-file hash and
-must update that value here. The normalized scientific-body hash must remain
-unchanged.
+After the approved mixed-provenance header-only correction, the complete
+vendored file has SHA-256:
+
+```text
+6796d34f2c813e5b627b03d003ddd29e0701cfd18e1b4c2ee7d263ce671dbede
+```
+
+The normalized scientific-body hash remains unchanged.
 
 ## Contents
 

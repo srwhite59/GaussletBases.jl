@@ -240,6 +240,27 @@ function _rg_supplement_orthonormal_basis(S_AA, atol, rtol)
         Float64[values...], keep
 end
 
+function _rg_capture_tolerance(S_AA, occupied_atol, occupied_rtol,
+    supplement_atol, supplement_rtol)
+    tolerances = Float64[occupied_atol, occupied_rtol,
+        supplement_atol, supplement_rtol]
+    all(isfinite, tolerances) && all(>=(0.0), tolerances) ||
+        throw(ArgumentError("occupied-first overlap tolerances must be finite and nonnegative"))
+    scale = max(opnorm(Matrix{Float64}(S_AA), Inf), 1.0)
+    return max(max(tolerances[1], tolerances[3]),
+        max(tolerances[2], tolerances[4]) * scale)
+end
+
+function _rg_validate_capture_eigenvalues(values, capture_tol, label)
+    isempty(values) && return (NaN, NaN)
+    raw_range = extrema(Float64.(values))
+    raw_range[1] >= -capture_tol && raw_range[2] <= 1.0 + capture_tol ||
+        throw(ArgumentError(
+            "$(label) eigenvalues $(raw_range) fall outside physical range " *
+            "[-$(capture_tol), $(1.0 + capture_tol)]"))
+    return raw_range
+end
+
 function _rg_direction_metadata(labels, owners, channels, nA)
     out_labels = isnothing(labels) ? String["candidate_$(i)" for i in 1:nA] :
         String[String(label) for label in labels]
@@ -329,6 +350,18 @@ function occupied_first_injection_geometry(
         throw(ArgumentError(
             "occupied-first Y_occ is not orthonormal in S_AA; error $(occupied_orthogonality_error)",
         ))
+    capture_tol = _rg_capture_tolerance(S, occupied_overlap_atol,
+        occupied_overlap_rtol, supplement_overlap_atol, supplement_overlap_rtol)
+    complement_metric = _rg_sym(S - transpose(Xmat) * Xmat)
+    complement_metric_values = eigvals(Symmetric(complement_metric))
+    complement_metric_minimum_eigenvalue = minimum(complement_metric_values)
+    complement_metric_minimum_eigenvalue >= -capture_tol ||
+        throw(ArgumentError(
+            "occupied-first mixed overlap has materially negative complement metric; " *
+            "minimum eigenvalue $(complement_metric_minimum_eigenvalue) is below -$(capture_tol)"))
+    occupied_base_capture_singular_values = Float64[svdvals(Xmat * Y0)...]
+    occupied_base_capture_min =
+        minimum(abs2.(occupied_base_capture_singular_values))
     fixed = injected_fixed_sector(
         Xmat,
         S,
@@ -342,22 +375,26 @@ function occupied_first_injection_geometry(
     mandatory_G = fixed.injected_G
     Qp = injection_complement(mandatory_G, nG)
     recovered = transpose(mandatory_A) * S * Y0
-    recovered_singulars = svdvals(recovered)
-    occupied_recovery_loss = isempty(recovered_singulars) ? 0.0 :
-        maximum(abs.(1.0 .- recovered_singulars))
-    weakest_occupied_capture = isempty(recovered_singulars) ? 1.0 :
-        minimum(abs2.(recovered_singulars))
+    occupied_recovery_after_mandatory_inclusion_singular_values =
+        Float64[svdvals(recovered)...]
+    occupied_recovery_after_mandatory_inclusion_loss =
+        maximum(abs.(1.0 .-
+            occupied_recovery_after_mandatory_inclusion_singular_values))
     recovery_tol = max(Float64(occupied_overlap_atol), Float64(occupied_overlap_rtol))
-    occupied_recovery_loss <= recovery_tol ||
+    occupied_recovery_after_mandatory_inclusion_loss <= recovery_tol ||
         throw(ArgumentError(
-            "occupied-first mandatory occupied recovery failed; loss $(occupied_recovery_loss)",
+            "occupied-first mandatory occupied recovery failed; loss " *
+            "$(occupied_recovery_after_mandatory_inclusion_loss)",
         ))
 
     U, supplement_metric_values, supplement_keep = _rg_supplement_orthonormal_basis(
         S, supplement_overlap_atol, supplement_overlap_rtol)
     full_C = vcat(transpose(mandatory_A) * (S * U), transpose(Qp) * (Xmat * U))
     full_capture = _rg_sym(transpose(full_C) * full_C)
-    full_values = sort(Float64[eigvals(Symmetric(full_capture))...]; rev = true)
+    raw_full_values = Float64[eigvals(Symmetric(full_capture))...]
+    raw_full_capture_range = _rg_validate_capture_eigenvalues(
+        raw_full_values, capture_tol, "occupied-first full capture")
+    full_values = sort(raw_full_values; rev = true)
 
     U_perp0 = U - mandatory_A * (transpose(mandatory_A) * S * U)
     perp_values, perp_vectors = eigen(Symmetric(_rg_sym(transpose(U_perp0) * S * U_perp0)))
@@ -373,9 +410,13 @@ function occupied_first_injection_geometry(
     capture_vectors = zeros(Float64, size(Zperp, 2), 0)
     if size(Zperp, 2) > 0
         values, vectors = eigen(Symmetric(_rg_sym(transpose(Cperp) * Cperp)))
+        raw_complement_capture_range = _rg_validate_capture_eigenvalues(
+            values, capture_tol, "occupied-first complement capture")
         order = sort(eachindex(values); by = index -> (-values[index], index))
         capture_values = Float64[values[index] for index in order]
         capture_vectors = Matrix{Float64}(vectors[:, order])
+    else
+        raw_complement_capture_range = (NaN, NaN)
     end
     kept = findall(>=(cutoff), capture_values)
     rejected = setdiff(eachindex(capture_values), kept)
@@ -400,8 +441,14 @@ function occupied_first_injection_geometry(
     diagnostics = (;
         provenance,
         occupied_orthogonality_error,
-        occupied_recovery_loss,
-        weakest_occupied_capture,
+        occupied_base_capture_singular_values,
+        occupied_base_capture_min,
+        occupied_recovery_after_mandatory_inclusion_singular_values,
+        occupied_recovery_after_mandatory_inclusion_loss,
+        capture_tol,
+        complement_metric_minimum_eigenvalue,
+        raw_full_capture_range,
+        raw_complement_capture_range,
         full_capture_eigenvalues = full_values,
         supplement_metric_eigenvalues = supplement_metric_values,
         supplement_metric_kept_indices = supplement_keep,
@@ -428,7 +475,6 @@ function occupied_first_injection_geometry(
         full_capture_eigenvalues = full_values,
         optional_kept_indices = kept,
         optional_rejected_indices = rejected,
-        occupied_recovery_error = occupied_recovery_loss,
         diagnostics,
     )
 end

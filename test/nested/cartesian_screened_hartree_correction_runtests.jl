@@ -5,6 +5,15 @@ using GaussletBases
 
 const CRD = GaussletBases.CartesianReferenceDensity
 
+function _unconverged_packet(packet)
+    diagnostics = merge(packet.rhf_diagnostics, (; converged = false))
+    return typeof(packet)(packet.spec, packet.supplement, packet.overlap,
+        packet.overlap_fingerprint, packet.occupied_coefficients,
+        packet.occupations, packet.orbital_energies, packet.density_matrix,
+        diagnostics, packet.density_fit, packet.potential_fit,
+        packet.validation, packet.provenance)
+end
+
 function _be_core_fixture()
     spec = CRD.be_core_reference_packet_spec(ns = 3, core_spacing = 0.15)
     packet = CRD.build_atomic_hf_reference_packet(spec)
@@ -127,6 +136,46 @@ end
     @test norm(shifted_potential - shifted_density) /
         max(norm(shifted_density), eps(Float64)) < 1.0e-3
     @test norm(shifted_potential - fixture.J0, Inf) > 1.0e-8
+
+    cloud, cloud_density = CRD._packet_cloud_from_readback(fixture.packet)
+    compact_expansion = CRD._atomic_reference_coulomb_expansion(:compact)
+    explicit_density = GaussletBases.CartesianGaussianRawBlocks.atomic_reference_hartree_gg_block(
+        fixture.base.terminal_basis,
+        fixture.base.parent.parent_axis_bundle_object,
+        cloud,
+        cloud_density;
+        expansion = compact_expansion)
+    @test fixture.exact == explicit_density.GG
+    @test explicit_density.diagnostics.coulomb_expansion_term_count == 45
+
+    unconverged = _unconverged_packet(fixture.packet)
+    @test_throws ArgumentError CRD.build_screened_hartree_correction(
+        packet_reference.V,
+        packet_reference.J_final,
+        packet_reference.E0,
+        packet_reference.C_final,
+        packet_reference.occupations;
+        packet = unconverged,
+        diagnostic_only = true)
+    @test_throws ArgumentError CRD.build_atomic_packet_screened_hartree_correction(
+        fixture.base,
+        fixture.ham,
+        unconverged;
+        reference_coefficients = terminal_C,
+        occupations = terminal_occ,
+        diagnostic_only = true)
+
+    packet_path = joinpath(mktempdir(), "screened_hartree_packet.jld2")
+    CRD.write_atomic_hf_reference_packet(packet_path, fixture.packet)
+    readback = CRD.read_atomic_hf_reference_packet(packet_path)
+    unconverged_readback = merge(readback, (; rhf_converged = false))
+    @test_throws ArgumentError CRD.build_atomic_packet_screened_hartree_correction(
+        fixture.base,
+        fixture.ham,
+        unconverged_readback;
+        reference_coefficients = terminal_C,
+        occupations = terminal_occ,
+        diagnostic_only = true)
 
     bad_reference = copy(packet_reference.C_final)
     bad_reference[:, 1] .*= 1.1
