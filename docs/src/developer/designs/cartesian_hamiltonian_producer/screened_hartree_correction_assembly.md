@@ -94,7 +94,7 @@ authority is approved.
 
 ## Protected Additive Packet Consumer
 
-`HP-RG-PROTECT-ADDREF-FN-01` approves a narrow molecular consumer of this
+`HP-RG-PROTECT-ADDREF-FN-01` implements a narrow molecular consumer of this
 same correction core. It supplies separately validated native-`L` occupied
 blocks from placed packets and forms:
 
@@ -105,9 +105,9 @@ J0 = sum_a J_a
 E0 = sum_a E_aa + 2*sum_{a<b} E_ab
 ```
 
-The packet blocks must remain separate for `P0`; their orthonormalized union is
-used only to protect the basis span. An internal additive entry point may
-validate each block separately and then delegate to the existing correction
+The packet blocks remain separate for `P0`; their orthonormalized union is
+used only to protect the basis span. The internal additive entry point
+validates each block separately and then delegates to the existing correction
 and anchor core. It must not concatenate the blocks and impose global
 orthogonality, duplicate the correction formula, rotate `Vee_L`, or write a
 corrected artifact. The detailed source and Be2 gates are in

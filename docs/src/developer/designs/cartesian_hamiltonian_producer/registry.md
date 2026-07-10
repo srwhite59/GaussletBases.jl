@@ -2413,7 +2413,7 @@ Cr/Cr2 claims, inferred occupancy, or fitted terms as protected orbitals.
 
 ### HP-PQS-ATOMREF-POTMOM-FN-01 / HP-PQS-ATOMREF-POTMOM-TEST-01 - determinant-moment fitted-potential polish
 
-Status: approved narrow internal source/packet amendment; not yet implemented.
+Status: implemented narrow internal packet facility.
 
 Owner and canonical contract:
 
@@ -5058,7 +5058,7 @@ automatic defaults, solver, exchange, row-gauge rho0/P0, or Cr/Cr2 claims.
 
 ### HP-RG-PROTECT-ADDREF-FN-01 / HP-RG-PROTECT-ADDREF-TEST-01 - protected additive atomic reference correction
 
-Status: approved narrow internal source/design authority. This is the first
+Status: implemented narrow internal, opt-in facility. This is the first
 real protected-localized consumer of occupied-first reference geometry. It is
 not public workflow, artifact, solver, or production Cr2 authority.
 
@@ -5193,10 +5193,10 @@ fixtures are not committed. Required evidence:
 - parent bounds, axis counts, padding/radius, final dimension, retained counts,
   shell/slab topology, warning flags, and phase timings.
 
-No endpoint energy or SCF assertion is required. After manager acceptance of
-the Be2 gate, CR2 may use the same internal path with two Cr `18e` packets for
-an off/on measurement. That does not authorize a production claim or repo
-Cr2 test.
+No endpoint energy or SCF assertion is required. The strict padded Be2 gate
+passed, so CR2 may use the same internal path with two Cr `18e` packets for an
+off/on measurement. That does not authorize a production claim or repo Cr2
+test.
 
 Explicit exclusions:
 

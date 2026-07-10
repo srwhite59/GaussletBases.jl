@@ -27359,3 +27359,51 @@ Carrying-cost result:
   remains materially line-negative.
 - Exact next blocker: finish and review the concurrent packet moment polish and
   strict padded-Be2 additive-reference gate.
+
+## Cartesian Hamiltonian Producer Pass 353 - Protected Additive Reference And Packet Moment Polish
+
+Commit(s):
+- this commit - implement protected additive atomic references and deterministic
+  packet potential moment polishing.
+
+Summary:
+- Implemented the private protected-localized additive-reference path. One
+  shared compact residual object now supplies geometry and operators; the
+  full-rank union of placed packet occupied spaces is mandatory for basis
+  protection, while original packet blocks remain separate when forming
+  additive `P0/q0`.
+- Added placed fitted-potential `GG/GA/AA`, packet density-cloud self/cross
+  energy, native-`L` representation, and reuse of the existing correction core
+  with `E0 = sum E_aa + 2 sum E_ab`. Ordinary no-reference `H1_L/Vee_L`
+  remains exactly unchanged.
+- Implemented the fixed 33-term determinant-moment polish. Exponents and the
+  first five broad-tail coefficients stay fixed; one prescribed rank-28 SVD
+  update aligns determinant `P0`, density-fit `E0`, and potential-fit `J0`.
+  Legacy packets remain readable with unavailable polish provenance.
+
+Validation / evidence:
+- Doer reported packet `90/90`, screened-Hartree `59/59`, exact no-reference
+  parity, and the strict padded Be2 gate with direct anchor `-3.73e-14 Ha`,
+  derivative anchor `0`, charge `4`, and roundoff recovery through `L`.
+  Terminal due diligence showed 10-bohr padding, axes `(23,23,41)`, dimension
+  `1747`, two direct cores, 13 complete shells, and the recorded advisory slab/
+  aspect warnings without padding, weight, or large-identity warnings.
+- Manager reviewed every source/test diff, restored two unrelated legacy rank-
+  tolerance semantics, reran package load, misc `52/52`, packet `90/90`, the
+  docs build, and `git diff --check`. The expensive 32.55-GiB Be2 gate was not
+  repeated.
+
+Goal advancement / guardrail:
+- LT2/LT5/LT8 and MT4/MT5: closes the first physically correct additive packet
+  consumer and clears CR2 to run an internal screened-Hartree off/on
+  measurement. This is not endpoint validation or production workflow.
+- No public input, corrected artifact, solver, exchange, EGOI, `Vee` rotation,
+  heteronuclear moment policy, or Cr2 production claim is introduced.
+
+Carrying-cost result:
+- Task source delta is `+451/-83` (net `+368`) across the six approved files;
+  tests add `108` lines. Duplicate compact selection was removed, and no new
+  source file, exported API, artifact field, or second correction model was
+  added.
+- Exact next step: CR2 may consume two Cr `18e` packets through this private
+  path for a controlled same-basis correction-off versus correction-on audit.

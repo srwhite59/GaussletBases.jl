@@ -444,19 +444,30 @@ function _supplement_self_energy(supplement, density, expansion)
     return Float64(value)
 end
 
-function _cloud_supplement(betas, spec::AtomicHFReferencePacketSpec)
+function _cloud_supplement(betas, spec::AtomicHFReferencePacketSpec; center = spec.center)
     orbitals = _GB_PARENT.CartesianGaussianShellOrbitalRepresentation3D[
         _GB_PARENT.CartesianGaussianShellOrbitalRepresentation3D(
-            "fit_s$(i)", (0, 0, 0), spec.center,
+            "fit_s$(i)", (0, 0, 0), center,
             [0.5 * Float64(beta)], [1.0],
             :axiswise_normalized_cartesian_gaussian)
         for (i, beta) in pairs(betas)]
     metadata = (; source_kind = :atomic_hf_reference_density_fit_cloud,
         atom = spec.atom, basis_name = "$(spec.basis_name)_density_fit",
-        lmax = 0, nuclei = NTuple{3,Float64}[spec.center])
+        lmax = 0, nuclei = NTuple{3,Float64}[center])
     return _GB_PARENT.CartesianGaussianShellSupplementRepresentation3D(
         :atomic_hf_reference_density_fit_cloud, orbitals, metadata)
 end
+
+function _density_fit_cloud_terms(fit, spec, center)
+    cloud = _cloud_supplement(fit.betas, spec; center)
+    pair_terms = getfield(_GB_PARENT, :_gaussian_coulomb_pair_terms)
+    return [(Float64(weight), pair_terms(orbital, orbital))
+        for (weight, orbital) in zip(fit.weights, cloud.orbitals)]
+end
+
+_density_cloud_terms_energy(left, right, expansion) = Float64(sum(
+    lw * rw * getfield(_GB_PARENT, :_gaussian_coulomb_pair_integral)(lt, rt, expansion)
+    for (lw, lt) in left, (rw, rt) in right))
 
 function _cloud_self_energy(betas, weights, spec::AtomicHFReferencePacketSpec,
     expansion)
@@ -790,6 +801,80 @@ function fit_atomic_reference_potential(
         Vector{Float64}(errors.err), row)
 end
 
+const _POTENTIAL_MOMENT_DISTANCES =
+    (0.0, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0, 20.0)
+
+function _determinant_potential_moments(supplement, density, exponents, center)
+    raw_owner = _GB_PARENT.CartesianGaussianRawBlocks
+    donor = getfield(_GB_PARENT.CartesianFinalBasisRealization,
+        :_r3a_qw_supplement)(supplement)
+    inventory = getfield(raw_owner, :_axis_family_inventory)(donor)
+    term_type = getfield(raw_owner, :_AtomicReferenceHartreePotentialTerm)
+    moments = Matrix{Float64}(undef, length(_POTENTIAL_MOMENT_DISTANCES), length(exponents))
+    for (row, distance) in pairs(_POTENTIAL_MOMENT_DISTANCES),
+            (column, exponent) in pairs(exponents)
+        placement = (center[1] + distance, center[2], center[3])
+        term = term_type(1.0, Float64(exponent), placement, (0, 0, 0))
+        AA = getfield(raw_owner, :_mixed_hartree_aa_block)(
+            donor, inventory, term_type[term])
+        moments[row, column] = sum(density .* AA)
+    end
+    return moments
+end
+
+function _polish_atomic_reference_potential(supplement, rhf, density_fit,
+    potential_fit, spec)
+    length(potential_fit.coefficients) == 33 && length(potential_fit.exponents) == 33 ||
+        throw(ArgumentError("determinant-moment polish requires 33 retained potential terms"))
+    potential_fit.row.fixed_broad_terms == 5 ||
+        throw(ArgumentError("determinant-moment polish requires five fixed broad terms"))
+    fixed, free = 1:5, 6:33
+    coefficients0, exponents0 = copy(potential_fit.coefficients), copy(potential_fit.exponents)
+    moments = _determinant_potential_moments(
+        supplement, rhf.density_total, exponents0, spec.center)
+    expansion = _atomic_reference_coulomb_expansion(:compact)
+    origin_terms = _density_fit_cloud_terms(density_fit, spec, spec.center)
+    targets = Float64[_density_cloud_terms_energy(origin_terms,
+        _density_fit_cloud_terms(density_fit, spec,
+            (spec.center[1] + distance, spec.center[2], spec.center[3])), expansion)
+        for distance in _POTENTIAL_MOMENT_DISTANCES]
+    radial = hcat([exp.(-exponent .* potential_fit.radial_grid.^2)
+        for exponent in exponents0[free]]...)
+    design = vcat(radial, moments[:, free])
+    target = vcat(zeros(Float64, length(potential_fit.radial_grid)),
+        targets - moments * coefficients0)
+    weights = vcat(_radial_fit_weights(
+        potential_fit.radial_grid, potential_fit.radial_exact), fill(1.0e4, length(targets)))
+    delta, _, rank = _solve_weighted_svd(design, target, weights; rtol = 1.0e-12)
+    rank == 28 || throw(ArgumentError(
+        "determinant-moment polish retained rank $(rank), expected 28"))
+    coefficients = copy(coefficients0)
+    coefficients[free] .+= delta
+    coefficients[fixed] == coefficients0[fixed] ||
+        throw(ArgumentError("determinant-moment polish changed fixed broad coefficients"))
+    fit_values = potential_fit.radial_fit + radial * delta
+    errors = _potential_fit_errors(potential_fit.radial_grid,
+        potential_fit.radial_exact, fit_values, density_fit.row.charge)
+    moment_max_abs_error = maximum(abs, moments * coefficients - targets)
+    moment_max_abs_error <= 1.0e-9 || throw(ArgumentError(
+        "determinant-moment polish error $(moment_max_abs_error) exceeds 1e-9 Ha"))
+    errors.absmax <= potential_fit.row.absmax + 1.0e-9 &&
+        errors.tail_charge_error <= potential_fit.row.tail_charge_error + 1.0e-9 ||
+        throw(ArgumentError("determinant-moment polish materially regressed radial/tail accuracy"))
+    polish = (; policy_id = :determinant_densityfit_coulomb_moment_v1,
+        retained_rank = rank, coefficient_delta_max = maximum(abs, delta),
+        moment_max_abs_error)
+    row = merge(potential_fit.row, (; coefficient_min = minimum(coefficients),
+        coefficient_max = maximum(coefficients),
+        negative_coefficient_count = count(<(0.0), coefficients),
+        errors.absmax, errors.relmax, errors.relrms, errors.core_relmax,
+        errors.mid_relmax, errors.tail_relmax, errors.tail_charge_error,
+        moment_polish = polish))
+    return AtomicReferencePotentialFit(coefficients, exponents0,
+        copy(potential_fit.radial_grid), copy(potential_fit.radial_exact),
+        fit_values, Vector{Float64}(errors.err), row)
+end
+
 function _packet_validation(spec, supplement, rhf, density_fit, potential_fit)
     S = Matrix{Float64}(rhf.overlap)
     C = Matrix{Float64}(rhf.occupied_orbitals)
@@ -824,8 +909,10 @@ function build_atomic_hf_reference_packet(
     _require_atomic_reference_converged(rhf, "atomic reference packet construction")
     density_fit = fit_atomic_reference_density(
         supplement, rhf, spec; options = density_options)
-    potential_fit = fit_atomic_reference_potential(
+    potential_fit0 = fit_atomic_reference_potential(
         density_fit; options = potential_options)
+    potential_fit = _polish_atomic_reference_potential(
+        supplement, rhf, density_fit, potential_fit0, spec)
     validation = _packet_validation(spec, supplement, rhf, density_fit, potential_fit)
     provenance = (; git_commit = _git_commit(),
         construction_timestamp = string(time()),
@@ -957,8 +1044,14 @@ function write_atomic_hf_reference_packet(path::AbstractString,
         f["potential_fit/radial_fit"] = pf.radial_fit
         f["potential_fit/radial_error"] = pf.radial_error
         for name in propertynames(pf.row)
-            name == :fit_kind && continue
+            name in (:fit_kind, :moment_polish) && continue
             f["potential_fit/$(String(name))"] = getproperty(pf.row, name)
+        end
+        if hasproperty(pf.row, :moment_polish) && !isnothing(pf.row.moment_polish)
+            for name in propertynames(pf.row.moment_polish)
+                f["potential_fit/moment_polish/$(String(name))"] =
+                    getproperty(pf.row.moment_polish, name)
+            end
         end
 
         for name in propertynames(packet.validation)
@@ -1003,6 +1096,13 @@ function read_atomic_hf_reference_packet(path::AbstractString)
             term_count = Int(f["density_fit/term_count"]),
             retained_rank = Int(f["density_fit/retained_rank"]),
             negative_weight_count = Int(f["density_fit/negative_weight_count"]))
+        moment_polish = haskey(f, "potential_fit/moment_polish/policy_id") ? (;
+            policy_id = Symbol(f["potential_fit/moment_polish/policy_id"]),
+            retained_rank = Int(f["potential_fit/moment_polish/retained_rank"]),
+            coefficient_delta_max =
+                Float64(f["potential_fit/moment_polish/coefficient_delta_max"]),
+            moment_max_abs_error =
+                Float64(f["potential_fit/moment_polish/moment_max_abs_error"])) : nothing
         pot_row = (; charge = Float64(f["potential_fit/charge"]),
             total_terms = Int(f["potential_fit/total_terms"]),
             fixed_broad_terms = Int(f["potential_fit/fixed_broad_terms"]),
@@ -1011,7 +1111,8 @@ function read_atomic_hf_reference_packet(path::AbstractString)
             absmax = Float64(f["potential_fit/absmax"]),
             relmax = Float64(f["potential_fit/relmax"]),
             relrms = Float64(f["potential_fit/relrms"]),
-            tail_charge_error = Float64(f["potential_fit/tail_charge_error"]))
+            tail_charge_error = Float64(f["potential_fit/tail_charge_error"]),
+            moment_polish)
         return (;
             path = String(path),
             artifact_kind = f["artifact_kind"],
@@ -1155,6 +1256,88 @@ function _packet_cloud_from_readback(packet; center = _packet_center(packet))
     return cloud, density
 end
 
+function atomic_reference_packet_occupied_embedding(packet, supplement, S_AA, owner_indices;
+    owner_index::Integer, center, supplement_indices, overlap_atol::Real = 1.0e-10)
+    _require_atomic_reference_converged(packet, "protected occupied packet embedding")
+    indices = Int.(collect(supplement_indices))
+    length(unique(indices)) == length(indices) ||
+        throw(ArgumentError("packet supplement indices must be unique"))
+    S_packet = Matrix{Float64}(packet.overlap)
+    length(indices) == size(S_packet, 1) ||
+        throw(DimensionMismatch("packet and owner-local supplement counts differ"))
+    all(index -> owner_indices[index] == Int(owner_index), indices) ||
+        throw(ArgumentError("packet supplement indices cross owner boundaries"))
+    placement = ntuple(axis -> Float64(center[axis]), 3)
+    all(index -> maximum(abs(supplement.orbitals[index].center[axis] - placement[axis])
+        for axis in 1:3) <= overlap_atol, indices) ||
+        throw(ArgumentError("packet supplement indices do not match placement center"))
+    spec, metadata = _packet_density_fit_spec(packet, placement), supplement.metadata
+    (isnothing(metadata.atom) || String(metadata.atom) == spec.atom) &&
+        (isnothing(metadata.basis_name) || String(metadata.basis_name) == spec.basis_name) ||
+        throw(ArgumentError("packet atom/basis does not match supplement metadata"))
+    S_block = Matrix{Float64}(S_AA[indices, indices])
+    _matrix_fingerprint(S_block) == String(packet.overlap_fingerprint) ||
+        throw(ArgumentError("packet basis/order fingerprint mismatch"))
+    order = hasproperty(packet, :labels) ?
+        (; labels = String.(packet.labels), powers = Matrix{Int}(packet.angular_powers)) :
+        _orbital_arrays(packet.supplement)
+    length(order.labels) == length(indices) && size(order.powers) == (3, length(indices)) ||
+        throw(DimensionMismatch("packet supplement order metadata has wrong shape"))
+    for (column, index) in enumerate(indices)
+        orbital = supplement.orbitals[index]
+        actual_label, expected_label = string(orbital.label), order.labels[column]
+        (actual_label == expected_label || endswith(actual_label, "_" * expected_label)) &&
+            ntuple(axis -> Int(orbital.angular_powers[axis]), 3) ==
+                ntuple(axis -> order.powers[axis, column], 3) ||
+            throw(ArgumentError("packet supplement basis/order mismatch at column $(column)"))
+    end
+    C = hasproperty(packet, :C_occ) ? Matrix{Float64}(packet.C_occ) : Matrix{Float64}(packet.occupied_coefficients)
+    occupations = Vector{Float64}(packet.occupations)
+    abs(sum(occupations) - spec.electron_count) <= overlap_atol ||
+        throw(ArgumentError("packet occupations do not recover its electron count"))
+    Y = zeros(Float64, size(S_AA, 1), size(C, 2))
+    Y[indices, :] .= C
+    orthogonality_error = norm(transpose(Y) * S_AA * Y - I, Inf)
+    orthogonality_error <= overlap_atol ||
+        throw(ArgumentError("embedded packet occupied block is not S_AA-orthonormal"))
+    return (; packet, owner_index = Int(owner_index), center = placement,
+        supplement_indices = indices, Y, occupations)
+end
+function _packet_density_cloud_terms(packet, center)
+    _require_atomic_reference_converged(packet, "atomic reference density-cloud evaluation")
+    return _density_fit_cloud_terms(
+        packet.density_fit, _packet_density_fit_spec(packet, center), center)
+end
+function atomic_reference_packet_additive_density_energy(placements)
+    n = length(placements); n > 0 || throw(ArgumentError("additive reference requires at least one packet"))
+    expansion = _atomic_reference_coulomb_expansion(:compact)
+    terms = [_packet_density_cloud_terms(placement.packet, placement.center)
+        for placement in placements]
+    energies = [_density_cloud_terms_energy(terms[a], terms[b], expansion)
+        for a in 1:n, b in 1:n]
+    oracle = _density_cloud_terms_energy(reduce(vcat, terms), reduce(vcat, terms), expansion)
+    return (; pair_energies = energies, total = sum(energies),
+        cross_symmetry_error = norm(energies - transpose(energies), Inf),
+        combined_cloud_oracle = oracle)
+end
+function _packet_potential_expansion(packet)
+    template = _atomic_reference_coulomb_expansion(:compact)
+    return _GB_PARENT.CoulombGaussianExpansion(packet.potential_fit.coefficients,
+        packet.potential_fit.exponents; del = template.del, s = template.s, c = template.c,
+        maxu = template.maxu)
+end
+function atomic_reference_packet_fitted_potential_raw_blocks(base, supplement, packet;
+    center = _packet_center(packet))
+    _require_atomic_reference_converged(packet, "protected fitted-potential packet")
+    realizer = _GB_PARENT.CartesianFinalBasisRealization
+    proxy = getfield(realizer, :_r3a_qw_proxy_layers)(base.parent.parent_axis_bundle_object)
+    raw = _GB_PARENT.CartesianGaussianRawBlocks.placed_spherical_gaussian_potential_raw_blocks(
+        base.terminal_basis, base.parent.parent_axis_bundle_object,
+        proxy, getfield(realizer, :_r3a_qw_supplement)(supplement),
+        _packet_potential_expansion(packet), center)
+    GA = getfield(realizer, :_r3a_project_parent_ga)(base.terminal_basis, raw.GA)
+    return (; GG = raw.GG, GA, AA = raw.AA)
+end
 function atomic_reference_packet_terminal_hartree_gg(
     base,
     packet;
@@ -1170,26 +1353,10 @@ function atomic_reference_packet_terminal_hartree_gg(
             expansion)
         return result.GG
     elseif source == :potential_fit
-        template = _atomic_reference_coulomb_expansion(:compact)
-        expansion = _GB_PARENT.CoulombGaussianExpansion(
-            packet.potential_fit.coefficients,
-            packet.potential_fit.exponents;
-            del = template.del, s = template.s, c = template.c,
-            maxu = template.maxu)
-        basis = base.terminal_basis
-        bundles = base.parent.parent_axis_bundle_object
-        pgdg = Tuple(getfield(_GB_PARENT, :_nested_axis_pgdg)(
-            bundles, axis) for axis in (:x, :y, :z))
-        matrix = zeros(Float64, basis.final_dimension, basis.final_dimension)
-        factors = ntuple(axis ->
-            getfield(_GB_PARENT.CartesianFinalBasisRealization,
-                :_r3a_centered_factor_terms)(
-                pgdg[axis], expansion, placement[axis]), 3)
-        getfield(_GB_PARENT.CartesianFinalBasisRealization,
-            :_accumulate_terminal_gaussian_sum!)(
-            matrix, basis, expansion.coefficients, factors[1], factors[2],
-            factors[3]; scale = 1.0)
-        return _sym(matrix)
+        return _GB_PARENT.CartesianGaussianRawBlocks.
+            placed_spherical_gaussian_potential_gg_block(
+                base.terminal_basis, base.parent.parent_axis_bundle_object,
+                _packet_potential_expansion(packet), placement)
     else
         throw(ArgumentError("source must be :density_fit or :potential_fit"))
     end

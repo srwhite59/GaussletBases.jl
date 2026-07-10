@@ -412,3 +412,28 @@ function atomic_reference_hartree_ga_aa_blocks(proxy, supplement, reference_supp
     )
     return (; GA, AA, diagnostics)
 end
+
+function placed_spherical_gaussian_potential_gg_block(basis, bundles, expansion, center)
+    placement = _float_center(center)
+    pgdg = Tuple(getfield(_GB_PARENT, :_nested_axis_pgdg)(bundles, axis)
+        for axis in (:x, :y, :z))
+    realizer = _GB_PARENT.CartesianFinalBasisRealization
+    factors = ntuple(axis -> getfield(realizer, :_r3a_centered_factor_terms)(
+        pgdg[axis], expansion, placement[axis]), 3)
+    GG = zeros(Float64, basis.final_dimension, basis.final_dimension)
+    getfield(realizer, :_accumulate_terminal_gaussian_sum!)(GG, basis, expansion.coefficients,
+        factors[1], factors[2], factors[3]; scale = 1.0)
+    return _symmetrize_raw_block(GG)
+end
+function placed_spherical_gaussian_potential_raw_blocks(
+    basis, bundles, proxy, supplement, expansion, center)
+    placement = _float_center(center)
+    terms = _AtomicReferenceHartreePotentialTerm[_AtomicReferenceHartreePotentialTerm(
+        Float64(coefficient), Float64(exponent), placement, (0, 0, 0))
+        for (coefficient, exponent) in zip(expansion.coefficients, expansion.exponents)]
+    inventory = _axis_family_inventory(supplement)
+    GG = placed_spherical_gaussian_potential_gg_block(basis, bundles, expansion, placement)
+    GA = _mixed_hartree_ga_block(proxy, supplement, inventory, terms)
+    AA = _mixed_hartree_aa_block(supplement, inventory, terms)
+    return (; GG, GA, AA)
+end

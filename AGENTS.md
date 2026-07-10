@@ -772,9 +772,9 @@ protected orbitals. Density-fit `J0_G` must receive its role-qualified compact
 Coulomb expansion explicitly. No production correction, solver, public
 default, exchange, EGOI, row-gauge rho0/P0, or Cr/Cr2 claim is approved.
 `HP-PQS-ATOMREF-POTMOM-FN-01` and
-`HP-PQS-ATOMREF-POTMOM-TEST-01` approve only the fixed-policy determinant-
-moment polish recorded in the same canonical packet contract. The current
-`33` potential terms and first `5` broad-tail coefficients/exponents remain
+`HP-PQS-ATOMREF-POTMOM-TEST-01` authorize only the implemented fixed-policy
+determinant-moment polish recorded in the same canonical packet contract. The
+current `33` potential terms and first `5` broad-tail coefficients/exponents remain
 fixed; only coefficients `6:33` may change through the prescribed `13`-point,
 weight-`1e4` SVD correction. This is packet consistency between determinant
 `P0`, density-fit `E0`, and fitted-potential `J0`, not a scalar Hamiltonian
@@ -1190,8 +1190,8 @@ Approved Residual Gaussian module surfaces:
   The helper is not wired into the protected builder and is not a direct
   substitute for staged geometry over `M = [G, R_compact]`.
 - `HP-RG-PROTECT-ADDREF-FN-01` and
-  `HP-RG-PROTECT-ADDREF-TEST-01` approve the first internal protected-localized
-  occupied-reference consumer. Build compact `R` once, make the full-rank
+  `HP-RG-PROTECT-ADDREF-TEST-01` authorize the implemented first internal
+  protected-localized occupied-reference consumer. Build compact `R` once, make the full-rank
   union of all placed converged packet occupied spaces mandatory in
   `M = [G,R_compact]`, and apply current optional staged selection only after
   that mandatory block. Keep each original packet block separate for
@@ -1210,8 +1210,8 @@ Approved Residual Gaussian module surfaces:
   algebra coverage plus an ignored physically padded Be2 two-packet gate with
   terminal due diligence. No public input, corrected artifact, protected atom,
   counterpoise, compact/high transfer, `Vee` rotation, solver, EGOI, exchange,
-  or Cr2 production claim is approved. CR2 may consume the path only after Be2
-  manager acceptance.
+  or Cr2 production claim is approved. The strict padded Be2 gate passed, so
+  CR2 may consume the path for measurement only.
 - `HP-RG-PROTECT-INJECT-DESIGN-01`,
   `HP-RG-PROTECT-INJECT-FN-01` / `TEST-01`, and
   `HP-RG-PROTECT-ONEBODY-FN-01` / `TEST-01` are governed by

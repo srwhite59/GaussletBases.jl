@@ -53,7 +53,7 @@ Cr2 ladder bases. `HP-RG-PROTECT-LADDER-BUNDLE-*` approves an opt-in
 directory-bundle facility for this recurring ladder workflow: protected
 Hamiltonian member artifacts, exact cross-overlap sidecars, optional restart
 sidecars, manifest/provenance, and bounded summaries.
-`HP-RG-PROTECT-ADDREF-*` approves a separate internal in-memory lane that
+`HP-RG-PROTECT-ADDREF-*` implements a separate internal in-memory lane that
 makes the full union of placed atomic packet occupied spaces mandatory in the
 protected basis, preserves the original per-packet blocks for additive `P0`,
 and assembles native-order screened-Hartree `Delta_J0/C` without changing the

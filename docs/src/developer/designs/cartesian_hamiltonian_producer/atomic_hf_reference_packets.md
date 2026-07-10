@@ -2,8 +2,8 @@
 
 Status: implemented internal subsystem under
 `HP-PQS-ATOMREF-PACKET-FN-01` and
-`HP-PQS-ATOMREF-PACKET-TEST-01`. A fixed-policy determinant-moment polish of
-the fitted potential is approved, pending implementation, under
+`HP-PQS-ATOMREF-PACKET-TEST-01`. The fixed-policy determinant-moment polish of
+the fitted potential is implemented under
 `HP-PQS-ATOMREF-POTMOM-FN-01` and
 `HP-PQS-ATOMREF-POTMOM-TEST-01`.
 

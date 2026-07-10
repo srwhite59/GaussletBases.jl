@@ -184,7 +184,7 @@ Implemented base path:
   are not protected orbitals; and density-fit `J0_G` receives the explicit
   role-qualified compact Coulomb expansion.
 - `HP-PQS-ATOMREF-POTMOM-FN-01` and
-  `HP-PQS-ATOMREF-POTMOM-TEST-01` approve a pending fixed-policy determinant-
+  `HP-PQS-ATOMREF-POTMOM-TEST-01` implement the fixed-policy determinant-
   moment polish for those packet potential fits. It preserves all `33`
   exponents and the first `5` broad-tail coefficients, adjusts only
   coefficients `6:33` against the fixed `13`-distance Coulomb-moment grid, and
@@ -380,7 +380,7 @@ Approved Residual Gaussian robustness lane:
   builder; composition over `M = [G, R_compact]` belongs to
   `HP-RG-PROTECT-ADDREF-*`.
 - `HP-RG-PROTECT-ADDREF-FN-01` and
-  `HP-RG-PROTECT-ADDREF-TEST-01` approve that first real internal consumer for
+  `HP-RG-PROTECT-ADDREF-TEST-01` implement that first real internal consumer for
   homonuclear protected-localized molecules. It is explicit internal opt-in;
   protected members without packet references remain unchanged. The staged
   geometry consumes the already-built compact residual basis
@@ -398,8 +398,8 @@ Approved Residual Gaussian robustness lane:
   energy, anchors, unchanged unscreened matrices, and terminal due diligence.
   No public input, corrected artifact, solver, endpoint claim, protected atom,
   counterpoise, compact/high transfer, EGOI, exchange, or Cr2 production
-  workflow is approved. After Be2 acceptance, CR2 may consume the same
-  in-memory path for measurement only.
+  workflow is approved. The strict padded Be2 gate passed; CR2 may consume the
+  same in-memory path for measurement only.
 - `HP-RG-PROTECT-INJECT-DESIGN-01`,
   `HP-RG-PROTECT-INJECT-FN-01` / `TEST-01`, and
   `HP-RG-PROTECT-ONEBODY-FN-01` / `TEST-01` govern the internal,

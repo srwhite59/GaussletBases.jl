@@ -122,6 +122,27 @@ function protected_localized_inherited_site_hamiltonian(
             H1_L_symmetry_error = norm(H1 - transpose(H1), Inf),
             Vee_L_symmetry_error = norm(Vee - transpose(Vee), Inf)))
 end
+function protected_original_reference_blocks_in_local_basis(
+    G_L, A_L, X, S_AA, loc, occupied_blocks; recovery_atol::Real = 1.0e-10)
+    coefficient_blocks = Matrix{Float64}[]
+    diagnostics = NamedTuple[]
+    for block_raw in occupied_blocks
+        block = Matrix{Float64}(block_raw)
+        C_L = transpose(G_L) * X * block + transpose(A_L) * S_AA * block
+        C_F = loc.W * C_L
+        f_singulars, l_singulars = Float64[svdvals(C_F)...], Float64[svdvals(C_L)...]
+        f_loss, l_loss = maximum(abs.(1.0 .- f_singulars)),
+            maximum(abs.(1.0 .- l_singulars))
+        orthogonality_error = norm(transpose(C_L) * C_L - I, Inf)
+        maximum((f_loss, l_loss, orthogonality_error)) <= recovery_atol ||
+            throw(ArgumentError("protected occupied block is not recovered in F/L"))
+        push!(coefficient_blocks, C_L)
+        push!(diagnostics, (; f_recovery_singular_values = f_singulars,
+            f_recovery_loss = f_loss, l_recovery_singular_values = l_singulars,
+            l_recovery_loss = l_loss, l_orthogonality_error = orthogonality_error))
+    end
+    return (; coefficient_blocks, diagnostics)
+end
 
 function _protected_localized_axis_expectations(operator, ML, name::AbstractString)
     dense = symmetrize_operator(operator)
@@ -240,6 +261,15 @@ function transform_protected_original_fixed_sector_exact_hartree(raw_blocks, geo
         protected_count = components.protected_count,
         z_dimension = components.z_dimension,
         f_dimension = components.f_dimension)
+end
+
+function transform_protected_original_localized_exact_hartree(raw_blocks, geometry, loc)
+    fixed = transform_protected_original_fixed_sector_exact_hartree(raw_blocks, geometry)
+    localized = symmetrize_operator(transpose(loc.W) * fixed.hartree * loc.W)
+    return (; J0_L = localized,
+        diagnostics = merge(fixed.diagnostics, (; localized_symmetry_error =
+            norm(localized - transpose(localized), Inf),
+            localized_finite = all(isfinite, localized))))
 end
 
 function atomic_reference_protected_original_fixed_sector_exact_hartree(

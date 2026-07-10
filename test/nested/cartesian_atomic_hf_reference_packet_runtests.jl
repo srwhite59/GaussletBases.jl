@@ -17,6 +17,8 @@ end
 
 function _packet_roundtrip_smoke(spec, label)
     packet = CRD.build_atomic_hf_reference_packet(spec)
+    accepted_potential = CRD.fit_atomic_reference_potential(packet.density_fit)
+    polish = packet.potential_fit.row.moment_polish
     path = joinpath(mktempdir(), "$(label)_atomic_hf_reference_packet.jld2")
     CRD.write_atomic_hf_reference_packet(path, packet)
     readback = CRD.read_atomic_hf_reference_packet(path)
@@ -38,6 +40,16 @@ function _packet_roundtrip_smoke(spec, label)
     @test abs(validation.density_fit_charge_error) < 1.0e-10
     @test validation.density_fit_self_energy_relative_error < 1.0e-8
     @test validation.potential_fit_radial_relmax < 1.0e-4
+    @test length(packet.potential_fit.coefficients) == 33
+    @test packet.potential_fit.exponents == accepted_potential.exponents
+    @test packet.potential_fit.coefficients[1:5] == accepted_potential.coefficients[1:5]
+    @test polish.policy_id == :determinant_densityfit_coulomb_moment_v1
+    @test polish.retained_rank == 28
+    @test polish.moment_max_abs_error <= 1.0e-9
+    @test packet.potential_fit.row.absmax <= accepted_potential.row.absmax + 1.0e-9
+    @test packet.potential_fit.row.tail_charge_error <=
+        accepted_potential.row.tail_charge_error + 1.0e-9
+    @test readback.potential_fit.row.moment_polish == polish
     @test packet.rhf_diagnostics.coulomb_expansion_doacc === true
     @test packet.rhf_diagnostics.coulomb_expansion_terms >= 100
     @test packet.rhf_diagnostics.coulomb_expansion_maxu >= 100.0
@@ -57,11 +69,16 @@ function _packet_roundtrip_smoke(spec, label)
                 name in GaussletBases._CARTESIAN_COULOMB_EXPANSION_SUMMARY_KEYS
             delete!(file, "coulomb_expansion/$(role)/$(name)")
         end
+        for name in (:policy_id, :retained_rank, :coefficient_delta_max,
+                :moment_max_abs_error)
+            delete!(file, "potential_fit/moment_polish/$(name)")
+        end
     end
     legacy = CRD.read_atomic_hf_reference_packet(legacy_path)
     @test isnothing(legacy.coulomb_expansions.rhf)
     @test isnothing(legacy.coulomb_expansions.density_self_energy)
     @test isnothing(legacy.coulomb_expansions.potential_tail_scaffold)
+    @test isnothing(legacy.potential_fit.row.moment_polish)
     @test abs(p0.trace - spec.electron_count) < 1.0e-10
     @test sum(p0.q_AA) > 0.0
 

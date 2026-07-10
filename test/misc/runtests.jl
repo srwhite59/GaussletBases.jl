@@ -27,6 +27,17 @@ using SHA
         [-0.01, 0.5], diagnostics.capture_tol, "synthetic capture")
     @test_throws ArgumentError CRG._rg_validate_capture_eigenvalues(
         [0.5, 1.01], diagnostics.capture_tol, "synthetic capture")
+
+    Y1 = reshape([1.0, 0.0, 0.0], 3, 1)
+    Y2 = reshape([0.6, 0.8, 0.0], 3, 1)
+    union_result = CRG.protected_occupied_union(S, [Y1, Y2])
+    @test union_result.retained_rank == 2
+    @test union_result.gram_eigenvalues ≈ [0.4, 1.6]
+    @test maximum(union_result.recovery_losses) < 1.0e-12
+    duplicate_result = CRG.protected_occupied_union(S, [Y1, Y1])
+    @test duplicate_result.retained_rank == 1
+    @test maximum(duplicate_result.recovery_losses) < 1.0e-12
+    @test_throws ArgumentError CRG.protected_occupied_union(S, [1.1 .* Y1, Y2])
 end
 
 @testset "vendored legacy BasisSets provenance" begin

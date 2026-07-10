@@ -173,23 +173,17 @@ function _plb_compact_residual(inputs, stages)
             residual_compactness = _plb_compactness(inputs)))
 end
 
-function _plb_protected_geometry(inputs, stages)
+function _plb_protected_geometry(inputs, residual, stages; occupied_blocks = Matrix{Float64}[])
     recipe = inputs.recipe
     return _plb_stage!(stages, "ns$(recipe.ns) staged protected-original geometry", () ->
         CartesianResidualGaussians.staged_protected_original_injection_geometry(
             inputs.base.terminal_basis.final_dimension,
-            inputs.X, inputs.S_AA, inputs.labels, inputs.centers, inputs.owners;
-            residual_occupation_cutoff =
-                _plb_get(recipe, :residual_occupation_cutoff, 1.0e-6),
-            residual_compactness = _plb_compactness(inputs),
+            inputs.X, inputs.S_AA, inputs.labels, inputs.centers, inputs.owners,
+            residual; occupied_blocks,
             s_cut = _plb_get(recipe, :protected_s_cut, 0.95),
             occ_cut = _plb_get(recipe, :protected_occ_cut, 0.003),
             candidate_overlap_atol = 1.0e-12,
-            candidate_overlap_rtol = 1.0e-8,
-            tau_neg_abs = _plb_get(recipe, :tau_neg_abs, 1.0e-12),
-            tau_neg_rel = _plb_get(recipe, :tau_neg_rel, 1.0e-12),
-            tau_merge_abs = _plb_get(recipe, :tau_merge_abs, 1.0e-12),
-            tau_merge_rel = _plb_get(recipe, :tau_merge_rel, 1.0e-12)))
+            candidate_overlap_rtol = 1.0e-8))
 end
 
 function _plb_augmented(inputs, residual, stages)
@@ -252,10 +246,7 @@ function _plb_member_diagnostics(case)
         Vee_L_symmetry_error = localized.Vee_L_symmetry_error)
 end
 
-function _plb_build_member(recipe, stages)
-    inputs = _plb_build_inputs(recipe, stages)
-    residual = _plb_compact_residual(inputs, stages)
-    geometry = _plb_protected_geometry(inputs, stages)
+function _plb_finish_member(recipe, inputs, residual, geometry, stages)
     augmented = _plb_augmented(inputs, residual, stages)
     H_F = _plb_stage!(stages, "ns$(recipe.ns) protected fixed one-body", () ->
         _plb_protected_one_body(inputs, geometry, augmented))
@@ -272,6 +263,67 @@ function _plb_build_member(recipe, stages)
         _plb_localized_raw_coefficients(geometry, localized.transform))
     return (; recipe, inputs, residual, geometry, augmented, localized,
         row_locality, raw, H = localized.H1_L, V = localized.Vee_L)
+end
+
+function _plb_build_member(recipe, stages)
+    inputs = _plb_build_inputs(recipe, stages)
+    residual = _plb_compact_residual(inputs, stages)
+    geometry = _plb_protected_geometry(inputs, residual, stages)
+    return _plb_finish_member(recipe, inputs, residual, geometry, stages)
+end
+_plb_reference_embeddings(inputs, placements, stages) = [_plb_stage!(stages,
+        "ns$(inputs.recipe.ns) embed reference owner $(placement.owner_index)", () ->
+        CartesianReferenceDensity.atomic_reference_packet_occupied_embedding(
+            placement.packet, inputs.supplement, inputs.S_AA, inputs.owners;
+            owner_index = placement.owner_index, center = placement.center,
+            supplement_indices = placement.supplement_indices)
+    ) for placement in placements]
+function _plb_additive_reference_raw_blocks(inputs, embeddings, stages)
+    raw_blocks = [_plb_stage!(stages,
+            "ns$(inputs.recipe.ns) fitted reference field owner $(embedding.owner_index)", () ->
+                CartesianReferenceDensity.atomic_reference_packet_fitted_potential_raw_blocks(
+                    inputs.base, inputs.supplement, embedding.packet;
+                    center = embedding.center)) for embedding in embeddings]
+    GG, GA, AA = copy(first(raw_blocks).GG), copy(first(raw_blocks).GA),
+        copy(first(raw_blocks).AA)
+    for raw in raw_blocks[2:end]
+        GG .+= raw.GG
+        GA .+= raw.GA
+        AA .+= raw.AA
+    end
+    return (; GG, GA, AA)
+end
+function _plb_build_additive_reference_member(
+    recipe, stages, placements; correction_options = (;))
+    isempty(placements) && return (; member = _plb_build_member(recipe, stages),
+        correction = nothing, reference = nothing)
+    inputs = _plb_build_inputs(recipe, stages)
+    residual = _plb_compact_residual(inputs, stages)
+    embeddings = _plb_reference_embeddings(inputs, placements, stages)
+    occupied_blocks = [entry.Y for entry in embeddings]
+    geometry = _plb_protected_geometry(inputs, residual, stages;
+        occupied_blocks)
+    member = _plb_finish_member(recipe, inputs, residual, geometry, stages)
+    represented = _plb_stage!(stages, "ns$(recipe.ns) represented reference in L", () ->
+        CartesianResidualGaussians.protected_original_reference_blocks_in_local_basis(
+            member.raw.G_L, member.raw.A_L, inputs.X, inputs.S_AA,
+            member.localized.transform,
+            occupied_blocks))
+    raw = _plb_additive_reference_raw_blocks(inputs, embeddings, stages)
+    hartree = _plb_stage!(stages, "ns$(recipe.ns) additive reference J0 in F/L", () ->
+        CartesianResidualGaussians.transform_protected_original_localized_exact_hartree(
+            raw, geometry, member.localized.transform))
+    energy = _plb_stage!(stages, "ns$(recipe.ns) additive reference density energy", () ->
+        CartesianReferenceDensity.atomic_reference_packet_additive_density_energy(embeddings))
+    correction = _plb_stage!(stages, "ns$(recipe.ns) additive screened-Hartree correction", () ->
+        CartesianReferenceDensity.build_additive_screened_hartree_correction(
+            member.V, hartree.J0_L, energy.total, represented.coefficient_blocks,
+            [entry.occupations for entry in embeddings];
+            packets = [entry.packet for entry in embeddings], correction_options...))
+    reference = (; represented = represented.diagnostics,
+        hartree = hartree.diagnostics, energy,
+        geometry = geometry.additive_reference)
+    return (; member, correction, reference)
 end
 
 function _plb_write_member_artifact(case, path::AbstractString, source_artifact, source_commit, current_commit)

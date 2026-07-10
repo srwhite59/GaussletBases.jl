@@ -5,6 +5,7 @@ struct CartesianResidualGaussianBasis
     candidate_labels::Vector{String}
     candidate_owner_indices::Vector{Int}
     candidate_centers::Vector{NTuple{3,Float64}}
+    compact_source_candidate_indices::Union{Nothing,Vector{Int}}
     residual_source_owner_indices::Vector{Int}
     residual_occupations::Vector{Float64}
     owner_retained_counts::Vector{Int}
@@ -525,19 +526,49 @@ function protected_original_gram_clean(S_AA, indices, nA, atol, rtol)
     Z[indices, :] .= vectors[:, keep] * Diagonal(1.0 ./ sqrt.(values[keep]))
     return (; Z, values = Float64[values...], keep)
 end
-function protected_original_broad_subspace(S_AA, broad_indices, protected_Z, atol, rtol)
-    nA = size(S_AA, 1)
-    E = zeros(Float64, nA, length(broad_indices))
-    for (column, index) in pairs(broad_indices)
-        E[index, column] = 1.0
-    end
-    Q0 = E - protected_Z * (transpose(protected_Z) * S_AA[:, broad_indices])
+function protected_original_complement(S_AA, source, fixed, atol, rtol;
+    allow_empty::Bool = false)
+    size(source, 2) == 0 && return (; Z = zeros(Float64, size(S_AA, 1), 0))
+    Q0 = source - fixed * (transpose(fixed) * S_AA * source)
     values, vectors = eigen(Symmetric(_rg_sym(transpose(Q0) * S_AA * Q0)))
     rank_tol = max(Float64(atol), Float64(rtol) * maximum(values))
     keep = findall(>(rank_tol), values)
-    isempty(keep) && throw(ArgumentError("protected-original broad Gram cleanup removed all columns"))
-    return (; Z = Matrix{Float64}(Q0 * vectors[:, keep] * Diagonal(1.0 ./ sqrt.(values[keep]))),
-        values = Float64[values...], keep)
+    isempty(keep) && !allow_empty &&
+        throw(ArgumentError("protected-original complement Gram cleanup removed all columns"))
+    Z = isempty(keep) ? zeros(Float64, size(S_AA, 1), 0) :
+        Matrix{Float64}(Q0 * vectors[:, keep] * Diagonal(1.0 ./ sqrt.(values[keep])))
+    return (; Z)
+end
+function protected_occupied_union(S_AA, occupied_blocks; overlap_atol::Real = 1.0e-10,
+    overlap_rtol::Real = 1.0e-10)
+    blocks = Matrix{Float64}[Matrix{Float64}(block) for block in occupied_blocks]
+    isempty(blocks) && return nothing
+    nA = size(S_AA, 1)
+    all(block -> size(block, 1) == nA && size(block, 2) > 0, blocks) ||
+        throw(DimensionMismatch("protected occupied blocks have incompatible dimensions"))
+    tolerance = max(Float64(overlap_atol),
+        Float64(overlap_rtol) * max(opnorm(Matrix{Float64}(S_AA), Inf), 1.0))
+    maximum(norm(transpose(block) * S_AA * block - I, Inf) for block in blocks) <= tolerance ||
+        throw(ArgumentError("protected occupied packet block is not S_AA-orthonormal"))
+    all_columns = hcat(blocks...)
+    gram = _rg_sym(transpose(all_columns) * S_AA * all_columns)
+    values, vectors = eigen(Symmetric(gram))
+    check_residual_gaussian_metric(values, overlap_atol, overlap_rtol,
+        "protected occupied union Gram")
+    rank_tol = max(Float64(overlap_atol),
+        Float64(overlap_rtol) * max(maximum(values), 1.0))
+    keep = findall(>(rank_tol), values)
+    isempty(keep) && throw(ArgumentError("protected occupied union has no retained rank"))
+    basis = Matrix{Float64}(all_columns * vectors[:, keep] *
+        Diagonal(1.0 ./ sqrt.(values[keep])))
+    recovery_singular_values = [Float64[svdvals(transpose(basis) * S_AA * block)...]
+        for block in blocks]
+    recovery_losses = [maximum(abs.(1.0 .- singulars))
+        for singulars in recovery_singular_values]
+    maximum(recovery_losses) <= tolerance ||
+        throw(ArgumentError("protected occupied packet recovery failed"))
+    return (; basis, gram_eigenvalues = Float64[values...], retained_rank = length(keep),
+        recovery_singular_values, recovery_losses)
 end
 protected_original_projection_block(X, S_AA, T_G, T_A, Z) = begin
     XZ = X * Z
@@ -609,36 +640,47 @@ function protected_original_direction_summary(candidate_labels, candidate_owner_
 end
 function staged_protected_original_injection_geometry(base_dimension::Integer, X, S_AA,
     candidate_labels::Vector{String}, candidate_centers::Vector{NTuple{3,Float64}},
-    candidate_owner_indices::Vector{Int}; residual_occupation_cutoff::Real = 1.0e-6,
-    residual_compactness, s_cut::Real = 0.95, occ_cut::Real = 0.003,
+    candidate_owner_indices::Vector{Int}, residual::CartesianResidualGaussianBasis;
+    occupied_blocks = Matrix{Float64}[], s_cut::Real = 0.95, occ_cut::Real = 0.003,
     candidate_overlap_atol::Real = 1.0e-12, candidate_overlap_rtol::Real = 1.0e-8,
-    tau_neg_abs::Real = 1.0e-12, tau_neg_rel::Real = 1.0e-12,
-    tau_merge_abs::Real = 1.0e-12, tau_merge_rel::Real = 1.0e-12,
-    identity_atol::Real = 5.0e-8)
+    occupied_overlap_atol::Real = 1.0e-10, occupied_overlap_rtol::Real = 1.0e-10)
     nG, nA = Int(base_dimension), length(candidate_labels)
     size(X) == (nG, nA) || throw(DimensionMismatch("protected-original mixed overlap has wrong shape"))
     size(S_AA) == (nA, nA) || throw(DimensionMismatch("protected-original supplement overlap has wrong shape"))
-    residual_gaussian_compactness_selector(residual_compactness) == :ordered_compact_first_mgs ||
-        throw(ArgumentError("staged protected-original geometry requires ordered compact-first residual selection"))
-    candidate_keep = residual_gaussian_compactness_keep_mask(
-        residual_compactness, nA, candidate_centers, candidate_owner_indices)
-    order_values = residual_gaussian_order_values(
-        residual_compactness, nA, candidate_centers, candidate_owner_indices)
-    blocks = filter(!isnothing, [owner_ordered_mgs_residual_gaussian_block(
-        X, S_AA, candidate_owner_indices, owner, nA, Float64(residual_occupation_cutoff),
-        tau_neg_abs, tau_neg_rel, order_values; candidate_keep)
-        for owner in unique(candidate_owner_indices)])
-    isempty(blocks) && throw(ArgumentError("protected-original compact RG selection retained no columns"))
-    T_A0 = hcat((block.T_A for block in blocks)...)
-    T_G0 = Matrix{Float64}(-X * T_A0)
-    T_G, T_A = finalize_residual_gaussian_transform(
-        T_G0, T_A0, X, S_AA, tau_merge_abs, tau_merge_rel, identity_atol)
-    protected_indices = sort(unique(vcat((block.source_indices for block in blocks)...)))
-    Zp = protected_original_gram_clean(
+    residual.base_dimension == nG && residual.candidate_count == nA ||
+        throw(DimensionMismatch("protected-original compact residual dimensions do not match"))
+    residual.candidate_labels == candidate_labels &&
+        residual.candidate_owner_indices == candidate_owner_indices &&
+        residual.candidate_centers == candidate_centers ||
+        throw(ArgumentError("protected-original compact residual candidate metadata do not match"))
+    protected_indices = residual.compact_source_candidate_indices
+    isnothing(protected_indices) && throw(ArgumentError(
+        "staged protected-original geometry requires compact residual source indices"))
+    T_G, T_A = residual.T_G, residual.T_A
+    Zcompact = protected_original_gram_clean(
         S_AA, protected_indices, nA, candidate_overlap_atol, candidate_overlap_rtol).Z
+    occupied = protected_occupied_union(S_AA, occupied_blocks;
+        overlap_atol = occupied_overlap_atol, overlap_rtol = occupied_overlap_rtol)
+    Zp = if isnothing(occupied)
+        Zcompact
+    else
+        compact_perp = protected_original_complement(S_AA, Zcompact, occupied.basis,
+            candidate_overlap_atol, candidate_overlap_rtol; allow_empty = true)
+        hcat(occupied.basis, compact_perp.Z)
+    end
+    if !isnothing(occupied)
+        occupied_B = protected_original_projection_block(X, S_AA, T_G, T_A, occupied.basis)
+        occupied_singulars = Float64[svdvals(occupied_B)...]
+        minimum(occupied_singulars) >= Float64(s_cut) || throw(ArgumentError(
+            "mandatory occupied union is insufficiently represented by compact M; minimum singular value $(minimum(occupied_singulars))"))
+    else
+        occupied_singulars = Float64[]
+    end
     broad_indices = setdiff(collect(1:nA), protected_indices)
-    broad = protected_original_broad_subspace(
-        S_AA, broad_indices, Zp, candidate_overlap_atol, candidate_overlap_rtol)
+    E_broad = zeros(Float64, nA, length(broad_indices))
+    for (column, index) in pairs(broad_indices); E_broad[index, column] = 1.0; end
+    broad = protected_original_complement(
+        S_AA, E_broad, Zp, candidate_overlap_atol, candidate_overlap_rtol)
     B_W = protected_original_projection_block(X, S_AA, T_G, T_A, broad.Z)
     fake_W = protected_original_fake_rdm_operator(S_AA, broad.Z)
     rep_values, rep_vectors = eigen(Symmetric(_rg_sym(transpose(B_W) * B_W)))
@@ -677,6 +719,12 @@ function staged_protected_original_injection_geometry(base_dimension::Integer, X
         Z_protected = Zp,
         Z_broad = Zb,
         Z, B,
+        additive_reference = isnothing(occupied) ? nothing : (;
+            union_gram_eigenvalues = occupied.gram_eigenvalues,
+            union_rank = occupied.retained_rank,
+            packet_recovery_Z_singular_values = occupied.recovery_singular_values,
+            packet_recovery_Z_losses = occupied.recovery_losses,
+            occupied_representability_singular_values = occupied_singulars),
         dropped_fake_direction_summary = protected_original_direction_summary(
             candidate_labels, candidate_owner_indices, dropped_Z, fake_values[dropped_fake])))
 end
@@ -705,7 +753,7 @@ function build_injected_residual_gaussian_basis(base_dimension, X, S_AA, labels,
     source_owners, occupations, owner_counts, residual_labels =
         residual_gaussian_block_metadata(blocks, maximum(owners))
     return CartesianResidualGaussianBasis(nG, length(labels), size(T_A, 2), labels, owners,
-        centers, source_owners, occupations, owner_counts, residual_labels, T_G, T_A,
+        centers, nothing, source_owners, occupations, owner_counts, residual_labels, T_G, T_A,
         fixed.injected_G, fixed.injected_A, cutoff, injection_cutoff,
         Float64(tau_neg_abs), Float64(tau_neg_rel), Float64(tau_merge_abs), Float64(tau_merge_rel),
         :owner_local_residual_occupation, :injected_fixed_sector_owner_local_residual_final_merge_lowdin,
@@ -771,9 +819,11 @@ function build_residual_gaussian_basis(base_dimension::Integer, X, S_AA,
         throw(ArgumentError("residual-Gaussian G' S R validation failed"))
     residual_source_owner_indices, residual_occupations, owner_counts, residual_labels =
         residual_gaussian_block_metadata(owner_blocks, maximum(candidate_owner_indices))
+    compact_sources = selection_rule == :owner_local_ordered_compact_first_mgs ?
+        sort(unique(vcat((block.source_indices for block in owner_blocks)...))) : nothing
     return CartesianResidualGaussianBasis(
         Int(base_dimension), candidate_count, size(T_A, 2), candidate_labels,
-        candidate_owner_indices, candidate_centers, residual_source_owner_indices,
+        candidate_owner_indices, candidate_centers, compact_sources, residual_source_owner_indices,
         residual_occupations, owner_counts, residual_labels, T_G, T_A,
         nothing, nothing, cutoff, 0.0, Float64(tau_neg_abs),
         Float64(tau_neg_rel), Float64(tau_merge_abs), Float64(tau_merge_rel),

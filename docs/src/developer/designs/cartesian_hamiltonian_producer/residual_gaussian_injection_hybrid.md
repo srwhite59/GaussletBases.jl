@@ -15,8 +15,10 @@ interaction semantics are governed by
 [Protected-localized basis convention](protected_localized_basis.md).
 Artifact/locality, retained-GTO EGOI, and ladder facilities have their own
 source IDs later in this memo.
-`HP-RG-PROTECT-ADDREF-*` governs the prospective combined additive-reference
-consumer. This top-level summary does not broaden any of those lanes.
+`HP-RG-PROTECT-ADDREF-*` governs the implemented combined additive-reference
+consumer described in
+[Protected additive atomic reference correction](protected_additive_reference_correction.md).
+This top-level summary does not broaden any of those lanes.
 
 ## Motivation
 
@@ -487,10 +489,9 @@ The implemented geometry and selection contract is now owned by
 `HP-RG-OCC-FIRST-INJECT-FN-01` and
 `HP-RG-OCC-FIRST-INJECT-TEST-01`.
 
-The source-backed helper is not wired into the protected-localized builder and
-is not a direct replacement for staged protected-original geometry over
-`M = [G, R_compact]`. That composition belongs to
-`HP-RG-PROTECT-ADDREF-*` and
+The standalone source-backed helper is not a direct replacement for staged
+protected-original geometry over `M = [G, R_compact]`. The implemented
+protected-localized composition belongs to `HP-RG-PROTECT-ADDREF-*` and
 [Protected additive atomic reference correction](protected_additive_reference_correction.md).
 
 ## Protected Geometry, One-Body, And Interaction History

@@ -1,6 +1,6 @@
 # Protected Additive Atomic Reference Correction
 
-Status: approved narrow internal source/design authority under
+Status: implemented narrow internal, opt-in facility under
 `HP-RG-PROTECT-ADDREF-FN-01` and
 `HP-RG-PROTECT-ADDREF-TEST-01`.
 
@@ -52,16 +52,16 @@ Existing reusable owners already provide:
 - the existing `ScreenedHartreeCorrection` algebra in
   `src/cartesian_reference_density/screened_hartree_correction.jl`.
 
-The missing work is the combined mandatory occupied geometry, fast
-fitted-potential `GA/AA`, additive placed-packet reference assembly, and the
-final `F -> L` handoff.
+The implemented path combines mandatory occupied geometry, fast placed
+fitted-potential `GG/GA/AA`, additive packet reference assembly, and the final
+`F -> L` handoff while reusing the owners above.
 
 This is an explicit internal opt-in path. A protected member built without
 placed reference packets must preserve the current geometry, `H1_L`, `Vee_L`,
 ordering, and artifact behavior.
 
-The intended composition seam is a private sibling of the current member
-builder, conceptually:
+The implemented composition seam is a private sibling of the current member
+builder:
 
 ```text
 _plb_build_additive_reference_member(recipe, stages, placements)
@@ -80,9 +80,9 @@ The protected path must build `R_compact` once. The staged protected geometry
 must consume that exact `CartesianResidualGaussianBasis`; it must not rerun
 ordered compact-first selection to reconstruct a nominally equivalent `M`.
 
-If the existing residual object lacks the native source fact required to
-protect originals corresponding to compact residuals, this lane approves one
-vector-backed internal field:
+The residual object carries the native source fact required to protect
+originals corresponding to compact residuals in one vector-backed internal
+field:
 
 ```text
 compact_source_candidate_indices::Union{Nothing,Vector{Int}}
@@ -95,9 +95,8 @@ selection rules without native accepted-source semantics, it is `nothing`.
 Do not parse residual labels to recover this fact. No artifact field or public
 result is approved.
 
-The old duplicate compact-selection block inside staged protected geometry
-should be deleted or reduced to delegation once the live caller passes the
-already-built residual object.
+The old duplicate compact-selection block inside staged protected geometry is
+deleted; the live caller passes the already-built residual object.
 
 ## Mandatory Occupied Span
 
@@ -244,10 +243,9 @@ the factor of two on cross terms.
 
 ## Existing Correction Algebra
 
-Use the existing same-basis screened-Hartree owner. Add an internal additive
-reference entry point if needed so it validates each coefficient block
-separately rather than requiring the concatenated occupied columns to be
-globally orthonormal.
+The internal additive entry point in the existing same-basis screened-Hartree
+owner validates each coefficient block separately rather than requiring the
+concatenated occupied columns to be globally orthonormal.
 
 With native-order `Vee_L`, return the existing correction object:
 
@@ -336,9 +334,10 @@ Required Be2 evidence:
   retained counts, shell/slab topology, and warning flags;
 - phase timings and carrying-cost report.
 
-No endpoint energy or SCF assertion is required. After manager acceptance of
-the Be2 gate, CR2 may consume the same internal path with two Cr `18e` packets
-for an off/on measurement. That is not a production claim or repo test.
+No endpoint energy or SCF assertion is required. The strict padded Be2 gate
+passed with roundoff reference recovery and direct/derivative anchors, so CR2
+may consume the same internal path with two Cr `18e` packets for an off/on
+measurement. That is not a production claim or repo test.
 
 ## Failure Rules
 

@@ -14,6 +14,14 @@ function _unconverged_packet(packet)
         packet.validation, packet.provenance)
 end
 
+function _packet_with_occupations(packet, occupations)
+    return typeof(packet)(packet.spec, packet.supplement, packet.overlap,
+        packet.overlap_fingerprint, packet.occupied_coefficients,
+        occupations, packet.orbital_energies, packet.density_matrix,
+        packet.rhf_diagnostics, packet.density_fit, packet.potential_fit,
+        packet.validation, packet.provenance)
+end
+
 function _be_core_fixture()
     spec = CRD.be_core_reference_packet_spec(ns = 3, core_spacing = 0.15)
     packet = CRD.build_atomic_hf_reference_packet(spec)
@@ -100,6 +108,71 @@ end
     @test packet_reference.E0 ≈
         fixture.packet.density_fit.row.exact_self_energy atol = 1.0e-8
 
+    packet_count = length(fixture.packet.supplement.orbitals)
+    packet_embedding = CRD.atomic_reference_packet_occupied_embedding(
+        fixture.packet, fixture.packet.supplement, fixture.packet.overlap,
+        ones(Int, packet_count); owner_index = 1, center = fixture.spec.center,
+        supplement_indices = 1:packet_count)
+    @test sum(packet_embedding.occupations) == fixture.spec.electron_count
+    packet_labels = string.(getproperty.(fixture.packet.supplement.orbitals, :label))
+    px = findfirst(label -> startswith(label, "px"), packet_labels)
+    py = findfirst(==("py" * packet_labels[px][3:end]), packet_labels)
+    reordered_orbitals = copy(fixture.packet.supplement.orbitals)
+    reordered_orbitals[px], reordered_orbitals[py] =
+        reordered_orbitals[py], reordered_orbitals[px]
+    reordered_supplement = typeof(fixture.packet.supplement)(
+        fixture.packet.supplement.supplement_kind, reordered_orbitals,
+        fixture.packet.supplement.metadata)
+    @test_throws ArgumentError CRD.atomic_reference_packet_occupied_embedding(
+        fixture.packet, reordered_supplement, fixture.packet.overlap,
+        ones(Int, packet_count); owner_index = 1, center = fixture.spec.center,
+        supplement_indices = 1:packet_count)
+    bad_occupations = _packet_with_occupations(fixture.packet, [1.5])
+    @test_throws ArgumentError CRD.atomic_reference_packet_occupied_embedding(
+        bad_occupations, fixture.packet.supplement, fixture.packet.overlap,
+        ones(Int, packet_count); owner_index = 1, center = fixture.spec.center,
+        supplement_indices = 1:packet_count)
+
+    C_A = reshape([1.0, 0.0, 0.0], 3, 1)
+    C_B = reshape([0.6, 0.8, 0.0], 3, 1)
+    occupations = [[2.0], [2.0]]
+    additive_reference = CRD.represented_additive_reference_p0_q0(
+        [C_A, C_B], occupations)
+    additive_J = [1.2 0.1 0.0; 0.1 0.9 0.2; 0.0 0.2 0.7]
+    additive_V = [1.0 0.2 0.1; 0.2 1.1 0.3; 0.1 0.3 0.8]
+    additive_E0 = sum(additive_reference.P0 .* additive_J)
+    V_before, J_before = copy(additive_V), copy(additive_J)
+    additive = CRD.build_additive_screened_hartree_correction(
+        additive_V, additive_J, additive_E0, [C_A, C_B], occupations)
+    @test additive.diagnostics.P0_trace ≈ 4.0 atol = 1.0e-12
+    @test additive.diagnostics.q0_charge ≈ 4.0 atol = 1.0e-12
+    @test additive.diagnostics.additive_reference.block_traces ≈ [2.0, 2.0]
+    @test additive.diagnostics.additive_reference.interpacket_occupied_overlap_max ≈ 0.6
+    @test additive.diagnostics.direct_hartree_energy_anchor_error ≈ 0.0 atol = 1.0e-12
+    @test additive.diagnostics.derivative_anchor_error ≈ 0.0 atol = 1.0e-12
+    @test additive_V == V_before
+    @test additive_J == J_before
+    @test_throws ArgumentError CRD.build_additive_screened_hartree_correction(
+        additive_V, additive_J, additive_E0, [C_A, 1.1 .* C_B], occupations)
+
+    placements = [(; packet = fixture.packet, center = (-2.0, 0.0, 0.0)),
+        (; packet = fixture.packet, center = (2.0, 0.0, 0.0))]
+    cloud_energy = CRD.atomic_reference_packet_additive_density_energy(placements)
+    @test cloud_energy.pair_energies[1, 2] ≈ cloud_energy.pair_energies[2, 1] atol = 1.0e-12
+    @test cloud_energy.pair_energies[1, 1] ≈
+        fixture.packet.density_fit.row.fit_self_energy atol = 1.0e-10
+    @test cloud_energy.total ≈ sum(cloud_energy.pair_energies) atol = 1.0e-12
+    @test cloud_energy.total ≈ cloud_energy.combined_cloud_oracle atol = 1.0e-12
+
+    packet_raw = CRD.atomic_reference_packet_fitted_potential_raw_blocks(
+        fixture.base, fixture.packet.supplement, fixture.packet)
+    @test all(isfinite, packet_raw.GG) && all(isfinite, packet_raw.GA) &&
+        all(isfinite, packet_raw.AA)
+    @test norm(packet_raw.GG - transpose(packet_raw.GG), Inf) < 1.0e-10
+    @test norm(packet_raw.AA - transpose(packet_raw.AA), Inf) < 1.0e-10
+    @test abs(sum(fixture.packet.density_matrix .* packet_raw.AA) -
+        fixture.packet.density_fit.row.fit_self_energy) <= 1.0e-9
+
     terminal_C, terminal_occ = _terminal_control_reference(fixture.J0)
     terminal_diagnostic = CRD.build_atomic_packet_screened_hartree_correction(
         fixture.base,
@@ -149,6 +222,8 @@ end
     @test explicit_density.diagnostics.coulomb_expansion_term_count == 45
 
     unconverged = _unconverged_packet(fixture.packet)
+    @test_throws ArgumentError CRD.atomic_reference_packet_additive_density_energy(
+        [(; packet = unconverged, center = fixture.spec.center)])
     @test_throws ArgumentError CRD.build_screened_hartree_correction(
         packet_reference.V,
         packet_reference.J_final,
@@ -168,6 +243,11 @@ end
     packet_path = joinpath(mktempdir(), "screened_hartree_packet.jld2")
     CRD.write_atomic_hf_reference_packet(packet_path, fixture.packet)
     readback = CRD.read_atomic_hf_reference_packet(packet_path)
+    readback_embedding = CRD.atomic_reference_packet_occupied_embedding(
+        readback, fixture.packet.supplement, fixture.packet.overlap,
+        ones(Int, packet_count); owner_index = 1, center = fixture.spec.center,
+        supplement_indices = 1:packet_count)
+    @test readback_embedding.Y == packet_embedding.Y
     unconverged_readback = merge(readback, (; rhf_converged = false))
     @test_throws ArgumentError CRD.build_atomic_packet_screened_hartree_correction(
         fixture.base,

@@ -46,6 +46,27 @@ function represented_reference_p0_q0(
         dimension = size(C, 1),
     )
 end
+function represented_additive_reference_p0_q0(coefficient_blocks, occupation_blocks)
+    length(coefficient_blocks) == length(occupation_blocks) &&
+        !isempty(coefficient_blocks) || throw(ArgumentError(
+            "additive represented reference needs matching nonempty blocks"))
+    references = [represented_reference_p0_q0(C, occ)
+        for (C, occ) in zip(coefficient_blocks, occupation_blocks)]
+    all(reference -> reference.dimension == first(references).dimension, references) ||
+        throw(DimensionMismatch("additive represented reference dimensions differ"))
+    combined = represented_reference_p0_q0(
+        hcat(coefficient_blocks...), vcat(occupation_blocks...))
+    cross_overlap_max = maximum((maximum(abs, transpose(Matrix{Float64}(coefficient_blocks[a])) *
+        Matrix{Float64}(coefficient_blocks[b]))
+        for a in eachindex(coefficient_blocks) for b in (a + 1):length(coefficient_blocks));
+        init = 0.0)
+    return merge(combined, (;
+        trace_loss = sum(reference.trace_loss for reference in references),
+        occupied_orthogonality_error =
+            maximum(reference.occupied_orthogonality_error for reference in references),
+        cross_overlap_max,
+        block_traces = [reference.trace for reference in references]))
+end
 
 function _screened_hartree_matrix(name, matrix)
     M = Matrix{Float64}(matrix)
@@ -103,7 +124,7 @@ end
 
 function _packet_summary(packet, reference, source)
     packet === nothing && return (;
-        source = :explicit_same_basis_inputs,
+        source,
         represented_dimension = reference.dimension,
         reference_orbital_count = reference.coefficient_count,
         represented_trace = reference.trace,
@@ -148,12 +169,12 @@ function _packet_summary(packet, reference, source)
     )
 end
 
-function build_screened_hartree_correction(
+function _build_screened_hartree_correction(
     V_IDA,
     J0_G,
     E0_G::Real,
-    reference_coefficients::AbstractMatrix{<:Real},
-    occupations::AbstractVector{<:Real};
+    reference,
+    additive_reference;
     packet = nothing,
     J0_G_exact = nothing,
     source::Symbol = :explicit_same_basis_inputs,
@@ -180,7 +201,6 @@ function build_screened_hartree_correction(
     size(V) == size(J) ||
         throw(DimensionMismatch("V_IDA and J0_G dimensions differ"))
     isfinite(E0_G) || throw(ArgumentError("E0_G must be finite"))
-    reference = represented_reference_p0_q0(reference_coefficients, occupations)
     reference.dimension == size(V, 1) ||
         throw(DimensionMismatch(
             "represented reference dimension $(reference.dimension) does not match matrix dimension $(size(V, 1))",
@@ -231,7 +251,7 @@ function build_screened_hartree_correction(
         diagnostic_only,
         "screened-Hartree derivative anchor error $(derivative_error) exceeds $(anchor_atol)",
     )
-    diagnostics = (;
+    diagnostics = merge(isnothing(additive_reference) ? (;) : (; additive_reference), (;
         accounting =
             :screened_direct_electron_electron_interaction_not_physical_h1,
         q0_charge = sum(q0),
@@ -261,7 +281,7 @@ function build_screened_hartree_correction(
         V_IDA_symmetry_error = norm(V - transpose(V), Inf),
         V_IDA_finite = all(isfinite, V),
         diagnostic_only,
-    )
+    ))
     return ScreenedHartreeCorrection(
         delta,
         constant,
@@ -276,6 +296,30 @@ function build_screened_hartree_correction(
         diagnostics,
         _packet_summary(packet, reference, source),
     )
+end
+function build_screened_hartree_correction(
+    V_IDA, J0_G, E0_G::Real, reference_coefficients::AbstractMatrix{<:Real},
+    occupations::AbstractVector{<:Real}; kwargs...)
+    return _build_screened_hartree_correction(V_IDA, J0_G, E0_G,
+        represented_reference_p0_q0(reference_coefficients, occupations), nothing; kwargs...)
+end
+function build_additive_screened_hartree_correction(
+    V_IDA, J0_G, E0_G::Real, coefficient_blocks, occupation_blocks;
+    packets = nothing, kwargs...)
+    if !isnothing(packets)
+        length(packets) == length(coefficient_blocks) ||
+            throw(DimensionMismatch("additive packet and coefficient block counts differ"))
+    end
+    foreach(packet -> _require_atomic_reference_converged(
+        packet, "additive screened-Hartree packet consumption"), something(packets, ()))
+    reference = represented_additive_reference_p0_q0(
+        coefficient_blocks, occupation_blocks)
+    additive_reference = (;
+        block_count = length(coefficient_blocks),
+        block_traces = reference.block_traces,
+        interpacket_occupied_overlap_max = reference.cross_overlap_max)
+    return _build_screened_hartree_correction(V_IDA, J0_G, E0_G,
+        reference, additive_reference; source = :additive_atomic_packets, kwargs...)
 end
 
 function _screened_hartree_vee(ham_or_matrix)
