@@ -27145,3 +27145,38 @@ Carrying-cost result:
   startup instructions. Simplified: authority precedence and completed-lane
   status. Exact next step: bounded extraction of the atomic HF packet contract,
   followed by subsystem splits before any shadow TOML registry.
+
+## Cartesian Hamiltonian Producer Pass 348 - Canonical Atomic Packet Contract
+
+Commit(s):
+- this commit - extract the atomic HF reference packet contract.
+
+Summary:
+- Moved the implemented packet's determinant, density-fit, potential-fit,
+  identity, convergence, Coulomb-role, validation, and failure semantics into
+  `atomic_hf_reference_packets.md` as their single canonical home.
+- Reduced the screened-Hartree formalism, registry, current status, and
+  `AGENTS.md` copies to links, lifecycle/ownership metadata, and the three
+  execution-critical guards: reject unconverged packets, never treat fitted
+  terms as protected orbitals, and pass compact density-fit Coulomb authority
+  explicitly.
+- Kept vendored-basis hashes and licensing facts in
+  `docs/legacy_basissets_provenance.md` and numerical evidence in Passes 325,
+  330, 331, and 345 rather than creating another evidence page.
+
+Validation / evidence:
+- Reviewed the live packet structs, builder, writer/readback, validation, and
+  terminal Hartree consumer against the extracted contract. Verified every
+  registry source/test path and canonical link, scanned for stale future-
+  implementation wording, and ran `git diff --check`.
+- This pass changes documentation only. Before this log entry, the touched
+  active documentation shrank by 66 net lines.
+
+Goal advancement / guardrail:
+- LT2/LT3/LT5 and MT5: establishes the first subsystem under the new
+  single-home documentation model while preserving all packet physics and
+  source authority. No source, test, artifact, API, workflow, or numerical
+  behavior changes.
+- Exact next blocker remains implementation and Be2 acceptance of the
+  protected additive-reference contract; further documentation extraction is
+  separate cleanup work, not permission to delay that physics target.

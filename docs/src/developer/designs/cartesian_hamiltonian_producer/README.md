@@ -188,6 +188,9 @@ ID or subsystem.
 - [Screened Hartree residual-density formalism](screened_hartree_residual_density.md)
   for the measurement-only protected-GTO Hartree branch: keep `Vnuc_G`
   Galerkin and use IDA/MWG only for residual density fluctuations `q - q0`
+- [Atomic HF reference packets](atomic_hf_reference_packets.md)
+  for the canonical determinant, density-fit, potential-fit, identity, and
+  validation contract of reusable one-center packet references
 - [Screened Hartree correction assembly](screened_hartree_correction_assembly.md)
   for the internal source-backed `Delta_J0`/`C` correction object built from
   atomic reference packets and same-basis `V_IDA`

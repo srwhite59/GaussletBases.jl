@@ -176,27 +176,13 @@ Implemented base path:
   potential-fit Gaussians as protected orbitals, row-gauge rho0/P0, EGOI,
   exchange, or Cr/Cr2 claims.
 - `HP-PQS-ATOMREF-PACKET-FN-01` and
-  `HP-PQS-ATOMREF-PACKET-TEST-01` approve only a narrow source/design lane for
-  reusable one-center atomic HF reference packets. The packet records system
-  facts, supplement basis/fingerprint, pure-GTO HF occupied orbitals and
-  density matrix, near-exact spherical Gaussian density fit, fast fitted
-  potential for `J0_G`, and provenance. HF occupied orbitals define `P0/q0`;
-  the density fit defines the reference cloud/self-energy; the potential fit
-  is only a fast representation of that same cloud's Hartree potential.
-  Initial scope is Be core `2e` and Ne all-electron `10e`, cc-pV5Z,
-  `lmax = 1`, writer/readback/validation helpers, and small packet-consumption
-  smokes. Packet construction and writing require converged RHF; validation
-  and readback report convergence explicitly, and packet-driven
-  screened-Hartree consumption rejects unconverged packets. There is no
-  `allow_unconverged` builder option. The density-fit `J0_G` path must pass the
-  role-qualified compact Coulomb expansion explicitly rather than inherit a
-  helper default. The test authority also permits a header/provenance-only
-  correction for `data/legacy/BasisSets` plus a cheap normalized-body hash and
-  parser-count regression in `test/misc/runtests.jl`; the scientific data body
-  must not change. This does not approve screened-Hartree production
-  Hamiltonians, artifact workflow integration beyond the packet itself,
-  public driver defaults, solver workflow, EGOI, exchange, row-gauge rho0/P0,
-  Cr/Cr2 claims, or treating fitted density/potential terms as protected GTOs.
+  `HP-PQS-ATOMREF-PACKET-TEST-01` implement reusable one-center atomic HF
+  reference packets under
+  [the canonical packet contract](atomic_hf_reference_packets.md). Current
+  bounded references are Be core `2e` and Ne all-electron `10e`, cc-pV5Z,
+  `lmax = 1`. Unconverged packets are rejected; fitted density/potential terms
+  are not protected orbitals; and density-fit `J0_G` receives the explicit
+  role-qualified compact Coulomb expansion.
 - `HP-REP-XGTO-IMPORT-FN-01` and `HP-REP-XGTO-IMPORT-TEST-01` approve only a
   representation-transfer facility for importing explicit external Gaussian AO
   orbitals into an orthonormal GaussletBases final working basis. The rule is

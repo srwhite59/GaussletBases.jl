@@ -1,12 +1,11 @@
 # Screened Hartree Residual-Density Formalism
 
 Document role: canonical screened-Hartree residual-density formalism plus a
-transitional history of its measurement lanes. The formalism/audit itself is
-measurement-only under `HP-PQS-SCREEN-HARTREE-AUDIT-01`; the atomic packet
-section later in this page records separately implemented source authority
-under `HP-PQS-ATOMREF-PACKET-*` and will be extracted into its own subsystem
-contract in a later topology pass. This page does not independently broaden
-either authority.
+history of its measurement lanes. The formalism/audit itself is
+measurement-only under `HP-PQS-SCREEN-HARTREE-AUDIT-01`. Reusable atomic
+reference packet semantics are owned separately by
+[Atomic HF reference packets](atomic_hf_reference_packets.md). This page does
+not independently broaden either authority.
 
 The point nucleus remains an exact/Galerkin one-body operator. IDA/MWG is used
 only for the residual fluctuation density.
@@ -484,134 +483,10 @@ cloud.
 
 ## Reusable Atomic HF Reference Packets
 
-`HP-PQS-ATOMREF-PACKET-FN-01` and `HP-PQS-ATOMREF-PACKET-TEST-01` govern the
-implemented reusable one-center atomic HF reference packet facility. It
-replaces ignored ad hoc packets with a standard atom/basis reference object for
-screened-Hartree probes.
-
-This packet is analogous to defining a standard atom/basis reference:
-
-- atom and charge;
-- electron count and explicit filled-shell/spin convention;
-- basis name and `lmax`;
-- pure-GTO HF occupied orbitals;
-- near-exact spherical Gaussian density fit;
-- fast fitted Hartree potential for `J0_G`.
-
-Required conventions:
-
-- HF occupied orbitals define `P0` and `q0`;
-- packet construction requires converged RHF and must stop before fitting when
-  RHF is unconverged;
-- packet writing rejects an in-memory unconverged packet, validation/readback
-  report convergence explicitly, and packet-driven screened-Hartree
-  consumption rejects an unconverged packet;
-- no `allow_unconverged` packet-builder option is approved;
-- the density fit defines the reference cloud and self-energy;
-- the potential fit is only a fast representation of that same cloud's Hartree
-  potential;
-- fitted density and fitted-potential Gaussian terms are not supplement
-  orbitals and not protected basis content;
-- filled-shell and occupancy choices are explicit and must not be inferred
-  from element tables.
-
-Approved initial packet contents:
-
-- `system`: atom, charge, electron count, spin/fill-shell convention, basis
-  name, `lmax`, and geometry center;
-- `supplement_basis`: labels, angular powers, exponents, coefficients,
-  overlap, and overlap fingerprint;
-- `hf`: occupied coefficients in supplement coordinates, occupations, orbital
-  energies, density matrix, and explicit RHF/UHF convention metadata;
-- `density_fit`: spherical Gaussian density coefficients/exponents, fit
-  diagnostics, charge, and self-Coulomb;
-- `potential_fit`: fitted radial `J0(r)` coefficients/exponents, fixed
-  broad-tail provenance, refit/trim metadata, and radial/matrix/anchor
-  diagnostics;
-- `provenance`: code version, input controls, fit tolerances, and reference
-  energies where available.
-
-Initial scope:
-
-- one-center atom packets only;
-- Be core `Z=4`, `2e`, and Ne all-electron `10e`;
-- cc-pV5Z, `lmax = 1`;
-- writer/readback plus validation helpers;
-- small Be/Ne smoke consumption that builds `P0/q0` and `J0_G` from packet
-  contents.
-
-Implemented source surface:
-
-- `src/cartesian_reference_density/CartesianReferenceDensity.jl`;
-- `src/cartesian_reference_density/atomic_hf_reference_packets.jl`;
-- `src/GaussletBases.jl` only for include/qualified access wiring;
-- `src/cartesian_reference_density/screened_hartree_correction.jl` only for
-  rejecting an unconverged packet at the consumption boundary;
-- optional narrow calls to existing exact Hartree helpers in
-  `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` for validation,
-  without changing their numerical contract.
-
-The density-fit `J0_G` path must obtain the packet-local compact Coulomb
-expansion by its documented role and pass that exact object explicitly to the
-mixed-Hartree helper. A helper default must not choose this approximation.
-
-Approved test surface:
-
-- `test/nested/cartesian_atomic_hf_reference_packet_runtests.jl`, limited to
-  packet roundtrip, validation helpers, and small Be/Ne consumption smokes with
-  temporary packet output and no committed binary fixtures;
-- `test/nested/cartesian_screened_hartree_correction_runtests.jl`, only for
-  unconverged-packet consumer rejection;
-- `test/misc/runtests.jl`, only for the vendored-basis hash/parser regression
-  below.
-
-Validation requirements:
-
-- packet readback roundtrip;
-- unconverged RHF builder failure, in-memory packet write rejection, explicit
-  convergence reporting, and packet-consumer rejection;
-- occupied orthogonality and density trace;
-- current supplement overlap/fingerprint match;
-- density-fit charge and self-energy errors;
-- potential-fit radial tail and matrix/anchor checks against exact
-  density-fit `J0_G`;
-- small Be/Ne smoke consuming packet to build `P0/q0` and `J0_G`;
-- explicit compact Coulomb expansion passage for density-fit `J0_G`;
-- no committed large binary fixtures.
-
-Vendored-basis reconciliation under `HP-PQS-ATOMREF-PACKET-TEST-01` is limited
-to correcting the header of `data/legacy/BasisSets`, correcting
-`docs/legacy_basissets_provenance.md`, and adding a cheap regression in
-`test/misc/runtests.jl`. The normalized scientific body must remain unchanged.
-Its SHA-256 is
-`b83883f4589234dd512eb760c95280854a2f42d007ab6e3533abda39a2829051`;
-the full current file at `6cfe15d0c` is
-`b40763c17cdbd8825cecf05aedbf34b35084fec7a3375661a65b49e749d33251`
-and contains `60` basis blocks. The regression checks the normalized-body hash
-and parser counts for H cc-pVTZ (`6/8` shells/rows), H cc-pVQZ (`10/12`), Be
-cc-pV5Z (`21/42`), Ne cc-pV5Z (`21/54`), and Cr cc-pV5Z (`32/434`). Mixed
-historical provenance and unresolved license/redistribution status must be
-reported honestly; do not claim every custom block came from Basis Set
-Exchange.
-
-`HP-RG-PROTECT-ADDREF-FN-01` is the narrow molecular follow-on. It protects
-the orthonormalized union of placed packet occupied spaces but forms `P0` from
-the original per-packet blocks, sums placed fitted-potential fields, and adds
-all packet density-fit cross energies before calling the existing native-`L`
-screened-Hartree correction core. See
-`protected_additive_reference_correction.md`. This does not broaden the packet
-artifact itself or change fitted density/potential terms into orbitals.
-
-Explicit exclusions:
-
-- screened-Hartree production Hamiltonian assembly;
-- artifact workflow integration beyond the packet itself;
-- public driver defaults;
-- solver workflow;
-- EGOI, exchange, rho0/P0 row-gauge shortcuts, Cr/Cr2 production claims;
-- treating fitted density or potential terms as protected GTOs.
-
-Evidence: ignored packets and probes show this shape works. Ne packet-driven
-endpoints removed hard-coded occupied labels, and refined potential fitting
-reduced `J0_G` construction from about `118` s exact to about `0.96` s with
-`33` terms and sub-microhartree anchor error.
+The implemented packet facility is governed by
+`HP-PQS-ATOMREF-PACKET-FN-01` and `HP-PQS-ATOMREF-PACKET-TEST-01`.
+[Atomic HF reference packets](atomic_hf_reference_packets.md) owns packet
+roles, contents, identity, Coulomb conventions, validation, and failure
+behavior. This formalism consumes the packet's occupied determinant as the
+reference density, its density fit as the reference cloud/self-energy, and
+its potential fit only as a fast evaluator of that cloud's Hartree field.

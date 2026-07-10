@@ -22,6 +22,10 @@ where the saved/protected HF determinant defines `P0` and `q0`, and the
 atomic reference packet density/potential fields evaluate the Galerkin
 reference Hartree field.
 
+[Atomic HF reference packets](atomic_hf_reference_packets.md) owns packet
+identity, determinant/density/potential roles, convergence, and validation.
+This page owns only correction assembly from valid represented packet data.
+
 The returned object should contain:
 
 ```text

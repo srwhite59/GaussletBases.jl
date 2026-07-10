@@ -762,23 +762,13 @@ in `test/core/runtests.jl`. This is not authority for clamping, exponent
 truncation, scaled/log PGDG carriers, new stage objects, terminal contraction
 changes, or a broad analytic-integral rewrite.
 `HP-PQS-ATOMREF-PACKET-FN-01` and
-`HP-PQS-ATOMREF-PACKET-TEST-01` approve only reusable one-center atomic HF
-reference packets in
-`src/cartesian_reference_density/atomic_hf_reference_packets.jl`, module
-include/qualified wiring, and existing mixed-Hartree validation calls. Be core
-`2e` and Ne all-electron `10e`, cc-pV5Z, `lmax = 1`, are the bounded initial
-scope. Packet construction and writing require converged RHF; validation and
-readback report convergence, and packet-driven screened-Hartree consumption
-rejects unconverged packets. No `allow_unconverged` knob is approved. The
-density-fit `J0_G` path must pass its role-qualified compact Coulomb expansion
-explicitly. Test authority covers the existing packet test, narrow
-unconverged-consumer coverage in the screened-Hartree correction test, and a
-cheap `test/misc/runtests.jl` vendored-basis body-hash/parser regression. It
-also permits only a provenance/header correction to `data/legacy/BasisSets`;
-the normalized scientific body must not change. This does not approve a
-screened-Hartree production workflow, solver, public driver default, EGOI,
-exchange, row-gauge rho0/P0, Cr/Cr2 claim, or fitted terms as protected
-orbitals.
+`HP-PQS-ATOMREF-PACKET-TEST-01` authorize only the implemented one-center
+packet facility recorded in the registry and
+`docs/src/developer/designs/cartesian_hamiltonian_producer/atomic_hf_reference_packets.md`.
+Unconverged packets are rejected. Fitted density/potential terms are not
+protected orbitals. Density-fit `J0_G` must receive its role-qualified compact
+Coulomb expansion explicitly. No production correction, solver, public
+default, exchange, EGOI, row-gauge rho0/P0, or Cr/Cr2 claim is approved.
 `HP-REP-XGTO-IMPORT-FN-01` and `HP-REP-XGTO-IMPORT-TEST-01` approve only the
 external-GTO representation-transfer facility in
 `src/cartesian_external_gto_import.jl`, narrow include/shared-overlap wiring,
