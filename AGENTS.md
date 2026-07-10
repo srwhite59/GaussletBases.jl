@@ -525,8 +525,6 @@ these approved design IDs:
 - `HP-PQS-COULOMB-ACCURACY-TEST-01`
 - `HP-PQS-ATOMREF-PACKET-FN-01`
 - `HP-PQS-ATOMREF-PACKET-TEST-01`
-- `HP-PQS-ATOMREF-POTMOM-FN-01`
-- `HP-PQS-ATOMREF-POTMOM-TEST-01`
 - `HP-REP-XGTO-IMPORT-FN-01`
 - `HP-REP-XGTO-IMPORT-TEST-01`
 - `HP-PQS-SCREEN-HARTREE-CORR-FN-01`
@@ -776,17 +774,14 @@ Coulomb expansion explicitly. The stored overlap fingerprint is an exact
 packet self-integrity check. Translated owner-local embedding keeps exact
 atom/basis/count/owner/center/order checks but compares overlap numerically at
 the unchanged `norm(..., Inf) <= 1e-10`; mapped raw-byte hash mismatch alone
-is not a failure. No production correction, solver, public
+is not a failure. Packet construction uses the ordinary density fit followed
+by the ordinary radial potential fit. The density fit owns `E0`; the fitted
+potential is an approximate `J0` evaluator whose radial, tail, matrix, and
+`Tr(P0*J0_fit)-E0_fit` consistency errors are reported. Packets carrying
+retired `potential_fit/moment_polish/*` provenance are rejected and require
+regeneration. The retired `HP-PQS-ATOMREF-POTMOM-*` IDs are historical only
+and do not authorize source work. No production correction, solver, public
 default, exchange, EGOI, row-gauge rho0/P0, or Cr/Cr2 claim is approved.
-`HP-PQS-ATOMREF-POTMOM-FN-01` and
-`HP-PQS-ATOMREF-POTMOM-TEST-01` authorize only the implemented fixed-policy
-determinant-moment polish recorded in the same canonical packet contract. The
-current `33` potential terms and first `5` broad-tail coefficients/exponents remain
-fixed; only coefficients `6:33` may change through the prescribed `13`-point,
-weight-`1e4` SVD correction. This is packet consistency between determinant
-`P0`, density-fit `E0`, and fitted-potential `J0`, not a scalar Hamiltonian
-patch, public fitting option, anchor-tolerance change, heteronuclear policy,
-or permission to treat fitted terms as orbitals.
 `HP-REP-XGTO-IMPORT-FN-01` and `HP-REP-XGTO-IMPORT-TEST-01` approve only the
 external-GTO representation-transfer facility in
 `src/cartesian_external_gto_import.jl`, narrow include/shared-overlap wiring,
@@ -807,7 +802,10 @@ wiring, and small correctness tests. The helper returns
 `C = 0.5*q0'V_IDA*q0 - 0.5*E0_G` from represented, converged determinants and
 same-basis fields. `Vnuc` remains Galerkin; the density fit owns `E0_G`; the
 potential fit only evaluates `J0_G`; and `Delta_J0 + C` is direct
-electron-electron accounting. Reject unconverged packets and failed anchors.
+electron-electron accounting. Exact/density-fit energy identities and all
+representation, finiteness, symmetry, convergence, and derivative/algebra
+checks remain strict. An ordinary fitted-potential consistency error is
+reported, not rejected solely because it exceeds `1e-8 Ha`.
 No public workflow, corrected artifact, solver integration, exchange, EGOI,
 source/interaction transform, `C' V C`, or Cr2 production claim is approved.
 `HP-R1-WIRE-01` approves
@@ -1221,10 +1219,12 @@ Approved Residual Gaussian module surfaces:
   vector-backed residual source-index field is allowed to eliminate duplicate
   compact selection; label parsing is forbidden. Validation is small committed
   algebra coverage plus an ignored physically padded Be2 two-packet gate with
-  terminal due diligence. No public input, corrected artifact, protected atom,
-  counterpoise, compact/high transfer, `Vee` rotation, solver, EGOI, exchange,
-  or Cr2 production claim is approved. The strict padded Be2 gate passed, so
-  CR2 may consume the path for measurement only.
+  terminal due diligence. Ordinary fitted-potential consumption reports total
+  and self/cross `Tr(P0*J0_fit)-E0_fit` contributions; the decomposition is
+  strict, while its magnitude is not a `1e-8 Ha` rejection gate. Retired
+  polished packets must be regenerated. No public input, corrected artifact,
+  protected atom, counterpoise, compact/high transfer, `Vee` rotation, solver,
+  EGOI, exchange, or Cr2 production claim is approved.
 - `HP-RG-PROTECT-INJECT-DESIGN-01`,
   `HP-RG-PROTECT-INJECT-FN-01` / `TEST-01`, and
   `HP-RG-PROTECT-ONEBODY-FN-01` / `TEST-01` are governed by

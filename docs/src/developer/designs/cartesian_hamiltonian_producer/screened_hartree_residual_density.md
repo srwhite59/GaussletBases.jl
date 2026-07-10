@@ -221,9 +221,11 @@ the potential fit is only a validated fast evaluator for J0_G.
 ```
 
 Do not mix `q0`, `J0_G`, and `E0_G` from different reference densities.
-Density- and potential-fit errors must be reported and small enough for the
-intended correction accuracy. Packet-specific fit construction, provenance,
-and validation belong to
+Density- and potential-fit errors must be reported. Exact/density-fit oracle
+identities remain strict, while the ordinary fitted-potential consistency
+error `Tr(P0*J0_fit)-E0_fit` is an exposed approximation diagnostic rather
+than a fixed `1e-8 Ha` rejection gate. Packet-specific fit construction,
+provenance, and validation belong to
 [Atomic HF reference packets](atomic_hf_reference_packets.md).
 
 ## Exchange Is Separate

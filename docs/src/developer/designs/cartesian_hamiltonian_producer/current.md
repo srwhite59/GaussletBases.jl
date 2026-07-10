@@ -159,12 +159,13 @@ Implemented base path:
   blocks use exact identity/order mapping plus the unchanged numerical
   `norm(..., Inf) <= 1e-10` equivalence gate.
 - `HP-PQS-ATOMREF-POTMOM-FN-01` and
-  `HP-PQS-ATOMREF-POTMOM-TEST-01` implement the fixed-policy determinant-
-  moment polish for those packet potential fits. It preserves all `33`
-  exponents and the first `5` broad-tail coefficients, adjusts only
-  coefficients `6:33` against the fixed `13`-distance Coulomb-moment grid, and
-  keeps old packets readable without inferring polish. It does not weaken the
-  screened-Hartree anchor or add a public/tunable fitting policy.
+  `HP-PQS-ATOMREF-POTMOM-TEST-01` are retired/superseded same-day false-start
+  records. Atomic packets now use only the ordinary density fit followed by
+  the ordinary radial potential fit. Density-fit `E0` remains authoritative;
+  fitted-potential `J0` consistency errors are reported rather than forced
+  below `1e-8 Ha`. Packets carrying retired moment-polish provenance must be
+  regenerated, while the protected additive-reference construction remains
+  implemented independently.
 - `HP-REP-XGTO-IMPORT-FN-01` and `HP-REP-XGTO-IMPORT-TEST-01` approve only a
   representation-transfer facility for importing explicit external Gaussian AO
   orbitals into an orthonormal GaussletBases final working basis. The rule is
@@ -355,14 +356,17 @@ Approved Residual Gaussian robustness lane:
   `ScreenedHartreeCorrection` algebra must be reused. The first acceptance
   gate is a physically padded Be2 construction with two Be `2e` packets,
   separate packet recovery/trace checks, total charge `4`, explicit cross
-  energy, anchors, unchanged unscreened matrices, and terminal due diligence.
+  energy, strict derivative/algebra checks, fitted-potential total/self/cross
+  consistency reporting, unchanged unscreened matrices, and terminal due
+  diligence.
   Stored packet fingerprints and structural mapping remain hard failures;
   mapped overlap hash equality is diagnostic when the numerical equivalence
   gate passes.
   No public input, corrected artifact, solver, endpoint claim, protected atom,
   counterpoise, compact/high transfer, EGOI, exchange, or Cr2 production
-  workflow is approved. The strict padded Be2 gate passed; CR2 may consume the
-  same in-memory path for measurement only.
+  workflow is approved. The earlier polish-assisted Be2 energy result is
+  historical; regenerate ordinary packets and rerun the bounded construction
+  before further measurement consumption.
 - `HP-RG-PROTECT-INJECT-DESIGN-01`,
   `HP-RG-PROTECT-INJECT-FN-01` / `TEST-01`, and
   `HP-RG-PROTECT-ONEBODY-FN-01` / `TEST-01` govern the internal,

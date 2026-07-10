@@ -2210,10 +2210,26 @@ facts exactly, but its overlap is accepted by the unchanged numerical
 nested internal mapping summary may carry the three fingerprints, mapped exact-
 match boolean, two overlap differences, and tolerance.
 
+Packet fitting uses only the ordinary determinant -> density-fit -> radial-
+potential-fit pipeline. Density fits own `E0`; the current 33-term potential
+fit is an approximate `J0` evaluator built from the compact 45-term scaffold.
+Its radial, tail, matrix, and `Tr(P0*J0_fit)-E0_fit` consistency errors are
+reported. Existing packets containing retired moment-polish provenance are
+rejected and require regeneration.
+
 Amendment source limit: the embedding-equivalence follow-on may edit only
 `src/cartesian_reference_density/atomic_hf_reference_packets.jl`, plus the
 existing private additive-reference caller if the nested diagnostic must be
 forwarded. This does not reopen the other packet or correction surfaces.
+
+Retirement cleanup under these packet IDs must delete
+`_POTENTIAL_MOMENT_DISTANCES`, `_determinant_potential_moments`,
+`_polish_atomic_reference_potential`, packet fields, writer/readback support,
+and focused tests; make packet construction consume the ordinary radial fit
+directly; and reject retired provenance. Matching energy-consistency behavior
+belongs to the active screened-Hartree and protected-additive IDs. No
+compatibility adapter or replacement fit policy is approved; the source/test
+change should be materially line-negative.
 
 Non-goals: production corrected Hamiltonians, artifact integration beyond the
 packet, public defaults, solver workflow, exchange, EGOI, row-gauge rho0/P0,
@@ -2221,62 +2237,20 @@ Cr/Cr2 claims, inferred occupancy, or fitted terms as protected orbitals.
 
 ### HP-PQS-ATOMREF-POTMOM-FN-01 / HP-PQS-ATOMREF-POTMOM-TEST-01 - determinant-moment fitted-potential polish
 
-Status: implemented narrow internal packet facility.
+Lifecycle: retired. Permission: none.
 
-Owner and canonical contract:
+This same-day false start was approved in commit `9739c22a6` and implemented
+as the moment-polish portion of manager Pass 353. It adjusted fitted-potential
+coefficients against determinant moments on a fixed separation grid to force
+one padded Be2 energy-consistency value below `1e-8 Ha`. That is not a generic
+atomic or molecular fitting principle and must not be retained through an
+adapter.
 
-- `CartesianReferenceDensity` atomic packet subsystem;
-- [Atomic HF reference packets](atomic_hf_reference_packets.md), section
-  "Determinant-Moment Potential Polish."
-
-Approved source surface:
-
-- `src/cartesian_reference_density/atomic_hf_reference_packets.jl` only;
-- read-only reuse of existing exact unit spherical-Gaussian potential matrices
-  and explicit compact density-cloud Coulomb energy helpers; no change to
-  their owning source files is approved.
-
-Approved test/evidence surfaces:
-
-- `test/nested/cartesian_atomic_hf_reference_packet_runtests.jl`;
-- `test/nested/cartesian_screened_hartree_correction_runtests.jl`;
-- the existing ignored padded-Be2 additive-reference gate;
-- `tmp/work/be_potential_fit_self_anchor_probe.jl` remains measurement
-  evidence, not production input.
-
-Permission summary: after the existing radial potential fit, apply one
-deterministic weighted-SVD coefficient correction using exact packet-
-determinant moments and explicit compact density-fit self/cross energies on the
-fixed `13`-distance grid. Preserve `33` terms, every exponent, and coefficients
-`1:5`; adjust only `6:33`. Persist one optional nested moment-polish summary.
-Older packets remain readable, and missing polish provenance is unavailable,
-not inferred.
-
-Initial scope: current spherical closed-shell Be and Ne packets and
-identical-packet radial pairs. This does not define heteronuclear moment
-matching.
-
-Source budget: target at most `120` added source lines in the approved packet
-file. This is a separate packet-consistency budget and does not expand the
-`350`-line `HP-RG-PROTECT-ADDREF-*` implementation budget. If more source or a
-second persistent object is needed, stop and report the missing abstraction.
-
-Required acceptance:
-
-- Be/Ne build and packet roundtrip preserve the nested polish summary;
-- term count remains `33`, exponents and coefficients `1:5` are unchanged;
-- maximum moment error is at most `1e-9 Ha`, with no material radial/tail
-  regression;
-- padded Be2 with `diagnostic_only = false` passes the existing direct and
-  derivative anchor threshold `1e-8 Ha`;
-- ordinary no-reference protected `H1_L`/`Vee_L` parity remains exact.
-
-Non-goals: public options, element tuning, added Gaussian terms, changed tail,
-changed density/determinant semantics, scalar Hamiltonian patches, anchor-
-tolerance changes, correction-formula changes, fitted terms as orbitals,
-heteronuclear/Cr/Cr2 policy, artifacts beyond the backward-compatible packet
-summary, solver workflow, or endpoint claims. If the real padded-Be2 anchor
-still fails, stop rather than weakening any gate.
+Historical evidence remains in manager Passes 351 and 353. Durable packet,
+screened-Hartree, and additive-reference behavior is now owned by their active
+IDs and canonical contracts; the ordinary radial fit supersedes the retired
+behavior. The retired IDs do not authorize source work, packet compatibility,
+molecule-trained fitting, or consumption of polished packets.
 
 ### HP-REP-XGTO-IMPORT-FN-01 / HP-REP-XGTO-IMPORT-TEST-01 — external GTO orbital import
 
@@ -2413,7 +2387,7 @@ Dependencies:
 
 Permission summary: consume represented, converged reference determinants and
 same-basis `V_IDA`, `J0_G`, and `E0_G`; validate representation, symmetry,
-and direct energy/field anchors; and return
+and direct field algebra; and return
 
 ```text
 Delta_J0 = J0_G - Diagonal(V_IDA * q0)
@@ -2422,6 +2396,15 @@ C = 0.5 * q0' * V_IDA * q0 - 0.5 * E0_G
 
 as an in-memory `ScreenedHartreeCorrection`. These terms belong to direct
 electron-electron/Hartree accounting, not physical kinetic/nuclear `H1`.
+
+Exact/density-fit oracle fields retain strict energy identities. For an
+ordinary fitted-potential field, report
+`Tr(P0*J0_fit)-E0_fit` rather than rejecting the result solely at `1e-8 Ha`.
+The active correction IDs approve the narrow source/test change needed to
+separate that reported approximation from strict representation, finiteness,
+symmetry, convergence, and derivative/algebra failures. Additive consumers may
+forward total and self/cross consistency diagnostics under their own active
+IDs.
 
 Exclusions: public driver/default behavior, corrected artifacts, solver
 integration, exchange, EGOI, row-gauge substitutions, source or interaction
@@ -4863,8 +4846,9 @@ Required construction:
    cross overlap and form `P0_L = sum_a C_aL*n_a*C_aL'` and
    `q0_L = diag(P0_L)`. Validate every packet block separately; do not globally
    orthogonalize packet blocks when forming `P0_L`.
-8. Build and sum placed fitted-potential `GG/GA/AA` Hartree blocks, transform
-   through the existing protected fixed-sector helper, then localize
+8. Build and sum placed ordinary fitted-potential `GG/GA/AA` Hartree blocks,
+   reject packets carrying retired moment-polish provenance, transform through
+   the existing protected fixed-sector helper, then localize
    `J0_L = W' * J0_F * W`.
 9. Build the compact-convention no-half reference Coulomb energy
    `E0 = sum_a E_aa + 2*sum_{a<b}E_ab`, including explicit cross terms.
@@ -4906,6 +4890,12 @@ The original per-packet occupied blocks define `P0`. Packet density fits define
 self/cross energies. Packet fitted potentials are only the fast representation
 of the same placed reference field.
 
+Report `Tr(P0*J0_fit)-E0_fit` as a fitted-potential consistency approximation.
+For each packet report `Tr(P_a*J_a)-E_aa`; for each pair report
+`Tr(P_a*J_b)+Tr(P_b*J_a)-2E_ab`. The decomposition must sum to the total within
+numerical assembly tolerance, but its magnitude is not a `1e-8 Ha` rejection
+gate. Exact/density-fit oracle identities remain strict.
+
 Approved source surface:
 
 - `src/cartesian_residual_gaussians/residual_basis.jl`;
@@ -4932,6 +4922,12 @@ For this embedding-equivalence amendment only, source edits are limited to
 `src/cartesian_reference_density/atomic_hf_reference_packets.jl` and the
 existing private additive-reference caller if nested diagnostic forwarding is
 directly required. The other implemented addref surfaces are not reopened.
+
+For the moment-polish retirement only, the existing private additive caller
+may reject retired packets and return the total/self/cross consistency
+diagnostics. Packet fit deletion and correction acceptance behavior remain in
+their active module owners. No geometry, `H1_L`, `Vee_L`, placement, or
+ordinary no-reference behavior change is approved.
 
 Approved committed test surface:
 
@@ -4962,16 +4958,19 @@ fixtures are not committed. Required evidence:
 - explicit `E_AA`, `E_BB`, both cross orderings, and
   `E0 = E_AA + E_BB + 2E_AB`;
 - finite/symmetric placed raw blocks, `J0_F`, `J0_L`, and `Delta_J0`;
-- direct energy and derivative anchors;
+- strict derivative/algebra checks;
+- total fitted-potential consistency error and matching self/cross
+  decomposition, reported without a `1e-8 Ha` magnitude gate;
 - current optional staged-selection diagnostics after mandatory inclusion;
 - exact confirmation that unscreened `H1_L` and `Vee_L` were not mutated;
 - parent bounds, axis counts, padding/radius, final dimension, retained counts,
   shell/slab topology, warning flags, and phase timings.
 
-No endpoint energy or SCF assertion is required. The strict padded Be2 gate
-passed, so CR2 may use the same internal path with two Cr `18e` packets for an
-off/on measurement. That does not authorize a production claim or repo Cr2
-test.
+No endpoint energy or SCF assertion is required. The earlier polish-assisted
+padded Be2 energy result is historical false-start evidence; regenerate
+ordinary Be/Ne/Cr packets and rerun the bounded construction before further
+consumption. The additive construction remains implemented, but this does not
+authorize a production claim or repo Cr2 test.
 
 Explicit exclusions:
 

@@ -237,12 +237,34 @@ J0_L   = W' * J0_F * W
 mixed-Hartree path remains the small-system oracle; it is not the practical
 Cr2 construction.
 
-The padded Be2 non-diagnostic gate must use packet potentials carrying the
-approved determinant-moment polish under `HP-PQS-ATOMREF-POTMOM-*`, or another
-packet that independently passes the unchanged anchor. Missing polish
-provenance on a legacy packet is reported as unavailable, never inferred. The
-polish belongs to packet construction and must not be reimplemented in this
-additive-reference lane.
+Every placement must use a packet produced by the ordinary determinant ->
+density-fit -> radial-potential-fit pipeline. Packets carrying retired
+`potential_fit/moment_polish/*` provenance are rejected and must be
+regenerated. The additive lane must not re-fit packet potentials, adjust their
+coefficients for molecular separations, or add a scalar anchor patch.
+
+## Fitted-Potential Consistency Reporting
+
+The density fits define `E_aa` and `E_ab`; the ordinary fitted potentials
+provide approximate fields `J_a`. In native `L` order report:
+
+```text
+epsilon_aa = Tr(P_a * J_a) - E_aa
+epsilon_ab = Tr(P_a * J_b) + Tr(P_b * J_a) - 2 E_ab
+epsilon_total = sum_a epsilon_aa + sum_{a<b} epsilon_ab
+```
+
+The assembled total must also satisfy
+
+```text
+epsilon_total = Tr(P0_L * J0_L) - E0
+```
+
+up to numerical assembly tolerance. Report the total, every available self
+term, and every available pair cross term. Their algebraic decomposition is a
+strict check; their physical magnitude is a fitted-potential approximation
+diagnostic and is not required to be below `1e-8 Ha`. Exact/density-fit oracle
+fields retain strict energy identities.
 
 ## Additive Reference Self-Energy
 
@@ -319,6 +341,13 @@ diagnostic forwarding is directly required, the existing private additive-
 reference caller. The amendment does not reopen the other implemented source
 surfaces above.
 
+The moment-polish retirement follow-on may use the already-approved packet and
+screened-Hartree owners to remove the retired fit and energy rejection. This
+additive lane may edit only its existing private caller when needed to report
+the total/self/cross consistency decomposition or reject retired packets. It
+must not change protected geometry, `H1_L`, `Vee_L`, placement algebra, or the
+ordinary no-reference path.
+
 The no-reference protected member path must remain numerically unchanged.
 
 Target source budget is at most 350 added lines across the approved files,
@@ -363,7 +392,9 @@ Required Be2 evidence:
 - explicit `E_AA`, `E_BB`, `E_AB`, reversed-cross parity, and total
   `E0 = E_AA + E_BB + 2E_AB`;
 - finite/symmetric placed raw blocks, `J0_F`, `J0_L`, and `Delta_J0`;
-- direct energy and derivative anchors;
+- strict derivative/algebra checks;
+- fitted-potential total consistency error and its self/cross decomposition,
+  without a `1e-8 Ha` magnitude gate;
 - optional staged capture/fake-RDM counts after mandatory inclusion;
 - exact confirmation that the unscreened `H1_L` and `Vee_L` inputs were not
   mutated;
@@ -371,10 +402,13 @@ Required Be2 evidence:
   retained counts, shell/slab topology, and warning flags;
 - phase timings and carrying-cost report.
 
-No endpoint energy or SCF assertion is required. The strict padded Be2 gate
-passed with roundoff reference recovery and direct/derivative anchors, so CR2
-may consume the same internal path with two Cr `18e` packets for an off/on
-measurement. That is not a production claim or repo test.
+No endpoint energy or SCF assertion is required. The earlier padded Be2 run
+used the now-retired determinant-moment polish; its structural, recovery, and
+derivative evidence remains useful, but its forced sub-`1e-8 Ha` energy result
+is historical false-start evidence. Regenerate ordinary Be/Ne/Cr packets and
+rerun the bounded construction before further consumption. The additive
+implementation itself remains accepted; this is not a production claim or
+repo test.
 
 ## Failure Rules
 
@@ -391,13 +425,18 @@ Stop and report if:
   neutral raw-block owner;
 - cross self-energy cannot be evaluated in the documented compact density
   convention;
+- a packet carries retired moment-polish provenance;
+- the reported total fitted-potential consistency error does not agree with
+  its assembled self/cross decomposition within numerical tolerance;
 - the additive reference can be formed only by globally orthogonalizing packet
   occupied blocks;
 - the correction requires changing `H1_L`, rotating `Vee_L`, or adding an
   artifact/public/solver path.
 
 Do not turn a failed mandatory occupied direction into an RG, silently drop it,
-or weaken the active representability threshold.
+weaken the active representability threshold, or reject an otherwise valid
+ordinary fitted potential solely because its reported consistency magnitude
+exceeds `1e-8 Ha`.
 
 ## Explicitly Separate Later Lanes
 

@@ -27688,3 +27688,70 @@ Carrying-cost result:
 - exact next step: implement and validate the driver plumbing as Pass 360,
   including the required medium-term checkpoint. Rho0 documentation
   compression moves to Pass 361.
+
+## Cartesian Hamiltonian Producer Pass 360 - Retire Packet Moment Polish
+
+Commit(s):
+- this commit - retire determinant-moment fitted-potential polishing and
+  restore the ordinary atomic packet fit contract.
+
+Summary:
+- Retired/superseded `HP-PQS-ATOMREF-POTMOM-FN-01` /
+  `HP-PQS-ATOMREF-POTMOM-TEST-01` as a same-day false start. Commit
+  `9739c22a6` and the moment-polish portion of Pass 353 remain historical
+  evidence, not active source authority.
+- Restored one generic packet pipeline: determinant -> density fit -> ordinary
+  radial potential fit. Density-fit `E0` remains authoritative; the compact-
+  scaffold, currently 33-term fitted potential remains an approximate fast
+  `J0` evaluator.
+- Required `Tr(P0*J0_fit)-E0_fit` reporting, including additive total and
+  self/cross decomposition. Its algebraic decomposition is strict, but its
+  magnitude is not forced below `1e-8 Ha`. Exact/density-fit oracle identities
+  and representation, finiteness, symmetry, convergence, and derivative
+  checks remain strict.
+- Existing polished Be/Ne/Cr packets must be regenerated. Readback must reject
+  retired moment-polish provenance rather than infer compatibility.
+
+Validation / evidence:
+- Design review compared the canonical packet, screened-Hartree, and protected
+  additive contracts with committed packet/correction source. The polish is a
+  separable post-fit block; additive geometry, `P0/J0/E0` assembly, protected
+  transforms, `H1_L`, and `Vee_L` do not depend on it.
+- Focused lifecycle/source/test scans, docs-only scope review, local
+  Documenter, and `git diff --check` are the acceptance gates. No numerical
+  test is required in this authority pass.
+
+Goal advancement / guardrail:
+- LT2/LT5/LT8 and MT4: removes a molecule-trained coefficient adjustment
+  without discarding the implemented additive-reference construction. No
+  replacement fit policy, threshold weakening for exact oracles, scalar patch,
+  public workflow, solver, or endpoint claim is approved.
+- Source removal proceeds under the active packet, screened-Hartree, and
+  protected-additive IDs, not under the retired POTMOM IDs. It should delete
+  code/tests and reject stale packets rather than add compatibility machinery.
+
+Carrying-cost result:
+- source/test line delta: `0` in this docs-only pass.
+- next implementation should be materially line-negative: delete the polish
+  constants/helpers, packet fields/readback, and moment-specific tests; retain
+  only ordinary-fit diagnostics and additive decomposition.
+- exact next step: implement this removal and regenerate bounded packets before
+  further screened-Hartree consumption. Canonical-driver plumbing and rho0
+  documentation compression follow afterward.
+
+### Medium-Term Goal Checkpoint After Pass 360
+
+- MT1 fake-PQS quarantine: completed/maintained. No reference-fit change
+  affects route construction.
+- MT2 independent PQS recovery: completed for the supported producer. The
+  pending work is packet/correction cleanup, not route recovery.
+- MT3 common physical support vocabulary: active/maintained. Protected
+  additive measurements still require exact owner mapping and terminal due
+  diligence.
+- MT4 supplement staging: active, with the additive construction implemented.
+  Immediate blocker is removing retired polish consumption, regenerating
+  ordinary packets, and reporting fitted-potential consistency honestly.
+- MT5 cleanup pressure: active. This false-start retirement should reduce
+  source/test/docs carrying cost; single-home rho0 compression remains queued.
+- MT6 old flat-path classification: maintenance. No row-gauge, interaction
+  rotation, EGOI WIP, or compatibility adapter is promoted.

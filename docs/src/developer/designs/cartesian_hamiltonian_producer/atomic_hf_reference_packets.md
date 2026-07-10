@@ -2,10 +2,10 @@
 
 Status: implemented internal subsystem under
 `HP-PQS-ATOMREF-PACKET-FN-01` and
-`HP-PQS-ATOMREF-PACKET-TEST-01`. The fixed-policy determinant-moment polish of
-the fitted potential is implemented under
-`HP-PQS-ATOMREF-POTMOM-FN-01` and
-`HP-PQS-ATOMREF-POTMOM-TEST-01`.
+`HP-PQS-ATOMREF-PACKET-TEST-01`. The determinant-moment fitted-potential
+polish formerly recorded under `HP-PQS-ATOMREF-POTMOM-FN-01` and
+`HP-PQS-ATOMREF-POTMOM-TEST-01` is retired and must not be produced or
+consumed.
 
 This page is the canonical contract for reusable one-center atomic
 Hartree-Fock (HF) reference packets. The registry owns permission, lifecycle,
@@ -69,8 +69,8 @@ The packet records:
 - density fit: spherical Gaussian widths/exponents and signed weights, radial
   target and fit data, charge, self-energy, and fit diagnostics;
 - potential fit: Gaussian coefficients/exponents, fixed broad-tail and
-  trim/refit facts, radial errors, tail diagnostics, and an optional compact
-  determinant-moment polish record;
+  trim/refit facts, radial errors, tail diagnostics, matrix comparisons, and
+  reference-energy consistency diagnostics;
 - provenance: code/input identity, fit tolerances, reference energy where
   supplied, and role-qualified Coulomb-expansion summaries.
 
@@ -156,75 +156,55 @@ bounded matrix/anchor case.
 These role-qualified packet choices do not change the producer-wide
 `coulomb_accuracy` policy of a Hamiltonian consuming the packet.
 
-## Determinant-Moment Potential Polish
+## Ordinary Radial Potential Fit And Consistency
 
-The packet determinant, density fit, and fitted potential have distinct roles,
-but a non-diagnostic screened-Hartree anchor requires them to agree on the
-reference Coulomb energy. For one packet at the origin and an identical packet
-displaced by radial distance `d`, define:
+Packet construction uses one untuned sequence:
 
 ```text
-m_j(d) = Tr(P_HF * V_j(d))
-t(d)   = (rho_fit(0) | rho_fit(d))_compact
+atomic determinant
+-> spherical density fit
+-> ordinary radial Hartree-potential fit
+-> reported approximation errors
 ```
 
-`V_j(d)` is the exact pure-GTO matrix of one retained spherical Gaussian
-potential term with the packet potential exponent and unit coefficient.
-`P_HF` is the pure-GTO packet determinant. `t(d)` uses the packet density fit
-and its explicit role-qualified compact Coulomb expansion. Thus this is a
-consistency fit for determinant-defined `P0`, density-fit-defined `E0`, and
-potential-fit-defined `J0`; it is not a scalar energy correction.
+The density fit remains the authority for the reference cloud and no-half
+Coulomb self-energy `E0_fit`. The potential fit is only a faster approximation
+to that cloud's Hartree field `J0_fit`. It starts from the role-qualified
+compact 45-term Coulomb scaffold and currently retains 33 Gaussian potential
+terms after the ordinary radial trim/refit. A Hamiltonian or packet RHF built
+with the separate high-accuracy 135-term policy does not make this fitted
+potential exact.
 
-For two identical placed packets separated by `d`, the screened-Hartree direct
-anchor residual is exactly the sum of the two self and two cross moment
-residuals:
+For a represented packet determinant, report
 
 ```text
-Tr(P0 * J0_fit) - E0_fit = 2*(m(0)'c - t(0)) + 2*(m(d)'c - t(d))
+potential_fit_consistency_error = Tr(P0 * J0_fit) - E0_fit
 ```
 
-The moment objective therefore repairs the packet representation that enters
-the anchor rather than adding a posterior scalar to the Hamiltonian.
+along with radial, tail, matrix, and charge/self-energy fit errors. This value
+measures consistency between determinant-defined `P0`, density-fit-defined
+`E0_fit`, and approximate potential-fit `J0_fit`. It is not required to be
+below `1e-8 Ha`, and it must not be hidden by a scalar correction or by fitting
+the potential to molecular separations.
 
-Start from the existing retained `33`-term fitted potential with coefficients
-`c0`. Preserve every exponent and keep the first `5` broad-tail coefficients
-exactly fixed. For coefficients `6:33`, solve once for `delta` on the fixed
-distance grid:
+For additive packet references, the consumer also reports available
+self/cross contributions:
 
 ```text
-D = [0, 0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 8, 10, 20] bohr
-
-min_delta ||W_radial * A_radial * delta||_2^2
-        + ||1e4 * (M_free * delta - (t - M*c0))||_2^2
+epsilon_aa = Tr(P_a * J_a_fit) - E_aa
+epsilon_ab = Tr(P_a * J_b_fit) + Tr(P_b * J_a_fit) - 2 E_ab
+epsilon_total = sum_a epsilon_aa + sum_{a<b} epsilon_ab
 ```
 
-Use the existing radial grid, `_radial_fit_weights(...)`, column-scaled
-`_solve_weighted_svd(...)`, and fixed SVD `rtol = 1e-12`. The radial target is
-zero change from the already-accepted radial fit. Apply the resulting `delta`
-once; do not iterate, tune by element, expose controls, or add Gaussian terms.
-The fixed policy ID is
-`:determinant_densityfit_coulomb_moment_v1`.
+where packet density fits define `E_aa` and `E_ab`. The total must agree with
+`Tr(P0 * J0_fit) - E0_fit` up to numerical assembly error.
 
-The initial scope is the existing one-center spherical closed-shell Be and Ne
-packets and identical-packet radial pairs. The multi-distance grid prevents the
-Be2 `R = 4` gate from becoming a one-geometry fit. This lane does not establish
-a heteronuclear cross-anchor policy. If the retained potential does not have
-the approved `33`-term, five-fixed-term shape, or the weighted solve does not
-meet rank, radial, tail, and moment checks, stop rather than generalizing or
-silently marking the packet polished.
-
-New packets carry one nested `potential_fit` moment-polish record with:
-
-- policy ID;
-- retained SVD rank;
-- maximum coefficient change;
-- maximum absolute moment error.
-
-The policy ID fixes the distance grid, moment weight, SVD tolerance, and five
-fixed broad terms. Readback must return the record when present. Older packets
-without it remain readable and report the record as unavailable/`nothing`;
-absence must never be interpreted as polished. The artifact kind and existing
-packet convention ID do not change.
+The retired determinant-moment polish, separation grid, moment weight,
+fixed-tail moment solve, and element/molecule-specific coefficient adjustment
+must not run. Packet readback must explicitly reject any packet containing
+`potential_fit/moment_polish/*`; polished Be, Ne, and Cr packets require
+regeneration through the ordinary pipeline. Do not add a compatibility adapter
+or silently strip the retired provenance.
 
 ## Validation And Failure Behavior
 
@@ -243,23 +223,26 @@ Required packet checks are:
   a different raw fingerprint;
 - density-fit charge and self-energy errors are reported and within the
   intended fit tolerance;
-- potential-fit radial and far-tail diagnostics are reported;
-- potential-fit `J0_G` agrees with the density-fit mixed-Hartree path on a
-  bounded matrix and energy-anchor check;
-- when determinant-moment polishing is present, the term count and exponents
-  are unchanged, the first five coefficients are unchanged, the maximum Be/Ne
-  moment error is at most `1e-9 Ha`, and radial/tail diagnostics do not regress
-  materially;
+- potential-fit radial, far-tail, matrix, and energy-consistency diagnostics
+  are reported, including its compact 45-term scaffold and current 33-term
+  retained shape;
+- potential-fit `J0_G` is compared with the density-fit mixed-Hartree path on a
+  bounded matrix case, but its reported energy-consistency error is not an
+  acceptance threshold;
+- exact/density-fit oracle paths retain strict energy and field identities;
+- packets containing retired moment-polish provenance are rejected;
 - the density-fit path demonstrably receives the explicit compact expansion;
 - packet outputs contain no unreported fallback reference or inferred
   occupancy convention.
 
 Fail rather than fitting, writing, or consuming when convergence, packet
 self-integrity, exact owner-local mapping, numerical overlap equivalence,
-occupied orthogonality, density trace, or required fit validation is not
-satisfied. Do not repair packet mismatch by relabeling orbitals, changing
-occupations, treating fit terms as orbitals, or silently choosing another
-Coulomb expansion.
+occupied orthogonality, density trace, finiteness, symmetry, or required
+ordinary-fit construction validation is not satisfied. A finite validated
+potential fit is not rejected solely because its reported energy-consistency
+error exceeds `1e-8 Ha`. Do not repair packet mismatch by relabeling orbitals,
+changing occupations, treating fit terms as orbitals, silently choosing
+another Coulomb expansion, or reviving determinant-moment polishing.
 
 ## Ownership And Tests
 
@@ -274,6 +257,16 @@ For the embedding-equivalence follow-on, source edits are limited to
 private additive-reference caller may forward the one nested mapping summary
 only if directly needed. No other packet, correction, artifact, or workflow
 surface is reopened by this amendment.
+
+The moment-polish retirement follow-on must delete
+`_POTENTIAL_MOMENT_DISTANCES`, `_determinant_potential_moments`,
+`_polish_atomic_reference_potential`, its packet fields, writer/readback
+support, and moment-specific tests from the existing packet source/test owner.
+`build_atomic_hf_reference_packet(...)` must consume
+`fit_atomic_reference_potential(...)` directly, and readback must reject the
+retired keys. The matching correction/additive diagnostic changes remain owned
+by their canonical contracts; no replacement fit helper or compatibility
+shape is approved. The source/test pass should be materially line-negative.
 
 The packet facility depends on the historical basis collection described in
 [Legacy BasisSets provenance](../../legacy_basissets_provenance.md).
@@ -305,6 +298,5 @@ This packet contract does not approve:
 - fitted density or potential terms as protected orbitals;
 - element-table inference of charge, electron count, spin, or occupancy;
 - a general basis download, conversion, or licensing subsystem.
-- a public potential-polish option, element-specific tuning, heteronuclear
-  moment policy, scalar anchor patch, or weakening of the `1e-8 Ha` screened-
-  Hartree anchor.
+- a replacement potential-polish policy, element-specific tuning,
+  separation-trained fit, or scalar anchor patch.

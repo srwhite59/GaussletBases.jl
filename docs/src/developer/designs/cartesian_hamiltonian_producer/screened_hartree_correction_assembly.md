@@ -108,6 +108,26 @@ The helper must report anchor/derivative checks and represented-reference
 diagnostics. It must keep the correction in memory unless a later artifact
 authority is approved.
 
+The energy interpretation depends on the `J0_G` source. For an exact or
+density-fit oracle field, retain the strict identity
+
+```text
+Tr(P0 * J0_G) = E0_G
+```
+
+within the active numerical tolerance. For the ordinary fitted-potential path,
+report instead
+
+```text
+potential_fit_consistency_error = Tr(P0 * J0_fit) - E0_fit
+```
+
+without rejecting an otherwise valid fit solely because this approximation
+error exceeds `1e-8 Ha`. The density fit still owns `E0_fit`; the potential fit
+does not redefine the reference energy. The derivative identity with respect
+to the supplied `J0_G`, representation checks, and finite/symmetry checks
+remain strict.
+
 ## Protected Additive Packet Consumer
 
 `HP-RG-PROTECT-ADDREF-FN-01` implements a narrow molecular consumer of this
@@ -156,13 +176,15 @@ Implemented diagnostics include:
   `Delta_J0`;
 - `E0_G`, `q0' * V_IDA * q0`, current direct energy, correction expectation,
   and corrected direct energy;
-- direct anchor identity:
+- exact/density-fit direct anchor identity:
 
   ```text
   E_current_direct[P0] + Tr(P0 * Delta_J0) + C == E_exact_direct[P0]
   ```
 
-- derivative/field anchor check:
+- fitted-potential consistency error `Tr(P0 * J0_fit) - E0_fit`, reported as
+  an approximation rather than an anchor rejection;
+- derivative/field algebra check:
 
   ```text
   F_current_direct[P0] + Delta_J0 == J0_G
@@ -171,7 +193,8 @@ Implemented diagnostics include:
 - optional fitted-potential-versus-density-fit matrix relative-Frobenius and
   maximum-entry differences when both are evaluated;
 - for additive references, block count/traces and maximum inter-block occupied
-  overlap.
+  overlap, plus total and available self/cross fitted-potential consistency
+  contributions.
 
 Packet placement, protected-basis capture, row/sector locality, and terminal
 due diligence belong to the packet embedding and protected additive-reference
@@ -192,10 +215,16 @@ Required test coverage:
 - rejection of an unconverged packet;
 - `q0` charge and `P0` trace;
 - finite/symmetric `Delta_J0`;
-- direct energy/derivative anchor identities;
+- strict derivative/algebra identities for every source;
+- strict direct energy identity for exact/density-fit oracle sources;
+- acceptance and reporting of a finite ordinary fitted-potential consistency
+  error without a `1e-8 Ha` rejection;
 - potential-fit agreement with the exact density-fit `J0_G` path on a small
-  case;
+  case as a reported matrix/energy approximation;
 - additive blocks remain separate while their density matrices sum;
+- additive total consistency error agrees with its self/cross decomposition;
+- packets containing retired `potential_fit/moment_polish/*` provenance are
+  rejected;
 - rejection or clear failure on mismatched packet/working-basis facts.
 
 No Be2/Cr2 energy assertions, SCF convergence gates, solver tests, or
@@ -203,15 +232,17 @@ production endpoint claims are approved.
 
 ## Failure Behavior
 
-Dimension mismatch, nonfinite inputs, negative occupations, and unconverged
-packet consumption are hard failures. Normal construction also rejects input
-asymmetry, reference trace/orthogonality loss, negative `q0`, and failed direct
-energy or derivative anchors at the configured tolerances.
+Dimension mismatch, nonfinite inputs, negative occupations, input asymmetry,
+reference trace/orthogonality loss, negative `q0`, unconverged packet
+consumption, and failed derivative/algebra checks are hard failures. Exact and
+density-fit oracle energy identities also remain strict.
 
-`diagnostic_only = true` may retain a numerically imperfect represented
-reference for explicit diagnosis. It does not permit dimension/nonfinite
-errors or unconverged packet consumption, and it does not make the result
-valid for endpoint interpretation.
+An ordinary fitted-potential result is not rejected solely because
+`Tr(P0 * J0_fit) - E0_fit` exceeds `1e-8 Ha`; that value and the associated
+radial, tail, and matrix errors must remain visible. `diagnostic_only = true`
+does not bypass structural, representation, finiteness, symmetry, convergence,
+or algebraic failures and is not required merely to observe a finite
+fitted-potential consistency error.
 
 ## Explicit Exclusions
 
