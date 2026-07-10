@@ -566,6 +566,8 @@ these approved design IDs:
 - `HP-RG-INJECT-FN-01`
 - `HP-RG-OCC-FIRST-INJECT-FN-01`
 - `HP-RG-OCC-FIRST-INJECT-TEST-01`
+- `HP-RG-PROTECT-ADDREF-FN-01`
+- `HP-RG-PROTECT-ADDREF-TEST-01`
 - `HP-RG-PROTECT-INJECT-FN-01`
 - `HP-RG-PROTECT-INJECT-TEST-01`
 - `HP-RG-PROTECT-ONEBODY-FN-01`
@@ -1191,6 +1193,29 @@ Approved Residual Gaussian module surfaces:
   `Y_occ`, and terminal due-diligence inspection. No `ns = 7` gate, final
   consumer wiring, screened-Hartree change, artifact/public workflow,
   shell-local injection, EGOI, exchange, solver, or Cr/Cr2 work is approved.
+- `HP-RG-PROTECT-ADDREF-FN-01` and
+  `HP-RG-PROTECT-ADDREF-TEST-01` approve the first internal protected-localized
+  occupied-reference consumer. Build compact `R` once, make the full-rank
+  union of all placed converged packet occupied spaces mandatory in
+  `M = [G,R_compact]`, and apply current optional staged selection only after
+  that mandatory block. Keep each original packet block separate for
+  `P0 = sum_a P_a`; do not globally orthogonalize packet blocks when forming
+  the reference density. Build placed fitted-potential `GG/GA/AA` through the
+  neutral raw-block owner, transform `J0` through the existing protected
+  fixed-sector and localized `W` helpers, include
+  `E0 = sum_a E_aa + 2*sum_{a<b}E_ab`, and call the existing in-memory
+  `ScreenedHartreeCorrection` with native `Vee_L`. Approved files are
+  `residual_basis.jl`, `augmented_operators.jl`,
+  `cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`, the two
+  `cartesian_reference_density` implementation files, and narrow internal
+  composition in `cartesian_protected_ladder_bundle.jl`. One native
+  vector-backed residual source-index field is allowed to eliminate duplicate
+  compact selection; label parsing is forbidden. Validation is small committed
+  algebra coverage plus an ignored physically padded Be2 two-packet gate with
+  terminal due diligence. No public input, corrected artifact, protected atom,
+  counterpoise, compact/high transfer, `Vee` rotation, solver, EGOI, exchange,
+  or Cr2 production claim is approved. CR2 may consume the path only after Be2
+  manager acceptance.
 - `HP-RG-PROTECT-INJECT-DESIGN-01` is design-only authority for the current
   compact-first injection direction. It does not belong in the approved source
   ID list and does not approve implementation. The design builds compact/narrow

@@ -5340,8 +5340,177 @@ Validation for this source lane:
 - no screened-Hartree endpoint required;
 - no Cr/Cr2 run.
 
-The strict actual-packet screened-Hartree anchor is a later gate. It is not
-approved until occupied-first geometry has a real final-basis consumer.
+These occupied-first IDs alone do not approve the strict actual-packet
+screened-Hartree anchor. The combined final-basis consumer is separately
+governed by `HP-RG-PROTECT-ADDREF-*` below.
+
+### HP-RG-PROTECT-ADDREF-FN-01 / HP-RG-PROTECT-ADDREF-TEST-01 - protected additive atomic reference correction
+
+Status: approved narrow internal source/design authority. This is the first
+real protected-localized consumer of occupied-first reference geometry. It is
+not public workflow, artifact, solver, or production Cr2 authority.
+
+Purpose: build a protected-localized homonuclear molecular member whose basis
+contains the full span of all placed converged atomic packet occupied spaces,
+then assemble the existing screened direct-Hartree correction in native `L`
+order.
+
+This path is internal and explicitly opt-in. Protected members built without
+placed reference packets must preserve current geometry, `H1_L`, `Vee_L`,
+native ordering, and artifact behavior.
+
+The intended private composition seam is conceptually:
+
+```text
+_plb_build_additive_reference_member(recipe, stages, placements)
+    -> (member, correction)
+```
+
+Each normalized placement carries `packet`, `owner_index`, `center`, and
+explicit `supplement_indices`. It must share the current member-build core;
+`_plb_build_member(recipe, stages)` remains the unchanged no-reference path.
+
+Required construction:
+
+1. Build ordered compact-first `R_compact` once and define
+   `M = [G,R_compact]`.
+2. Embed each packet's original occupied block `Y_a` into the combined
+   supplement by explicit owner-local indices, placement, basis order, and
+   fingerprint.
+3. Form a full-rank `S_AA`-orthonormal union `Y_union` for basis protection.
+4. Make `Y_union` mandatory first, then add current compact-original protected
+   directions after orthogonalizing them against that union.
+5. Apply the existing staged representability and fake-RDM policy only to the
+   remaining optional supplement complement.
+6. Preserve every original `Y_a` and occupation vector separately. The
+   orthonormalized union is not used to define `P0`.
+7. Represent each original packet block in native `L` order by final-basis
+   cross overlap and form `P0_L = sum_a C_aL*n_a*C_aL'` and
+   `q0_L = diag(P0_L)`. Validate every packet block separately; do not globally
+   orthogonalize packet blocks when forming `P0_L`.
+8. Build and sum placed fitted-potential `GG/GA/AA` Hartree blocks, transform
+   through the existing protected fixed-sector helper, then localize
+   `J0_L = W' * J0_F * W`.
+9. Build the compact-convention no-half reference Coulomb energy
+   `E0 = sum_a E_aa + 2*sum_{a<b}E_ab`, including explicit cross terms.
+10. Call the existing screened-Hartree core with native-order `Vee_L`, `J0_L`,
+    `P0_L/q0_L`, and `E0` to return the existing
+    `ScreenedHartreeCorrection`. Do not duplicate the formula in the ladder
+    owner.
+
+The staged protected geometry must consume the exact already-built residual
+object rather than reconstruct compact selection. If needed, this lane permits
+one internal vector-backed field on `CartesianResidualGaussianBasis`:
+
+```text
+compact_source_candidate_indices::Union{Nothing,Vector{Int}}
+```
+
+It is the sorted unique accepted-source set for ordered compact-first MGS, not
+a one-to-one label for final residual columns after merge cleanup. It is
+`nothing` for selection rules without native accepted-source semantics. Do not
+parse labels. Delete or delegate the current duplicate compact-selection block
+in staged protected geometry. No artifact field is approved.
+
+Mandatory occupied directions are not optional cutoff candidates. If the
+union is not full-rank/recoverable or is not stably representable by `M` under
+the active staged representability threshold, stop as insufficient
+compact-main-basis support. Do not discard the direction, convert it into an
+RG, or weaken the threshold.
+
+Reference algebra is additive:
+
+```text
+P0 = sum_a P_a
+q0 = diag(P0)
+J0 = sum_a J_a
+E0 = sum_a E_aa + 2*sum_{a<b} E_ab
+```
+
+The original per-packet occupied blocks define `P0`. Packet density fits define
+self/cross energies. Packet fitted potentials are only the fast representation
+of the same placed reference field.
+
+Approved source surface:
+
+- `src/cartesian_residual_gaussians/residual_basis.jl`;
+- `src/cartesian_residual_gaussians/augmented_operators.jl`;
+- `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`;
+- `src/cartesian_reference_density/atomic_hf_reference_packets.jl`;
+- `src/cartesian_reference_density/screened_hartree_correction.jl`;
+- `src/cartesian_protected_ladder_bundle.jl` for narrow internal composition
+  only, with no public recipe or artifact change.
+
+The neutral raw-block owner may add one internal explicit spherical Gaussian
+potential entry point that reuses existing factor and mixed/self block kernels
+for fitted-potential `GG/GA/AA`. Packet or ladder files must not duplicate
+analytic Gaussian loops. Existing exact density-fit mixed-Hartree blocks remain
+the small-system oracle.
+
+No new source file, public export, artifact/schema field, or persistent
+workflow object is approved. Related diagnostics must be nested in compact
+records rather than copied as a flat stage field cloud. Target source budget is
+at most `350` added lines across the approved files, with duplicate compact
+selection deletion reported separately.
+
+Approved committed test surface:
+
+- `test/misc/runtests.jl` for a tiny mandatory-union/additive-density contract;
+- `test/nested/cartesian_screened_hartree_correction_runtests.jl` for additive
+  block validation and anchor algebra.
+
+Do not add a new committed test file or binary fixture.
+
+First end-to-end acceptance is an ignored, source-backed, physically padded
+Be2 construction with two converged Be core `2e` cc-pV5Z, `lmax = 1` packets.
+Use driver-style padding of at least `10` bohr and inspect terminal due
+diligence. One ignored `tmp/work/*.jl` probe and durable text/TSV output under
+`/Users/srw/dmrgtmp` are allowed; generated packets, Hamiltonians, and matrix
+fixtures are not committed. Required evidence:
+
+- one shared compact residual object for geometry and operators;
+- omitted-reference protected-member parity with the current path;
+- mandatory union Gram/rank and roundoff per-packet recovery through `L`;
+- per-packet trace `2` and total `P0/q0` charge `4`;
+- explicit `E_AA`, `E_BB`, both cross orderings, and
+  `E0 = E_AA + E_BB + 2E_AB`;
+- finite/symmetric placed raw blocks, `J0_F`, `J0_L`, and `Delta_J0`;
+- direct energy and derivative anchors;
+- current optional staged-selection diagnostics after mandatory inclusion;
+- exact confirmation that unscreened `H1_L` and `Vee_L` were not mutated;
+- parent bounds, axis counts, padding/radius, final dimension, retained counts,
+  shell/slab topology, warning flags, and phase timings.
+
+No endpoint energy or SCF assertion is required. After manager acceptance of
+the Be2 gate, CR2 may use the same internal path with two Cr `18e` packets for
+an off/on measurement. That does not authorize a production claim or repo
+Cr2 test.
+
+Explicit exclusions:
+
+- protected one-center atom compactness or removal of the current two-owner
+  compactness assumption;
+- counterpoise artifacts or retention of separated kinetic/unit-nuclear
+  matrices;
+- compact/high transfer helpers;
+- corrected protected-localized artifact variants;
+- public driver/API/export/default changes;
+- solver, HF, MP2-NO, or production Cr2 workflow;
+- `Vee` transformation, `C' V C`, or four-index interactions;
+- EGOI, exchange, rho0 row-gauge, residual-selection, injection-threshold, or
+  mapping-default changes;
+- endpoint or publication claims.
+
+Before any future compact/high transfer authority, require a same-commit audit
+of `X`, `S_AA`, compact residual geometry, protected `G_L/A_L`, native
+ordering, and exact final-basis cross overlap. A historical final-row mismatch
+does not establish a Coulomb-accuracy basis change.
+
+Decision rule: if exact packet mapping, mandatory recovery, neutral
+fitted-potential blocks, compact cross energy, and existing correction reuse
+cannot all fit this in-memory surface, stop and report the exact missing native
+fact. Do not solve the blocker with public/artifact/solver wiring or a second
+screened-Hartree formula.
 
 ### HP-RG-PROTECT-INJECT-FN-01 — staged protected-original geometry prototype
 

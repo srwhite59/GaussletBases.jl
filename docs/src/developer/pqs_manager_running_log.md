@@ -27051,3 +27051,57 @@ Carrying-cost result:
   quarantined: unresolved mixed-data licensing and the strict actual-packet
   screened-Hartree anchor; exact remaining blocker: wire occupied-first
   geometry into a reviewed final-basis consumer before endpoint interpretation.
+
+### Medium-Term Goal Checkpoint After Pass 345
+
+- MT1 fake-PQS quarantine: completed/maintained; no current reference or
+  protected work revives fake-PQS as producer authority.
+- MT2 independent PQS recovery: completed for the supported canonical path;
+  current work concerns basis/reference adequacy rather than route recovery.
+- MT3 common physical support vocabulary: active/maintained through mandatory
+  terminal due-diligence review on every new molecular acceptance gate.
+- MT4 supplement staging: active and refined. The immediate target is one
+  compact residual construction plus mandatory packet occupied protection and
+  additive screened-Hartree reference assembly.
+- MT5 cleanup pressure: active. The staged protected helper currently rebuilds
+  compact selection and should consume the already-built residual object.
+- MT6 old flat-path classification: maintenance. Existing exact mixed-Hartree
+  kernels remain reusable owners; no old route orchestration is promoted.
+
+## Cartesian Hamiltonian Producer Pass 346 - Protected Additive Reference Authority
+
+Commit(s):
+- this commit - approve protected additive atomic reference correction.
+
+Summary:
+- Approved `HP-RG-PROTECT-ADDREF-FN-01` and
+  `HP-RG-PROTECT-ADDREF-TEST-01`. The protected path now has a precise next
+  source contract: build compact `R` once, make the orthonormalized union of
+  placed packet occupied spaces mandatory, and preserve original per-packet
+  orbitals separately for additive `P0`.
+- The exact reference side reuses neutral fitted-potential `GG/GA/AA`, the
+  protected fixed-sector transform, and localized `W`. Reference energy must
+  include every packet self term and doubled cross term before the existing
+  native-order `ScreenedHartreeCorrection` algebra is called.
+- Protected atom compactness, counterpoise artifacts, and compact/high transfer
+  remain separate. Future transfer authority requires a same-commit basis
+  parity audit rather than inference from historical row counts.
+
+Validation / evidence:
+- Design-manager inspected live HEAD `5c113cfba`, the sole protected staged
+  caller, compact residual duplication, exact mixed-Hartree owners, protected
+  transform/localization helpers, and current correction API. Docs validation
+  used focused ID/formula scans and `git diff --check`; no Julia run was needed.
+
+Goal advancement / guardrail:
+- LT1/LT2/LT5/LT8 and MT4/MT5: defines the first physically correct additive
+  packet consumer while requiring reuse and deletion of duplicate compact
+  selection. Default no-reference members remain unchanged. No public input,
+  corrected artifact, solver, `Vee` rotation, EGOI, exchange, endpoint, or Cr2
+  production claim is approved.
+
+Carrying-cost result:
+- source line delta: 0 in this docs-only pass; simplified target: one compact
+  residual object; quarantined: atom/counterpoise/transfer; exact next blocker:
+  implement within the six approved files and pass the padded Be2 two-packet
+  recovery, cross-energy, anchor, and due-diligence gate.

@@ -590,6 +590,14 @@ historical provenance and unresolved license/redistribution status must be
 reported honestly; do not claim every custom block came from Basis Set
 Exchange.
 
+`HP-RG-PROTECT-ADDREF-FN-01` is the narrow molecular follow-on. It protects
+the orthonormalized union of placed packet occupied spaces but forms `P0` from
+the original per-packet blocks, sums placed fitted-potential fields, and adds
+all packet density-fit cross energies before calling the existing native-`L`
+screened-Hartree correction core. See
+`protected_additive_reference_correction.md`. This does not broaden the packet
+artifact itself or change fitted density/potential terms into orbitals.
+
 Explicit exclusions:
 
 - screened-Hartree production Hamiltonian assembly;

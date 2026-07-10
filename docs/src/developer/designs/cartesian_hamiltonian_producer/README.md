@@ -46,6 +46,11 @@ Cr2 ladder bases. `HP-RG-PROTECT-LADDER-BUNDLE-*` approves an opt-in
 directory-bundle facility for this recurring ladder workflow: protected
 Hamiltonian member artifacts, exact cross-overlap sidecars, optional restart
 sidecars, manifest/provenance, and bounded summaries.
+`HP-RG-PROTECT-ADDREF-*` approves a separate internal in-memory lane that
+makes the full union of placed atomic packet occupied spaces mandatory in the
+protected basis, preserves the original per-packet blocks for additive `P0`,
+and assembles native-order screened-Hartree `Delta_J0/C` without changing the
+protected artifact or inherited-site `Vee_L` convention.
 The supported supplemented
 workflow now accepts explicit homonuclear
 z-axis diatomics without element-specific branches. A compact artifact manifest
@@ -151,6 +156,9 @@ Agents should read first:
 - [Residual Gaussian injection hybrid memo](residual_gaussian_injection_hybrid.md)
   for the optional near-gausslet injection proposal, protected-original
   compact-main design, and the narrow staged geometry source prototype
+- [Protected additive atomic reference correction](protected_additive_reference_correction.md)
+  for the internal occupied-union, additive packet `P0/J0/E0`, and native
+  protected-localized screened-Hartree correction lane
 - [Reference-density-matrix IDA correction](rho0_reference_density_matrix.md)
   for the successor to row-gauge rho0/Galerkin probes: fixed `P0`, exact and
   approximate reference Fock/energy matching, and the measurement-only

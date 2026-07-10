@@ -156,6 +156,45 @@ product matrices, project through terminal blocks, transform into Residual
 Gaussian bases, change Qiu-White semantics, create route objects, or own
 artifacts/status/payloads.
 
+## Protected Additive Atomic Reference Assembly
+
+Why to check:
+The protected screened-Hartree path combines several already-owned numerical
+objects. Rebuilding any one of them locally risks changing the reference
+density, protected basis, or inherited-site interaction convention.
+
+Key docs:
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/protected_additive_reference_correction.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartree_correction_assembly.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/registry.md`,
+  `HP-RG-PROTECT-ADDREF-FN-01`, `HP-RG-PROTECT-ADDREF-TEST-01`
+
+Source anchors:
+- **active implementation surface**:
+  `src/cartesian_residual_gaussians/residual_basis.jl`,
+  `staged_protected_original_injection_geometry`
+- **active reusable kernel**:
+  `src/cartesian_residual_gaussians/augmented_operators.jl`,
+  `transform_protected_original_fixed_sector_exact_hartree`
+- **active reusable kernels**:
+  `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`,
+  `atomic_reference_hartree_gg_block` and
+  `atomic_reference_hartree_ga_aa_blocks`
+- **active reference owner**:
+  `src/cartesian_reference_density/atomic_hf_reference_packets.jl`
+- **active correction owner**:
+  `src/cartesian_reference_density/screened_hartree_correction.jl`,
+  `ScreenedHartreeCorrection`
+- **consumer composition seam**:
+  `src/cartesian_protected_ladder_bundle.jl`, `_plb_build_member`
+
+Do-not-forget rule:
+Use an orthonormalized occupied union only to protect the basis span. Build
+`P0` from the original per-packet occupied blocks, include all density-cloud
+cross energies, transform only one-body `J0`, and keep native inherited-site
+`Vee_L` unchanged. The geometry and operator paths must share one already-built
+compact residual object.
+
 ## CPB Local Blocks And Parent Axis Factors
 
 Why to check:

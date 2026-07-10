@@ -484,8 +484,30 @@ Approved Residual Gaussian robustness lane:
   screened-Hartree correction changes, EGOI, solver workflow, public
   driver/API/defaults, artifacts, shell-local injection, fake-RDM hierarchy,
   exchange, row-gauge rho0/P0, automatic physics defaults, or Cr/Cr2 claims.
-  The strict actual-packet screened-Hartree anchor remains a later gate after
-  occupied-first geometry has a real final-basis consumer.
+  This occupied-first helper alone does not approve the strict actual-packet
+  screened-Hartree anchor; the combined final-basis consumer is governed by
+  `HP-RG-PROTECT-ADDREF-*` below.
+- `HP-RG-PROTECT-ADDREF-FN-01` and
+  `HP-RG-PROTECT-ADDREF-TEST-01` approve that first real internal consumer for
+  homonuclear protected-localized molecules. It is explicit internal opt-in;
+  protected members without packet references remain unchanged. The staged
+  geometry consumes the already-built compact residual basis
+  `M = [G,R_compact]`, makes the
+  full-rank union of all placed packet occupied spaces mandatory before current
+  optional staged selection, and preserves the original packet blocks
+  separately for additive `P0`. Native-order packet blocks define
+  `P0 = sum_a P_a`; placed fitted potentials define `J0 = sum_a J_a`; packet
+  density fits define
+  `E0 = sum_a E_aa + 2*sum_{a<b} E_ab`. Existing raw `GG/GA/AA`, protected
+  fixed-sector transforms, localized `W`, inherited-site `Vee_L`, and
+  `ScreenedHartreeCorrection` algebra must be reused. The first acceptance
+  gate is a physically padded Be2 construction with two Be `2e` packets,
+  separate packet recovery/trace checks, total charge `4`, explicit cross
+  energy, anchors, unchanged unscreened matrices, and terminal due diligence.
+  No public input, corrected artifact, solver, endpoint claim, protected atom,
+  counterpoise, compact/high transfer, EGOI, exchange, or Cr2 production
+  workflow is approved. After Be2 acceptance, CR2 may consume the same
+  in-memory path for measurement only.
 - `HP-RG-PROTECT-INJECT-FN-01` and `HP-RG-PROTECT-INJECT-TEST-01` approve
   only a narrow internal source-backed geometry prototype for staged
   protected-original injection in

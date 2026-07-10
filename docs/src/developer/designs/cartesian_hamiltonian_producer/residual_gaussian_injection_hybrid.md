@@ -916,9 +916,9 @@ No `ns = 7` committed gate is required.
 No endpoint energy assertions, SCF convergence claims, Cr2 gates, or
 production artifact tests are approved.
 
-The strict actual-packet screened-Hartree anchor remains a later gate after
-this geometry is consumed by a real final working basis. It is not part of the
-current source or test lane.
+The strict actual-packet screened-Hartree anchor is not part of this
+occupied-first source/test lane. Its separate combined final-basis consumer is
+governed by `HP-RG-PROTECT-ADDREF-*` below.
 
 ### Explicit Exclusions
 
@@ -959,6 +959,20 @@ Approved validation for `HP-RG-OCC-FIRST-INJECT-FN-01`:
 - supplement capture spectrum report;
 - no Cr/Cr2 run;
 - no screened-Hartree endpoint run required.
+
+## Protected Additive Reference Consumer
+
+`HP-RG-PROTECT-ADDREF-FN-01` is the separate source authority that combines
+occupied-first reference protection with the staged protected-original path
+over `M = [G,R_compact]`. It is not a call-site substitution of
+`occupied_first_injection_geometry(...)`.
+
+That lane requires one already-built compact residual object, a full-rank
+mandatory union of all placed packet occupied spaces, the current optional
+staged filters only after mandatory inclusion, and separate retention of the
+original packet occupied blocks for additive `P0`. Its native-`L`
+screened-Hartree construction, source surfaces, Be2 gate, and exclusions are
+recorded in `protected_additive_reference_correction.md`.
 
 ## HP-RG-PROTECT-INJECT-FN-01 - Staged Protected-Original Geometry Prototype
 

@@ -101,6 +101,31 @@ The canonical RG algorithm contract is
 - RG does not own artifact writing, artifact provenance, basis loading, facade
   parsing, public exports, driver workflow, or route-stage/report fields.
 
+## Protected Additive References
+
+- Protected molecular geometry uses the exact compact residual basis consumed
+  by augmented operators. Do not rebuild compact selection inside the geometry
+  helper.
+- The full-rank orthonormal union of placed packet occupied spaces is used only
+  to make their span mandatory in the protected basis.
+- Each packet's original occupied columns and occupations remain separate and
+  define its additive contribution to `P0`. Do not globally orthogonalize the
+  packet blocks when constructing the reference density.
+- Mandatory packet occupied directions are never optional capture candidates.
+  Rank or representability failure means insufficient compact-main-basis
+  support and must stop the construction.
+- Molecular reference fields and energies are additive:
+  `P0 = sum_a P_a`, `J0 = sum_a J_a`, and
+  `E0 = sum_a E_aa + 2*sum_{a<b}E_ab`.
+- Packet density fits define self/cross Coulomb energies. Fitted potentials are
+  only fast evaluators of the same placed reference field.
+- Transform `J0` through existing raw `GG/GA/AA`, protected fixed-sector, and
+  localized `W` owners. Keep native `L` ordering and inherited-site `Vee_L`;
+  do not rotate or transform `Vee`.
+- `Delta_J0` and `C` remain an in-memory screened direct-Hartree correction.
+  They do not mutate unscreened `H1_L/Vee_L` and are not a corrected artifact
+  without later authority.
+
 ## Provenance And Metadata
 
 - Metadata may contain provenance only. It must not carry transforms,
