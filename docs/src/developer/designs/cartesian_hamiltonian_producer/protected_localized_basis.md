@@ -13,8 +13,9 @@ replacement, its localized one-particle basis, and the inherited-site
 two-index interaction convention. The registry owns permission, lifecycle,
 and exact implementation surfaces. Separate subsystem pages own persistence,
 [row-locality metadata and artifact behavior](protected_localized_artifact.md),
-[retained-GTO EGOI](retained_gto_egoi.md), ladder transfer/bundles,
-occupied-first reference geometry, and additive screened-Hartree assembly.
+[retained-GTO EGOI](retained_gto_egoi.md),
+[ladder transfer/bundles](protected_localized_ladder.md), occupied-first
+reference geometry, and additive screened-Hartree assembly.
 
 ## Purpose
 
@@ -306,7 +307,8 @@ This contract does not own or approve:
   [protected-localized artifact contract](protected_localized_artifact.md);
 - EGOI targets or corrections, which belong to
   [retained-GTO local-product EGOI](retained_gto_egoi.md);
-- ladder transfer, cross overlaps, bundles, or restart sidecars;
+- ladder transfer, cross overlaps, bundles, or restart sidecars, which belong
+  to [protected-localized ladder bundles](protected_localized_ladder.md);
 - rho0/reference-density history or screened-Hartree formula changes;
 - public driver/API/default changes, solver workflow, or endpoint claims;
 - new residual policy, fake-RDM hierarchy, mapping defaults, or Cr2-specific

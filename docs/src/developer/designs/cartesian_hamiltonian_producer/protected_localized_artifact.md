@@ -30,9 +30,10 @@ convention_version = 1
 `protected_localized_row_locality`, which constructs optional locality
 metadata before the writer validates and stores it.
 
-Protected ladder members may consume this artifact contract. Ladder
-manifests, cross-basis transfers, restart sidecars, and bundle summaries remain
-separate consumer formats and are not part of this schema.
+Protected ladder members may consume this artifact contract. Their manifests,
+cross-basis transfers, restart sidecars, and summaries are governed separately
+by [protected-localized ladder bundles](protected_localized_ladder.md) and are
+not part of this schema.
 
 ## Native Artifact Contract
 
@@ -188,7 +189,8 @@ not-yet-implemented lifecycle entries.
 This contract does not own or authorize:
 
 - protected-basis numerical construction or alternative interaction rules;
-- ladder manifests, transfers, restart sidecars, or bundle summaries;
+- ladder manifests, transfers, restart sidecars, or bundle summaries, which
+  belong to [protected-localized ladder bundles](protected_localized_ladder.md);
 - EGOI targets or corrections, which remain governed by
   [retained-GTO local-product EGOI](retained_gto_egoi.md);
 - occupied-first or additive-reference construction;

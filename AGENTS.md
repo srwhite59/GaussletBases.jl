@@ -1264,40 +1264,20 @@ Approved Residual Gaussian module surfaces:
   the `M2` mask, and exactly zero disallowed/long-range `DeltaV`. This does not
   approve AB overlap products, `s3`/`p`/`d`, artifacts, public/solver workflow,
   rho0/screened-Hartree changes, or Cr2 production claims.
-- `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only ignored measurement
-  probes for same-parent protected-localized ladder transfer. It may use
-  `/Users/srw/dmrgtmp` outputs, existing protected-localized inherited-site
-  Hamiltonian construction/writer, in-memory or ignored cross-overlap
-  sidecars, `ns = 7 -> 9` and optional `9 -> 11` same-parent Cr2 ladder
-  bases, occupied-orbital transfer by `C_B = <B|A> C_A`, fixed-density
-  target-Hamiltonian evaluation, and a few bounded UHF sweeps only after
-  transfer trace and orthonormality checks pass. Final working bases are
-  treated as orthonormal: use only the final-basis cross overlap, not
-  generalized self-overlap transfer. Evaluate with target `H1_L` and `Vee_L`;
-  do not transform source Hamiltonians, source `Vee`, or use `C' V C`. This
-  lane does not approve tracked source edits, public API/export, production
-  workflow, durable artifact schema, protected-`Vee` convention changes,
-  rho0/P0 revival, EGOI expansion/corrected artifacts, or Cr2 production
-  claims. Because this is measurement-only authority, do not add it to the
-  approved source-ID list.
+- `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` is completed historical
+  measurement evidence.
 - `HP-RG-PROTECT-LADDER-BUNDLE-FN-01` and
-  `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` approve an opt-in protected-localized
-  ladder bundle writer/reader facility. Preferred source owner is
-  `src/cartesian_protected_ladder_bundle.jl`, with `src/GaussletBases.jl` only
-  for the include; narrow reuse/wiring is allowed in
-  `src/cartesian_ida_hamiltonian.jl`, `src/cartesian_representation_transfer.jl`,
-  and `src/cartesian_residual_gaussians/augmented_operators.jl` only when
-  needed for protected-localized member artifact validation, exact final-basis
-  cross overlaps, orbital transfer, or the in-memory representation seam. The
-  bundle may write member protected-localized Hamiltonian artifacts, exact
-  `S_BA = <L_B|L_A>` sidecars, optional transferred-orbital restart sidecars,
-  a versioned manifest with shared-parent proof/provenance/diagnostics, and
-  bounded summary TSVs. A module-qualified opt-in function is allowed; package
-  exports and driver defaults are not. This lane does not approve changing the
-  protected-localized `Vee` convention, source-Hamiltonian transforms,
-  transformed source `Vee`, `C' V C`, rho0/P0 revival, EGOI expansion or
-  corrected artifacts, solver/HF/MP2-NO workflow integration, or Cr2
-  production claims.
+  `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` govern the implemented internal
+  opt-in facility in
+  `docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_ladder.md`.
+  Transfers require shared parent lattice, identical supplement and Coulomb
+  expansion, and use only `S_BA = <L_B|L_A>` with `C_B = S_BA*C_A`.
+  Final self-overlaps are diagnostic only; evaluate transferred densities
+  with target `H1_L` and target inherited-site `Vee_L`. Never use generalized
+  overlap, source-Hamiltonian/`Vee` transforms, or interaction rotation.
+  Restarts are native order. The lane does not approve new representation
+  sidecars, solver/UHF continuation, EGOI, screened-Hartree/rho0 changes,
+  public defaults, or Cr2 production claims.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only ignored measurement probes for a
   rho0/Galerkin IDA correction over the protected-localized inherited-site
   baseline. It may use `/Users/srw/dmrgtmp` outputs, in-memory experiments over

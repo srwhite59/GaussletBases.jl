@@ -493,28 +493,10 @@ Approved robustness lane:
   `HP-RG-PROTECT-EGOI-TEST-01` are approved but pending. Their sole active
   contract is [retained-GTO local-product EGOI](retained_gto_egoi.md); no
   protected retained-GTO helper is implemented in committed source.
-- `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only a same-parent
-  protected-localized ladder transfer audit. It may use ignored probes and
-  `/Users/srw/dmrgtmp` outputs to build same-geometry/same-parent `ns = 7`
-  and `ns = 9` protected-localized inherited-site Hamiltonians, compute exact
-  final-basis cross overlaps, transfer occupied orbitals by
-  `C_B = <B|A> C_A`, and evaluate or briefly continue the transferred UHF
-  state with the target-basis `H1_L` and `Vee_L`. It forbids source edits,
-  artifact schema changes, public workflow, transformed source Hamiltonians,
-  transformed `Vee`, `C' V C`, rho0/P0, EGOI expansion, and Cr2 production
-  claims.
-- `HP-RG-PROTECT-LADDER-BUNDLE-FN-01` /
-  `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` approve a reusable opt-in bundle
-  facility for the same workflow. Preferred source owner is
-  `src/cartesian_protected_ladder_bundle.jl`, included from
-  `src/GaussletBases.jl`, with narrow reuse in
-  `cartesian_ida_hamiltonian.jl` and `cartesian_representation_transfer.jl`.
-  The bundle directory may write protected-localized Hamiltonian member
-  artifacts, exact cross-overlap sidecars, optional transferred-orbital
-  restart sidecars, a versioned manifest, and summary TSVs. It does not
-  approve package exports, driver defaults, solver workflow, transformed
-  source Hamiltonians, transformed `Vee`, `C' V C`, rho0/P0, EGOI expansion,
-  protected-`Vee` convention changes, or Cr2 production claims.
+- `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` is completed historical
+  measurement. `HP-RG-PROTECT-LADDER-BUNDLE-FN-01` /
+  `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` are implemented and governed only by
+  [protected-localized ladder bundles](protected_localized_ladder.md).
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement-only rho0/Galerkin IDA
   correction audit on top of that protected-localized baseline. The audit may
   use ignored probes, `/Users/srw/dmrgtmp` outputs, in-memory experiments over

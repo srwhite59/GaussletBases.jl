@@ -27516,3 +27516,46 @@ Carrying-cost result:
   delay the packet embedding fix.
 - MT6 old flat-path classification: maintenance. No interaction transform,
   row-gauge correction, EGOI WIP, or public workflow was promoted.
+
+## Cartesian Hamiltonian Producer Pass 356 - Canonical Protected-Localized Ladder Contract
+
+Commit(s):
+- this commit - extract the protected-localized ladder bundle contract.
+
+Summary:
+- Moved bundle identity/layout, shared-parent and supplement proof, common
+  Coulomb policy, exact `S_BA` transfer, native restart order, target-member
+  fixed-density evaluation, diagnostics, readback, and limitations into
+  `protected_localized_ladder.md` as their single canonical home.
+- Reconciled lifecycle: `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` is completed
+  historical measurement; `HP-RG-PROTECT-LADDER-BUNDLE-FN-01` and
+  `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` are implemented internal contracts.
+- Reduced the registry, current status, `AGENTS.md`, implementation slices,
+  residual-domain page, and transitional injection memo to compact lifecycle,
+  ownership, links, and execution-critical guardrails.
+
+Validation / evidence:
+- Compared the contract with committed `HEAD` in
+  `cartesian_protected_ladder_bundle.jl`, the related representation-transfer
+  and protected-artifact owners, source commit `3eaa812a9`, and manager Pass
+  313. Verified transfer direction, z-to-native conversion, target `H1_L` /
+  `Vee_L` evaluation, parent proof, same-expansion gate, and bundle readback.
+- Focused lifecycle, generalized-overlap/interaction-rotation exclusion, path,
+  Documenter, docs-only scope, and `git diff --check` validation passed.
+
+Goal advancement / guardrail:
+- LT3/LT5 and MT5: continues single-home cleanup with no source, artifact,
+  numerical, or authority change. This is Pass 356, not a new checkpoint;
+  Pass 355 already recorded the required medium-term checkpoint.
+- Documentation cleanup remains parallel work. The active physics direction
+  after Pass 353 is the controlled CR2 screened-Hartree off/on measurement;
+  retained-GTO EGOI remains approved but pending.
+- Cross overlaps still require reconstructed in-memory protected
+  representations because member artifacts lack raw `G_L/A_L`. No new
+  representation sidecar or member field is approved.
+
+Carrying-cost result:
+- Active docs are `+478/-520`, net `-42` lines including the canonical page
+  and this record; duplicated transitional contract prose was removed.
+- Exact next cleanup blocker: none. The immediate physics blocker remains the
+  separately authorized packet-embedding source fix before CR2 preflight.

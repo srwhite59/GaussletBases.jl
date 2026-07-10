@@ -433,28 +433,17 @@ Approved Residual Gaussian robustness lane:
   in [retained-GTO local-product EGOI](retained_gto_egoi.md). No protected
   retained-GTO helper or focused test is implemented in committed source;
   current uncommitted `hamiltonian_corrections.jl` work is not authoritative.
-- `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only a measurement-first
-  same-parent protected-localized ladder transfer audit. It may build
-  `ns = 7 -> 9` and optional `9 -> 11` protected-localized inherited-site
-  Hamiltonians on the same parent lattice, same supplement, and same Cr2
-  geometry, compute exact final-basis cross overlaps, transfer occupied
-  orbitals as `C_B = <B|A> C_A`, evaluate the transferred density with the
-  target `H1_L`/`Vee_L`, and run a few bounded UHF sweeps only after trace and
-  orthonormality checks pass. It does not approve source edits, public
-  workflow, durable artifact schema, source-Hamiltonian or `Vee` transforms,
-  `C' V C`, rho0/P0 revival, EGOI expansion, or Cr2 production claims.
+- `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` is completed historical
+  same-parent transfer evidence.
 - `HP-RG-PROTECT-LADDER-BUNDLE-FN-01` and
-  `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` approve an opt-in source/artifact
-  facility for reusable protected-localized ladder bundles. A bundle may
-  contain one protected-localized inherited-site Hamiltonian artifact per
-  ladder member, exact final-basis cross-overlap sidecars, optional
-  transferred-orbital restart sidecars, a versioned manifest with
-  shared-parent proof and diagnostics, and bounded TSV summaries. Preferred
-  owner is `src/cartesian_protected_ladder_bundle.jl`, with reuse of
-  `cartesian_ida_hamiltonian.jl` and `cartesian_representation_transfer.jl`.
-  It does not approve package exports, driver defaults, solver workflow,
-  source-Hamiltonian or `Vee` transforms, `C' V C`, rho0/P0, EGOI expansion,
-  protected-`Vee` convention changes, or Cr2 production claims.
+  `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` implement the internal opt-in
+  [protected-localized ladder bundle](protected_localized_ladder.md). It owns
+  versioned manifests, protected member references, exact adjacent
+  final-basis cross overlaps, optional native-order restarts, target-member
+  fixed-density evaluation, and bounded summaries. Generalized overlap,
+  source-Hamiltonian/`Vee` transforms, interaction rotation, new
+  representation sidecars, solver workflow, and Cr2 production remain
+  excluded.
 - `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement audit for rho0/Galerkin
   IDA correction over the protected-localized inherited-site baseline. It may
   use ignored probes, `/Users/srw/dmrgtmp` outputs, analytic IDA/Coulomb

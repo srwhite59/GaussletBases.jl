@@ -48,13 +48,10 @@ The retained-GTO EGOI audit is complete;
 [`HP-RG-PROTECT-EGOI-*`](retained_gto_egoi.md) records the approved but
 unimplemented retained-original-GTO local-product helper and validation
 contract. It is not an artifact or solver workflow.
-`HP-RG-PROTECT-LADDER-XFER-AUDIT-01` approves only a
-same-parent protected-localized ladder transfer measurement audit, using
-final-basis cross overlaps to move occupied orbitals between comparable
-Cr2 ladder bases. `HP-RG-PROTECT-LADDER-BUNDLE-*` approves an opt-in
-directory-bundle facility for this recurring ladder workflow: protected
-Hamiltonian member artifacts, exact cross-overlap sidecars, optional restart
-sidecars, manifest/provenance, and bounded summaries.
+The same-parent ladder audit is complete. The implemented
+[protected-localized ladder bundle](protected_localized_ladder.md) owns the
+opt-in directory manifest, protected member references, exact final-basis
+cross-overlap sidecars, optional native-order restarts, and bounded summaries.
 `HP-RG-PROTECT-ADDREF-*` implements a separate internal in-memory lane that
 makes the full union of placed atomic packet occupied spaces mandatory in the
 protected basis, preserves the original per-packet blocks for additive `P0`,
@@ -172,6 +169,9 @@ ID or subsystem.
 - [Retained-GTO local-product EGOI](retained_gto_egoi.md) for the completed
   measurement and approved-pending retained-original `s1+s2`, local-product,
   `M2` correction helper
+- [Protected-localized ladder bundles](protected_localized_ladder.md) for the
+  implemented same-parent member, cross-overlap, native restart, manifest,
+  and target-evaluation contract
 - [Occupied-first injection geometry](occupied_first_injection.md)
   for mandatory occupied protection, physical capture validation, optional
   supplement selection, and the current unwired-consumer boundary
