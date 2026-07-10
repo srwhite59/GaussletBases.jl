@@ -2665,7 +2665,8 @@ report the exact blocker before touching CR2 production scripts.
 
 ### HP-PQS-COULOMB-ACCURACY-FN-01 - producer-wide Coulomb accuracy policy
 
-Status: approved narrow source/design authority.
+Status: producer policy implemented; narrow canonical-driver exposure approved
+for implementation.
 
 Canonical design: `coulomb_accuracy_policy.md`.
 
@@ -2691,6 +2692,13 @@ Exact presets:
 Only those names are user-facing. This ID does not approve user inputs for
 `doacc`, `del`, `s`, `c`, `maxu`, coefficients, exponents, or custom
 expansion objects.
+
+Canonical-driver amendment: `bin/cartesian_ham_builder.jl` may expose the same
+`coulomb_accuracy` symbol with visible default `:compact`, accept it through
+the existing trusted input-file/`key=value` allowlist, validate only
+`:compact | :high`, add it to `common_basis`, and print it in the existing
+basis contract summary. The driver passes the symbol to the producer and must
+not resolve or inspect the expansion itself.
 
 The option is route-family-neutral wherever current PQS and White-Lindsey
 construction paths share parent/base/supplemented machinery. Neither route may
@@ -2781,18 +2789,19 @@ src/cartesian_protected_ladder_bundle.jl
 src/cartesian_reference_density/atomic_hf_reference_packets.jl
 src/GaussianAnalyticIntegrals.jl
 src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
+bin/cartesian_ham_builder.jl
 ```
 
 `src/cartesian_ida_hamiltonian.jl` is approved only for compact expansion
 summary serialization/readback shared by current artifact owners. No new source
-file, struct, public export, canonical driver input, general report object, or
-route-stage field cloud is approved.
+file, struct, public export, canonical driver input other than the exact policy
+symbol above, general report object, or route-stage field cloud is approved.
 
 Forbidden:
 
 - changing the producer default to `:high`;
 - custom expansion parameters or coefficient/exponent input;
-- canonical CLI changes;
+- other canonical driver inputs or CLI changes;
 - ordinary Qiu-White, legacy, or experimental path cleanup;
 - scaled/log PGDG carriers, new stage objects, or terminal contraction changes;
 - shellification, terminal realization, retained selection, mapping,
@@ -2822,6 +2831,7 @@ test/driver_public/cartesian_base_hamiltonian_runtests.jl
 test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
 test/nested/cartesian_atomic_hf_reference_packet_runtests.jl
 test/core/runtests.jl
+test/docs/cartesian_ham_builder_policy_runtests.jl
 ```
 
 Approved validation:
@@ -2848,10 +2858,17 @@ Approved validation:
 - every endpoint-style probe used for interpretation includes terminal
   due-diligence review.
 
+The existing docs policy test may check the driver input/default/validation/
+forwarding/printing contract without executing a Hamiltonian. Bounded
+canonical-driver validation must separately show omitted-versus-explicit
+compact matrix/artifact parity and one accepted high request with finite/
+symmetric matrices and `:high`/`135`-term artifact provenance. Use temporary or
+ignored outputs; do not add a committed driver fixture or endpoint value.
+
 High supplemented and protected-ladder checks may remain ignored bounded probes
 if committed execution would materially increase routine test time. No new
-committed test file, canonical CLI test, solver run, Cr/Cr2 endpoint assertion,
-or production energy claim is approved.
+committed test file, solver run, Cr/Cr2 endpoint assertion, or production
+energy claim is approved.
 
 ### HP-R1-WIRE-01 — report-free base producer wiring
 

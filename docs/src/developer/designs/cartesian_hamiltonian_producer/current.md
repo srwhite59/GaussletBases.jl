@@ -79,7 +79,9 @@ Implemented base path:
   factor formulas in `GaussianAnalyticIntegrals.jl` and the neutral nuclear
   raw-block owner. High-exponent failure is not authority for scaled/log PGDG
   carriers or terminal-contraction redesign.
-  This does not change the default, canonical CLI, custom parameters,
+  The canonical driver may now expose the same expert symbol, default it to
+  `:compact`, validate `:compact | :high`, forward it in `common_basis`, and
+  print it. This does not approve other CLI controls, custom parameters,
   shellification, residual/injection/EGOI/screened-Hartree policy, solver
   workflow, or Cr2-specific behavior.
 - `HP-COMP-NSCORE-*` approves direct nucleus-centered core side parity:

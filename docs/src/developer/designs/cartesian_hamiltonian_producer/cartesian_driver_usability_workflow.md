@@ -47,6 +47,8 @@ private route-stage diagnostics.
 - `HP-DRV-STAGE-WIRE-01` - canonical driver wiring to the staged surface.
 - `HP-DRV-STAGE-TEST-01` - validation gates for staged driver execution.
 - `HP-DRV-TEST-01` - validation gates for the driver usability lane.
+- `HP-PQS-COULOMB-ACCURACY-FN-01` / `TEST-01` - the one approved
+  cross-lane expert accuracy input exposed by the canonical driver.
 
 ## Approved File
 
@@ -95,6 +97,7 @@ Approved user-facing configuration concepts:
   White-Lindsey low-order construction family;
 - `hamfile`;
 - `padding`;
+- `coulomb_accuracy`, with `:compact` default and `:compact | :high` values;
 - `check_file`;
 - `print_contract`;
 - `print_timing`;
@@ -103,6 +106,11 @@ Approved user-facing configuration concepts:
 Compact summary printing and artifact readback checks may remain part of the
 workflow, but they are not open-ended run-level hooks. They must not introduce
 additional route, diagnostic, artifact-schema, or solver controls.
+
+For `coulomb_accuracy`, the driver validates and forwards only the policy
+symbol in the public `basis` object. Expansion resolution, coefficients,
+exponents, and parity checks remain producer-owned under the canonical Coulomb
+policy; the driver must not duplicate them.
 
 The implementation may choose a compact concrete representation, such as a
 small `NamedTuple` or driver-local variables, but it must not grow route-stage
@@ -369,6 +377,8 @@ This lane does not approve:
 - allocation probes, benchmarking harnesses, or Cr2-specific stress controls;
 - solver/RHF/ECP/EGOI/HamV6 workflow;
 - public API/export changes;
+- custom Coulomb parameters or any additional expert driver control beyond the
+  separately approved `coulomb_accuracy` symbol;
 - artifact schema changes beyond the existing approved provenance groups;
 - committed test files or committed driver-input fixtures.
 
@@ -403,6 +413,11 @@ scripts, not in the canonical driver.
   `HP-R3U-ZDI-WIRE-01` and remains ignored/user-run after H2/Be2 validation;
 - no Cr2-specific driver run, solver run, committed test file, or committed
   input fixture is approved by this ID.
+
+The Coulomb-policy IDs separately allow the existing docs policy test plus
+bounded temporary driver runs proving compact-default parity and one accepted
+high request. Those checks do not broaden this workflow's test-file or endpoint
+authority.
 
 Temporary project input files for validation should live under ignored
 `tmp/work`.

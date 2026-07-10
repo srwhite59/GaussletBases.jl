@@ -1,6 +1,7 @@
 # Producer-Wide Coulomb Accuracy Policy
 
-Status: approved narrow source/design authority under
+Status: producer-wide policy implemented, with narrow canonical-driver
+exposure approved for implementation under
 `HP-PQS-COULOMB-ACCURACY-FN-01` and
 `HP-PQS-COULOMB-ACCURACY-TEST-01`.
 
@@ -25,18 +26,19 @@ expansion.
 
 ## Expert Input And Presets
 
-The source-backed base and supplemented producer facades may accept:
+The source-backed base and supplemented producer facades accept:
 
 ```julia
 coulomb_accuracy = :compact  # default
 coulomb_accuracy = :high
 ```
 
-The option belongs with producer basis/construction inputs. This authority does
-not add it to `bin/cartesian_ham_builder.jl` or create a canonical CLI option.
-It is route-family-neutral wherever current PQS and White-Lindsey constructions
-share the parent/base/supplemented machinery; neither route may re-resolve a
-different expansion.
+The option belongs with producer basis/construction inputs. The canonical
+human-facing driver may expose the same policy name and default; it does not
+own a second policy or expansion resolver. The option is route-family-neutral
+wherever current PQS and White-Lindsey constructions share the
+parent/base/supplemented machinery; neither route may re-resolve a different
+expansion.
 
 The only accepted values and exact presets are:
 
@@ -52,6 +54,30 @@ the Cartesian/PQS producer default remains `:compact`.
 
 Do not expose `doacc`, `del`, `s`, `c`, `maxu`, coefficient vectors,
 exponent vectors, or custom expansion objects as new user inputs.
+
+## Canonical Driver Exposure
+
+`bin/cartesian_ham_builder.jl` may add exactly one public expert input:
+
+```julia
+coulomb_accuracy = :compact  # :compact or :high
+```
+
+Required driver behavior:
+
+1. Keep the visible editable default `:compact` near the other basis inputs.
+2. Include `:coulomb_accuracy` in the existing trusted input-file and
+   `key=value` override allowlist.
+3. Normalize with `Symbol(...)` and reject values outside
+   `(:compact, :high)` before construction.
+4. Add the normalized symbol to the existing `common_basis` `NamedTuple`.
+5. Print the resolved policy in the existing basis contract summary.
+
+The driver must pass the symbol through the public basis contract and let the
+existing producer resolve the one `CoulombGaussianExpansion`. It must not call
+`coulomb_gaussian_expansion(...)`, inspect coefficients/exponents, add a second
+default, or create a new parser/configuration object. Omitted driver input must
+remain exactly equivalent to explicit `coulomb_accuracy = :compact`.
 
 ## One-Expansion Construction Contract
 
@@ -267,14 +293,15 @@ src/cartesian_protected_ladder_bundle.jl
 src/cartesian_reference_density/atomic_hf_reference_packets.jl
 src/GaussianAnalyticIntegrals.jl
 src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
+bin/cartesian_ham_builder.jl
 ```
 
 `src/cartesian_ida_hamiltonian.jl` is approved only for compact summary
 serialization/readback shared by current artifact owners. It must not make
 `CartesianIDAHamiltonian` choose or carry a construction expansion.
 
-No new source file, struct, public export, driver input, or general reporting
-framework is approved.
+No new source file, struct, public export, driver input other than the exact
+`coulomb_accuracy` symbol above, or general reporting framework is approved.
 
 ## Validation Authority
 
@@ -306,7 +333,22 @@ test/driver_public/cartesian_base_hamiltonian_runtests.jl
 test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
 test/nested/cartesian_atomic_hf_reference_packet_runtests.jl
 test/core/runtests.jl
+test/docs/cartesian_ham_builder_policy_runtests.jl
 ```
+
+The existing docs policy test may assert only the canonical-driver contract:
+visible compact default, public-input allowlisting, value validation,
+`common_basis` forwarding, contract printing, and absence of private expansion
+resolution. Do not create a new committed driver test or input fixture.
+
+Source validation must also run bounded one-center canonical-driver smokes for:
+
+- omitted policy and explicit `:compact`, with exact matrix/artifact parity;
+- explicit `:high`, with successful input acceptance, finite/symmetric output,
+  and `coulomb_expansion/` provenance reporting `:high` and `135` terms.
+
+These may use ignored temporary input/output paths. Inspect terminal due
+diligence, but do not add a high-accuracy endpoint or energy baseline.
 
 The core test addition is limited to a small focused analytic-kernel test. It
 must compare the stable formulas with a BigFloat oracle across compact and high
@@ -338,7 +380,8 @@ This authority does not approve:
 
 - changing the producer default to `:high`;
 - custom expansion parameters or coefficient/exponent inputs;
-- canonical CLI changes;
+- canonical driver inputs or CLI behavior beyond the single policy symbol
+  approved above;
 - ordinary Qiu-White, legacy, or experimental path cleanup;
 - scaled/log PGDG carriers, new stage objects, or terminal contraction changes;
 - shellification, terminal realization, retained selection, mapping, residual
@@ -355,3 +398,8 @@ or materially exceeds that size, stop for design review.
 
 The stable-formula amendment itself should remain below about 60 added source
 lines and must not introduce a new carrier, cache, status object, or module.
+
+The canonical-driver extension should target at most 20 added `bin`/test lines.
+If it needs a parser abstraction, new configuration carrier, producer change,
+artifact change, or another committed test file, stop and report the missing
+seam.

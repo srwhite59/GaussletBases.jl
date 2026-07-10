@@ -27639,3 +27639,52 @@ Carrying-cost result:
 - Documentation delta including this record is `+287/-733`, net `-446` lines.
 - Exact remaining boundary: downstream workflow and endpoint validation, not
   correction algebra or packet representation.
+
+## Cartesian Hamiltonian Producer Pass 359 - Canonical Driver Coulomb Accuracy Authority
+
+Commit(s):
+- this commit - expose the implemented Coulomb accuracy policy through the
+  canonical driver.
+
+Summary:
+- Amended the existing `HP-PQS-COULOMB-ACCURACY-FN-01` /
+  `HP-PQS-COULOMB-ACCURACY-TEST-01` authority rather than creating a new lane.
+  The library producer already accepts `coulomb_accuracy = :compact | :high`;
+  this pass approves the missing human-facing workflow plumbing in
+  `bin/cartesian_ham_builder.jl`.
+- The driver may add one visible `:compact` default, reuse its existing trusted
+  input-file and `key=value` allowlist, validate the two policy symbols, forward
+  the symbol in `common_basis`, and print it. Expansion resolution remains
+  producer-owned; the driver must not inspect or construct the 45/135-term
+  expansion.
+- Approved only the existing docs policy test for committed driver-shape
+  coverage. Numerical validation uses bounded temporary driver runs for
+  omitted/explicit compact parity and one high request with artifact
+  provenance.
+
+Validation / evidence:
+- Design review confirmed the facade path already implements compact-default
+  parity, high construction, PGDG exponent parity, finite/symmetric matrices,
+  and artifact summary checks. The canonical driver currently lacks only the
+  public variable, allowlist entry, validation, `common_basis` field, and print
+  field.
+- Focused source/test/authority scans, docs-only scope review, local Documenter,
+  and `git diff --check` are the acceptance gates. No Julia numerical test is
+  required in this authority pass.
+
+Goal advancement / guardrail:
+- LT2/LT5/LT8 and MT4: makes the already-implemented high-accuracy Hamiltonian
+  policy reachable from the canonical artifact-producing workflow needed by
+  CR2, without adding a Cr2 branch or changing numerical construction.
+- Default remains `:compact`. No custom expansion controls, parser framework,
+  artifact change, solver work, EGOI, screened-Hartree change, or additional
+  driver input is approved.
+
+Carrying-cost result:
+- source/test line delta: `0` in this docs-only pass; existing IDs and files are
+  reused.
+- target implementation growth: at most 20 added `bin`/test lines, with no new
+  source object, test file, or fixture.
+- exact next step: implement and validate the driver plumbing as Pass 360,
+  including the required medium-term checkpoint. Rho0 documentation
+  compression moves to Pass 361.

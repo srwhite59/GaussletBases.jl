@@ -752,9 +752,12 @@ protected/ladder readback must not infer missing legacy provenance as
 `:high`. Atomic packet RHF remains high accuracy while its current
 density/self-energy and fitted-potential scaffold evaluations remain
 role-qualified compact approximations. This authority does not approve custom
-expansion inputs, a high default, canonical CLI changes, ordinary QW/legacy
-cleanup, solver workflow, EGOI or screened-Hartree formula changes, or
-Cr2-specific behavior.
+expansion inputs or a high default. It narrowly allows
+`bin/cartesian_ham_builder.jl` to expose the same `coulomb_accuracy` symbol,
+default `:compact`, validate `:compact | :high`, forward it in `common_basis`,
+and print it; the driver must not resolve the expansion. No other canonical
+driver/CLI changes, ordinary QW/legacy cleanup, solver workflow, EGOI or
+screened-Hartree formula changes, or Cr2-specific behavior are approved.
 The same IDs narrowly add `src/GaussianAnalyticIntegrals.jl` and
 `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl` for algebraically
 stable determinant and pairwise weighted-distance forms in
