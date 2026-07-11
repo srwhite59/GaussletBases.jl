@@ -28069,3 +28069,40 @@ Carrying-cost result:
   `-308` lines.
 - Exact next step: replace the long `current.md` ledger with a compact status
   table sourced from reconciled registry lifecycles and canonical contracts.
+
+## Cartesian Hamiltonian Producer Pass 368 - Compact Current Producer Status
+
+Commit(s):
+- this commit - replace the long current-authority ledger with a compact live
+  status page.
+
+Summary:
+- Reduced `current.md` from `996` to `135` lines. It now contains only
+  implemented facility families, genuinely active/pending lanes, the current
+  consumer physics target, blockers/follow-ups, non-negotiable boundaries, and
+  canonical reading.
+- Preserved the authority rule: `AGENTS.md` whitelist, assigned registry
+  entry, canonical contract, and explicit current boundary must agree; silence
+  in the selective status page is neutral, while conflict fails closed.
+
+Validation / evidence:
+- Every table row was checked against committed source/history and its
+  canonical page. Pending state remains explicit for standard K60/driver
+  wiring and retained-GTO EGOI; completed source-backed shell, packet,
+  protected, transfer, and correction facilities are not described as future.
+- Link/path checks, focused lifecycle scans, local Documenter, and
+  `git diff --check` are the acceptance gates. No source/test behavior
+  changed.
+
+Goal advancement / guardrail:
+- MT5 and documentation startup: restores `current.md` to its intended role
+  instead of making it a second registry and contract store. Normal startup
+  no longer requires reading pass chronology or every producer lane.
+- The page is deliberately non-exhaustive. It must not become another active
+  ID whitelist; the registry and subsystem contracts remain authoritative.
+
+Carrying-cost result:
+- Documentation before this log entry is `+135/-996`, net `-861` lines.
+- Exact next step: audit one bounded registry family for metadata-only
+  compression. Do not introduce `authority.toml` until canonical-document and
+  lifecycle parity are complete.
