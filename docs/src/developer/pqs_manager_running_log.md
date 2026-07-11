@@ -28031,3 +28031,41 @@ Carrying-cost result:
   net `-609` lines.
 - Exact next reorganization step: compress `current.md` into live facilities,
   active/pending lanes, blockers, and canonical reading only.
+
+## Cartesian Hamiltonian Producer Pass 367 - Reconcile Implemented Basis Policies
+
+Commit(s):
+- this commit - reconcile stale approved/future labels with accepted source
+  implementations and canonicalize aspect-aware complete-shell policy.
+
+Summary:
+- Reclassified mapping `s_factor`, current RG cutoff, common face-product and
+  thin-slab lowering/metadata, angular-z shellification, and PQS aspect-aware
+  complete-shell source modes from approved/future wording to implemented
+  lifecycle where explicit source commits and manager acceptance records exist.
+- Replaced the aspect-shell implementation plan with the live `(q,q,L)`
+  contract: angular-band selection occurs after shellification and before
+  lowering/retained/support facts are frozen, and one shape reaches multilayer
+  realization and due diligence.
+
+Validation / evidence:
+- Reconciliation used source commits `38919af96`, `1f7f04e56`,
+  `85382464d`, `ac77f9a57`/`ce060352e`, and `9bcc1e66f`, plus their
+  accepted running-log records. Source/caller scans confirmed noncubic
+  `raw_source_dims`, explicit `q/L`, compact slab selection, and current
+  mapping/cutoff implementation.
+- Focused stale-lifecycle scans, link/path checks, local Documenter, and
+  `git diff --check` are the acceptance gates. No numerical test is repeated
+  because this is docs-only reconciliation of already accepted source.
+
+Goal advancement / guardrail:
+- MT5: prevents the compact current-status page from inheriting false pending
+  states. No permission, source surface, numerical policy, or default changes.
+- The physical-aspect due-diligence estimate remains advisory; the implemented
+  angular-band selector remains construction authority.
+
+Carrying-cost result:
+- Documentation before this log entry is approximately `+203/-511`, net
+  `-308` lines.
+- Exact next step: replace the long `current.md` ledger with a compact status
+  table sourced from reconciled registry lifecycles and canonical contracts.

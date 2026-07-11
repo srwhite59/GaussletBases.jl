@@ -754,7 +754,7 @@ slabs. Do not implement `HP-COMP-OUTERMM-*` as a separate source lane.
 
 ### HP-COMP-THINSLAB-FN-01 — common thin-slab stack compact lowering
 
-Status: approved.
+Status: implemented.
 
 Approved source files:
 
@@ -852,7 +852,7 @@ silent fallback under this ID.
 
 ### HP-COMP-THINSLAB-TEST-01 — common thin-slab stack validation
 
-Status: approved.
+Status: implemented validation evidence.
 
 Approved validation:
 
@@ -907,7 +907,7 @@ blocker.
 
 ### HP-COMP-THINSLAB-META-FN-01 — thin-slab metadata inventory cleanup
 
-Status: approved.
+Status: implemented.
 
 Approved source file:
 
@@ -974,7 +974,7 @@ consistent with compact thin-slab lowering.
 
 ### HP-COMP-THINSLAB-META-TEST-01 — thin-slab metadata inventory validation
 
-Status: approved.
+Status: implemented validation evidence.
 
 Approved validation:
 
@@ -994,7 +994,7 @@ test, or Cr2 fixture is approved.
 
 ### HP-COMP-FACEPROD-FN-01 — neutral terminal face-product helper
 
-Status: approved.
+Status: implemented.
 
 Approved source files:
 
@@ -1062,7 +1062,7 @@ ownership.
 
 ### HP-COMP-FACEPROD-TEST-01 — neutral terminal face-product validation
 
-Status: approved.
+Status: implemented validation evidence.
 
 Approved validation:
 
@@ -1082,7 +1082,7 @@ test, or Cr2 fixture is approved.
 
 ### HP-COMP-ANGBOX-FN-01 — angular-balanced z-axis diatomic shellification
 
-Status: approved.
+Status: implemented.
 
 Approved source file:
 
@@ -1173,7 +1173,7 @@ missing native fact or policy.
 
 ### HP-COMP-ANGBOX-TEST-01 — angular-balanced shellification validation
 
-Status: approved.
+Status: completed validation evidence.
 
 Approved validation:
 
@@ -2554,7 +2554,7 @@ physical box padding remain separate concepts.
 
 ### HP-PQS-MAP-SFACTOR-FN-01 — expert mapping `s_factor` keyword
 
-Status: approved narrow source authority.
+Status: implemented expert input/provenance facility.
 
 Purpose: expose a low-cognitive-overhead expert knob for PQS/WL parent mapping
 shape. Cr and Cr2 evidence shows that scanning only `core_spacing` along the
@@ -2608,7 +2608,7 @@ Guardrails:
 
 ### HP-PQS-MAP-SFACTOR-TEST-01 — mapping `s_factor` validation
 
-Status: approved validation gates.
+Status: implemented validation evidence.
 
 Approved validation:
 
@@ -4399,7 +4399,7 @@ support is approved.
 
 ### HP-RG-CUTOFF-FN-02 — production residual cutoff tightening
 
-Status: approved.
+Status: implemented current production default.
 
 Approved source files:
 
@@ -4469,7 +4469,7 @@ authority if needed.
 
 ### HP-RG-CUTOFF-TEST-02 — production residual cutoff validation
 
-Status: approved.
+Status: implemented validation evidence.
 
 Approved validation:
 
@@ -6523,147 +6523,36 @@ Approved validation:
 
 No committed fixtures or tests are approved by default.
 
-### HP-PQS-ASPECTSHELL-FN-01 — PQS complete-shell aspect-aware source modes
+### HP-PQS-ASPECTSHELL-FN-01 / HP-PQS-ASPECTSHELL-TEST-01 — PQS complete-shell aspect-aware source modes
 
-Status: approved for future implementation. No source is implemented by the
-approving docs pass.
+Status: implemented internal construction policy and completed bounded
+validation.
 
-Design note:
+Owner: PQS terminal low-order route enrichment and multilayer shell
+realization.
 
-```text
-docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_complete_shell_aspect_source_modes.md
-```
+Canonical contract:
+[PQS complete-shell aspect-aware source modes](pqs_complete_shell_aspect_source_modes.md).
 
-Problem: `HP-DRV-SHELLDD-*` can report that a physically rectangular complete
-shell is represented by cubic `(q,q,q)` source modes, but fixing that mismatch
-changes basis construction. Current `_pqs_complete_shell_contract(...)` in
-`src/cartesian_terminal_lowering/region_contracts.jl` hard-codes
-`source_mode_shape = ntuple(_ -> policy.q, 3)`. The multilayer shell source
-plan still rejects non-cubic `raw_source_dims` and passes `L = q`.
+Implemented source surfaces:
 
-Old code to recover explicitly:
+- `src/pqs_source_box_route_driver_helpers.jl`;
+- `src/pqs_multilayer_shell_region_plan.jl`;
+- `src/pqs_multilayer_shell_source_plan.jl`;
+- `src/cartesian_base_hamiltonian.jl` for due-diligence shape reporting.
 
-- `src/cartesian_nested_diatomic.jl` contains
-  `_nested_diatomic_reference_band(...)`,
-  `_nested_diatomic_shared_shell_reference_band(...)`,
-  `_nested_diatomic_choose_shell_axis_retain_count(...)`,
-  `_nested_diatomic_adaptive_shell_retention(...)`,
-  `_nested_diatomic_source_box_dimension_plan(...)`,
-  `_nested_diatomic_projected_q_shell_adaptive_source_dimensions(...)`, and
-  `_nested_projected_q_shell_source_mode_plan(...)`;
-- `src/cartesian_nested_faces.jl`'s `_nested_projected_q_shell_layer(...)`
-  already accepts `raw_source_dims`, `selected_q`, and separate `q`/`L`;
-- central distorted product metadata in
-  `src/cartesian_shellification/terminal_geometry.jl` already computes
-  `L = max(shell_side, round(Int, shell_side * aspect_ratio))` as a simpler
-  aspect-aware diagnostic cross-check.
+Permission summary: for bond-aligned z-axis diatomic PQS shared complete
+shells, select angular-band source dimensions after shellification and before
+lowering/retained/support records are frozen; carry one authoritative
+`(q,q,L)` shape through multilayer realization and due diligence.
 
-Approved source files:
+Validation/evidence: bounded H2/H2+ replay, noncubic retained-count checks,
+finite/symmetric artifact/readback, and removal of the stale cubic-source
+warning. Evidence is recorded in manager running-log Pass 247.
 
-```text
-src/pqs_source_box_route_driver_helpers.jl
-src/cartesian_terminal_lowering/region_contracts.jl
-src/pqs_multilayer_shell_source_plan.jl
-src/pqs_multilayer_shell_region_plan.jl
-```
-
-Optional only if directly needed to reuse or narrowly expose the old
-angular-resolution helpers:
-
-```text
-src/cartesian_nested_diatomic.jl
-src/cartesian_nested_faces.jl
-```
-
-Optional only if directly needed for support-record consistency:
-
-```text
-src/pqs_source_box_diatomic_complete_core_shell.jl
-```
-
-Amended seam: compute aspect-aware complete-shell source shapes inside the
-terminal low-order route-driver path after shellification has produced
-complete-shell regions and parent/bundle facts, but before
-`lowering_contract_inventory`, `retained_unit_plan`,
-`retained_unit_transform_contract_plan`, and `terminal_retained_rule_plan` are
-frozen. The intended area is around
-`_pqs_source_box_route_driver_unit_stage_low_order_summary(...)`,
-`_pqs_source_box_route_driver_terminal_lowering_plan(...)`, and
-`_pqs_source_box_route_driver_enriched_retained_unit_plan(...)`.
-`_pqs_complete_shell_contract(...)` remains a metadata contract builder unless
-a narrow synchronization change is still required; it is too early to choose
-`L` honestly by itself. `pqs_multilayer_shell_source_plan.jl` remains
-responsible for accepting/passing non-cubic `raw_source_dims` and calling
-`_nested_projected_q_shell_layer(...)` with the correct `L`, but it is too late
-to be the only fix.
-
-Approved behavior:
-
-- change z-axis diatomic PQS complete-shell source-mode shape from cubic
-  `(q,q,q)` to explicit aspect-aware `(q,q,L)`;
-- keep `q` as the selected transverse PQS source size;
-- derive `L` from the restored angular-resolution rule, or from a documented
-  validated equivalent;
-- recover the old angular-band `L` choice from the old helper logic, not from
-  index aspect guessing;
-- rewrite or enrich PQS complete-shell lowering contracts so
-  `source_mode_shape` is `(q,q,L)`;
-- ensure retained-unit metadata, support records, transform-contract
-  raw-product retained rules, due-diligence actual source shape, and final
-  realization validation all see the same `source_mode_shape`;
-- pass non-cubic `raw_source_dims`, explicit `q`, explicit `L`, and
-  `selected_q` through the multilayer source plan into
-  `_nested_projected_q_shell_layer(...)`;
-- preserve shell support ownership and shell-local projection/Lowdin cleanup;
-- preserve due-diligence reporting of actual and expected source-mode shapes.
-
-Forbidden:
-
-- artifact schema/provenance/reader changes;
-- public input or driver semantic changes;
-- WL source-mode or retained-basis policy changes;
-- thin-slab, angular z-extension, direct/core identity, residual/MWG/IDA, or
-  global injection changes;
-- old route-global materialization revival;
-- broad source-mode framework or report/payload expansion;
-- Cr2 production claims.
-
-Expected consequences:
-
-- retained counts and final dimensions may change;
-- Hamiltonian matrices and energies may change;
-- old scalar targets tied to cubic complete-shell source modes must be
-  remeasured rather than preserved.
-
-Failure rule: if non-cubic complete-shell source modes require changing
-support ownership, terminal realization semantics, artifact schema, public
-driver inputs, or a broad route/report framework, make no source commit and
-report the blocker. If restoring the angular selection requires a broader
-extraction from the old diatomic high-order path, stop and request a narrower
-helper-authority amendment.
-
-Line budget: target at most `160` added `src` lines.
-
-### HP-PQS-ASPECTSHELL-TEST-01 — PQS complete-shell aspect-source validation
-
-Status: approved.
-
-Approved validation:
-
-- `git diff --check`;
-- package load;
-- focused complete-shell source-shape probe showing a rectangular physical
-  shell uses `(q,q,L)` rather than `(q,q,q)`;
-- retained count matches `prod(source_mode_shape) -
-  prod(source_mode_shape .- 2)` for the selected shell;
-- due-diligence report shows actual shape, expected aspect shape, retained
-  count, and no stale cubic-shape warning for the repaired shell;
-- bounded H2 or H2+ artifact/readback smoke;
-- finite/symmetric base Hamiltonian matrices if an artifact is written;
-- no Cr2 run required.
-
-No committed fixtures or tests are approved by default.
-
+Non-goals: new source work under a completed lane, public inputs, WL policy,
+shell ownership, thin-slab/direct-core changes, artifacts, RG/MWG/IDA,
+injection, solver workflow, or Cr2 production claims.
 ### HP-DRV-TEST-01 — driver workflow validation
 
 Approved validation:

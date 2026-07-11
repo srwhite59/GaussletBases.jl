@@ -1007,9 +1007,8 @@ Status: approved for implementation under `HP-DRV-FILE-01`,
 `HP-DRV-INV-FN-01`, `HP-DRV-INV-TEST-01`, and `HP-DRV-TEST-01`.
 `HP-DRV-SHELLDD-FN-01` and `HP-DRV-SHELLDD-TEST-01` additionally approve the
 terminal due-diligence report.
-`HP-PQS-ASPECTSHELL-FN-01` and `HP-PQS-ASPECTSHELL-TEST-01` separately approve
-the future source-policy lane for aspect-aware PQS complete-shell source
-modes.
+`HP-PQS-ASPECTSHELL-FN-01` and `HP-PQS-ASPECTSHELL-TEST-01` separately
+record the implemented aspect-aware PQS complete-shell source policy.
 
 Approved boundary:
 
@@ -1165,89 +1164,15 @@ Line budget:
   support are required.
 
 ### PQS complete-shell aspect source modes
+### PQS complete-shell aspect source modes
 
-`HP-PQS-ASPECTSHELL-FN-01` approves the future source-policy pass that restores
-explicit angular-resolution source dimensions for PQS complete shells.
-
-Approved files:
-
-```text
-src/pqs_source_box_route_driver_helpers.jl
-src/cartesian_terminal_lowering/region_contracts.jl
-src/pqs_multilayer_shell_source_plan.jl
-src/pqs_multilayer_shell_region_plan.jl
-```
-
-Optional only if directly needed:
-
-```text
-src/cartesian_nested_diatomic.jl
-src/cartesian_nested_faces.jl
-```
-
-Optional only if support-record consistency directly requires it:
-
-```text
-src/pqs_source_box_diatomic_complete_core_shell.jl
-```
-
-Intended seam:
-
-- compute aspect-aware complete-shell source shapes after shellification and
-  before lowering-contract inventories, retained-unit plans, transform
-  contracts, and terminal retained-rule plans are frozen;
-- the route-driver seam is around
-  `_pqs_source_box_route_driver_unit_stage_low_order_summary(...)`,
-  `_pqs_source_box_route_driver_terminal_lowering_plan(...)`, and
-  `_pqs_source_box_route_driver_enriched_retained_unit_plan(...)`;
-- keep `_pqs_complete_shell_contract(...)` as a metadata contract builder
-  unless a narrow synchronization change remains needed;
-- keep `pqs_multilayer_shell_source_plan.jl` responsible for accepting and
-  passing non-cubic `raw_source_dims` into
-  `_nested_projected_q_shell_layer(...)`, but do not make it the sole owner of
-  the `L` decision.
-
-Approved behavior:
-
-- replace hard-coded cubic `source_mode_shape = (q,q,q)` for z-axis diatomic
-  PQS complete shells with explicit aspect-aware `(q,q,L)`;
-- keep `q` as the selected transverse source size;
-- derive `L` from the old angular-resolution rule, or a documented validated
-  equivalent;
-- recover the old angular-band `L` choice from the old helper logic, not index
-  aspect guessing;
-- rewrite or enrich PQS complete-shell lowering contracts so retained-unit
-  metadata, support records, transform-contract raw-product retained rules,
-  due-diligence actual source shape, and final realization validation all agree
-  on `source_mode_shape`;
-- pass non-cubic `raw_source_dims`, explicit `q`, explicit `L`, and
-  `selected_q` into `_nested_projected_q_shell_layer(...)`;
-- preserve support ownership and shell-local projection/Lowdin cleanup.
-
-Forbidden:
-
-- driver/public input changes;
-- artifact schema/provenance/reader changes;
-- WL policy changes;
-- thin-slab, angular z-extension, direct/core identity, Residual Gaussian,
-  MWG/IDA, global injection, raw-block, solver, or Cr2 workflow changes;
-- old route-global materialization revival;
-- broad source-mode framework or report/payload expansion.
-
-Validation:
-
-- package load;
-- focused source-shape probe showing `(q,q,L)`;
-- retained count matches the boundary count implied by source-mode shape;
-- due-diligence report no longer emits a stale cubic-shape warning for the
-  repaired shell;
-- bounded H2 or H2+ artifact/readback smoke.
-
-Line budget:
-
-- target at most `160` added `src` lines.
-
-## Nesting/Supplement Composition Target
+`HP-PQS-ASPECTSHELL-FN-01` / `TEST-01` are implemented. The terminal
+low-order route enriches shared z-axis diatomic PQS complete-shell contracts
+with the angular-band `(q,q,L)` source shape before retained/support records
+are frozen. Multilayer realization and due diligence consume that same shape.
+The canonical contract is
+`pqs_complete_shell_aspect_source_modes.md`; old cubic dimensions and scalar
+targets are historical evidence.
 
 Status: planning section for the explicit initial composition matrix. The
 WL base diatomic, base homonuclear diatomic, supplemented WL diatomic, and

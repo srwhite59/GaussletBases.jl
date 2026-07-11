@@ -35,9 +35,9 @@ a standard terminal due-diligence report so consumers can review derived
 system/geometry facts, parent axes and 1D centers, gausslet/IDA weight stats,
 dimension accounting, shell-by-shell physical aspect ratios, source-mode
 shapes, retained counts, and warning flags before interpreting energies or
-residual/injection behavior. `HP-PQS-ASPECTSHELL-*` separately approves the
-future source-policy lane that may change PQS complete shells from cubic
-`(q,q,q)` source modes to explicit aspect-aware `(q,q,L)` source modes.
+residual/injection behavior. `HP-PQS-ASPECTSHELL-*` implements the separate
+construction policy that selects explicit aspect-aware `(q,q,L)` source
+modes for PQS shared complete shells.
 The implemented [protected-localized basis convention](protected_localized_basis.md)
 owns compact-main replacement, localized `L`, exact `H1_L`, and inherited-site
 `Vee_L`. The implemented

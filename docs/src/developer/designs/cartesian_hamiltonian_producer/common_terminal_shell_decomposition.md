@@ -1,13 +1,9 @@
 # Common Terminal Shell Decomposition
 
-Status: approved narrow audit/source authority under
-`HP-COMP-SHELLGEOM-FN-01` and `HP-COMP-SHELLGEOM-TEST-01`, with the
-z-axis diatomic same-function/same-argument correction approved under
-`HP-COMP-SHELLGEOM-DIAT-FN-01` and `HP-COMP-SHELLGEOM-DIAT-TEST-01`, and
-neutral compact face-product helper authority approved under
-`HP-COMP-FACEPROD-FN-01` and `HP-COMP-FACEPROD-TEST-01`, and
-narrow common thin-slab stack lowering repair approved under
-`HP-COMP-THINSLAB-FN-01` and `HP-COMP-THINSLAB-TEST-01`.
+Status: implemented common shellification, angular-z-extension, neutral
+face-product, and compact thin-slab subsystem. The registry records the
+`HP-COMP-SHELLGEOM-*`, `HP-COMP-ANGBOX-*`, `HP-COMP-FACEPROD-*`,
+`HP-COMP-THINSLAB-*`, and `HP-COMP-THINSLAB-META-*` source/test surfaces.
 
 ## Problem
 

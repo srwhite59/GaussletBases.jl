@@ -1,93 +1,78 @@
 # PQS Complete-Shell Aspect-Aware Source Modes
 
-Status: design and future source-policy authority under
-`HP-PQS-ASPECTSHELL-FN-01` and `HP-PQS-ASPECTSHELL-TEST-01`. This document
-approves no source implementation in this pass.
+Status: implemented internal construction policy under
+`HP-PQS-ASPECTSHELL-FN-01` and
+`HP-PQS-ASPECTSHELL-TEST-01`.
+
+This page is the canonical contract for aspect-aware source dimensions of
+shared complete shells in bond-aligned diatomic PQS construction. The registry
+owns source/test permission and lifecycle; this page owns the source-shape
+algorithm, stage boundary, validation, and exclusions.
 
 ## Purpose
 
-The terminal due-diligence report may warn when a rectangular physical
-complete shell is represented by cubic `(q, q, q)` source modes. Reporting the
-mismatch is not a basis-policy change. Fixing it is: it changes retained
-counts, final dimensions, transforms, Hamiltonian matrices, and downstream
-energies.
+A rectangular physical shell must not silently receive a cubic
+`(q,q,q)` source span merely because `q` is the transverse PQS size. That
+under-resolves bond-axis angular content and changes retained counts,
+transforms, Hamiltonian matrices, and downstream energies.
 
-This design records the separate source-policy lane for restoring explicit
-aspect-aware PQS complete-shell source dimensions.
-
-## Problem
-
-Current PQS terminal lowering hard-codes complete-shell source modes as cubic:
-
-```julia
-source_mode_shape = ntuple(_ -> policy.q, 3)
-```
-
-in `src/cartesian_terminal_lowering/region_contracts.jl`'s
-`_pqs_complete_shell_contract(...)`.
-
-For a z-axis diatomic, a shared complete shell can be physically rectangular.
-The H2+ due-diligence audit showed a shell with physical side lengths roughly:
+Terminal due diligence first exposed this failure. The implemented policy now
+uses:
 
 ```text
-x/y/z = 3.464 x 3.464 x 6.646
+source_mode_shape = (q, q, L)
 ```
 
-but current PQS lowering used:
+for a z-axis diatomic shared complete shell, with `L` selected by the
+existing angular-resolution machinery rather than by raw index aspect.
+
+## Construction Boundary
+
+The bond-axis source length cannot be selected honestly in the early terminal
+region contract builder, which sees region metadata but not all parent/bundle
+and retention facts. It also cannot be repaired only in the multilayer source
+plan after retained-rule and support records have already frozen a shape.
+
+The implemented owner is the terminal low-order route path after:
 
 ```text
-actual source_mode_shape = (5, 5, 5)
+shellification
++ parent/bundle construction
 ```
 
-The diagnostic aspect-balanced estimate was:
+and before:
 
 ```text
-expected source_mode_shape = (5, 5, 10)
-retained count: 98 -> 178
+lowering contract inventory
+retained-unit plans
+retained-unit transform contracts
+support records
+terminal retained-rule plans
+due-diligence rows
+final realization
 ```
 
-That warning is only a diagnostic today. The source-policy fix is to make the
-PQS complete-shell source mode shape explicitly aspect-aware.
+`_pqs_source_box_route_driver_aspect_shell_lowering_plan(...)` enriches only
+PQS `:complete_shell` contracts for shared molecular shells of bond-aligned
+z-axis diatomics. Other region kinds, White-Lindsey lowering, one-center
+construction, and nonshared shells retain their existing policies.
 
-## Old Code To Recover
+## Angular-Resolution Selection
 
-The repo still contains the older angular-resolution machinery that separated
-transverse `q` from the bond-axis source length `L`.
+For each eligible complete shell, the route owner calls the established
+diatomic source-box dimension planner with:
 
-Important existing primitives:
+- the parent axis bundle and atomic locations;
+- the shell outer and inner-exclusion boxes;
+- selected transverse `q`;
+- bond axis;
+- current complete-shell retention policy and support count;
+- the established shared-shell angular-resolution scale.
 
-- `src/cartesian_nested_diatomic.jl`
-  - `_nested_diatomic_reference_band(...)`
-  - `_nested_diatomic_shared_shell_reference_band(...)`
-  - `_nested_diatomic_choose_shell_axis_retain_count(...)`
-  - `_nested_diatomic_adaptive_shell_retention(...)`
-  - `_nested_diatomic_source_box_dimension_plan(...)`
-  - `_nested_diatomic_projected_q_shell_adaptive_source_dimensions(...)`
-  - `_nested_projected_q_shell_source_mode_plan(...)`
-
-- `src/cartesian_nested_faces.jl`
-  - `_nested_projected_q_shell_layer(...)`
-
-The important old concepts are:
+The old angular-band machinery selects axis retained counts and returns:
 
 ```text
-selected_q:        requested transverse PQS source size
-raw_source_dims:   actual source-mode dimensions, e.g. (q, q, L)
-raw_q:             transverse raw source dimension
-raw_L:             bond-axis raw source dimension
-```
-
-The older adaptive path did not choose `L` by arbitrary shell depth. It chose
-axis retained counts by comparing angular coverage statistics to a reference
-angular-resolution band:
-
-```text
-reference band -> per-axis retained count -> source_mode_dims
-```
-
-Then it fed:
-
-```text
+source_mode_dims
 raw_source_dims
 selected_q
 raw_q
@@ -95,194 +80,116 @@ raw_L
 axis_selector_retained_counts
 ```
 
-into `_nested_projected_q_shell_layer(...)`. That layer already accepts
-non-cubic `raw_source_dims` and records `raw_q_matches_selected_q`,
-`source_mode_dims`, and `raw_L`.
-
-There is also a simpler aspect-aware rule already used for central distorted
-product boxes in `src/cartesian_shellification/terminal_geometry.jl`:
-
-```julia
-aspect_ratio = physical_sizes[axis] / transverse_size
-L = max(shell_side, round(Int, shell_side * aspect_ratio))
-source_mode_shape = ntuple(a -> a == axis ? L : shell_side, 3)
-```
-
-That central-box rule is useful as a diagnostic cross-check, but the preferred
-complete-shell repair should restore or re-express the older angular-band
-selection explicitly.
-
-## Current Blockers
-
-The source-policy blocker is narrow but real:
-
-- `_pqs_complete_shell_contract(...)` currently records `(q, q, q)`;
-- `src/pqs_multilayer_shell_source_plan.jl` currently rejects non-cubic
-  `raw_source_dims` and passes `L = q`;
-- `src/pqs_multilayer_shell_region_plan.jl` can carry `source_mode_shape`
-  from terminal lowering into shell layers, but must be validated for
-  non-cubic source shapes;
-- raw-product source-mode indexing and retained rules already support general
-  three-axis source dimensions, but need focused validation in this path;
-- terminal realization validates source-mode shape consistency and should
-  continue doing so.
-
-## Approved Source Policy
-
-For z-axis diatomic PQS complete shells, source-mode shape should match the
-physical angular-resolution requirement of the shell.
-
-The intended shape is:
+For bond axis `z`, `raw_q` is the common transverse source size and
+`raw_L` is the selected longitudinal size. The enriched lowering contract
+records one authoritative shape and policy:
 
 ```text
-source_mode_shape = (q, q, L)
+source_mode_shape = source_mode_dims
+source_mode_policy = :diatomic_shared_shell_adaptive_angular_source_box
 ```
 
-for bond axis `z`, with the analogous axis permutation for `x` or `y` if a
-future approved geometry uses another bond axis.
+A simple physical aspect estimate may remain a due-diligence comparison. It is
+not the construction rule and must not overwrite the angular-band result.
 
-Policy:
+## Downstream Shape Consistency
 
-- `q` remains the selected transverse PQS source size.
-- `L` is a bond-axis source length chosen by an explicit angular-resolution
-  rule, not by a hidden cubic default.
-- The first implementation should restore or re-express the older
-  angular-band retained-count logic:
-  - build a reference angular-resolution band;
-  - evaluate candidate retained counts along each axis;
-  - choose the count whose angular coverage matches the reference band;
-  - convert retained counts to source-mode dimensions with the established
-    source-mode padding convention;
-  - pass `raw_source_dims`, `selected_q`, `raw_q`, and `raw_L` explicitly into
-    the projected-q shell layer.
-- A simple physical-aspect estimate such as
-  `L = max(q, round(Int, q * aspect_ratio))` may be used only as a diagnostic
-  or fallback candidate if the source pass explicitly validates that it matches
-  the angular-band rule for the approved fixtures.
+Every downstream representation of the shell must consume the same
+`source_mode_shape`:
 
-## Registered IDs
+- lowering contract metadata;
+- retained-unit and support metadata;
+- raw-product retained rules;
+- multilayer region and source plans;
+- due-diligence actual-shape rows;
+- final realization validation.
 
-### HP-PQS-ASPECTSHELL-FN-01
+The multilayer source plan accepts noncubic `raw_source_dims`, requires both
+transverse dimensions to agree, derives `q` and bond-axis `L`, and calls
+`_nested_projected_q_shell_layer(...)` with explicit
+`raw_source_dims/selected_q/q/L`. It must not replace `L` with `q` or
+reconstruct a shape from the inner box after an authoritative contract shape
+exists.
 
-Approved future source surface:
+The retained complete-shell count follows the established raw-product boundary
+rule, including:
 
 ```text
-src/pqs_source_box_route_driver_helpers.jl
-src/cartesian_terminal_lowering/region_contracts.jl
-src/pqs_multilayer_shell_source_plan.jl
-src/pqs_multilayer_shell_region_plan.jl
+prod(source_mode_shape) - prod(source_mode_shape .- 2)
 ```
 
-Optional only if directly needed to reuse the old angular-resolution helpers:
+where that rule applies.
+
+## Implemented Source Ownership
+
+The implementation is in:
+
+- `src/pqs_source_box_route_driver_helpers.jl` for angular-dimension
+  selection and lowering-contract enrichment;
+- `src/pqs_multilayer_shell_region_plan.jl` for carrying the contract shape;
+- `src/pqs_multilayer_shell_source_plan.jl` for noncubic source realization;
+- `src/cartesian_base_hamiltonian.jl` for corrected due-diligence expected
+  shape reporting.
+
+The older angular selector remains in its established diatomic owner. No
+second selector or user-facing aspect parameter is introduced.
+
+## Validation And Evidence
+
+The accepted bounded H2/H2+ replay replaced hidden cubic `(5,5,5)` shapes
+with angular-band selections:
 
 ```text
-src/cartesian_nested_diatomic.jl
-src/cartesian_nested_faces.jl
+(5,5,8), (5,5,7), (5,5,6), (5,5,6)
 ```
 
-Optional only if directly needed for support-record consistency:
+with retained counts `146`, `130`, `114`, and `114`. The base final
+dimension changed from the old cubic value `767` to `879`, as expected for
+a basis-policy correction.
 
-```text
-src/pqs_source_box_diatomic_complete_core_shell.jl
-```
+Acceptance checks include:
 
-Amended seam:
+- exact shape agreement across lowering, retained, support, source-plan,
+  due-diligence, and final realization records;
+- noncubic multilayer source-plan acceptance;
+- retained-count agreement with the active boundary rule;
+- finite/symmetric base Hamiltonian matrices;
+- artifact/readback matrix parity;
+- disappearance of the stale
+  `rectangular_physical_shell_cubic_source_modes` warning;
+- continued reporting of physical-aspect differences where the advisory
+  estimate and angular-band policy differ.
 
-- compute aspect-aware complete-shell source shapes in the terminal low-order
-  route path after shellification has produced complete-shell regions and
-  parent/bundle facts are available;
-- do this before lowering-contract inventory, retained-unit plans,
-  retained-unit transform contracts, and terminal retained-rule plans are
-  frozen;
-- the relevant route-driver area includes
-  `_pqs_source_box_route_driver_unit_stage_low_order_summary(...)`,
-  `_pqs_source_box_route_driver_terminal_lowering_plan(...)`, and
-  `_pqs_source_box_route_driver_enriched_retained_unit_plan(...)`;
-- `_pqs_complete_shell_contract(...)` remains a metadata contract builder
-  unless a narrow synchronization change is still required. It is too early to
-  honestly choose `L` by itself;
-- `pqs_multilayer_shell_source_plan.jl` remains responsible for accepting and
-  passing non-cubic `raw_source_dims` and calling
-  `_nested_projected_q_shell_layer(...)` with the correct `L`, but it is too
-  late to be the only fix.
+Old scalar dimensions or energies tied to cubic complete shells must be
+remeasured, not preserved through compatibility logic.
 
-Approved behavior:
+## Failure Behavior
 
-- change PQS complete-shell source-mode shape from cubic `(q, q, q)` to an
-  explicit aspect-aware `(q, q, L)` shape for z-axis diatomic complete shells;
-- derive `L` from the restored angular-resolution rule, or from a documented
-  validated equivalent;
-- recover the old angular-band `L` choice from the old helper logic, not from
-  index aspect guessing;
-- rewrite or enrich PQS complete-shell lowering contracts so
-  `source_mode_shape` is `(q, q, L)`;
-- ensure retained-unit metadata, support records, transform-contract raw-product
-  retained rules, due-diligence actual source shape, and final realization
-  validation all see the same `source_mode_shape`;
-- pass non-cubic `raw_source_dims` through the multilayer shell source plan;
-- call `_nested_projected_q_shell_layer(...)` with explicit `q`, `L`,
-  `raw_source_dims`, and `selected_q`;
-- preserve shell support ownership and shell-local projection/Lowdin cleanup;
-- preserve due-diligence reporting of actual and expected source-mode shapes.
+Stop if:
 
-Forbidden:
+- the angular selector cannot produce finite, valid dimensions;
+- transverse dimensions disagree;
+- any downstream record carries a different source shape;
+- support ownership or shell-local projection would need to change;
+- a noncubic source shape cannot reach final realization without a new broad
+  route or payload object.
 
-- artifact schema/provenance/reader changes;
-- public input or driver semantic changes;
-- WL source-mode or retained-basis policy changes;
-- thin-slab, angular z-extension, direct/core identity, or residual/MWG/IDA
-  changes;
-- global residual/injection changes;
-- old route-global materialization revival;
-- broad source-mode framework or report/payload expansion;
-- Cr2 production claim.
+Do not repair failure by restoring cubic shapes, guessing `L` from index
+aspect, weakening support checks, or changing retained counts after the
+contract is frozen.
 
-Expected consequences:
+## Explicit Non-Goals
 
-- retained counts and final dimensions may change;
-- Hamiltonian matrices and energies may change;
-- old scalar targets tied to cubic complete-shell source modes must be
-  remeasured rather than preserved.
+This contract does not approve:
 
-Failure rule: if non-cubic complete-shell source modes require changing
-support ownership, terminal realization semantics, artifact schema, public
-driver inputs, or a broad route/report framework, make no source commit and
-report the blocker.
+- public driver/API inputs or automatic source-shape tuning;
+- White-Lindsey source-mode or retained-basis changes;
+- shell ownership, direct/core identity, thin-slab, or angular-z-extension
+  policy changes;
+- artifact schema/provenance changes;
+- residual/RG/MWG/IDA, injection, EGOI, or screened-Hartree changes;
+- route-global materialization revival or a report/payload framework;
+- solver workflow or Cr2 production claims.
 
-Line budget: target at most `160` added `src` lines. If restoring the angular
-selection needs a broader extraction from the old diatomic high-order path,
-stop and request a narrower helper-authority amendment.
-
-### HP-PQS-ASPECTSHELL-TEST-01
-
-Approved validation:
-
-- `git diff --check`;
-- package load;
-- focused complete-shell source-shape probe showing a rectangular physical
-  shell uses `(q, q, L)` rather than `(q, q, q)`;
-- retained count matches `prod(source_mode_shape) -
-  prod(source_mode_shape .- 2)` for the selected shell;
-- due-diligence report shows actual shape, expected aspect shape, retained
-  count, and no stale cubic-shape warning for the repaired shell;
-- bounded H2 or H2+ artifact/readback smoke;
-- finite/symmetric base Hamiltonian matrices if an artifact is written;
-- no Cr2 run required.
-
-No committed fixtures or tests are approved by default.
-
-## Boundary With Due Diligence
-
-`HP-DRV-SHELLDD-*` may report:
-
-```text
-actual source_mode_shape
-expected aspect-balanced source_mode_shape
-retained-count delta
-warning flags
-```
-
-It must not change construction behavior.
-
-`HP-PQS-ASPECTSHELL-*` is the source-policy lane that may change construction
-behavior by making PQS complete shells aspect-aware.
+Terminal due diligence remains advisory reporting. It exposes actual and
+expected physical-aspect shapes but does not itself choose `L`.

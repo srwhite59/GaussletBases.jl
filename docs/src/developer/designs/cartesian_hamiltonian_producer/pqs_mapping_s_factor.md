@@ -1,7 +1,8 @@
 # PQS/WL Mapping `s_factor`
 
-Status: approved source authority under `HP-PQS-MAP-SFACTOR-FN-01` and
-validation authority under `HP-PQS-MAP-SFACTOR-TEST-01`.
+Status: implemented expert input and provenance facility under
+`HP-PQS-MAP-SFACTOR-FN-01` and
+`HP-PQS-MAP-SFACTOR-TEST-01`.
 
 This is a narrow expert knob for Cartesian/PQS/WL parent mapping shape. It is
 not a new default policy, not automatic tuning, and not a statement that small

@@ -1,9 +1,9 @@
 # Residual Gaussian Orthogonality Robustness
 
-Status: approved narrow source authority under `HP-RG-ORTHO-FN-01`,
-`HP-RG-ORTHO-TEST-01`, `HP-RG-IDTOL-FN-01`, and
-`HP-RG-IDTOL-TEST-01`, plus the superseding cutoff/tolerance policy
-`HP-RG-CUTOFF-FN-01` and `HP-RG-CUTOFF-TEST-01`.
+Status: implemented residual orthogonality/cutoff policy. The current
+production default is owned by `HP-RG-CUTOFF-FN-02` /
+`HP-RG-CUTOFF-TEST-02`; older ORTHO, IDTOL, and CUTOFF-01 entries remain
+historical source/validation steps.
 
 ## Reason
 
