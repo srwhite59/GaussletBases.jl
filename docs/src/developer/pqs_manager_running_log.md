@@ -28202,3 +28202,45 @@ Carrying-cost result:
   duplication, and two registry families.
 - MT6 old flat-path classification: maintenance. No row-gauge, interaction
   rotation, old route wrapper, or unaccepted EGOI WIP was promoted.
+
+## Cartesian Hamiltonian Producer Pass 371 - Reconcile Composition And Inputs
+
+Commit(s):
+- this commit - reconcile the mature composition/input family and compress its
+  registry and startup-document duplication.
+
+Summary:
+- Reclassified base homonuclear diatomics, supplemented WL diatomics,
+  supplemented atoms, atom physical parent sizing, public `ns` normalization,
+  public-`ns` direct-core parity, and the WL diatomic `ns` guard as
+  implemented, with their bounded validation contracts completed.
+- Made the composition page the live owner of the bounded atom/diatomic,
+  PQS/WL, base/supplemented matrix. The one-center atom page owns physical
+  radius, and the direct-core page owns odd-side parity. Registry entries are
+  now individually addressable metadata rather than implementation plans.
+
+Validation / evidence:
+- Reconciled source commits `095a89d41`, `4cfb47ace`, `2e9818c90`,
+  `5f0185a16`, `18d683575`, `50327dc1e`, and `e41aba6eb` against
+  live source/callers and accepted Passes 139, 141, 142, 145, 146, 148, and
+  160. Verified one registry heading per FN/TEST ID and all named paths.
+- Focused stale-lifecycle/formula scans, local Documenter, and
+  `git diff --check` passed. No numerical Julia tests were run because this
+  pass changes documentation only.
+
+Goal advancement / guardrail:
+- MT5: removes pre-implementation source lists, line budgets, repeated
+  validation narratives, and stale partial-matrix claims from active docs.
+  This is parallel cleanup with no strategic or physics change; controlled
+  CR2 screened-Hartree consumption remains the current MT4 direction.
+- Public `ns`/`q`, direct-core parity, atom extent, WL early rejection,
+  and retained-support saturation semantics are unchanged. No geometry,
+  driver, route, RG/MWG/IDA, artifact, solver/ECP, or Cr2 authority expanded.
+
+Carrying-cost result:
+- Active documentation before this log entry is approximately `+421/-1096`,
+  net `-675` lines. The log entry preserves accepted evidence without
+  restoring duplicated contract prose.
+- Exact next cleanup step: migrate another mature registry family only after
+  source-backed lifecycle review; do not use this pass to reopen WL terminal
+  algorithms or composition behavior.

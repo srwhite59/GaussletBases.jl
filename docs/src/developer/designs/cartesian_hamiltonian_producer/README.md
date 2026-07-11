@@ -64,20 +64,14 @@ lane is approved for JLD2 sidecar groups that make written Hamiltonians
 self-describing without changing matrix keys or reader behavior. Broad public
 API/export, translated atoms, Cr2-specific production workflow, ECP, broad
 EGOI workflow, RHF, and solver work remain deferred.
-The documented 2 x 2 x 2 matrix over `geometry`, `nesting`, and supplement
-state now has approved implementation authority under the current
-origin-centered atom and homonuclear z-axis diatomic constraints.
-The approved composition IDs are `HP-COMP-WLDIAT-*`, `HP-COMP-BASEDIAT-*`,
-`HP-COMP-SUPPWL-*`, and `HP-COMP-SUPPATOM-*`.
-The one-center atom parent-sizing correction is approved under
-`HP-COMP-ATOMBOX-*`: atom `radius`/driver `padding` is physical box extent
-authority. Public size-parameter normalization is approved under
-`HP-COMP-NS-*`: user-facing input should name `ns` as the requested
-cube/source/nesting size, while route-local `q` is derived from `ns` and
-`nesting`. WL z-axis diatomic `ns` cleanup is approved under
-`HP-COMP-WLNS-*`: `nesting = :wl`, `Natom = 2`, and normalized `ns < 4`
-should reject early, while working WL diatomic `ns` ranges may saturate the
-final retained support when the physical parent extent dominates.
+The bounded 2 x 2 x 2 matrix over geometry, nesting, and supplement state is
+implemented for origin-centered atoms and homonuclear z-axis diatomics.
+[Nesting/supplement composition](nesting_supplement_composition_plan.md) owns
+the shared producer path, public `ns` and derived route-local `q`, the WL
+diatomic `ns < 4` guard, and retained-support saturation. One-center
+`radius` is physical box-extent authority, while
+[public-`ns` direct-core parity](public_ns_core_side_parity.md) limits
+oddization to direct nucleus-centered core blocks.
 `HP-PQS-MAP-SFACTOR-*` approves a narrow expert mapping-strength scalar:
 `s_factor`, default `1.0`, with one-center
 `effective_s = s_factor * sqrt(Z * core_spacing)` and explicit provenance.
@@ -100,9 +94,6 @@ The follow-up WL boundary-stratum parity cleanup is approved under
 `HP-WLDIAT-PARITY-*`: direct nucleus-centered core blocks keep odd-side
 centering, but boundary shells retain the requested shell count such as
 `ns = 4 -> 4^3 - 2^3 = 56`.
-Public-`ns` direct core side parity is approved under `HP-COMP-NSCORE-*`:
-direct nucleus-centered core blocks use the oddized public `ns` side, while
-boundary retained sizes keep route-local construction.
 Common terminal shell decomposition is approved as a shared route-family-free
 first step under `HP-COMP-SHELLGEOM-*`: PQS and White-Lindsey differ only after
 common shell/core support regions exist.
@@ -223,7 +214,7 @@ ID or subsystem.
   for the explicit homonuclear diatomic molecule-scope relaxation
 - [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md)
   for the narrow terminal-basis seam needed by `nesting = :wl`
-- [Nesting/supplement composition plan](nesting_supplement_composition_plan.md)
+- [Nesting/supplement composition](nesting_supplement_composition_plan.md)
   for the target 2 x 2 x 2 composition matrix and dependency order
 - [Public ns direct-core side parity](public_ns_core_side_parity.md)
   for deriving direct nucleus-centered core side from public `ns` rather than
@@ -341,23 +332,19 @@ ID or subsystem.
 - [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md)
   approves only explicit origin-centered one-center base atom driver inputs
   through the existing base facade. Current validation remains the
-  origin-centered H endpoint for that base-only driver lane. Supplemented atoms
-  are governed separately by `HP-COMP-SUPPATOM-*`.
+  origin-centered H endpoint for that base-only driver lane. Implemented
+  supplemented atoms are governed separately by `HP-COMP-SUPPATOM-*`.
 - [R3 homonuclear z-axis diatomic supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md)
   approves explicit homonuclear two-center z-axis diatomic supplemented inputs
   through the existing facade and canonical driver, with no element-specific
   defaults or Cr2-specific branch.
 - [Nesting/supplement composition plan](nesting_supplement_composition_plan.md)
-  records the target three-choice contract:
+  owns the implemented three-choice contract:
   `geometry = atom | z-axis diatomic`, `nesting = :pqs | :wl`, and
-  `supplement = off | on`. The WL z-axis diatomic base cell is approved under
-  `HP-COMP-WLDIAT-*`, and the base homonuclear z-axis diatomic validation
-  relaxation is approved under `HP-COMP-BASEDIAT-*`. Supplemented WL z-axis
-  diatomics are approved under `HP-COMP-SUPPWL-*`; supplemented one-center
-  atoms are approved under `HP-COMP-SUPPATOM-*`. WL diatomic `ns` early
-  rejection and retained-support saturation wording are approved under
-  `HP-COMP-WLNS-*`; the compact WL diatomic retained-basis correction is
-  approved under `HP-WLDIAT-COMPACT-*`.
+  `supplement = off | on`, together with public `ns` normalization, the WL
+  diatomic size guard, and shared residual-GTO/MWG supplementation. The compact
+  WL diatomic retained-basis correction remains separately governed by
+  `HP-WLDIAT-COMPACT-*`.
 - [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
   approves only compact JLD2 sidecar groups for matrix-order basis labels and
   uniform recipe provenance, and separately approves a compact source-mode
@@ -397,7 +384,7 @@ Candidate amendments:
   workflow/export, basis/supplement-realism beyond explicit supplied
   labels/files, and broad driver diagnostics remain candidate-only until
   separately approved. Supplemented atoms and supplemented WL z-axis diatomics
-  are approved under `HP-COMP-SUPPATOM-*` and `HP-COMP-SUPPWL-*`.
+  are already implemented internal composition cells.
 
 Historical material:
 

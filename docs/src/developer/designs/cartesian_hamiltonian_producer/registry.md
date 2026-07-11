@@ -544,85 +544,49 @@ No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
 approved.
 
-## Approved Composition Cleanup: Public ns Direct-Core Side Parity
+## Composition Input: Public ns Direct-Core Side
 
-This lane corrects an even-`ns` PQS/WL comparison bug. Public `ns` is the
-requested cube/source/nesting size, but shared route setup still derives the
-nucleus-centered direct/core side from route-local `q`. Since WL derives
-`q = ns - 2`, even-`ns` same-size PQS/WL comparisons can get different direct
-core boxes even though the direct core centering rule is not a route-family
-physics difference.
+Canonical contract:
+[Public ns direct-core side parity](public_ns_core_side_parity.md).
 
-The odd-side parity rule is necessary only for direct nucleus-centered core
-identity blocks. It must not apply to boundary shells, WL boundary-stratum
-retained products, or non-direct support regions.
+### HP-COMP-NSCORE-FN-01 — public ns direct-core side
 
-### HP-COMP-NSCORE-FN-01 — public ns direct core side
+Lifecycle: implemented. Permission: source maintenance.
 
-Approved source files:
+Source:
 
-```text
-src/pqs_source_box_route_driver_helpers.jl
-src/cartesian_base_hamiltonian.jl
-```
+- `src/cartesian_base_hamiltonian.jl`;
+- `src/pqs_source_box_route_driver_helpers.jl`.
 
-`src/cartesian_base_hamiltonian.jl` is approved only if needed to keep
-one-center parent minimum sizing consistent with the same direct-core rule.
+Dependencies: `HP-COMP-NS-FN-01` public-size normalization and the existing
+direct-core route construction.
 
-Approved behavior:
+Permission: preserve
+`direct_core_side = isodd(ns) ? ns : ns + 1` for direct nucleus-centered
+identity blocks only. Boundary retained construction remains route-local.
 
-- keep public `ns` as the requested cube/source/nesting size;
-- keep route-local `q` derivation unchanged:
-  - PQS: `q = ns`;
-  - WL: `q = ns - 2`;
-- derive only direct nucleus-centered core side from public `ns`:
-  `direct_core_side = isodd(ns) ? ns : ns + 1`;
-- do not apply this oddization rule to boundary shells, WL boundary-stratum
-  retained products, or non-direct support regions;
-- preserve odd-`ns` dimensions where this cleanup should be a no-op;
-- preserve WL boundary retained count policy, including `ns = 4 -> 56`,
-  `ns = 5 -> 98`, and `ns = 6 -> 152`;
-- update internal provenance or summary labels such as `:odd_q_core_side` to
-  an `ns`-truthful rule if they are still written.
+Evidence: implementation commit `e41aba6eb`; manager running-log Pass 160.
 
-Forbidden:
+Non-goals: driver/public-input changes, shellification or terminal-lowering
+redesign, boundary oddization, artifact/manifest changes, old WL
+materialization, fixtures, or Cr2 workflow.
 
-- driver changes;
-- public input changes;
-- route skeleton redesign;
-- shellification geometry rewrites beyond direct-core side authority;
-- terminal lowering, retained-unit, or terminal-realizer changes;
-- artifact schema changes;
-- manifest expansion;
-- PQS/WL special cases in the driver;
-- old WL materialization revival;
-- committed tests or fixtures;
-- Cr2-specific workflow.
+### HP-COMP-NSCORE-TEST-01 — public ns direct-core validation
 
-Failure rule: if fixing the parity requires changing route skeleton semantics,
-terminal lowering, retained-unit records, WL boundary coefficient construction,
-artifact schema, or driver inputs, make no source commit and report the exact
-blocker.
+Lifecycle: completed validation contract. Permission: validation maintenance.
 
-### HP-COMP-NSCORE-TEST-01 — public ns direct-core parity validation
+Canonical contract:
+[Public ns direct-core side parity](public_ns_core_side_parity.md).
 
-Approved validation:
+Evidence and test surfaces:
 
-- `git diff --check`;
-- package load;
-- small one-center atom base artifact/readback for `ns = 5`, `6`, and `7` with
-  `nesting = :pqs` and `nesting = :wl`;
-- same-`ns` PQS/WL atom dimensions match for `ns = 5`, `6`, and `7` under a
-  bounded common fixture;
-- `ns = 6` no longer has the reported `66`-row skew;
-- small H2 or Be2 smoke to confirm the diatomic path still constructs;
-- existing H2 Residual Gaussian endpoint smoke if touched code crosses the
-  supplemented path;
-- no Cr2 run.
+- `docs/src/developer/pqs_manager_running_log.md`, Pass 160;
+- `test/driver_public/cartesian_base_hamiltonian_runtests.jl`, current
+  downstream public-base regression.
 
-No committed test file, committed fixture, driver contract test,
-solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
-validation, or Cr2 fixture is approved.
+The accepted gate covered bounded same-`ns` PQS/WL atom dimensions,
+even-`ns` parity, provenance, readback, and a diatomic smoke. No dedicated
+ID-specific committed test file or Cr2 fixture was added.
 
 ## Common Shellification And Compact Thin-Slab Family
 
@@ -866,470 +830,218 @@ Facility-wide non-goals: default promotion, automatic tuning, another COMX
 path, White-Lindsey support, route/report payloads, artifact schema,
 Hamiltonian/raw-block/RG/MWG/IDA/EGOI/screening/solver changes, or Cr2
 production claims.
-## Approved Composition Lane: Base Homonuclear Z-Axis Diatomics
 
-This section promotes the base z-axis diatomic validation relaxation. It
-approves only the `geometry = z-axis diatomic`, `supplement = off` public input
-contract in the base facade. It does not approve route/shellification changes.
+## Implemented Composition And Input Family
 
-### HP-COMP-BASEDIAT-FN-01 — base homonuclear z-axis diatomic validation
+Canonical contracts:
 
-Approved source file:
+- [Nesting/supplement composition](nesting_supplement_composition_plan.md);
+- [R1 one-center base atoms](r1_one_center_base_atoms.md);
+- [Public ns direct-core side parity](public_ns_core_side_parity.md).
 
-```text
-src/cartesian_base_hamiltonian.jl
-```
+### HP-COMP-BASEDIAT-FN-01 — base homonuclear z-axis diatomics
 
-Approved behavior:
+Lifecycle: implemented. Permission: source maintenance.
 
-- relax the `_cartesian_base_inputs(...)` two-center branch from H2-only to
-  explicit homonuclear z-axis all-electron diatomics;
-- require exactly two atom symbols and exactly two nuclear charges;
-- require equal atom symbols;
-- require equal finite positive nuclear charges that are integer-valued after
-  validation;
-- require two finite centers on the Cartesian z axis (`x = y = 0`) with
-  distinct `z`;
-- require explicit `nup` and `ndn` nonnegative integers with
-  `nup + ndn == sum(nuclear_charges)` after charge validation;
-- keep atom symbol as provenance label only and nuclear charge as authority;
-- keep the basis contract unchanged except for `HP-COMP-NS-*` public size
-  naming: `ns`, `core_spacing`, `xmax_parallel`,
-  `xmax_transverse`, optional `parent_axis_family`, `reference_spacing`,
-  `tail_spacing`, and `nesting`;
-- preserve both `nesting = :pqs` and `nesting = :wl` as public construction
-  family choices;
-- preserve current H2 behavior and existing route provenance labels
-  (`:z_axis_diatomic_pqs_base`, and `:z_axis_diatomic_wl_base` only when the
-  WL diatomic terminal-record lane succeeds).
+Source: `src/cartesian_base_hamiltonian.jl`.
 
-The `nesting = :wl` path still depends on `HP-COMP-WLDIAT-FN-01` for native WL
-diatomic terminal records. This ID may allow validated non-H diatomic inputs to
-reach the same WL route path, but it must not implement terminal records,
-shellification, or route lowering outside `src/cartesian_base_hamiltonian.jl`.
+Dependencies: the shared base producer and the implemented nesting-specific
+terminal-basis paths.
 
-Forbidden:
+Permission: validate explicit equal-symbol/equal-charge neutral all-electron
+diatomics at two finite distinct z-axis centers and send them through the
+existing PQS/WL base path.
 
-- driver changes;
-- source files outside `src/cartesian_base_hamiltonian.jl`;
-- supplement, Residual Gaussian, MWG/IDA, or artifact-manifest changes;
-- route skeleton, shellification, terminal lowering, raw-block, writer,
-  reader, public API/export, solver/ECP, diagnostics, status/report payload,
-  or Cr2-specific workflow changes;
-- element lookup/default tables or element-inferred electron counts;
-- heteronuclear, translated, non-z-axis, or general-geometry support;
-- committed tests or committed input fixtures.
+Evidence: implementation commit `095a89d41`; manager running-log Pass 139.
 
-Failure rule: if non-H base diatomic construction requires route/shellification
-changes outside `src/cartesian_base_hamiltonian.jl`, make no source commit and
-report the exact blocker.
+Non-goals: heteronuclear/general geometry, inferred element data, driver,
+supplement, route/shellification, artifact, solver/ECP, or Cr2-specific work.
 
-Line budget: target under `60` added `src` lines.
+### HP-COMP-BASEDIAT-TEST-01 — base diatomic validation
 
-### HP-COMP-BASEDIAT-TEST-01 — base homonuclear z-axis diatomic validation
+Lifecycle: completed validation contract. Permission: validation maintenance.
 
-Approved validation:
+Evidence and test surfaces:
 
-- `git diff --check`;
-- package load;
-- H2 base artifact/readback unchanged for `nesting = :pqs`;
-- H2 base artifact/readback for `nesting = :wl` if the WL diatomic terminal
-  lane is implemented in the working tree; otherwise report the existing
-  `HP-COMP-WLDIAT-*` dependency;
-- one small explicit non-H homonuclear z-axis base artifact/readback,
-  preferably Be2 or N2 with bounded `q`, for `nesting = :pqs`;
-- the same small non-H base artifact/readback for `nesting = :wl` if runtime is
-  bounded and the WL diatomic terminal lane is implemented in the working tree;
-- clear rejection for heteronuclear symbols, unequal charges, non-neutral
-  electron count, and non-z-axis centers;
-- no Cr2 run.
+- `docs/src/developer/pqs_manager_running_log.md`, Pass 139;
+- `test/driver_public/cartesian_base_hamiltonian_runtests.jl`, current
+  downstream base-facade regression.
 
-No committed test file, committed fixture, driver contract test, supplemented
-run, solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2
-fixture is approved.
+The accepted gate covered H2 and bounded Be2 PQS/WL artifact/readback plus
+invalid geometry, charge, and electron-count rejection. No dedicated
+ID-specific committed test file was added.
 
-## Approved Composition Lane: Supplemented White-Lindsey Z-Axis Diatomics
+### HP-COMP-SUPPWL-FN-01 — supplemented WL z-axis diatomics
 
-This section promotes the supplemented WL z-axis diatomic composition lane.
-The goal is to make `Natom = 2`, `basisname !== nothing`, and
-`nesting = :wl` use the same supplemented homonuclear z-axis diatomic staged
-facade as `nesting = :pqs`, after the WL base route has produced a valid
-`CartesianTerminalBasisRealization`.
+Lifecycle: implemented. Permission: source maintenance.
 
-### HP-COMP-SUPPWL-FN-01 — supplemented WL z-axis diatomic composition
+Source owners:
 
-Approved source files:
+- `src/cartesian_base_hamiltonian.jl`;
+- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`, shared
+  residual-GTO/MWG consumer.
 
-```text
-src/cartesian_base_hamiltonian.jl
-src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
-```
+Dependencies: implemented WL terminal realization and the common supplemented
+Hamiltonian path.
 
-`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` is
-optional in this lane and may be edited only if a direct genericity blocker
-appears in the existing RG/MWG compatibility entry point. The default expected
-source change is in `src/cartesian_base_hamiltonian.jl`.
+Permission: a WL terminal basis enters the same residual-GTO, exact augmented
+one-body, residual MWG/IDA, assembly, and artifact path as PQS.
 
-Approved behavior:
+Evidence: implementation commit `4cfb47ace`; manager running-log Pass 141.
 
-- allow `nesting = :wl` through the existing supplemented homonuclear z-axis
-  diatomic facade/staged path;
-- remove the early supplemented-`nesting = :wl` blockers in
-  `cartesian_base_working_basis(...; supplemented = true)` and
-  `cartesian_residual_gto_supplement_basis(...)` only if the existing
-  Residual Gaussian/MWG path works with the WL `CartesianTerminalBasisRealization`;
-- preserve the existing supplement contract: `basis_by_center`, `lmax`,
-  optional `uncontracted`, `width_filtering`, and `basisfile`;
-- preserve residual selection, exact augmented operators, residual MWG/IDA
-  interaction, base K/U reuse, artifact keys, manifest/provenance, driver
-  inputs, and stage labels;
-- keep `nesting` as a construction-family choice, not a diagnostic route
-  switch.
-
-Forbidden:
-
-- driver changes;
-- supplemented atoms;
-- route skeleton, shellification, terminal lowering, raw-block,
-  residual-selection, MWG/IDA convention, artifact schema, writer, reader,
-  public API/export, solver/ECP, diagnostics, status/report payload, or
-  Cr2-specific workflow changes;
-- old White-Lindsey H1/H1+J materialization revival or adaptation;
-- committed tests or committed input fixtures.
-
-Failure rule: if supplemented WL requires new terminal records, route lowering
-semantics, residual-selection changes, artifact/schema changes, or source files
-outside the approved surface, make no source commit and report the exact
-blocker.
-
-Line budget: target under `80` added `src` lines, with deletion or
-simplification of the early supplemented-WL blockers expected where practical.
+Non-goals: a WL-specific supplement algorithm, old WL H1/H1+J revival, driver,
+route/lowering, RG/MWG convention, artifact, solver/ECP, or Cr2 changes.
 
 ### HP-COMP-SUPPWL-TEST-01 — supplemented WL validation
 
-Approved validation:
+Lifecycle: completed validation contract. Permission: validation maintenance.
 
-- `git diff --check`;
-- package load;
-- H2 supplemented artifact/readback with `nesting = :pqs`;
-- small H2 supplemented artifact/readback with `nesting = :wl`;
-- small non-H homonuclear z-axis supplemented artifact/readback with
-  `nesting = :wl` if bounded;
-- finite/symmetric `K` and `V` checks plus readback deltas for WL supplemented
-  output;
-- clear rejection remains for supplemented atoms and invalid diatomic inputs;
-- no Cr2 run.
+Evidence and test surfaces:
 
-No committed test file, committed fixture, driver contract test,
-solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
-approved.
+- `docs/src/developer/pqs_manager_running_log.md`, Pass 141;
+- `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`, current
+  downstream supplemented-path regression.
 
-## Approved Composition Lane: Supplemented One-Center Atoms
+The accepted gate covered H2 PQS/WL and bounded Be2 WL artifact/readback,
+finite/symmetric operators, and invalid-system rejection. No dedicated
+ID-specific committed test file was added.
 
-This section promotes the supplemented one-center atom composition lane. The
-goal is to make `Natom = 1`, `basisname !== nothing`, and either
-`nesting = :pqs` or `nesting = :wl` use the same staged supplemented
-Hamiltonian machinery as supported diatomics, with one physical owner center.
+### HP-COMP-SUPPATOM-FN-01 — supplemented one-center atoms
 
-### HP-COMP-SUPPATOM-FN-01 — supplemented atom composition
+Lifecycle: implemented. Permission: source maintenance.
 
-Approved source files:
+Source owners:
 
-```text
-src/cartesian_base_hamiltonian.jl
-bin/cartesian_ham_builder.jl
-src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
-```
+- `src/cartesian_base_hamiltonian.jl`;
+- `bin/cartesian_ham_builder.jl`;
+- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`, shared
+  residual-GTO/MWG consumer.
 
-`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` is
-optional in this lane and may be edited only if a direct one-owner RG/MWG
-genericity blocker appears. The default expected source changes are in
-`src/cartesian_base_hamiltonian.jl` and `bin/cartesian_ham_builder.jl`.
+Dependencies: the one-center base contract and common supplemented producer.
 
-Approved behavior:
+Permission: origin-centered all-electron atoms use the existing atomic
+supplement loader and the same PQS/WL residual-GTO/MWG path as supported
+diatomics.
 
-- allow origin-centered one-center all-electron atoms with supplement enabled;
-- preserve both `nesting = :pqs` and `nesting = :wl`;
-- use the existing base atom validation and terminal basis construction;
-- use the existing residual Gaussian augmentation, exact augmented operators,
-  residual MWG/IDA interaction, base K/U reuse, assembly, writer, readback,
-  manifest, and provenance;
-- use `legacy_atomic_gaussian_supplement(...)` when `length(input.symbols) == 1`;
-- keep `legacy_bond_aligned_diatomic_gaussian_supplement(...)` when
-  `length(input.symbols) == 2`;
-- relax only the canonical driver's supplemented `Natom == 2` guard so
-  `basisname !== nothing` works for both `Natom = 1` and `Natom = 2`;
-- keep driver public inputs, ordering, comments, hooks, spacing/layout, stage
-  labels, and artifact contract otherwise unchanged.
+Evidence: implementation commit `2e9818c90`; manager running-log Pass 142.
 
-Forbidden:
-
-- separate atom-only Hamiltonian builder or materialization path;
-- new driver inputs, route switches, diagnostics, stop-after controls, or
-  stage labels;
-- route skeleton, shellification, terminal lowering, raw-block,
-  residual-selection, MWG/IDA convention, artifact schema, writer, reader,
-  public API/export, solver/ECP, status/report payload, heteronuclear/general
-  geometry, translated atom, or Cr2-specific workflow changes;
-- committed tests or committed input fixtures.
-
-Failure rule: if supplemented atoms require new residual-selection semantics,
-atom-only MWG/IDA conventions, terminal-lowering changes, route changes,
-artifact schema changes, or a separate atom Hamiltonian path, make no source
-commit and report the exact blocker.
-
-Line budget: target under `80` added `src`/`bin` lines, with deletion or
-simplification expected where guards become obsolete.
+Non-goals: atom-only Hamiltonian/materialization paths, translated atoms,
+element defaults, new driver controls, route/lowering, RG/MWG convention,
+artifact, solver/ECP, or Cr2 changes.
 
 ### HP-COMP-SUPPATOM-TEST-01 — supplemented atom validation
 
-Approved validation:
+Lifecycle: completed validation contract. Permission: validation maintenance.
 
-- `git diff --check`;
-- package load;
-- base atom artifact/readback still passes;
-- H atom supplemented artifact/readback with `nesting = :pqs`;
-- H atom supplemented artifact/readback with `nesting = :wl`;
-- small Be atom supplemented artifact/readback for `nesting = :pqs` or
-  `nesting = :wl` if bounded;
-- H2 supplemented PQS and WL smoke still pass;
-- translated atom still rejects clearly;
-- supplement basis count mismatch still rejects clearly;
-- no Cr2 run.
+Evidence and test surfaces:
 
-No committed test file, committed fixture, driver contract test,
-solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
-approved.
+- `docs/src/developer/pqs_manager_running_log.md`, Pass 142;
+- `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`, current
+  downstream supplemented-path regression.
 
-## Approved Contract Lane: One-Center Atom Parent Sizing
+The accepted gate covered base H, supplemented H under PQS/WL, bounded Be,
+H2 regression smokes, translated-atom rejection, and supplement-count
+rejection. No dedicated ID-specific committed test file was added.
 
-This section promotes a narrow atom box-sizing correction. The current
-one-center atom producer still contains an old minimal-test artifact in which
-`parent_axis_counts = (2*q + 1, 2*q + 1, 2*q + 1)`. That makes public
-`padding` / `basis.radius` non-authoritative for atom box size. The approved
-contract is that one-center atom sizing uses the same physical-size idea as
-z-axis diatomics: the public physical extent and spacing policy determine the
-parent box/counts. Public size-parameter naming is separately normalized under
-`HP-COMP-NS-*`.
+### HP-COMP-ATOMBOX-FN-01 — one-center atom physical extent
 
-### HP-COMP-ATOMBOX-FN-01 — one-center atom parent sizing
+Lifecycle: implemented. Permission: source maintenance.
 
-Approved source file:
+Source: `src/cartesian_base_hamiltonian.jl`.
 
-```text
-src/cartesian_base_hamiltonian.jl
-```
+Canonical owner:
+[R1 one-center base atoms](r1_one_center_base_atoms.md).
 
-No optional helper file is approved in this amendment. If a later source audit
-finds an existing parent/system sizing helper that should own the shared rule,
-that exact file must be named in a separate docs-only amendment.
+Dependencies: White-Lindsey atomic mapping, public `radius`, spacing policy,
+and public-`ns` direct-core minimum.
 
-Approved behavior:
+Permission: derive atom parent counts from physical `basis.radius` and the
+existing mapping/spacing policy; `ns` remains resolution/nesting input.
 
-- remove the fixed `2*q + 1` atom parent-axis count artifact;
-- use `input.radius` / public `basis.radius` as the one-center physical box
-  extent authority;
-- make atom parent axis counts depend on radius plus `core_spacing` / existing
-  spacing policy, analogous to the z-axis diatomic physical-extent sizing;
-- preserve the public size/nesting control as resolution metadata, not direct
-  box side count;
-- preserve origin-centered atom validation, explicit charge/electron-count
-  validation, `nesting = :pqs` and `nesting = :wl`, supplemented atoms,
-  artifact keys, manifest/provenance, and canonical driver inputs;
-- ensure different atom padding/radius values can produce different atom
-  dimensions when the physical extent changes enough.
+Evidence: implementation commit `18d683575`; manager running-log Pass 146.
 
-Forbidden:
+Non-goals: driver or diatomic sizing changes, translated atoms, broad parent
+redesign, route/RG/MWG/IDA, artifact, solver/ECP, or Cr2 changes.
 
-- driver changes;
-- route-family switches, raw-block changes, residual-selection changes,
-  MWG/IDA convention changes, artifact schema changes, writer/reader changes,
-  public API/export changes, solver/ECP work, diagnostics/status/report
-  payloads, committed tests, or Cr2-specific workflow changes;
-- translated atoms, non-origin atom support, or element lookup/default tables;
-- broad parent-construction rewrites or diatomic sizing changes.
+### HP-COMP-ATOMBOX-TEST-01 — atom physical-extent validation
 
-Failure rule: if fixing atom parent sizing requires broad parent-construction
-redesign, route semantics changes, driver contract changes, artifact schema
-changes, translated-atom support, or source files outside the approved surface,
-make no source commit and report the exact blocker.
+Lifecycle: completed validation contract. Permission: validation maintenance.
 
-Line budget: target under `80` added `src` lines.
+Evidence and test surfaces:
 
-### HP-COMP-ATOMBOX-TEST-01 — atom parent-sizing validation
+- `docs/src/developer/pqs_manager_running_log.md`, Pass 146;
+- `test/driver_public/cartesian_base_hamiltonian_runtests.jl`, current
+  downstream one-center base regression.
 
-Approved validation:
+The accepted gate covered atom base/supplemented PQS/WL construction, bounded
+Be, radius sensitivity, and H2/Be2 regression smokes. No dedicated
+ID-specific committed test file was added.
 
-- `git diff --check`;
-- package load;
-- H atom base artifact/readback still passes;
-- H atom supplemented PQS and WL artifact/readback still pass;
-- small Be atom base and supplemented smoke if bounded;
-- atom padding sensitivity check: same atom inputs with two padding/radius
-  values should show changed parent counts/dimension or a clear explanation if
-  both values fall in the same count bin;
-- H2/Be2 diatomic smoke to confirm no diatomic sizing regression;
-- no Cr2 run.
+### HP-COMP-NS-FN-01 — public ns and derived q
 
-No committed test file, committed fixture, driver contract test,
-solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
-approved.
+Lifecycle: implemented. Permission: source maintenance.
 
-## Approved Contract Lane: Public `ns` Input And Derived `q`
+Source:
 
-This section approves a narrow public input cleanup. The prior public contract
-used `q` for the requested cube/source/nesting size, but White-Lindsey uses a
-route-local `q` that is naturally two smaller than the requested `ns` source
-size. That makes `q` an ambiguous public knob across the composed
-`nesting = :pqs | :wl` workflow.
+- `src/cartesian_base_hamiltonian.jl`;
+- `bin/cartesian_ham_builder.jl`.
 
-The durable public field is now `ns`: the requested cube/source/nesting size.
-Route-local `q` is derived after the construction family is selected.
+Dependencies: the supported PQS/WL composition matrix.
 
-### HP-COMP-NS-FN-01 — public `ns` normalization
+Permission: normalize public `ns`, derive `q = ns` for PQS and
+`q = ns - 2` for WL, validate any legacy `q` compatibility, and record the
+existing compact provenance.
 
-Approved source files:
+Evidence: implementation commit `5f0185a16`; manager running-log Pass 145.
 
-```text
-src/cartesian_base_hamiltonian.jl
-bin/cartesian_ham_builder.jl
-```
+Non-goals: changing physical extent, route construction, shellification,
+terminal lowering, artifact format/readback, driver stages, solver/ECP, or Cr2
+workflow.
 
-Approved behavior:
+### HP-COMP-NS-TEST-01 — public ns validation
 
-- prefer `basis.ns` / driver `ns` in public examples, templates, and driver
-  contract construction;
-- derive route-local `q` from the normalized public `ns` and `nesting`:
-  - `nesting = :pqs`: `q = ns`;
-  - `nesting = :wl`: `q = ns - 2`;
-- reject `nesting = :wl` with `ns < 3`;
-- keep `ns` separate from physical box controls: atom `radius` / driver
-  `padding`, diatomic extents, `core_spacing`, `reference_spacing`, and
-  `tail_spacing`;
-- temporarily accept legacy public `q` only as compatibility:
-  - if `ns` is absent, derive `ns = q` for `nesting = :pqs`;
-  - if `ns` is absent, derive `ns = q + 2` for `nesting = :wl`;
-  - if both `ns` and `q` are present, require consistency with the selected
-    nesting or throw `ArgumentError`;
-- record compact provenance in existing groups:
-  - `ns`: normalized public requested source size;
-  - `q`: derived route-local value passed to route construction;
-  - `q_rule`: `:pqs_ns_equals_q` or `:wl_ns_minus_2`;
-  - `ns_source`: `:public_ns` or `:legacy_q_compatibility`.
+Lifecycle: completed validation contract. Permission: validation maintenance.
 
-Forbidden:
+Evidence and test surfaces:
 
-- route skeleton, shellification, terminal lowering, raw-block,
-  residual-selection, MWG/IDA, numerical-kernel, solver/ECP, or Cr2-specific
-  workflow changes;
-- public API/export redesign beyond accepting/prefering `ns` in the existing
-  public groups;
-- artifact matrix-key changes, reader behavior changes, new artifact format,
-  route diagnostics, status/report payloads, raw-block switches, or new driver
-  hooks/stage labels;
-- committed tests or fixtures.
+- `docs/src/developer/pqs_manager_running_log.md`, Pass 145;
+- `test/driver_public/cartesian_base_hamiltonian_runtests.jl`, current
+  downstream public-input/provenance regression.
 
-Failure rule: if this cleanup requires route-stage redesign, terminal
-construction changes, artifact reader changes, or a broad compatibility layer
-outside the approved files, make no source commit and report the blocker.
+The accepted gate covered atom/diatomic PQS/WL base construction, bounded
+supplemented smokes, legacy-`q` compatibility, inconsistent input rejection,
+and provenance. No dedicated ID-specific committed test file was added.
 
-Line budget: target under `80` added source/bin lines, with net simplification
-where legacy `q` plumbing becomes local normalization.
+### HP-COMP-WLNS-FN-01 — WL diatomic ns guard
 
-### HP-COMP-NS-TEST-01 — public `ns` validation
+Lifecycle: implemented. Permission: source maintenance.
 
-Approved validation:
+Source: `src/cartesian_base_hamiltonian.jl`.
 
-- `git diff --check`;
-- package load;
-- atom and z-axis diatomic base artifact/readback using public `ns` under
-  `nesting = :pqs`;
-- small atom and z-axis diatomic base artifact/readback using public `ns` under
-  `nesting = :wl` where the corresponding WL construction cell is already
-  supported;
-- supplemented atom/diatomic smoke using public `ns` only where the
-  corresponding supplemented composition cell is already supported and bounded;
-- legacy `q` compatibility smoke if the implementation keeps it;
-- clear rejection for inconsistent `ns`/`q`, `nesting = :wl` with `ns < 3`,
-  and unsupported geometry/supplement combinations;
-- direct provenance inspection for `ns`, derived `q`, `q_rule`, `ns_source`,
-  and `nesting`;
-- no Cr2 run.
+Dependencies: `HP-COMP-NS-FN-01` normalization and WL complete-shell
+diatomic construction.
 
-No committed test file, committed fixture, driver contract test,
-solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
-approved.
+Permission: reject normalized WL z-axis diatomic `ns < 4` before route
+construction and preserve retained-support saturation as valid behavior.
 
-## Approved Contract Lane: WL Diatomic `ns` Early Rejection
+Evidence: implementation commit `50327dc1e`; manager running-log Pass 148.
 
-This section approves a narrow cleanup of the public `ns` contract for
-White-Lindsey z-axis diatomics. Current `nesting = :wl`, `Natom = 2`,
-`ns = 3` normalizes to route-local `q = 1` and `core_cube_side = 1`, then
-fails later in terminal shellification because a complete-shell inner box
-cannot be formed. That input should be rejected early as unsupported WL
-diatomic input, not discovered after route construction.
+Non-goals: changing working WL retained support, driver compatibility,
+shellification/lowering, artifacts, RG/MWG/IDA, solver/ECP, or Cr2 workflow.
 
-The same audit showed that working WL diatomic `ns` ranges may change
-route-local `q`, shellification block decomposition, and final row order
-without changing the retained support set over a fixed physical parent extent.
-That is retained-support saturation, not ignored public input.
+### HP-COMP-WLNS-TEST-01 — WL diatomic ns validation
 
-### HP-COMP-WLNS-FN-01 — WL diatomic `ns` contract cleanup
+Lifecycle: completed validation contract. Permission: validation maintenance.
 
-Approved source file:
+Evidence and test surfaces:
 
-```text
-src/cartesian_base_hamiltonian.jl
-```
+- `docs/src/developer/pqs_manager_running_log.md`, Pass 148;
+- `test/driver_public/cartesian_base_hamiltonian_runtests.jl`, current
+  downstream WL base regression.
 
-Approved behavior:
-
-- for homonuclear z-axis diatomics with `nesting = :wl`, reject normalized
-  `ns < 4` early with a clear `ArgumentError`;
-- preserve current public size normalization:
-  - `nesting = :pqs`: route-local `q = ns`;
-  - `nesting = :wl`: route-local `q = ns - 2`;
-- preserve all working cells in the current composition matrix: atom and
-  z-axis diatomic geometry, base and supplemented mode, and `nesting = :pqs`
-  / `:wl`;
-- document and preserve the fact that WL diatomic retained support may
-  saturate over `ns` ranges when the physical parent extent dominates; the
-  same public `ns` value is not a fair PQS/WL basis-size comparison.
-
-Forbidden:
-
-- driver public-input changes, layout/comment/stage/timing changes, or
-  compatibility aliases;
-- route skeleton, shellification, terminal lowering, retained-unit,
-  terminal-basis, raw-block, Residual Gaussian, MWG/IDA, artifact schema,
-  writer, reader, public API/export, solver/ECP, diagnostics, report/status
-  payload, or Cr2-specific workflow changes;
-- attempts to "fix" WL `ns = 4:7` retained-support saturation in this lane;
-- committed tests or committed input fixtures.
-
-Failure rule: if early WL diatomic `ns` rejection cannot be implemented in
-`src/cartesian_base_hamiltonian.jl` without touching driver, shellification,
-terminal lowering, route semantics, or artifact schema, make no source commit
-and report the exact blocker.
-
-Line budget: target under `60` added `src` lines.
-
-### HP-COMP-WLNS-TEST-01 — WL diatomic `ns` validation
-
-Approved validation:
-
-- `git diff --check`;
-- package load;
-- WL Be2 or H2 z-axis diatomic with `ns = 3` rejects early;
-- WL z-axis diatomic `ns = 4` base artifact/readback still passes;
-- WL z-axis diatomic supplemented smoke still passes where that composition
-  cell is already implemented and bounded;
-- PQS atom and z-axis diatomic smoke still pass;
-- no Cr2 run.
-
-No committed test file, committed fixture, driver contract test,
-solver/RHF/ECP/EGOI validation, route-diagnostic validation, or Cr2 fixture is
-approved.
+The accepted gate covered early `ns = 3` rejection, working `ns = 4` base
+and supplemented smokes, and PQS regressions. No dedicated ID-specific
+committed test file was added.
 
 ## Approved Base Assembly Completion
 
@@ -6433,67 +6145,12 @@ Remaining deferred lanes are:
 - allocation-free or bounded-allocation validation reductions for large dense
   matrices.
 
-### Nesting/supplement composition target
+### Composition family index
 
-The target producer contract is the three-choice composition documented in
-`nesting_supplement_composition_plan.md`:
-
-```text
-geometry:   atom | z-axis diatomic
-nesting:    :pqs | :wl
-supplement: off | on
-```
-
-This registry section is planning only except for the promoted
-`HP-COMP-WLDIAT-*`, `HP-COMP-BASEDIAT-*`, `HP-COMP-SUPPWL-*`,
-`HP-COMP-SUPPATOM-*`, `HP-COMP-ATOMBOX-*`, `HP-COMP-WLNS-*`,
-`HP-WLDIAT-COMPACT-*`, and `HP-WLDIAT-PARITY-*` pairs above.
-Current support remains partial:
-
-- atom / no supplement / `:pqs`: implemented for explicit origin-centered base
-  atoms;
-- atom / no supplement / `:wl`: implemented for one-center base atoms;
-- atom / supplement / either nesting: approved under `HP-COMP-SUPPATOM-*`;
-- z-axis diatomic / no supplement / `:pqs`: implemented for explicit
-  homonuclear z-axis all-electron inputs;
-- z-axis diatomic / no supplement / `:wl`: implemented for explicit
-  homonuclear z-axis all-electron inputs through native WL terminal records,
-  with compact retained-basis correction approved separately under
-  `HP-WLDIAT-COMPACT-*`;
-- z-axis diatomic / supplement / `:pqs`: supported for explicit homonuclear
-  z-axis diatomics through the residual-GTO/MWG path;
-- z-axis diatomic / supplement / `:wl`: supported for explicit homonuclear
-  z-axis diatomics through the same residual-GTO/MWG boundary after WL terminal
-  realization.
-
-For `nesting = :wl` z-axis diatomics, `HP-COMP-WLNS-*` additionally approves
-early rejection of normalized `ns < 4` and records that final retained support
-may saturate across working `ns` ranges.
-`HP-WLDIAT-COMPACT-*` records that the current boundary-stratum identity
-realization is not the production compact retained-basis contract.
-`HP-WLDIAT-PARITY-*` records that boundary strata retain the requested shell
-count without nucleus-centered symmetric-odd coercion.
-
-Composition IDs:
-
-- `HP-COMP-WLDIAT-FN-01` / `HP-COMP-WLDIAT-TEST-01`: approved WL z-axis
-  diatomic base terminal records and artifact path;
-- `HP-COMP-BASEDIAT-FN-01` / `HP-COMP-BASEDIAT-TEST-01`: approved base
-  homonuclear z-axis diatomic input validation relaxation in
-  `src/cartesian_base_hamiltonian.jl`;
-- `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01`: approved supplemented
-  White-Lindsey z-axis diatomic composition through the existing RG/MWG
-  boundary;
-- `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01`: supplemented
-  one-center atom path through common Residual Gaussian augmentation;
-- `HP-COMP-WLNS-FN-01` / `HP-COMP-WLNS-TEST-01`: WL z-axis diatomic `ns`
-  early rejection and retained-support saturation wording.
-- `HP-WLDIAT-COMPACT-FN-01` / `HP-WLDIAT-COMPACT-TEST-01`: WL z-axis
-  diatomic compact retained-basis correction.
-- `HP-WLDIAT-PARITY-FN-01` / `HP-WLDIAT-PARITY-TEST-01`: WL boundary-stratum
-  retained-count parity correction.
-
-The initial explicit `atom | z-axis diatomic`, `:pqs | :wl`,
-`supplement = off | on` composition lanes now all have approved implementation
-authority. Remaining geometry, solver, ECP, public export, and Cr2-specific
-work still need later docs-only amendments before implementation may begin.
+The bounded atom/diatomic, PQS/WL, base/supplemented matrix is implemented.
+Its individually addressable source/test entries and evidence appear above;
+the live numerical contract is
+[Nesting/supplement composition](nesting_supplement_composition_plan.md).
+WL compact retained-basis and boundary-count policies remain separate
+registered families. General geometry, public export, solver/ECP, and
+Cr2-specific workflow remain outside this composition authority.

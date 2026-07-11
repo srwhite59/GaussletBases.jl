@@ -1089,9 +1089,10 @@ Approved run-level hooks:
 `basisname = nothing` selects base mode. `basisname !== nothing` selects a
 supported supplemented mode and is the visible supplement basis label. The
 original driver-stage lane covered supplemented diatomics only;
-`HP-COMP-SUPPATOM-*` separately approves relaxing the old `Natom == 1`
-rejection. `padding` is physical box padding: it maps to one-center `radius`
-for atoms and to z-axis diatomic facade extents around the two nuclei.
+`HP-COMP-SUPPATOM-*` now implements supported one-center supplemented
+composition beyond that old boundary. `padding` is physical box padding: it
+maps to one-center `radius` for atoms and to z-axis diatomic facade extents
+around the two nuclei.
 
 `nesting` is a construction-family choice, not a diagnostic route switch. It
 must not expose internal route-family names, route skeletons, retained-rule
@@ -1174,66 +1175,19 @@ The canonical contract is
 `pqs_complete_shell_aspect_source_modes.md`; old cubic dimensions and scalar
 targets are historical evidence.
 
-Status: planning section for the explicit initial composition matrix. The
-WL base diatomic, base homonuclear diatomic, supplemented WL diatomic, and
-supplemented one-center atom lanes now all have approved IDs below. Deferred
-geometry, solver, ECP, public export, and Cr2-specific work remain
-candidate-only.
+### Implemented composition family
 
-The target producer shape is the 2 x 2 x 2 composition matrix recorded in
-`nesting_supplement_composition_plan.md`:
+The bounded atom/diatomic, PQS/WL, base/supplemented matrix is implemented.
+Its live geometry, public-`ns`, WL size-guard, atom-extent, and shared
+residual-GTO/MWG rules are canonical in
+`nesting_supplement_composition_plan.md`,
+`r1_one_center_base_atoms.md`, and
+`public_ns_core_side_parity.md`.
 
-```text
-geometry:   atom | z-axis diatomic
-nesting:    :pqs | :wl
-supplement: off | on
-```
-
-Current implementation status:
-
-| Geometry | Supplement | `nesting = :pqs` | `nesting = :wl` |
-| --- | --- | --- | --- |
-| atom | off | implemented for explicit origin-centered base atoms | implemented for one-center base atoms |
-| atom | on | approved implementation lane through the common RG/MWG path | approved implementation lane through the common RG/MWG path |
-| z-axis diatomic | off | implemented for explicit homonuclear z-axis all-electron inputs | mechanically implemented through native WL terminal records; compact retained-basis correction approved under `HP-WLDIAT-COMPACT-*` |
-| z-axis diatomic | on | supported for explicit homonuclear z-axis diatomics through RG/MWG | supported through the same RG/MWG boundary after WL base terminal realization |
-
-Dependency order:
-
-1. WL z-axis diatomic base: approved under `HP-COMP-WLDIAT-FN-01`; produce
-   native WL terminal records and the common `CartesianTerminalBasisRealization`
-   for `supplement = off`.
-2. Base homonuclear z-axis diatomics: approved under
-   `HP-COMP-BASEDIAT-FN-01`; relax base two-center validation from H2-only to
-   explicit homonuclear z-axis all-electron diatomics in
-   `src/cartesian_base_hamiltonian.jl` only.
-3. Supplemented WL: approved under `HP-COMP-SUPPWL-FN-01`; use the same RG
-   augmentation boundary after WL base terminal bases exist.
-4. Supplemented atoms: approved under `HP-COMP-SUPPATOM-FN-01`; use the same
-   owner-local Residual Gaussian path as supplemented diatomics, with one owner
-   center as the simple case.
-
-Approved first lane:
-
-- `HP-COMP-WLDIAT-FN-01` / `HP-COMP-WLDIAT-TEST-01`;
-
-Approved boundary:
-
-- source files are exactly those listed in `registry.md`;
-- support `Natom = 2`, `nesting = :wl`, `basisname = nothing` artifact/readback
-  through the same `CartesianTerminalBasisRealization` and staged base
-  Hamiltonian path;
-- produce native WL z-axis diatomic terminal records;
-- preserve the existing driver contract and avoid driver special cases;
-- do not adapt old WL H1/H1+J materialization;
-- do not change artifact schema, reader behavior, RG/MWG/supplement behavior,
-  route diagnostics, public API/export, or Cr2 workflow;
-- route provenance may use `:z_axis_diatomic_wl_base` under existing keys after
-  validation;
-- line budget is at most `250` added `src` lines, with deletion or
-  simplification of obsolete blocker-only WL diatomic guards expected where
-  practical.
-
+This implementation ledger does not restate those source and validation
+contracts. The separate WL compact retained-basis and boundary-count work
+below remains independently governed; composition support does not promise
+identical PQS/WL dimensions.
 ### 1a. White-Lindsey Diatomic Compact Retained Basis
 
 Status: approved for implementation under `HP-WLDIAT-COMPACT-FN-01` and
@@ -1314,35 +1268,18 @@ Be2 `ns = 5` boundary count demonstrates `98`; small WL base artifact/readback;
 small WL supplemented artifact/readback if bounded; PQS H2 RG endpoint
 unchanged; finite/symmetric `K` and `V`; no Cr2 run.
 
-Additional approved composition lane:
+Related WL retained-basis lanes:
 
-- `HP-WLDIAT-COMPACT-FN-01` / `HP-WLDIAT-COMPACT-TEST-01` are approved for
-  the WL z-axis diatomic compact retained-basis correction;
-- `HP-WLDIAT-PARITY-FN-01` / `HP-WLDIAT-PARITY-TEST-01` are approved for the
-  WL boundary-stratum retained-count parity correction;
-- `HP-COMP-BASEDIAT-FN-01` / `HP-COMP-BASEDIAT-TEST-01` are approved for the
-  base homonuclear z-axis diatomic validation relaxation;
-- `HP-COMP-SUPPWL-FN-01` / `HP-COMP-SUPPWL-TEST-01` are approved for the
-  supplemented White-Lindsey z-axis diatomic composition lane through the
-  existing RG/MWG boundary;
-- `HP-COMP-SUPPATOM-FN-01` / `HP-COMP-SUPPATOM-TEST-01` are approved for the
-  supplemented one-center atom composition lane through the existing RG/MWG
-  boundary.
-- `HP-COMP-ATOMBOX-FN-01` / `HP-COMP-ATOMBOX-TEST-01` are approved for the
-  one-center atom parent-sizing correction in `src/cartesian_base_hamiltonian.jl`.
-  Public `basis.radius` is the atom physical box extent authority.
-- `HP-COMP-NS-FN-01` / `HP-COMP-NS-TEST-01` are approved for public
-  size-parameter normalization in `src/cartesian_base_hamiltonian.jl` and
-  `bin/cartesian_ham_builder.jl`: public `ns` is the requested
-  cube/source/nesting size, while route-local `q` is derived as `q = ns` for
-  PQS and `q = ns - 2` for White-Lindsey.
-- `HP-COMP-NSCORE-FN-01` / `HP-COMP-NSCORE-TEST-01` are approved for direct
-  nucleus-centered core side parity in
-  `src/pqs_source_box_route_driver_helpers.jl`, with
-  `src/cartesian_base_hamiltonian.jl` allowed only if needed for one-center
-  parent minimum sizing consistency. Direct core side is derived from public
-  `ns` as `isodd(ns) ? ns : ns + 1`; route-local `q` remains route-local and
-  must not impose an oddized boundary retained count.
+- `HP-WLDIAT-COMPACT-FN-01` / `HP-WLDIAT-COMPACT-TEST-01` govern the
+  compact WL z-axis diatomic retained-basis correction;
+- `HP-WLDIAT-PARITY-FN-01` / `HP-WLDIAT-PARITY-TEST-01` govern WL
+  boundary-stratum retained-count parity.
+
+The implemented composition/input family is canonical in
+`nesting_supplement_composition_plan.md`,
+`r1_one_center_base_atoms.md`, and
+`public_ns_core_side_parity.md`; it is not duplicated in this ledger.
+
 - `HP-COMP-SHELLGEOM-FN-01` / `HP-COMP-SHELLGEOM-TEST-01` are approved for
   common terminal shell decomposition audit/cleanup in
   `src/cartesian_shellification/terminal_geometry.jl` and narrow caller
@@ -1435,7 +1372,7 @@ Decision:
 
 - the original `HP-DRV-ATOM-*` lane approved base atom driver output only;
 - current validation remains origin-centered H;
-- supplemented atom Hamiltonians are separately approved under
+- supplemented atom Hamiltonians are implemented separately under
   `HP-COMP-SUPPATOM-*`.
 
 Forbidden:

@@ -135,6 +135,27 @@ box controls remain separate concepts. Later `HP-PQS-MAP-SFACTOR-*` approves
 only the expert scalar `s_factor` as a narrow mapping-strength override; it
 does not revive public `d`, public `parent_mapping_d`, or element defaults.
 
+## Physical Parent Extent
+
+`HP-COMP-ATOMBOX-FN-01` is implemented. Public `basis.radius` is the
+one-center physical parent-extent authority. The producer maps that radius
+through the existing White-Lindsey atomic mapping and spacing policy, rounds
+to an odd axis count, and applies the public-`ns` direct-core side only as a
+minimum:
+
+```text
+mapped_count = odd count covering basis.radius
+direct_core_side = isodd(ns) ? ns : ns + 1
+parent_side = max(mapped_count, direct_core_side)
+```
+
+Thus `ns` controls source/nesting resolution; it does not replace atom
+radius or driver padding as physical box size. The shared `ns`/`q` rules
+are canonical in
+[Nesting/supplement composition](nesting_supplement_composition_plan.md), and
+direct-core parity is canonical in
+[Public ns direct-core side parity](public_ns_core_side_parity.md).
+
 ## Artifact Contract
 
 No new artifact schema is approved. Existing `HP-R1-ART-01`
