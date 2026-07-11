@@ -1331,7 +1331,7 @@ Non-negotiable RG guardrails:
   workflow, public API, or source files outside the approved RG owner/plumbing
   surface;
 - `HP-RG-NUMCOMP-FN-01` and `HP-RG-NUMCOMP-TEST-01` approve only the
-  implementation-pending internal opt-in numerical-complete policy in
+  implemented internal opt-in numerical-complete policy in
   `numerical_complete_residual_basis.md`. Reuse
   `build_residual_gaussian_basis(...)` with explicit `1e-10` cutoff,
   injection disabled, and no compactness prefilter; preserve `G`, keep the

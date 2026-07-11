@@ -28350,3 +28350,64 @@ Goal advancement / guardrail:
   protected-path behavior changed. Source added `118` lines and tests `64`,
   with no new type or duplicated numerical builder. Exact remaining caller is
   cr2-doer; production/default promotion remains unapproved.
+
+## Cartesian Hamiltonian Producer Pass 375 - Numerical-Complete Lifecycle Reconciliation
+
+Commit(s):
+- `b2da7070c` - implement and validate the internal numerical-complete residual
+  member;
+- this commit - mark `HP-RG-NUMCOMP-FN-01` and
+  `HP-RG-NUMCOMP-TEST-01` implemented/completed across live authority.
+
+Summary:
+- Reconciled the canonical contract, registry, current status, startup
+  guardrails, and adjacent residual/protected pages with the accepted source.
+  The implemented path preserves `G`, retains owner-local numerical residual
+  rank at `1e-10`, represents packet occupied blocks in native `[G,R_num]`,
+  and returns the existing screened-Hartree correction separately.
+- The H2 and padded Be2 gates are complete. The one authorized Cr2 fixed
+  imported-density comparison is now a consumer measurement rather than an
+  implementation blocker.
+
+Validation / guardrail:
+- Source acceptance used package load, misc `59/59`, nested H2 `67/67`, facade
+  `69/69`, reviewed padded Be2 evidence, terminal due diligence, and
+  `git diff --check`. This lifecycle pass uses source/path/ID scans, local
+  Documenter, staged docs-only review, and `git diff --check`.
+- The production cutoff remains `1e-6`; no default, artifact, public workflow,
+  solver, localization, interaction rotation, EGOI, odd-Gaussian, or Cr2
+  production authority is added.
+
+Goal advancement / next step:
+- MT4: numerical-complete additive composition is implemented and unblocks the
+  controlled Cr2 fixed-density off/on comparison. Endpoint interpretation
+  remains consumer-owned.
+- MT5: lifecycle drift for the newest source lane is closed immediately. The
+  next documentation reorganization target remains the historical
+  `implementation_slices.md` ledger and its foundational registry duplication,
+  after concurrent source work is clear.
+
+Carrying-cost note:
+- This is a narrow lifecycle update with no source/test changes and no new
+  design layer. It converts pending prose to source-backed fact rather than
+  duplicating the implementation report.
+
+### Medium-Term Goal Checkpoint After Pass 375
+
+- **MT1 fake-PQS quarantine - completed/maintained.** No route-shadow,
+  alternate Hamiltonian, or old materialization workflow has returned.
+- **MT2 independent PQS recovery - completed for supported cells.** Current
+  work consumes the same staged PQS producer and terminal realization.
+- **MT3 common physical support vocabulary - active refinement.** Common
+  shell ownership, aspect-source construction, and due diligence are live.
+  The Cr2 shared-shell local-resolution question remains a separate policy
+  audit; it is not silently folded into numerical-complete RG work.
+- **MT4 supplement/reference staging - active and materially advanced.** The
+  basis-preserving numerical-complete additive member is implemented; the next
+  physics step is the bounded Cr2 fixed imported-density comparison.
+- **MT5 documentation and carrying-cost cleanup - active.** Current status is
+  compact and major injection/reference contracts have canonical homes. The
+  next large stable target is the 2,050-line historical implementation ledger.
+- **MT6 old flat-path classification - maintenance.** Protected replacement,
+  dormant rho0/FAPP/JANCHOR, and the unrelated EGOI WIP remain separate and
+  are not compatibility dependencies of the numerical-complete member.

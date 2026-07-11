@@ -58,8 +58,8 @@ module, or object names in the new owner.
 - `HP-RG-CUTOFF-TEST-01` - validation gates for the cutoff/tolerance policy.
 - `HP-RG-CUTOFF-FN-02` - production residual occupation cutoff tightening.
 - `HP-RG-CUTOFF-TEST-02` - residual-only validation for the tightened cutoff.
-- `HP-RG-NUMCOMP-FN-01` / `HP-RG-NUMCOMP-TEST-01` - approved-pending
-  internal numerical-complete residual and additive-reference lane governed by
+- `HP-RG-NUMCOMP-FN-01` / `HP-RG-NUMCOMP-TEST-01` - implemented internal
+  numerical-complete residual and additive-reference lane governed by
   [numerical_complete_residual_basis.md](numerical_complete_residual_basis.md).
 - `HP-RG-SPECTRAL-AUDIT-01` - measurement-only residual-sector spectral audit.
 - `HP-RG-INJECT-AUDIT-01` - measurement-only optional injection audit.

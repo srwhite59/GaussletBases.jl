@@ -1,7 +1,7 @@
 # Numerical-Complete Residual Gaussian Basis
 
-Status: approved internal opt-in source and validation authority under
-`HP-RG-NUMCOMP-FN-01` and `HP-RG-NUMCOMP-TEST-01`; implementation pending.
+Status: implemented internal opt-in facility under
+`HP-RG-NUMCOMP-FN-01` and `HP-RG-NUMCOMP-TEST-01`.
 
 This page is the canonical contract for retaining the numerical Gaussian
 complement of an explicit supplement while preserving the terminal gausslet
@@ -100,7 +100,7 @@ residual_injection_cutoff  = 0.0
 residual_compactness       = nothing
 ```
 
-Implementation must reuse that builder and the existing
+The implementation reuses that builder and the existing
 `CartesianResidualGaussianBasis`. It must not duplicate the owner-local
 eigensolve, define another residual object, or create a second merge path. A
 narrow internal caller may name the numerical-complete policy, but all
@@ -159,12 +159,12 @@ Screening off/on uses the same `H1_M` and `Vee_M`; only the separately returned
 `Delta_J0/C` is applied. The one-body correction is direct electron-electron
 accounting, not a replacement kinetic or nuclear operator.
 
-The implementation may reuse private input, packet-placement, raw-field, and
+The implementation reuses private input, packet-placement, raw-field, and
 energy helpers near the protected ladder owner. It must not construct
 protected geometry, perform `F -> L` localization, write a protected artifact,
 or alter protected-localized ladder and EGOI facilities.
 
-## Approved Source Surfaces
+## Implemented Source Surfaces
 
 `HP-RG-NUMCOMP-FN-01` approves only:
 
@@ -179,13 +179,23 @@ or alter protected-localized ladder and EGOI facilities.
   `src/cartesian_reference_density/screened_hartree_correction.jl` only for
   narrow reuse when no contract or persistent result shape changes.
 
-Target at most `180` added source lines. If the path requires another builder,
-module, persistent struct, artifact field, or metadata cloud, stop and request
-new authority.
+Commit `b2da7070c` added `118` source lines without changing
+`residual_basis.jl` or the packet/correction owners. The implemented entry
+points are:
+
+```text
+numerical_complete_reference_blocks_in_augmented_basis(...)
+_plb_numerical_complete_residual(...)
+_plb_build_numerical_complete_member(...)
+_plb_build_numerical_complete_additive_reference_member(...)
+```
+
+No second builder, type, artifact field, or metadata cloud was added. Future
+work that requires one of those surfaces needs new authority.
 
 ## Validation
 
-`HP-RG-NUMCOMP-TEST-01` approves:
+`HP-RG-NUMCOMP-TEST-01` implemented:
 
 1. A compact synthetic contract in `test/misc/runtests.jl` that distinguishes
    a retained residual eigenvalue above `1e-10` from a true numerical null and
@@ -195,8 +205,9 @@ new authority.
    default assertions must remain unchanged.
 3. Ignored physically padded H2/Be2 construction and endpoint probes under
    `tmp/work`, with durable output only under `/Users/srw/dmrgtmp`.
-4. Only after the small-system gates pass, one ignored Cr2 fixed imported-density
-   comparison against the accepted protected `+28.510 mHa` result.
+4. After the now-passed small-system gates, one ignored Cr2 fixed
+   imported-density comparison against the accepted protected `+28.510 mHa`
+   result remains authorized.
 
 Every endpoint must inspect terminal due diligence. Report:
 
@@ -214,9 +225,12 @@ MWG finiteness and symmetry
 screened and unscreened endpoint deltas where run
 ```
 
-Stop before Cr2 if H2 or Be2 develops a bad low mode, failed capture, unstable
-metric, or material MWG-sensitive endpoint change. A Cr2 measurement is not a
-production energy claim.
+Accepted validation at `b2da7070c` passed package load, misc `59/59`, nested
+H2 augmented `67/67`, and facade `69/69`. H2 retained `34/34` candidates;
+padded Be2 retained `42/42`, recovered packet occupied spaces at about
+`1.3e-15`, preserved no-reference/additive `H1/Vee` exactly, and produced no
+bad residual-weighted low mode. Terminal due diligence was inspected. A Cr2
+measurement remains a consumer diagnostic, not a production energy claim.
 
 ## Explicit Non-Goals
 

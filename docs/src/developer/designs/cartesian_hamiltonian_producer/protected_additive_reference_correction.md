@@ -6,7 +6,7 @@ Status: implemented narrow internal, opt-in facility under
 
 This protected replacement path remains implemented. The separate
 [numerical-complete residual basis](numerical_complete_residual_basis.md) is an
-approved-pending alternative that preserves `G` and appends `R_num`; it does
+implemented alternative that preserves `G` and appends `R_num`; it does
 not alter this contract or reuse protected artifact semantics.
 
 This lane builds one protected-localized molecular member whose basis contains

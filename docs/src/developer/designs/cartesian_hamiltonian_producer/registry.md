@@ -3530,7 +3530,7 @@ facade support is approved.
 
 ### HP-RG-NUMCOMP-FN-01 — numerical-complete residual basis and additive consumer
 
-Status: approved internal opt-in source authority; implementation pending.
+Status: implemented internal opt-in facility at `b2da7070c`.
 
 Owner: `CartesianResidualGaussians`, with narrow private additive-reference
 composition near the protected ladder owner.
@@ -3565,7 +3565,7 @@ Gaussian-array enrichment, or Cr2-specific behavior and claims.
 
 ### HP-RG-NUMCOMP-TEST-01 — numerical-complete residual validation
 
-Status: approved validation contract; implementation pending.
+Status: completed bounded validation contract at `b2da7070c`.
 
 Approved surfaces:
 
@@ -3581,6 +3581,11 @@ capture/trace, broad occupation and `P_GR`, low modes, MWG finiteness/symmetry,
 bounded endpoints, and inspected terminal due diligence. Near-threshold metric
 failure, occupied capture failure, or a bad H2/Be2 mode stops the lane; do not
 floor eigenvalues, inject occupied directions, or weaken thresholds.
+
+Accepted evidence: package load; misc `59/59`; nested H2 augmented `67/67`;
+facade `69/69`; reviewed padded Be2 construction, endpoint, and terminal due
+diligence. One ignored Cr2 fixed imported-density comparison remains allowed;
+it is not a production claim or further source authority.
 
 ### HP-RG-SPECTRAL-AUDIT-01 — residual-sector spectral audit
 

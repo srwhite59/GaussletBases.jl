@@ -37,7 +37,7 @@ are evidence, not normal startup authority.
 | Composition and driver | PQS/WL, base/supplemented composition through shared producer boundaries; canonical artifact-producing driver; terminal inventory and due-diligence reporting | [Composition contract](nesting_supplement_composition_plan.md), [driver workflow](cartesian_driver_usability_workflow.md), [due diligence](terminal_shellification_due_diligence.md) |
 | Mapping and source span | Expert `s_factor` and opt-in mapped-COMX source spans with provenance; defaults remain unchanged | [Mapping s_factor](pqs_mapping_s_factor.md), [mapped COMX](mapped_comx_source_span.md) |
 | Coulomb policy | One producer-wide expansion reaches parent/PGDG, base IDA, residual-GTO, and MWG. Compact45 and high135 are implemented | [Coulomb accuracy](coulomb_accuracy_policy.md) |
-| Residual Gaussians | Owner-local residual selection, one final merge, exact augmented one-body operators, final-basis MWG/IDA, current `1e-6` occupation cutoff | [Residual Gaussian domain](residual_gaussian_domain_module.md), [orthogonality/cutoff](residual_gaussian_orthogonality_robustness.md) |
+| Residual Gaussians | Owner-local residual selection, one final merge, exact augmented one-body operators, final-basis MWG/IDA, current `1e-6` production cutoff, and opt-in numerical-complete `[G,R_num]` additive composition | [Residual Gaussian domain](residual_gaussian_domain_module.md), [numerical-complete basis](numerical_complete_residual_basis.md), [orthogonality/cutoff](residual_gaussian_orthogonality_robustness.md) |
 | Direct-G injection | Default-off in-memory compatibility path; ordinary behavior is invariant and enabled artifacts remain unsupported | [Direct-G injection](residual_gaussian_injection_hybrid.md) |
 | Protected-localized basis | Compact-main protected replacement, exact localized one-body matrices, inherited-site `Vee_L`; direct `C' V C` is rejected | [Protected-localized basis](protected_localized_basis.md) |
 | Protected persistence | Opt-in protected Hamiltonian artifacts with native locality metadata, plus same-parent ladder bundles and exact cross-overlap transfer | [Protected artifact](protected_localized_artifact.md), [protected ladder](protected_localized_ladder.md) |
@@ -54,7 +54,6 @@ claim.
 | --- | --- | --- |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
-| `HP-RG-NUMCOMP-*` | Internal opt-in source/test lane approved, not implemented | Reuse the existing RG builder at `eta_num=1e-10`, preserve `G`, validate packet capture after construction, and build one unlocalized additive-reference member before any Cr2 comparison |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |
 | Documentation architecture | Active cleanup | Finish canonical ownership/lifecycle reconciliation, compress registry families, then introduce shadow machine-readable metadata only after parity |
@@ -65,8 +64,9 @@ historical audit IDs are not active work.
 
 ## Current Physics Target
 
-The current consumer-facing target is one controlled Cr2 screened-Hartree
-off/on comparison after the numerical-complete H2/Be2 gates:
+The current consumer-facing target is the authorized controlled Cr2
+screened-Hartree off/on fixed-density comparison. The numerical-complete
+H2/Be2 source and validation gates have passed:
 
 - one high-accuracy `M=[G,R_num]` Hamiltonian basis that preserves `G`;
 - one imported external-GTO occupied start represented by the source-backed
@@ -86,17 +86,14 @@ energy claim.
    screened comparison stays `:high` and must not be changed mid-comparison.
 2. **Retained-GTO EGOI helper.** The protected target/mask convention is
    accepted, but committed source does not yet implement the helper.
-3. **Numerical-complete additive composition.** The reuse contract is approved,
-   but packet capture, exact field transformation, and the additive correction
-   have not yet been composed in native `[G,R_num]` order.
-4. **Residual spectral interpretation.** Tightening the RG cutoff removed
+3. **Residual spectral interpretation.** Tightening the RG cutoff removed
    marginal residuals but did not remove the measured low two-owner mode.
    Injection and cutoff changes are not substitutes for a separately approved
    safety policy.
-5. **Protected atoms and counterpoise.** One-center protected compactness,
+4. **Protected atoms and counterpoise.** One-center protected compactness,
    separated kinetic/unit-nuclear persistence, and counterpoise sidecars remain
    separate future designs.
-6. **Authority lifecycle drift.** Several older pages still say “approved”
+5. **Authority lifecycle drift.** Several older pages still say “approved”
    after their implementations landed. Correct them only from explicit
    source/test commits and manager acceptance records; do not infer lifecycle
    from filenames or current source alone.
