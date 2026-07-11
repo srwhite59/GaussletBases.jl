@@ -166,17 +166,19 @@ Implemented base path:
   below `1e-8 Ha`. Packets carrying retired moment-polish provenance must be
   regenerated, while the protected additive-reference construction remains
   implemented independently.
-- `HP-REP-XGTO-IMPORT-FN-01` and `HP-REP-XGTO-IMPORT-TEST-01` approve only a
-  representation-transfer facility for importing explicit external Gaussian AO
-  orbitals into an orthonormal GaussletBases final working basis. The rule is
-  `S_FG = <F|G_external>` and `C_F = S_FG * C_G`. External AO self-overlap
-  `S_GG` is validation-only for checks such as `C_G' * S_GG * C_G ~= I`; it is
-  not a generalized final-basis transfer metric. The lane may add a compact
-  explicit packet reader/writer, import result, and capture diagnostics around
-  existing `gto_overlap_matrix(...)`. It does not approve Hamiltonian
-  transforms, `C' V C`, `Vee`/source transforms, solver workflow,
-  screened-Hartree/EGOI changes, residual/injection policy changes, PySCF
-  dependency in repo tests, or Cr2 production claims.
+- `HP-REP-XGTO-IMPORT-FN-01` and `HP-REP-XGTO-IMPORT-TEST-01` implement
+  explicit external-GTO orbital import by `C_F = <F|G_external>*C_G` and now
+  approve a narrow protected-member composition using native
+  `S_LG = <L|G_external>`. `HP-REP-XGTO-PROTECT-SIDECAR-FN-01` and
+  `HP-REP-XGTO-PROTECT-SIDECAR-TEST-01` approve, but do not yet implement, one
+  standalone native-order representation sidecar retaining `S_LG`, direct
+  spin imports, member/packet identity, and metric-aware capture diagnostics.
+  External `S_GG` remains validation/diagnostic data, not a generalized final
+  metric. The canonical contract is
+  [external GTO orbital import](external_gto_orbital_import.md). No protected
+  artifact field, ladder-sidecar reuse, solver orthonormalization, Hamiltonian
+  or interaction transform, PySCF dependency, or Cr2 production claim is
+  approved.
 - `HP-MCOMX-*` approves a protected-`P2` plus mapped Chebyshev source-span
   option at the existing nested doside / COMX seam. The nonlinear map uses
   normalized local `u`, while `_cleanup_comx_transform(...)` still uses the
@@ -402,9 +404,10 @@ Approved Residual Gaussian robustness lane:
   versioned manifests, protected member references, exact adjacent
   final-basis cross overlaps, optional native-order restarts, target-member
   fixed-density evaluation, and bounded summaries. Generalized overlap,
-  source-Hamiltonian/`Vee` transforms, interaction rotation, new
-  representation sidecars, solver workflow, and Cr2 production remain
-  excluded.
+  source-Hamiltonian/`Vee` transforms, interaction rotation, solver workflow,
+  and Cr2 production remain excluded. The separately approved external-GTO
+  representation sidecar is not a ladder manifest, transfer, or restart
+  object and does not change this bundle contract.
 - Exact neutral reference-Hartree numerics remain implemented under
   `HP-RHO0-MIXH-GG-*`, `HP-RHO0-MIXH-GAAA-*`, and
   `HP-RHO0-MIXH-FEXACT-*`. The canonical contract is

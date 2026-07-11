@@ -197,8 +197,9 @@ fixed_density_energy/*
 ```
 
 These are ladder-owned sidecars, not fields added to protected member
-artifacts. No representation sidecar beyond these implemented objects is
-authorized here.
+artifacts. The separately governed external-GTO representation sidecar in
+[External GTO orbital import](external_gto_orbital_import.md) is not a ladder
+transfer/restart object and does not change this layout or identity.
 
 ## Required Diagnostics
 
@@ -260,8 +261,10 @@ needed to assemble a new exact cross overlap.
 
 Therefore, cross-overlap construction currently requires reconstructing both
 protected members in memory from the recipe. A bundle cannot derive a new
-transfer from member artifacts alone. Adding raw-`L` coefficient fields or a
-new representation sidecar requires separate authority.
+transfer from member artifacts alone. Raw-`L` coefficient fields remain
+forbidden. `HP-REP-XGTO-PROTECT-SIDECAR-*` separately approves saving an exact
+external `S_LG` once while one in-memory member exists; it does not let the
+bundle reconstruct other overlaps or add member fields.
 
 ## Failure Behavior
 
@@ -313,7 +316,8 @@ This contract does not approve:
 - solver or UHF continuation;
 - source-Hamiltonian or source-`Vee` transformation;
 - generalized final-basis overlap transfer;
-- new representation sidecars or raw-`L` member fields;
+- ladder-owned representation sidecars or raw-`L` member fields; the separate
+  external-GTO sidecar remains outside this contract;
 - package exports, public API, or driver defaults;
 - Cr2 production claims.
 

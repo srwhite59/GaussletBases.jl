@@ -527,6 +527,8 @@ these approved design IDs:
 - `HP-PQS-ATOMREF-PACKET-TEST-01`
 - `HP-REP-XGTO-IMPORT-FN-01`
 - `HP-REP-XGTO-IMPORT-TEST-01`
+- `HP-REP-XGTO-PROTECT-SIDECAR-FN-01`
+- `HP-REP-XGTO-PROTECT-SIDECAR-TEST-01`
 - `HP-PQS-SCREEN-HARTREE-CORR-FN-01`
 - `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`
 - `HP-R1-WIRE-01`
@@ -778,15 +780,21 @@ retired `potential_fit/moment_polish/*` provenance are rejected and require
 regeneration. The retired `HP-PQS-ATOMREF-POTMOM-*` IDs are historical only
 and do not authorize source work. No production correction, solver, public
 default, exchange, EGOI, row-gauge rho0/P0, or Cr/Cr2 claim is approved.
-`HP-REP-XGTO-IMPORT-FN-01` and `HP-REP-XGTO-IMPORT-TEST-01` approve only the
-external-GTO representation-transfer facility in
-`src/cartesian_external_gto_import.jl`, narrow include/shared-overlap wiring,
-and its existing correctness test. Import uses
-`S_FG = <F|G_external>` and `C_F = S_FG * C_G`; external `S_GG` is validation
-only. Explicit packet basis/order/fingerprint data are required, and repo tests
-must not depend on PySCF. This does not approve Hamiltonian or `Vee` transforms,
-`C' V C`, generalized final-basis overlap workflows, solver workflow,
-screened-Hartree/EGOI changes, or Cr2 production claims.
+`HP-REP-XGTO-IMPORT-FN-01` and `HP-REP-XGTO-IMPORT-TEST-01` own the implemented
+external-GTO import and approve its narrow protected-member composition
+extension. Import uses `S_FG = <F|G_external>` and `C_F = S_FG*C_G`; a
+protected member uses native `S_LG = <L|G_external>` from the existing exact
+handoff. External `S_GG` is validation and metric-aware capture data, not a
+generalized final-basis metric. Direct imported coefficients are not
+solver-orthonormalized. `HP-REP-XGTO-PROTECT-SIDECAR-FN-01` and
+`HP-REP-XGTO-PROTECT-SIDECAR-TEST-01` additionally approve one standalone
+native-order sidecar containing `S_LG`, direct spin imports, packet/member
+fingerprints, provenance, and metric-aware capture diagnostics. The sidecar is
+not a protected Hamiltonian field or ladder transfer/restart. No PySCF
+dependency, raw-coefficient angular capture, raw `G_L/A_L` persistence,
+Hamiltonian/`Vee` transform, `C' V C`, generalized final overlap, public
+workflow, solver/HF loop, screened-Hartree/EGOI change, or Cr2 production claim
+is approved.
 `HP-PQS-SCREEN-HARTREE-CORR-FN-01` and
 `HP-PQS-SCREEN-HARTREE-CORR-TEST-01` implement only the internal in-memory
 screened direct-Hartree correction specified by

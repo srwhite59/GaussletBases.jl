@@ -191,6 +191,9 @@ This contract does not own or authorize:
 - protected-basis numerical construction or alternative interaction rules;
 - ladder manifests, transfers, restart sidecars, or bundle summaries, which
   belong to [protected-localized ladder bundles](protected_localized_ladder.md);
+- external-GTO `S_LG` representation sidecars, which belong to
+  [External GTO orbital import](external_gto_orbital_import.md) and do not add
+  `G_L`, `A_L`, or `S_LG` fields here;
 - EGOI targets or corrections, which remain governed by
   [retained-GTO local-product EGOI](retained_gto_egoi.md);
 - occupied-first or additive-reference construction;

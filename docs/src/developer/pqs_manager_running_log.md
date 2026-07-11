@@ -27846,3 +27846,50 @@ Carrying-cost result:
 - Exact next cleanup candidate: separately review and delete dormant FAPP and
   JANCHOR source/tests only after a fresh caller audit; this pass deliberately
   leaves their implementation untouched.
+
+## Cartesian Hamiltonian Producer Pass 363 - Protected External-GTO Representation Sidecar Authority
+
+Commit(s):
+- this commit - approve protected-localized external-GTO composition and a
+  standalone native representation sidecar.
+
+Summary:
+- Reconciled `HP-REP-XGTO-IMPORT-FN-01` / `TEST-01` as an implemented general
+  packet/import facility and approved one narrow extension from an already-
+  built protected member. It reuses the exact final/GTO handoff to form
+  `S_LG = <L|G_external>` and imports direct spin coefficients by
+  `C_L = S_LG*C_G` in native `L` order.
+- Added `HP-REP-XGTO-PROTECT-SIDECAR-FN-01` / `TEST-01` for one standalone
+  v1 sidecar retaining exact final-by-external `S_LG`, direct imports,
+  packet/member fingerprints and provenance, Coulomb policy, and capture
+  diagnostics. It is neither a protected Hamiltonian field nor a ladder
+  transfer/restart sidecar.
+- Defined full external-span capture in the nonorthogonal `S_GG` metric and
+  occupied capture through `C_L'*C_L`. Raw AO coefficient squares do not define
+  angular-channel capture.
+
+Validation / evidence:
+- Design review confirmed the existing packet validation/import source, exact
+  `_cartesian_final_gto_cross_overlap_handoff(...)`, and in-memory protected
+  `G_L/A_L` provide the complete seam. Protected artifacts intentionally lack
+  raw reconstruction coefficients; saving the roughly 25 MB Cr2 `S_LG` avoids
+  repeating an expensive member build.
+- Focused source/caller, artifact-boundary, ID/path, native-order/formula, and
+  docs-only scope scans plus local Documenter and `git diff --check` are the
+  acceptance gates. No Julia numerical test is required in this authority pass.
+
+Goal advancement / guardrail:
+- LT2/LT5/LT8 and MT4: makes exact external-state representation reusable for
+  controlled screened/unscreened starts without moving solver policy into the
+  repo. CR2 still owns orbital orthonormalization, HF/sweep state, energies,
+  spin/occupation diagnostics, and interpretation.
+- No PySCF dependency, public workflow, generalized final metric, Hamiltonian
+  or `Vee` transform, raw `G_L/A_L` persistence, protected/ladder schema
+  change, EGOI/screened-Hartree change, or endpoint claim is approved.
+
+Carrying-cost result:
+- source/test line delta: `0` in this docs-only pass.
+- first implementation reuses existing source/test files and targets at most
+  350 source plus 220 test lines, with no module, export, or large fixture.
+- exact next step: implement the protected import/result and sidecar roundtrip
+  on a bounded synthetic/small member, then let CR2 reuse the saved `S_LG`.
