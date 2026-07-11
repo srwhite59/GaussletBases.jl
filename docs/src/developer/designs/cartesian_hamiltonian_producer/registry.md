@@ -624,599 +624,152 @@ No committed test file, committed fixture, driver contract test,
 solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
 validation, or Cr2 fixture is approved.
 
-## Approved Composition Cleanup: Common Terminal Shell Decomposition
+## Common Shellification And Compact Thin-Slab Family
 
-This lane freezes the two-geometry distinction needed to keep PQS/WL
-composition from drifting.
+Canonical contract:
+[Common terminal shell decomposition](common_terminal_shell_decomposition.md).
 
-Common terminal shell decomposition is the first geometry:
+This family owns route-neutral first-step shell geometry, native angular-z slab
+classification, shared face-product realization, and compact thin-slab
+lowering. It does not own PQS aspect-aware complete-shell source dimensions,
+which have a separate canonical contract and IDs.
 
-```text
-parent lattice + nuclear centers + direct core side
--> direct core regions
--> terminal shell regions
--> owned support rows
-```
+### HP-COMP-SHELLGEOM-FN-01 — common shell decomposition
 
-PQS and White-Lindsey must share this first step. The family split begins only
-after common shell records exist:
+Status: implemented.
 
-```text
-PQS: common shell support + full source CPB -> retained source-box modes
-WL:  common shell support -> faces/edges/corners/strata -> 1D contractions
-```
+Owner/source:
+`src/cartesian_shellification/terminal_geometry.jl`, with narrow caller
+plumbing in `src/pqs_source_box_route_driver_helpers.jl`.
 
-### HP-COMP-SHELLGEOM-FN-01 — common shell decomposition audit/cleanup
+Permission: maintain route-family-free direct-core/shell regions, ordering,
+coverage, and owned support before PQS/WL retained construction diverges.
 
-Approved source files:
+### HP-COMP-SHELLGEOM-TEST-01 — common shell validation
 
-```text
-src/cartesian_shellification/terminal_geometry.jl
-src/pqs_source_box_route_driver_helpers.jl
-```
+Status: completed validation evidence.
 
-Approved behavior:
-
-- audit whether first-step shell/core region construction is already identical
-  for `nesting = :pqs` and `nesting = :wl`;
-- keep direct core regions, shell regions, owned support rows, ordering, and
-  coverage route-family-free;
-- remove route-family branching from common terminal shell decomposition if it
-  exists;
-- rename or locally clarify shellifier parameters and summary labels so common
-  shell geometry is not presented as governed by PQS `q` or WL inner side;
-- keep direct-core side tied to public `ns` through `HP-COMP-NSCORE-*`;
-- leave PQS and White-Lindsey lowering/realization separate after common shell
-  records are produced.
-
-Approved source surface details:
-
-- `src/cartesian_shellification/terminal_geometry.jl` owns common
-  route-family-free shell/core region decomposition;
-- `src/pqs_source_box_route_driver_helpers.jl` may change only narrow caller
-  plumbing and summary/provenance wording needed to pass common shell inputs
-  before selecting PQS or White-Lindsey lowering.
-
-For one-center atoms, same public system, parent extent, and `ns` must produce
-the same direct core and shell-owned support regions before family-specific
-lowering.
-
-For z-axis diatomics, this lane may audit whether central-gap and shared-shell
-planning use the same common shell decomposition. It must not change central
-gap/contact policy unless the fix is the same route-family-free shell input
-cleanup and does not touch lowering, retained units, or WL/PQS realization.
+Evidence: bounded same-input PQS/WL shell/support comparisons and downstream
+artifact/endpoint smokes recorded in the manager log. No committed fixture is
+owned by this ID.
 
 ### HP-COMP-SHELLGEOM-DIAT-FN-01 — diatomic common shellifier entry
 
-Approved source files:
+Status: implemented.
 
-```text
-src/cartesian_shellification/terminal_geometry.jl
-src/pqs_source_box_route_driver_helpers.jl
-```
+Owner/source:
+`src/cartesian_shellification/terminal_geometry.jl` and narrow
+`src/pqs_source_box_route_driver_helpers.jl` caller plumbing.
 
-Approved behavior:
-
-- for fixed public z-axis diatomic system, parent axes, public `ns`, direct
-  core side, nuclear centers, and bond axis, `nesting = :pqs` and
-  `nesting = :wl` must call the same common shellifier with the same
-  first-step arguments;
-- central-gap, contact-core, shared-shell, and outer-mismatch region ownership
-  are common shell decomposition facts;
-- PQS `q` and WL inner side are retained-construction inputs after common
-  shell records exist and must not change common diatomic shellifier entry;
-- if `raw_terminal_geometry(...)` currently uses a parameter named `q` for
-  common central-gap or shared-shell decisions, source work may rename or
-  reinterpret that shellifier boundary parameter as common `ns`;
-- keep the central-gap/contact algorithm unchanged except for replacing
-  route-family-dependent inputs with the shared common inputs.
-
-This does not approve changing terminal lowering, retained units, PQS
-source-box realization, WL face/edge/corner coefficient construction, route
-skeletons, artifacts, driver inputs, or public API.
-
-Failure rule: if same-function/same-argument z-axis diatomic entry requires
-changing the central-gap/contact algorithm rather than only its
-route-family-independent inputs, make no source commit and request a separate
-docs-only amendment.
+Permission: feed the same public `ns`, direct-core side, centers, bond axis,
+and parent facts into common z-axis diatomic shellification before family
+lowering. Central-gap/contact redesign is not approved.
 
 ### HP-COMP-SHELLGEOM-DIAT-TEST-01 — diatomic shellifier-entry validation
 
-Approved validation:
+Status: completed validation evidence.
 
-- `git diff --check`;
-- package load;
-- focused audit showing z-axis diatomic PQS/WL calls enter the common
-  shellifier with the same parent axes, nuclear centers, direct core side,
-  public `ns`, and bond axis;
-- same-`ns` PQS/WL z-axis diatomic direct core, central-gap/contact,
-  shared-shell, and outer-mismatch region counts match before
-  family-specific lowering for a bounded H2 or Be2 fixture;
-- base artifact/readback smoke for the same bounded fixture under
-  `nesting = :pqs` and `nesting = :wl` if the WL retained-basis path remains
-  available;
-- existing H2 Residual Gaussian endpoint smoke only if touched code crosses
-  supplemented path;
-- no Cr2 run.
+Evidence: bounded PQS/WL same-function/same-argument and shell-region parity;
+no Cr2 committed gate.
 
-No committed test file, committed fixture, driver contract test,
-solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
-validation, or Cr2 fixture is approved.
+### HP-COMP-OUTERMM-FN-01 — outer-mismatch-only correction
 
-### HP-COMP-OUTERMM-FN-01 / HP-COMP-OUTERMM-TEST-01 — superseded subset
+Status: superseded; no permission.
 
-Status: superseded by `HP-COMP-THINSLAB-FN-01` and
-`HP-COMP-THINSLAB-TEST-01`.
+Superseded by `HP-COMP-THINSLAB-FN-01`. Do not restore a separate
+outer-mismatch path.
 
-The outer-mismatch-only lane correctly identified that identity lowering was
-wrong, but the same direct-identity mistake also applies to central midpoint
-slabs. Do not implement `HP-COMP-OUTERMM-*` as a separate source lane.
+### HP-COMP-OUTERMM-TEST-01 — outer-mismatch-only validation
 
-### HP-COMP-THINSLAB-FN-01 — common thin-slab stack compact lowering
+Status: superseded; no permission.
+
+Historical evidence is subsumed by common thin-slab validation.
+
+### HP-COMP-ANGBOX-FN-01 — angular-balanced diatomic shellification
 
 Status: implemented.
 
-Approved source files:
+Owner/source:
+`src/cartesian_shellification/terminal_geometry.jl`.
 
-```text
-src/cartesian_terminal_lowering/selection.jl
-src/cartesian_terminal_lowering/region_contracts.jl
-src/cartesian_retained_units/lower_contract_units.jl
-src/cartesian_retained_unit_transform_contracts/unit_contracts.jl
-src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
-src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
-```
+Permission: emit native ordered `:angular_z_extension_slab` stacks so the
+ordinary shell body plus planned axial extensions realizes the physical
+outer-nucleus angular target. It does not change real-shell retained policy or
+central-gap/contact ownership.
 
-Optional only if directly required for native slab-axis/thickness metadata or
-existing summaries/records:
+### HP-COMP-ANGBOX-TEST-01 — angular shellification validation
 
-```text
-src/cartesian_shellification/terminal_geometry.jl
-src/pqs_source_box_route_driver_helpers.jl
-src/pqs_source_box_diatomic_complete_core_shell.jl
-```
+Status: completed validation evidence.
 
-Problem:
-
-- `src/cartesian_shellification/terminal_geometry.jl` creates
-  `region_kind = :direct_midpoint_slab` for central-gap one-slice slabs and
-  `region_kind = :outer_mismatch_slab` for boundary mismatch slabs;
-- `src/cartesian_terminal_lowering/region_contracts.jl` currently maps
-  midpoint slabs to `:direct_slab_identity_cpb`;
-- `src/cartesian_terminal_lowering/region_contracts.jl` currently maps that
-  outer-mismatch region to `:direct_boundary_slab_identity_cpb`;
-- `src/cartesian_retained_units/lower_contract_units.jl` then treats the
-  regions as direct retained units;
-- terminal realization therefore writes a full identity block.
-
-For z-axis diatomics, thin slabs are not production identity sectors for either
-PQS or White-Lindsey. They are face-like compact slab objects.
-Outer-mismatch evidence from CR2 found `z_low_outer_mismatch_slab` and
-`z_high_outer_mismatch_slab` contributing `7605` final rows each, or `15210`
-rows total. That is a producer basis-size bug, not a CR2/HFDMRG consumer
-issue. The central midpoint slab has the same lowering category: a one-slice
-slab between atom-local boxes, not a direct core.
-
-Approved behavior:
-
-- for `PQSLowering` and `WhiteLindseyLowering`, `:direct_midpoint_slab` and
-  `:outer_mismatch_slab` must not lower to `:direct_slab_identity_cpb` or
-  `:direct_boundary_slab_identity_cpb`;
-- use the same compact slab lowering function for both construction families,
-  with the same terminal region, public `ns`, slab normal axis, slab
-  thickness, and native source/support facts, when those facts are sufficient;
-- keep real shell-region lowering route-specific after common shellification:
-  PQS full source-box shell projection and WL face/edge/corner product
-  contractions remain different constructions;
-- keep direct nucleus-centered core and atom-contact core sectors identity
-  sectors;
-- the compact unit slice should have retained scale `ns x ns x 1` after
-  standard one-dimensional COMX/product compression, not full identity support
-  rows;
-- an outer-mismatch region of thickness `t <= ns` should be decomposed or
-  realized as an oriented stack of compact slices with scale about
-  `t * ns * ns`, not as one identity block;
-- if slab thickness exceeds `ns`, source work must stop and report whether a
-  whole-block `ns x ns x ns` compression or a setup-error policy needs
-  separate approval;
-- preserve shellification coverage, owned support disjointness, deterministic
-  ordering, common PQS/WL first-step geometry, Hamiltonian assembly, artifacts,
-  driver inputs, Residual Gaussian, MWG/IDA, and reader behavior;
-- keep PQS and White-Lindsey thin-slab lowering identical at this boundary.
-  Route-family-specific thin-slab lowering requires a later amendment.
-
-Forbidden:
-
-- driver changes;
-- artifact, manifest, provenance, schema, or reader changes;
-- residual Gaussian, MWG, IDA, Hamiltonian assembly, raw-block, or solver
-  changes;
-- route-family-specific thin-slab behavior;
-- route skeleton redesign;
-- broad terminal realization redesign beyond the shared thin-slab consumer;
-- retained-unit record changes beyond the shared thin-slab retained object;
-- retained-unit transform changes beyond the shared thin-slab transform
-  contract;
-- old high-order workflow revival;
-- committed Cr2 tests or fixtures;
-- direct slab deletion unless a separate approval proves the slabs are
-  nonphysical padding regions.
-
-Failure rule: if the slab cannot be compacted through existing compact slab
-machinery without changing shellification semantics, route skeletons, artifact
-schema, driver inputs, or real-shell policy, make no source commit and report
-the exact missing native fact. Do not parse region role names to infer slab
-normal or thickness; add native shellification metadata under the optional
-source surface if needed. If slab thickness exceeds `ns`, do not install a
-silent fallback under this ID.
-
-### HP-COMP-THINSLAB-TEST-01 — common thin-slab stack validation
-
-Status: implemented validation evidence.
-
-Approved validation:
-
-- `git diff --check`;
-- package load;
-- bounded H2 or Be2 artifact/readback under `nesting = :pqs` and
-  `nesting = :wl` where midpoint slabs and outer-mismatch slabs are present or
-  explicitly probed;
-- confirm no `direct_slab_identity_cpb` rows for `:direct_midpoint_slab`
-  regions under either lowering family;
-- confirm no `direct_boundary_slab_identity_cpb` rows for
-  `:outer_mismatch_slab` regions under either lowering family;
-- focused audit showing PQS and White-Lindsey call the same compact
-  thin-slab lowering function with the same region/public-`ns` inputs for
-  matched slab regions;
-- confirm retained thin-slab count is compact relative to support count, with
-  normal oriented unit-slice target `ns x ns x 1` and thickness-`t <= ns`
-  outer-mismatch scale about `t * ns * ns`;
-- existing H2 Residual Gaussian endpoint smoke if touched code crosses
-  supplemented construction;
-- optional CR2 user-run inventory only, not a committed gate.
-
-No committed test file, committed fixture, driver contract test,
-solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
-validation, or Cr2 fixture is approved.
-
-Forbidden:
-
-- driver changes;
-- public input changes;
-- route skeleton redesign;
-- terminal lowering redesign beyond the narrow common thin-slab repair in
-  `HP-COMP-THINSLAB-FN-01`;
-- retained-unit record changes beyond the shared thin-slab retained object;
-- retained-unit transform changes beyond the shared thin-slab transform
-  contract;
-- PQS source-box retained-mode realization changes;
-- WL face/edge/corner coefficient or retained-basis changes;
-- direct-core parity changes beyond `HP-COMP-NSCORE-*`;
-- central-gap/contact policy redesign;
-- artifact schema, manifest, reader, or provenance expansion;
-- Hamiltonian, one-body, IDA, MWG, Residual Gaussian, raw-block, solver, ECP,
-  or Cr2 workflow changes;
-- old WL materialization revival;
-- committed tests or fixtures.
-
-Failure rule: if common shell decomposition cannot be made route-family-free
-without changing terminal lowering, retained-unit records, PQS retained-mode
-realization, WL boundary coefficient construction, route skeleton semantics,
-artifact schema, or driver inputs, make no source commit and report the exact
-blocker.
-
-### HP-COMP-THINSLAB-META-FN-01 — thin-slab metadata inventory cleanup
-
-Status: implemented.
-
-Approved source file:
-
-```text
-src/cartesian_terminal_shellification_geometry.jl
-```
-
-Only in support of the already approved thin-slab lowering pass:
-
-```text
-src/pqs_source_box_route_driver_helpers.jl
-src/pqs_source_box_diatomic_complete_core_shell.jl
-```
-
-Problem:
-
-`src/cartesian_terminal_shellification_geometry.jl` is not the new
-shellifier owner, but it is still a live metadata/scaffold inventory path.
-The route helper calls
-`_cartesian_terminal_shellification_region_unit_inventory(...)`, and
-`_cartesian_terminal_region_unit_mapping(region)` still encodes the old direct
-identity slab contract:
-
-```text
-:direct_midpoint_slab -> :direct_slab_identity_cpb
-:outer_mismatch_slab -> :direct_boundary_slab_identity_cpb
-```
-
-It also has no planned `:angular_z_extension_slab` case. This makes route
-inventory disagree with the approved compact thin-slab lowering contract.
-
-Approved behavior:
-
-- update `_cartesian_terminal_region_unit_mapping(...)` so midpoint slabs,
-  outer-mismatch fallback slabs, and angular z-extension slabs map to the
-  compact thin-slab lowering category, not direct identity categories;
-- add only the minimal compact thin-slab inventory/count vocabulary needed for
-  existing route summaries to agree with terminal lowering;
-- recognize `:angular_z_extension_slab` as a planned compact thin-slab region;
-- preserve the metadata-only nature of the file: it describes planned
-  lowering consistently, but does not materialize coefficients or construct
-  Hamiltonian data;
-- keep direct core and atom-contact core identity mappings unchanged.
-
-Forbidden:
-
-- driver changes;
-- artifact, manifest, provenance, schema, or reader changes;
-- shellification algorithm changes;
-- route skeleton redesign;
-- Residual Gaussian, MWG, IDA, Hamiltonian, raw-block, or solver changes;
-- committed tests or fixtures;
-- Cr2 workflow;
-- new reporting framework;
-- reintroduction of direct identity slab lowering under a new name;
-- broad cleanup or deletion of the terminal-shellification metadata file in
-  this pass.
-
-Failure rule: if updating this metadata inventory requires materializing
-retained units, adding artifact/report payloads, changing shellification
-geometry, or redesigning route skeletons, make no source commit and report the
-blocker. This ID is only for keeping the live metadata/scaffold inventory
-consistent with compact thin-slab lowering.
-
-### HP-COMP-THINSLAB-META-TEST-01 — thin-slab metadata inventory validation
-
-Status: implemented validation evidence.
-
-Approved validation:
-
-- `git diff --check`;
-- package load;
-- existing angular geometry audit still passes;
-- thin-slab inventory/probe no longer blocks on unsupported terminal
-  shellification region kind `angular_z_extension_slab`;
-- focused scan confirms no planned direct identity lowering for midpoint,
-  outer-mismatch, or angular z-extension slabs in this metadata inventory;
-- bounded H2/Be2 artifact/readback validation remains under the main
-  `HP-COMP-THINSLAB-*` implementation pass;
-- no Cr2 run.
-
-No committed test file, committed fixture, public driver test, artifact schema
-test, or Cr2 fixture is approved.
+Evidence: ignored H2/Be2/Cr2-style geometry inventories and accepted
+shellification Passes 179/186; no production Cr2 claim.
 
 ### HP-COMP-FACEPROD-FN-01 — neutral terminal face-product helper
 
 Status: implemented.
 
-Approved source files:
+Owner/source:
 
-```text
-src/cartesian_final_basis_realization/terminal_face_product_blocks.jl
-src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl
-src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
-src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
-```
+- `src/cartesian_final_basis_realization/terminal_face_product_blocks.jl`;
+- module include in
+  `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`;
+- consumers in PQS and White-Lindsey terminal realization.
 
-Problem:
+Permission: one route-neutral face/face-stack coefficient assembly over fixed
+normal-axis indices. It is not a new terminal-basis policy.
 
-`HP-COMP-THINSLAB-*` needs a compact product-block seam for slabs, but the
-first source attempt placed a reusable helper in
-`white_lindsey_terminal_basis_realization.jl` and then called it from PQS.
-That makes shared numerical work look White-Lindsey-owned. The correct owner is
-a neutral internal helper under `CartesianFinalBasisRealization`.
-
-Approved behavior:
-
-- add a private/module-internal neutral helper for compact face-product
-  terminal blocks;
-- reuse `_nested_doside_1d(...)` and `_nested_face_product(...)`;
-- support normal axes `:x`, `:y`, and `:z`;
-- support one fixed normal-axis index for a face-like block;
-- support an ordered stack of fixed normal-axis indices for a thickness-`t`
-  slab;
-- take the retained count from the caller, normally public `ns`;
-- refactor White-Lindsey facet terminal realization to use the neutral helper;
-- allow later `HP-COMP-THINSLAB-*` implementation to use the same helper for
-  midpoint, outer-mismatch fallback, and angular z-extension thin slabs;
-- preserve existing support validation, overlap identity validation,
-  deterministic ordering, and owned-support disjointness.
-
-This helper seam does not replace `HP-COMP-THINSLAB-*`. It only approves the
-shared face-product coefficient assembly needed so thin-slab lowering can be
-implemented through reuse instead of duplicated PQS/WL terminal code.
-
-Forbidden:
-
-- driver changes;
-- public API/export;
-- artifact, manifest, provenance, schema, or reader changes;
-- shellification algorithm changes;
-- terminal lowering policy changes by itself beyond enabling the later
-  `HP-COMP-THINSLAB-*` pass;
-- route skeleton changes;
-- Residual Gaussian, MWG, IDA, Hamiltonian, raw-block, or solver changes;
-- old high-order workflow revival;
-- committed tests or fixtures;
-- Cr2 workflow;
-- duplicate implementation of face-product coefficient assembly;
-- PQS-specific thin-slab projection path;
-- treating thin slabs as White-Lindsey boundary strata for naming convenience.
-
-Line budget: target at most `80` added source lines for the neutral helper and
-WL facet refactor. If the helper needs substantially more, stop and report the
-missing abstraction before continuing.
-
-Failure rule: if a neutral helper cannot serve both current White-Lindsey
-facets and future thin slabs without changing numerical semantics, make no
-source commit and report whether the blocker is helper signature,
-support-record shape, retained-unit metadata, or terminal-realization
-ownership.
-
-### HP-COMP-FACEPROD-TEST-01 — neutral terminal face-product validation
-
-Status: implemented validation evidence.
-
-Approved validation:
-
-- `git diff --check`;
-- package load;
-- focused ignored helper probe if needed;
-- White-Lindsey facet parity before/after the refactor, showing identical
-  dimensions and coefficients or roundoff agreement;
-- H2 or Be2 base artifact/readback for `nesting = :wl` to confirm WL facet
-  behavior is unchanged;
-- H2 or Be2 base artifact/readback for `nesting = :pqs` if PQS terminal
-  realization imports or consumes the helper;
-- no Cr2 run.
-
-No committed test file, committed fixture, public driver test, artifact schema
-test, or Cr2 fixture is approved.
-
-### HP-COMP-ANGBOX-FN-01 — angular-balanced z-axis diatomic shellification
-
-Status: implemented.
-
-Approved source file:
-
-```text
-src/cartesian_shellification/terminal_geometry.jl
-```
-
-Optional only if directly required for existing summary/caller plumbing:
-
-```text
-src/pqs_source_box_route_driver_helpers.jl
-src/pqs_source_box_diatomic_complete_core_shell.jl
-```
-
-Approved behavior:
-
-- each shared z-axis diatomic molecular shellification step should compute an
-  angular-balanced target box from the outer nuclei in physical parent-axis
-  coordinates;
-- compare the physical bond-axis longitudinal margin from each outer nucleus
-  to the selected transverse physical scale; if `x` and `y` transverse scales
-  differ, use the smaller scale unless a later amendment approves another
-  convention;
-- treat this as the operational `:outer_nucleus_45_degree` shellification
-  rule;
-- when the angular-balanced target requires bond-axis-only extension beyond
-  the ordinary index-layer shell body, emit that difference as planned axial
-  thin-slab stacks with native metadata. The ordinary body plus planned
-  z-extension slabs, not the ordinary body alone, realizes the target
-  coverage;
-- specifically, when ordinary shared-shell expansion stops with transverse
-  axes saturated and bond-axis parent support remaining, emit the bond-axis
-  leftovers as planned `:angular_z_extension_slab` stack regions;
-- do not treat planned z-extension slabs as route-family-specific shell
-  regions or direct identity sectors;
-- apply the same thin-slab category to central midpoint slabs, planned
-  non-boundary angular z-extension slabs, planned boundary angular z-extension
-  slabs, and
-  unexpected outer-mismatch fallback slabs;
-- planned z-extension stacks with total thickness greater than `ns` should be
-  split into multiple ordered compact slab units with thickness `<= ns`;
-- unexpected fallback slabs with thickness greater than `ns` remain a
-  setup/shellification failure unless a later policy approves a whole-block
-  compression.
-
-Planned angular z-extension metadata should include:
-
-```text
-slab_kind = :angular_z_extension_slab
-slab_normal_axis
-slab_side
-slab_thickness
-slab_stack_index
-slab_stack_count
-bond_axis
-reference_nucleus_index
-angular_balance_rule = :outer_nucleus_45_degree
-longitudinal_margin_physical
-transverse_scale_physical
-angular_extension_physical
-```
-
-This lane must not parse region labels to infer slab geometry, must not change
-real shell retained policy, and must not turn axial z-extension slabs into
-identity sectors. Thin-slab lowering remains under `HP-COMP-THINSLAB-*`.
-
-Forbidden:
-
-- driver changes;
-- public input changes;
-- artifact, manifest, provenance, schema, or reader changes;
-- terminal lowering, retained-unit, transform-contract, or terminal-realization
-  changes;
-- Hamiltonian, one-body, IDA, MWG, Residual Gaussian, raw-block, solver, ECP,
-  or Cr2 workflow changes;
-- route skeleton redesign;
-- route-family-specific PQS/WL geometry;
-- PQS/WL real-shell retained-policy changes;
-- direct slab deletion;
-- Cr2-specific branches;
-- committed tests or fixtures.
-
-Failure rule: if angular-balanced shellification
-requires changing terminal lowering, retained-unit records, route skeletons,
-artifact schema, driver inputs, or real-shell retained policy beyond emitting
-native thin-slab stack regions, do not commit source work and report the exact
-missing native fact or policy.
-
-### HP-COMP-ANGBOX-TEST-01 — angular-balanced shellification validation
+### HP-COMP-FACEPROD-TEST-01 — face-product validation
 
 Status: completed validation evidence.
 
-Approved validation:
+Evidence: exact White-Lindsey facet coefficient parity and compact slab reuse;
+no committed fixture.
 
-- `git diff --check`;
-- package load;
-- ignored geometry audit output for bounded H2/Be2 and user-run Cr2-style
-  fixtures showing parent physical endpoints/counts, snapped nuclear indices,
-  core boxes, molecular inner box, each proposed shared-shell expansion,
-  transverse scale, low/high longitudinal margins, angular-balance ratios,
-  planned z-extension slab stacks, and residual outer mismatch if any;
-- ignored angular geometry audit showing planned z-extension support, zero
-  residual z mismatch after classification, and PQS/WL geometry parity;
-- prove planned z-extension stack slices use the same thin-slab lowering
-  category for PQS and WL;
-- no artifact/readback is required while lowering is intentionally deferred;
-- no committed Cr2 fixture or Cr2 run.
+### HP-COMP-THINSLAB-FN-01 — common compact thin-slab lowering
 
-Separate existing `HP-COMP-SHELLGEOM-DIAT-*` note:
-central-gap/contact algorithm redesign remains deferred. That lane approves
-only shared shellifier entry and route-family-independent inputs to the current
-algorithm. `HP-COMP-ANGBOX-*` does not change that central-gap/contact policy.
+Status: implemented.
 
-### HP-COMP-SHELLGEOM-TEST-01 — common shell decomposition validation
+Owner/source:
 
-Approved validation:
+- `src/cartesian_terminal_lowering/selection.jl`;
+- `src/cartesian_terminal_lowering/region_contracts.jl`;
+- `src/cartesian_retained_units/lower_contract_units.jl`;
+- `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`;
+- PQS/WL terminal realization through the neutral face-product owner;
+- native shellification/caller support in the established terminal owners.
 
-- `git diff --check`;
-- package load;
-- focused audit showing the one-center atom common shell decomposition is
-  route-family-free for the same public `ns`, parent extent, and center;
-- same-`ns` PQS/WL one-center atom direct core and shell-owned support counts
-  match before family-specific lowering;
-- same-`ns` PQS/WL one-center atom base artifact/readback still works for a
-  bounded fixture;
-- H2 or Be2 smoke to confirm the diatomic path still constructs;
-- existing H2 Residual Gaussian endpoint smoke only if touched code crosses
-  supplemented path;
-- no Cr2 run.
+Permission: midpoint, outer-mismatch, and angular-z-extension slabs lower as
+compact face stacks for both PQS and WL, never as full identity CPBs. Real
+shells remain family-specific.
 
-No committed test file, committed fixture, driver contract test,
-solver/RHF/ECP/EGOI validation, route-diagnostic validation, artifact schema
-validation, or Cr2 fixture is approved.
+### HP-COMP-THINSLAB-TEST-01 — compact thin-slab validation
 
+Status: completed validation evidence.
+
+Evidence: PQS/WL H2/Be2 artifact/readback, compact retained counts, exact WL
+facet parity, and H2 residual-GTO endpoint replay; no committed Cr2 gate.
+
+### HP-COMP-THINSLAB-META-FN-01 — thin-slab inventory metadata
+
+Status: implemented.
+
+Owner/source:
+`src/cartesian_terminal_shellification_geometry.jl`.
+
+Permission: describe native compact slab kinds consistently in internal
+inventory/scaffold summaries. It does not materialize coefficients or create
+artifact/report payloads.
+
+### HP-COMP-THINSLAB-META-TEST-01 — thin-slab inventory validation
+
+Status: completed validation evidence.
+
+Evidence: focused inventory checks confirm midpoint, outer-mismatch, and
+angular-z-extension slabs no longer advertise direct identity lowering.
+
+Family-wide non-goals: public inputs, artifact schema, route-report
+frameworks, RG/MWG/IDA, Hamiltonian semantics, solver/ECP, real-shell
+PQS/WL convergence, or Cr2 production claims.
 ## Approved Source-Span Facility: Mapped-COMX
 
 This section approves a narrow mainline source-span option based on

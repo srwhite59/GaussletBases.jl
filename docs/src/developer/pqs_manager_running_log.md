@@ -28106,3 +28106,42 @@ Carrying-cost result:
 - Exact next step: audit one bounded registry family for metadata-only
   compression. Do not introduce `authority.toml` until canonical-document and
   lifecycle parity are complete.
+
+## Cartesian Hamiltonian Producer Pass 369 - Compact Shell-Family Registry
+
+Commit(s):
+- this commit - replace the prose-heavy common shell/thin-slab registry family
+  with one metadata-oriented entry per ID.
+
+Summary:
+- Compressed fourteen shell-family source/test/superseded IDs while preserving
+  separate headings, lifecycle, owner/source paths, permission summaries,
+  validation evidence, and non-goals. This avoids the combined-heading shape
+  that would be unsafe for later machine-readable generation.
+- The canonical common-shell document remains the owner of geometry,
+  angular-z, face-product, and compact slab semantics. The registry now points
+  to it instead of duplicating full algorithms, pseudocode, failure rules, and
+  test narratives.
+
+Validation / evidence:
+- Verified exactly one registry heading for each SHELLGEOM, SHELLGEOM-DIAT,
+  OUTERMM, ANGBOX, FACEPROD, THINSLAB, and THINSLAB-META source/test ID.
+  Compared every source path and lifecycle with accepted implementation commits
+  and Passes 179/180/186/206.
+- Source-path checks, focused ID/lifecycle scans, local Documenter, and
+  `git diff --check` are the acceptance gates. No authority or source/test
+  behavior changes.
+
+Goal advancement / guardrail:
+- MT5 and registry migration: demonstrates the target metadata-only registry
+  shape on a mature implemented family without introducing a second authority
+  file or generator.
+- Individual IDs remain individually addressable. Superseded OUTERMM IDs carry
+  no permission; grouping prose does not reactivate them.
+
+Carrying-cost result:
+- Registry delta before this log entry is `+86/-533`, net `-447` lines;
+  registry length falls to about `6,732` lines.
+- Exact next step: review the overnight tranche as a whole. Further registry
+  families should be migrated independently; shadow TOML still waits for
+  complete canonical/lifecycle parity.
