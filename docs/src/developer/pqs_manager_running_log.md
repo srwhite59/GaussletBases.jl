@@ -28244,3 +28244,36 @@ Carrying-cost result:
 - Exact next cleanup step: migrate another mature registry family only after
   source-backed lifecycle review; do not use this pass to reopen WL terminal
   algorithms or composition behavior.
+
+## Cartesian Hamiltonian Producer Pass 372 - Broad Residual Occupation And Boys Decision
+
+Commit(s):
+- no source commit - accepted ignored H2/Be2 measurement evidence at
+  `f7dc81b9b`; only this strategic log entry is tracked.
+
+Summary:
+- Measured the actual RHF use of broad residual Gaussians rather than treating
+  spread or assigned-owner distance as a physics proxy. Total residual
+  occupations were `5.57e-5 e` for H2 and `2.18e-3 e` for Be2; broad residuals
+  carried `4.78e-5 e` and `2.07e-3 e`, respectively. The largest individual
+  broad-function occupation was `8.91e-6 e` for H2 and `5.71e-4 e` for Be2.
+- Owner-blocked Boys rotations remained stable. All six RHF cases converged,
+  no attractive residual-weighted Fock collapse appeared, and the largest
+  MWG-sensitive endpoint changes were `0.00210 mHa` for H2 and `0.03492 mHa`
+  for Be2.
+
+Decision / goal advancement:
+- Keep the unlocalized final Lowdin residual basis as the production baseline
+  because localization supplies no demonstrated endpoint benefit, not because
+  Boys localization is physically unsafe. Worsened median spread or owner
+  distance is geometric evidence only and must not independently reject a
+  same-span localization.
+- MT4: broad RGs are not a measured blocker to the controlled CR2 screened
+  comparison. No Gaussian-array odd-partner enrichment is justified now.
+
+Guardrail / next trigger:
+- Future broad-RG questions should report `P_RR` eigenvalues, broad occupation,
+  `P_GR` coupling, low modes, and same-span MWG endpoint sensitivity. Low RHF
+  occupation does not establish correlated-method safety; odd Gaussian-array
+  partners remain a conditional enrichment only after a measured occupation,
+  instability, or MWG-sensitivity trigger. No source/test lines were added.
