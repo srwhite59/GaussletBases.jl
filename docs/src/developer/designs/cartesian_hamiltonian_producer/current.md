@@ -54,6 +54,7 @@ claim.
 | --- | --- | --- |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
+| `HP-RG-NUMCOMP-*` | Internal opt-in source/test lane approved, not implemented | Reuse the existing RG builder at `eta_num=1e-10`, preserve `G`, validate packet capture after construction, and build one unlocalized additive-reference member before any Cr2 comparison |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |
 | Documentation architecture | Active cleanup | Finish canonical ownership/lifecycle reconciliation, compress registry families, then introduce shadow machine-readable metadata only after parity |
@@ -65,11 +66,11 @@ historical audit IDs are not active work.
 ## Current Physics Target
 
 The current consumer-facing target is one controlled Cr2 screened-Hartree
-off/on comparison:
+off/on comparison after the numerical-complete H2/Be2 gates:
 
-- one protected-localized high-accuracy Hamiltonian basis;
+- one high-accuracy `M=[G,R_num]` Hamiltonian basis that preserves `G`;
 - one imported external-GTO occupied start represented by the source-backed
-  native `S_LG` sidecar;
+  cross-overlap infrastructure;
 - identical starting state for screened and unscreened runs;
 - consumer-owned solver continuation, spin/occupation diagnostics, and
   interpretation.
@@ -85,14 +86,17 @@ energy claim.
    screened comparison stays `:high` and must not be changed mid-comparison.
 2. **Retained-GTO EGOI helper.** The protected target/mask convention is
    accepted, but committed source does not yet implement the helper.
-3. **Residual spectral interpretation.** Tightening the RG cutoff removed
+3. **Numerical-complete additive composition.** The reuse contract is approved,
+   but packet capture, exact field transformation, and the additive correction
+   have not yet been composed in native `[G,R_num]` order.
+4. **Residual spectral interpretation.** Tightening the RG cutoff removed
    marginal residuals but did not remove the measured low two-owner mode.
    Injection and cutoff changes are not substitutes for a separately approved
    safety policy.
-4. **Protected atoms and counterpoise.** One-center protected compactness,
+5. **Protected atoms and counterpoise.** One-center protected compactness,
    separated kinetic/unit-nuclear persistence, and counterpoise sidecars remain
    separate future designs.
-5. **Authority lifecycle drift.** Several older pages still say “approved”
+6. **Authority lifecycle drift.** Several older pages still say “approved”
    after their implementations landed. Correct them only from explicit
    source/test commits and manager acceptance records; do not infer lifecycle
    from filenames or current source alone.
@@ -122,6 +126,7 @@ Read only the relevant contract:
 
 - [Terminal and producer invariants](invariants.md)
 - [Residual Gaussian domain](residual_gaussian_domain_module.md)
+- [Numerical-complete residual basis](numerical_complete_residual_basis.md)
 - [Protected-localized basis](protected_localized_basis.md)
 - [Protected-localized artifacts](protected_localized_artifact.md)
 - [Retained-GTO EGOI](retained_gto_egoi.md)

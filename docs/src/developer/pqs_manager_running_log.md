@@ -28277,3 +28277,42 @@ Guardrail / next trigger:
   occupation does not establish correlated-method safety; odd Gaussian-array
   partners remain a conditional enrichment only after a measured occupation,
   instability, or MWG-sensitivity trigger. No source/test lines were added.
+
+## Cartesian Hamiltonian Producer Pass 373 - Numerical-Complete Residual Authority
+
+Commit(s):
+- this commit - approve the internal numerical-complete residual basis and
+  additive-reference consumer.
+
+Summary:
+- Approved a generic opt-in `M=[G,R_num]` path that preserves the terminal
+  gausslet basis and retains the owner-local numerical complement of the full
+  selected supplement at the explicit strict threshold `eta_num=1e-10`.
+- The path must reuse `build_residual_gaussian_basis(...)`, exact augmented
+  operators, existing MWG, atomic packets, placed reference-Hartree fields,
+  and the existing in-memory `ScreenedHartreeCorrection`. Packet occupied
+  spaces are validated after construction and never select or replace residual
+  directions.
+
+Decision / goal advancement:
+- MT4: replaces the next protected-replacement experiment with a simpler
+  basis-preserving source lane. H2 and padded Be2 are mandatory gates before
+  one fixed imported-density Cr2 comparison; no global default or endpoint
+  claim is approved.
+- The ordinary production cutoff remains `1e-6`. The `1e-10` threshold is a
+  named internal numerical-complete policy, not a conditioning tolerance or a
+  reinterpretation of `HP-RG-CUTOFF-FN-02`.
+
+Guardrail / remaining blocker:
+- No compactness/width filter, injection, occupied append, eigenvalue flooring,
+  localization, interaction rotation, artifact, public workflow, solver, EGOI,
+  or Gaussian-array enrichment is allowed. Failed packet capture means the
+  supplement/rank is insufficient. Near-threshold instability stops the lane.
+- The immediate blocker is source composition and small-system validation in
+  native `[G,R_num]` order. The existing protected additive-reference path
+  remains unchanged until this alternative passes.
+
+Carrying-cost note:
+- One canonical contract and compact registry/startup pointers are added. The
+  implementation target is at most 180 source lines and no new residual object,
+  module, artifact shape, or metadata cloud.

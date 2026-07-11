@@ -58,6 +58,9 @@ module, or object names in the new owner.
 - `HP-RG-CUTOFF-TEST-01` - validation gates for the cutoff/tolerance policy.
 - `HP-RG-CUTOFF-FN-02` - production residual occupation cutoff tightening.
 - `HP-RG-CUTOFF-TEST-02` - residual-only validation for the tightened cutoff.
+- `HP-RG-NUMCOMP-FN-01` / `HP-RG-NUMCOMP-TEST-01` - approved-pending
+  internal numerical-complete residual and additive-reference lane governed by
+  [numerical_complete_residual_basis.md](numerical_complete_residual_basis.md).
 - `HP-RG-SPECTRAL-AUDIT-01` - measurement-only residual-sector spectral audit.
 - `HP-RG-INJECT-AUDIT-01` - measurement-only optional injection audit.
 - `HP-RG-INJECT-FN-01` - default-off in-memory injection-plus-RG
@@ -126,6 +129,10 @@ The module owns:
   `x^2`/`y^2`/`z^2` transformation;
 - moment-matched Gaussian descriptors;
 - residual-containing IDA interaction blocks.
+
+The numerical-complete policy reuses these same owners and objects with an
+explicit `1e-10` residual-rank threshold. It is not a second builder and does
+not change the ordinary production cutoff.
 
 ### Not Owned By CartesianResidualGaussians
 

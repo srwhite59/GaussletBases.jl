@@ -91,8 +91,10 @@ The canonical RG algorithm contract is
 
 - residual basis directions are selected separately on each physical owner atom
   and then merged once;
-- residual occupation is not numerical rank, an integral weight, or a tolerance
-  repair knob;
+- the ordinary production residual-occupation cutoff is not numerical rank, an
+  integral weight, or a tolerance repair knob. The explicit numerical-complete
+  opt-in is the sole current exception and uses the owner-local residual-metric
+  spectrum only to discard numerical nulls at its fixed `1e-10` threshold;
 - exact augmented one-body/moment transformation is not the MWG approximation;
 - raw Cartesian Gaussian block construction is not Residual Gaussian basis
   selection or augmented-operator transformation;

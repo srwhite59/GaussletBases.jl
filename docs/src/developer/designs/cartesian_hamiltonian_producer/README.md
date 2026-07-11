@@ -57,6 +57,12 @@ makes the full union of placed atomic packet occupied spaces mandatory in the
 protected basis, preserves the original per-packet blocks for additive `P0`,
 and assembles native-order screened-Hartree `Delta_J0/C` without changing the
 protected artifact or inherited-site `Vee_L` convention.
+`HP-RG-NUMCOMP-*` separately approves an implementation-pending internal
+opt-in lane that preserves `G`, retains the owner-local numerical supplement
+complement at `eta_num = 1e-10`, validates packet occupied capture after
+construction, and assembles the same in-memory additive correction in native
+unlocalized `[G,R_num]` order. It does not change the production `1e-6`
+residual cutoff.
 The supported supplemented
 workflow now accepts explicit homonuclear
 z-axis diatomics without element-specific branches. A compact artifact manifest
@@ -166,6 +172,9 @@ ID or subsystem.
 - [Protected additive atomic reference correction](protected_additive_reference_correction.md)
   for the internal occupied-union, additive packet `P0/J0/E0`, and native
   protected-localized screened-Hartree correction lane
+- [Numerical-complete residual Gaussian basis](numerical_complete_residual_basis.md)
+  for the approved-pending internal path that preserves `G`, appends the full
+  numerical supplement complement, and validates packet capture afterward
 - [Reference Hartree numerics](reference_hartree_numerics.md) for implemented
   neutral exact `GG/GA/AA` kernels and protected fixed/localized transforms
 - [Rho0 and reference-density correction history](rho0_reference_density_matrix.md)

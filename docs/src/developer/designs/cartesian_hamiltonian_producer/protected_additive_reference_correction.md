@@ -4,6 +4,11 @@ Status: implemented narrow internal, opt-in facility under
 `HP-RG-PROTECT-ADDREF-FN-01` and
 `HP-RG-PROTECT-ADDREF-TEST-01`.
 
+This protected replacement path remains implemented. The separate
+[numerical-complete residual basis](numerical_complete_residual_basis.md) is an
+approved-pending alternative that preserves `G` and appends `R_num`; it does
+not alter this contract or reuse protected artifact semantics.
+
 This lane builds one protected-localized molecular member whose basis contains
 the complete span of all placed atomic packet occupied spaces, then constructs
 the existing screened direct-Hartree correction in that member's native `L`

@@ -579,6 +579,8 @@ these approved design IDs:
 - `HP-RG-CUTOFF-TEST-01`
 - `HP-RG-CUTOFF-FN-02`
 - `HP-RG-CUTOFF-TEST-02`
+- `HP-RG-NUMCOMP-FN-01`
+- `HP-RG-NUMCOMP-TEST-01`
 - `HP-RG-INJECT-FN-01`
 - `HP-RG-OCC-FIRST-INJECT-FN-01`
 - `HP-RG-OCC-FIRST-INJECT-TEST-01`
@@ -1302,8 +1304,11 @@ Non-negotiable RG guardrails:
 
 - residual directions are selected separately on each physical owner atom and
   merged once;
-- residual occupation is not numerical rank, not an integral weight, and not a
-  conditioning repair knob;
+- the ordinary production residual-occupation cutoff is not numerical rank,
+  not an integral weight, and not a conditioning repair knob. The explicit
+  `HP-RG-NUMCOMP-*` opt-in is the sole current exception: it interprets the
+  same owner-local residual-metric spectrum only to discard numerical nulls at
+  its fixed `1e-10` threshold;
 - exact augmented one-body/moment transformation is not the MWG approximation;
 - MWG descriptors are not invariant under arbitrary residual rotations and must
   be computed from the final merged residual basis;
@@ -1325,6 +1330,16 @@ Non-negotiable RG guardrails:
   `G' S R` validation, width/zeta filtering, MWG/IDA, artifacts, driver
   workflow, public API, or source files outside the approved RG owner/plumbing
   surface;
+- `HP-RG-NUMCOMP-FN-01` and `HP-RG-NUMCOMP-TEST-01` approve only the
+  implementation-pending internal opt-in numerical-complete policy in
+  `numerical_complete_residual_basis.md`. Reuse
+  `build_residual_gaussian_basis(...)` with explicit `1e-10` cutoff,
+  injection disabled, and no compactness prefilter; preserve `G`, keep the
+  existing unlocalized final merge, and validate packet occupied capture only
+  after construction. The production default remains `1e-6`. No second RG
+  builder/object, replacement/injection, localization, artifact/public/solver
+  work, interaction rotation, Gaussian-array enrichment, or Cr2-specific
+  behavior is authorized;
 - `HP-RG-SPECTRAL-AUDIT-01` is a follow-up residual-sector measurement lane,
   not a guard implementation. It may classify the remaining low Cr2
   residual-only `H1_RR` mode after the `1.0e-6` cutoff, but it must not change

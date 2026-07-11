@@ -2614,9 +2614,11 @@ Approved historical R3-A basis-construction surface. Current production logic is
 `build_residual_gaussian_basis(...)` under `HP-RG-FN-01`.
 
 Binding guardrails: residual basis directions are selected separately on each
-physical owner atom; residual occupation is not numerical rank; owner-local
-sectors are merged once; global raw-candidate Lowdin and global raw-column
-pivoted-Cholesky selection are not approved current algorithms.
+physical owner atom; ordinary production residual occupation is not numerical
+rank; owner-local sectors are merged once; global raw-candidate Lowdin and
+global raw-column pivoted-Cholesky selection are not approved current
+algorithms. The separate `HP-RG-NUMCOMP-*` opt-in owns its explicit
+numerical-null interpretation.
 
 ### HP-R3-FN-02 — exact augmented one-body and moment assembly
 
@@ -3525,6 +3527,60 @@ Approved validation:
 No other committed fixture/test, driver workflow, artifact schema change,
 solver/RHF, ECP, EGOI, full HF, Cr2 full Hamiltonian, Cr2 artifact, or Cr2
 facade support is approved.
+
+### HP-RG-NUMCOMP-FN-01 — numerical-complete residual basis and additive consumer
+
+Status: approved internal opt-in source authority; implementation pending.
+
+Owner: `CartesianResidualGaussians`, with narrow private additive-reference
+composition near the protected ladder owner.
+
+Canonical contract:
+[Numerical-complete residual Gaussian basis](numerical_complete_residual_basis.md).
+
+Approved source surfaces:
+
+- `src/cartesian_residual_gaussians/residual_basis.jl` for narrow reuse of the
+  existing builder only;
+- `src/cartesian_residual_gaussians/augmented_operators.jl` for native
+  `[G,R_num]` packet representation;
+- `src/cartesian_protected_ladder_bundle.jl` for private in-memory composition;
+- `src/cartesian_reference_density/atomic_hf_reference_packets.jl` and
+  `src/cartesian_reference_density/screened_hartree_correction.jl` only for
+  narrow reuse without contract or result-shape changes.
+
+Permission summary: explicitly call the existing owner-local residual builder
+with `eta_num = 1e-10`, injection disabled, and no compactness prefilter; build
+exact augmented operators and MWG in native `M=[G,R_num]` order; validate
+packet occupied capture after construction; and return the existing in-memory
+screened-Hartree correction separately.
+
+Dependencies: implemented ordinary residual basis, exact augmented operators,
+MWG, atomic packets, reference-Hartree numerics, and screened-Hartree
+correction assembly.
+
+Non-goals: production/default cutoff changes, replacement/injection,
+localization, public/driver/artifact/solver work, interaction rotation, EGOI,
+Gaussian-array enrichment, or Cr2-specific behavior and claims.
+
+### HP-RG-NUMCOMP-TEST-01 — numerical-complete residual validation
+
+Status: approved validation contract; implementation pending.
+
+Approved surfaces:
+
+- `test/misc/runtests.jl` for compact numerical-rank and malformed-metric
+  coverage;
+- `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` for a bounded
+  explicit opt-in path without changing ordinary defaults;
+- ignored padded H2/Be2 probes and, only after those pass, one ignored Cr2
+  fixed-density comparison.
+
+Required gates: owner and final metric spectra, `G-R`/`R-R` identities, packet
+capture/trace, broad occupation and `P_GR`, low modes, MWG finiteness/symmetry,
+bounded endpoints, and inspected terminal due diligence. Near-threshold metric
+failure, occupied capture failure, or a bad H2/Be2 mode stops the lane; do not
+floor eigenvalues, inject occupied directions, or weaken thresholds.
 
 ### HP-RG-SPECTRAL-AUDIT-01 — residual-sector spectral audit
 
