@@ -2581,17 +2581,16 @@ gate.
 Non-goals: normal `Pkg.test` wiring, Be2/Cr2 committed fixtures, private
 status vocabulary, or new source behavior.
 
-## Approved For Compact Hamiltonian Artifact Manifest
-
-This section approves only artifact sidecar groups for existing
-`CartesianIDAHamiltonian{Float64}` JLD2 files. It does not approve a new
-Hamiltonian object, new matrix keys, public reader API, driver public input
-change, solver workflow, CR2-consumer-specific field, Cr2-specific field,
-report/status payload, or artifact schema dump in the driver.
+## Cartesian Hamiltonian Artifact Manifest
 
 ### HP-HAM-MANIFEST-FN-01 — compact Hamiltonian artifact manifest
 
-Approved source files:
+Lifecycle: implemented. Permission: source maintenance.
+
+Owner/canonical: ordinary Cartesian Hamiltonian artifact composition;
+[artifact manifest](cartesian_hamiltonian_artifact_manifest.md).
+
+Source:
 
 ```text
 src/cartesian_base_hamiltonian.jl
@@ -2599,201 +2598,62 @@ src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
 src/cartesian_ida_hamiltonian.jl
 ```
 
-`src/cartesian_ida_hamiltonian.jl` is approved only for a small unexported
-sidecar writer/helper if needed; it must not change
-`write_cartesian_ida_hamiltonian` matrix keys or
-`read_cartesian_ida_hamiltonian` behavior.
-
-Approved sidecar groups:
+Validation:
 
 ```text
-hamiltonian_manifest/
-hamiltonian_manifest/final_basis_labels/
-hamiltonian_manifest/final_basis_source_relations/
-hamiltonian_manifest/source_shells/
-hamiltonian_manifest/source_modes/
-recipe_provenance/
+test/driver_public/cartesian_base_hamiltonian_runtests.jl
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+docs/src/developer/pqs_manager_running_log.md (Pass 113)
 ```
 
-`hamiltonian_manifest/` reuses the source/fixed-column provenance model from
-`docs/src/developer/projected_q_shell_policy.md`. Basis identity is a
-status-bearing construction label, not `center_xyz`. Centers are
-representative metadata only.
+Dependencies: minimal `CartesianIDAHamiltonian` writer/reader, R1 producer,
+and supplemented residual-GTO/MWG writer.
 
-Approved `hamiltonian_manifest/` root key:
+Permission: maintain matrix-order `final_basis_labels/` and
+`recipe_provenance/` on existing facade artifacts.
 
-- `manifest_version = 1`;
-
-Approved required `hamiltonian_manifest/final_basis_labels/` fields:
-
-- `final_basis_col`;
-- `sector`;
-- `unit_label`;
-- `unit_kind`;
-- `source_region_label`;
-- `source_region_label_status`;
-- `source_box_label`;
-- `source_box_label_status`;
-- `owner_nucleus_index`;
-- `owner_label_status`;
-- `shell_label_status`;
-- `shell_index`;
-- `ray_label_status`;
-- `ray_id`;
-- `ray_family_label`;
-- `radial_order_status`;
-- `radial_order`;
-- `center_x`;
-- `center_y`;
-- `center_z`;
-- `center_definition`;
-- `center_status`;
-- `lowdin_correction_applied`;
-- `supplement_label`;
-- `angular_power_x`;
-- `angular_power_y`;
-- `angular_power_z`;
-- `inferred_from_centers`;
-- `inferred_from_nearest_grid`;
-- `inferred_from_support_order`;
-- `inferred_from_support_indices`;
-- `inferred_from_raw_to_final_support`.
-
-The final-basis label rows must follow the exact matrix row/column order.
-`owner_nucleus_index` uses one-based physical nucleus indices and `0` when no
-owner is meaningful; unavailable integer shell/ray/radial labels use `0`;
-unavailable angular powers use `-1`; and all `inferred_from_*` flags must be
-`false` for production manifest rows. Approved sectors are `:base`,
-`:residual`, and `:supplement_derived`.
-
-Approved optional `hamiltonian_manifest/final_basis_source_relations/` fields:
-
-- `final_basis_col`;
-- `relation_index`;
-- `relation_kind`;
-- `source_shell_id`;
-- `source_mode_label`;
-- `local_axis_x`;
-- `local_axis_y`;
-- `local_axis_z`;
-- `relation_status`;
-- `shell_label_status`;
-- `ray_label_status`;
-- `radial_order_status`;
-- `coefficient_status`;
-- `weight_status`;
-- `span_status`;
-- `inferred_from_centers`;
-- `inferred_from_nearest_grid`;
-- `inferred_from_support_order`;
-- `inferred_from_support_indices`;
-- `inferred_from_raw_to_final_support`.
-
-Relations, `source_shells/`, and `source_modes/` may be populated only when
-the construction natively defines those facts. Source-mode identity is
-`(source_shell_id, local_axis_x, local_axis_y, local_axis_z)` in shell-local
-coordinates. It is a label, not a coefficient map, support row, parent row, or
-operator reconstruction claim. Missing shell, ray, radial, source-box, or
-relation facts must be status-bearing `:unavailable` or `:mixed`, not inferred
-from centers, nearest-grid snapping, support order, support indices, or
-raw-to-final support.
-
-Approved `recipe_provenance/` keys:
-
-- `provenance_version = 1`;
-- `producer`;
-- `nesting`;
-- `route`;
-- `ns`;
-- `q`;
-- `q_rule`;
-- `ns_source`;
-- `core_spacing`;
-- `padding`;
-- `radius`;
-- `xmax_parallel`;
-- `xmax_transverse`;
-- `extent_source`;
-- `parent_axis_counts`;
-- `atom_symbols`;
-- `nuclear_charges`;
-- `atom_locations`;
-- `nup`;
-- `ndn`;
-- `basisname`;
-- `basisfile`;
-- `lmax`;
-- `uncontracted`;
-- `width_filtering`;
-- `base_dimension`;
-- `residual_dimension`;
-- `augmented_dimension`.
-
-The recipe group may repeat facts from `producer_provenance/` and
-`supplement_provenance/` so consumers have one uniform location. Values must
-come from the validated public construction contract and produced dimensions,
-not route reports, element tables, solver assumptions, or private diagnostics.
-`nesting` records the public construction family (`:pqs` or `:wl`), and
-`route` records the truthful base route label derived from `(input.kind,
-input.nesting)`. `ns` records the normalized public requested source size.
-`q` records the derived route-local value, not a common public cube-size knob.
-`q_rule` records the derivation rule, and `ns_source` records whether `ns` came
-from the new public field or a temporary legacy-`q` compatibility path.
-
-Center conventions and construction labels must be derived from existing
-terminal basis blocks, parent axes, residual metadata, and augmented moment/MWG
-descriptors. If the implementation cannot derive a required center convention
-or source label from those existing objects without adding algorithmic
-metadata, it must stop and report the missing seam.
-
-This ID does not approve `T_G`, `T_A`, dense residual transforms, coefficients,
-dense moment matrices, raw inventories, allocation probes, report/status
-payloads, public reader APIs, public exports, driver public input changes,
-artifact schema dumps in the driver, solver-specific fields,
-CR2-consumer-specific fields, Cr2-specific fields, committed Cr2 fixtures, or
-Cr2-specific branches.
-
-One-center atom padding is provenance-only for this manifest lane. Source work
-under `HP-HAM-MANIFEST-*` must not change atom size policy or parent-axis
-counts. Production atom parent sizing is separately governed by
-`HP-COMP-ATOMBOX-*`; diatomic padding-derived extents continue to use the
-existing facade contract.
-
-Line budget: at most `150` added `src` lines. Stop for a separate amendment if
-the implementation needs source files outside the approved surfaces, new
-algorithmic metadata, a public reader, driver contract changes, or changes to
-the Hamiltonian matrix writer/reader contract.
+Non-goals: matrix/reader changes, public manifest API, inferred labels, dense
+transforms, solver/consumer fields, protected artifacts, or new composition.
 
 ### HP-HAM-MANIFEST-TEST-01 — artifact manifest validation
 
-Approved validation:
+Lifecycle: validation completed; tracked regression coverage is partial.
+Permission: validation maintenance.
 
-- `git diff --check`;
-- package load;
-- H atom or H2 base artifact write/readback through the existing reader;
-- H2 supplemented artifact write/readback through the existing reader;
-- direct JLD2 checks that `hamiltonian_manifest/final_basis_labels/` rows
-  match matrix dimension and approved status-bearing fields;
-- direct JLD2 checks that unavailable or mixed shell/ray/radial/source labels
-  are explicit and that no production row is marked inferred from centers,
-  nearest grid, support order, support indices, or raw-to-final support;
-- direct JLD2 checks that `recipe_provenance/` records validated public
-  system, basis, supplement, route, parent-axis counts, and dimensions;
-- optional practical Be2 supplemented artifact manifest inspection;
-- no Cr2 run.
+Owner/canonical: ordinary artifact validation;
+[artifact manifest](cartesian_hamiltonian_artifact_manifest.md).
 
-No new committed test file, public reader API, artifact schema dump, driver
-public input change, Cr2 fixture, or solver/CR2 workflow validation is approved
-by this ID.
+Test/evidence:
+
+```text
+test/driver_public/cartesian_base_hamiltonian_runtests.jl
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+docs/src/developer/pqs_manager_running_log.md (Pass 113)
+```
+
+Dependencies: `HP-HAM-MANIFEST-FN-01` and the unchanged ordinary reader.
+
+Permission: maintain base/supplemented readback and selected provenance-root
+checks. The accepted direct-JLD2 evidence owns detailed field/status coverage.
+
+Non-goals: a new committed test file, public reader, schema dump, Cr2 fixture,
+or solver/consumer workflow.
 
 ### HP-HAM-MANIFEST-SRC-FN-01 — source-mode provenance seam
 
-Approved purpose: carry compact construction-native source-mode provenance
-from terminal lowering / retained-unit / raw-product source planning to the
-base working basis manifest context so artifact writing can populate optional
-source provenance groups without route reports or center inference.
+Lifecycle: partially implemented. Permission: source maintenance and the
+remaining construction-native subset only.
 
-Approved source files:
+Owner/canonical: terminal source provenance at the ordinary artifact boundary;
+[artifact manifest](cartesian_hamiltonian_artifact_manifest.md).
+
+Implemented source:
+
+```text
+src/cartesian_base_hamiltonian.jl
+```
+
+Remaining approved source surfaces:
 
 ```text
 src/cartesian_terminal_lowering/contracts.jl
@@ -2809,130 +2669,105 @@ src/cartesian_retained_unit_transform_contracts/records.jl
 src/cartesian_retained_unit_transform_contracts/unit_contracts.jl
 src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl
 src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
-src/cartesian_base_hamiltonian.jl
 ```
 
-Module wrapper files are approved only for internal exports/includes required
-by the compact provenance seam. They are not public API authority.
+Validation/evidence:
 
-Approved carrier:
+```text
+test/driver_public/cartesian_base_hamiltonian_runtests.jl
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+docs/src/developer/pqs_manager_running_log.md (Passes 115-116)
+```
 
-- preferred: one internal `source_mode_provenance` field on the
-  `cartesian_base_working_basis(...)` return value;
-- allowed if cleaner: one optional compact source-mode provenance field on
-  `CartesianTerminalBasisRealization`;
-- no other stage object, report, status payload, route summary, artifact
-  wrapper, or persistent cache is approved.
+Dependencies: terminal retained-rule/raw-product facts, terminal basis matrix
+order, and `HP-HAM-MANIFEST-FN-01`.
 
-Approved source facts:
+Permission: maintain the existing `source_mode_provenance` carrier and add
+only missing construction-native relations or labels on the listed surfaces.
 
-- source shell IDs, unit links, source-box/source-region labels, construction
-  kind, source intervals, source-mode dimensions, source-mode ordering, center
-  definition/status, Lowdin-correction status, and shell/ray/radial label
-  statuses;
-- source mode identities
-  `(source_shell_id, local_axis_x, local_axis_y, local_axis_z)`, local
-  source-mode ordering, native parent-lattice coordinates only when already
-  available, representative center metadata, and status flags;
-- final-basis source-relation rows only where the relation is construction
-  native: direct identity, boundary source-mode selection, product-axis tuple,
-  or explicit `:mixed` / `:unavailable`;
-- final-basis label improvements only where the final basis column is directly
-  and natively tied to the row's unit/source mode.
-
-Ray, cone, shell, and radial labels may be written only when already natively
-defined by the construction. This ID does not approve a repo-chosen ray/cone
-grouping policy or inferred labels from centers, nearest-grid snapping, support
-order, support indices, or raw-to-final support.
-
-This ID does not approve coefficients, dense transforms, `T_G`, `T_A`, raw
-candidate inventories, raw pair inventories, allocation probes, route reports,
-diagnostic payloads, metadata/status field clouds beyond the compact approved
-provenance object, Hamiltonian object changes, matrix-key changes,
-`read_cartesian_ida_hamiltonian` changes, public API/export changes, driver
-changes, artifact schema dumps, solver fields, CR2-consumer-specific fields,
-Cr2-specific fields, committed Cr2 fixtures, or Cr2-specific branches.
-
-Line budget: at most `180` added `src` lines. Stop for a separate amendment if
-the implementation needs new source files, public exports, dense payloads,
-driver changes, reader changes, route report plumbing, or a source-mode/ray
-policy not already present in construction metadata.
+Non-goals: inferred ray/radial/locality policy, coefficients, weights, spans,
+dense transforms, route reports, new stage objects, reader/driver changes, or
+consumer-specific schema.
 
 ### HP-HAM-MANIFEST-SRC-TEST-01 — source-mode provenance seam validation
 
-Approved validation:
+Lifecycle: validation completed for the implemented subset; tracked regression
+coverage is partial. Permission: validation maintenance.
 
-- `git diff --check`;
-- package load;
-- H2 base artifact write/readback through the existing reader;
-- H2 supplemented artifact write/readback through the existing reader;
-- direct JLD2 checks that optional `source_shells/`, `source_modes/`, and
-  `final_basis_source_relations/` are present only for construction-native
-  provenance rows;
-- checks that absent shell/ray/radial/source facts are explicitly
-  `:unavailable` or `:mixed` and not inferred;
-- optional practical Be2 supplemented manifest inspection;
-- no Cr2 run.
+Owner/canonical: terminal source-provenance validation;
+[artifact manifest](cartesian_hamiltonian_artifact_manifest.md).
 
-No new committed test file, public reader API, driver public input change,
-artifact schema dump, Cr2 fixture, solver/CR2 workflow validation, or broad
-route/report validation is approved by this ID.
+Test/evidence:
+
+```text
+test/driver_public/cartesian_base_hamiltonian_runtests.jl
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+docs/src/developer/pqs_manager_running_log.md (Passes 115-116)
+```
+
+Dependencies: `HP-HAM-MANIFEST-SRC-FN-01` and the existing reader.
+
+Permission: maintain native source-group presence, status, no-inference, and
+readback checks for the implemented subset.
+
+Non-goals: a new committed test file, public reader, broad route/report test,
+Cr2 fixture, or solver/consumer workflow.
 
 ### HP-NEST-ART-FN-01 — nesting artifact-truth cleanup
 
-Approved source files:
+Lifecycle: implemented. Permission: source maintenance.
+
+Owner/canonical: ordinary artifact nesting and route provenance;
+[artifact manifest](cartesian_hamiltonian_artifact_manifest.md).
+
+Source:
 
 ```text
 src/cartesian_base_hamiltonian.jl
 src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl
 ```
 
-`src/cartesian_base_hamiltonian.jl` is approved only for artifact provenance
-truth for the public `nesting` construction-family input. It may:
+Validation/evidence:
 
-- record `nesting` in `producer_provenance/` and `recipe_provenance/`;
-- choose truthful base route labels from `(input.kind, input.nesting)`, with
-  approved labels `:one_center_pqs_base`, `:one_center_wl_base`, and
-  `:z_axis_diatomic_pqs_base`;
-- historically enforced a supplemented-WL early stop under this narrow
-  provenance lane; that stop is superseded for the supported z-axis diatomic
-  supplemented WL composition cell by `HP-COMP-SUPPWL-*`;
-- leave unsupported WL H2 without a provenance label until that path succeeds
-  under separate authority.
+```text
+test/driver_public/cartesian_base_hamiltonian_runtests.jl
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+docs/src/developer/pqs_manager_running_log.md (Pass 134)
+```
 
-`src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl` is
-approved only for a docstring correction so the module description no longer
-says it is exclusively PQS-specific now that the WL terminal-basis seam uses the
-same final-basis boundary.
+Dependencies: public nesting normalization and the separately authorized
+PQS/WL composition cells.
 
-This ID does not approve driver public input changes, route skeleton changes,
-shellification changes, terminal lowering changes, raw-block changes,
-Residual Gaussian/MWG/IDA changes, artifact matrix-key changes,
-`read_cartesian_ida_hamiltonian` behavior changes, public API/export changes,
-Cr2 workflow, committed tests, diagnostic/report changes, or WL H2 support.
+Permission: maintain truthful `nesting` and route labels in producer/recipe
+provenance and the nesting-neutral final-basis module description.
 
-Failure rule: if truthful nesting provenance requires changing reader behavior,
-artifact matrix keys, or the broader manifest structure, make no source commit
-and report the blocker.
+Non-goals: new composition support, route/shell changes, matrix/reader changes,
+driver/API changes, diagnostics, or Cr2 workflow.
 
 ### HP-NEST-ART-TEST-01 — nesting artifact-truth validation
 
-Approved validation:
+Lifecycle: validation completed; tracked regression coverage is partial.
+Permission: validation maintenance.
 
-- `git diff --check`;
-- package load;
-- small `nesting = :pqs` base artifact write/readback plus direct provenance
-  inspection;
-- small `nesting = :wl` one-center atom artifact write/readback plus direct
-  provenance inspection;
-- the historical supplemented-WL rejection from this lane is superseded by
-  `HP-COMP-SUPPWL-*` for the supported z-axis diatomic supplemented WL cell;
-- no Cr2 run.
+Owner/canonical: artifact nesting/route validation;
+[artifact manifest](cartesian_hamiltonian_artifact_manifest.md).
 
-No new committed test file, driver-input fixture, public reader API, artifact
-schema dump, WL H2 validation, supplemented WL validation, or Cr2 fixture was
-approved by this ID. Later supplemented WL validation is owned by
+Test/evidence:
+
+```text
+test/driver_public/cartesian_base_hamiltonian_runtests.jl
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+docs/src/developer/pqs_manager_running_log.md (Pass 134)
+```
+
+Dependencies: `HP-NEST-ART-FN-01`; supplemented WL validation remains owned by
 `HP-COMP-SUPPWL-TEST-01`.
+
+Permission: maintain small artifact/readback provenance checks for truthful
+nesting and route labels.
+
+Non-goals: new fixtures, public reader/schema dump, composition validation,
+solver workflow, or Cr2 tests.
 
 ## Implemented R3 Usability Supplemented Workflow
 

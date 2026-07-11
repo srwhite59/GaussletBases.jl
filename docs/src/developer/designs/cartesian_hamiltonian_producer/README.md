@@ -68,9 +68,12 @@ unlocalized `[G,R_num]` order. It does not change the production `1e-6`
 residual cutoff.
 The supported supplemented
 workflow now accepts explicit homonuclear
-z-axis diatomics without element-specific branches. A compact artifact manifest
-lane is approved for JLD2 sidecar groups that make written Hamiltonians
-self-describing without changing matrix keys or reader behavior. Broad public
+z-axis diatomics without element-specific branches. The implemented compact
+artifact manifest adds matrix-order labels and recipe provenance without
+changing matrix keys or reader behavior. Its construction-native source-mode
+seam remains partial: terminal shell/mode and retained boundary-seed facts are
+written, while direct/residual relations and ray/radial labels remain
+unavailable. Broad public
 API/export, translated atoms, Cr2-specific production workflow, ECP, broad
 EGOI workflow, RHF, and solver work remain deferred.
 The bounded 2 x 2 x 2 matrix over geometry, nesting, and supplement state is

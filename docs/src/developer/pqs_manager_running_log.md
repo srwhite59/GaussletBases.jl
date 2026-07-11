@@ -28513,3 +28513,36 @@ Goal advancement / guardrail:
   changed. Source still accepts only `:compact | :high`; the approved
   `:standard` tier remains a separate Coulomb-policy implementation task and
   is not misrepresented as implemented by this R1 pass.
+
+## Cartesian Hamiltonian Producer Pass 379 - Reconcile Ordinary Artifact Manifests
+
+Commit(s):
+- this commit - canonicalize the ordinary Hamiltonian manifest and compress its
+  registry/startup authority.
+
+Summary:
+- Reconciled the ordinary artifact contract with commits `f3ef53efc`,
+  `604e2323d`, `5d98ffcc6`, and `584e9d333`. Compact matrix-order labels,
+  recipe provenance, and nesting truth are implemented. Source-mode provenance
+  is explicitly partial: native terminal shells/modes and retained boundary
+  seeds are written, while direct/support-dense and residual relations,
+  ray/radial labels, coefficients, weights, and spans remain unavailable.
+- Replaced proposed keys and implementation choreography with the exact live
+  matrix payload, manifest/source/recipe key inventories, writer composition,
+  native-order rule, unchanged-reader behavior, and protected-artifact
+  boundary. Converted all six registry IDs to individual metadata records and
+  reduced AGENTS to execution-critical guardrails.
+
+Validation / evidence:
+- Compared committed base/supplemented writers, minimal reader, provenance
+  carrier, route labels, focused tests, and manager-log Passes 113, 115, 116,
+  and 134. Exact-ID heading counts, source/test path checks, stale-lifecycle
+  scans, `git diff --check`, and the full local Documenter build passed. The
+  detailed source schema remains accepted direct-JLD2 evidence with only
+  partial tracked regression coverage.
+
+Goal advancement / guardrail:
+- MT5: removes about `247` net documentation lines before this entry and gives
+  written artifact reality one canonical home. MT4 remains parallel. No source,
+  test, schema, reader, writer, API, composition, protected, solver, EGOI,
+  screened-Hartree, Coulomb, or Cr2 behavior changed.

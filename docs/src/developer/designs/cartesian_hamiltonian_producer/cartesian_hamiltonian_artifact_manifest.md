@@ -1,85 +1,73 @@
 # Cartesian Hamiltonian Artifact Manifest
 
-Status: approved for implementation under `HP-HAM-MANIFEST-FN-01` and
-`HP-HAM-MANIFEST-TEST-01`.
+This page is the canonical contract for optional provenance groups attached to
+ordinary `CartesianIDAHamiltonian{Float64}` JLD2 artifacts. It does not define
+a second Hamiltonian object or reader.
 
-The optional source-mode provenance seam is approved separately under
-`HP-HAM-MANIFEST-SRC-FN-01` and `HP-HAM-MANIFEST-SRC-TEST-01`.
+## Lifecycle
 
-Protected-localized injection artifacts are governed separately by
-`HP-RG-PROTECT-ART-FN-01` and `HP-RG-PROTECT-ART-TEST-01`. They are explicit
-opt-in convention/versioned Hamiltonian variants, not a sidecar expansion of
-the default manifest contract described here.
-Protected-localized row-locality metadata is governed by
-`HP-RG-PROTECT-ARTLOC-FN-01` and `HP-RG-PROTECT-ARTLOC-TEST-01`; those centers
-are numerical position expectations in the `L` basis, not the construction
-labels below.
+| ID | Lifecycle | Current boundary |
+| --- | --- | --- |
+| `HP-HAM-MANIFEST-FN-01` | Implemented | Matrix-order final-basis labels and recipe provenance on base and supplemented facade artifacts |
+| `HP-HAM-MANIFEST-TEST-01` | Validation completed; tracked coverage is partial | Existing-reader checks plus accepted direct-JLD2 schema validation |
+| `HP-HAM-MANIFEST-SRC-FN-01` | Partially implemented | Native terminal source shells/modes and retained boundary-seed relations only |
+| `HP-HAM-MANIFEST-SRC-TEST-01` | Validation completed for the implemented subset; tracked coverage is partial | Accepted direct-JLD2 source-provenance checks |
+| `HP-NEST-ART-FN-01` | Implemented | Truthful `nesting` and route provenance |
+| `HP-NEST-ART-TEST-01` | Validation completed; tracked coverage is partial | Accepted PQS/WL provenance and readback checks |
 
-## Purpose
+The compact manifest landed in `f3ef53efc`, native source shell/mode groups in
+`604e2323d`, retained boundary-seed relations in `5d98ffcc6`, and nesting
+truth in `584e9d333`. Manager-log Passes 113, 115, 116, and 134 record the
+accepted numerical and readback evidence.
 
-Canonical-driver Hamiltonian artifacts need enough sidecar information for
-downstream consumers to identify matrix rows, locality, freezing groups, and the
-public construction recipe. This is artifact annotation only. The Hamiltonian
-object, matrix datasets, and `read_cartesian_ida_hamiltonian` behavior stay
-unchanged.
+## Artifact Layers
 
-## Approved Boundary
-
-Approved source files:
-
-- `src/cartesian_base_hamiltonian.jl`;
-- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`;
-- `src/cartesian_ida_hamiltonian.jl` only for a small unexported sidecar
-  writer/helper if local duplication would otherwise be worse.
-
-The implementation may write additional JLD2 sidecar groups after writing the
-existing `CartesianIDAHamiltonian{Float64}` artifact. It must not rename,
-remove, or reinterpret the existing matrix keys:
-
-- `kinetic`;
-- `nuclear_attraction_unit_by_center`;
-- `electron_electron_ida`;
-- `nuclear_charges`;
-- `nuclear_positions`;
-- `nup`;
-- `ndn`.
-
-`read_cartesian_ida_hamiltonian` must keep reading only the Hamiltonian object
-and must ignore sidecar groups. Manifest readback is validation-only through
-direct JLD2 inspection or local test helpers, not a public reader API.
-
-## Final Basis Manifest
-
-Approved root group:
+The low-level writer in `src/cartesian_ida_hamiltonian.jl` remains minimal. It
+writes exactly:
 
 ```text
-hamiltonian_manifest/
+artifact_kind = :cartesian_ida_hamiltonian
+format_version = 1
+kinetic
+nuclear_attraction_unit_by_center
+electron_electron_ida
+nuclear_charges
+nuclear_positions
+nup
+ndn
 ```
 
-The manifest reuses the fixed-column/source-mode provenance model from
-`docs/src/developer/projected_q_shell_policy.md`. A basis-function identity is
-a construction label with explicit status, not a center. Centers are
-representative metadata only.
+`read_cartesian_ida_hamiltonian` validates the kind and version and reads only
+those Hamiltonian datasets. It ignores every provenance group described below.
+That compatibility behavior is intentional.
 
-Approved root key:
+Facade producers append sidecars after the minimal artifact is written:
+
+- base artifacts add `producer_provenance/`, `hamiltonian_manifest/`,
+  `recipe_provenance/`, and `coulomb_expansion/`;
+- supplemented residual-GTO/MWG artifacts add `supplement_provenance/`,
+  `hamiltonian_manifest/`, `recipe_provenance/`, and
+  `coulomb_expansion/`.
+
+The R1 contract owns `producer_provenance/`; the residual workflow owns
+`supplement_provenance/`; and the Coulomb policy owns
+`coulomb_expansion/`. This page owns only the manifest and recipe groups and
+their composition with the unchanged artifact.
+
+Direct callers of `write_cartesian_ida_hamiltonian` do not receive these
+sidecars automatically. No public manifest reader is implemented.
+
+## Final-Basis Labels
+
+Every facade-written artifact contains:
 
 ```text
-manifest_version = 1
-```
-
-### `final_basis_labels/`
-
-Approved required subgroup:
-
-```text
+hamiltonian_manifest/manifest_version = 1
 hamiltonian_manifest/final_basis_labels/
 ```
 
-This subgroup generalizes the earlier private `fixed_column_labels` table from
-"fixed columns" to "final basis columns." It has one row per Hamiltonian matrix
-row/column.
-
-Approved minimal fields:
+`final_basis_labels/` has one row per Hamiltonian row/column in native matrix
+order. Its live fields are:
 
 ```text
 final_basis_col
@@ -116,47 +104,116 @@ inferred_from_support_indices
 inferred_from_raw_to_final_support
 ```
 
-Shape and status contract:
+Current source emits `sector = :base` for terminal-basis rows and
+`sector = :residual` for appended residual-GTO rows. It does not emit a third
+supplement-derived sector. `final_basis_col` is `1:n`; unavailable integer
+shell/ray/radial labels are `0`; unavailable angular powers are `-1`; and an
+absent physical owner is `0`.
 
-- `final_basis_col` is `1:n` in the exact matrix row/column order;
-- every field has one value per final basis column;
-- `owner_nucleus_index` uses one-based physical nucleus indices and `0` when
-  no owner is meaningful;
-- unavailable integer labels such as `shell_index`, `ray_id`, and
-  `radial_order` use `0`;
-- unavailable angular powers use `-1`;
-- labels that are not native must use status values such as `:mixed` or
-  `:unavailable`, not guessed values;
-- all `inferred_from_*` flags must be `false` for production manifest rows;
-- `center_*` fields are representative metadata and must not be used as
-  identity labels.
+Direct terminal rows use parent-support centers. Support-local Lowdin rows use
+an `abs2` coefficient centroid and are marked representative. Residual rows use
+the exact diagonal position expectation in the augmented basis, their native
+owner, and residual label. These centers describe a row; they do not define
+its construction identity.
 
-Allowed `sector` values are:
+All five `inferred_from_*` fields are `false`. Missing source-box, shell, ray,
+radial, or owner facts remain status-bearing `:unavailable` or `:mixed`. A
+writer must never manufacture them from centers, nearest-grid snapping,
+support order, support indices, or raw-to-final support.
 
-- `:base`;
-- `:residual`;
-- `:supplement_derived`.
+Matrices and sector ranges remain in native order. This manifest does not
+authorize a z-sorted matrix convention or any row permutation.
 
-For the current residual-GTO/MWG path, residual rows are `:residual`; their
-supplement origin is recorded by owner, supplement labels, and angular powers
-where those are meaningful. `:supplement_derived` is reserved for future
-non-residual supplement-derived functions if approved separately.
+## Native Source Provenance
 
-`source_region_label` or `unit_label` is the honest fallback grouping when
-shell/ray/radial labels are unavailable. Do not infer shell, ray, radial, or
-source-box labels from representative centers, nearest-grid snapping, support
-order, support indices, or raw-to-final support.
-
-### `final_basis_source_relations/`
-
-Approved optional subgroup:
+When terminal retained-rule facts are available, the writer also emits:
 
 ```text
-hamiltonian_manifest/final_basis_source_relations/
+hamiltonian_manifest/source_shells/
+hamiltonian_manifest/source_modes/
 ```
 
-Use this subgroup only for relation facts the construction natively defines.
-Approved fields:
+### Source shells
+
+The live `source_shells/` fields are:
+
+```text
+status
+schema_version
+row_count
+source_shell_id
+unit_label
+unit_kind
+final_basis_start
+final_basis_stop
+source_shell_label
+construction_kind
+axis_start
+axis_stop
+contracted_dims
+source_mode_count
+source_mode_ordering
+center_definition
+center_status
+lowdin_correction_applied
+shell_label_status
+ray_label_status
+radial_order_status
+inferred_from_centers
+inferred_from_nearest_grid
+inferred_from_support_order
+inferred_from_support_indices
+inferred_from_raw_to_final_support
+```
+
+The current status is `:native_terminal_source_shells`, schema version is `1`,
+and axis intervals and contracted dimensions are three-column integer tables.
+Shell labels are native. Source-shell centers, ray labels, and radial order are
+currently unavailable.
+
+### Source modes
+
+The live `source_modes/` fields are:
+
+```text
+status
+schema_version
+row_count
+source_shell_id
+mode_index
+unit_label
+native_source_id_label
+local_axis_x
+local_axis_y
+local_axis_z
+center_x
+center_y
+center_z
+center_definition
+center_status
+lowdin_correction_applied
+source_mode_status
+shell_label_status
+ray_label_status
+radial_order_status
+inferred_from_centers
+inferred_from_nearest_grid
+inferred_from_support_order
+inferred_from_support_indices
+inferred_from_raw_to_final_support
+```
+
+A source-mode identity is
+`(source_shell_id, local_axis_x, local_axis_y, local_axis_z)` in shell-local
+coordinates. It is a construction label, not a coefficient map, parent row,
+support row, positive-weight claim, or reconstructable transform. Current
+mode centers are `NaN` with unavailable status; ray/radial labels are also
+unavailable. Parent-lattice coordinates are not written.
+
+### Final-basis source relations
+
+`hamiltonian_manifest/final_basis_source_relations/` is written only when at
+least one retained boundary-seed relation exists. Its live fields are:
 
 ```text
 final_basis_col
@@ -181,136 +238,37 @@ inferred_from_support_indices
 inferred_from_raw_to_final_support
 ```
 
-Relations may describe source-mode identity, product-axis tuples, boundary
-modes, support spans, or Lowdin mixtures only when the construction producer
-defines that relation honestly. Relation weights or spans may appear only when
-they are construction-native scalar facts, not dense transforms.
+Current relations are only `:boundary_mode` rows with
+`:native_retained_boundary_seed` status. Coefficients and weights are marked
+`:not_serialized`; spans, ray labels, and radial order are unavailable.
 
-### `source_shells/` And `source_modes/`
+This is the exact partial implementation boundary. Direct/support-dense rows
+and residual rows have no source-relation rows. No source coefficient, weight,
+span, ray, cone, or radial grouping has been implemented. The remaining
+approved seam may carry only additional construction-native facts through the
+existing compact `source_mode_provenance` context. It may not introduce center
+inference, consumer locality policy, dense transforms, or route reports.
 
-Approved optional subgroups:
+## Recipe Provenance
 
-```text
-hamiltonian_manifest/source_shells/
-hamiltonian_manifest/source_modes/
-```
-
-These subgroups are the provenance-compatible extension path from the prior
-PQS sidecar contract. A source mode identity is
-`(source_shell_id, local_axis_x, local_axis_y, local_axis_z)` in shell-local
-axis coordinates. That identity labels a construction-native source function;
-it does not claim one parent grid row, one final support row, positive weight,
-or a reconstructable basis transform.
-
-When present, `source_shells/` may contain stable shell IDs, unit links,
-construction kind, axis intervals, contracted dimensions, source-mode ordering,
-center definition/status, and shell/ray/radial label statuses. `source_modes/`
-may contain source-shell-local mode indices, native source labels, local axis
-coordinates, parent-lattice coordinates when native, representative center
-metadata, `lowdin_correction_applied`, and status flags.
-
-If these source layers are not natively available for a row, the manifest must
-say `:unavailable` or `:mixed`; it must not silently infer the missing source
-identity.
-
-Approved sources for representative centers and labels are the existing
-terminal basis blocks, parent axes, residual metadata, and augmented moment/MWG
-descriptors already computed by the approved construction. If a source pass
-cannot derive a center convention or construction label from those objects
-without adding algorithmic metadata, it must stop and report the missing seam.
-Do not add coefficients, dense transforms, raw inventories, route reports, or
-status payloads to force the manifest to exist.
-
-## Source-Mode Provenance Seam
-
-The first compact manifest writer may write only `final_basis_labels/` and
-`recipe_provenance/` when source-mode facts are not live at the artifact seam.
-`HP-HAM-MANIFEST-SRC-FN-01` approves one narrow construction-native provenance
-carrier so later source work can populate optional groups:
-
-```text
-hamiltonian_manifest/source_shells/
-hamiltonian_manifest/source_modes/
-```
-
-and, where the relation is native, improve:
-
-```text
-hamiltonian_manifest/final_basis_source_relations/
-hamiltonian_manifest/final_basis_labels/
-```
-
-Approved carrier concept:
-
-```text
-terminal lowering / retained-unit / raw-product source plans
--> compact source-mode provenance object
--> base working basis manifest context
--> artifact sidecar writer
-```
-
-The preferred live carrier is one internal `source_mode_provenance` field on
-the object returned by `cartesian_base_working_basis(...)`. A source pass may
-instead attach the same compact object to `CartesianTerminalBasisRealization`
-only if that avoids duplication or loss of terminal construction ordering. In
-either case, the object is artifact provenance only; Hamiltonian construction,
-operator assembly, residual selection, and reader behavior must not consume it.
-
-Approved object contents are row tables matching the optional manifest groups:
-
-- source-shell rows with stable shell IDs, unit links, construction kind,
-  source-box/source-region labels, source-mode dimensions/order, source
-  intervals, center definition/status, Lowdin-correction status, and
-  shell/ray/radial label statuses;
-- source-mode rows with `(source_shell_id, local_axis_x, local_axis_y,
-  local_axis_z)` identity, source-mode label/order fields, parent-lattice
-  coordinates only when native, representative center metadata, and status
-  flags;
-- final-basis source-relation rows only for native relation facts, such as
-  direct identity, boundary source-mode selection, product-axis tuple, or
-  explicit mixed/unavailable relation status;
-- optional final-basis label improvements only where the final basis column is
-  directly and natively tied to a unit/source mode.
-
-The object must not contain coefficients, dense transforms, `T_G`, `T_A`,
-raw candidate inventories, raw pair inventories, route reports, allocation
-probes, or diagnostic payloads. It may carry compact row IDs, labels, small
-integer coordinates, source-mode dimensions, status symbols, and booleans.
-
-Ray and radial labels remain unavailable unless already natively defined by
-the construction. Do not add a repo-chosen ray/cone/radial grouping policy in
-this lane.
-
-The seam may reuse facts already present in:
-
-- terminal lowering contracts and their source CPBs;
-- retained-unit records;
-- retained-unit transform contracts and raw product source metadata;
-- `RawProductBoxPlan` / `PQSBoundaryProductModeRetainedRule`;
-- terminal basis blocks and their matrix-order column ranges.
-
-It must not add algorithmic metadata upstream merely to satisfy an artifact
-consumer. If the native facts are missing, write explicit `:unavailable` or
-`:mixed` statuses and report the missing producer seam.
-
-## Recipe Provenance Group
-
-Approved group:
-
-```text
-recipe_provenance/
-```
-
-Approved keys:
+Every facade-written manifest contains `recipe_provenance/` with these live
+keys:
 
 ```text
 provenance_version = 1
 producer
 nesting
 route
+ns
 q
+q_rule
+ns_source
 core_spacing
 padding
+s_factor
+mapping_s_factor
+mapping_s_standard
+mapping_s_effective
 radius
 xmax_parallel
 xmax_transverse
@@ -331,68 +289,80 @@ residual_dimension
 augmented_dimension
 ```
 
-The group may repeat facts already present in `producer_provenance/` and
-`supplement_provenance/` so downstream artifact consumers can use one uniform
-recipe location. It must be filled from the validated public construction
-contract and produced dimensions, not recovered from route reports or inferred
-from element tables.
+Values come from validated producer input and constructed dimensions, not from
+route reports, element tables, solver assumptions, or artifact inference.
+Base artifacts use no supplement values, zero residual dimension, and equal
+base/augmented dimensions. Supplemented artifacts record their validated
+supplement and base-then-residual dimensions.
 
-`nesting` records the public construction family (`:pqs` or `:wl`). `route`
-records the truthful base route label derived from `(input.kind,
-input.nesting)`, for example `:one_center_pqs_base`, `:one_center_wl_base`, or
-`:z_axis_diatomic_pqs_base`. The recipe group must not write a PQS route label
-for a WL artifact merely because the old route helpers were PQS-named.
+`nesting` records `:pqs` or `:wl`. `ns` is the normalized public source size;
+`q` is its route-local derivative; `q_rule` and `ns_source` preserve that
+normalization history. Mapping fields record the requested factor and resolved
+standard/effective values. `padding`, `radius`, and the extents are provenance,
+not permission to change box sizing.
 
-For base artifacts without a supplement, supplement-specific keys may be
-`nothing` and `residual_dimension` may be `0`; `augmented_dimension` equals the
-base dimension. For supplemented artifacts, `basisname`, optional `basisfile`,
-`lmax`, `uncontracted`, `width_filtering`, and base/residual/augmented
-dimensions must match the validated supplement construction.
+Base artifacts repeat the same truthful `nesting` and base-route facts in
+`producer_provenance/`. A writer must not use a PQS label for a WL construction
+because an internal helper or historical route name is PQS-oriented.
 
-## Padding Scope
+Route labels are derived from system kind, nesting, and supplement state:
 
-This lane records the current recipe; it does not change atom box-size policy.
-One-center atom padding may be recorded as provenance, but source work under
-this lane must not change the current one-center parent-axis counts or reinterpret
-atom padding as an active size-control fix. Diatomic padding-derived extents
-remain active through the existing facade contract.
+```text
+:one_center_pqs_base
+:one_center_wl_base
+:z_axis_diatomic_pqs_base
+:z_axis_diatomic_wl_base
+:one_center_pqs_residual_gto_mwg
+:one_center_wl_residual_gto_mwg
+:z_axis_diatomic_pqs_residual_gto_mwg
+:z_axis_diatomic_wl_residual_gto_mwg
+```
 
-## Forbidden
+Later composition authorities made all listed construction cells reachable.
+That support does not originate from `HP-NEST-ART-*`; those IDs own only
+truthful persisted nesting and route facts.
 
-This lane does not approve:
+## Ownership And Failure Behavior
 
-- `T_G`, `T_A`, dense residual transforms, coefficients, dense moment matrices,
-  or raw candidate inventories in the artifact;
-- allocation probes, benchmark data, route reports, status/result payloads, or
-  artifact schema dumps in the driver;
-- public reader APIs, public exports, or driver public input changes;
-- solver-specific, CR2-consumer-specific, Cr2-specific, ECP, RHF, or
-  HFDMRG-specific algorithm fields;
-- committed Cr2 fixtures or Cr2-specific branches;
-- changes to Hamiltonian matrix keys or `read_cartesian_ida_hamiltonian`;
-- new algorithmic metadata in terminal basis, Residual Gaussian, raw-block, or
-  route objects.
+Implemented source owners are:
 
-## Validation
+- `src/cartesian_base_hamiltonian.jl` for labels, source provenance, recipe,
+  route truth, and facade composition;
+- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` for the
+  supplemented artifact and `supplement_provenance/` write;
+- `src/cartesian_ida_hamiltonian.jl` for the unchanged minimal writer/reader;
+- `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  for the nesting-neutral module boundary description.
 
-Required validation:
+Manifest dimensions must equal the Hamiltonian dimension. Missing native
+source provenance omits optional source groups; it does not trigger inference.
+Empty relation tables are omitted. Existing writer/reader, filesystem, and
+dimension errors propagate.
 
-- `git diff --check`;
-- package load;
-- H atom or H2 base artifact write/readback through the existing reader;
-- H2 supplemented artifact write/readback through the existing reader;
-- direct JLD2 validation that `hamiltonian_manifest/final_basis_labels/` rows
-  match the matrix dimension and use the approved status-bearing fields;
-- direct JLD2 validation that missing shell/ray/radial/source labels are
-  explicitly `:unavailable` or `:mixed`, not inferred;
-- direct JLD2 validation that `recipe_provenance/` records the validated public
-  system, basis, supplement, route, parent-axis counts, and dimensions;
-- no Cr2 run.
+Tracked validation lives in:
 
-Optional validation:
+- `test/driver_public/cartesian_base_hamiltonian_runtests.jl`;
+- `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
 
-- Be2 supplemented artifact write/readback and manifest inspection if practical.
-- Source-mode seam validation under `HP-HAM-MANIFEST-SRC-TEST-01` may add
-  ignored/direct JLD2 checks that optional source groups are present only when
-  construction-native provenance rows exist and that missing shell/ray/radial
-  labels remain explicitly unavailable.
+Those tests cover artifact/readback and selected provenance roots. Detailed
+field/status validation was accepted through the ignored direct-JLD2 probes
+recorded in manager-log Passes 113, 115, 116, and 134; it is not a complete
+tracked regression of every sidecar key.
+
+## Exclusions
+
+This contract does not authorize:
+
+- changes to Hamiltonian matrix keys or ordinary reader behavior;
+- a public manifest reader, new artifact wrapper, or artifact schema dump;
+- `T_G`, `T_A`, coefficients, dense transforms, moment matrices, support/raw
+  inventories, or reconstructable final-basis coefficients;
+- inferred source identity, consumer ray/locality policy, or z-sorted matrices;
+- solver, restart, corrected-Hamiltonian, EGOI, protected-localized, ladder,
+  Cr2-specific, or consumer-specific fields;
+- public input/default changes, box-policy changes, or new composition support.
+
+Protected-localized artifacts and their row-locality metadata are a distinct
+kind and convention governed by
+[the protected artifact contract](protected_localized_artifact.md). They are
+not ordinary manifest variants.
