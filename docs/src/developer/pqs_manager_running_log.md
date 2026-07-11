@@ -28145,3 +28145,60 @@ Carrying-cost result:
 - Exact next step: review the overnight tranche as a whole. Further registry
   families should be migrated independently; shadow TOML still waits for
   complete canonical/lifecycle parity.
+
+## Cartesian Hamiltonian Producer Pass 370 - Canonical Mapped-COMX Authority
+
+Commit(s):
+- this commit - canonicalize implemented mapped-COMX behavior and compress its
+  registry/AGENTS/implementation-ledger duplication.
+
+Summary:
+- Replaced the pre-implementation mapped-COMX plan with the live contract for
+  normalized-local protected-P2 mapped enrichment, physical-coordinate COMX,
+  carried terminal axis facts, and the implemented PQS-only
+  `source_span = :ordinary | :mapped_comx` driver selector.
+- Reduced nine MCOMX source/test IDs to separate metadata-oriented registry
+  entries. Ordinary remains default; the bounded He `ns=5` result remains a
+  physics limitation that blocks default promotion rather than a wiring
+  failure.
+
+Validation / evidence:
+- Reconciled source commits `978eaeb05`, `e6ead8ce5`, and `f8405b9c2`
+  plus the `c8e098b78` He limitation. Verified exactly one heading per
+  MCOMX ID and all live source paths.
+- Focused lifecycle/default/PQS-only scans, local Documenter, and
+  `git diff --check` are the acceptance gates. No source or numerical test
+  changes.
+
+Goal advancement / guardrail:
+- MT5: removes another full duplicated source specification while preserving
+  the numerical map/localization distinction that prevents unit-dependent
+  source spans.
+- No default promotion, White-Lindsey mapped span, second COMX path, artifact,
+  solver, or Cr2 authority is introduced.
+
+Carrying-cost result:
+- Active documentation before this log entry is approximately `+209/-730`,
+  net `-521` lines. The registry reaches about `6,499` lines and the
+  canonical mapped-COMX page `179` lines.
+- Exact next reorganization step: migrate another mature registry family only
+  after source-backed lifecycle review; do not start shadow TOML from stale
+  pre-implementation headers.
+
+### Medium-Term Goal Checkpoint After Pass 370
+
+- MT1 fake-PQS quarantine: completed/maintained. No route-shadow or alternate
+  Hamiltonian path was revived.
+- MT2 independent PQS recovery: completed for supported producer cells;
+  mapped-COMX remains an optional source-span input to the same path.
+- MT3 common physical support vocabulary: active/maintained. Common shell,
+  aspect-source, and mapped terminal contracts now have current canonical
+  ownership.
+- MT4 supplement staging: active. Protected/additive/representation facilities
+  are implemented; controlled CR2 screened off/on consumption remains the
+  current physics target.
+- MT5 cleanup pressure: materially advanced. Passes 366-370 removed mixed
+  injection/history roles, stale lifecycle labels, long current-status
+  duplication, and two registry families.
+- MT6 old flat-path classification: maintenance. No row-gauge, interaction
+  rotation, old route wrapper, or unaccepted EGOI WIP was promoted.

@@ -125,13 +125,10 @@ z-axis diatomic shared-shell growth may emit planned angular z-extension slab
 stacks when the ordinary index-layer shell body underreaches the physical
 outer-nucleus angular target. Lowering those slabs remains governed by
 `HP-COMP-THINSLAB-*`.
-Mapped-COMX source spans are approved as a narrow option at the existing
-doside/COMX source-span seam under `HP-MCOMX-*`; high-order remains a
-consumer/benchmark lane, not the owner of the installed facility.
-`HP-MCOMX-TERM-*` approves only terminal-basis wiring so carried materialized
-mapped-COMX axis facts can define PQS shell seed coefficients. `HP-MCOMX-DRV-*`
-approves only a compact `source_span` driver/facade construction choice for
-`:ordinary` versus `:mapped_comx`.
+Mapped-COMX source spans, terminal consumption of carried axis facts, and the
+compact `source_span = :ordinary | :mapped_comx` driver choice are
+implemented under `HP-MCOMX-*`. Ordinary remains default; mapped-COMX is
+PQS-only and high-order remains a consumer/benchmark lane.
 The old complete-core-shell RHF payload stack was removed by `28e9b2c84` under
 `HP-RETIRE-CCS-RHF-*`. The route-driver materialization/report/save wrappers
 were removed by `e2e164e9b`, and the dangling ladder runners by `77fa2700b`.

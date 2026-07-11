@@ -1388,26 +1388,12 @@ Additional approved composition lane:
   Midpoint slabs, non-boundary z-extension slabs, boundary z-extension slabs,
   and fallback outer-mismatch slabs all use the same thin-slab category.
   Lowering those slabs remains deferred to `HP-COMP-THINSLAB-*`.
-- `HP-MCOMX-FILE-01`, `HP-MCOMX-OBJ-01`, `HP-MCOMX-FN-01`,
-  `HP-MCOMX-WIRE-01`, and `HP-MCOMX-TEST-01` are approved for the mainline
-  mapped-COMX source-span option at the existing nested doside / COMX seam,
-  plus narrow PQS raw-source axis-transform wiring. The first rule is
-  protected physical `P2` plus mapped Chebyshev enrichment with `lambda = 0.5`,
-  normalized local `u`, no `sqrtJ`, and existing physical-coordinate COMX
-  cleanup. High-order is a consumer/benchmark lane, not the owner of the
-  installed implementation. A `CartesianRawProductSources` numerical builder
-  or new mapped-COMX source file is not approved.
-- `HP-MCOMX-TERM-FN-01` / `HP-MCOMX-TERM-TEST-01` are approved only for
-  terminal-basis consumption of carried materialized source-axis transform
-  facts in `_shell_seed(...)`. The pass may validate facts and build shell
-  seed coefficients from them, but must keep boundary mode selection, support
-  restriction, shell-local Lowdin, canonicalization, support validation, and
-  ordinary fallback unchanged.
-- `HP-MCOMX-DRV-FN-01` / `HP-MCOMX-DRV-TEST-01` are approved only for making
-  `source_span = :ordinary` or `:mapped_comx` selectable through the canonical
-  driver and staged base/facade path. The default remains `:ordinary`;
-  `:mapped_comx` is currently PQS-only. No route records, terminal-lowering
-  changes, artifact changes, source defaults, or new COMX path are approved.
+- `HP-MCOMX-*` is implemented. The existing doside seam builds protected-P2
+  mapped-Chebyshev enrichment in normalized local coordinates, terminal
+  realization consumes carried materialized axis facts, and the canonical
+  driver exposes `source_span = :ordinary | :mapped_comx`. Ordinary remains
+  default and mapped-COMX remains PQS-only. The canonical contract is
+  `mapped_comx_source_span.md`.
 
 No initial composition placeholder remains candidate-only. Remaining geometry,
 solver, ECP, public export, and Cr2-specific work still need a later docs-only

@@ -770,335 +770,102 @@ angular-z-extension slabs no longer advertise direct identity lowering.
 Family-wide non-goals: public inputs, artifact schema, route-report
 frameworks, RG/MWG/IDA, Hamiltonian semantics, solver/ECP, real-shell
 PQS/WL convergence, or Cr2 production claims.
-## Approved Source-Span Facility: Mapped-COMX
+## Mapped-COMX Source-Span Facility
 
-This section approves a narrow mainline source-span option based on
-high-order-manager scratch evidence. The high-order branch is an experimental
-proving ground and benchmark consumer. It does not own the mainline
-implementation shape, and its scripts, route wrappers, reports, and benchmark
-scaffolding must not be copied into production.
+Canonical contract:
+[Mapped-COMX source span](mapped_comx_source_span.md).
 
-Source-review correction: mapped-COMX is a new source-span option inside the
-existing nested doside / COMX path, not a new numerical facility under
-`CartesianRawProductSources`.
+Ordinary remains the default. The installed mapped option is PQS-only and
+remains opt-in after the bounded He `ns=5` physics limitation.
 
-Approved implementation path:
+### HP-MCOMX-FILE-01 — mapped-COMX source ownership
 
-```text
-pqs_source_axis_transform_facts_from_pgdg_axes(...)
--> _nested_doside_1d(...)
--> _nested_retained_span(...)
--> _cleanup_comx_transform(...)
-```
+Status: implemented.
 
-The option changes only the raw span passed into the existing physical COMX
-cleanup.
+Source owners:
+`src/cartesian_nested_faces.jl` and narrow existing PQS source-axis plumbing.
+No new production file was created under `CartesianRawProductSources`.
 
-Approved first numerical rule:
+### HP-MCOMX-OBJ-01 — mapped source specification
 
-```text
-protected physical P2
-+ mapped Chebyshev enrichment T_k(s_lambda(u))
-+ lambda = 0.5
-+ no sqrtJ
-+ physical-u COMX localization
-```
+Status: implemented internal construction specification.
 
-with:
+Permission: fixed protected-P2, mapped-Chebyshev, lambda/no-sqrt-J, and
+physical-localization facts. No public export or general tuning object.
 
-```text
-s_lambda(u) = (1 + lambda) * u / (1 + lambda * u^2)
-```
+### HP-MCOMX-FN-01 — mapped source-span construction
 
-Here `u` is the dimensionless local coordinate on the source interval,
-`u = (x - x_mid) / x_half`, not raw physical center `x`. The existing COMX
-cleanup still uses the physical position matrix. Applying `s_lambda` directly
-to physical centers is forbidden.
+Status: implemented.
 
-The ordinary polynomial source-span path remains available and unchanged. This
-lane installs an additional source-span facility; it does not change defaults
-or make high-order benchmark results production acceptance tests.
-
-Post-installation evidence from high-order-manager He/PQS testing on
-2026-06-26 found that the installed `n_s = 5` mapped-COMX recipe is not robust
-enough for all-electron scalar capture. It remains an opt-in construction
-choice and must not be promoted to a default route from the first angular proxy
-or driver-wiring success. The next mapped-COMX promotion evidence should be
-bounded He `n_s = 6` and `n_s = 7` H1/IDA testing with shell-restricted scalar
-capture diagnostics.
-
-### HP-MCOMX-FILE-01 — mapped-COMX source-span files
-
-Approved source files:
-
-```text
-src/cartesian_nested_faces.jl
-src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl
-src/cartesian_raw_product_sources/axis_transform_facts.jl
-src/cartesian_raw_product_sources/records.jl
-```
-
-Primary owner: the existing nested doside / COMX source-span seam in
+Owner/source:
 `src/cartesian_nested_faces.jl`.
 
-`src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl` is
-approved only for narrow keyword/spec plumbing into the existing doside seam
-and for reporting the returned source-span facts.
+Permission: construct normalized-local-coordinate mapped enrichment before the
+existing physical-coordinate COMX cleanup. Ordinary behavior remains default.
 
-`CartesianRawProductSources` files are approved only for compact provenance or
-accessors on existing `AxisSourceTransformFact` records if needed. They must
-not own the numerical mapped-COMX span builder.
+### HP-MCOMX-WIRE-01 — PQS axis-transform wiring
 
-No new source file is approved. In particular,
-`src/cartesian_raw_product_sources/mapped_comx_source_span.jl` is not approved.
+Status: implemented.
 
-### HP-MCOMX-OBJ-01 — mapped-COMX source-span specification
+Owner/source:
+`src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`.
 
-Approved object: a compact `MappedCOMXSourceSpec` or equivalent typed
-source-span specification.
+Permission: pass the internal source-span choice into the existing doside seam
+and return ordinary carried `AxisSourceTransformFact` objects.
 
-Approved fields/semantics:
+### HP-MCOMX-TEST-01 — mapped source validation
 
-- `protected_degree`, initially `2`;
-- `lambda`, initially `0.5`;
-- `mapped_family`, initially `:chebyshev_s`;
-- `include_sqrt_jacobian = false`;
-- `localization_coordinate = :physical_u`;
-- requested and resolved one-dimensional source mode count;
-- deterministic mapped-order list or equivalent compact source-span metadata;
-- compact rank and overlap/orthogonality diagnostics.
+Status: completed validation evidence.
 
-The object is source-span construction data at the doside seam, not a route
-report, status payload, public input object, artifact schema,
-`CartesianRawProductSources` numerical builder, or high-order benchmark record.
+Evidence: `ns=5/6/7` rank/protected-span/coordinate/orthogonality checks and
+bounded H/He/H2 comparisons. He `ns=5` blocks default promotion.
 
-### HP-MCOMX-FN-01 — mapped-COMX source-span construction
+### HP-MCOMX-TERM-FN-01 — terminal shell-seed consumption
 
-Approved behavior:
+Status: implemented.
 
-- extend `_nested_doside_1d(...)` / `_nested_retained_span(...)` with an
-  internal keyword or spec that changes only the raw source-span columns;
-- keep the current ordinary span as the default behavior;
-- build protected physical polynomial columns `1, u, u^2` using normalized
-  local `u`;
-- add mapped Chebyshev columns `T_k(s_lambda(u))` until the requested source
-  mode count is reached;
-- project mapped columns against the protected physical block in the local
-  parent metric;
-- orthonormalize the combined one-dimensional source span;
-- continue through the existing `_cleanup_comx_transform(...)` using the
-  physical position matrix;
-- return materialized `AxisSourceTransformFact`s compatible with existing
-  `RawProductBoxPlan` and PQS boundary product-mode retained rules;
-- preserve deterministic ordering and ordinary polynomial source-span behavior.
+Owner/source:
 
-The first implementation is restricted to `protected_degree = 2`. General
-protected degrees require a later parity-balanced mapped-order fill rule; they
-must not be implied by blindly adding `T_1`, `T_2`, and so on.
+- `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`;
+- narrow module import/include support in
+  `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`.
 
-### HP-MCOMX-WIRE-01 — raw-source and PQS axis-transform wiring
+Permission: validate and consume materialized carried axis facts as the PQS
+shell seed while preserving ordinary fallback, boundary selection, support
+restriction, Lowdin, and canonicalization.
 
-Approved behavior:
+### HP-MCOMX-TERM-TEST-01 — terminal seam validation
 
-- make the mapped-COMX option reachable through internal construction controls
-  needed by the approved validation gates;
-- carry descriptive source-span provenance such as
-  `source_span_family = :mapped_comx`, protected degree, lambda, mapped family,
-  mapped orders, `include_sqrt_jacobian = false`, and
-  `localization_coordinate = :physical_u`;
-- keep Hamiltonian, operator, and artifact layers consuming the usual
-  carried-space / raw product source facts;
-- avoid branching downstream Hamiltonian construction on ordinary polynomial
-  versus mapped-COMX source spans except for descriptive provenance already
-  carried by source facts.
+Status: completed validation evidence.
 
-Internal consumers must not read provenance metadata as a data bus. If mapped
-orders or source-span diagnostics are needed after construction, return them as
-real result fields or accessors; metadata remains reporting/provenance.
+Evidence: carried-fact coefficient parity/difference checks plus ordinary and
+supplemented bounded endpoints; no committed Cr2 gate.
 
-Forbidden for all `HP-MCOMX-*` IDs:
+### HP-MCOMX-DRV-FN-01 — canonical source-span selector
 
-- changing default source spans;
-- public API or export changes;
-- canonical driver input changes;
-- artifact schema, manifest, or reader changes;
-- Hamiltonian, one-body, IDA, MWG, Residual Gaussian, raw Gaussian block, or
-  solver changes;
-- ECP, EGOI, RHF, ED, DMRG, or Cr2 workflow;
-- explicit `Y_lm` / angular injection;
-- `sqrtJ` weighting;
-- mapped-`s` COMX as the production localization gauge;
-- applying `s_lambda` to raw physical centers;
-- `protected_degree != 2` in the first implementation;
-- a parallel mapped-COMX axis-transform route outside the existing doside /
-  COMX path;
-- numerical source-span builders under `CartesianRawProductSources`;
-- `src/cartesian_raw_product_sources/mapped_comx_source_span.jl`;
-- importing high-order branch scaffolding, scripts, route wrappers, status
-  objects, diagnostics, or reports;
-- a duplicate high-order-maintained implementation of the same mainline
-  option;
-- committed Cr fixtures or broad high-order benchmark fixtures.
+Status: implemented.
 
-Failure rule: if the source option cannot be installed as a small branch in
-the existing doside source-span seam before `_cleanup_comx_transform(...)`,
-make no source commit and report the exact missing mainline seam. If the pass
-needs a new source file, a second COMX wrapper, a
-`CartesianRawProductSources` numerical builder, Hamiltonian assembly changes,
-artifact schemas, public driver inputs, or high-order-specific workflow,
-request a separate amendment.
+Owner/source:
 
-### HP-MCOMX-TEST-01 — mapped-COMX validation
+- `bin/cartesian_ham_builder.jl`;
+- `src/cartesian_base_hamiltonian.jl`;
+- narrow `src/pqs_source_box_route_driver_helpers.jl` propagation.
 
-Approved validation:
+Permission: expose `source_span = :ordinary | :mapped_comx`, default ordinary,
+and reject mapped-COMX with White-Lindsey. This is not a diagnostic route
+switch.
 
-- `git diff --check`;
-- package load;
-- local source-span validation for `n_s = 5`, `6`, and `7`:
-  - full retained rank;
-  - protected `P2` span preserved;
-  - mapped columns use normalized local `u in [-1, 1]`;
-  - source columns/centers match the high-order scratch convention within a
-    reviewed tolerance;
-  - source-axis overlap approximately identity after construction;
-  - physical-`u` COMX off-diagonal residual reported;
-  - metadata records the approved source-span rule;
-- bounded cubic H and He+ one-electron gate comparing ordinary polynomial and
-  mapped-COMX source spans with fixed support and retained count;
-- bounded He `1s^2` fixed-orbital IDA gate if the already-supported analytic
-  path can run without new solver or artifact workflow;
-- high-order-manager consumer benchmarks on the installed mainline option for
-  Cr occupied capture, reported back as evidence rather than committed mainline
-  fixtures;
-- no Cr2 run.
+### HP-MCOMX-DRV-TEST-01 — driver source-span validation
 
-No committed test file is approved by default. A later implementation blurb may
-name a small standalone script or ignored probe for the approved gates.
-Committed fixtures, public driver tests, solver tests, and Cr/Cr2 benchmark
-fixtures require a separate amendment.
+Status: completed validation evidence.
 
-### HP-MCOMX-TERM-FN-01 — mapped-COMX terminal-basis wiring
+Evidence: ordinary default parity, mapped PQS artifact/readback/provenance, and
+bounded endpoint smokes.
 
-Approved source files:
-
-```text
-src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
-src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl
-```
-
-`CartesianFinalBasisRealization.jl` is approved only for import/include cleanup
-if directly required.
-
-Approved behavior:
-
-- in `_shell_seed(...)`, prefer
-  `contract.metadata.raw_product_source_axis_transform_facts` when present;
-- validate exactly three axis facts;
-- validate each fact is an `AxisSourceTransformFact`;
-- validate `coefficient_status === :materialized`;
-- validate source intervals match `support.outer_box`;
-- validate source mode dimensions match `source_shape`;
-- validate coefficient matrix row/column sizes match interval length and
-  source mode dimension;
-- build `full_coefficients` from the materialized axis coefficient matrices;
-- keep existing boundary mode selection, support restriction,
-  shell-local Lowdin, canonicalization, and support validation;
-- preserve ordinary fallback through
-  `_nested_projected_q_shell_full_sides(...)` when materialized facts are
-  absent.
-
-This ID makes carried mapped-COMX axis facts basis-defining at terminal shell
-realization. It does not approve changing source-span construction, shell
-ownership, retained-rule semantics, Lowdin realization, artifact schemas,
-driver inputs, Hamiltonian assembly, IDA, MWG, RG, raw Gaussian blocks, solver,
-EGOI, Cr2, high-order workflow, or defaults.
-
-Failure rule: if terminal realization cannot consume carried axis facts without
-changing shell ownership, retained-rule semantics, Lowdin realization, artifact
-schema, or driver inputs, make no source commit and report the exact blocker.
-
-### HP-MCOMX-TERM-TEST-01 — mapped-COMX terminal seam validation
-
-Approved validation:
-
-- `git diff --check`;
-- package load;
-- ordinary PQS H2 endpoint/regression unchanged;
-- mapped source-span probe still passes;
-- focused He or H terminal seam check showing mapped terminal shell
-  coefficients differ from ordinary and match the carried materialized axis
-  facts;
-- H2 supplemented RG endpoint if the touched path crosses it;
-- no Cr2 run.
-
-No driver input test, artifact schema test, committed test file, committed
-fixture, high-order benchmark fixture, or Cr2 fixture is approved.
-
-### HP-MCOMX-DRV-FN-01 — mapped-COMX canonical driver selection
-
-Approved source files:
-
-```text
-bin/cartesian_ham_builder.jl
-src/cartesian_base_hamiltonian.jl
-src/pqs_source_box_route_driver_helpers.jl
-```
-
-`src/pqs_source_box_route_driver_helpers.jl` is approved only for narrow
-propagation of a normalized source-span selector to the already-approved
-source-axis transform fact path. This ID must not add route records,
-route-stage diagnostics, terminal-lowering contracts, artifact fields, or a
-new COMX implementation.
-
-Approved behavior:
-
-- add a visible canonical-driver input `source_span`;
-- support trusted input-file and command-line override handling through the
-  existing compact driver input mechanism;
-- print `source_span` in the compact public contract when `print_contract` is
-  enabled;
-- accept only `:ordinary` and `:mapped_comx` as driver-facing values;
-- default to `:ordinary`;
-- normalize and validate the selector in `src/cartesian_base_hamiltonian.jl`;
-- pass `:mapped_comx` through the existing PQS source-box path so terminal
-  realization receives materialized mapped-COMX axis facts;
-- reject `source_span = :mapped_comx` clearly for `nesting = :wl` until a
-  future WL-specific amendment approves otherwise;
-- keep ordinary driver artifact/readback behavior unchanged.
-
-This is a public construction choice, not a diagnostic route switch.
-
-Forbidden:
-
-- new driver hooks beyond `source_span`;
-- route skeleton, route record, terminal-lowering, retained-rule, shell
-  ownership, artifact schema, manifest, reader, Hamiltonian, IDA, MWG, RG, raw
-  Gaussian block, solver, EGOI, Cr2, high-order workflow, or source-default
-  changes;
-- another COMX path, route-stage diagnostics, stop-after controls, raw-block
-  switches, allocation probes, committed tests, or committed fixtures.
-
-Failure rule: if making `source_span` driver-selectable requires new route
-records, terminal-lowering changes, artifact schema changes, or another COMX
-path, make no source commit and report the exact blocker.
-
-### HP-MCOMX-DRV-TEST-01 — mapped-COMX driver validation
-
-Approved validation:
-
-- `git diff --check`;
-- package load;
-- default ordinary driver artifact/readback still passes;
-- mapped-COMX He or H PQS driver smoke proves carried facts are
-  basis-defining;
-- ordinary versus mapped He supplemented/MWG/IDA comparison through the real
-  driver if bounded;
-- H2 RG endpoint still passes;
-- no Cr2 run.
-
-No committed test file, committed fixture, high-order benchmark fixture,
-artifact schema test, route-diagnostic test, or Cr2 fixture is approved.
-
+Facility-wide non-goals: default promotion, automatic tuning, another COMX
+path, White-Lindsey support, route/report payloads, artifact schema,
+Hamiltonian/raw-block/RG/MWG/IDA/EGOI/screening/solver changes, or Cr2
+production claims.
 ## Approved Composition Lane: Base Homonuclear Z-Axis Diatomics
 
 This section promotes the base z-axis diatomic validation relaxation. It
