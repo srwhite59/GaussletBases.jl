@@ -4297,273 +4297,185 @@ dedicated raw-block test file currently exists.
 Non-goals: Cr2 workflow, artifacts, public API, route/status/payload, or
 residual internal-vocabulary tests.
 
-## Approved For R3 Terminal G-G Product Matrices
+## Implemented R3 Exact-Operator Optimizations
 
-This section approves only the terminal final-basis `G-G` product-matrix
-optimization recorded in `r3_terminal_gg_product_matrices.md`. It is owned by
-`CartesianFinalBasisRealization`, not by `CartesianGaussianRawBlocks`.
+### HP-R3GG-FN-01 — terminal G-G product matrices
 
-### HP-R3GG-FN-01 — R3/RG terminal G-G product-matrix optimization
+Lifecycle: implemented. Permission: source maintenance.
 
-Approved owner:
+Owner/canonical: `CartesianFinalBasisRealization`;
+[terminal G-G products](r3_terminal_gg_product_matrices.md).
 
-```text
-Owner module: CartesianFinalBasisRealization
-```
-
-Approved source files:
-
-```text
-src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
-src/cartesian_final_basis_realization/pqs_terminal_one_body.jl
-```
-
-The first implementation should prefer editing only
-`pqs_terminal_residual_gto.jl`. Edits to `pqs_terminal_one_body.jl` are
-approved only for a small internal terminal-product workspace or multi-product
-helper needed to reuse function-local buffers across consecutive product
-assemblies.
-
-Approved product matrices:
-
-- kinetic `K_GG`;
-- coordinate moments `x_GG`, `y_GG`, `z_GG`;
-- second moments `x2_GG`, `y2_GG`, `z2_GG`.
-
-Approved implementation shapes:
-
-- accumulate the three kinetic-axis product contributions into one destination;
-- reuse an already constructed base Hamiltonian kinetic `G-G` block in the
-  same-construction path when available and validated equal;
-- build coordinate and second-moment `G-G` products one axis at a time and
-  transform immediately;
-- share function-local scratch/workspace across consecutive terminal product
-  assemblies;
-- delete or simplify `_r3a_product_matrix(...)` when replaced and no live
-  caller remains.
-
-This ID does not approve `G-A`/`A-A` raw-block changes, nuclear raw-block
-changes, unit-nuclear `U_A` Gaussian-sum changes, terminal basis realization
-changes, residual Gaussian algorithm changes, Qiu-White semantic changes,
-IDA/MWG changes, parent construction, persistent caches, metadata,
-report/status/payload fields, public API/export, artifact changes, Cr2 facade
-support, or Cr2 artifact workflow.
-
-Line budget: at most `100` added `src` lines total. If implementation needs a
-broad product-operator framework, persistent workspace/cache object, files
-outside the approved source files, or a public/internal payload, stop and
-request a new docs-only amendment.
-
-### HP-R3GG-TEST-01 — terminal G-G product validation
-
-Approved validation:
-
-- existing H2 Residual Gaussian endpoint unchanged;
-- Be2 Residual Gaussian usability/performance measurement unchanged except for
-  allowed timing/allocation improvement;
-- Cr2 q4 `K_GG`, coordinate moment `G-G`, and second-moment `G-G` products
-  match the current construction at roundoff as ignored validation;
-- augmented exact operators remain finite and symmetric;
-- base `G-G` block equality checks in the existing H2 endpoint still pass;
-- Cr2 q4 exact-operator allocation is remeasured after parity.
-
-No new committed test file is approved by this ID.
-
-## Approved For R3 Unit-Nuclear U_GG Gaussian Sum
-
-This section approves only the terminal final-basis unit-nuclear `U_GG`
-Gaussian-sum optimization recorded in
-`r3_unit_nuclear_ugg_gaussian_sum.md`. It is owned by
-`CartesianFinalBasisRealization`, not by `CartesianGaussianRawBlocks`.
-
-### HP-R3UN-FN-01 — R3/RG unit-nuclear U_GG Gaussian-sum optimization
-
-Approved owner:
-
-```text
-Owner module: CartesianFinalBasisRealization
-```
-
-Approved source files:
+Source:
 
 ```text
 src/cartesian_final_basis_realization/pqs_terminal_one_body.jl
 src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
 ```
 
-The first implementation should prefer `pqs_terminal_one_body.jl`. Edits to
-`pqs_terminal_residual_gto.jl` are approved only for narrow R3 exact-operator
-caller wiring needed to use function-local scratch or the optimized helper.
+Dependencies: realized terminal blocks and Residual Gaussian exact transforms.
 
-Approved target functions:
+Permission: maintain exact kinetic and first/second moment `G-G` assembly with
+function-local scratch reuse.
+
+Non-goals: Gaussian `G-A`/`A-A` raw blocks, unit nuclear, residual/MWG policy,
+persistent caches, metadata, artifacts, public API, or solver workflow.
+
+### HP-R3GG-TEST-01 — terminal G-G validation
+
+Lifecycle: completed validation. Permission: test maintenance.
+
+Owner/canonical: `CartesianFinalBasisRealization`;
+[terminal G-G products](r3_terminal_gg_product_matrices.md).
+
+Test/evidence:
 
 ```text
-_accumulate_terminal_gaussian_sum!
-_terminal_gaussian_sum_action
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+docs/src/developer/pqs_manager_running_log.md (Passes 087-087B)
 ```
 
-Approved implementation shapes:
+Dependencies: `HP-R3GG-FN-01` and accepted Be2/Cr2 ignored parity evidence.
 
-- reuse function-local scratch/workspace across Gaussian-sum terms and center
-  calls;
-- accumulate terminal Gaussian-sum contributions in-place into the caller's
-  destination;
-- reduce avoidable allocation in factor lookup and terminal Gaussian-sum action
-  construction;
-- add small internal scratch arguments or file-local helpers only if they remain
-  inside `CartesianFinalBasisRealization` and create no persistent state;
-- simplify or delete allocation-heavy helper code inside the targeted
-  Gaussian-sum path after parity.
+Permission: maintain the focused endpoint, parity, finiteness, and symmetry
+coverage. No separate product-framework fixture is authorized.
 
-This ID does not approve neutral raw-block changes, terminal kinetic/moment
-`G-G` product changes, residual Gaussian selection/orientation/transform
-changes, MWG/IDA changes, Qiu-White semantic changes, route/stage setup
-cleanup, raw-block setup cleanup, parent construction, terminal basis
-realization changes, persistent caches/workspaces, broad Gaussian-sum
-frameworks, metadata/report/status/payload fields, artifacts, public
-API/export, Cr2 facade support, or Cr2 artifact workflow.
+Non-goals: route, artifact, public workflow, or Cr2 production tests.
 
-Line budget: at most `100` added `src` lines total. If implementation needs a
-broad Gaussian-sum framework, persistent cache/workspace object, files outside
-the approved source files, or source edits outside the terminal unit-nuclear
-`U_GG` path, stop and request a new docs-only amendment.
+### HP-R3UN-FN-01 — terminal unit-nuclear U_GG Gaussian sum
 
-### HP-R3UN-TEST-01 — unit-nuclear U_GG validation
+Lifecycle: implemented. Permission: source maintenance.
 
-Approved validation:
+Owner/canonical: `CartesianFinalBasisRealization`;
+[unit-nuclear Gaussian sum](r3_unit_nuclear_ugg_gaussian_sum.md).
 
-- existing H2 Residual Gaussian endpoint unchanged;
-- Be2 Residual Gaussian facade/readback unchanged except for allowed
-  timing/allocation improvement;
-- Cr2 q4 exact-operator audit reports before/after unit-nuclear `U_GG`
-  allocation and total wrapper allocation;
-- Cr2 q4 unit-nuclear `U_GG` block replay parity and final exact augmented
-  operator parity at roundoff;
-- exact operators remain finite and symmetric.
+Source:
 
-No new committed test file is approved by this ID.
+```text
+src/cartesian_final_basis_realization/pqs_terminal_one_body.jl
+src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+```
 
-## Approved For R3 Same-Construction Base K/U Reuse
+Dependencies: realized terminal blocks and the producer-wide Coulomb expansion.
 
-This section approves only narrow reuse of already-built same-construction
-base final-basis kinetic and unit-nuclear blocks in supplemented residual-GTO
-/ MWG exact augmented operators. It is an orchestration reuse lane, not a
-terminal product, Gaussian-sum, raw-block, residual-basis, or interaction
-algorithm lane.
+Permission: maintain exact uncharged by-center `U_GG`, term-first assembly,
+and function-local scratch reuse.
 
-Evidence recorded before approval: a replay that reused same-construction base
-`K_GG` and unit `U_GG[A]` blocks had exact operator delta `0.0` and reduced the
-exact augmented-operator replay to `0.8620s / 1237.136 MiB`.
+Non-goals: physical charge application, neutral `G-A`/`A-A` raw blocks,
+residual/MWG policy, persistent caches, metadata, artifacts, or public API.
+
+### HP-R3UN-TEST-01 — terminal unit-nuclear validation
+
+Lifecycle: completed validation. Permission: test maintenance.
+
+Owner/canonical: `CartesianFinalBasisRealization`;
+[unit-nuclear Gaussian sum](r3_unit_nuclear_ugg_gaussian_sum.md).
+
+Test/evidence:
+
+```text
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+docs/src/developer/pqs_manager_running_log.md (Passes 089-089B)
+```
+
+Dependencies: `HP-R3UN-FN-01` and accepted Be2/Cr2 ignored parity evidence.
+
+Permission: maintain the focused endpoint, fallback, parity, finiteness, and
+symmetry coverage. No separate Gaussian-sum fixture is authorized.
+
+Non-goals: route, artifact, public workflow, or Cr2 production tests.
 
 ### HP-R3BASE-FN-01 — same-construction base K/U reuse
 
-Approved owner:
+Lifecycle: implemented. Permission: source and approved-caller maintenance.
 
-```text
-Owner module: CartesianFinalBasisRealization plus narrow caller wiring
-```
+Owner/canonical: `CartesianFinalBasisRealization` plus producer composition;
+[same-construction base reuse](r3_same_construction_base_reuse.md).
 
-Approved source files:
+Source:
 
 ```text
 src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
 src/cartesian_base_hamiltonian.jl
 ```
 
-Approved behavior:
+Additional live consumer: `src/cartesian_protected_ladder_bundle.jl`, under
+its separately owned protected-ladder authority.
 
-- `pqs_terminal_residual_gto_augmented_products(...)`, or its approved caller
-  wrapper, may accept a trusted same-construction base kinetic matrix and use
-  it as the `G-G` kinetic block for `transform_augmented_operator`;
-- `pqs_terminal_residual_gto_augmented_unit_nuclear(...)`, or its approved
-  caller wrapper, may accept trusted same-construction unit nuclear
-  `U_GG[A]` matrices and use them as the `G-G` unit blocks for
-  `transform_augmented_operator`;
-- `cartesian_residual_gto_mwg_hamiltonian(...)` and staged helpers in
-  `src/cartesian_base_hamiltonian.jl` may pass `base_ham.kinetic` and
-  `base_ham.nuclear_attraction_unit_by_center` into the augmented operator
-  construction;
-- current behavior must be preserved when trusted base blocks are not supplied.
+Dependencies: `HP-R3GG-FN-01`, `HP-R3UN-FN-01`, one shared base construction,
+and exact augmented transforms.
 
-Trust condition:
+Permission: maintain trusted `base_kinetic` and `base_unit_nuclear` handoff,
+dimension/center checks, and live exact recomputation fallbacks.
 
-- the base Hamiltonian, terminal basis realization, parent bundles, residual
-  basis, and supplement must come from the same
-  `cartesian_base_working_basis(...)` construction path;
-- implementation must validate matrix dimensions and center count before
-  reuse;
-- no provenance payload, metadata proof, report field, status object, or
-  persistent cache is required or approved for this trust check.
+Non-goals: public inputs, persisted trust proofs, caches, provenance or artifact
+fields, operator rewrites, residual/MWG policy, or solver behavior.
 
-This ID does not approve public API/export changes, canonical-driver changes,
-raw-block changes, residual selection/orientation/transform changes, MWG/IDA
-convention changes, terminal product or Gaussian-sum kernel rewrites,
-persistent cache/workspace objects, metadata/status/report/artifact schema
-fields, route/stage setup cleanup, committed tests, Cr2 workflow, or source
-files outside the two approved files.
+### HP-R3BASE-TEST-01 — same-construction reuse validation
 
-Line budget: target under `100` added `src` lines. If trusted
-same-construction provenance cannot be guaranteed by local call shape plus
-dimension/center validation, or if implementation needs public payloads,
-metadata, or stage objects, make no source commit and report the blocker.
+Lifecycle: completed validation. Permission: test maintenance.
 
-### HP-R3BASE-TEST-01 — base K/U reuse validation
+Owner/canonical: producer composition;
+[same-construction base reuse](r3_same_construction_base_reuse.md).
 
-Approved validation:
+Test/evidence:
 
-- `git diff --check`;
-- package load;
-- existing H2 R3 endpoint unchanged;
-- Be2 supplemented facade/readback unchanged except allowed
-  timing/allocation improvement;
-- Cr2 exact-operator attribution audit or focused ignored replay showing base
-  `K_GG` / unit `U_GG[A]` reuse parity and allocation effect;
-- final exact operators finite and symmetric.
+```text
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+docs/src/developer/pqs_manager_running_log.md (Passes 109-110)
+```
 
-No new committed test file, Cr2 artifact, Cr2 workflow, public API/export,
-driver workflow change, metadata/status/report field, or artifact schema
-change is approved by this ID.
+Dependencies: implemented reuse and fallback paths plus accepted ignored
+allocation/parity evidence.
 
-### HP-R3BASE-DRV-WIRE-01 — canonical driver K/U reuse call-site wiring
+Permission: maintain focused fallback/reuse parity, exact-operator, endpoint,
+and artifact-readback coverage.
 
-Approved source file:
+Non-goals: dedicated cache/provenance tests, Cr2 workflow, or public API tests.
+
+### HP-R3BASE-DRV-WIRE-01 — canonical-driver K/U reuse wiring
+
+Lifecycle: implemented. Permission: caller maintenance.
+
+Owner/canonical: canonical Cartesian driver;
+[same-construction base reuse](r3_same_construction_base_reuse.md).
+
+Source:
 
 ```text
 bin/cartesian_ham_builder.jl
 ```
 
-Approved behavior:
+Dependencies: `HP-R3BASE-FN-01` and the supported supplemented driver path.
 
-- in supplemented mode only, pass `base_ham.kinetic` into
-  `cartesian_residual_gto_augmented_products(...)` as `base_kinetic`;
-- in supplemented mode only, pass
-  `base_ham.nuclear_attraction_unit_by_center` into
-  `cartesian_residual_gto_augmented_unit_nuclear(...)` as
-  `base_unit_nuclear`;
-- keep the current public inputs, hooks, timing labels, visible stage sequence,
-  artifact schema, and driver contract unchanged.
+Permission: maintain passing the already-built base kinetic and by-center unit
+nuclear matrices to supplemented exact-operator construction.
 
-This ID is only call-site wiring so the canonical driver uses the already
-approved same-construction base K/U reuse path. It does not approve source or
-kernel changes, diagnostics, new hooks, new timing labels, public API/export
-changes, artifact changes, tests/fixtures, Cr2 workflow, or edits outside
-`bin/cartesian_ham_builder.jl`.
+Non-goals: new driver inputs, hooks, timing labels, stages, artifacts, kernels,
+or base-only behavior changes.
 
-Failure rule: if the driver call-site update needs any visible driver contract
-change, make no source commit and report the blocker.
+### HP-R3BASE-DRV-TEST-01 — canonical-driver reuse validation
 
-### HP-R3BASE-DRV-TEST-01 — driver K/U reuse validation
+Lifecycle: completed validation. Permission: evidence maintenance.
 
-Approved validation:
+Owner/canonical: canonical Cartesian driver;
+[same-construction base reuse](r3_same_construction_base_reuse.md).
 
-- `git diff --check`;
-- package load;
-- H2 supplemented driver artifact/readback;
-- Be2 supplemented driver artifact/readback if practical;
-- no Cr2 run.
+Test/evidence:
 
-No new committed test file, fixture, diagnostic, hook, timing label, public
-input, artifact schema, or Cr2 workflow is approved by this ID.
+```text
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+docs/src/developer/pqs_manager_running_log.md (Pass 110)
+```
+
+No dedicated committed driver test exists for these keyword handoffs.
+
+Dependencies: `HP-R3BASE-DRV-WIRE-01` and supported H2/Be2 supplemented
+driver evidence.
+
+Permission: maintain the accepted call-site validation record.
+
+Non-goals: new fixtures, hooks, public inputs, artifacts, or Cr2 workflow.
 
 ## Approved For Canonical Cartesian Driver Usability
 
@@ -5640,30 +5552,23 @@ committed tests/fixtures, Cr2-specific workflow, or Cr2 Hamiltonian runs.
 
 ### HP-R3REM-AUDIT-01 — remaining exact-operator allocation audit
 
-Approved scope:
+Lifecycle: completed historical measurement. Permission: none.
 
-- measure the Cr2 q4 R3/RG exact augmented-operator allocation remaining after
-  `954c86cd` and the terminal `G-G` product-workspace optimization;
-- separate total wrapper allocation from neutral raw-block construction,
-  terminal `G-G` product buffers, unit-nuclear `U_GG` Gaussian-sum
-  construction, exact augmented nuclear transforms, route/stage setup, and
-  audit/replay overhead;
-- use ignored `tmp/work` probes only, with H2/Be2 sanity if needed.
+Owner/canonical: historical exact-operator attribution;
+[remaining allocation audit](r3_remaining_exact_operator_allocation_audit.md).
 
-Required outcome:
+Evidence:
 
-- classify the dominant remaining allocation bucket;
-- recommend a future source lane only if the owner, files, functions,
-  forbidden surfaces, validation gates, line budget, deletion/simplification
-  expectation, and failure rule are specific enough for a separate docs-only
-  amendment.
+```text
+docs/src/developer/pqs_manager_running_log.md (Passes 088-089B)
+```
 
-This ID does not extend `HP-R3GG-FN-01` and does not approve unit-nuclear
-`U_GG` Gaussian-sum optimization, route/raw-block setup cleanup, final-basis
-`G-G` changes, `G-A`/`A-A` raw-block changes, residual Gaussian algorithm
-changes, IDA/MWG changes, Qiu-White semantic changes, parent or terminal-basis
-changes, persistent caches/workspaces, artifacts, public API/export, Cr2 facade
-support, or Cr2 artifact workflow.
+Outcome: attributed the largest in-wrapper remainder to terminal unit-nuclear
+`U_GG`; the separately authorized implementation is now canonical in
+[unit-nuclear Gaussian sums](r3_unit_nuclear_ugg_gaussian_sum.md).
+
+Non-goals: this completed audit grants no source, test, tool, driver, route,
+kernel, artifact, public API, solver, or Cr2 workflow authority.
 
 ## Rejected Or Deferred
 

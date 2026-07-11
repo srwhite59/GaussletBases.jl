@@ -74,16 +74,18 @@ The detailed object, realization, one-body, IDA, and Hamiltonian boundary is
   matrices. They do not perform terminal projection, optimize final-basis
   `G-G` product matrices, transform into residual bases, or own nuclear/MWG
   interaction blocks.
-- R3/RG terminal `G-G` product-matrix optimization may own only final-basis
+- R3/RG terminal `G-G` product-matrix optimization owns only final-basis
   product matrices for kinetic, coordinate moments, and second moments used by
   residual-Gaussian exact augmented operators. It must not change terminal
   basis realization, `G-A`/`A-A` raw blocks, unit-nuclear Gaussian sums, IDA,
   MWG, residual selection, or route/public/artifact surfaces.
 - Remaining R3/RG exact-operator allocation after terminal `G-G` product
-  workspace reuse was attributed by `HP-R3REM-AUDIT-01`. `HP-R3UN-FN-01` may
-  own only terminal final-basis unit-nuclear `U_GG` Gaussian-sum allocation
-  reduction. Route/raw-block setup, neutral raw blocks, residual/MWG/IDA work,
-  public workflow, and Cr2 facade/artifact work remain outside this authority.
+  workspace reuse was attributed by completed `HP-R3REM-AUDIT-01`.
+  `HP-R3UN-FN-01` owns only terminal final-basis unit-nuclear `U_GG`
+  Gaussian-sum construction. Trusted base-block reuse is separately limited
+  to one construction and changes no operator. Route/raw-block setup, neutral
+  raw blocks, residual/MWG/IDA work, public workflow, and Cr2 facade/artifact
+  work remain outside these authorities.
 - Slice C/base IDA assembly produces a real final-basis matrix and then uses the
   existing `CartesianIDAHamiltonian`; no Hamiltonian wrapper or result payload is
   approved.

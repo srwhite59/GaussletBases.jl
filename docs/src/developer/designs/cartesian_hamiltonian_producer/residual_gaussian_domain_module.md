@@ -315,6 +315,10 @@ grant new source, fixture, endpoint, or Cr2 workflow authority.
 - Raw exact Gaussian matrices:
   [nuclear raw blocks](cartesian_gaussian_raw_blocks_nuclear.md) and
   [non-nuclear raw blocks](cartesian_gaussian_raw_blocks_non_nuclear.md).
+- Exact terminal `G-G` owners and trusted base-block reuse:
+  [terminal products](r3_terminal_gg_product_matrices.md),
+  [unit nuclear](r3_unit_nuclear_ugg_gaussian_sum.md), and
+  [same-construction reuse](r3_same_construction_base_reuse.md).
 - Persistence:
   [ordinary artifact manifest](cartesian_hamiltonian_artifact_manifest.md).
 

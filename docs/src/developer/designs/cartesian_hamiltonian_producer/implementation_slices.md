@@ -48,7 +48,8 @@ current contracts are listed here instead of repeated.
 | R3 terminal `G-G` product-matrix optimization | [R3 terminal G-G product matrices](r3_terminal_gg_product_matrices.md) |
 | R3 exact-operator allocation attribution | [R3 remaining exact-operator allocation audit](r3_remaining_exact_operator_allocation_audit.md) |
 | R3 terminal unit-nuclear Gaussian-sum optimization | [R3 unit-nuclear U_GG Gaussian sum](r3_unit_nuclear_ugg_gaussian_sum.md) |
-| Same-construction base K/U reuse and supplemented diatomics | [R3 homonuclear supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md), [R3 usability workflow](r3_usability_supplemented_workflow.md) |
+| Same-construction base K/U reuse | [R3 same-construction base reuse](r3_same_construction_base_reuse.md) |
+| Supported supplemented facade and diatomics | [R3 usability workflow](r3_usability_supplemented_workflow.md), [R3 homonuclear supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md) |
 | Canonical driver and artifact-producing workflow | [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md) |
 | Driver atom input and hidden-`d` cleanup | [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md) |
 | R1 one-center base atoms | [R1 one-center base atoms](r1_one_center_base_atoms.md) |

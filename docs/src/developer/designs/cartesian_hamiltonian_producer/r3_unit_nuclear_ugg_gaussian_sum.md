@@ -1,144 +1,96 @@
-# R3 Unit-Nuclear U_GG Gaussian-Sum Optimization
+# R3 Unit-Nuclear U_GG Gaussian Sum
 
-Status: approved narrow source authority for reducing R3/RG exact-operator
-allocation in terminal final-basis unit-nuclear `U_GG` Gaussian-sum
-construction. This is not `HP-R3GG-*`, `HP-CGRB-*`, or route/setup authority.
+Status: implemented internal optimization and completed validation contract.
 
-## Decision
+This page is the canonical contract for:
 
-The `HP-R3REM-AUDIT-01` measurement separated the remaining post-`954c86cd`
-Cr2 q4 exact augmented-operator allocation. The exact-operator wrapper now
-measures about `5.7739s / 4680.627 MiB`; the largest in-wrapper owner is
-unit-nuclear `U_GG` factor lookup plus Gaussian-sum construction at about
-`2.0447s / 1856.819 MiB`.
+- `HP-R3UN-FN-01`;
+- `HP-R3UN-TEST-01`.
 
-Crossed or non-target buckets:
+The implementation is owned by `CartesianFinalBasisRealization`. It constructs
+the exact terminal final-basis, uncharged nuclear-attraction block for each
+nuclear center. Neutral Gaussian `G-A` and `A-A` nuclear blocks remain owned by
+[Cartesian Gaussian raw blocks](cartesian_gaussian_raw_blocks_nuclear.md).
 
-- neutral non-nuclear raw blocks: `0.1894s / 860.736 MiB`;
-- neutral nuclear raw blocks: `0.6316s / 15.765 MiB`;
-- terminal `G-G` kinetic/moment products: `0.8352s / 733.701 MiB`;
-- augmented nuclear transforms only: `0.0125s / 179.268 MiB`.
+## Source And Entry Points
 
-Approve a narrow source lane for terminal final-basis unit-nuclear `U_GG`
-Gaussian-sum construction. Do not use this lane for route/stage setup,
-raw-block setup, neutral raw-block kernels, residual Gaussian algorithms,
-MWG/IDA, public workflow, or Cr2 artifact/facade work.
-
-## Approved IDs
-
-- `HP-R3UN-FN-01` - terminal final-basis unit-nuclear `U_GG` Gaussian-sum
-  allocation reduction.
-- `HP-R3UN-TEST-01` - validation gates for the narrow `U_GG` optimization.
-
-## Scope
-
-Approved owner:
-
-```text
-Owner module: CartesianFinalBasisRealization
-```
-
-Approved source files:
+Implemented source:
 
 ```text
 src/cartesian_final_basis_realization/pqs_terminal_one_body.jl
 src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
 ```
 
-The first source pass should prefer `pqs_terminal_one_body.jl`. Edits to
-`pqs_terminal_residual_gto.jl` are approved only for narrow caller wiring needed
-to pass function-local scratch or use the optimized helper from the R3 exact
-augmented-operator path.
+The principal helpers are `_accumulate_terminal_gaussian_sum!` and its
+function-local workspace form. Supporting helpers validate factor families,
+fill one term-first action, and add terminal blocks.
+`pqs_terminal_residual_gto_augmented_unit_nuclear(...)` supplies center-specific
+factor families and transforms the resulting `G-G`, `G-A`, and `A-A` blocks
+into the augmented basis.
 
-Approved target functions:
+Commit `79e5cd474` implemented the allocation reduction. Manager-log Passes
+089, 089A, and 089B preserve the accepted parity and allocation evidence.
+
+## Numerical Contract
+
+For center `A`, the terminal kernel assembles the Gaussian expansion
 
 ```text
-_accumulate_terminal_gaussian_sum!
-_terminal_gaussian_sum_action
+U_GG[A] = -sum_t c_t tensor(Fx[t], Fy[t], Fz[t])
 ```
 
-Exact names may follow existing local code, but the approved surface is only
-the existing terminal Gaussian-sum path used to construct unit-nuclear `U_GG`
-matrices.
+blockwise in the realized terminal basis. The minus sign belongs to the
+uncharged attractive unit operator `U_A = -1/r_A`. Physical nuclear charge is
+applied later by Hamiltonian assembly and must not be folded into this block.
 
-## Allowed Implementation Shapes
+The implementation is term-first and respects direct identity and compact
+support-local terminal blocks. It evaluates one triangle and mirrors
+off-diagonal blocks. Before accumulation it requires:
 
-`HP-R3UN-FN-01` may:
+- a square destination of size `basis.final_dimension`;
+- equal coefficient and x/y/z factor-family term counts;
+- factor matrices large enough for all referenced support states;
+- finite factor matrices symmetric within `1e-10` in infinity norm.
 
-- reuse function-local scratch/workspace across Gaussian-sum terms and center
-  calls;
-- accumulate terminal Gaussian-sum contributions in-place into the caller's
-  destination;
-- reduce avoidable allocation in factor lookup and terminal Gaussian-sum
-  action construction;
-- introduce small internal scratch arguments or file-local helpers if they
-  remain inside `CartesianFinalBasisRealization` and do not create persistent
-  state;
-- simplify or delete obsolete allocation-heavy code inside the targeted
-  Gaussian-sum path once parity is established.
+When no trusted base blocks are supplied, the augmented path computes one
+matrix per center. It reuses one function-local set of action, tile, and block
+workspaces across centers. A center already represented by a PGDG axis may
+reuse that axis's factor family; translated centers are evaluated through the
+same mapped ordinary one-body owner and the carried Coulomb expansion.
 
-The mathematical operator is unchanged: each unit-nuclear `U_GG` block remains
-the exact final-basis uncharged nuclear attraction matrix assembled from the
-approved term-first Gaussian-sum factors and terminal basis representation.
+The producer-wide expansion and PGDG exponent sequence must agree before this
+path runs. The number of nuclear locations must match the number of physical
+charges, although charges are not applied inside `U_GG`.
 
-## Not Approved
-
-This amendment does not approve:
-
-- neutral nuclear or non-nuclear `G-A`/`A-A` raw-block changes;
-- terminal `G-G` kinetic, coordinate-moment, or second-moment product changes;
-- residual Gaussian selection, orientation, transforms, exact augmented
-  transform semantics, MWG, or IDA changes;
-- Qiu-White semantic changes or route objects;
-- route/stage setup cleanup, raw-block setup cleanup, parent construction, or
-  terminal basis realization changes;
-- persistent caches, persistent workspace objects, broad Gaussian-sum
-  frameworks, provider bundles, metadata/report/status/payload fields,
-  artifacts, public API/export, committed tests, Cr2 facade support, or Cr2
-  artifact workflow.
+Trusted same-construction `U_GG[A]` reuse and its live recomputation fallback
+belong to [same-construction base reuse](r3_same_construction_base_reuse.md).
 
 ## Validation
 
-`HP-R3UN-TEST-01` approves validation only for this narrow optimization:
-
-- existing H2 Residual Gaussian endpoint unchanged;
-- Be2 Residual Gaussian facade/readback unchanged except for allowed
-  timing/allocation improvement;
-- Cr2 q4 exact-operator audit reports before/after unit-nuclear `U_GG`
-  allocation and total wrapper allocation;
-- Cr2 q4 replay parity for unit-nuclear `U_GG` blocks and final exact
-  augmented operators at roundoff;
-- exact operators remain finite and symmetric.
-
-Recommended commands for a source pass:
+The maintained focused gate is:
 
 ```text
-git diff --check
-julia --project=. -e 'using GaussletBases; println("load ok")'
-julia --project=. test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
-julia --project=. tmp/work/be2_r3u_facade_measurement.jl
-julia --project=. tmp/work/cr2_exact_operator_allocation_audit.jl
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
 ```
 
-If the Cr2 audit does not directly compare `U_GG` blocks, add an ignored
-`tmp/work` parity probe. Do not add a committed test file under this ID.
+It exercises the fallback path, exact augmented nuclear blocks, finiteness,
+symmetry, base-block parity, and the H2 endpoint. Accepted Be2 and ignored Cr2
+replay/allocation evidence remains in manager-log Passes 089-089B.
 
-## Line Budget And Failure Rule
+`HP-R3UN-TEST-01` is completed validation and maintenance permission. It does
+not authorize a separate Gaussian-sum framework or development-only fixture.
 
-Line budget:
+## Boundaries
 
-- at most `100` added `src` lines total;
-- net simplification is expected through deletion/simplification of
-  allocation-heavy Gaussian-sum helper code;
-- no new committed test file.
+This contract does not own or change:
 
-Failure rule: if this needs a persistent cache/workspace object, a broad
-Gaussian-sum framework, files outside the approved source files, source edits
-outside the terminal unit-nuclear `U_GG` path, or more than the line budget,
-stop and request a new docs-only amendment before coding.
+- neutral nuclear `G-A` or `A-A` kernels;
+- terminal kinetic or moment products;
+- residual selection, orientation, or exact transforms;
+- IDA, MWG, routes, parent construction, or terminal realization;
+- physical charge application;
+- persistent caches or workspace objects;
+- metadata, reports, artifacts, public APIs, solvers, or Cr2 workflows.
 
-## Deferred
-
-Route/stage setup, raw-block setup, neutral raw-block kernels, residual
-Gaussian algorithm changes, MWG/IDA, public supplemented workflow/export, Cr2
-facade support, and Cr2 artifact workflow remain deferred.
+Workspace reuse is function-local. No persistent factor cache or stage object
+is part of the implemented contract.

@@ -114,8 +114,10 @@ as MWG, or treating MWG as exact residual-GTO Coulomb, is a category error.
 The base Hamiltonian, terminal basis, parent bundles, supplement, and carried
 Coulomb expansion must belong to one construction. Dimension-compatible
 objects assembled independently are not interchangeable. The current code
-checks base blocks, centers, nuclear charges, dimensions, and PGDG exponent
-parity before composing the augmented interaction.
+checks residual and reused-matrix dimensions, center/charge counts, and PGDG
+exponent parity before composing the augmented interaction. Trusted kinetic and
+unit-nuclear block reuse, including its exact fallback, is canonical in
+[R3 same-construction base reuse](r3_same_construction_base_reuse.md).
 
 ### Compact Provenance
 

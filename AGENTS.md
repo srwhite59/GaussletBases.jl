@@ -1215,106 +1215,23 @@ Implemented neutral Cartesian Gaussian raw-block ownership is canonical in
 - The neutral owner does not own routes, caches, metadata, artifacts, public
   API, residual selection, MWG, EGOI, or solver behavior.
 
-Approved R3/RG terminal `G-G` product-matrix optimization:
+Implemented R3 exact-operator optimization contracts:
 
-- `HP-R3GG-FN-01` approves only
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` and, if
-  needed for small internal terminal-product workspace/helper reuse,
-  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`.
-- Approved product matrices are only the final-basis `G-G` kinetic,
-  coordinate-moment, and second-moment matrices used by
-  `pqs_terminal_residual_gto_augmented_operators(...)`.
-- Allowed shapes are accumulation of the three kinetic-axis contributions into
-  one destination, reuse of an already constructed same-construction base
-  Hamiltonian kinetic block when available and validated equal, axis-by-axis
-  product/transform for coordinate and second moments, function-local scratch
-  reuse across consecutive product assemblies, and deletion/simplification of
-  `_r3a_product_matrix(...)` when no live caller remains.
-- `HP-R3GG-TEST-01` approves only the existing H2 Residual Gaussian endpoint,
-  ignored Be2 measurement, ignored Cr2 q4 `K_GG`/moment `G-G` parity, exact
-  operator finiteness/symmetry, existing base `G-G` block equality checks, and
-  Cr2 q4 exact-operator allocation remeasurement. No new committed test file
-  is approved.
-
-This G-G lane must not change `G-A`/`A-A` raw blocks, nuclear raw blocks,
-unit-nuclear Gaussian-sum construction, IDA/MWG, residual selection,
-orientation, or transforms, terminal basis realization, Qiu-White semantics,
-route setup, parent construction, persistent caches, metadata/report/status/
-payload fields, artifacts, public API/export, Cr2 facade support, or Cr2
-artifact workflow. Line budget is at most 100 added `src` lines.
-
-Measurement-only current R3 allocation decision:
-
-- `HP-R3REM-AUDIT-01` approves only ignored `tmp/work` measurement/probe work
-  to classify remaining Cr2 q4 exact augmented-operator allocation after
-  `954c86cd`.
-- It is intentionally not listed as production source authority.
-
-Approved R3 unit-nuclear `U_GG` Gaussian-sum optimization:
-
-- `HP-R3UN-FN-01` approves only terminal final-basis unit-nuclear `U_GG`
-  Gaussian-sum allocation reduction in
-  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, with
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
-  only for narrow caller wiring if needed.
-- Target functions are `_accumulate_terminal_gaussian_sum!` and
-  `_terminal_gaussian_sum_action`.
-- Allowed changes are function-local scratch/workspace reuse, in-place
-  accumulation into caller destinations, allocation reduction in factor lookup
-  and terminal Gaussian-sum action, and deletion/simplification of obsolete
-  allocation-heavy code in that path.
-- `HP-R3UN-TEST-01` approves only H2 endpoint validation, Be2
-  facade/readback measurement, Cr2 exact-operator audit with before/after
-  `U_GG` allocation, Cr2 `U_GG` replay parity, and finite/symmetric exact
-  operators. No committed test file is approved.
-- This lane must not change neutral raw blocks, terminal kinetic/moment `G-G`
-  products, residual Gaussian algorithms or transforms, IDA/MWG, Qiu-White
-  semantics, route/stage setup, raw-block setup, parent construction, terminal
-  basis realization, persistent caches/workspaces, broad Gaussian-sum
-  frameworks, metadata/report/status/payload fields, artifacts, public
-  API/export, Cr2 facade support, or Cr2 artifact workflow. Line budget is at
-  most 100 added `src` lines.
-
-Approved R3 same-construction base K/U reuse:
-
-- `HP-R3BASE-FN-01` approves only reuse of already-built same-construction base
-  final-basis kinetic `K_GG` and unit nuclear `U_GG[A]` blocks in supplemented
-  exact augmented operators.
-- Approved files are
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` and
-  `src/cartesian_base_hamiltonian.jl`.
-- Allowed wiring is passing `base_ham.kinetic` and
-  `base_ham.nuclear_attraction_unit_by_center` from the same
-  `cartesian_base_working_basis(...)` construction path into the augmented
-  product/unit-nuclear construction, with matrix-dimension and center-count
-  validation. Existing recomputation behavior must remain when trusted base
-  blocks are not supplied.
-- `HP-R3BASE-TEST-01` approves only H2 R3 endpoint validation, Be2
-  facade/readback validation, ignored Cr2 exact-operator attribution or replay
-  showing base K/U reuse parity and allocation effect, and finite/symmetric
-  exact-operator checks. No committed test file is approved.
-- This lane must not change public API/export, canonical driver, raw blocks,
-  residual selection/orientation/transforms, MWG/IDA conventions, terminal
-  product or Gaussian-sum kernels, route/stage setup, metadata/status/report/
-  artifact schema, persistent cache/workspace objects, committed tests, Cr2
-  workflow, or files outside the approved surfaces. Line budget target is under
-  100 added `src` lines.
-
-Approved canonical-driver call-site wiring for R3 same-construction K/U reuse:
-
-- `HP-R3BASE-DRV-WIRE-01` approves only `bin/cartesian_ham_builder.jl`.
-- In supplemented mode only, the driver may pass `base_ham.kinetic` as
-  `base_kinetic` to `cartesian_residual_gto_augmented_products(...)` and
-  `base_ham.nuclear_attraction_unit_by_center` as `base_unit_nuclear` to
-  `cartesian_residual_gto_augmented_unit_nuclear(...)`.
-- Public inputs, hooks, timing labels, visible stage sequence, artifact schema,
-  and the driver contract must remain unchanged.
-- `HP-R3BASE-DRV-TEST-01` approves only `git diff --check`, package load, H2
-  supplemented driver artifact/readback, optional practical Be2 supplemented
-  driver/readback, and no Cr2 run.
-- This lane must not change source/kernels, diagnostics, hooks, timing labels,
-  public inputs, artifacts, committed tests/fixtures, Cr2 workflow, or any file
-  outside `bin/cartesian_ham_builder.jl`.
+- [Terminal G-G products](docs/src/developer/designs/cartesian_hamiltonian_producer/r3_terminal_gg_product_matrices.md)
+  owns exact terminal kinetic and first/second moment `G-G` assembly.
+- [Unit-nuclear Gaussian sums](docs/src/developer/designs/cartesian_hamiltonian_producer/r3_unit_nuclear_ugg_gaussian_sum.md)
+  owns exact uncharged by-center terminal `U_GG` assembly. Physical charge is
+  applied only by Hamiltonian assembly.
+- Both kernels may reuse scratch only within one function call. They do not
+  authorize persistent caches, stage objects, metadata, or artifact fields.
+- [Same-construction base reuse](docs/src/developer/designs/cartesian_hamiltonian_producer/r3_same_construction_base_reuse.md)
+  permits trusted base `K_GG` and `U_GG[A]` reuse only when the base,
+  terminal realization, supplement, and residual come from one construction.
+  Dimension/center checks and exact recomputation fallbacks remain required.
+- Canonical-driver reuse is call-site wiring only. It changes no public input,
+  stage, timing, artifact, operator, residual/MWG, solver, or Cr2 contract.
+- Completed `HP-R3REM-AUDIT-01` is measurement history and grants no source
+  authority.
 
 Foundational terminal/base work must follow
 `docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md`.

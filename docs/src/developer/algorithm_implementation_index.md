@@ -320,7 +320,9 @@ Why to check:
 Prevent sign, charge, and center-summing errors.
 
 Key docs:
-- `docs/src/developer/designs/cartesian_hamiltonian_producer/`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/r3_terminal_gg_product_matrices.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/r3_unit_nuclear_ugg_gaussian_sum.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/r3_same_construction_base_reuse.md`
 - `docs/src/developer/numerical_contracts.md`
 - `docs/src/developer/pqs_near_term_final_basis_realization_plan.md`
 
@@ -328,9 +330,12 @@ Source anchors:
 - **active implementation surface**:
   `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`,
   `assemble_terminal_product_operator!`
-- **active implementation surface under `HP-R3UN-FN-01`**:
+- **implemented terminal unit-nuclear surface**:
   `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`,
   `_accumulate_terminal_gaussian_sum!`, `_terminal_gaussian_sum_action`
+- **same-construction reuse and fallback caller**:
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
+  `pqs_terminal_residual_gto_augmented_unit_nuclear`
 - **consumer example only**: `src/ordinary_qw_operator_assembly.jl`,
   `assembled_one_body_hamiltonian`
 - **oracle/reference only**: `src/pqs_multilayer_support_one_body.jl`:
@@ -341,20 +346,16 @@ Source anchors:
 Do-not-forget rule:
 By-center nuclear matrices are uncharged unit attractions, `U_A = -1/r_A`.
 Apply `Z_A` and sum centers only when forming the Hamiltonian.
-The `HP-R3UN-FN-01` optimization lane covers only terminal final-basis
-unit-nuclear `U_GG` Gaussian-sum allocation reduction. It does not approve
-neutral raw-block changes, terminal kinetic/moment `G-G` product changes,
-route/setup cleanup, residual/MWG/IDA changes, artifacts, public API, or Cr2
-workflow.
+The implemented `HP-R3UN-FN-01` surface covers only terminal final-basis
+unit-nuclear `U_GG` Gaussian-sum construction. Trusted base-block reuse is a
+same-construction caller decision; exact recomputation remains available.
 
 ## R3 Terminal G-G Product Matrices
 
 Why to check:
-After neutral nuclear and non-nuclear `G-A`/`A-A` raw-block reuse, Cr2 q4
-exact-operator allocation is dominated by terminal final-basis `G-G` product
-matrices and unrelated route/stage setup. The approved G-G lane is narrow and
-only covers kinetic, coordinate-moment, and second-moment product matrices used
-by Residual Gaussian exact augmented operators.
+Residual Gaussian exact augmented operators require terminal final-basis
+kinetic, coordinate-moment, and second-moment `G-G` products. Their optimized
+blockwise implementation is separate from neutral Gaussian raw blocks.
 
 Key docs:
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/r3_terminal_gg_product_matrices.md`
@@ -364,16 +365,18 @@ Key docs:
 Source anchors:
 - **active implementation surface**:
   `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
-  `_r3a_product_matrix`, `pqs_terminal_residual_gto_augmented_operators`
+  `pqs_terminal_residual_gto_augmented_products`
 - **active reusable kernel**:
   `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`,
-  `assemble_terminal_product_operator!`
+  `assemble_terminal_product_operator!`, `_assemble_terminal_product_operator!`
+- **trusted reuse callers**:
+  `src/cartesian_base_hamiltonian.jl`, `bin/cartesian_ham_builder.jl`
 
 Do-not-forget rule:
-This lane is final-basis `G-G` only. Do not change Gaussian `G-A`/`A-A` raw
-blocks, nuclear Gaussian sums, IDA/MWG interaction, residual selection or
-transforms, route setup, public API, artifacts, status/report fields, or Cr2
-workflow.
+This implementation is final-basis `G-G` only. Scratch is function-local.
+Same-construction kinetic reuse does not authorize persistent caches,
+provenance payloads, public inputs, artifacts, interaction transforms, or
+changes to Gaussian `G-A`/`A-A` raw blocks.
 
 ## IDA And Density Pair-Factor Conventions
 

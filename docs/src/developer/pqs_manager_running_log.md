@@ -28666,3 +28666,36 @@ Goal advancement / guardrail:
   remains parallel. No cutoff, tolerance, orientation, MWG, numerical-complete,
   injection/protected, artifact, solver, or Cr2 behavior changed; eigenvalue
   flooring and global residual selection remain forbidden.
+
+## Cartesian Hamiltonian Producer Pass 383 - Reconcile R3 Exact-Operator Optimizations
+
+Commit(s):
+- `fb9b0414a`, `5cd9e15a6`, `79e5cd474`, `b9ad881df`, and `720912ca4` -
+  implemented terminal product reuse, unit-nuclear assembly, trusted base-block
+  reuse, and canonical-driver wiring;
+- this commit - canonicalize their implemented contracts and lifecycle.
+
+Summary:
+- Rewrote the terminal `G-G` and unit-nuclear `U_GG` pages as compact
+  source-backed contracts and added one narrow canonical home for trusted
+  same-construction base kinetic/unit-nuclear reuse. Exact recomputation remains
+  live, while function-local workspaces remain distinct from persistent caches.
+- Converted all eight optimization IDs to individual metadata records and
+  compressed startup/navigation repetition. The adjacent `HP-R3REM-AUDIT-01`
+  record is now completed historical measurement with no source permission;
+  its old prohibition no longer contradicts the later implementation.
+
+Validation / evidence:
+- Reconciled current helpers, fallback and trusted call paths, facade, driver,
+  protected-ladder consumer, focused H2 test, implementation commits, and
+  manager Passes 087-110. Heading, source/caller, stale-lifecycle, link, and
+  scope scans passed, as did `git diff --check` and the full local Documenter
+  build. No numerical test was run because source and behavior are unchanged.
+
+Goal advancement / guardrail:
+- MT5: removes `149` net documentation lines including this entry and makes
+  exact-operator ownership machine-addressable. MT4 remains parallel. No
+  kernel, allocation, caller,
+  driver, residual/MWG, artifact, public API, solver, Coulomb, or Cr2 behavior
+  changed. Same-construction trust is local call-graph responsibility, not a
+  persisted proof or permission to reuse merely dimension-compatible matrices.

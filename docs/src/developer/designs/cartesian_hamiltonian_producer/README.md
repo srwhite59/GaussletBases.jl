@@ -25,9 +25,9 @@ only a non-exported supported facade for H2 and internal/performance-supported
 Be2 artifacts. The neutral Cartesian Gaussian raw-block owner is implemented
 for the [uncharged by-center nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
 and the exact [non-nuclear overlap/kinetic/moment slice](cartesian_gaussian_raw_blocks_non_nuclear.md).
-A narrow R3/RG terminal `G-G` product-matrix
-optimization lane is approved separately. A narrow unit-nuclear `U_GG`
-Gaussian-sum allocation lane is approved after the remaining-allocation audit.
+The terminal `G-G` product and by-center unit-nuclear `U_GG` optimization
+layers are implemented, including trusted same-construction base-block reuse
+in supported supplemented callers.
 The canonical Cartesian driver usability lane is approved so the standard
 driver can directly produce base and supported supplemented Hamiltonian
 artifacts from visible public `system`, `basis`, and optional `supplement`
@@ -200,11 +200,14 @@ ID or subsystem.
 - [Cartesian Gaussian raw blocks - non-nuclear slice](cartesian_gaussian_raw_blocks_non_nuclear.md)
   for the neutral overlap/kinetic/moment raw-block owner
 - [R3 terminal G-G product matrices](r3_terminal_gg_product_matrices.md)
-  for the narrow final-basis `G-G` product-matrix optimization lane
+  for implemented exact terminal kinetic and first/second moment products
 - [R3 remaining exact-operator allocation audit](r3_remaining_exact_operator_allocation_audit.md)
   for the measurement-only decision after terminal `G-G` workspace reuse
 - [R3 unit-nuclear U_GG Gaussian sum](r3_unit_nuclear_ugg_gaussian_sum.md)
-  for the narrow terminal final-basis unit-nuclear `U_GG` optimization lane
+  for implemented exact uncharged by-center terminal `U_GG` assembly
+- [R3 same-construction base reuse](r3_same_construction_base_reuse.md)
+  for trusted base kinetic/unit-nuclear reuse, validation, fallbacks, and
+  canonical-driver call-site behavior
 - [Screened Hartree residual-density formalism](screened_hartree_residual_density.md)
   for the durable physics contract: keep `Vnuc_G` Galerkin and use IDA/MWG
   only for residual density fluctuations `q - q0`
@@ -301,15 +304,18 @@ ID or subsystem.
   approves only the neutral owner for exact non-nuclear Gaussian
   overlap/kinetic/coordinate-moment/second-moment `G-A`/`A-A` raw blocks.
 - [R3 terminal G-G product matrices](r3_terminal_gg_product_matrices.md)
-  approves only the terminal final-basis `G-G` product matrices used by
-  residual-Gaussian exact augmented operators.
+  defines the implemented terminal final-basis kinetic and moment `G-G`
+  products used by residual-Gaussian exact augmented operators.
 - [R3 remaining exact-operator allocation audit](r3_remaining_exact_operator_allocation_audit.md)
   approves only a measurement-only audit of the post-`954c86cd` Cr2 exact
   augmented-operator allocation. It does not approve a unit-nuclear, route
   setup, raw-block setup, or other source lane.
 - [R3 unit-nuclear U_GG Gaussian sum](r3_unit_nuclear_ugg_gaussian_sum.md)
-  approves only terminal final-basis unit-nuclear `U_GG` Gaussian-sum
-  allocation reduction under `CartesianFinalBasisRealization`.
+  defines implemented terminal final-basis uncharged by-center `U_GG`
+  Gaussian-sum assembly under `CartesianFinalBasisRealization`.
+- [R3 same-construction base reuse](r3_same_construction_base_reuse.md)
+  defines the implemented trusted base kinetic/unit-nuclear handoff, exact
+  fallbacks, and canonical-driver call-site wiring.
 - [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)
   approves only the compact canonical `bin/cartesian_ham_builder.jl` workflow:
   visible defaults, optional trusted input file, command-line overrides,
