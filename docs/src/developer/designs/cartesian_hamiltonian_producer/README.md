@@ -216,7 +216,7 @@ ID or subsystem.
 - [External GTO orbital import](external_gto_orbital_import.md)
   for the representation-transfer facility that imports explicit external AO
   orbitals into an orthonormal final basis by `C_F = <F|G> C_G`, including the
-  approved protected-member composition and standalone native `S_LG` sidecar
+  implemented protected-member composition and standalone native `S_LG` sidecar
 - [PQS/WL mapping `s_factor`](pqs_mapping_s_factor.md)
   for the expert mapping-strength scalar that preserves default behavior while
   allowing CR2-style scans

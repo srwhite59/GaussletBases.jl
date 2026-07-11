@@ -28546,3 +28546,56 @@ Goal advancement / guardrail:
   written artifact reality one canonical home. MT4 remains parallel. No source,
   test, schema, reader, writer, API, composition, protected, solver, EGOI,
   screened-Hartree, Coulomb, or Cr2 behavior changed.
+
+## Cartesian Hamiltonian Producer Pass 380 - Compress External-GTO Representation Authority
+
+Commit(s):
+- `0452ab581` - implement the general external-GTO importer;
+- `702aa4a62` - implement protected composition and the standalone sidecar;
+- this commit - reconcile and compress their canonical documentation.
+
+Summary:
+- Reduced `external_gto_orbital_import.md` from `387` to `298` lines while
+  preserving exact packet/result fields, `S_FG*C_G` and `S_LG*C_G`,
+  validation-only `S_GG`, metric-aware full-span capture, direct
+  unorthonormalized spin imports, and the complete native-order v1 sidecar key
+  families. Removed the proposed packet reader and optional ladder-accessor
+  story: current source consumes in-memory packets and member fields directly.
+- Split two combined registry headings into four individually addressable
+  lifecycle records and reduced AGENTS to the cross-overlap, orientation,
+  no-transform, and no-generalized-metric guardrails.
+
+Validation / evidence:
+- Compared committed structs, exports, helpers, exact GTO handoff, member
+  dependency, sidecar writer/reader/reimport, key inventory, focused test, and
+  Passes 337, 363, and 365. ID-heading counts, source/test/path and stale-plan
+  scans, `git diff --check`, and full local Documenter passed. No numerical test
+  was needed because source, packet, and sidecar behavior are unchanged.
+
+Goal advancement / guardrail:
+- MT5: removes about `97` net documentation lines before this entry and gives
+  every external-representation ID one metadata record. MT4 remains the active
+  controlled numerical-complete Cr2 measurement. External import remains
+  representation infrastructure, not solver or physics authority. Coulomb,
+  driver, shell-resolution, protected-additive, and EGOI contracts are
+  untouched.
+
+### Medium-Term Goal Checkpoint After Pass 380
+
+- **MT1 fake-PQS quarantine - completed/maintained.** Representation transfer
+  adds no route or alternate-Hamiltonian path.
+- **MT2 independent PQS recovery - completed for supported cells.** This pass
+  changes no producer construction or recovery behavior.
+- **MT3 common physical support vocabulary - active refinement.** Current
+  shell-resolution questions remain separate; external AO identity and native
+  `L` ordering do not decide shell policy.
+- **MT4 supplement/reference staging - active.** The numerical-complete Cr2
+  screened/unscreened measurement remains the physics target. External import
+  supplies representation and capture only; consumers own orthonormalization,
+  solver state, and interpretation.
+- **MT5 documentation and carrying-cost cleanup - active.** Canonical ownership
+  and individually addressable registry IDs continue to replace combined
+  implementation-era prose.
+- **MT6 old flat-path classification - maintenance.** Protected-additive,
+  retained-GTO EGOI, Coulomb, driver, and shell-resolution lanes remain
+  independent and were neither activated nor reinterpreted here.

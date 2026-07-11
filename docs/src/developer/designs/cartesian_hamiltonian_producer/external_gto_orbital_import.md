@@ -1,164 +1,173 @@
 # External GTO Orbital Import
 
-Status: the general import facility and narrow protected-localized composition
-are implemented under `HP-REP-XGTO-IMPORT-FN-01` and
-`HP-REP-XGTO-IMPORT-TEST-01`. The durable representation sidecar is implemented
-under
-`HP-REP-XGTO-PROTECT-SIDECAR-FN-01` and
-`HP-REP-XGTO-PROTECT-SIDECAR-TEST-01`.
+The general external-GTO importer and the protected-localized representation
+sidecar are implemented representation infrastructure. They do not own a
+Hamiltonian correction, solver state, or physics endpoint.
 
-This is representation-transfer infrastructure. It is not a physics endpoint,
-Hamiltonian correction, or solver workflow.
+## Lifecycle
 
-## Purpose
+`HP-REP-XGTO-IMPORT-FN-01` / `TEST-01` and
+`HP-REP-XGTO-PROTECT-SIDECAR-FN-01` / `TEST-01` are implemented. The general
+importer landed in `0452ab581`; protected composition and the sidecar landed in
+`702aa4a62`. Manager-log Passes 337, 363, and 365 record acceptance.
 
-Build exact overlaps between a GaussletBases final working basis and an
-explicit external Gaussian AO basis, then import external HF orbitals by the
-normal final-basis transfer rule:
+## Transfer Convention
+
+For an orthonormal final working basis `F` and explicit external Gaussian AO
+basis `G`, import uses only the cross overlap:
 
 ```text
-S_FG = <final basis F | external GTO basis G>
+S_FG = <F|G_external>
 C_F  = S_FG * C_G
 ```
 
-`C_G` is the external AO coefficient matrix, for example from PySCF. The final
-working basis is intended to be orthonormal, so import uses only the cross
-overlap. This is the same final-basis transfer convention recorded in the repo
-overlap policy.
-
-The external AO self-overlap is validation data only:
+The external self-overlap validates the packet and source orbitals:
 
 ```text
 C_G' * S_GG * C_G ~= I
 ```
 
-Do not use `S_GG` to build a generalized final-basis solve or a generalized
-downstream final-basis transfer.
+`S_GG` is not a final-basis metric. It is never used to construct a
+generalized final-basis solve, source-Hamiltonian transform, or interaction
+transform. Capture below one reports representation loss.
 
-## Approved IDs
+## Implemented Ownership And Entry Points
 
-- `HP-REP-XGTO-IMPORT-FN-01`
-- `HP-REP-XGTO-IMPORT-TEST-01`
-- `HP-REP-XGTO-PROTECT-SIDECAR-FN-01`
-- `HP-REP-XGTO-PROTECT-SIDECAR-TEST-01`
+`src/cartesian_external_gto_import.jl` owns all packet, result, protected
+composition, sidecar, and saved-representation logic. `src/GaussletBases.jl`
+exports the general packet/import API and includes the owner file.
 
-## Source Ownership
+Exported entry points are `ExternalGTOOrbitalSpinBlock`,
+`ExternalGTOOrbitalPacket`, `ExternalGTOOrbitalSpinImport`,
+`ExternalGTOOrbitalImportResult`, `external_gto_overlap_fingerprint`,
+`external_gto_ordering_fingerprint`, and `import_external_gto_orbitals`.
+Protected entry points remain module-qualified and unexported:
+`protected_localized_external_gto_import`,
+`write_protected_localized_external_gto_representation`,
+`read_protected_localized_external_gto_representation`, and
+`external_gto_import_from_saved_representation`.
 
-Approved source surface:
+`src/cartesian_gto_probes.jl` owns `gto_overlap_matrix(...)` and the reused
+exact `_cartesian_final_gto_cross_overlap_handoff(...)`.
+`src/cartesian_representation_transfer.jl` records the related cross-overlap
+final-basis convention but is not called by this implementation.
+`src/cartesian_protected_ladder_bundle.jl` supplies the existing in-memory
+protected member shape and commit helper; no ladder accessor or schema was
+added.
 
-- `src/cartesian_external_gto_import.jl`
-- `src/GaussletBases.jl` for include/export wiring
-- `src/cartesian_representation_transfer.jl` only for shared transfer
-  diagnostics, if needed
-- `src/cartesian_gto_probes.jl` only for narrow reuse around
-  `gto_overlap_matrix(...)` and
-  `_cartesian_final_gto_cross_overlap_handoff(...)`, without changing their
-  numerical contracts
-- `src/cartesian_protected_ladder_bundle.jl` only if a small internal accessor
-  is required to expose an already-built member's `base`, supplement, `G_L`,
-  and `A_L`; no ladder manifest or sidecar contract may change
+There is no external packet file reader, PySCF parser, or external-file format
+in this facility. Callers construct the explicit packet in memory.
 
-The implementation should be a small wrapper/facility around existing exact
-overlap kernels, especially:
+## External Packet
+
+`ExternalGTOOrbitalSpinBlock` stores exactly `spin`, `coefficients`, and
+`occupations`.
+
+`spin` is `:restricted`, `:alpha`, or `:beta`. A packet without beta accepts a
+restricted or alpha block. A spin-resolved packet requires alpha and beta roles
+exactly. Coefficient rows must match AO count; orbital columns must match the
+occupation vector; all values must be finite.
+
+`ExternalGTOOrbitalPacket` stores exactly:
 
 ```text
-gto_overlap_matrix(working, probes)
+probes
+centers
+angular_powers
+exponents
+contraction_coefficients
+primitive_normalizations
+ao_labels
+ordering_fingerprint
+S_GG
+S_GG_fingerprint
+alpha
+beta
+provenance
 ```
 
-Do not put this under screened-Hartree, EGOI, residual-GTO selection, or a
-Cr2-specific workflow.
+The constructor receives an explicit resolved Cartesian supplement
+representation, `S_GG`, and spin blocks. It derives center, angular-power,
+primitive, contraction, and normalization arrays from `probes`. `provenance`
+is a caller-owned compact value; the repo does not infer an external AO order
+or spherical convention from label strings.
 
-Allowed compact API/result shapes:
+The ordering fingerprint covers ordered labels, powers, centers, exponents,
+coefficients, and primitive normalization. The overlap fingerprint is over the
+Float64 matrix bytes. Import recomputes both fingerprints by default, checks
+`S_GG` finiteness and symmetry, and recomputes `<probes|probes>` numerically.
+The existing `validate_fingerprints=false` option reports fingerprint booleans
+without making them fatal; it does not bypass the physical `S_GG` checks.
+Protected composition always uses strict fingerprint validation.
 
-- a read/write helper for explicit external GTO orbital packets;
-- a compact packet/result/diagnostic object for imported orbitals;
-- a direct import helper such as `import_external_gto_orbitals(working, packet)`;
-- an internal protected-member composition helper such as
-  `protected_localized_external_gto_import(member, packet)`;
-- optional spin-resolved alpha/beta output when the packet supplies both spin
-  channels.
+## General Import Result
 
-These shapes must stay focused on orbital import and capture diagnostics. They
-must not become Hamiltonian, solver, or interaction-transform payloads.
+`import_external_gto_orbitals(working, packet)` validates the packet before
+calling `gto_overlap_matrix(working, packet.probes)`. It returns
+`ExternalGTOOrbitalImportResult` with:
 
-## External Packet Contract
+```text
+cross_overlap_size
+cross_overlap_finite
+ordering_fingerprint_valid
+S_GG_fingerprint_valid
+S_GG_symmetry_error
+S_GG_expected_error
+alpha
+beta
+```
 
-The repo reader consumes an explicit external basis/state packet. It must not
-depend on PySCF at test time and must not infer AO order from label strings
-when explicit basis data is available.
+The general result does not retain `S_FG`. Each
+`ExternalGTOOrbitalSpinImport` stores:
 
-Required packet contents:
+```text
+spin
+imported_coefficients
+source_orthogonality_error
+capture_matrix
+orbital_captures
+density_trace_source
+density_trace_capture
+density_trace_loss
+worst_orbital_capture
+```
 
-- centers;
-- resolved angular powers or an already-resolved Cartesian/spherical
-  convention;
-- exponents;
-- contraction coefficients;
-- AO labels;
-- AO ordering/fingerprint;
-- `S_GG` and its fingerprint;
-- spin-resolved MO coefficient matrices where applicable;
-- occupations;
-- provenance, including source code/tool, source basis, molecule/atom
-  geometry, and ordering convention.
-
-If the source calculation used spherical harmonics, a CR2/PySCF-side writer may
-resolve the external basis into explicit Cartesian/GTO coefficient data before
-the packet reaches this repo. The repo reader should validate the resolved
-data; it should not guess spherical ordering from strings as the accepted
-construction rule.
-
-## Import Diagnostics
-
-The import facility must define/report:
-
-- `S_FG = <F|G_external>`;
-- `S_GG = <G_external|G_external>` for validation only;
-- `C_F_alpha = S_FG * C_G_alpha`;
-- `C_F_beta = S_FG * C_G_beta`, when beta orbitals are present;
-- `C_G' * S_GG * C_G` orthogonality errors;
-- `C_F' * C_F` capture/norm diagnostics;
-- density trace capture/loss by spin;
-- worst orbital capture;
-- labels/fingerprint/order checks;
-- packet provenance and basis dimensions.
-
-Capture less than identity is a projection/capture diagnostic. It is not by
-itself a request to transform the source Hamiltonian or to introduce a
-generalized final-basis overlap workflow.
+Here `imported_coefficients = S_FG*C_G`,
+`capture_matrix = C_F'*C_F`, and orbital captures are its diagonal. Density
+trace values use the packet occupations. Source MOs that fail the configured
+`C_G'*S_GG*C_G` orthogonality tolerance are rejected. The returned coefficients
+are direct projections and are not solver-orthonormalized.
 
 ## Protected-Localized Composition
 
-For one already-built protected-localized member, form
+For an already-built protected member, the internal composition forms:
 
 ```text
 raw_to_L = [member.raw.G_L; member.raw.A_L]
-S_LG     = <L | G_external>
+S_LG     = <L|G_external>
 C_L      = S_LG * C_G
 ```
 
-by calling the existing exact
-`_cartesian_final_gto_cross_overlap_handoff(...)` with the member's fixed/base
-working basis, supplement, `raw_to_L`, and packet probes. `S_LG` has native
-protected-localized rows and external AO columns. The helper must verify the
-handoff orientation `:final_by_gto`, finiteness, final dimension, external AO
-dimension, and packet identity before importing either spin block.
+The exact handoff must report `:final_by_gto`; `S_LG` rows must equal the
+member's native protected dimension and columns must equal external AO count.
+The returned `ProtectedLocalizedExternalGTORepresentation` stores exactly:
 
-The returned alpha/beta `C_L` matrices are the direct projected coefficients.
-They are deliberately not orthonormalized or converted into solver restart
-orbitals. A consumer may use the same projected state for screened and
-unscreened calculations, but solver-ready orthonormalization and all HF state
-management remain consumer responsibilities.
+```text
+cross_overlap
+imported
+source_metric
+occupied_capture
+identity
+```
 
-This composition requires the in-memory member because protected Hamiltonian
-artifacts intentionally omit `G_L/A_L`. It must not reconstruct `S_LG` from
-`H1_L`, `Vee_L`, row centers, labels, or sector metadata.
+It does not orthonormalize alpha or beta imports. Construction requires the
+in-memory member because protected Hamiltonian artifacts intentionally omit
+`G_L/A_L`. It never reconstructs `S_LG` from matrices, centers, labels, or
+sector metadata.
 
-## Metric-Aware Principal Capture
+### Metric-aware capture
 
-The external AO basis is nonorthogonal. Full external-subspace capture must
-therefore use `S_GG`, not raw AO coefficient squares or `svdvals(S_LG)` alone.
-For the diagnostic eigendecomposition
+The full nonorthogonal external span is whitened only for diagnostics:
 
 ```text
 S_GG = U * Diagonal(s) * U'
@@ -167,221 +176,123 @@ Q_G  = U_keep * Diagonal(s_keep^(-1/2))
 T_LG = S_LG * Q_G
 ```
 
-report the retained source-metric rank, discarded/tiny eigenvalue count,
-source-metric eigenvalue range, principal singular values `svdvals(T_LG)`, and
-projected Gram eigenvalues `eigvals(T_LG' * T_LG)`. Eigenvalues below `-tau`
-or capture outside `[-1e-8, 1 + 1e-8]` fail. Tiny roundoff may be clamped for
-reporting only. Tiny positive metric modes below `tau` are excluded only from
-this diagnostic and are reported; they do not change `C_L = S_LG*C_G`.
+`source_metric` reports retained rank, discarded count, `tau`, metric
+eigenvalue extrema, `svdvals(T_LG)`, and eigenvalues of `T_LG'*T_LG`.
+Materially negative metric eigenvalues or capture outside
+`[-1e-8, 1+1e-8]` fail. Tiny modes are excluded only from this diagnostic; they
+do not alter `C_L = S_LG*C_G`.
 
-For each occupied spin block, the packet has already established
-`C_G' * S_GG * C_G = I`. Its metric-aware capture is therefore directly
-
-```text
-K_occ = C_L' * C_L
-```
-
-with per-orbital diagonal captures, occupied principal singular values,
-projected Gram eigenvalues, and occupation-weighted trace loss. Do not define
-shell/angular capture from raw squared AO coefficients. A later angular
-decomposition must be separately designed in the external AO metric.
+For each source-metric-orthonormal spin block, `occupied_capture` reports the
+principal singular values and projected-Gram eigenvalues of `C_L` directly.
+Raw squared AO coefficients do not define angular-channel capture.
 
 ## Protected Representation Sidecar
 
-The sidecar is a standalone representation artifact. It is not a field of the
-protected Hamiltonian artifact and not a ladder transfer or restart sidecar.
-Its fixed identity is:
+The standalone sidecar identity is fixed:
 
 ```text
-artifact_kind       = :protected_localized_external_gto_representation
-format_version      = 1
-convention_id       = :protected_localized_external_gto_native_v1
-convention_version  = 1
-site_order_kind     = :native
-orientation         = :final_by_external
+artifact_kind      = :protected_localized_external_gto_representation
+format_version     = 1
+convention_id      = :protected_localized_external_gto_native_v1
+convention_version = 1
+site_order_kind    = :native
+orientation        = :final_by_external
 ```
 
-The v1 JLD2 layout uses these required groups:
+`S_LG` is stored with final rows and external AO columns. The complete live v1
+key families are:
 
 ```text
-artifact_kind
-format_version
-convention_id
-convention_version
-site_order_kind
-orientation
+cross_overlap/{S_LG,fingerprint_sha256,final_dimension,external_dimension}
 
-cross_overlap/S_LG
-cross_overlap/fingerprint_sha256
-cross_overlap/final_dimension
-cross_overlap/external_dimension
+external/{ao_count,ao_labels,ordering_fingerprint_sha256,
+          S_GG_fingerprint_sha256,alpha_coefficients_fingerprint_sha256}
+external/beta_coefficients_fingerprint_sha256              optional
+external/provenance/repr
 
-external/ao_count
-external/ao_labels
-external/ordering_fingerprint_sha256
-external/S_GG_fingerprint_sha256
-external/alpha_coefficients_fingerprint_sha256
-external/beta_coefficients_fingerprint_sha256       optional with beta
-external/provenance/*
+imported/alpha/{coefficients,occupations}
+imported/beta/{coefficients,occupations}                    optional
 
-imported/alpha/coefficients
-imported/alpha/occupations
-imported/beta/coefficients                           optional with beta
-imported/beta/occupations                            optional with beta
+protected/{final_dimension,artifact_kind,convention_id,
+           recipe_fingerprint_sha256,H1_L_fingerprint_sha256,
+           Vee_L_fingerprint_sha256,source_artifact,
+           source_commit,current_commit}
+protected/member_artifact                                  optional
+protected/basis_controls/{nesting,ns,core_spacing,s_factor,basisname,lmax}
+protected/geometry_inputs/{atom_symbols,nuclear_charges,atom_locations,nup,ndn}
 
-protected/final_dimension
-protected/artifact_kind
-protected/convention_id
-protected/recipe_fingerprint_sha256
-protected/H1_L_fingerprint_sha256
-protected/Vee_L_fingerprint_sha256
-protected/source_artifact
-protected/member_artifact                           optional
-protected/source_commit
-protected/current_commit
-protected/basis_controls/*
-protected/geometry_inputs/*
-coulomb_expansion/*
+coulomb_expansion/{policy,doacc,term_count,del,s,c,maxu}
 
-diagnostics/cross_overlap/*
-diagnostics/source_metric/*
-diagnostics/alpha/*
-diagnostics/beta/*                                  optional with beta
+diagnostics/cross_overlap/{final_dimension,external_dimension,finite,max_abs,
+                           fingerprint_sha256}
+diagnostics/source_metric/{retained_rank,discarded_count,tau,
+                           metric_eigenvalue_min,metric_eigenvalue_max,
+                           projected_gram_eigenvalues,principal_singular_values,
+                           S_GG_symmetry_error,S_GG_expected_error}
+diagnostics/alpha/{spin,source_orthogonality_error,capture_matrix,
+                   orbital_captures,density_trace_source,density_trace_capture,
+                   density_trace_loss,worst_orbital_capture,
+                   projected_gram_eigenvalues,principal_singular_values}
+diagnostics/beta/{same fields as alpha}                     optional
 ```
 
-Matrix fingerprints use the same deterministic Float64 byte convention as the
-existing external overlap fingerprint. Optional beta groups are all-or-none.
-Unknown extra keys do not change v1 semantics; missing required keys fail.
-The ordering and `S_GG` fingerprints define external-basis compatibility for
-later imports. Source coefficient fingerprints bind the stored alpha/beta
-imports to the saved packet state; they do not prevent applying the same
-`S_LG` to a different coefficient set with the same validated AO basis and
-fresh capture diagnostics.
+The Coulomb group delegates to the current centralized summary serializer; it
+does not define Coulomb policy. Optional beta keys are all-or-none. The sidecar
+stores no external `S_GG` matrix, `G_L`, `A_L`, `H1_L`, or `Vee_L` payload.
+Matrix fingerprints use the deterministic Float64 byte convention from
+`external_gto_overlap_fingerprint`; H1/Vee fingerprints bind member identity
+only.
 
-Required numerical payload:
+## Read, Write, And Reimport
 
-- `S_LG`, stored explicitly with final rows and external AO columns;
-- direct imported alpha coefficients and occupations;
-- direct imported beta coefficients and occupations when present;
-- no orthonormalized solver orbitals, Hamiltonian, or interaction matrix.
+The writer verifies that the in-memory `S_LG` still matches its fingerprint.
+Readback requires every applicable v1 key and rejects wrong identity, version,
+ordering, orientation, dimensions, nonfinite values, changed fingerprints,
+malformed spin roles, partial beta groups, incomplete Coulomb provenance, or
+inconsistent capture diagnostics.
 
-Required external identity:
+Optional readback validation may supply:
 
-- AO count and ordered AO labels;
-- packet ordering fingerprint and `S_GG` fingerprint;
-- source alpha/beta coefficient fingerprints;
-- bounded packet/source provenance.
+- the original packet, which also verifies source coefficient/occupation
+  identity and recomputes every stored import;
+- the in-memory protected member;
+- a protected Hamiltonian artifact, validated by content so relocation alone
+  does not fail.
 
-Required protected-member identity:
+`external_gto_import_from_saved_representation(value, packet)` accepts a new
+orbital state only when ordered labels, ordering fingerprint, and `S_GG`
+fingerprint match the saved external AO basis. It then returns fresh direct
+imports and capture diagnostics without overwriting the sidecar's original
+state. Unknown extra keys are not interpreted as v1 semantics.
 
-- final dimension and native-order convention;
-- protected member convention identity and paired artifact path when
-  available;
-- recipe/source/current commit provenance and a compact recipe fingerprint;
-- basis and geometry controls;
-- Hamiltonian-wide Coulomb policy summary;
-- `H1_L` and `Vee_L` fingerprints used only to bind the sidecar to the member,
-  not to transform either matrix.
+This sidecar is not a protected Hamiltonian field and not a ladder manifest,
+transfer sidecar, or restart sidecar. Those identities and schemas remain
+unchanged.
 
-Required diagnostics:
+## Validation And Failure Boundary
 
-- `S_LG` dimensions, finiteness, maximum magnitude, and fingerprint;
-- packet ordering, `S_GG`, and source-orthogonality validation;
-- per-spin capture matrices, per-orbital captures, occupied principal values,
-  source/captured density traces, and trace losses;
-- full external-metric rank/eigenvalue and principal-capture diagnostics;
-- native-order and protected-member identity checks.
+The committed test owner is:
 
-Readback must reject unrecognized identity/version/order/orientation,
-nonfinite or dimensionally inconsistent matrices, changed `S_LG` fingerprint,
-malformed spin blocks, or inconsistent diagnostic lengths. When a packet or
-protected member/artifact is supplied for validation, its fingerprints,
-dimensions, native ordering, recipe/member identity, and Coulomb policy must
-match. When the original external packet is supplied, recompute and validate
-`C_L = S_LG*C_G` for every stored spin block. A later packet/state with the
-same AO ordering and `S_GG` may instead produce a new direct import from the
-saved `S_LG`; it does not overwrite or relabel the stored import. Missing raw
-`G_L/A_L` in a protected artifact is not a readback error; the saved `S_LG` is
-precisely the durable representation object.
+```text
+test/nested/cartesian_external_gto_import_runtests.jl
+```
 
-At the current Cr2 dimensions, `6945 x 448` Float64 `S_LG` storage is about
-25 MB and is intentionally retained. Do not replace it with reconstruction
-metadata or lossy compression in this lane.
+It covers generic restricted/spin-resolved imports, fingerprint/order/metric
+failures, occupied rotations, exact protected handoff parity, rectangular
+capture dimensions, alpha/beta direct imports, sidecar key inventory and
+roundtrip, saved-overlap reimport, packet/member/artifact validation, relocated
+artifact acceptance, and payload tampering. It uses synthetic repo-owned
+packets and no PySCF dependency or molecular endpoint.
 
-## Consumer Boundary
+The facility must not add or perform:
 
-The repo owns exact representation transfer, packet/member identity, capture
-diagnostics, and sidecar persistence. Consumers such as CR2 own
-orthonormalization into solver-ready orbitals, screened/unscreened HF starts,
-per-sweep occupied-subspace overlap logging, energies, spin diagnostics,
-owner-local moments, compact-residual occupation, and physical interpretation.
-None of those consumer responsibilities belongs in this sidecar helper.
+- packet-file or PySCF readers;
+- solver-ready orbital orthonormalization or HF state management;
+- Hamiltonian, source-Hamiltonian, or `Vee` transforms;
+- direct `C' V C` or a generalized final-basis metric workflow;
+- raw-coefficient angular capture claims;
+- protected artifact or ladder-sidecar schema changes;
+- screened-Hartree, EGOI, residual-selection, injection, or Cr2 physics claims.
 
-## Tests
-
-Approved test surface:
-
-- `test/nested/cartesian_external_gto_import_runtests.jl`
-
-Tests should be correctness-only and small. They should not require PySCF at
-test time. Synthetic or repo-built explicit external packets are acceptable.
-
-Required test coverage:
-
-- exact overlap shape, finiteness, and validation of `S_GG`;
-- `C_G' * S_GG * C_G` validation;
-- `C_F = S_FG * C_G` import;
-- capture diagnostics;
-- invariance under occupied-space rotations;
-- mismatch/fingerprint/order failure;
-- spin-resolved alpha/beta handling if present.
-
-The protected extension and sidecar tests must additionally cover:
-
-- exact parity with a direct
-  `_cartesian_final_gto_cross_overlap_handoff(...)` call;
-- native `S_LG` orientation and `C_L = S_LG*C_G` for both spins;
-- metric-aware full/occupied capture diagnostics and occupied-space rotation
-  invariance;
-- temporary-file sidecar roundtrip;
-- rejection of wrong kind/version/order/orientation, malformed dimensions,
-  changed fingerprints, and mismatched packet/member identity;
-- absence of `G_L`, `A_L`, `H1_L`, and `Vee_L` payloads.
-
-No energy assertions, SCF convergence claims, molecule-specific physics gates,
-Cr2-sized committed fixtures, or Cr2 production gates are approved.
-
-## Explicit Exclusions
-
-Forbidden in this lane:
-
-- Hamiltonian transforms;
-- `C' V C`;
-- `Vee` or source-interaction transforms;
-- generalized final-basis overlap workflow;
-- raw-coefficient `s/p/d/f+` capture accounting;
-- solver workflow;
-- screened-Hartree changes;
-- EGOI changes;
-- residual selection or injection policy changes;
-- production Cr2 claims;
-- PySCF dependency in repo tests;
-- protected Hamiltonian artifact fields for `G_L/A_L` or `S_LG`;
-- ladder manifest, transfer-sidecar, or restart-sidecar changes;
-- reuse of ladder sidecar identities for external-GTO representation.
-
-The implementation remains in the existing source and test files and owns one
-compact internal protected-import/readback result shape. It adds no module,
-source file, public export, driver input, protected/ladder artifact schema, or
-fixture. Persistent raw protected coefficients, a generalized final metric,
-or changes outside the approved source surface remain forbidden.
-
-## Decision Rule
-
-If the import can be implemented as a bounded packet reader plus
-`gto_overlap_matrix`-based transfer with clear capture diagnostics, proceed
-under this authority. Protected composition may additionally consume one
-already-built member and persist the exact native `S_LG` sidecar above. If
-correct import requires Hamiltonian transformation, interaction rotation,
-generalized final-basis metric logic, reconstruction from a protected artifact,
-or PySCF-dependent repo tests, stop and request a new design amendment.
+Consumers own solver initialization, orthonormalization, sweep diagnostics,
+energies, spin interpretation, and endpoint conclusions.

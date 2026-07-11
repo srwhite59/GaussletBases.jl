@@ -783,21 +783,15 @@ retired `potential_fit/moment_polish/*` provenance are rejected and require
 regeneration. The retired `HP-PQS-ATOMREF-POTMOM-*` IDs are historical only
 and do not authorize source work. No production correction, solver, public
 default, exchange, EGOI, row-gauge rho0/P0, or Cr/Cr2 claim is approved.
-`HP-REP-XGTO-IMPORT-FN-01` and `HP-REP-XGTO-IMPORT-TEST-01` own the implemented
-external-GTO import and approve its narrow protected-member composition
-extension. Import uses `S_FG = <F|G_external>` and `C_F = S_FG*C_G`; a
-protected member uses native `S_LG = <L|G_external>` from the existing exact
-handoff. External `S_GG` is validation and metric-aware capture data, not a
-generalized final-basis metric. Direct imported coefficients are not
-solver-orthonormalized. `HP-REP-XGTO-PROTECT-SIDECAR-FN-01` and
-`HP-REP-XGTO-PROTECT-SIDECAR-TEST-01` additionally implement one standalone
-native-order sidecar containing `S_LG`, direct spin imports, packet/member
-fingerprints, provenance, and metric-aware capture diagnostics. The sidecar is
-not a protected Hamiltonian field or ladder transfer/restart. No PySCF
-dependency, raw-coefficient angular capture, raw `G_L/A_L` persistence,
-Hamiltonian/`Vee` transform, `C' V C`, generalized final overlap, public
-workflow, solver/HF loop, screened-Hartree/EGOI change, or Cr2 production claim
-is approved.
+`HP-REP-XGTO-IMPORT-*` and `HP-REP-XGTO-PROTECT-SIDECAR-*` own the implemented
+external-GTO representation path. Read
+`docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_orbital_import.md`.
+Import is cross-overlap only: `C_F = <F|G_external>*C_G`; external `S_GG` is
+validation/capture data, never a generalized final-basis metric. Protected
+sidecars store native-order, final-by-external `S_LG` and direct
+unorthonormalized spin imports. Do not add packet/PySCF readers, Hamiltonian or
+`Vee` transforms, `C' V C`, solver orthonormalization, protected-artifact or
+ladder-sidecar fields, raw `G_L/A_L`, or physics/Cr2 authority.
 `HP-PQS-SCREEN-HARTREE-CORR-FN-01` and
 `HP-PQS-SCREEN-HARTREE-CORR-TEST-01` implement only the internal in-memory
 screened direct-Hartree correction specified by

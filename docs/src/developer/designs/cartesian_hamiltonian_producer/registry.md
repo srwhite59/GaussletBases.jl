@@ -1262,89 +1262,87 @@ IDs and canonical contracts; the ordinary radial fit supersedes the retired
 behavior. The retired IDs do not authorize source work, packet compatibility,
 molecule-trained fitting, or consumption of polished packets.
 
-### HP-REP-XGTO-IMPORT-FN-01 / HP-REP-XGTO-IMPORT-TEST-01 — external GTO orbital import
+### HP-REP-XGTO-IMPORT-FN-01 — external GTO orbital import
 
-Lifecycle: the general packet/import facility and narrow protected-localized
-composition extension are implemented.
+Lifecycle: implemented. Permission: source maintenance.
 
-Owner and canonical contract:
+Owner/canonical: `src/cartesian_external_gto_import.jl`;
+[external GTO orbital import](external_gto_orbital_import.md).
 
-- `src/cartesian_external_gto_import.jl`;
-- [External GTO orbital import](external_gto_orbital_import.md).
+Source: `src/cartesian_external_gto_import.jl`; existing include/export wiring
+in `src/GaussletBases.jl`.
 
-Approved related source surfaces:
+Dependencies: exact overlap/handoff kernels in `src/cartesian_gto_probes.jl`;
+the cross-overlap-only convention in
+`src/cartesian_representation_transfer.jl`; existing protected member data in
+`src/cartesian_protected_ladder_bundle.jl` for the internal composition.
 
-- `src/cartesian_gto_probes.jl` for unchanged exact handoff reuse;
-- `src/cartesian_representation_transfer.jl` only for existing compact
-  transfer diagnostics;
-- `src/cartesian_protected_ladder_bundle.jl` only for a small internal member
-  accessor if the existing member fields cannot be consumed directly;
-- `src/GaussletBases.jl` only for existing include/export wiring, with no new
-  protected import export.
+Validation: `test/nested/cartesian_external_gto_import_runtests.jl`.
 
-Approved test surface:
+Permission: maintain explicit packet validation, `S_FG*C_G` import,
+spin-resolved capture, and direct unorthonormalized protected `S_LG*C_G`
+composition.
 
-- `test/nested/cartesian_external_gto_import_runtests.jl`.
+Non-goals: packet-file/PySCF readers, solver orthonormalization, generalized
+final metrics, Hamiltonian/interaction transforms, physics-policy changes, or
+Cr2 endpoint claims.
 
-Permission: validate explicit external AO packet identity and `S_GG`; import
-with `C_F = <F|G_external>*C_G`; and return spin-aware capture diagnostics. The
-protected extension may consume one already-built member, form native
-`S_LG = <L|G_external>` through the existing exact handoff, retain it in one
-internal result, and import direct alpha/beta coefficients without
-orthonormalizing them.
+### HP-REP-XGTO-IMPORT-TEST-01 — external GTO orbital import validation
 
-Capture of the full nonorthogonal external AO span must be metric-aware through
-`S_GG`; occupied capture remains `C_L'*C_L` after source-metric orthogonality
-validation. Raw squared AO coefficients do not define angular capture.
+Lifecycle: implemented validation. Permission: test maintenance.
 
-Exclusions: PySCF dependency, public workflow, solver-ready
-orthonormalization, Hamiltonian/interaction transforms, generalized final
-overlap, screened-Hartree/EGOI/selection changes, or Cr2 endpoint claims.
+Owner/canonical: external representation transfer;
+[external GTO orbital import](external_gto_orbital_import.md).
 
-### HP-REP-XGTO-PROTECT-SIDECAR-FN-01 / HP-REP-XGTO-PROTECT-SIDECAR-TEST-01 — protected external-GTO representation sidecar
+Test: `test/nested/cartesian_external_gto_import_runtests.jl`.
 
-Lifecycle: implemented internal source and validation contract.
+Dependencies: `HP-REP-XGTO-IMPORT-FN-01` and repo-owned synthetic packets.
 
-Owner and canonical contract:
+Permission: maintain packet identity/order/`S_GG`, restricted/spin-resolved
+import, capture, rotation-invariance, and malformed-input checks.
 
-- `src/cartesian_external_gto_import.jl`;
-- [External GTO orbital import](external_gto_orbital_import.md), section
-  "Protected Representation Sidecar."
+Non-goals: PySCF, molecular endpoint, solver, energy, or Cr2 fixtures.
 
-Approved optional caller surface:
+### HP-REP-XGTO-PROTECT-SIDECAR-FN-01 — protected external-GTO representation sidecar
 
-- `src/cartesian_protected_ladder_bundle.jl` only for an already-built member
-  accessor; ladder manifests, transfer sidecars, and restart sidecars remain
-  unchanged.
+Lifecycle: implemented internal facility. Permission: source maintenance.
 
-Approved test surface:
+Owner/canonical: `src/cartesian_external_gto_import.jl`;
+[external GTO orbital import](external_gto_orbital_import.md), protected
+representation sidecar section.
 
-- `test/nested/cartesian_external_gto_import_runtests.jl` only; no committed
-  Cr2-sized fixture.
+Source: `src/cartesian_external_gto_import.jl`.
 
-Permission: write/read one standalone native-order sidecar containing exact
-final-by-external `S_LG`, direct imported spin coefficients/occupations,
-external packet identity, protected member/recipe/Coulomb identity, matrix
-fingerprints, and metric-aware capture diagnostics. The sidecar is bound to a
-protected member but is not part of its Hamiltonian artifact schema.
+Dependencies: exact final/GTO handoff in `src/cartesian_gto_probes.jl`, the
+existing protected member contract in `src/cartesian_protected_ladder_bundle.jl`,
+and existing protected-artifact/Coulomb serializers.
 
-Fixed identity:
+Validation: `test/nested/cartesian_external_gto_import_runtests.jl`.
 
-```text
-artifact_kind      = :protected_localized_external_gto_representation
-format_version     = 1
-convention_id      = :protected_localized_external_gto_native_v1
-convention_version = 1
-site_order_kind    = :native
-orientation        = :final_by_external
-```
+Permission: maintain the standalone native-order, final-by-external v1 sidecar,
+exact `S_LG`, direct spin imports, packet/member fingerprints, and metric-aware
+capture diagnostics.
 
-Exclusions: raw `G_L/A_L` persistence, protected artifact changes, ladder
-sidecar identity reuse, lossy `S_LG`, source `H1/Vee` transforms, public
-exports/workflow, solver/HF state management, PySCF, angular shell accounting,
-or Cr2 production claims. Stop if implementation requires a new source/test
-file, persistent raw protected coefficients, or generalized final-basis
-metric.
+Non-goals: protected/ladder schema changes, raw `G_L/A_L`, H1/Vee transforms,
+lossy overlap storage, public workflow, solver state, PySCF, or Cr2 claims.
+
+### HP-REP-XGTO-PROTECT-SIDECAR-TEST-01 — protected external-GTO sidecar validation
+
+Lifecycle: implemented validation. Permission: test maintenance.
+
+Owner/canonical: protected external representation persistence;
+[external GTO orbital import](external_gto_orbital_import.md).
+
+Test: `test/nested/cartesian_external_gto_import_runtests.jl`.
+
+Dependencies: `HP-REP-XGTO-PROTECT-SIDECAR-FN-01`, the protected artifact
+reader, and centralized Coulomb-summary validation.
+
+Permission: maintain exact key/identity, roundtrip, saved-overlap reimport,
+rectangular capture, packet/member/artifact, and tamper-rejection checks.
+
+Non-goals: Cr2-sized fixtures, solver/HF behavior, protected/ladder schema
+tests, or external dependencies.
 
 ### HP-PQS-SCREEN-HARTREE-CORR-FN-01 / HP-PQS-SCREEN-HARTREE-CORR-TEST-01 - internal screened-Hartree correction assembly
 
