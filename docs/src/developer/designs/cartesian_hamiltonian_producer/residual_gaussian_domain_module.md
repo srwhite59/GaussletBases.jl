@@ -278,24 +278,12 @@ baselines when available. This audit does not approve a kinetic/`H1_RR` guard,
 automatic pruning, cutoff/tolerance changes, source instrumentation, full HF,
 artifacts, driver work, or MWG/IDA changes.
 
-The optional injection-plus-RG idea is recorded separately in
-`residual_gaussian_injection_hybrid.md`. That memo proposes classifying
-near-gausslet supplement modes by owner-local residual norm, globally merging
-the injected subspace, replacing the corresponding gausslet-sector directions,
-and then returning to owner-local residual selection for true RGs.
-`HP-RG-INJECT-AUDIT-01` approves only ignored measurement probes for that
-proposal. It is not production source authority and does not change the
-approved RG defaults, MWG/IDA convention, artifacts, driver workflow, or
-public API.
-
-`HP-RG-INJECT-FN-01` approves the historical default-off in-memory direct
-`G`-injection implementation in the RG owner. It may add the numerical
-authority needed for an injected replacement base sector and exact one-body
-transformation into `[F, R]`, but injected directions must not become
-residual-GTO/MWG channels. When `residual_injection_cutoff <= 0`, the current
-production RG behavior must remain unchanged within roundoff. This ID does not
-approve driver input, public API, artifact schema/provenance changes,
-production-default changes, full HF, Cr2 workflow, or spectral pruning.
+`HP-RG-INJECT-AUDIT-01` is completed historical measurement.
+`HP-RG-INJECT-FN-01` retains the implemented, preservation-only, default-off
+direct-`G` injection compatibility path. Its canonical contract is
+[Default-off direct-G residual injection](residual_gaussian_injection_hybrid.md).
+It is not the current protected-main construction and does not authorize a
+default, artifact, public workflow, solver, or spectral-pruning change.
 
 `HP-RG-PROTECT-INJECT-DESIGN-01` supplied the completed compact-first
 rationale now governed by

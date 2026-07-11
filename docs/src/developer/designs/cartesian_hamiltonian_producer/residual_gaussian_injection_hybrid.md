@@ -1,326 +1,209 @@
-# Residual Gaussian Injection Hybrid Memo
+# Default-Off Direct-G Residual Injection
 
-Document role: transitional multi-lane design/history ledger pending subsystem
-split. It is not the owner of current status or a single source-authority
-contract. Each section's exact registry entry and canonical subsystem document
-govern; rejected alternatives and measurements remain here as rationale.
+Status: implemented internal compatibility facility under
+`HP-RG-INJECT-FN-01`; disabled by default and not the current protected-main
+construction target.
 
-The historical default-off direct-`G` implementation remains a
-preservation-only compatibility surface under `HP-RG-INJECT-FN-01`. The
-current direction is occupied-first/protected-main injection. Its geometry is
-source-backed under `HP-RG-OCC-FIRST-INJECT-FN-01` and
-governed by [Occupied-first injection geometry](occupied_first_injection.md).
-Protected-original staging, exact one-body transformation, and inherited-site
-interaction semantics are governed by
-[Protected-localized basis convention](protected_localized_basis.md).
-Artifact/locality, [retained-GTO EGOI](retained_gto_egoi.md), and ladder
-facilities have their own source IDs and contracts.
-`HP-RG-PROTECT-ADDREF-*` governs the implemented combined additive-reference
-consumer described in
-[Protected additive atomic reference correction](protected_additive_reference_correction.md).
-This top-level summary does not broaden any of those lanes.
+This page is the canonical contract for the historical direct-`G` injection
+path. The registry owns permission, lifecycle, and exact source surfaces. This
+page owns the numerical construction, default-off behavior, failure rules, and
+its boundary with the current protected-localized architecture.
 
-## Motivation
+## Purpose
 
-The current Residual Gaussian path classifies supplement directions by the
-owner-local residual metric
-
-```text
-M = S_AA - X'X
-```
-
-after projection against the orthonormal terminal gausslet space. Retaining a
-direction with small residual occupation `lambda` then forms a normalized
-residual roughly like
+Ordinary residual Gaussian (RG) construction projects an original supplement
+direction `a` out of an orthonormal terminal gausslet space `G`. If its
+residual occupation is `lambda`, the normalized complement behaves like:
 
 ```text
 r = (I - P_G) a / sqrt(lambda)
 ```
 
-This is exactly the operation that becomes fragile when a GTO direction is
-already almost represented by the gausslets. Tightening
-`residual_occupation_cutoff` can discard marginal directions, but evidence
-after `HP-RG-CUTOFF-FN-02` still showed a low two-owner residual-sector mode
-in the Cr2 residual-only audit. The likely failure mode is not merely "the
-cutoff is too loose"; it is that near-gausslet GTO directions have only two
-current fates:
+This is fragile as `lambda -> 0`: discarding the direction loses exact
+supplement-span information, while retaining it creates a normalized tiny
+complement that can behave like a ghost residual function.
 
-- discard them, losing exact GTO-span information;
-- keep and normalize their tiny residual complements, risking ghost residual
-  functions.
+Direct-`G` injection supplies a third fate. A near-gausslet supplement mode
+replaces its represented direction inside `G` rather than becoming an RG/MWG
+channel. The implementation is retained as an internal, default-off
+compatibility and measurement surface. Current protected work instead replaces
+directions over the compact main space `M = [G, R_compact]`; see
+[Protected-localized basis convention](protected_localized_basis.md).
 
-The proposed third fate is injection: represent near-gausslet directions
-exactly in the one-body basis by replacing the corresponding gausslet subspace,
-without creating residual-Gaussian/MWG channels for them.
+## Policy And Thresholds
 
-This is conceptually analogous to the injection construction in the Angular
-Gausslet manuscript: an approximate subspace of a localized Gaussian span is
-replaced by an exact target subspace, and the final localized basis is obtained
-by orthonormalizing inside the injected span. Here the injected target is not
-low-`l` spherical harmonics; it is the set of supplement modes whose residual
-norm against the terminal gausslet span is small.
-
-## Optional Switch
-
-The proposed user/internal policy knob is:
+The internal option is:
 
 ```text
 residual_injection_cutoff = lambda_inj
 ```
 
-with the simple off rule:
+Its contract is:
 
 ```text
-lambda_inj <= 0    injection disabled; current RG behavior
-lambda_inj > 0     near-gausslet modes with lambda <= lambda_inj are injected
+lambda_inj <= 0    injection disabled
+lambda_inj > 0     classify near-G modes for direct-G replacement
 ```
 
-For the first audit policy, `lambda_inj` should be at least the active
-`residual_occupation_cutoff`. Otherwise there is an ambiguous band of modes
-that are neither injected nor retained as true residuals. This is not a
-permanent mathematical requirement: a later design could intentionally approve
-a discard buffer between injection and true-RG retention, but that policy must
-be explicit rather than accidental.
+When enabled, `lambda_inj` must be at least the active
+`residual_occupation_cutoff`. This avoids an accidental band that is neither
+injected nor retained. No public/default policy is approved.
 
-The first practical sweep values should be treated as audit choices, not
-defaults. A plausible starting range is:
+Keep these numerical decisions distinct:
 
 ```text
-lambda_inj = 0          off/current behavior
-lambda_inj = 1.0e-6    near current residual cutoff
-lambda_inj = 1.0e-5
-lambda_inj = 1.0e-4
+candidate_overlap_cutoff       supplement metric rank cleanup
+residual_injection_cutoff      near-G injection classification
+injected_overlap_cutoff        duplicate global injection cleanup
+residual_occupation_cutoff     true RG retention after replacement
+identity_atol                  final residual identity validation
 ```
 
-## Candidate GTO Orthonormalization
+Candidate metric rank is not residual occupation. None of these thresholds is
+a kinetic or one-body spectral guard.
 
-The first step must stabilize the raw owner-local supplement span before
-classifying injection or residual content. For each physical owner atom:
+## Candidate Classification
 
-```text
-S_AA = owner-local candidate overlap
-S_AA = U diag(s) U'
-keep candidate metric modes with s above the candidate-overlap threshold
-A_tilde = A U_keep diag(s_keep)^(-1/2)
-```
-
-The candidate-overlap threshold removes linearly dependent GTO candidate
-combinations. It is not a residual occupation cutoff and has no direct
-physical meaning as residual content. The threshold should be recorded
-separately, for example as an absolute/relative rule:
+For each physical owner, form the owner-local supplement overlap `S_AA` and
+rank-clean it with the established absolute/relative Gram rule. In the cleaned
+orthonormal candidate basis `A_tilde`, define:
 
 ```text
-keep s_i > max(candidate_overlap_atol,
-               candidate_overlap_rtol * maximum(s))
-```
-
-The simple audit policy can begin with a relative scale near `1.0e-8` when
-the candidates are individually normalized, but a future source lane must name
-the actual threshold and failure rule explicitly.
-
-## Local Classification, Global Injection
-
-The tricky part is that injected functions must be orthonormal as one global
-set, while true residual Gaussians should remain as owner-local as possible
-for MWG descriptors.
-
-The proposed split is:
-
-```text
-For each owner:
-  1. build stable orthonormal candidate modes A_tilde;
-  2. compute C = G' S A_tilde;
-  3. diagonalize M = I - C'C;
-  4. mark modes with lambda <= lambda_inj as provisional injected modes;
-  5. keep modes with lambda > lambda_inj as provisional residual candidates.
-
-Across all owners:
-  6. concatenate provisional injected modes;
-  7. globally orthonormalize/merge them in the S metric;
-  8. drop duplicate injected directions by a separate injected-overlap rank
-     threshold;
-  9. obtain one global orthonormal injected subspace Y_inj.
-
-Then:
- 10. build the injected gausslet sector F = Y_inj + (G cap Y_inj^perp);
- 11. for each owner separately, residualize its remaining candidate modes
-     against F;
- 12. apply owner-local residual occupation selection;
- 13. perform the final inter-owner residual merge.
-```
-
-Classification is applied to the owner-local orthonormal candidate principal
-modes, not to raw contracted GTO columns. If
-
-```text
-M v_i = lambda_i v_i
-```
-
-then the classified supplement-space mode is
-
-```text
+C = G' S A_tilde
+M_res = I - C'C
+M_res v_i = lambda_i v_i
 y_i = A_tilde v_i
 ```
 
-These `y_i` modes are the provisional injected modes or provisional residual
-candidates.
+Classification applies to the principal modes `y_i`, not to raw contracted
+GTO columns:
 
-This deliberately does not diagonalize one global residual metric over all
-atoms to decide residual Gaussians. Global injection is acceptable because
-injected functions do not become MWG residual channels. Global residual
-selection would reintroduce nonlocal residual rotations and would be the wrong
-owner model for MWG.
+- `lambda_i <= lambda_inj`: provisional injected mode;
+- `lambda_i > lambda_inj`: provisional true-residual candidate.
 
-## Injected Gausslet Sector
+Candidate Gram cleanup and residual occupation answer different questions and
+must not share a cutoff.
 
-If `Y_inj` is the global orthonormal injected subspace, the injected gausslet
-sector is:
+Injection is global because injected modes do not become owner-local MWG
+channels. True residual selection remains owner-local:
 
-```text
-F = Y_inj op (G cap Y_inj^perp)
-```
+1. classify stable candidate principal modes separately for each owner;
+2. concatenate provisional injected modes;
+3. globally orthonormalize and remove duplicate injected directions using the
+   separate injected-overlap rank rule;
+4. construct one global injected target `Y`;
+5. residualize each owner's remaining candidates against the replacement
+   sector;
+6. apply owner-local true-RG occupation selection;
+7. perform the ordinary final inter-owner residual merge.
 
-It has dimension `nG`, not `nG + dim(Y_inj)`. The injected functions replace
-the corresponding approximate directions in the gausslet sector. They are not
-added on top of the original gausslets.
+Global injection cleanup is not permission for global residual selection.
 
-A concrete construction should use the projection of the global injected
-subspace into the original gausslet coefficient space. Let `Y` be the global
-orthonormal injected modes and
+## Replacement Geometry
+
+For the global orthonormal injected target `Y`, form:
 
 ```text
 B = G' S Y
 ```
 
-Then build an orthonormal complement `Q_perp` inside the original gausslet
-coefficient space:
+Construct an orthonormal complement `Q_perp` in the coordinate space of
+`G`:
 
 ```text
-Q_perp' Q_perp = I
 B' Q_perp = 0
-```
-
-The injected gausslet sector can then be represented as
-
-```text
+Q_perp' Q_perp = I
 F = [Y, G Q_perp]
 ```
 
-This makes the `nG`-dimensional replacement explicit and gives a direct rank
-and conditioning diagnostic for whether the injected modes lie stably in the
-gausslet span.
+`F` has the same dimension as `G`. Injection is replacement, not append.
+Required guards are:
 
-Required guards for any future source lane:
+- `dim(Y) < dim(G)`;
+- `B` has full injected rank and acceptable conditioning;
+- `F' S F` is identity to tolerance;
+- true residuals are orthogonal to `F), not merely to the old `G`;
+- duplicate cross-owner injected modes are removed explicitly;
+- final `F-R` and `R-R` metric checks pass.
 
-- `dim(Y_inj) < nG`;
-- the projection `B = G' S Y_inj` has full rank and acceptable condition;
-- the final injected gausslet sector is orthonormal;
-- remaining true residuals are orthogonal to the injected sector `F`, not only
-  to the original `G`;
-- duplicate injected directions across owners are merged or dropped by an
-  explicit injected-subspace rank rule.
+If the injected target is too large, rank deficient, or unstable under global
+cleanup, stop. Do not silently discard target directions, append them, or turn
+them into MWG residuals.
 
-If the injected subspace is too large, nearly singular, or cannot be merged
-without unstable rotations, the construction should stop and report the
-blocker rather than falling back silently.
+## Operators And Interaction
 
-## One-Body And Interaction Convention
+With injection enabled:
 
-The proposed convention is:
+- exact kinetic, moment, and per-center unit-nuclear operators are transformed
+  into the in-memory `[F, R]` basis;
+- remaining true RGs retain the existing exact augmented one-body transform;
+- the injected base sector inherits the original gausslet-sector IDA
+  interaction convention;
+- residual MWG/IDA descriptors and channels apply only to true residuals.
 
-- exact one-body operators use the true injected/raw representation;
-- true residual Gaussians use the existing exact augmented one-body
-  transformation;
-- injected-sector two-body IDA inherits the original gausslet IDA semantics;
-- only true residual directions get residual-GTO/MWG interaction channels.
+The inherited IDA treatment is an explicit two-body approximation. Injected
+directions do not receive residual-GTO/MWG descriptors. Exact one-body
+transformation does not authorize a two-index interaction congruence or a new
+density convention.
 
-The inherited IDA treatment for injected directions is an approximation. The
-one-body basis changes exactly and one-body operators use the injected/raw
-representation exactly; the two-body IDA keeps the original gausslet-sector
-IDA treatment for the replaced subspace. This is stable in the limit
-`lambda -> 0`: a direction already represented by gausslets should not create
-a normalized residual function or a residual MWG density.
+The current supplemented artifact writer rejects
+`residual_injection_cutoff > 0`. Enabled injection is in-memory only; this
+contract does not authorize artifact provenance or persistence.
 
-Do not give injected functions their own MWG descriptors in the first design.
-That would reintroduce the near-zero residual-density problem through another
-path.
+## Current Implementation Boundary
 
-## Distinct Thresholds
+The implementation is internal and default-off. With
+`residual_injection_cutoff <= 0`, ordinary RG selection, exact augmented
+operators, MWG/IDA interaction, endpoint values, and artifact behavior must
+remain unchanged within roundoff.
 
-Future work should keep at least these policies separate:
+Approved implementation owners are:
 
-```text
-candidate_overlap_cutoff       raw GTO candidate linear dependence
-residual_injection_cutoff      optional near-gausslet injection threshold
-injected_overlap_cutoff        global duplicate injected-mode merge threshold
-residual_occupation_cutoff     true RG retention after injection
-identity_atol                  final residual identity validation tolerance
-```
+- `src/cartesian_residual_gaussians/residual_basis.jl`;
+- `src/cartesian_residual_gaussians/augmented_operators.jl`;
+- `src/cartesian_residual_gaussians/mwg_interaction.jl`;
+- narrow compatibility plumbing in
+  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
 
-These thresholds answer different questions. They should not be collapsed into
-one "stability" knob.
+Compact implementation facts may include injection and rank thresholds,
+injected dimension/owner counts, `B/Q_perp` transform authority, and the
+existing true-residual `T_G/T_A` blocks. Do not add discarded spectra,
+inventory payloads, status fields, or report frameworks to construction
+objects.
 
-## HP-RG-INJECT-AUDIT-01 - Measurement-Only First Step
+There is no current production caller that should turn this path on as the
+protected construction. The protected-localized builder uses the separate
+compact-main geometry and operator contract.
 
-Status: approved by user direction, measurement-only. This is not production
-source authority.
+## Validation And Failure Behavior
 
-It should use ignored probes only and report, for Cr atom, Cr2 monomer
-counterpoise if available, and Cr2:
+The source-backed lane was validated with:
 
-- raw candidate counts;
-- stable owner-local candidate counts after `S_AA` rank cleanup;
-- provisional injected count by owner for trial `lambda_inj`;
-- globally retained injected count after duplicate merge;
-- rank and condition of `B = G' S Y_inj`;
-- true RG count by owner;
-- residual occupation spectra before and after injection;
-- `K_RR` and `H1_RR` low eigenvalues for true RGs;
-- projected one-body errors of the injected sector versus the original GTO
-  span, separated into `K`, each unit `U_A`, and `H1`;
-- owner weights and residual-occupation composition of low modes;
-- GTO-span one-body accuracy or mismatch against the non-injected path where
-  cheap;
-- whether the low two-owner residual ghost sector disappears, shrinks, or
-  persists.
+- default-off H2 residual-GTO/MWG endpoint parity;
+- ignored default-off Cr/Cr2 replay against ordinary production RG counts;
+- ignored enabled replay of injected/true-RG counts, `B` rank/condition,
+  `F' S F`, `F' S R`, `R' S R`, finite/symmetric exact one-body
+  matrices, and low `K_RR/H1_RR` spectra;
+- package load and `git diff --check`.
 
-Approved surfaces:
+Stop rather than broaden the implementation if enabled injection requires:
 
-- ignored `tmp/work/*.jl` probes only;
-- durable text/TSV output under `/Users/srw/dmrgtmp/...` or CR2 run
-  directories.
+- artifact/schema/provenance changes;
+- driver/public API/default changes;
+- source outside the registered owners;
+- terminal-basis, raw-block, route, or shellification rewrites;
+- persistent dense `nG x nG` workspace beyond the approved compact
+  transform;
+- global residual selection, automatic spectral pruning, solver/HF workflow,
+  or Cr2-specific production behavior.
 
-Forbidden:
+No committed large fixture or endpoint is part of this compatibility lane.
 
-- production source changes;
-- committed tests or fixtures;
-- artifact schema/provenance/reader/manifest changes;
-- driver changes;
-- public API/export changes;
-- RG default changes;
-- automatic pruning or residual-selection implementation;
-- MWG/IDA convention changes;
-- dense Vee, full HF, or solver workflow;
-- Cr2 full Hamiltonian, Cr2 artifact, or Cr2-specific workflow.
+## Historical Measurement
 
-Validation for the audit:
-
-- `git diff --check`;
-- package load;
-- ignored injection audit probe for the target Cr/Cr2 fixture;
-- no full HF and no new Hamiltonian artifact.
-
-Failure rule: if the audit cannot reconstruct the needed owner-local
-candidate spans, injected-sector projection `B`, or residual-sector one-body
-blocks cheaply from existing construction seams, stop and report the exact
-missing reusable seam. Do not add production source instrumentation as part of
-this lane.
-
-## Audit Result And Implementation Decision
-
-The first `HP-RG-INJECT-AUDIT-01` probe did not remove the current Cr2 low
-two-center residual sector under the tested reconstruction. The best tested
-value, `lambda_inj = 1.0e-4`, reduced the severity only modestly:
+`HP-RG-INJECT-AUDIT-01` is completed historical measurement authority. The
+first Cr2 reconstruction found that direct-`G` injection was numerically
+well-conditioned but did not remove the low two-owner residual sector:
 
 ```text
 lambda_inj        injected   true RG count   min K_RR   min H1_RR
@@ -328,365 +211,46 @@ lambda_inj        injected   true RG count   min K_RR   min H1_RR
 1.0e-4            38         100             0.445326   -7.061948
 ```
 
-The audit also showed that the trial injected sector was numerically healthy:
-for the dimer at `lambda_inj = 1.0e-4`, `B` condition was about `1.002` and
-the implicit `F' S F` error was about `3.9e-12`. The result should be
-interpreted as follows:
+At `lambda_inj = 1.0e-4`, the reported `B` condition was about `1.002`
+and the implicit `F' S F` error about `3.9e-12`. The audit's zero point was
+not exactly production-equivalent, so these values are evidence, not an
+endpoint baseline.
 
-- injection did not by itself fix the current Cr2 low-H1 residual sector;
-- the first audit `lambda = 0` baseline did not exactly match production RG;
-- the surviving low mode after `lambda_inj = 1.0e-4` had no low-occupation
-  weight below that threshold, so the remaining issue is not only the
-  just-above-cutoff tail;
-- nevertheless, RG alone still has the bad singular-complement limit, while
-  injection gives near-gausslet GTO directions the correct third fate.
+The durable interpretation is:
 
-Implementation is therefore approved as a principled construction improvement,
-not as a claim that injection alone solves the Cr2 residual-sector safety
-problem. A later spectral stop-and-report gate may still be needed.
+- direct injection addresses the singular-complement construction problem;
+- it is not by itself a demonstrated Cr2 residual-sector fix;
+- cutoff-only RG remains an unsuitable long-term construction principle;
+- residual spectral safety is a separate diagnostic/design question.
 
-## HP-RG-INJECT-FN-01 - Default-Off In-Memory Injection Implementation
+Detailed chronology remains in the manager running log and repository history.
 
-Status: historical default-off `G`-injection source authority. It is not the
-current compact-first implementation target and must not be used to turn on
-the existing injection path as-is for the protected-original design below.
-Current protected work uses the implemented protected geometry/one-body IDs
-and the canonical protected-localized basis contract below; this historical
-direct-`G` authority does not broaden them.
+## Successor Contracts
 
-Approved source surface:
+Do not use this direct-`G` compatibility path as a substitute for:
 
-- `src/cartesian_residual_gaussians/residual_basis.jl`;
-- `src/cartesian_residual_gaussians/augmented_operators.jl`;
-- `src/cartesian_residual_gaussians/mwg_interaction.jl`;
-- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` only
-  for narrow internal keyword plumbing, same-construction validation, and
-  compatibility wiring.
+- [Occupied-first injection geometry](occupied_first_injection.md), which owns
+  mandatory occupied protection and optional supplement capture;
+- [Protected-localized basis convention](protected_localized_basis.md), which
+  owns replacement over `M = [G, R_compact]`, exact localized one-body
+  operators, and inherited-site `Vee_L`;
+- [Protected-localized artifact contract](protected_localized_artifact.md);
+- [Retained-GTO local-product EGOI](retained_gto_egoi.md);
+- [Protected-localized ladder bundles](protected_localized_ladder.md);
+- [Protected additive atomic reference correction](protected_additive_reference_correction.md);
+- [Screened Hartree residual-density formalism](screened_hartree_residual_density.md).
 
-Approved behavior:
-
-- add an internal `residual_injection_cutoff` option whose default preserves
-  current behavior, with `residual_injection_cutoff <= 0` meaning injection
-  disabled;
-- when injection is disabled, preserve current production residual selection,
-  transforms, exact augmented one-body operators, MWG/IDA interaction, H2
-  endpoint values, and artifact behavior within roundoff;
-- when injection is enabled, form owner-local stable candidate principal modes
-  after `S_AA` rank cleanup and classify `y_i = A_tilde v_i`, not raw GTO
-  columns;
-- globally merge provisional injected modes, drop duplicate injected modes by
-  an explicit injected-overlap rank rule, and validate rank/condition of
-  `B = G' S Y_inj`;
-- construct the injected gausslet sector as the replacement sector
-  `F = [Y, G Q_perp]` or an equivalent numerically stable representation;
-- residualize true RG candidates against `F`, not against the original `G`;
-- keep true RG residual selection owner-local, followed by one final
-  inter-owner merge;
-- keep injected directions out of residual-GTO/MWG channels;
-- transform exact one-body/moment/unit-nuclear operators into the in-memory
-  `[F, R]` basis when injection is enabled;
-- preserve inherited gausslet-sector IDA for the injected base sector as the
-  explicitly documented two-body approximation;
-- continue using residual MWG/IDA only for true residual directions;
-- carry only compact numerical authority needed for the injected base sector
-  and true residual transforms; avoid raw inventories, discarded spectra,
-  broad reports, or status payloads.
-
-Approved object/policy facts, if needed:
-
-- `residual_injection_cutoff`;
-- candidate-overlap rank threshold values;
-- injected-overlap rank threshold value;
-- injected dimension and optionally compact injected owner counts;
-- numerical authority for the injected base-sector transform or equivalent
-  low-rank representation;
-- existing `T_G`/`T_A` authority for true residual directions.
-
-Forbidden:
-
-- default-on injection;
-- driver input or canonical driver workflow changes;
-- public API/export changes;
-- artifact schema/provenance/reader/manifest changes;
-- writing injection-enabled supplemented artifacts without a later provenance
-  amendment;
-- full HF, dense Vee, solver workflow, Cr2 full Hamiltonian, Cr2 artifact, or
-  Cr2-specific workflow;
-- automatic pruning by kinetic or `H1_RR` spectrum;
-- kinetic/`H1_RR` spectral-guard implementation;
-- MWG descriptors or residual-MWG channels for injected directions;
-- global residual selection;
-- width/zeta filtering default changes;
-- route, shellification, terminal-lowering, raw-block, Qiu-White, or
-  Hamiltonian artifact writer rewrites;
-- committed tests or fixtures unless separately approved.
-
-Validation for the source pass:
-
-- `git diff --check`;
-- package load;
-- current H2 residual-GTO/MWG endpoint unchanged with injection disabled;
-- ignored default-off replay showing the source path matches current
-  production RG counts and residual spectra for the target Cr/Cr2 fixture;
-- ignored enabled-injection replay showing finite/symmetric in-memory
-  one-body operators, `F' S F`, `F' S R`, `R' S R`, injected counts, true RG
-  counts, `B` rank/condition, and `K_RR`/`H1_RR` spectra;
-- no full HF and no new Hamiltonian artifact.
-
-Failure rule: if implementing injection requires artifact schema changes,
-driver/public API changes, source outside the approved files, raw-block
-rewrites, terminal-basis changes, or a broad payload/report framework, make no
-source commit and report the blocker. If exact one-body transformation into
-`[F, R]` cannot be done without storing an unacceptable dense `nG x nG`
-workspace persistently, stop and request a compact-transform design amendment.
+Rejected broad protected candidates never become MWG residuals. Direct
+`C' V C` interaction rotation remains invalid under the protected-localized
+contract.
 
 ## Do Not Confuse
 
-- Candidate GTO overlap rank is not residual occupation.
-- Residual occupation is not numerical rank and not residual integral weight.
+- Candidate overlap rank is not residual occupation.
+- Residual occupation is not integral weight or numerical rank.
 - Injected directions are not residual Gaussians.
-- Injected directions are not appended. In the historical direct-injection
-  path they replace a subspace of `G`; in the protected-original compact-main
-  design they replace a subspace of `M = [G, R_compact]`.
-- Global injection merging is not permission for global residual selection.
-- Exact one-body injection is not a new residual-MWG density convention.
-- A kinetic or `H1_RR` spectral guard remains a later safety gate, not the
-  first automatic pruning rule.
-
-## Source Authority Status
-
-`HP-RG-INJECT-FN-01` approves only the default-off in-memory source lane
-above as historical `G`-injection authority. It does not approve the protected
-compact-main construction, changing the production default, artifact
-provenance, driver workflow, public API, full HF, Cr2 artifact/workflow, or
-spectral pruning policy.
-
-## Protected Compact-Main Design Contract
-
-`HP-RG-PROTECT-INJECT-DESIGN-01` supplied the compact-first rationale that is
-now implemented by the protected geometry and one-body source lanes. Its
-canonical numerical contract has moved to
-[Protected-localized basis convention](protected_localized_basis.md).
-
-Historical design and measurement evidence remains in manager running-log
-Passes 235-253 and in
-`docs/src/developer/reports/cr2_staged_subspace_filter_870498b54/`. The durable
-rules are replacement over `M = [G, R_compact]`, separate Gaussian Gram and
-representability gates, protected-span preservation, and rejection of
-unsupported broad directions without creating MWG residual channels.
-
-## Occupied-First Injection History And Contract
-
-`HP-RG-OCC-FIRST-INJECT-AUDIT-01` is completed historical measurement
-authority. Passes 323-324 established the occupied-first direction: Be/Ne
-occupied subspaces were recovered at roundoff after mandatory inclusion, while
-weak optional p-like directions demonstrated why capture-cutoff selection must
-remain separate from occupied protection. Numerical evidence remains in the
-manager running log.
-
-The implemented geometry and selection contract is now owned by
-[Occupied-first injection geometry](occupied_first_injection.md) under
-`HP-RG-OCC-FIRST-INJECT-FN-01` and
-`HP-RG-OCC-FIRST-INJECT-TEST-01`.
-
-The standalone source-backed helper is not a direct replacement for staged
-protected-original geometry over `M = [G, R_compact]`. The implemented
-protected-localized composition belongs to `HP-RG-PROTECT-ADDREF-*` and
-[Protected additive atomic reference correction](protected_additive_reference_correction.md).
-
-## Protected Geometry, One-Body, And Interaction History
-
-The implemented staged geometry under `HP-RG-PROTECT-INJECT-FN-01` /
-`HP-RG-PROTECT-INJECT-TEST-01` and exact one-body transformation under
-`HP-RG-PROTECT-ONEBODY-FN-01` / `HP-RG-PROTECT-ONEBODY-TEST-01` are governed
-by [Protected-localized basis convention](protected_localized_basis.md).
-
-The completed one-body audit and source replay remain documented in manager
-running-log Passes 254, 255, and 259 and in
-`docs/src/developer/reports/cr2_protected_onebody_audit_eaf05a38c/`.
-
-The completed `HP-RG-PROTECT-VEE-AUDIT-01` record is intentionally retained as
-negative and positive evidence rather than active measurement authority:
-
-- Pass 269 rejected direct `C' V C` interaction rotation because it fails
-  null/projected many-electron energy invariance.
-- Pass 270 established localized `L`, exact `H1_L`, and inherited
-  pre-injection site-order `Vee_M` as the viable protected-localized
-  convention.
-
-Artifact persistence, row-locality metadata, EGOI, ladder facilities, and
-rho0/reference-density work remain in their separate sections below and are
-not part of this extracted basis contract.
-
-## HP-RG-PROTECT-ART-FN-01 - Protected-Localized Hamiltonian Artifact Variant
-
-Status: implemented.
-
-The artifact identity, native sector/order law, writer/readback behavior, and
-exclusions are canonical in
-[Protected-localized artifact contract](protected_localized_artifact.md).
-The persisted basis numerics remain governed by
-[Protected-localized basis convention](protected_localized_basis.md).
-
-## HP-RG-PROTECT-ART-TEST-01 - Protected Artifact Validation
-
-Status: implemented validation contract. Exact validation and historical
-evidence are indexed by the
-[canonical artifact contract](protected_localized_artifact.md) and registry.
-
-## HP-RG-PROTECT-ARTLOC-FN-01 - Protected Artifact Row-Locality Metadata
-
-Status: implemented.
-
-The native-center calculation, deterministic inverse permutations,
-native-sector labels, optional spreads, compatibility behavior, and strict
-matrix-order boundary are canonical in
-[Protected-localized artifact contract](protected_localized_artifact.md).
-
-## HP-RG-PROTECT-ARTLOC-TEST-01 - Row-Locality Validation
-
-Status: implemented validation contract. Exact validation and historical
-evidence are indexed by the
-[canonical artifact contract](protected_localized_artifact.md) and registry.
-
-## Retained-GTO EGOI History
-
-`HP-RG-PROTECT-EGOI-AUDIT-01` is a completed historical measurement.
-Its retained-target ladder, mask-radius isolation, cross-term analysis, and
-numerical evidence remain in manager running-log Passes 302-308.
-
-The approved but pending `HP-RG-PROTECT-EGOI-FN-01` and
-`HP-RG-PROTECT-EGOI-TEST-01` contract is now owned by
-[Retained-GTO local-product EGOI](retained_gto_egoi.md). The protected helper
-is not implemented in committed source. In particular, uncommitted additions
-in `src/hamiltonian_corrections.jl` are not accepted by this historical memo.
-
-## Protected-Localized Ladder History
-
-`HP-RG-PROTECT-LADDER-XFER-AUDIT-01` is a completed historical
-same-parent transfer measurement. Its durable outcome is the implemented
-`HP-RG-PROTECT-LADDER-BUNDLE-FN-01` /
-`HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` facility governed by
-[Protected-localized ladder bundles](protected_localized_ladder.md).
-
-The canonical page owns bundle identity, layout, cross-overlap direction,
-native restart order, target-Hamiltonian evaluation, diagnostics, readback,
-and limitations. Numerical evidence remains in manager running-log Pass 313.
-
-## HP-RG-RHO0-GAL-AUDIT-01 - Rho0/Galerkin IDA Correction Audit
-
-Status: approved measurement-only audit authority. This is not source
-implementation authority, not source-backed IDA/MWG authority, not artifact
-authority, not production Hamiltonian authority, and not a Cr2 production
-claim. Later row-gauge audits showed this formulation was algebraically
-under-specified as a correction target. Keep this lane as historical
-measurement evidence; use `HP-RHO0-REFDENS-AUDIT-01` in
-`rho0_reference_density_matrix.md` for the current reference-density-matrix
-target.
-
-### Purpose
-
-Test whether a reference-density / Galerkin correction can improve the
-existing IDA interaction after the protected-localized injection convention
-has removed the broad residual-collapse mechanism. This is an IDA-improvement
-lane on top of the sane protected-localized inherited-site baseline. It is not
-a basis-fate rule, not a replacement for compact RG/injection selection, and
-not permission to revive `C' V C`.
-
-### Baseline
-
-The audit starts from the protected-localized convention:
-
-- build protected-localized injected basis `L`;
-- use exact one-body operators in `L`;
-- inherit pre-injection site-order `Vee_M` as the IDA/MWG interaction;
-- judge by small-system and Cr2 physics diagnostics.
-
-The rho0/Galerkin correction is tested as an additive or replacement
-candidate for improving IDA accounting relative to that inherited-site
-baseline. The audit must state the exact convention used before reporting
-energies or occupations.
-
-### Approved Surfaces
-
-Allowed:
-
-- ignored `tmp/work/*.jl` measurement probes only;
-- outputs under `/Users/srw/dmrgtmp/...`;
-- in-memory experiments over existing protected-localized geometry and
-  one-body/Vee data;
-- analytic IDA/Coulomb sanity checks;
-- small H, He, and H2 checks;
-- Cr2 fixed-density diagnostics;
-- one bounded Cr2 HF replay only if static rho0/Galerkin diagnostics are
-  sane.
-
-Forbidden:
-
-- tracked source edits;
-- public driver/API/input wiring or exports;
-- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
-- production Hamiltonian workflow;
-- `C' V C` interaction transform revival;
-- treating rejected broad directions as MWG residual channels;
-- treating Vee scaling as the fix;
-- screened-reference production claims;
-- Cr2 production energy claims;
-- publication-scale validation sweeps;
-- committed tests or fixtures.
-
-### Required Diagnostics
-
-The audit must report:
-
-- exact rho0 definition and normalization;
-- whether rho0 is a spherical one-Gaussian, multi-Gaussian, or fitted atomic
-  density;
-- Galerkin/reference vector or matrix convention used;
-- finite and symmetry checks;
-- analytic 1s self-Coulomb checks where applicable;
-- H, He, and H2 IDA sanity shifts;
-- Cr2 low `H1` / interaction incentive diagnostics;
-- fixed-density energy shift on the saved bad density if available;
-- bounded HF residual, compact-`R`, and injected-site occupation;
-- comparison to the protected-localized inherited-site `Vee_M` baseline.
-
-### Decision Rule
-
-If rho0/Galerkin improves the small IDA sanity checks and Cr2 diagnostics
-without reviving broad/residual occupation, the result may justify a later
-source-design amendment. That later amendment must name the source owner,
-operator convention, artifact/public exclusions, validation, and line budget.
-
-If rho0/Galerkin introduces negative broad residual/interaction modes,
-inconsistent energy accounting, or large occupation incentives, stop and
-record rho0/Galerkin as the current interaction-design blocker.
-
-This is repo-level algorithm engineering validation. Larger molecule and
-convergence sweeps belong to a consumer-oriented workflow after the repo path
-is stable.
-
-### Successor Target
-
-The successor lane replaces scalar/row-gauge `rho0` reasoning with a fixed
-reference density matrix `P0`. It requires:
-
-```text
-Delta_F0_sigma = F_exact0_sigma[P0] - F_app0_sigma[P0]
-
-C0 =
-    E_exact0[P0]
-  - E_app0[P0]
-  - sum_sigma Tr(P0_sigma * Delta_F0_sigma)
-```
-
-so that the corrected model satisfies both:
-
-```text
-E_new[P0] = E_exact0[P0]
-dE_new/dP_sigma at P0 = F_exact0_sigma[P0]
-```
-
-Do not continue row-action `(J*w)/w`, `diag(J)`, or scalar `u0/q0` matching as
-the acceptance target. Those are diagnostics of different objects, not the
-definition of the correction.
+- Injection is replacement, not append.
+- Direct-`G` injection is not compact-main protected injection.
+- Global injected-subspace cleanup is not global residual selection.
+- Exact one-body transformation is not an interaction rotation.
+- An enabled in-memory path is not artifact or production-workflow authority.

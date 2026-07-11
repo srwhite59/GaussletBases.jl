@@ -27994,3 +27994,40 @@ Carrying-cost result:
 - MT6 old flat-path classification: maintenance. No row-gauge, interaction
   rotation, retained-GTO EGOI WIP, or legacy compatibility adapter was
   promoted.
+
+## Cartesian Hamiltonian Producer Pass 366 - Canonical Direct-G Injection Contract
+
+Commit(s):
+- this commit - reduce the residual-injection mega-document to the one live
+  compatibility contract it still owns.
+
+Summary:
+- Replaced the mixed injection/protected/artifact/EGOI/ladder/rho0 ledger with
+  a canonical contract for the implemented, default-off direct-`G` injection
+  path. Preserved replacement geometry, owner-local true-RG selection, exact
+  `[F,R]` one-body transforms, inherited gausslet IDA, failure behavior, and
+  the in-memory/artifact boundary.
+- Marked `HP-RG-INJECT-AUDIT-01` completed historical measurement and reduced
+  its registry/AGENTS/implementation-slice duplication. Current
+  occupied-first, compact-main protected, artifact, EGOI, ladder, additive,
+  and screened-Hartree law remains in existing canonical pages.
+
+Validation / evidence:
+- Compared the new contract with live `residual_injection_cutoff` source,
+  terminal artifact rejection, registered source surfaces, and successor
+  contracts. Focused lifecycle/link scans and `git diff --check` passed.
+  Local Documenter is the final acceptance gate; no numerical Julia test is
+  needed because source and thresholds are unchanged.
+
+Goal advancement / guardrail:
+- MT5: removes another multi-project authority ledger while preserving the
+  singular-complement rationale and evidence that direct injection did not by
+  itself repair the tested Cr2 low residual sector.
+- Direct-`G` injection remains preservation-only. This pass does not turn it
+  on, expand it, or substitute it for `M=[G,R_compact]` protected geometry.
+
+Carrying-cost result:
+- Active documentation before this log entry is approximately `+224/-833`,
+  net `-609` lines.
+- Exact next reorganization step: compress `current.md` into live facilities,
+  active/pending lanes, blockers, and canonical reading only.

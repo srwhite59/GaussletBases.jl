@@ -160,9 +160,9 @@ ID or subsystem.
 - [Residual Gaussian orthogonality robustness](residual_gaussian_orthogonality_robustness.md)
   for the narrow final residual identity-check robustness, tolerance, and
   cutoff-policy lanes
-- [Residual Gaussian injection hybrid memo](residual_gaussian_injection_hybrid.md)
-  for the historical optional near-gausslet proposal and protected-injection
-  design/audit evidence
+- [Default-off direct-G residual injection](residual_gaussian_injection_hybrid.md)
+  for the implemented preservation-only compatibility path and its completed
+  measurement history
 - [Protected-localized basis convention](protected_localized_basis.md)
   for compact-first protected-original replacement, exact localized one-body
   operators, inherited-site `Vee`, and the rejection of direct `C' V C`

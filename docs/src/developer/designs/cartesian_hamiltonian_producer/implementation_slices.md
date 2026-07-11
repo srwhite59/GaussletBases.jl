@@ -377,30 +377,13 @@ Approved robustness lane:
   baselines when available. It does not approve production source changes,
   automatic residual pruning, kinetic/`H1_RR` guards, cutoff/tolerance changes,
   MWG/IDA changes, full HF, artifacts, driver changes, or committed tests.
-- `HP-RG-INJECT-AUDIT-01` approves only measurement of the optional
-  injection-plus-RG scheme recorded in
-  `residual_gaussian_injection_hybrid.md`: ignored probes may classify
-  owner-local principal modes `y_i = A_tilde v_i`, trial-inject modes under
-  `lambda_inj`, globally merge injected modes, report rank/condition of
-  `B = G' S Y_inj`, residualize true RG candidates against
-  `F = [Y, G Q_perp]`, and report true RG counts, `K_RR`/`H1_RR` spectra, and
-  injected-sector one-body projection errors. It does not approve production
-  source changes, committed tests, default changes, automatic pruning,
-  artifacts, driver changes, public API, MWG/IDA changes, full HF, Cr2
-  artifacts, or Cr2-specific workflow.
-- `HP-RG-INJECT-FN-01` approves a narrow default-off in-memory source
-  implementation in `src/cartesian_residual_gaussians/residual_basis.jl`,
-  `augmented_operators.jl`, and `mwg_interaction.jl`, with
-  `pqs_terminal_residual_gto.jl` allowed only for narrow internal keyword
-  plumbing and compatibility wiring. It may implement owner-local principal
-  mode classification, global injected-subspace merge, replacement base sector
-  `F`, exact one-body transformation into `[F, R]`, and inherited
-  gausslet-sector IDA for injected directions. It must preserve current
-  behavior when `residual_injection_cutoff <= 0`, and it must not approve
-  default-on injection, driver input, public API, artifact schema/provenance,
-  injection-enabled artifact writing, MWG channels for injected directions,
-  global residual selection, spectral pruning, full HF, Cr2 artifact/workflow,
-  or committed tests.
+- `HP-RG-INJECT-AUDIT-01` is completed historical measurement.
+  `HP-RG-INJECT-FN-01` retains the implemented, default-off, direct-`G`
+  compatibility path under
+  `residual_gaussian_injection_hybrid.md`. It preserves ordinary behavior
+  when disabled and never gives injected directions MWG residual channels.
+  Protected compact-main construction belongs to its separate canonical
+  contract.
 - `HP-RG-PROTECT-INJECT-DESIGN-01` approves only the protected-original
   compact-main injection design. It is not a source slice. The intended source
   direction is: build compact/narrow RGs first with the existing ordered

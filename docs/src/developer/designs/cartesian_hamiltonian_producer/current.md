@@ -319,26 +319,12 @@ Approved Residual Gaussian robustness lane:
   output. It does not approve pruning, kinetic/`H1_RR` guards, cutoff or
   tolerance changes, full HF, Vee/solver work, artifacts, source
   instrumentation, or driver changes.
-- `HP-RG-INJECT-AUDIT-01` approves the first measurement-only lane for the
-  optional injection-plus-RG scheme recorded in
-  `residual_gaussian_injection_hybrid.md`. Ignored probes may classify
-  owner-local principal modes, merge the trial injected subspace, report
-  `B = G' S Y_inj` rank/condition, report true RG counts and `K_RR`/`H1_RR`
-  spectra after injection, and measure injected-sector one-body projection
-  errors for `K`, each unit `U_A`, and `H1`. This does not approve
-  injected-sector source behavior, defaults, artifacts, driver input, public
-  API, automatic pruning, MWG/IDA convention changes, full HF, or Cr2 workflow.
-- `HP-RG-INJECT-FN-01` approves a narrow default-off in-memory implementation
-  of the injection-plus-RG hybrid. The audit did not remove the current Cr2
-  low-H1 residual sector, but injection remains the better general
-  construction because RG alone has a singular-complement limit. The source
-  lane may implement owner-local principal-mode classification, global
-  injected-subspace merge, replacement base sector `F`, exact one-body
-  transformation into `[F, R]`, and true-residual MWG/IDA only for directions
-  not injected. It must preserve current behavior when
-  `residual_injection_cutoff <= 0` and must not change driver input, public
-  API, artifact schema, production defaults, MWG channels for injected
-  directions, spectral pruning, full HF, or Cr2 workflow.
+- `HP-RG-INJECT-AUDIT-01` is completed historical measurement.
+  `HP-RG-INJECT-FN-01` retains the implemented, default-off, direct-`G`
+  compatibility path in
+  [its canonical contract](residual_gaussian_injection_hybrid.md). It is not
+  the current compact-main protected construction and does not authorize
+  defaults, artifacts, public workflow, solver work, or spectral pruning.
 - `HP-RG-OCC-FIRST-INJECT-FN-01` and
   `HP-RG-OCC-FIRST-INJECT-TEST-01` implement the internal
   [occupied-first injection geometry](occupied_first_injection.md). It makes

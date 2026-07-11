@@ -1163,41 +1163,16 @@ Approved Residual Gaussian module surfaces:
   driver changes, MWG/IDA changes, full HF, dense Vee/solver work, automatic
   residual pruning, kinetic/`H1_RR` guards, cutoff/tolerance changes, or
   source instrumentation.
-- `HP-RG-INJECT-AUDIT-01` is measurement-only authority for the optional
-  injection-plus-RG scheme recorded in
-  `docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_injection_hybrid.md`.
-  Ignored probes may classify owner-local principal modes
-  `y_i = A_tilde v_i`, sweep trial `residual_injection_cutoff` values,
-  globally merge injected modes, report rank/condition of
-  `B = G' S Y_inj`, residualize true RG candidates against
-  `F = [Y, G Q_perp]`, and report true RG counts, `K_RR`/`H1_RR` spectra, and
-  injected-sector one-body projection errors. It approves only ignored
-  `tmp/work/*.jl` probes and durable text/TSV output under
-  `/Users/srw/dmrgtmp/...` or CR2 run directories. It does not approve
-  production source changes, source instrumentation, committed tests,
-  artifacts, driver changes, public API/export changes, RG default changes,
-  automatic pruning, spectral-guard implementation, MWG/IDA convention
-  changes, full HF, dense Vee/solver work, Cr2 full Hamiltonian, Cr2 artifact,
-  or Cr2-specific workflow.
+- `HP-RG-INJECT-AUDIT-01` is completed historical measurement and carries no
+  active execution permission.
 - `HP-RG-INJECT-FN-01` approves only the historical default-off direct
-  `G`-injection implementation of the injection-plus-RG hybrid in
-  `src/cartesian_residual_gaussians/`:
-  `residual_basis.jl`, `augmented_operators.jl`, and `mwg_interaction.jl`;
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` is
-  allowed only for narrow internal keyword plumbing, same-construction
-  validation, and compatibility wiring. The source path may classify
-  owner-local principal modes, globally merge injected modes, construct a
-  replacement base sector `F`, transform exact one-body operators into
-  `[F, R]`, and inherit gausslet-sector IDA for injected directions. It must
-  preserve current behavior when `residual_injection_cutoff <= 0`. It does not
-  approve default-on injection, driver input, public API/export changes,
-  artifact schema/provenance/reader/manifest changes, injection-enabled
-  artifact writing, MWG channels for injected directions, global residual
-  selection, spectral pruning, full HF, dense Vee/solver work, Cr2 artifact or
-  workflow, route/shellification/raw-block changes, or committed tests.
-  This remains a preservation-only compatibility contract for live
-  default-off code; it is not authority to extend that algorithm or substitute
-  it for the occupied-first/protected-main direction.
+  `G`-injection compatibility implementation governed by
+  `residual_gaussian_injection_hybrid.md`. Disabled behavior is invariant;
+  enabled operation remains in memory, uses replacement rather than append,
+  and never gives injected directions MWG residual channels. This
+  preservation-only authority does not permit feature expansion, defaults,
+  artifacts, public/driver/solver workflow, spectral pruning, or substitution
+  for occupied-first/protected-main construction.
 - `HP-RG-OCC-FIRST-INJECT-FN-01` and
   `HP-RG-OCC-FIRST-INJECT-TEST-01` authorize only the implemented helper
   governed by
