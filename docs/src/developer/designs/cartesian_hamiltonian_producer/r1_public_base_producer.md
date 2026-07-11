@@ -1,56 +1,35 @@
 # R1 Public Base Producer
 
-Status: approved design amendment for first R1 implementation. The later
-`r1_one_center_base_atoms.md` amendment relaxes the one-center base atom scope
-from H-only to explicit origin-centered all-electron atoms; this document
-remains the baseline R1 H/H2 contract.
+Status: implemented exported public facade for unsupplemented, uncorrected,
+all-electron Cartesian IDA Hamiltonians. This page is the canonical facade,
+input, composition, and base-producer provenance contract.
 
-This document defines the minimal public base Cartesian Hamiltonian producer
-for first H/H2 use. It approves only the R1 IDs listed below and only within
-the scope recorded in `registry.md`. It does not approve tools, driver edits,
-new report fields, new artifact formats, broad public-driver polish, or
-implementation outside these IDs.
+## Owned IDs
 
-## Approved IDs
+- `HP-R1-FILE-01` - implemented public producer source owner;
+- `HP-R1-FN-01` - implemented exported facade;
+- `HP-R1-CORE-FN-01` - implemented public near-nucleus spacing convention;
+- `HP-R1-WIRE-01` - implemented report-free staged composition;
+- `HP-R1-ART-01` - implemented base-producer provenance sidecar;
+- `HP-R1-TEST-01` - implemented standalone public endpoint gate.
 
-- `HP-R1-FILE-01` - public base producer source file.
-- `HP-R1-FN-01` - public base Hamiltonian producer facade.
-- `HP-R1-WIRE-01` - report-free base producer wiring from the facade to the
-  existing terminal-basis and Hamiltonian construction path.
-- `HP-R1-ART-01` - fixed producer-provenance schema in the final Hamiltonian
-  file.
-- `HP-R1-TEST-01` - small committed public endpoint test/example for the
-  facade.
+Exact lifecycle, permission, source, test, and dependency metadata is recorded
+in [the registry](registry.md).
 
-All five R1 IDs are approved for first implementation in `registry.md`.
+## Meaning Of Base
 
-## Ownership And Export
+`base` means the Hamiltonian before Gaussian supplements, screened-Hartree or
+other corrections, fragment/counterpoise changes, and solver processing. The
+output uses the terminal Cartesian basis, exact assembled one-body matrices,
+and the producer's localized IDA electron-electron matrix.
 
-Approved owner: top-level `GaussletBases` public API.
+Supplements, corrected Hamiltonians, ECPs, arbitrary molecular geometry, and
+solver workflows are separate contracts. They must not be added by redefining
+this facade.
 
-Approved source file:
+## Public Interface
 
-```text
-src/cartesian_base_hamiltonian.jl
-```
-
-`cartesian_base_hamiltonian` should be exported from `src/GaussletBases.jl`.
-No other public symbol is approved by this R1 design.
-
-The name "base" is permanent terminology in this design: it means
-unsupplemented, uncorrected, all-electron localized-IDA Hamiltonian
-construction. Supplements, corrections, fragments, counterpoise, solver
-handoff, and non-base Hamiltonians are separate roadmap lanes. If a later API
-absorbs those directly, it should be a broader API such as
-`cartesian_hamiltonian`, not a redefinition of this base facade.
-
-The source file may use existing internal driver helpers, but it must not make
-those helpers public API and must not expose route-stage vocabulary in the
-public call shape.
-
-## Public Call Shape
-
-The approved public entry point is a single function:
+The function is exported from `GaussletBases`:
 
 ```julia
 cartesian_base_hamiltonian(
@@ -60,571 +39,252 @@ cartesian_base_hamiltonian(
 )::CartesianIDAHamiltonian{Float64}
 ```
 
-The function returns the existing `CartesianIDAHamiltonian{Float64}` directly.
-It must not return a wrapper, status object, materialization payload, report
-mirror, or `(value, status)` pair.
-
-The first implementation scope was origin-centered base H and Cartesian z-axis
-aligned base H2. `HP-R1-ATOM-*` separately approves explicit origin-centered
-all-electron one-center atoms through the same base facade and shared
-atom/diatomic producer machinery. X/y-aligned diatomics, generally oriented
-molecules, translated atoms, WL/QW unification, supplements, corrections,
-solver handoff, and Cr2-scale performance remain later roadmap lanes unless
-separately approved.
-
-## Input Shape
-
-All public inputs are plain `NamedTuple` groups. This design does not
-introduce public input structs, builder objects, config payloads, or keyword
-field clouds attached to intermediate stages.
-
-Unknown keys in public input groups must throw `ArgumentError`. The facade must
-normalize accepted public inputs immediately into fixed internal data and must
-not carry arbitrary public `NamedTuple` shapes through the staged
-implementation.
-
-`system` is a `NamedTuple`. Center-sized collections must be vectors or other
-`AbstractVector` values, not variable-size tuples.
-
-Required fields for first H/H2 scope:
-
-- `atom_symbols::AbstractVector`
-- `nuclear_charges::AbstractVector{<:Real}`
-- `atom_locations::AbstractVector{<:NTuple{3}}`
-- `nup`
-- `ndn`
-
-No optional `system` fields are part of the R1 public contract. Bond length is
-derived from `atom_locations`; the bond axis must be Cartesian `z` in R1.
-`map_backend` is a construction choice, not physical-system data, and is not
-public in R1.
-
-Scalar and collection validation rules:
-
-- `q` must be a positive integer;
-- `core_spacing`, `reference_spacing`, `tail_spacing`, `radius`,
-  `xmax_parallel`, and `xmax_transverse` must be finite and positive when
-  present;
-- all coordinates and nuclear charges must be finite;
-- first H/H2 scope supports only symbols and charges consistent with hydrogen
-  nuclei; `HP-R1-ATOM-*` separately relaxes one-center atoms to explicit
-  origin-centered all-electron inputs without element lookup;
-- `nup` and `ndn` must be nonnegative integers and must give the supported
-  total electron count for the requested H or H2 system;
-- one-center H must be at `(0.0, 0.0, 0.0)`;
-- z-axis H2 centers must have finite `x == 0`, finite `y == 0`, and distinct
-  finite `z` coordinates.
-
-`basis` is a `NamedTuple`.
-
-Required common fields:
-
-- `ns`
-- `core_spacing`
-
-Conditional fields:
-
-- one-center H requires:
-  - `radius`
-- z-axis H2 requires:
-  - `xmax_parallel`
-  - `xmax_transverse`
-
-`HP-COMP-NS-FN-01` amends the public size field. Durable public examples should
-use `ns`, the requested cube/source/nesting size. Route-local `q` is derived
-after selecting `nesting`: `q = ns` for `nesting = :pqs`, and `q = ns - 2` for
-`nesting = :wl`. Legacy public `q` may remain temporarily only as
-compatibility, with consistency checks when both `ns` and `q` are supplied.
-
-`HP-COMP-ATOMBOX-FN-01` amends the one-center atom sizing contract: `radius`
-is the public physical box extent authority for one-center atoms, and parent
-axis counts must be derived from that extent plus `core_spacing` / the existing
-spacing policy. `ns` remains source/nesting resolution metadata and must not be
-interpreted as the direct parent side-count rule.
-
-Optional public fields with R1 defaults:
-
-- `parent_axis_family = :G10`
-- `reference_spacing = 1.0`
-- `tail_spacing = 10.0`
-
-The reviewed R1 one-center H endpoint uses explicit public
-`core_spacing = 0.3` plus the general `reference_spacing = 1.0` default.
-Public `d` is deprecated and is not part of the durable producer contract.
-If a temporary compatibility path accepts `d`, it must require
-`d == resolved core_spacing`; mismatches must throw `ArgumentError`.
-
-Fixed private choices in R1:
-
-- `method = :pqs_source_box`
-- `q_to_core_spacing_rule = :standard_pqs_ns_equals_q` for PQS after
-  normalizing public `ns`
-- `parent_axis_bundle_backend = :pgdg_localized_experimental`
-
-The current private H2 setup still needs an internal radius-like domain value.
-The public z-axis H2 facade must derive that private value as
-`max(xmax_parallel, xmax_transverse)`. This derived value is not a public
-`basis` field.
-
-One-center H private wiring:
+Implementation owner:
 
 ```text
-spacing_inputs.reference_spacing = basis.reference_spacing
-parent_inputs.parent_mapping_rule = :white_lindsey_atomic_mapping
-parent_inputs.parent_mapping_d = resolved basis.core_spacing
+src/cartesian_base_hamiltonian.jl
 ```
 
-`core_spacing` is the authoritative public near-core physical spacing. In the
-White-Lindsey atom mapping, the internal `parent_mapping_d` is this same
-resolved physical scale. The `Z` dependence is the mapping-shape rule
-`core_range = sqrt(core_spacing / Z)` and
-`mapping_strength = sqrt(core_spacing * Z)`, not a second public knob.
-`reference_spacing`, `tail_spacing`, and box/domain controls remain separate
-concepts. The facade must not accept public `parent_mapping_d`. Later
-`HP-PQS-MAP-SFACTOR-*` approves only the expert scalar `s_factor` as a narrow
-mapping-strength override; it does not revive public `d` or
-`parent_mapping_d`.
-
-These are not public keywords or accepted `basis` fields in R1:
-
-- `n_s`
-- `q` in durable public examples after `HP-COMP-NS-FN-01`
-- `bond_axis`
-- `bond_length`
-- `map_backend`
-- `parent_axis_counts`
-- `parent_axis_bundle_backend`
-- `parent_mapping_rule`
-- `parent_mapping_Z`
-- `parent_mapping_d`
-- `d` in durable public examples
-
-`xmax_parallel` and `xmax_transverse` are accepted only for z-axis H2.
-They are unknown keys for one-center H. Public `d` is deprecated; if
-temporarily accepted for one-center H, it must equal resolved `core_spacing`,
-and it remains an unknown key for z-axis H2.
-
-Routing is implicit. One supported center selects the one-center base route.
-Two supported centers must be z-axis H2 and select the z-axis diatomic base
-route. R1 performs no translation or rotation. Cartesian x/y alignment and
-arbitrary molecular orientation must throw `ArgumentError` and are deferred.
-R1 has no public `method`, `route`, or output group selector. New method or
-route keywords should wait until R2 or later provides a second real public
-method.
-
-No basis artifact, TSV, report artifact, or output group is part of this base
-R1 contract.
-
-## First Public Examples
-
-One-center H:
-
-```julia
-h_system = (;
-    atom_symbols = ["H"],
-    nuclear_charges = [1.0],
-    atom_locations = [(0.0, 0.0, 0.0)],
-    nup = 1,
-    ndn = 0,
-)
-
-h_basis = (;
-    ns = 5,
-    core_spacing = 0.3,
-    radius = 4.0,
-    reference_spacing = 1.0,
-)
-
-h_ham = cartesian_base_hamiltonian(h_system; basis = h_basis)
-```
-
-Z-axis H2:
-
-```julia
-h2_system = (;
-    atom_symbols = ["H", "H"],
-    nuclear_charges = [1.0, 1.0],
-    atom_locations = [(0.0, 0.0, -2.0), (0.0, 0.0, 2.0)],
-    nup = 1,
-    ndn = 1,
-)
-
-h2_basis = (;
-    ns = 5,
-    core_spacing = 0.5,
-    xmax_parallel = 6.0,
-    xmax_transverse = 4.0,
-)
-
-h2_ham = cartesian_base_hamiltonian(
-    h2_system;
-    basis = h2_basis,
-    hamfile = "h2_cartesian_ida_hamiltonian.jld2",
-)
-```
-
-The examples intentionally do not call `cartesian_pair_terms`,
-`cartesian_assembly`, `cartesian_report`, or route-internal fixture controls.
-
-## Output And Artifact Contract
-
-The output is the existing `CartesianIDAHamiltonian{Float64}`.
-
-If `hamfile !== nothing`, the implementation must use
-`write_cartesian_ida_hamiltonian(hamfile, ham)` after constructing the
-Hamiltonian and still return `ham`. If `hamfile` is `nothing`, no artifact is
-written. If `hamfile` is an empty string, the facade must throw `ArgumentError`
-before writing. Parent-directory and file-system errors from the existing
-writer should propagate normally.
-
-The production facade must not automatically read back the artifact after
-writing. `read_cartesian_ida_hamiltonian` is for validation and users.
-
-## Artifact Provenance Schema
-
-`HP-R1-ART-01` amends the artifact contract narrowly: when
-`hamfile !== nothing`, the final Hamiltonian file must also preserve a fixed,
-versioned producer-provenance record for consumers. The existing Hamiltonian
-matrix payload remains the existing writer/readback payload; R1 provenance is
-additional data in the same file, not a separate artifact or report.
-
-Approved JLD2 provenance key prefix:
+Export/include owner:
 
 ```text
-producer_provenance/
+src/GaussletBases.jl
 ```
 
-Approved common keys:
+The return is the existing `CartesianIDAHamiltonian{Float64}` directly. The
+facade never returns a wrapper, status object, report, payload, or partial
+result.
 
-| Key | Value |
+## System Input
+
+`system` must contain exactly:
+
+- `atom_symbols::AbstractVector`;
+- `nuclear_charges::AbstractVector`;
+- `atom_locations::AbstractVector`;
+- `nup`;
+- `ndn`.
+
+Center collections must have equal lengths. Each location is a fixed
+three-element tuple with finite coordinates. Nuclear charges are converted to
+`Float64` and must be finite and positive. `nup` and `ndn` must be nonnegative
+integers and may not be `Bool`. Unknown or missing keys fail.
+
+### One-Center Atom
+
+The implemented atom scope is:
+
+- exactly one center at `(0.0, 0.0, 0.0)`;
+- integer-valued positive nuclear charge;
+- neutral all-electron count, `nup + ndn == nuclear_charge`;
+- atom symbol used as an explicit provenance label, not as charge, electron,
+  basis, or ECP authority.
+
+The broader atom rationale and exclusions are canonical in
+[R1 one-center base atoms](r1_one_center_base_atoms.md).
+
+### Homonuclear Z-Axis Diatomic
+
+The implemented molecular scope is:
+
+- exactly two centers;
+- equal atom-symbol labels and equal integer-valued positive charges;
+- both centers on the Cartesian z axis with distinct finite z coordinates;
+- neutral all-electron count equal to twice the per-center charge.
+
+There is no translation or rotation step. Heteronuclear, x/y-aligned,
+shifted-parallel, generally oriented, charged, or ECP systems fail validation.
+
+## Basis Input
+
+`basis` is a plain `NamedTuple`. It must contain `core_spacing` and at least one
+of `ns` or legacy-compatible `q`. Size values must be positive integers and
+may not be `Bool`.
+
+Geometry-specific required fields:
+
+| System | Required extent fields |
 | --- | --- |
-| `producer_provenance/provenance_version` | `1` |
-| `producer_provenance/producer` | `:cartesian_base_hamiltonian` |
-| `producer_provenance/nesting` | public construction family, `:pqs` or `:wl` |
-| `producer_provenance/route` | truthful base route label derived from `(input.kind, input.nesting)` |
-| `producer_provenance/ns` | normalized public requested cube/source/nesting size |
-| `producer_provenance/q` | derived route-local `q` consumed by route construction |
-| `producer_provenance/q_rule` | `:pqs_ns_equals_q` or `:wl_ns_minus_2` |
-| `producer_provenance/ns_source` | `:public_ns` or `:legacy_q_compatibility` |
-| `producer_provenance/core_spacing` | public `basis.core_spacing::Float64` |
-| `producer_provenance/reference_spacing` | resolved public `basis.reference_spacing::Float64` |
-| `producer_provenance/tail_spacing` | resolved public `basis.tail_spacing::Float64` |
-| `producer_provenance/parent_axis_family` | resolved public `basis.parent_axis_family::Symbol` |
-| `producer_provenance/parent_axis_counts` | realized `NTuple{3,Int}` |
-| `producer_provenance/mapping_kind` | route mapping symbol |
-| `producer_provenance/mapping_d` | `Float64` for one-center atoms, `nothing` for z-axis diatomics |
-| `producer_provenance/radius` | `Float64` for one-center atoms, `nothing` for z-axis diatomics |
-| `producer_provenance/xmax_parallel` | `nothing` for one-center atoms, `Float64` for z-axis diatomics |
-| `producer_provenance/xmax_transverse` | `nothing` for one-center atoms, `Float64` for z-axis diatomics |
-| `producer_provenance/atom_symbols` | `Vector{String}` |
-| `producer_provenance/nuclear_charges` | `Vector{Float64}` |
-| `producer_provenance/atom_locations` | `Matrix{Float64}` with one row per center |
-| `producer_provenance/nup` | `Int` |
-| `producer_provenance/ndn` | `Int` |
-| `producer_provenance/final_dimension` | `Int` |
+| one-center atom | `radius` |
+| z-axis diatomic | `xmax_parallel`, `xmax_transverse` |
 
-Route-specific values:
+All spacings and extents must be finite and positive.
 
-- one-center H or explicit one-center atom with `nesting = :pqs`:
-  - `producer_provenance/route = :one_center_pqs_base`
-  - `producer_provenance/nesting = :pqs`
-  - `producer_provenance/mapping_kind = :white_lindsey_atomic_mapping`
-  - `producer_provenance/mapping_d = resolved basis.core_spacing`
-  - `producer_provenance/radius = basis.radius`
-  - `producer_provenance/xmax_parallel = nothing`
-  - `producer_provenance/xmax_transverse = nothing`
-- one-center H or explicit one-center atom with `nesting = :wl`:
-  - `producer_provenance/route = :one_center_wl_base`
-  - `producer_provenance/nesting = :wl`
-  - `producer_provenance/mapping_kind = :white_lindsey_atomic_mapping`
-  - `producer_provenance/mapping_d = resolved basis.core_spacing`
-  - `producer_provenance/radius = basis.radius`
-  - `producer_provenance/xmax_parallel = nothing`
-  - `producer_provenance/xmax_transverse = nothing`
-- z-axis H2, or explicit homonuclear z-axis all-electron diatomic after
-  `HP-COMP-BASEDIAT-FN-01`, with `nesting = :pqs`:
-  - `producer_provenance/route = :z_axis_diatomic_pqs_base`
-  - `producer_provenance/nesting = :pqs`
-  - `producer_provenance/mapping_kind = :multicenter_pqs_mapping`
-  - `producer_provenance/mapping_d = nothing`
-  - `producer_provenance/radius = nothing`
-  - `producer_provenance/xmax_parallel = basis.xmax_parallel`
-  - `producer_provenance/xmax_transverse = basis.xmax_transverse`
-- z-axis H2, or explicit homonuclear z-axis all-electron diatomic after
-  `HP-COMP-BASEDIAT-FN-01`, with `nesting = :wl`, after
-  `HP-COMP-WLDIAT-FN-01` succeeds:
-  - `producer_provenance/route = :z_axis_diatomic_wl_base`
-  - `producer_provenance/nesting = :wl`
-  - `producer_provenance/mapping_kind = resolved WL diatomic parent mapping symbol`
-  - `producer_provenance/mapping_d = nothing`
-  - `producer_provenance/radius = nothing`
-  - `producer_provenance/xmax_parallel = basis.xmax_parallel`
-  - `producer_provenance/xmax_transverse = basis.xmax_transverse`
+Implemented optional fields and defaults:
 
-The `:z_axis_diatomic_wl_base` value is a truthful route-label value under the
-existing schema, not an artifact schema change. It may be written only after the
-WL z-axis diatomic base path succeeds under `HP-COMP-WLDIAT-FN-01` /
-`HP-COMP-WLDIAT-TEST-01`. Unsupported `(kind, nesting)` combinations must throw
-before artifact writing rather than writing a PQS-oriented route label.
-
-`format_version` for the existing Cartesian IDA Hamiltonian matrix payload is
-not changed by R1. Existing `read_cartesian_ida_hamiltonian` must continue to
-read the Hamiltonian matrices while ignoring the provenance keys. Validation
-may inspect the `producer_provenance/` keys directly. A public provenance
-reader, a separate manifest, or a new Hamiltonian wrapper requires another
-design amendment.
-
-The provenance is for consumer tracking. It must not be consumed by downstream
-construction stages after initial lattice/parent setup, and it must not become
-a report, status object, wrapper payload, separate manifest, or second artifact
-file.
-
-This design does not approve:
-
-- a new artifact file shape beyond the `HP-R1-ART-01`
-  `producer_provenance/` keys stored in the final Hamiltonian file;
-- a new artifact manifest;
-- a separate basis/provenance artifact;
-- a new materialization wrapper;
-- durable status/result-kind fields.
-
-## Error Behavior
-
-Unsupported or malformed public requests must throw clear exceptions, normally
-`ArgumentError` for input validation failures:
-
-- missing required `system` or `basis` fields;
-- unknown `system` or `basis` fields;
-- unsupported atom count, route geometry, or unsupported system in the active
-  R1/R1-atom scope;
-- non-z-axis diatomic geometry, including x/y-aligned or generally oriented
-  diatomics;
-- inconsistent field lengths for symbols, charges, positions, or electron
-  counts;
-- nonpositive or nonfinite spacing, radius, extent, coordinate, or charge
-  values;
-- unsupported electron counts, including non-neutral all-electron diatomics;
-- empty `hamfile`;
-- center-sized tuple inventories for atom symbols, charges, or locations.
-
-The facade must not return status objects, readiness summaries, blocker
-symbols, `nothing`, or partial payloads for unsupported public requests.
-Internal numerical construction errors may propagate after validation.
-
-## Public Workflow
-
-The recommended public workflow is:
-
-```text
-system / specification
--> parent and route geometry
--> terminal basis realization
--> Hamiltonian production
--> optional existing Hamiltonian artifact
-```
-
-`cartesian_pair_terms` and `cartesian_assembly` are absent from the recommended
-public base workflow. They may remain temporarily for legacy script and report
-compatibility, but R1 public documentation and examples must not teach users to
-call them for base Hamiltonian construction.
-
-## Mapping From Current Private Driver
-
-The current private driver and harness group inputs like this:
-
-| Current private group | R1 public input |
+| Field | Default / rule |
 | --- | --- |
-| `system_inputs` | `system` |
-| `spacing_inputs` and `parent_inputs` | `basis` subset plus fixed R1 defaults/private choices |
-| `route_inputs` | fixed internally to base PQS with geometry-inferred route |
-| `materialization_inputs` | `hamfile` keyword only |
-| `save_inputs`, TSV/report options | not part of the minimal base producer |
+| `parent_axis_family` | `:G10`; no other family is accepted |
+| `reference_spacing` | `1.0` |
+| `tail_spacing` | `10.0` |
+| `nesting` | `:pqs`; accepted values are `:pqs` and `:wl` |
+| `source_span` | `:ordinary`; `:mapped_comx` is PQS-only |
+| `s_factor` | `1.0`, finite and positive |
+| `coulomb_accuracy` | `:compact`; current source also accepts `:high` |
 
-The old route-driver execution spine was:
+`nesting`, `source_span`, and `coulomb_accuracy` may be supplied as symbols or
+strings and are normalized to symbols before construction.
 
-```text
-cartesian_system
--> cartesian_recipe
--> cartesian_parent
--> cartesian_shells
--> cartesian_units
--> cartesian_transforms
--> cartesian_pair_terms
--> cartesian_assembly
--> cartesian_report
--> cartesian_materialization
-```
+Public `ns` and route-local `q` semantics belong to
+[nesting and supplement composition](nesting_supplement_composition_plan.md).
+Durable calls use `ns`; `q` remains a compatibility input. When both are
+present, `q` must match the value derived from `ns` and `nesting`.
 
-`cartesian_materialization` and the paired route-driver print/save wrappers
-were removed by `e2e164e9b` under the completed `HP-RETIRE-DRV-MAT-*` lane. Do
-not copy this old spine into the canonical driver or future public workflow.
+`core_spacing` is the one public near-nucleus physical scale. It is not
+`reference_spacing`, box extent, or a hidden element default. One-center
+mapping uses the resolved `core_spacing` as its internal mapping `d`.
 
-The R1 facade should instead map to:
+Public `d` is deprecated compatibility input for one-center atoms only. If
+present, it must be finite, positive, and exactly equal to `core_spacing`.
+Diatomics reject `d`; public `parent_mapping_d` is unsupported. The expert
+mapping-strength exception is separately canonical in
+[PQS mapping `s_factor`](pqs_mapping_s_factor.md).
 
-```text
-cartesian_system / recipe / parent / shells / units
--> cartesian_transforms
--> terminal_basis_realization
--> shared base Hamiltonian constructor
--> optional write_cartesian_ida_hamiltonian
-```
+The complete three-tier `:compact | :standard | :high` design belongs to
+[Coulomb accuracy policy](coulomb_accuracy_policy.md). At the Pass 378 source
+baseline, this facade still validates only `:compact | :high`; `:standard` is
+approved there but has not yet landed in `src/cartesian_base_hamiltonian.jl`.
+This R1 reconciliation does not change that implementation lifecycle.
 
-The direct dependency to remove is report recovery through
-`cartesian_assembly`: today `cartesian_report` recovers `route_skeleton` and a
-low-order shellification summary from `cartesian_assembly`. R1 must not add a
-new base consumer of `cartesian_pair_terms` or `cartesian_assembly` just to feed
-that report dependency. The implementation must either use a report-free base
-materialization boundary or narrow existing report construction without adding
-new report field clouds.
+Unknown basis keys, invalid types, incompatible geometry-specific fields, and
+unsupported policy combinations fail rather than being ignored.
 
-## Report-Free Shared Constructor Seam
+## Report-Free Composition
 
-`HP-R1-WIRE-01` owns one private shared constructor seam:
-
-```julia
-_cartesian_base_ida_hamiltonian(
-    terminal_basis_realization,
-    parent_axis_bundle_object,
-    atom_locations::Vector{NTuple{3,Float64}},
-    nuclear_charges::Vector{Float64},
-    nup::Int,
-    ndn::Int,
-)::CartesianIDAHamiltonian{Float64}
-```
-
-Later authority `HP-PQS-COULOMB-ACCURACY-FN-01` supersedes the implicit
-expansion part of this signature. A focused caller scan should delete this
-helper if it is no longer live. If it remains live, it must receive the
-already-resolved `CoulombGaussianExpansion` explicitly and must not select
-compact accuracy internally.
-
-Approved owner file:
+The facade uses the current staged producer, without route reports or old
+pair/assembly materialization wrappers:
 
 ```text
-src/pqs_source_box_low_order_materialization.jl
+cartesian_base_working_basis
+-> cartesian_base_products
+-> cartesian_base_unit_nuclear
+-> cartesian_base_vee
+-> cartesian_base_hamiltonian_assembly
+-> optional base artifact write
 ```
 
-This PQS-named owner is acceptable for the explicitly PQS-only R1 migration.
-It is not permanent method-neutral ownership for R2.
+One resolved input and Coulomb expansion are carried through the parent,
+terminal basis, one-body, unit-nuclear, and IDA interaction construction. The
+assembly returns the existing Hamiltonian with explicit charges, positions,
+and electron counts.
 
-Allowed caller files:
+Numerical terminal realization, blockwise one-body construction, localized
+IDA, and Hamiltonian assembly are canonical in
+[Terminal basis and base assembly](terminal_basis_and_base_assembly.md). This
+facade does not duplicate those algorithms or expose their internal objects.
 
-- `src/pqs_source_box_low_order_materialization.jl`
-- `src/cartesian_base_hamiltonian.jl`
+## Artifact Behavior
 
-The existing report-bound materialization path and the new public facade should
-call this same private constructor. The implementation should move the current
-K/unit-`U_A`/localized-IDA/`CartesianIDAHamiltonian` orchestration behind this
-seam and delete the duplicated report-bound numerical orchestration it
-replaces. It must not fabricate a private report object, duplicate the
-Hamiltonian builder in the new public file, or leave two parallel base
-Hamiltonian construction paths.
+If `hamfile === nothing`, no file is written. A nonempty path writes the
+existing version-1 `:cartesian_ida_hamiltonian` artifact and the facade still
+returns the same in-memory Hamiltonian. Empty paths fail; file-system errors
+propagate normally. Production does not require readback.
 
-## Validation Gates For First Implementation
+The minimal matrix payload and `read_cartesian_ida_hamiltonian(...)` are owned
+by `src/cartesian_ida_hamiltonian.jl`. The reader reconstructs the Hamiltonian
+from its standard matrix and physical metadata keys and ignores additional
+provenance groups.
 
-First implementation must validate:
+### `producer_provenance/`
 
-- package load;
-- H base Hamiltonian construction through the public facade with a reviewed
-  one-center H system, explicit `core_spacing = 0.3`, and
-  `reference_spacing = 1.0`;
-- H2 base Hamiltonian construction through the public facade;
-- returned type is `CartesianIDAHamiltonian{Float64}`;
-- H one-body baseline remains `-0.49855234726272035` within `1.0e-10` for the
-  `core_spacing = 0.3`, `reference_spacing = 1.0` public example;
-- H2 final dimension remains `471`;
-- H2 `one_body_hamiltonian(ham)` lowest value remains
-  `-0.79460371733658908` within reviewed tolerance;
-- H2 localized IDA self-Coulomb remains `0.4569117646737212` within reviewed
-  tolerance;
-- `K`, every unit `U_A`, and `V` are finite and symmetric within reviewed
-  tolerance;
-- invalid public requests throw clear `ArgumentError`s rather than returning
-  status/blocker objects;
-- unknown public input keys throw `ArgumentError`;
-- temporary `d` for one-center H, if accepted, must match resolved
-  `core_spacing`; mismatches throw `ArgumentError`;
-- `d` for z-axis H2 throws `ArgumentError`;
-- empty `hamfile` throws `ArgumentError`;
-- non-`nothing` `hamfile` writes with `write_cartesian_ida_hamiltonian`;
-- validation readback with `read_cartesian_ida_hamiltonian` has zero one-body
-  readback delta;
-- artifact validation preserves the fixed `producer_provenance/` keys,
-  including H `core_spacing = 0.3`, `reference_spacing = 1.0`,
-  `mapping_kind = :white_lindsey_atomic_mapping`, and resolved
-  `mapping_d = 0.3`;
-- R0 warm/cold baseline is not materially regressed without explanation;
-- no `cartesian_pair_terms` or `cartesian_assembly` call appears in the
-  recommended public example path.
+`HP-R1-ART-01` owns one fixed base-producer sidecar in the same file. Current
+keys are:
 
-Validation policy decision: ignored validation is not enough for a new public
-facade. `HP-R1-TEST-01` approves one small committed public endpoint
-test/example. The test/example should exercise only the public facade, H/H2
-endpoint facts, and existing Hamiltonian-artifact readback. It must not assert
-route-internal stage fields, status symbols, report mirrors, terminal role
-vocabulary, or pair inventories.
+```text
+provenance_version        producer
+nesting                   route
+ns                        q
+q_rule                    ns_source
+core_spacing              s_factor
+reference_spacing         tail_spacing
+parent_axis_family        parent_axis_counts
+mapping_kind              mapping_d
+mapping_s_factor          mapping_s_standard
+mapping_s_effective       radius
+xmax_parallel             xmax_transverse
+atom_symbols              nuclear_charges
+atom_locations            nup
+ndn                       final_dimension
+```
 
-Approved standalone integration gate:
+`producer` is `:cartesian_base_hamiltonian`. `route` is derived truthfully
+from system kind and nesting. `ns`, `q`, `q_rule`, and `ns_source` preserve the
+public-size normalization. Atom artifacts record
+`:white_lindsey_atomic_mapping`, resolved `mapping_d`, and `radius`; diatomic
+artifacts record `mapping_d = nothing` and their explicit extents.
+
+Mapping-strength provenance records the requested factor, standard value, and
+effective value. The sidecar is consumer provenance only; construction stages
+must not read it back as numerical input.
+
+The broader `hamiltonian_manifest/`, `recipe_provenance/`, and
+`coulomb_expansion/` groups are governed by
+[Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
+and the Coulomb policy. They are not duplicated R1 schemas.
+
+## Library Facade Versus Driver
+
+The public library facade is the function documented above. The human-facing
+canonical driver is the separate script:
+
+```text
+bin/cartesian_ham_builder.jl
+```
+
+The driver owns editable defaults, trusted input-file/override handling,
+terminal due-diligence presentation, coarse stage timing, artifact checks, and
+optional supplemented workflow. It currently calls the same staged producer
+functions directly so timings remain visible. Driver variables are not facade
+keywords, and driver defaults are not hidden library defaults.
+
+Driver authority is canonical in
+[Cartesian driver usability workflow](cartesian_driver_usability_workflow.md).
+
+## Failure Behavior
+
+Malformed public requests throw, normally with `ArgumentError`, before
+expensive construction where practical. This includes:
+
+- missing or unknown keys;
+- non-vector center collections or non-tuple locations;
+- mismatched center counts;
+- nonfinite/nonpositive charges, spacings, or extents;
+- invalid `ns`, `q`, electron counts, geometry, nesting, source span, mapping,
+  or Coulomb policy;
+- translated atoms, unsupported diatomics, mismatched atom `d`, any diatomic
+  `d`, or empty `hamfile`.
+
+Numerical construction and file-system failures propagate. The facade never
+converts failure into `nothing`, readiness flags, blocker symbols, or partial
+artifacts.
+
+## Validation
+
+The committed standalone gate is:
 
 ```text
 test/driver_public/cartesian_base_hamiltonian_runtests.jl
 ```
 
-Invocation:
+It validates the exported facade for one-center H and z-axis H2, direct
+Hamiltonian return, finite/symmetric matrices, endpoint values, compact/high
+Coulomb behavior, atom and molecular geometry rejection, key/type/spacing
+validation, deprecated `d` behavior, artifact write/readback, and base
+producer provenance. The current H2 fixture has final dimension `487`.
 
-```text
-julia --project=. test/driver_public/cartesian_base_hamiltonian_runtests.jl
-```
+This is a focused public integration gate, not default tiny-unit coverage. It
+must not assert private route-stage inventories or teach the human-facing
+driver as the facade implementation.
 
-Cadence: standalone integration/endpoint gate, not default tiny unit coverage.
-Run it when touching the public facade, base producer wiring, Hamiltonian
-artifact writer/reader, or terminal base-Hamiltonian path. `HP-R1-TEST-01` does
-not approve adding this gate to `test/runtests.jl`; a runner edit would require
-explicit repo-manager approval.
+## Non-Goals
 
-Test artifact behavior: use `mktempdir()` for `hamfile` output.
+This contract does not authorize:
 
-The H endpoint test must use the public example's explicit
-`core_spacing = 0.3` with `reference_spacing = 1.0`. It must reject public
-`parent_mapping_d` and any temporary `d` value that differs from resolved
-`core_spacing`.
-
-The test must enforce the R1 geometry contract: x/y-aligned H2,
-shifted-parallel H2, and generally oriented H2 fail with `ArgumentError`
-before expensive construction, while the reviewed z-axis H2 endpoint succeeds.
-
-## Deletion And Shrinkage Targets
-
-The R1 implementation should shrink or quarantine:
-
-- public documentation that teaches pair/assembly stages as required base
-  Hamiltonian workflow;
-- use of `cartesian_pair_terms` and `cartesian_assembly` in the recommended
-  public base path;
-- report-only dependency on `route_skeleton` and low-order shellification
-  summary when it exists only to support base materialization;
-- driver/harness-only materialization options that are not part of the public
-  base producer contract.
-
-Do not delete useful local product-box, 1D factor, terminal-block, or
-term-first contraction kernels merely because their historical file or helper
-name contains "pair". Those kernels remain donor/oracle inventory for R2/R3
-classification.
-
-## Forbidden Additions
-
-The R1 base producer design forbids:
-
-- new payload/result/status wrapper around `CartesianIDAHamiltonian`;
-- new status, blocker, readiness, materialized, or result-kind field clouds;
-- new report fields duplicating terminal bases, matrices, factors, or raw pair
-  tensors;
-- metadata-carried numerical data;
-- new artifact shapes except the approved `HP-R1-ART-01`
-  `producer_provenance/` keys in the final Hamiltonian file;
-- public solver controls;
-- supplement, correction, fragment, counterpoise, or Cr2 stress functionality;
-- broad compatibility adapters that preserve the old pair/assembly story.
-
-If any of these become necessary, stop and write a separate docs-only design
-amendment before source work.
+- supplements, numerical-complete/protected bases, or corrections;
+- solver, RHF/UHF, fragment, counterpoise, ECP, or Cr2 workflow;
+- translated atoms, arbitrary orientation, or heteronuclear molecules;
+- new public symbols, input objects, result wrappers, reports, or status
+  payloads;
+- new artifact kinds, matrix keys, public provenance readers, or schema
+  expansion;
+- mapping, nesting, Coulomb, terminal-basis, or driver policy changes.

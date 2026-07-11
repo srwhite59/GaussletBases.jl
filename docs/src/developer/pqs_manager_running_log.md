@@ -28478,3 +28478,38 @@ Goal advancement / guardrail:
 - MT4 remains parallel: the controlled CR2 numerical-complete measurement is
   unaffected. No residual cutoff, MWG convention, artifact schema, public
   workflow, solver, protected, screened-Hartree, EGOI, or Cr2 authority changed.
+
+## Cartesian Hamiltonian Producer Pass 378 - Canonicalize R1 Public Base Producer
+
+Commit(s):
+- this commit - reconcile and compress the implemented exported base facade.
+
+Summary:
+- Reduced `r1_public_base_producer.md` from `630` to `290` lines and made it
+  the canonical source-backed contract for the exported
+  `cartesian_base_hamiltonian(system; basis, hamfile=nothing)` facade. It now
+  records exact system/basis validation, implemented origin-centered atom and
+  homonuclear z-axis diatomic scope, report-free staged composition, direct
+  `CartesianIDAHamiltonian` return, and all current `producer_provenance/`
+  fields without repeating terminal, mapping, composition, driver, or broader
+  artifact algorithms.
+- Converted the six R1 registry IDs to individual metadata records and reduced
+  startup duplication. Adjacent navigation now distinguishes the library
+  facade from `bin/cartesian_ham_builder.jl`, whose human-facing inputs,
+  due-diligence output, and stage timing remain separately owned.
+
+Validation / evidence:
+- Compared the committed export, exact function signature, input key/default
+  sets, staged functions, artifact writer/readback, provenance values, test
+  fixture, and all in-repo callers. ID-heading, path/link, stale-proposal, and
+  facade/driver-boundary scans, local Documenter, and `git diff --check`
+  passed. No numerical Julia test was run because behavior is unchanged.
+
+Goal advancement / guardrail:
+- MT5: removes `461` net documentation lines before this log entry and closes
+  the pre-implementation R1 story without reopening public behavior.
+- MT4 remains parallel. No source, API, input, default, artifact, mapping,
+  Coulomb, terminal, driver, solver, ECP, supplemented, or Cr2 authority
+  changed. Source still accepts only `:compact | :high`; the approved
+  `:standard` tier remains a separate Coulomb-policy implementation task and
+  is not misrepresented as implemented by this R1 pass.

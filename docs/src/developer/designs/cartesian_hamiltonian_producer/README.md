@@ -14,8 +14,8 @@ Status: the foundational
 is implemented for the internal base path. It owns support-local terminal
 realization, blockwise exact one-body assembly, localized IDA, and direct
 `CartesianIDAHamiltonian` construction. The historical Slice D route-driver
-wrapper is retired. R1 public base
-producer implementation is approved for the H/H2 scope recorded in
+wrapper is retired. The exported R1 public base
+producer is implemented for the atom/diatomic scope recorded in
 `r1_public_base_producer.md`, with a narrow explicit origin-centered
 one-center all-electron atom relaxation recorded in
 `r1_one_center_base_atoms.md`. Residual Gaussian basis,
@@ -269,9 +269,9 @@ ID or subsystem.
 
 ## Contracts, Amendments, And Completed Records
 
-- [R1 public base producer](r1_public_base_producer.md) defines the approved
-  minimal public base Hamiltonian producer surface for first origin-centered H
-  and z-axis H2 implementation.
+- [R1 public base producer](r1_public_base_producer.md) defines the implemented
+  exported base Hamiltonian facade, exact input validation, report-free
+  composition, and base-producer provenance boundary.
 - [R1 one-center base atoms](r1_one_center_base_atoms.md)
   relaxes the one-center base producer from H-only to explicit origin-centered
   all-electron atoms, while requiring atoms and diatomics to share the same

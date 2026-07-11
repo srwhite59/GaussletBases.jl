@@ -2,8 +2,9 @@
 
 Status: approved narrow source authority to relax the one-center base producer
 from hydrogen-only validation to explicit origin-centered all-electron atoms.
-This is not supplemented-atom, translated-atom, ECP, solver, or broad molecule
-authority.
+The implemented facade contract is canonical in
+[R1 public base producer](r1_public_base_producer.md). This is not
+supplemented-atom, translated-atom, ECP, solver, or broad molecule authority.
 
 ## Decision
 

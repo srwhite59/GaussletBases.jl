@@ -709,22 +709,18 @@ route-driver materialization wrapper was removed by `e2e164e9b` and is no
 longer source authority. Do not restore that wrapper, its report/save
 choreography, or compatibility adapters without a new docs-only amendment.
 
-`HP-R1-FILE-01` approves only `src/cartesian_base_hamiltonian.jl`.
-`HP-R1-FN-01` approves only the public `cartesian_base_hamiltonian` facade with
-the approved signature. The reviewed one-center H endpoint uses explicit
-public `core_spacing = 0.3` with `reference_spacing = 1.0`; resolved
-`core_spacing` maps to the private one-center `parent_mapping_d`, while
-`reference_spacing` remains the separate reference-grid spacing. Public `d` is
-deprecated; if temporarily accepted, it must equal resolved `core_spacing`, and
-z-axis H2 rejects `d`. Public `parent_mapping_d` remains unsupported.
-`HP-R1-CORE-FN-01` freezes `core_spacing` as the single public physical
-near-nucleus spacing after explicit input, driver default, or preset
-resolution. White-Lindsey `Z` behavior is an internal mapping-shape/default
-rule, not a second public knob. Driver/project defaults such as
-`core_spacing = 0.3` are allowed only when visible and overrideable; once
-resolved, they are ordinary explicit inputs. Routine correctness tests may
-override driver physics defaults, but any asserted scalar must be tied to the
-exact test input and not described as a physics-default result.
+`HP-R1-FILE-01`, `HP-R1-FN-01`, `HP-R1-CORE-FN-01`, `HP-R1-WIRE-01`,
+`HP-R1-ART-01`, and `HP-R1-TEST-01` are implemented under
+`docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md`.
+The exported facade is
+`cartesian_base_hamiltonian(system; basis, hamfile=nothing)` and returns the
+existing `CartesianIDAHamiltonian{Float64}` directly. Keep plain exact-key
+`NamedTuple` inputs, the implemented origin-centered atom/homonuclear z-axis
+diatomic scope, report-free staged composition, optional existing artifact,
+and fixed `producer_provenance/`. `core_spacing` is the one public
+near-nucleus scale; atom-only compatibility `d` must equal it, diatomics reject
+`d`, and public `parent_mapping_d` remains unsupported. Driver defaults and
+inputs belong to the separate human-facing driver contract.
 `HP-PQS-MAP-SFACTOR-FN-01` and `HP-PQS-MAP-SFACTOR-TEST-01` approve the only
 current public mapping-strength exception: optional positive expert
 `s_factor`, default `1.0`, with one-center
@@ -819,17 +815,6 @@ checks remain strict. An ordinary fitted-potential consistency error is
 reported, not rejected solely because it exceeds `1e-8 Ha`.
 No public workflow, corrected artifact, solver integration, exchange, EGOI,
 source/interaction transform, `C' V C`, or Cr2 production claim is approved.
-`HP-R1-WIRE-01` approves
-only the report-free shared base constructor seam and the approved callers.
-`HP-R1-ART-01` approves only the fixed `producer_provenance/` schema in the
-final Hamiltonian file. `HP-R1-TEST-01` approves only
-`test/driver_public/cartesian_base_hamiltonian_runtests.jl` as a standalone
-integration/endpoint gate. Base R1 scope is origin-centered H, Cartesian
-z-axis H2, and explicit origin-centered all-electron one-center atoms under
-`HP-R1-ATOM-*`. No driver/bin/tool/report/payload/status/pair/assembly public
-workflow expansion is approved, and no artifact expansion is approved except
-the `HP-R1-ART-01` provenance keys.
-
 `HP-R1-ATOM-FN-01` and `HP-R1-ATOM-WIRE-01` relax the one-center base facade in
 `src/cartesian_base_hamiltonian.jl` from H-only validation to explicit
 origin-centered all-electron atoms. The caller must provide vector-valued

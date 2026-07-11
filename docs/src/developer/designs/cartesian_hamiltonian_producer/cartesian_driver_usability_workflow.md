@@ -14,6 +14,12 @@ diagnostics, ladder controls, and provider switches from shaping the production
 implementation. The base and residual-GTO/MWG producer paths are now coherent
 enough that the canonical driver should prove those paths work together.
 
+The driver is not the implementation of the exported library facade. The
+facade's signature, exact `system`/`basis` inputs, and base artifact provenance
+are canonical in [R1 public base producer](r1_public_base_producer.md). This
+page owns only the human-facing script inputs, presentation, and staged timing
+workflow.
+
 Approve `bin/cartesian_ham_builder.jl` as the standard compact, copyable,
 human-facing Cartesian Hamiltonian producer driver. It should follow the
 scientific-driver pattern:

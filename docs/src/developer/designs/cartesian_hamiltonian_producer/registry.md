@@ -1460,111 +1460,71 @@ Return contract:
 - no materialization wrapper, `result_kind`, `materialized`, status mirror, or
   `ida_hamiltonian` field is approved.
 
-## Approved For R1 Implementation
-
-These entries authorize only the R1 public base producer scope recorded in
-`r1_public_base_producer.md`. They do not approve broad driver polish,
-additional routes, new artifact shapes beyond the approved `HP-R1-ART-01`
-`producer_provenance/` keys in the final Hamiltonian file, solver work,
-supplements, corrections, or status/report/payload expansion.
+## Implemented R1 Public Base Producer
 
 ### HP-R1-FILE-01 — public base producer source file
 
-Approved file:
+Lifecycle: implemented. Permission: source maintenance.
 
-```text
-src/cartesian_base_hamiltonian.jl
-```
+Owner/canonical: top-level `GaussletBases` public API;
+[R1 public base producer](r1_public_base_producer.md).
 
-Approved owner: top-level `GaussletBases` public API.
-
-The only new export approved by R1 is `cartesian_base_hamiltonian` from
+Source: `src/cartesian_base_hamiltonian.jl`; export/include wiring in
 `src/GaussletBases.jl`.
+
+Validation: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`.
+
+Dependencies: implemented terminal/base assembly and existing Cartesian IDA
+Hamiltonian object/writer.
+
+Permission: maintain the public base producer in its current owner file and
+the existing `cartesian_base_hamiltonian` export.
+
+Non-goals: new files, exports, result types, driver behavior, supplements,
+corrections, solver work, or artifact expansion.
 
 ### HP-R1-FN-01 — public base Hamiltonian producer facade
 
-Approved public call shape:
+Lifecycle: implemented exported facade. Permission: source maintenance.
 
-```julia
-cartesian_base_hamiltonian(
-    system::NamedTuple;
-    basis::NamedTuple,
-    hamfile::Union{Nothing,AbstractString} = nothing,
-)::CartesianIDAHamiltonian{Float64}
-```
+Owner/canonical: top-level `GaussletBases` public API;
+[R1 public base producer](r1_public_base_producer.md).
 
-Scope:
+Source: `src/cartesian_base_hamiltonian.jl` and export wiring in
+`src/GaussletBases.jl`.
 
-- origin-centered base H and Cartesian z-axis aligned base H2 first;
-- plain `NamedTuple` input groups only;
-- no public `method`, `route`, or output group in R1;
-- `n_s`, bond length, and private H2 radius are derived internally;
-- `core_spacing` is the authoritative physical near-nucleus spacing for each
-  center;
-- public `d` is deprecated and is not part of the durable producer contract;
-- one-center H maps `reference_spacing` and `core_spacing` separately:
-  `spacing_inputs.reference_spacing = basis.reference_spacing`,
-  `parent_inputs.parent_mapping_rule = :white_lindsey_atomic_mapping`, and
-  `parent_inputs.parent_mapping_d = basis.core_spacing`;
-- the reviewed H baseline uses explicit public `core_spacing = 0.3` and
-  `reference_spacing = 1.0`;
-- if a temporary compatibility path accepts public `d`, it must require
-  `d == resolved core_spacing`; z-axis H2 and durable public examples must not
-  use `d`;
-- x/y-aligned diatomics, shifted-parallel diatomics, generally oriented
-  molecules, translation, and rotation are deferred;
-- center-sized public collections must be vectors or other `AbstractVector`
-  values, not variable-size tuples;
-- unknown public input keys throw `ArgumentError`;
-- scalar inputs must be positive and finite where applicable;
-- symbols, charges, coordinates, and electron counts must match the approved
-  H/H2 scope;
-- return the existing `CartesianIDAHamiltonian{Float64}` directly;
-- no wrapper, payload, status object, report mirror, or new artifact shape
-  except the approved `HP-R1-ART-01` `producer_provenance/` keys in the final
-  Hamiltonian file;
-- non-`nothing` `hamfile` writes with existing
-  `write_cartesian_ida_hamiltonian`; production does not automatically
-  read back the artifact.
+Validation: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`.
+
+Dependencies: `HP-R1-CORE-FN-01`, public `ns` normalization, atom/diatomic
+scope contracts, mapping/Coulomb policies, and terminal/base assembly.
+
+Permission: maintain
+`cartesian_base_hamiltonian(system; basis, hamfile=nothing)` with plain
+`NamedTuple` inputs and direct `CartesianIDAHamiltonian{Float64}` return.
+
+Non-goals: public route/method selectors, wrapper payloads, general geometry,
+heteronuclear/ECP inputs, supplements, corrections, solver work, or driver
+input ownership.
 
 ### HP-R1-CORE-FN-01 — unified core-spacing producer contract
 
-Approved source file:
+Lifecycle: implemented. Permission: source maintenance.
 
-```text
-src/cartesian_base_hamiltonian.jl
-```
+Owner/canonical: base input normalization;
+[R1 public base producer](r1_public_base_producer.md).
 
-Approved behavior:
+Source: `src/cartesian_base_hamiltonian.jl`.
 
-- `core_spacing` is the single public physical near-nucleus spacing for each
-  center after explicit input or preset resolution;
-- public `d` is deprecated as a producer field;
-- a temporary compatibility acceptance of `d` may exist only when
-  `d == resolved core_spacing`; mismatches must throw `ArgumentError`;
-- one-center White-Lindsey atom wiring sets
-  `parent_inputs.parent_mapping_d = resolved core_spacing`;
-- the White-Lindsey `Z` dependence is an internal mapping-shape rule:
-  `core_range = sqrt(core_spacing / Z)` and
-  `mapping_strength = sqrt(core_spacing * Z)`;
-- multi-center mappings use the same per-center resolved-core-spacing model
-  before applying the combined/neighbor mapping effects;
-- future automatic presets may derive `core_spacing = core_scale(q or n_s) / Z`
-  or an equivalent fixed `core_spacing * Z` family, but once resolved,
-  `core_spacing` remains the authoritative scale.
-- canonical driver or project-input defaults may choose visible editable values
-  such as `core_spacing = 0.3`; these are explicit resolved inputs, not hidden
-  universal producer defaults, and normal overrides such as quick-test
-  `core_spacing = 0.5` remain allowed.
-- routine correctness tests may override driver physics defaults, but any
-  asserted scalar must be tied to the exact test input and not described as a
-  physics-default result.
+Validation: core-spacing and deprecated-`d` checks in
+`test/driver_public/cartesian_base_hamiltonian_runtests.jl`.
 
-This ID does not approve a public `d`, public `parent_mapping_d`, public
-mapping-strength/range knobs, element-table defaults, ECP behavior, solver
-workflow, artifact schema changes, or source files outside
-`src/cartesian_base_hamiltonian.jl`. `reference_spacing`, `tail_spacing`, and
-physical box padding remain separate concepts.
+Dependencies: one-center mapping and explicit atom/diatomic basis inputs.
+
+Permission: maintain `core_spacing` as the single public near-nucleus physical
+scale and atom-only compatibility `d == core_spacing`.
+
+Non-goals: public `parent_mapping_d`, hidden element defaults, automatic
+tuning, mapping-strength policy, ECP/solver behavior, or artifact changes.
 
 ### HP-PQS-MAP-SFACTOR-FN-01 — expert mapping `s_factor` keyword
 
@@ -1863,62 +1823,27 @@ energy claim is approved.
 
 ### HP-R1-WIRE-01 — report-free base producer wiring
 
-Approved wiring for the R1 public facade:
+Lifecycle: implemented. Permission: source maintenance.
 
-```text
-system / specification
--> parent and route geometry
--> terminal basis realization
--> Hamiltonian production
--> optional existing Hamiltonian artifact
-```
+Owner/canonical: staged base composition in
+`src/cartesian_base_hamiltonian.jl`;
+[R1 public base producer](r1_public_base_producer.md).
 
-The recommended base-public path must not require `cartesian_pair_terms` or
-`cartesian_assembly`. Existing stages may remain temporarily for legacy
-script/report compatibility, but this R1 authority does not approve adding a
-new base-route consumer to either stage.
+Source: `src/cartesian_base_hamiltonian.jl`.
 
-Approved private shared constructor seam:
+Validation: `test/driver_public/cartesian_base_hamiltonian_runtests.jl` and
+downstream terminal/base endpoint gates.
 
-```julia
-_cartesian_base_ida_hamiltonian(
-    terminal_basis_realization,
-    parent_axis_bundle_object,
-    atom_locations::Vector{NTuple{3,Float64}},
-    nuclear_charges::Vector{Float64},
-    nup::Int,
-    ndn::Int,
-)::CartesianIDAHamiltonian{Float64}
-```
+Dependencies: `cartesian_base_working_basis`, staged product/unit-nuclear/Vee
+construction, `cartesian_base_hamiltonian_assembly`, and one carried Coulomb
+expansion.
 
-`HP-PQS-COULOMB-ACCURACY-FN-01` supersedes the implicit expansion part of
-this historical signature. Delete the helper if no live caller remains; if it
-remains live, add the already-resolved `CoulombGaussianExpansion` explicitly.
-The helper must not select compact accuracy internally.
+Permission: maintain the report-free staged path used by the public facade and
+human-facing driver.
 
-Approved owner file:
-
-```text
-src/pqs_source_box_low_order_materialization.jl
-```
-
-This PQS-named owner is acceptable for the explicitly PQS-only R1 migration.
-It is not permanent method-neutral ownership for R2.
-
-Allowed caller files:
-
-- `src/pqs_source_box_low_order_materialization.jl`
-- `src/cartesian_base_hamiltonian.jl`
-
-The existing report-bound materialization path and the new public facade should
-call this same private constructor. The implementation must remove or bypass
-the current report dependency where `cartesian_assembly` exists chiefly to
-supply `route_skeleton` and a low-order shellification summary to
-`cartesian_report`, and delete the duplicated report-bound numerical
-orchestration it replaces. It must not fabricate a private report object,
-duplicate the Hamiltonian builder in the new public file, leave two parallel
-base Hamiltonian construction paths, or replace the dependency with a new
-report field cloud, status payload, or metadata-carried numerical data.
+Non-goals: retired `_cartesian_base_ida_hamiltonian`, pair/assembly reports,
+duplicate Hamiltonian construction, exposed stages, status payloads, or new
+artifact behavior.
 
 ### HP-ROUTE-RECIPE-FN-01 — family-selective route recipe cleanup
 
@@ -2383,87 +2308,47 @@ is approved by this ID.
 
 ### HP-R1-ART-01 — public base producer artifact provenance
 
-Approved artifact extension for R1 public facade writes only. When
-`hamfile !== nothing`, the final Hamiltonian file may add the following JLD2
-keys under `producer_provenance/`:
+Lifecycle: implemented. Permission: source maintenance.
 
-```text
-provenance_version
-producer
-nesting
-route
-ns
-q
-q_rule
-ns_source
-core_spacing
-reference_spacing
-tail_spacing
-parent_axis_family
-parent_axis_counts
-mapping_kind
-mapping_d
-radius
-xmax_parallel
-xmax_transverse
-atom_symbols
-nuclear_charges
-atom_locations
-nup
-ndn
-final_dimension
-```
+Owner/canonical: base artifact composition;
+[R1 public base producer](r1_public_base_producer.md).
 
-Exact values and route-specific `nothing` fields are defined in
-`r1_public_base_producer.md`. For one-center H, the provenance must record
-`core_spacing = 0.3`, `reference_spacing = 1.0`,
-`mapping_kind = :white_lindsey_atomic_mapping`, and
-`mapping_d = 0.3` for the reviewed endpoint. The `mapping_d` provenance value
-is the resolved internal White-Lindsey mapping parameter and equals
-`core_spacing` for one-center atoms; it is not a separate public input.
-`nesting` must record the public construction-family input, and `route` must be
-the truthful base route label derived from `(input.kind, input.nesting)`, not a
-PQS-oriented default string. `ns` records the normalized public requested
-source size. `q` records the derived route-local value consumed by route
-construction, not a common public cube-size knob. `q_rule` records the
-derivation rule, and `ns_source` records whether `ns` came from the new public
-field or a temporary legacy-`q` compatibility path.
-Existing
-`read_cartesian_ida_hamiltonian` must continue reading the Hamiltonian matrices
-while ignoring these extra keys. This ID does not approve a separate manifest,
-provenance file, wrapper object, public provenance reader, status/report
-payload, or use of provenance as staged algorithm data after initial
-lattice/parent construction.
+Source: `src/cartesian_base_hamiltonian.jl`; minimal writer/readback in
+`src/cartesian_ida_hamiltonian.jl`.
+
+Validation: artifact/provenance section of
+`test/driver_public/cartesian_base_hamiltonian_runtests.jl`.
+
+Dependencies: existing version-1 Cartesian IDA artifact and separately owned
+manifest/Coulomb summaries.
+
+Permission: maintain the fixed `producer_provenance/` keys and truthful
+route/size/mapping/system values listed in the canonical R1 contract.
+
+Non-goals: new artifact kinds or matrix keys, separate provenance files,
+public provenance readers, wrappers, algorithm consumption of sidecars, or
+manifest schema expansion.
 
 ### HP-R1-TEST-01 — public base producer endpoint test/example
 
-Approved committed validation surface for R1.
+Lifecycle: implemented validation contract. Permission: validation
+maintenance.
 
-Approved standalone integration gate:
+Owner/canonical: R1 public base producer;
+[R1 public base producer](r1_public_base_producer.md).
 
-```text
-test/driver_public/cartesian_base_hamiltonian_runtests.jl
-```
+Source: no production source permission.
 
-Invocation:
+Validation: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`.
 
-```text
-julia --project=. test/driver_public/cartesian_base_hamiltonian_runtests.jl
-```
+Dependencies: exported facade, existing Hamiltonian writer/readback,
+`producer_provenance/`, and current compact/high Coulomb source behavior.
 
-The test/example should exercise the public facade for one-center H and
-z-axis H2, verify `CartesianIDAHamiltonian{Float64}` output, validate the
-reviewed H baseline using explicit public `core_spacing = 0.3` with
-`reference_spacing = 1.0` and H2 endpoint facts, validate unknown-key and
-malformed input errors including mismatched temporary H `d` and rejected H2
-`d`, validate
-x/y-aligned, shifted-parallel, and generally oriented H2 rejection before
-expensive construction, and validate existing Hamiltonian artifact
-write/readback plus `HP-R1-ART-01` provenance using `mktempdir()`. It is a
-standalone integration/endpoint gate, not ordinary tiny unit coverage, and this
-ID does not approve adding it to `test/runtests.jl`. It must not assert private
-route-stage fields, report mirrors, status/blocker symbols, terminal role
-vocabulary, or pair inventories.
+Permission: maintain the standalone atom/H2 endpoint, malformed-input,
+deprecated-`d`, geometry, matrix, Coulomb, artifact, and provenance checks.
+
+Non-goals: default test-suite wiring, private stage/report assertions, driver
+input tests, supplemented/solver/Cr2 gates, or new source behavior.
 
 ## Approved For R1 One-Center Base Atoms
 

@@ -184,8 +184,10 @@ The canonical RG algorithm contract is
 
 ## Public Boundaries
 
-- R1 public base scope is origin-centered H, Cartesian z-axis H2, and explicit
-  origin-centered all-electron one-center atoms under `HP-R1-ATOM-*`.
+- The implemented R1 facade, exact inputs, and base provenance are canonical in
+  [R1 public base producer](r1_public_base_producer.md). Its scope is
+  origin-centered all-electron one-center atoms and homonuclear Cartesian
+  z-axis diatomics.
 - Atoms and diatomics must share the same base producer workflow after
   geometry/shellification normalization. Do not introduce atom-only
   Hamiltonian builders, materialization paths, route-stage/report/status
