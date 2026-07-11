@@ -28316,3 +28316,37 @@ Carrying-cost note:
 - One canonical contract and compact registry/startup pointers are added. The
   implementation target is at most 180 source lines and no new residual object,
   module, artifact shape, or metadata cloud.
+
+## Cartesian Hamiltonian Producer Pass 374 - Numerical-Complete Residual Implementation
+
+Commit(s):
+- this commit - implement the internal native `M=[G,R_num]` additive-reference
+  member and its bounded validation.
+
+Summary:
+- Reused the existing owner-local residual builder at the explicit
+  `eta_num=1e-10`, ordinary augmented one-body/MWG assembly, packet embedding,
+  placed fitted-potential field, additive density energy, and
+  `ScreenedHartreeCorrection`. The new composition preserves every terminal
+  gausslet and does not construct protected geometry, injection, replacement,
+  or localization.
+- H2 retained `34/34` candidates and padded Be2 retained `42/42`; minimum owner
+  metric eigenvalues were `5.11e-5` and `6.59e-6`. Packet recovery was about
+  `1.3e-15`, and Be2 no-reference/additive `H1` and `Vee` parity was exact.
+  Screened Be2 shifted by `-0.554179 mHa`; both endpoints converged, with no bad
+  residual-weighted low mode.
+
+Validation / review:
+- Doer gates passed package load, misc `59/59`, nested augmented H2 `67/67`,
+  facade `69/69`, the padded Be2 endpoint, due-diligence inspection, and
+  `git diff --check`. Manager reran package load, misc, and nested H2, and
+  reviewed the saved Be2 packet, density, endpoint, and due-diligence tables.
+
+Goal advancement / guardrail:
+- MT4: the source-backed basis-preserving member is ready for the one authorized
+  CR2 fixed imported-density comparison. The fitted-potential mismatch remains
+  reported (`1.286066e-7 Ha` for Be2) and is not hidden by an anchor patch.
+- No default, artifact, public workflow, solver, EGOI, Boys, odd-Gaussian, or
+  protected-path behavior changed. Source added `118` lines and tests `64`,
+  with no new type or duplicated numerical builder. Exact remaining caller is
+  cr2-doer; production/default promotion remains unapproved.

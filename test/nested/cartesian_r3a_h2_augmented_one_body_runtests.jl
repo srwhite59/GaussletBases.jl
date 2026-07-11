@@ -140,6 +140,15 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
           transpose(residual.T_G) * X * residual.T_A +
           transpose(residual.T_A) * transpose(X) * residual.T_G +
           transpose(residual.T_A) * S_AA * residual.T_A
+    numerical_residual = CRG.build_residual_gaussian_basis(
+        basis.final_dimension, X, S_AA, residual.candidate_labels,
+        residual.candidate_centers, residual.candidate_owner_indices;
+        residual_occupation_cutoff = 1.0e-10,
+        residual_injection_cutoff = 0.0,
+        residual_compactness = nothing)
+    numerical_operators = C.pqs_terminal_residual_gto_augmented_operators(
+        basis, parent.parent_axis_bundle_object, parent.parent_basis_object,
+        supplement, numerical_residual, NUCLEI, [1.0, 1.0]; expansion)
 
     @test residual.candidate_labels == EXPECTED_LABELS
     @test Dict(owner => count(==(owner), residual.candidate_owner_indices)
@@ -154,6 +163,26 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     @test maximum(residual.residual_occupations) ≈ 1.2243126230584132e-2 atol = 1.0e-14
     @test norm(residual.T_G + X * residual.T_A, Inf) <= 1.0e-10
     @test norm(RSR - I, Inf) <= 1.0e-10
+    @test numerical_residual.occupation_cutoff == 1.0e-10
+    @test numerical_residual.residual_injection_cutoff == 0.0
+    @test isnothing(numerical_residual.injected_G)
+    @test numerical_residual.residual_dimension == residual.residual_dimension
+    @test numerical_residual.owner_retained_counts == residual.owner_retained_counts
+    @test numerical_residual.T_G == residual.T_G
+    @test numerical_residual.T_A == residual.T_A
+    @test norm(numerical_operators.kinetic - operators.kinetic, Inf) <= 1.0e-10
+    @test maximum(norm(a - b, Inf) for (a, b) in zip(
+        numerical_operators.nuclear_attraction_unit_by_center,
+        operators.nuclear_attraction_unit_by_center)) <= 1.0e-10
+    Y_probe = zeros(Float64, size(S_AA, 1), 1)
+    Y_probe[1] = inv(sqrt(S_AA[1, 1]))
+    represented_probe = CRG.numerical_complete_reference_blocks_in_augmented_basis(
+        numerical_residual, X, S_AA, [Y_probe], [[2.0]])
+    @test represented_probe.diagnostics[1].recovery_loss <= 1.0e-10
+    @test represented_probe.diagnostics[1].gram_error <= 1.0e-10
+    @test represented_probe.diagnostics[1].electron_trace_error <= 1.0e-10
+    @test_throws ArgumentError CRG.numerical_complete_reference_blocks_in_augmented_basis(
+        residual, X, S_AA, [Y_probe], [[2.0]])
 
     for matrix in (
             operators.kinetic,
@@ -185,11 +214,17 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     ham = C.pqs_terminal_residual_gto_augmented_hamiltonian(
         base_ham, basis, parent.parent_axis_bundle_object, residual, operators;
         expansion)
+    numerical_ham = C.pqs_terminal_residual_gto_augmented_hamiltonian(
+        base_ham, basis, parent.parent_axis_bundle_object, numerical_residual,
+        numerical_operators; expansion)
     @test ham isa CartesianIDAHamiltonian{Float64}
     @test size(ham.electron_electron_ida) == (505, 505)
     @test symmetry_error(ham.electron_electron_ida) <= 1.0e-10
     @test norm(ham.electron_electron_ida[1:nG, 1:nG] -
                base_ham.electron_electron_ida, Inf) <= 1.0e-12
+    @test norm(one_body_hamiltonian(numerical_ham) - one_body_hamiltonian(ham), Inf) <= 1.0e-10
+    @test norm(numerical_ham.electron_electron_ida -
+        ham.electron_electron_ida, Inf) <= 1.0e-10
 
     centers, widths = CRG.moment_matched_gaussians(operators, residual)
     pair_terms = CRG._mwg_axis_pairs(parent.parent_axis_bundle_object, expansion,

@@ -40,6 +40,35 @@ using SHA
     @test_throws ArgumentError CRG.protected_occupied_union(S, [1.1 .* Y1, Y2])
 end
 
+@testset "numerical-complete residual metric contract" begin
+    CRG = GaussletBases.CartesianResidualGaussians
+    labels = ["a_s1", "a_s2"]
+    centers = NTuple{3,Float64}[(0.0, 0.0, 0.0), (0.0, 0.0, 0.0)]
+    owners = [1, 1]
+    S_AA = Matrix{Float64}(I, 2, 2)
+    X = Diagonal([sqrt(1.0 - 2.0e-10), 1.0]) |> Matrix
+    residual = CRG.build_residual_gaussian_basis(
+        2, X, S_AA, labels, centers, owners;
+        residual_occupation_cutoff = 1.0e-10,
+        residual_injection_cutoff = 0.0,
+        residual_compactness = nothing)
+    @test residual.candidate_count == 2
+    @test residual.residual_dimension == 1
+    @test residual.residual_occupations[1] > 1.0e-10
+    @test isnothing(residual.injected_G)
+    @test norm(residual.T_G + X * residual.T_A, Inf) <= 1.0e-10
+    @test norm(CRG.residual_gaussian_overlap(
+        residual.T_G, residual.T_A, X, S_AA) - I, Inf) <= 1.0e-10
+
+    malformed_X = copy(X)
+    malformed_X[1, 1] = sqrt(1.0 + 1.0e-6)
+    @test_throws ArgumentError CRG.build_residual_gaussian_basis(
+        2, malformed_X, S_AA, labels, centers, owners;
+        residual_occupation_cutoff = 1.0e-10,
+        residual_injection_cutoff = 0.0,
+        residual_compactness = nothing)
+end
+
 @testset "vendored legacy BasisSets provenance" begin
     path = joinpath(_PROJECT_ROOT, "data", "legacy", "BasisSets")
     text = read(path, String)

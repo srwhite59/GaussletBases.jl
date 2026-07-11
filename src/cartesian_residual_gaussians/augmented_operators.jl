@@ -23,6 +23,53 @@ function transform_augmented_operator(O_GG, O_GA, O_AA, residual)
     return symmetrize_operator(out)
 end
 
+function numerical_complete_reference_blocks_in_augmented_basis(
+    residual, X, S_AA, occupied_blocks, occupations;
+    recovery_atol::Real = 1.0e-10)
+    length(occupied_blocks) == length(occupations) ||
+        throw(DimensionMismatch("occupied block/occupation count mismatch"))
+    tolerance = Float64(recovery_atol)
+    isfinite(tolerance) && tolerance >= 0.0 ||
+        throw(ArgumentError("recovery_atol must be finite and nonnegative"))
+    residual.occupation_cutoff == 1.0e-10 &&
+        residual.residual_injection_cutoff == 0.0 &&
+        isnothing(residual.injected_G) &&
+        isnothing(residual.compact_source_candidate_indices) ||
+        throw(ArgumentError("reference representation requires the numerical-complete residual policy"))
+    nG, nA = residual.base_dimension, residual.candidate_count
+    size(X) == (nG, nA) ||
+        throw(DimensionMismatch("numerical-complete mixed overlap dimension mismatch"))
+    size(S_AA) == (nA, nA) ||
+        throw(DimensionMismatch("numerical-complete supplement overlap dimension mismatch"))
+    coefficient_blocks = Matrix{Float64}[]
+    diagnostics = NamedTuple[]
+    for (block_raw, occupations_raw) in zip(occupied_blocks, occupations)
+        block = Matrix{Float64}(block_raw)
+        occ = Vector{Float64}(occupations_raw)
+        size(block, 1) == nA && size(block, 2) == length(occ) ||
+            throw(DimensionMismatch("occupied packet block dimension mismatch"))
+        all(isfinite, block) && all(isfinite, occ) && all(>=(0.0), occ) ||
+            throw(ArgumentError("occupied packet block and occupations must be finite and nonnegative"))
+        C_G = X * block
+        C_R = transpose(residual.T_G) * C_G +
+            transpose(residual.T_A) * S_AA * block
+        C_M = vcat(C_G, C_R)
+        singulars = Float64[svdvals(C_M)...]
+        recovery_loss = maximum(abs.(1.0 .- singulars))
+        gram_error = norm(transpose(C_M) * C_M - I, Inf)
+        electron_count = dot(occ, vec(sum(abs2, C_M; dims = 1)))
+        expected_electron_count = sum(occ)
+        electron_trace_error = abs(electron_count - expected_electron_count)
+        maximum((recovery_loss, gram_error, electron_trace_error)) <= tolerance ||
+            throw(ArgumentError("numerical-complete occupied packet recovery failed"))
+        push!(coefficient_blocks, C_M)
+        push!(diagnostics, (; recovery_singular_values = singulars, recovery_loss,
+            gram_error, electron_count, expected_electron_count,
+            electron_trace_error))
+    end
+    return (; coefficient_blocks, diagnostics)
+end
+
 function protected_original_fixed_sector_components(geometry)
     T_G, T_A, Z, B = geometry.T_G, geometry.T_A, geometry.Z, geometry.B
     nG, nR, nZ, nM = size(T_G, 1), size(T_A, 2), size(Z, 2), size(B, 1)

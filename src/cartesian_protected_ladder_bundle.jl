@@ -173,6 +173,21 @@ function _plb_compact_residual(inputs, stages)
             residual_compactness = _plb_compactness(inputs)))
 end
 
+function _plb_numerical_complete_residual(inputs, stages)
+    recipe = inputs.recipe
+    return _plb_stage!(stages, "ns$(recipe.ns) numerical-complete residual basis", () ->
+        CartesianResidualGaussians.build_residual_gaussian_basis(
+            inputs.base.terminal_basis.final_dimension,
+            inputs.X, inputs.S_AA, inputs.labels, inputs.centers, inputs.owners;
+            residual_occupation_cutoff = 1.0e-10,
+            residual_injection_cutoff = 0.0,
+            tau_neg_abs = _plb_get(recipe, :tau_neg_abs, 1.0e-12),
+            tau_neg_rel = _plb_get(recipe, :tau_neg_rel, 1.0e-12),
+            tau_merge_abs = _plb_get(recipe, :tau_merge_abs, 1.0e-12),
+            tau_merge_rel = _plb_get(recipe, :tau_merge_rel, 1.0e-12),
+            residual_compactness = nothing))
+end
+
 function _plb_protected_geometry(inputs, residual, stages; occupied_blocks = Matrix{Float64}[])
     recipe = inputs.recipe
     return _plb_stage!(stages, "ns$(recipe.ns) staged protected-original geometry", () ->
@@ -271,6 +286,23 @@ function _plb_build_member(recipe, stages)
     geometry = _plb_protected_geometry(inputs, residual, stages)
     return _plb_finish_member(recipe, inputs, residual, geometry, stages)
 end
+
+function _plb_finish_numerical_complete_member(recipe, inputs, residual, stages)
+    augmented = _plb_augmented(inputs, residual, stages)
+    ham = _plb_stage!(stages, "ns$(recipe.ns) numerical-complete MWG Hamiltonian", () ->
+        cartesian_residual_gto_mwg_hamiltonian_assembly(
+            inputs.base, inputs.ham, inputs.supplement_basis, residual,
+            augmented.products, augmented.unit_nuclear, augmented.vee))
+    H = one_body_hamiltonian(ham)
+    return (; recipe, inputs, residual, augmented, ham,
+        H, V = ham.electron_electron_ida)
+end
+
+function _plb_build_numerical_complete_member(recipe, stages)
+    inputs = _plb_build_inputs(recipe, stages)
+    residual = _plb_numerical_complete_residual(inputs, stages)
+    return _plb_finish_numerical_complete_member(recipe, inputs, residual, stages)
+end
 _plb_reference_embeddings(inputs, placements, stages) = [_plb_stage!(stages,
         "ns$(inputs.recipe.ns) embed reference owner $(placement.owner_index)", () ->
         CartesianReferenceDensity.atomic_reference_packet_occupied_embedding(
@@ -332,6 +364,45 @@ function _plb_build_additive_reference_member(
     reference = (; represented = represented.diagnostics,
         hartree = hartree.diagnostics, energy,
         geometry = geometry.additive_reference)
+    return (; member, correction, reference)
+end
+
+function _plb_build_numerical_complete_additive_reference_member(
+    recipe, stages, placements; correction_options = (;))
+    isempty(placements) && return (;
+        member = _plb_build_numerical_complete_member(recipe, stages),
+        correction = nothing, reference = nothing)
+    inputs = _plb_build_inputs(recipe, stages)
+    residual = _plb_numerical_complete_residual(inputs, stages)
+    embeddings = _plb_reference_embeddings(inputs, placements, stages)
+    member = _plb_finish_numerical_complete_member(
+        recipe, inputs, residual, stages)
+    occupations = [entry.occupations for entry in embeddings]
+    represented = _plb_stage!(stages,
+        "ns$(recipe.ns) represented reference in numerical-complete M", () ->
+        CartesianResidualGaussians.numerical_complete_reference_blocks_in_augmented_basis(
+            residual, inputs.X, inputs.S_AA, [entry.Y for entry in embeddings],
+            occupations))
+    raw = _plb_additive_reference_raw_blocks(inputs, embeddings, stages)
+    J0_M = _plb_stage!(stages,
+        "ns$(recipe.ns) additive reference J0 in numerical-complete M", () ->
+        CartesianResidualGaussians.transform_augmented_operator(
+            raw.summed.GG, raw.summed.GA, raw.summed.AA, residual))
+    energy = _plb_stage!(stages, "ns$(recipe.ns) additive reference density energy", () ->
+        CartesianReferenceDensity.atomic_reference_packet_additive_density_energy(embeddings))
+    correction = _plb_stage!(stages,
+        "ns$(recipe.ns) numerical-complete screened-Hartree correction", () ->
+        CartesianReferenceDensity.build_additive_screened_hartree_correction(
+            member.V, J0_M, energy.total, represented.coefficient_blocks, occupations;
+            packets = [entry.packet for entry in embeddings],
+            component_field_expectations = raw.component_field_expectations,
+            density_pair_energies = energy.pair_energies,
+            correction_options...))
+    mapping = [(; owner_index = entry.owner_index, center = entry.center,
+        overlap_mapping = entry.overlap_mapping) for entry in embeddings]
+    reference = (; represented = represented.diagnostics, mapping, energy,
+        hartree = (; symmetry_error = norm(J0_M - transpose(J0_M), Inf),
+            finite = all(isfinite, J0_M)))
     return (; member, correction, reference)
 end
 
