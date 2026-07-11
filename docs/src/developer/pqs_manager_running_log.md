@@ -28445,3 +28445,36 @@ Goal advancement / guardrail:
   unaffected. No source, test, lifecycle, terminal algorithm, residual, WL,
   artifact, driver, or solver behavior changed. The retired Slice D wrapper
   remains explicitly non-restorable.
+
+## Cartesian Hamiltonian Producer Pass 377 - Canonicalize R3 Compatibility And Usability
+
+Commit(s):
+- this commit - compress R3-A/B/C history and reconcile the implemented
+  supplemented facade.
+
+Summary:
+- Reduced `r3_residual_gto_mwg_augmentation.md` from `992` to `188` lines. It
+  now indexes the R3-A/B/C dispositions, source migrations, rejected global
+  selection/payload paths, and accepted implementation commits; current
+  residual numerics and artifact behavior remain in their canonical owners.
+- Rewrote the usability and homonuclear pages as implemented contracts for the
+  non-exported same-construction facade and generic two-center z-axis scope.
+  Split every R3/R3U registry ID into an individually headed metadata record.
+  Current H2 validation facts were reconciled to base/residual/final dimensions
+  `487/18/505` and self-Coulomb `0.4574161883692301`.
+
+Validation / evidence:
+- Compared committed facade, compatibility, RG-domain, writer, driver, caller,
+  and standalone-test source. ID-heading counts, implementation commits,
+  source/test paths, historical-owner and stale-lifecycle scans, local
+  Documenter, and `git diff --check` passed. No numerical Julia test was run
+  because source and behavior are unchanged.
+
+Goal advancement / guardrail:
+- MT5: removes another mixed-role pre-domain memo and makes R3 compatibility,
+  numerical RG, facade, molecular scope, and artifact ownership explicit.
+  The docs-only batch is about `548` additions and `1,532` deletions before
+  this log entry, net `-984` lines.
+- MT4 remains parallel: the controlled CR2 numerical-complete measurement is
+  unaffected. No residual cutoff, MWG convention, artifact schema, public
+  workflow, solver, protected, screened-Hartree, EGOI, or Cr2 authority changed.

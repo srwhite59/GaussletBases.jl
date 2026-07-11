@@ -488,8 +488,8 @@ callers in one commit, prefer deleting the wrappers immediately.
 Future source migration must validate:
 
 - existing standalone H2 residual-GTO/MWG endpoint, including augmented
-  dimension `489` and lowest-orbital IDA self-Coulomb
-  `0.4574265214362075` within `1.0e-10`;
+  dimension `505` and lowest-orbital IDA self-Coulomb
+  `0.4574161883692301` within `1.0e-10`;
 - exact one-body/moment checks: `G' S R`, `R' S R`, base G-G block equality,
   finite/symmetric `K`, uncharged `U_A`, and moment matrices;
 - independent weight-aware `V_GM` check;

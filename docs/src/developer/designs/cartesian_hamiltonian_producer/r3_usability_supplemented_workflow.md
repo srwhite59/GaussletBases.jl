@@ -1,46 +1,24 @@
 # R3 Usability Supplemented Workflow
 
-Status: approved internal supported facade for the residual-GTO/MWG
-supplemented PQS Hamiltonian path. This is not an exported public API.
+Status: implemented internal supported facade for residual-GTO/MWG
+supplemented Hamiltonians. The function is module-qualified and non-exported.
 
-This amendment closes the immediate usability gap after R3-A/B/C: callers
-should not have to manually reconstruct the base stages, load a supplement,
-call the R3 same-construction function, and then call the R3-C writer.
-Implementation of this facade must use the approved owner-local residual
-selection correction in `r3_residual_gto_mwg_augmentation.md` and the corrected
-H2 MWG scalar `0.4574265214362075`.
+## Owned IDs
 
-It originally approved only a narrow module-qualified internal facade for
-z-axis H2 and internal/performance-supported z-axis Be2. The follow-on
-`r3_homonuclear_diatomic_supplemented_workflow.md` amendment relaxes that to
-explicit homonuclear two-center z-axis diatomics with no element-specific
-defaults and no Cr2-specific branch.
+- `HP-R3U-FILE-01` - implemented source and validation surfaces;
+- `HP-R3U-FN-01` - implemented non-exported supplemented facade;
+- `HP-R3U-WIRE-01` - implemented same-construction composition;
+- `HP-R3U-TEST-01` - implemented standalone H2 facade gate.
 
-## Approved IDs
+The homonuclear z-axis scope and canonical-driver wiring are governed by the
+implemented `HP-R3U-ZDI-*` contract in
+[R3 homonuclear supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md).
+One-center supplemented composition reuses this implementation under separate
+`HP-COMP-SUPPATOM-*` authority; it does not broaden the R3U molecular scope.
 
-- `HP-R3U-FILE-01` - exact source and test files for the usability facade.
-- `HP-R3U-FN-01` - non-exported supplemented Hamiltonian facade.
-- `HP-R3U-WIRE-01` - same-construction base/R3/R3-C wiring.
-- `HP-R3U-TEST-01` - standalone H2 usability endpoint validation.
-- `HP-R3U-ZDI-FN-01` - homonuclear z-axis diatomic supplemented facade scope.
-- `HP-R3U-ZDI-WIRE-01` - canonical driver supplemented-mode wiring.
-- `HP-R3U-ZDI-TEST-01` - H2/Be2 correctness and optional ignored Cr2 stress.
+## Interface
 
-## Decision
-
-The first usability surface is an internal supported function, not an exported
-public API and not a driver/tool workflow. The function name is:
-
-```julia
-cartesian_residual_gto_mwg_hamiltonian
-```
-
-It may be called as a module-qualified internal function, but it must not be
-added to the public export list in `src/GaussletBases.jl`. A later public API
-may choose a broader name such as `cartesian_hamiltonian`; this amendment does
-not freeze a public supplemented-Hamiltonian name.
-
-Approved call shape:
+The implemented call is:
 
 ```julia
 cartesian_residual_gto_mwg_hamiltonian(
@@ -51,247 +29,136 @@ cartesian_residual_gto_mwg_hamiltonian(
 )::CartesianIDAHamiltonian{Float64}
 ```
 
-The return is the existing `CartesianIDAHamiltonian{Float64}` directly. The
-function must not return a wrapper, status object, report object, payload, or
-`(value, metadata)` pair.
+It is defined in `src/cartesian_base_hamiltonian.jl` and is intentionally not
+exported from `GaussletBases`. It returns the existing Hamiltonian directly,
+not a wrapper, report, status object, payload, or `(value, metadata)` pair.
 
-## Approved Files
+## Supported Molecular Input
 
-Primary owner file:
+The R3U molecular path accepts explicit neutral all-electron homonuclear
+two-center Cartesian z-axis systems:
+
+- `system` has exactly `atom_symbols`, `nuclear_charges`, `atom_locations`,
+  `nup`, and `ndn`;
+- center collections are vectors of equal length;
+- the two symbols and nuclear charges are equal;
+- both centers have zero `x` and `y`, finite distinct `z`, and positive finite
+  charges;
+- `nup` and `ndn` are nonnegative integers whose sum equals the integer total
+  nuclear charge.
+
+There is no element-specific H, Be, or Cr branch. Heteronuclear, charged,
+ECP, non-z-axis, translated/rotated general molecular, and solver inputs fail
+validation. Cr2 may use the generic internal path, but it has no special
+default, fixture, or production claim here.
+
+## Basis Input
+
+For the diatomic path, `basis` requires:
+
+- `core_spacing`;
+- `xmax_parallel`;
+- `xmax_transverse`;
+- at least one of `ns` or legacy-compatible `q`.
+
+The shared base producer owns normalization of `ns`, route-local `q`,
+`nesting`, `source_span`, `s_factor`, `coulomb_accuracy`,
+`parent_axis_family`, `reference_spacing`, and `tail_spacing`. This facade does
+not define a second basis policy. Unknown keys and inconsistent `ns`/`q`
+values fail before construction. White-Lindsey minimum-`ns` behavior belongs
+to the composition contracts.
+
+## Supplement Input
+
+`supplement` requires:
+
+- `basis_by_center::AbstractVector` of string labels;
+- integer `lmax` with `0 <= lmax <= 6`.
+
+Optional fields are:
+
+- `uncontracted::Bool = false`;
+- `width_filtering = nothing` or exactly `(; max_width)` with positive finite
+  `max_width`;
+- `basisfile = nothing` or a trusted local/project path string.
+
+The basis-label count must match the center count. The current homonuclear
+path requires identical labels on both centers and uses the existing named
+Cartesian supplement loader. Fitted fields, ECP data, element defaults, and
+heteronuclear basis-by-center composition are not part of this contract.
+
+## Same-Construction Composition
+
+The facade performs one construction:
 
 ```text
-src/cartesian_base_hamiltonian.jl
+validated system, basis, and supplement
+-> cartesian_base_working_basis(...; supplemented=true)
+-> base products, unit nuclear matrices, Vee, and base Hamiltonian
+-> named Gaussian supplement representation
+-> owner-local residual Gaussian basis
+-> exact augmented one-body and moment matrices
+-> residual-containing MWG/IDA interaction
+-> CartesianIDAHamiltonian
+-> optional existing artifact writer
 ```
 
-This file may add the non-exported facade, input validation, supplement-spec
-normalization, and the one-call wiring from base spec to R3 construction.
+The base Hamiltonian, terminal basis, parent bundles, Gaussian supplement,
+residual object, and producer-owned Coulomb expansion therefore share one
+construction. The facade must not be replaced by a post-hoc augmentation of
+an arbitrary dimension-compatible Hamiltonian.
 
-Existing R3 owner file:
+Residual-basis, exact-operator, and MWG formulas belong to
+[Residual Gaussian domain module](residual_gaussian_domain_module.md). The
+terminal compatibility functions in
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` compose
+raw blocks, enforce same-construction checks, delegate numerical physics to
+the domain module, and assemble the existing Hamiltonian type.
 
-```text
-src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
-```
+## Artifact Boundary
 
-This file may be touched only if the implementation needs a small local seam
-to reuse the same-construction path and R3-C writer without recomputing the
-residual object. It must not add a new artifact schema, public API, status
-object, or broad provider/cache object.
+If `hamfile === nothing`, no file is written. Otherwise the facade writes the
+existing Cartesian IDA Hamiltonian artifact, compact supplement provenance,
+and the current Hamiltonian manifest, then still returns the in-memory
+Hamiltonian. Empty paths fail; ordinary file-system errors propagate.
 
-Approved validation file:
+Artifact identity, keys, provenance, compatibility, and readback are owned by
+[Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md).
+This facade does not expose residual transforms, raw stage objects, MWG
+descriptors, pair factors, or provenance payloads.
+
+## Validation
+
+The committed focused gate is:
 
 ```text
 test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
 ```
 
-`HP-R3U-TEST-01` may extend this existing standalone endpoint gate. It does
-not approve a new committed test file or inclusion in `test/runtests.jl`.
+Its facade section checks the returned type, same-construction H2 endpoint,
+artifact/readback matrix parity, compact provenance, Coulomb provenance, and
+malformed or unsupported input failures. At the Pass 377 baseline, the H2
+facade fixture has base dimension `487`, residual dimension `18`, and final
+dimension `505`; the accepted lowest-orbital IDA self-Coulomb reference is
+`0.4574161883692301` for the current compact fixture.
 
-No edit is approved for `src/GaussletBases.jl`; no export is approved. If the
-implementation cannot avoid a root include/export change, stop and return for
-a docs-only amendment.
+The file is a standalone focused gate, not normal `Pkg.test` pressure. Be2 and
+Cr2 measurements remain ignored/user-run evidence unless separately promoted.
 
-## System Input
+## Failure And Non-Goals
 
-`system` uses the same plain `NamedTuple` style as R1. Required keys:
+Invalid keys, dimensions, ownership, centers, nuclear charges, carried Coulomb
+expansion, PGDG exponent parity, exact base blocks, residual geometry, or
+artifact path fail rather than returning a status payload.
 
-- `atom_symbols::AbstractVector`
-- `nuclear_charges::AbstractVector{<:Real}`
-- `atom_locations::AbstractVector{<:NTuple{3}}`
-- `nup`
-- `ndn`
+This contract does not authorize:
 
-Center-sized collections must be vectors or other `AbstractVector` values, not
-variable-size tuples. Unknown keys must throw `ArgumentError`.
+- public export or broad API redesign;
+- general molecular orientation or heteronuclear/ECP support;
+- solver, RHF/UHF, EGOI, or screened-Hartree workflow;
+- new artifact shapes or residual-basis serialization;
+- route reports, persistent factor caches, or exposed construction stages;
+- Cr2-specific branches, defaults, committed fixtures, or scientific claims.
 
-Supported systems after `HP-R3U-ZDI-FN-01`:
-
-- explicit homonuclear two-center z-axis diatomics;
-- equal atom symbols and equal finite positive nuclear charges;
-- both centers have `x = 0` and `y = 0`;
-- centers have distinct finite `z` coordinates;
-- `nup` and `ndn` are explicit nonnegative integers;
-- current neutral all-electron policy requires
-  `nup + ndn == round(Int, sum(nuclear_charges))`;
-- no element-specific defaults or Cr2-specific branch.
-
-Unsupported systems must throw clear `ArgumentError`s before expensive
-construction where practical. ECP systems, charged systems, heteronuclear
-molecules, non-z-axis diatomics, translated/rotated general molecules,
-RHF/solver handoff, and non-base Hamiltonian variants are not approved. Cr2 is
-permitted only as an explicit homonuclear z-axis diatomic ignored/user-run
-stress or usability case through the generic path, not as a committed gate or
-special branch.
-
-## Base Basis Input
-
-`basis` is a plain `NamedTuple`. Required keys for the first diatomic scope:
-
-- `q`
-- `core_spacing`
-- `xmax_parallel`
-- `xmax_transverse`
-
-Optional keys and defaults:
-
-- `parent_axis_family = :G10`
-- `reference_spacing = 1.0`
-- `tail_spacing = 10.0`
-
-Validation:
-
-- `q` must be a positive integer;
-- spacing and extents must be finite and positive;
-- `parent_axis_family` must remain the validated R1 value `:G10`;
-- unknown keys throw `ArgumentError`.
-
-The usability facade has no public `method`, `route`, `n_s`, `bond_axis`,
-`bond_length`, `radius`, `d`, mapping backend, parent-axis-count, or output
-group selector. Those are either derived internally or unsupported.
-
-## Supplement Input
-
-`supplement` is a plain `NamedTuple`. Required keys:
-
-- `basis_by_center::AbstractVector{<:AbstractString}`
-- `lmax`
-
-Optional keys and defaults:
-
-- `uncontracted = false`
-- `width_filtering = nothing`
-- `basisfile = nothing`
-
-Validation and normalization:
-
-- `basis_by_center` length must equal the number of centers.
-- First usability scope is homonuclear: all atom symbols must match and all
-  `basis_by_center` values must match. This keeps the implementation on the
-  existing `legacy_bond_aligned_diatomic_gaussian_supplement` route. A
-  heteronuclear basis-by-center route requires a later amendment.
-- `lmax` must be an integer with `0 <= lmax <= 6`, matching the existing
-  legacy Cartesian shell cap.
-- `uncontracted` must be `Bool`.
-- `width_filtering` must be either `nothing` or a `NamedTuple` with exactly
-  `max_width`, where `max_width` is finite and positive. This maps to the
-  existing legacy `max_width` filter.
-- `basisfile` must be either `nothing` or an `AbstractString` naming a trusted
-  local/project basis source used by the existing basis-loading path.
-- Unknown supplement keys throw `ArgumentError`.
-
-First H2 validation fixture:
-
-```julia
-supplement = (;
-    basis_by_center = ["cc-pVTZ", "cc-pVTZ"],
-    lmax = 1,
-    uncontracted = false,
-    width_filtering = nothing,
-)
-```
-
-Basis-file lookup uses the existing legacy named-basis resolution order unless
-`basisfile` is explicitly supplied. This amendment does not approve ECP,
-pseudopotential, or element-default basis behavior.
-
-## Wiring Contract
-
-The facade must construct all base and supplement objects inside one call:
-
-```text
-validated system/basis/supplement spec
--> R1-style/base producer normalization and base stages
--> base CartesianIDAHamiltonian plus same-construction terminal basis/bundles
--> legacy named-basis supplement loading
--> basis_representation(supplement)
--> R3 same-construction augmented Hamiltonian path
--> optional R3-C artifact writer
--> CartesianIDAHamiltonian{Float64}
-```
-
-The facade must reuse the R1/base producer construction path where applicable.
-For H2, it should reuse the existing R1 validation/stage helpers rather than
-creating a second public-shaped base route. For Be2, it may add a generalized
-internal z-axis homonuclear diatomic normalization in the same owner file. It
-must not call the public `cartesian_base_hamiltonian` and then reconstruct
-terminal basis state separately. The base Hamiltonian, terminal basis
-realization, and parent axis bundle used for R3 must come from the same base
-construction call.
-
-The facade must reuse the R3 same-construction augmented Hamiltonian path and
-R3-C provenance writer. It may refactor local R3 internals enough to avoid
-recomputing residual objects for artifact writing, but it must not introduce a
-persistent raw-block bundle, cache object, status object, payload, report
-field, or public stage object.
-
-The facade must not expose or return terminal basis realizations, bundles,
-residual objects, augmented-operator objects, MWG descriptors, pair factors,
-or provenance payloads.
-
-## Artifact Contract
-
-If `hamfile === nothing`, no artifact is written.
-
-If `hamfile !== nothing`, the facade writes the supplemented Hamiltonian using
-the existing Cartesian IDA Hamiltonian artifact shape plus the approved
-`HP-R3-ART-01` `supplement_provenance/` group. It still returns the in-memory
-Hamiltonian.
-
-An empty `hamfile` must throw `ArgumentError`. File-system errors from the
-existing writer should propagate normally.
-
-Production must not require readback. Readback is validation-only.
-
-This amendment does not approve:
-
-- a new Hamiltonian wrapper;
-- a new artifact format;
-- new artifact keys beyond `supplement_provenance/`;
-- a separate manifest;
-- broad residual-basis serialization;
-- a public provenance reader.
-
-## Validation
-
-Approved committed validation remains a standalone endpoint gate:
-
-```text
-julia --project=. test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
-```
-
-`HP-R3U-TEST-01` may extend that file with one usability-facade section that:
-
-- calls `cartesian_residual_gto_mwg_hamiltonian` on the H2 fixture above;
-- writes to `mktempdir()`;
-- validates returned type `CartesianIDAHamiltonian{Float64}`;
-- validates augmented dimension `489`;
-- validates lowest augmented one-body orbital IDA self-Coulomb against the
-  owner-local residual-selection scalar `0.4574265214362075` within
-  `1.0e-10`;
-- validates readback Hamiltonian matrices against the returned Hamiltonian
-  within tight deltas;
-- validates `supplement_provenance/` keys match the normalized supplement
-  spec;
-- checks unknown keys, malformed supplement width filtering, unsupported
-  orientation, and unsupported non-homonuclear inputs without private stage
-  assertions.
-
-An ignored Be2 timing/proxy script under `tmp/work` is allowed but not
-committed. It may report candidate count, residual rank, dimension, elapsed
-time, allocations, and artifact write/readback sanity for the z-axis Be2
-internal performance proxy. It must not become a gate in this amendment.
-
-## Forbidden
-
-This usability amendment does not approve:
-
-- public export;
-- Cr2-specific branch, default, fixture, committed gate, or special workflow;
-- ECP, EGOI, RHF, solver, or HamV6 export;
-- driver/bin/tool workflow outside `HP-DRV-*` and `HP-R3U-ZDI-WIRE-01`;
-- report/status/payload object;
-- new artifact shape or artifact keys beyond R3-C provenance;
-- exposing internal stage objects;
-- pair/assembly public workflow;
-- parent-stage fields or persistent caches;
-- new source file;
-- new committed test file.
+Implementation history and superseded R3-A/B/C fixture narratives are indexed
+in [R3 compatibility history](r3_residual_gto_mwg_augmentation.md).

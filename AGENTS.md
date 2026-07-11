@@ -987,17 +987,14 @@ R3/RG current source authority is compact by design. Read
 for the Residual Gaussian algorithm contract; do not duplicate the full
 algorithm in `AGENTS.md`.
 
-Approved R3 compatibility and endpoint surfaces:
-
-- `HP-R3-OBJ-01`, `HP-R3-FN-01`, `HP-R3-FN-02`, and `HP-R3-TEST-01` remain
-  approved for the first H2 residual-GTO exact one-body/moment endpoint and its
-  standalone gate.
-- `HP-R3-FN-03` remains approved for the in-memory residual-MWG/IDA Hamiltonian
-  compatibility entry point
-  `pqs_terminal_residual_gto_augmented_hamiltonian(...)`.
-- `HP-R3-ART-01` remains approved only for the compact supplemented artifact
-  provenance writer that adds `supplement_provenance/` to the existing
-  Hamiltonian file.
+R3-A/B/C are implemented compatibility/history IDs, not current numerical
+algorithm owners. Their exact source/test permissions and migration evidence
+are indexed in
+`r3_residual_gto_mwg_augmentation.md`. Keep three execution guardrails: exact
+augmented one-body transforms are distinct from MWG interaction
+approximation; compatibility helpers delegate current physics to
+`CartesianResidualGaussians`; and supplemented assembly uses one base
+construction rather than post-hoc augmentation of an opaque Hamiltonian.
 - `HP-HAM-MANIFEST-FN-01` approves only compact JLD2 sidecar groups
   `hamiltonian_manifest/` and `recipe_provenance/` for existing
   `CartesianIDAHamiltonian{Float64}` artifacts. Approved source files are
@@ -1075,13 +1072,12 @@ Approved R3 compatibility and endpoint surfaces:
   reader, direct JLD2 checks for optional source groups when native rows exist,
   unavailable/mixed status checks for missing labels, optional practical Be2
   manifest inspection, and no Cr2 run. No committed test file is approved.
-- `HP-R3U-FILE-01`, `HP-R3U-FN-01`, `HP-R3U-WIRE-01`, and `HP-R3U-TEST-01`
-  remain approved only for the non-exported supplemented usability facade and
-  its existing standalone H2 validation section.
-- The R3 compatibility/artifact owner file remains
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`; it may
-  keep small wrappers and artifact/facade hooks, but moved physics helpers
-  should delegate to or be deleted in favor of `CartesianResidualGaussians`.
+`HP-R3U-FILE-01`, `HP-R3U-FN-01`, `HP-R3U-WIRE-01`, and
+`HP-R3U-TEST-01` are implemented only for the non-exported supplemented facade,
+same-construction composition, and existing standalone H2 validation. Read
+`r3_usability_supplemented_workflow.md`. The terminal compatibility/artifact
+file may keep live composition and writer hooks, but must not duplicate moved
+Residual Gaussian physics.
 
 Approved Residual Gaussian module surfaces:
 
@@ -1347,8 +1343,8 @@ Non-negotiable RG guardrails:
   raw analytic formula ownership, facade parsing, artifact writing,
   `supplement_provenance/`, report/status/payload objects, or public exports.
 
-The active H2 owner-local residual-MWG endpoint has augmented dimension `489`
-and lowest-orbital IDA self-Coulomb `0.4574265214362075` within `1.0e-10`.
+The active H2 owner-local residual-MWG endpoint has augmented dimension `505`
+and lowest-orbital IDA self-Coulomb `0.4574161883692301` within `1.0e-10`.
 Older R3-B scalars and global-selection construction paths are historical only.
 Do not add width scaling, tolerance relaxation, global raw-candidate Lowdin,
 global raw-column pivoted-Cholesky residual selection, public export,

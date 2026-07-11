@@ -276,14 +276,12 @@ ID or subsystem.
   relaxes the one-center base producer from H-only to explicit origin-centered
   all-electron atoms, while requiring atoms and diatomics to share the same
   producer workflow after geometry/shellification normalization.
-- [R3 residual-GTO/MWG augmentation](r3_residual_gto_mwg_augmentation.md)
-  records implementation history and compact artifact provenance for the first
-  H2 endpoint. Current residual Gaussian algorithm authority is the domain
-  module page below.
+- [R3 residual-GTO/MWG compatibility history](r3_residual_gto_mwg_augmentation.md)
+  indexes the R3-A/B/C milestones, migrations, and rejected legacy paths;
+  current numerical and artifact authority lives in the linked subsystem pages.
 - [R3 usability supplemented workflow](r3_usability_supplemented_workflow.md)
-  approves only a non-exported supported facade that constructs H2 and
-  internal/performance-supported Be2 supplemented artifacts from system, base
-  basis, and supplement specs.
+  defines the implemented non-exported same-construction facade for explicit
+  system, base-basis, and supplement inputs.
 - [Residual Gaussian domain module](residual_gaussian_domain_module.md)
   is the canonical current RG algorithm contract for residual basis selection,
   exact augmented operators, matched-width Gaussian descriptors, and residual

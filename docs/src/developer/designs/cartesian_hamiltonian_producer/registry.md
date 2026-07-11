@@ -2560,117 +2560,141 @@ lane, ECP gate, translated-atom gate, or driver change is approved by this ID.
 Supported supplemented atom validation is governed by
 `HP-COMP-SUPPATOM-TEST-01`.
 
-## Approved For R3/RG Implementation
-
-The R3 labels remain approved compatibility and endpoint-history IDs. Current
-Residual Gaussian algorithm authority lives in
-`residual_gaussian_domain_module.md`; do not copy that algorithm into this
-registry. This section records approved IDs, source owners, function surfaces,
-artifact keys, and validation gates.
-
-### R3 Compatibility Boundary
-
-Approved R3 owner/path for compatibility entry points, artifact writing, and the
-non-exported usability facade:
-
-```text
-Owner module: CartesianFinalBasisRealization
-Source file: src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
-```
-
-R3 compatibility surfaces must delegate current residual-basis, exact-operator,
-and residual-interaction physics to the Residual Gaussian module where those
-module functions exist. They must not preserve retired global raw-candidate
-selection, old density gauges, or duplicate RG algorithms.
+## Implemented R3 Compatibility And Endpoint History
 
 ### HP-R3-OBJ-01 — residual-GTO augmentation object
 
-Approved historical/object authority for the first H2 residual-GTO endpoint.
-Current domain object fields and semantics are recorded under `HP-RG-OBJ-01` and
-`residual_gaussian_domain_module.md`. Compatibility names may remain only where
-live callers still use them.
+Lifecycle: implemented compatibility alias. Permission: source maintenance.
+
+Owner/canonical: `CartesianResidualGaussians`, with terminal compatibility;
+[R3 compatibility history](r3_residual_gto_mwg_augmentation.md) and
+[Residual Gaussian domain module](residual_gaussian_domain_module.md).
+
+Source: `src/cartesian_residual_gaussians/residual_basis.jl` and
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
+
+Validation: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+
+Dependencies: `HP-RG-OBJ-01` and the owner-local residual basis contract.
+
+Permission: maintain `CartesianTerminalResidualGTOAugmentation` only as the
+live alias of `CartesianResidualGaussianBasis` required by compatibility
+callers.
+
+Non-goals: a second object schema, R3-named numerical fields, payload/status
+objects, artifacts, or public API.
 
 ### HP-R3-FN-01 — residual-basis construction
 
-Approved historical R3-A basis-construction surface. Current production logic is
-`build_residual_gaussian_basis(...)` under `HP-RG-FN-01`.
+Lifecycle: implemented historical/compatibility surface. Permission: source
+maintenance.
 
-Binding guardrails: residual basis directions are selected separately on each
-physical owner atom; ordinary production residual occupation is not numerical
-rank; owner-local sectors are merged once; global raw-candidate Lowdin and
-global raw-column pivoted-Cholesky selection are not approved current
-algorithms. The separate `HP-RG-NUMCOMP-*` opt-in owns its explicit
-numerical-null interpretation.
+Owner/canonical: `CartesianResidualGaussians`;
+[Residual Gaussian domain module](residual_gaussian_domain_module.md).
+
+Source: `src/cartesian_residual_gaussians/residual_basis.jl` and the composition
+seam in `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
+
+Validation: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+
+Dependencies: `HP-RG-FN-01`, exact mixed overlap, and owner identity.
+
+Permission: maintain delegation to owner-local residual selection and one final
+inter-owner merge.
+
+Non-goals: global candidate selection, numerical-complete reinterpretation,
+new cutoffs, or duplicate R3 basis logic.
 
 ### HP-R3-FN-02 — exact augmented one-body and moment assembly
 
-Approved historical R3-A exact-operator surface. Current production logic is
-`transform_augmented_operator(...)` under `HP-RG-FN-02`.
+Lifecycle: implemented historical/compatibility surface. Permission: source
+maintenance.
 
-The exact transformed operators are kinetic, every uncharged by-center nuclear
-attraction, `x`, `y`, `z`, `x^2`, `y^2`, and `z^2`. This exact transformation is
-not the MWG approximation and must not be replaced by moment-matched interaction
-logic.
+Owner/canonical: `CartesianResidualGaussians`;
+[Residual Gaussian domain module](residual_gaussian_domain_module.md).
+
+Source: `src/cartesian_residual_gaussians/augmented_operators.jl` and raw-block
+composition in
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
+
+Validation: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+
+Dependencies: `HP-RG-FN-02`, exact raw `[G,A]` blocks, and the residual
+transform.
+
+Permission: maintain exact augmented kinetic, by-center unit-nuclear,
+coordinate, and second-moment transformations.
+
+Non-goals: MWG approximation, new raw kernels, artifact fields, or interaction
+rotation.
 
 ### HP-R3-FN-03 — residual MWG/IDA and in-memory Hamiltonian
 
-Approved R3-B compatibility entry point:
+Lifecycle: implemented compatibility entry point. Permission: source
+maintenance.
 
-```text
-pqs_terminal_residual_gto_augmented_hamiltonian(...)
-```
+Owner/canonical: terminal composition over `CartesianResidualGaussians`;
+[R3 compatibility history](r3_residual_gto_mwg_augmentation.md).
 
-Output is the existing `CartesianIDAHamiltonian{Float64}`. Current residual MWG
-descriptor and interaction math is owned by `moment_matched_gaussians(...)` and
-`assemble_residual_ida_interaction(...)` under `HP-RG-FN-03` and `HP-RG-FN-04`.
+Source: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+and `src/cartesian_residual_gaussians/mwg_interaction.jl`.
 
-The accepted H2 owner-local endpoint has augmented dimension `489` and
-lowest-orbital IDA self-Coulomb `0.4574265214362075` within `1.0e-10`. Older
-R3-B scalars from global-selection or retired density-gauge diagnostics are
-historical evidence only and are not active targets.
+Validation: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+
+Dependencies: `HP-RG-FN-03`, `HP-RG-FN-04`, same-construction base inputs,
+and the producer-owned Coulomb expansion.
+
+Permission: maintain
+`pqs_terminal_residual_gto_augmented_hamiltonian(...)` and direct return of the
+existing `CartesianIDAHamiltonian{Float64}`.
+
+Non-goals: duplicate MWG math, wrapper results, post-hoc opaque-Hamiltonian
+augmentation, solver work, or public API.
 
 ### HP-R3-ART-01 — compact supplemented artifact provenance
 
-Approved R3-C internal artifact helper remains outside the RG module. It may
-write an existing `CartesianIDAHamiltonian` file and add compact
-`supplement_provenance/` provenance. RG does not own artifact writing,
-artifact schema, JLD2 workflow, or provenance readers.
+Lifecycle: implemented internal artifact compatibility surface. Permission:
+source maintenance.
 
-Approved source owner/path:
+Owner/canonical: `CartesianFinalBasisRealization` workflow;
+[Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md).
 
-```text
-Owner module: CartesianFinalBasisRealization
-Source file: src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
-```
+Source:
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
 
-Approved `supplement_provenance/` keys:
+Validation: the artifact/readback section of
+`test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
 
-- `provenance_version`;
-- `producer = :cartesian_residual_gto_mwg_augmentation`;
-- `supplement_policy = :mwg_residual_gto`;
-- `basis_by_center`;
-- `lmax`;
-- `uncontracted`;
-- `width_filtering`;
-- `candidate_count`;
-- `owner_counts`;
-- `base_dimension`;
-- `residual_dimension`;
-- `augmented_dimension`;
-- `augmented_basis_order = :base_then_residual`;
-- `residual_basis_convention = :owner_local_residual_occupation_final_merge_lowdin`;
-- `rank_rule` / owner-local selection rule;
-- `occupation_cutoff = 1.0e-6`;
-- `tau_neg_abs`, `tau_neg_rel`;
-- `tau_merge_abs = 1.0e-12`, `tau_merge_rel = 1.0e-12`;
-- `mwg_convention_version`;
-- `mwg_convention = :separable_moment_matched_density_normalized`;
-- `one_body_source`;
-- `interaction_source = :weight_aware_residual_mwg_ida_blocks`;
-- compact validation labels and H2 reference value when supplied.
+Dependencies: existing Cartesian IDA artifact, `HP-HAM-MANIFEST-*`, and a
+validated residual construction.
 
-Do not serialize full residual bases, dense moments, `T_G`, `T_A`, MWG centers,
-MWG widths, or broad construction inputs in this compact group.
+Permission: maintain the compact `supplement_provenance/` group and existing
+writer composition recorded in the artifact contract.
+
+Non-goals: residual transforms, dense moments, matched-Gaussian arrays, full
+spectra, new artifact kinds, public readers, or RG ownership of persistence.
+
+### HP-R3-TEST-01 — residual-GTO/MWG compatibility endpoint
+
+Lifecycle: implemented validation contract. Permission: validation
+maintenance.
+
+Owner/canonical: R3 compatibility family;
+[R3 compatibility history](r3_residual_gto_mwg_augmentation.md).
+
+Source: no production source permission.
+
+Validation: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+
+Dependencies: the current RG domain functions, terminal compatibility seams,
+and existing Hamiltonian/artifact readers.
+
+Permission: maintain the standalone H2 residual geometry, exact-operator,
+independent interaction, in-memory Hamiltonian, and artifact compatibility
+gate.
+
+Non-goals: normal `Pkg.test` wiring, Be2/Cr2 committed fixtures, private
+status vocabulary, or new source behavior.
 
 ## Approved For Compact Hamiltonian Artifact Manifest
 
@@ -3025,85 +3049,94 @@ schema dump, WL H2 validation, supplemented WL validation, or Cr2 fixture was
 approved by this ID. Later supplemented WL validation is owned by
 `HP-COMP-SUPPWL-TEST-01`.
 
+## Implemented R3 Usability Supplemented Workflow
+
 ### HP-R3U-FILE-01 — supplemented workflow source and validation files
 
-Approved non-exported usability owner:
+Lifecycle: implemented. Permission: source and validation maintenance.
 
-```text
-src/cartesian_base_hamiltonian.jl
-```
+Owner/canonical: base-Hamiltonian composition;
+[R3 usability supplemented workflow](r3_usability_supplemented_workflow.md).
 
-Allowed companion surfaces:
+Source: `src/cartesian_base_hamiltonian.jl` and the compatibility/artifact seam
+in `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
 
-```text
-src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
-test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
-```
+Validation: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
 
-No public export, new source file, new committed test file, driver/bin/tool
-workflow, report/status/payload object, or artifact shape beyond
-`supplement_provenance/` is approved.
+Dependencies: implemented base producer, RG domain module, and existing
+Hamiltonian/artifact owners.
+
+Permission: maintain the non-exported facade in the existing source and test
+files.
+
+Non-goals: new files, public export, driver policy, result payloads, artifact
+schema expansion, or solver work.
 
 ### HP-R3U-FN-01 — non-exported supplemented Hamiltonian facade
 
-Approved internal call shape:
+Lifecycle: implemented. Permission: source maintenance.
 
-```julia
-cartesian_residual_gto_mwg_hamiltonian(
-    system::NamedTuple;
-    basis::NamedTuple,
-    supplement::NamedTuple,
-    hamfile::Union{Nothing,AbstractString} = nothing,
-)::CartesianIDAHamiltonian{Float64}
-```
+Owner/canonical: `src/cartesian_base_hamiltonian.jl`;
+[R3 usability supplemented workflow](r3_usability_supplemented_workflow.md).
 
-Original first systems were z-axis H2 and z-axis Be2. `HP-R3U-ZDI-FN-01`
-relaxes that guard to explicit homonuclear two-center z-axis diatomics. Be2
-remains an internal/performance-supported proxy. Cr2 is permitted only as an
-explicit generic homonuclear z-axis ignored/user-run stress or usability case
-after H2/Be2 validation. Heteronuclear systems, non-z-axis or arbitrary
-orientations, charged systems, ECP inputs, solver/RHF workflow, public export,
-and Cr2-specific branches remain unapproved.
+Source: `src/cartesian_base_hamiltonian.jl`.
+
+Validation: the facade section of
+`test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+
+Dependencies: `HP-R3U-ZDI-FN-01` for diatomic scope, shared base input
+normalization, and the R3/RG same-construction path.
+
+Permission: maintain
+`cartesian_residual_gto_mwg_hamiltonian(system; basis, supplement, hamfile)`
+as a non-exported direct-`CartesianIDAHamiltonian{Float64}` facade.
+
+Non-goals: public API, wrapper/result objects, general molecular geometry,
+heteronuclear/ECP inputs, solver work, or Cr2-specific behavior.
 
 ### HP-R3U-WIRE-01 — base-to-RG same-construction workflow
 
-Approved wiring:
+Lifecycle: implemented. Permission: source maintenance.
 
-```text
-validated system/basis/supplement spec
--> R1-style/base normalization and base stages
--> base CartesianIDAHamiltonian plus same-construction terminal basis/bundles
--> legacy named-basis supplement loading
--> basis_representation(supplement)
--> RG/R3 same-construction augmented Hamiltonian path
--> optional R3-C artifact writer
--> CartesianIDAHamiltonian{Float64}
-```
+Owner/canonical: base-Hamiltonian composition;
+[R3 usability supplemented workflow](r3_usability_supplemented_workflow.md).
 
-The base Hamiltonian, terminal basis realization, and parent axis bundle must
-come from the same base construction call. The facade must not expose terminal
-basis realizations, bundles, residual objects, augmented-operator objects, MWG
-descriptors, pair factors, or provenance payloads.
+Source: `src/cartesian_base_hamiltonian.jl` and
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
 
-### HP-R3-TEST-01 / HP-R3U-TEST-01 — standalone H2 endpoint gate
+Validation: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
 
-Approved standalone validation file:
+Dependencies: one base construction, named supplement representation, RG
+domain functions, producer-owned Coulomb expansion, and existing artifact
+writer.
 
-```text
-test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
-```
+Permission: maintain one same-construction path from validated input through
+the direct in-memory Hamiltonian and optional existing artifact.
 
-Invocation:
+Non-goals: post-hoc opaque-Hamiltonian augmentation, exposed stages, persistent
+caches, payloads, or duplicate numerical algorithms.
 
-```text
-julia --project=. test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
-```
+### HP-R3U-TEST-01 — supplemented facade endpoint
 
-The gate covers the H2 residual-GTO/MWG endpoint family, including residual
-basis checks, exact augmented one-body/moment checks, independent weight-aware
-`V_GM` comparison, in-memory Hamiltonian checks, and the non-exported usability
-facade/artifact readback section. It is not approved for `test/runtests.jl`,
-Be2 committed validation, Cr2 validation, or private route/status assertions.
+Lifecycle: implemented validation contract. Permission: validation
+maintenance.
+
+Owner/canonical: R3 usability family;
+[R3 usability supplemented workflow](r3_usability_supplemented_workflow.md).
+
+Source: no production source permission.
+
+Validation: the facade/artifact section of
+`test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+
+Dependencies: `HP-R3-TEST-01`, implemented facade, existing writer/readback,
+and compact provenance contracts.
+
+Permission: maintain H2 facade type, endpoint, malformed-input,
+artifact/readback, and provenance checks.
+
+Non-goals: normal test-suite wiring, new committed files, Be2/Cr2 committed
+gates, private stage assertions, or source expansion.
 
 ## Approved For Residual Gaussian Domain Migration
 
@@ -3197,7 +3230,7 @@ helpers directly.
 ### HP-RG-TEST-01 — migration validation
 
 Approved validation is the existing standalone H2 residual-GTO/MWG endpoint
-with augmented dimension `489`, self-Coulomb `0.4574265214362075`, exact
+with augmented dimension `505`, self-Coulomb `0.4574161883692301`, exact
 one-body/moment checks, independent weight-aware `V_GM` check, and optional
 ignored Be2 usability/performance measurement when a source pass changes the
 interaction path or facade wiring.
@@ -6005,77 +6038,71 @@ No committed test, replacement tool, adapter, or Cr2 workflow is approved.
 After this deletion pass, pause the cleanup lane unless a later amendment names
 another stale surface.
 
-## Approved For Homonuclear Z-Axis Diatomic Supplemented Workflow
-
-This section approves only the molecule-scope relaxation recorded in
-`r3_homonuclear_diatomic_supplemented_workflow.md`. It is generic
-homonuclear z-axis diatomic authority, not element-specific Cr2 authority.
+## Implemented Homonuclear Z-Axis Diatomic Supplemented Workflow
 
 ### HP-R3U-ZDI-FN-01 — homonuclear z-axis diatomic supplemented facade
 
-Approved source file:
+Lifecycle: implemented. Permission: source maintenance.
 
-```text
-src/cartesian_base_hamiltonian.jl
-```
+Owner/canonical: base-Hamiltonian input normalization;
+[R3 homonuclear supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md).
 
-Approved behavior:
+Source: `src/cartesian_base_hamiltonian.jl`.
 
-- replace hardcoded H/Be supplemented guards with explicit homonuclear z-axis
-  diatomic validation;
-- require explicit atom symbols, nuclear charges, `nup`, `ndn`, geometry, base
-  basis parameters, supplement basis labels, and optional supplement
-  `basisfile`;
-- support exactly two equal-symbol/equal-charge centers on the Cartesian
-  z-axis with distinct finite `z` coordinates;
-- require neutral all-electron count
-  `nup + ndn == round(Int, sum(nuclear_charges))`;
-- throw clear `ArgumentError`s for unsupported systems before expensive
-  construction where practical.
+Validation: H2 facade gate plus accepted H2/Be2 and optional ignored Cr2
+evidence in manager Pass 093; implementation commit `c57e709e7`.
 
-This ID does not approve heteronuclear systems, non-z-axis/general orientation,
-charged systems, ECP, solver/RHF workflow, public API/export redesign,
-artifact schema changes, route diagnostics, metadata/status/report fields, or
-Cr2-specific branches/defaults/fixtures.
+Dependencies: `HP-R3U-FN-01`, explicit system/basis/supplement inputs, and the
+shared base producer.
+
+Permission: maintain explicit neutral all-electron homonuclear two-center
+z-axis validation and optional trusted supplement `basisfile`.
+
+Non-goals: heteronuclear/general geometry, ECP/charged systems, solver work,
+public API, artifact changes, or Cr2-specific branches/defaults/fixtures.
 
 ### HP-R3U-ZDI-WIRE-01 — canonical driver supplemented-mode wiring
 
-Approved source file:
+Lifecycle: implemented. Permission: source maintenance.
 
-```text
-bin/cartesian_ham_builder.jl
-```
+Owner/canonical: canonical driver composition;
+[R3 homonuclear supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md).
 
-Approved behavior:
+Source: `bin/cartesian_ham_builder.jl`.
 
-- canonical driver `:supplemented` mode may call the supported
-  `cartesian_residual_gto_mwg_hamiltonian(...)` facade;
-- driver inputs may carry explicit homonuclear z-axis diatomic system, base
-  basis, supplement labels, optional `basisfile`, and `hamfile`;
-- Cr2 may be an ignored/user-run stress or usability case through the generic
-  path only after H2/Be2 validation.
+Validation: accepted H2/Be2 driver artifact/readback evidence in manager Pass
+095; original implementation commit `3a4933812`.
 
-This ID does not approve package-internal helper composition from the driver,
-Cr2-specific workflow, committed Cr2 fixtures, route diagnostics, artifact
-schema changes, public exports, solver workflow, or broad driver feature
-growth.
+Dependencies: `HP-DRV-*`, `HP-DRV-STAGE-*`, and the implemented supplemented
+producer stages.
 
-Line budget for `HP-R3U-ZDI-FN-01` plus `HP-R3U-ZDI-WIRE-01`: at most `100`
-added `src`/`bin` lines total, with net simplification expected where
-H/Be-specific checks are removed.
+Permission: maintain generic supplemented-mode wiring for explicit homonuclear
+z-axis inputs through the same producer construction.
+
+Non-goals: Cr2-specific workflow, committed fixtures, route diagnostics,
+artifact changes, public exports, solver behavior, or broad driver growth.
 
 ### HP-R3U-ZDI-TEST-01 — homonuclear diatomic validation
 
-Approved validation:
+Lifecycle: implemented validation contract. Permission: validation
+maintenance.
 
-- H2 supplemented facade/driver artifact path remains unchanged;
-- Be2 supplemented facade/driver artifact path remains unchanged and acts as
-  the non-H correctness/performance gate;
-- optional ignored/user-run Cr2 stress or usability run after H2/Be2 pass.
+Owner/canonical: homonuclear supplemented workflow;
+[R3 homonuclear supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md).
 
-No committed Cr2 fixture, committed Cr2 test, new committed test file,
-heteronuclear gate, non-z-axis gate, solver run, or artifact schema validation
-is approved by this ID.
+Source: no production source permission.
+
+Validation: standalone H2 facade gate, accepted H2/Be2 driver artifact
+readback, and optional ignored/user-run Cr2 stress after those gates pass.
+
+Dependencies: `HP-R3U-TEST-01`, `HP-DRV-TEST-01`, and generic homonuclear
+input validation.
+
+Permission: maintain bounded H2/Be2 correctness checks and optional ignored
+generic stress evidence.
+
+Non-goals: new committed tests or Cr2 fixtures, heteronuclear/general-geometry
+gates, solver runs, or artifact schema expansion.
 
 ## Approved Measurement-Only Authority
 

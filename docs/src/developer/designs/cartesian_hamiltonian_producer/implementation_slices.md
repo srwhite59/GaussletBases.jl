@@ -40,7 +40,7 @@ current contracts are listed here instead of repeated.
 | Historical ledger topic | Current canonical owner |
 | --- | --- |
 | White-Lindsey terminal basis seam and compact retained correction | [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md) |
-| Residual Gaussian module migration, exact augmented operators, and MWG | [Residual Gaussian domain module](residual_gaussian_domain_module.md), [R3 residual GTO/MWG augmentation](r3_residual_gto_mwg_augmentation.md) |
+| Residual Gaussian module migration, exact augmented operators, and MWG | [Residual Gaussian domain module](residual_gaussian_domain_module.md), [R3 compatibility history](r3_residual_gto_mwg_augmentation.md) |
 | Numerical-complete residual supplement | [Numerical-complete residual basis](numerical_complete_residual_basis.md) |
 | Compact Hamiltonian artifact manifest | [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md) |
 | Cartesian Gaussian nuclear raw blocks | [Nuclear raw blocks](cartesian_gaussian_raw_blocks_nuclear.md) |
