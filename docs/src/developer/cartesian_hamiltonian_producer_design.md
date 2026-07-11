@@ -7,6 +7,10 @@ Hamiltonian producer work now lives in:
 - [designs/cartesian_hamiltonian_producer/current.md](designs/cartesian_hamiltonian_producer/current.md)
 - [designs/cartesian_hamiltonian_producer/registry.md](designs/cartesian_hamiltonian_producer/registry.md)
 - [designs/cartesian_hamiltonian_producer/invariants.md](designs/cartesian_hamiltonian_producer/invariants.md)
+- [designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md](designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md)
+
+The compact historical Slice A/B/C/D disposition and later subsystem index is:
+
 - [designs/cartesian_hamiltonian_producer/implementation_slices.md](designs/cartesian_hamiltonian_producer/implementation_slices.md)
 
 The full June 2026 design document is preserved as historical material at:

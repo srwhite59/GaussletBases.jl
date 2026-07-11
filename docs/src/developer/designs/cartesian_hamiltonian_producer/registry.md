@@ -25,137 +25,141 @@ dropping either one.
 
 ### HP-OBJ-01 — `CartesianTerminalBasisBlock`
 
-Owner: `CartesianFinalBasisRealization`.
+Lifecycle: implemented. Permission: source maintenance.
 
-Exact fields:
+Owner/canonical: `CartesianFinalBasisRealization`;
+[terminal basis and base assembly](terminal_basis_and_base_assembly.md).
 
-```julia
-struct CartesianTerminalBasisBlock
-    unit_key::Symbol
-    support_indices::Vector{Int}
-    support_states::Vector{NTuple{3,Int}}
-    coefficients::Union{Nothing,Matrix{Float64}}
-    column_range::UnitRange{Int}
-end
-```
+Source: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`.
 
-`coefficients === nothing` means direct identity on the listed support rows.
-Otherwise `coefficients` is support-local rows by retained columns.
-`support_indices` and `support_states` are the authoritative owned terminal
-rows for the block. They must not mean a post-projection enlarged support, and
-PQS shell realization must not grow a block onto previous terminal regions.
-Terminal blocks are block-sparse by representation; direct blocks remain
-implicit identity on their owned support.
+Validation: `test/driver_public/cartesian_base_hamiltonian_runtests.jl` and
+downstream `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+
+Dependencies: authoritative terminal support and retained records.
+
+Permission: preserve the exact support-local block object and direct-identity
+versus compact-coefficient semantics.
+
+Non-goals: global coefficients/overlap, route metadata, reports, artifacts, or
+support growth.
 
 ### HP-OBJ-02 — `CartesianTerminalBasisRealization`
 
-Owner: `CartesianFinalBasisRealization`.
+Lifecycle: implemented. Permission: source maintenance.
 
-Exact fields:
+Owner/canonical: `CartesianFinalBasisRealization`;
+[terminal basis and base assembly](terminal_basis_and_base_assembly.md).
 
-```julia
-struct CartesianTerminalBasisRealization
-    blocks::Vector{CartesianTerminalBasisBlock}
-    final_dimension::Int
-    max_cross_overlap::Float64
-end
-```
+Source: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`.
 
-The object does not store parent bundles, stage objects, summaries, metadata,
-global coefficients, or global self-overlap matrices. Its blocks are
-represented on disjoint owned terminal regions. This block-sparse basis
-representation does not imply block-diagonal kinetic, nuclear, or IDA
-operators. Overlap between distinct owned-support blocks is structurally zero.
+Validation: `test/driver_public/cartesian_base_hamiltonian_runtests.jl` and
+terminal inventory/due-diligence consumers.
 
-The implemented `max_cross_overlap` field is legacy implementation debt after
-the structural-support correction. It must not be treated as a physical
-cross-block residual or construction repair signal. Source cleanup should
-replace production cross-overlap audit plumbing with structural support checks
-under a separate implementation handoff.
+Dependencies: `HP-OBJ-01` blocks and disjoint terminal support ownership.
 
-Under `HP-HAM-MANIFEST-SRC-FN-01`, a source pass may add one optional compact
-terminal source-mode provenance carrier if the implementation chooses to attach
-the manifest seam to this realization object. That carrier is artifact
-provenance only and must not become a basis, operator, route-report, or
-algorithm input.
+Permission: preserve the exact realization fields, native block order, final
+dimension, and structural-overlap interpretation. `max_cross_overlap` remains
+legacy object shape, not a physical repair signal.
+
+Non-goals: global basis matrices, route-stage state, algorithm inputs, or new
+provenance fields outside separately approved artifact authority.
 
 ### HP-FILE-01 — terminal realization file
 
-Approved file:
+Lifecycle: implemented. Permission: source maintenance.
 
-```text
-src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
-```
+Owner/canonical: `CartesianFinalBasisRealization`;
+[terminal basis and base assembly](terminal_basis_and_base_assembly.md).
+
+Source: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`.
+
+Validation: current base H/H2 and downstream augmented H2 gates.
+
+Dependencies: `HP-OBJ-01`, `HP-OBJ-02`, and typed terminal records.
+
+Permission: maintain the implemented terminal object and PQS realization owner.
+
+Non-goals: new modules, public exports, shell geometry, artifacts, or workflow.
 
 ### HP-FN-00 — block-local terminal shell realization
 
-Approved as a file-local/internal helper under HP-FILE-01. It realizes one PQS
-terminal shell by:
+Lifecycle: implemented. Permission: source maintenance.
 
-```text
-full source-box product modes
--> boundary product-mode column selection
--> restrict rows to support.support_indices / support.support_states
--> shell-local Gram on that owned support
--> symmetric shell-local Lowdin
--> final sign canonicalization
--> append block with unchanged owned support
-```
+Owner/canonical: `CartesianFinalBasisRealization`;
+[terminal basis and base assembly](terminal_basis_and_base_assembly.md).
 
-Previous-block projection, recursive projection, projection basis, and
-effective-support growth are forbidden. Full source-box modes are used only to
-generate boundary product-mode columns before row restriction to the
-shell-owned support.
+Source: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`.
+
+Validation: current base H/H2 gates; structural correction commits
+`d2bf139c6` and `d6968d15b`.
+
+Dependencies: retained source-mode contracts and authoritative shell support.
+
+Permission: maintain support-local shell seed, Gram/Lowdin realization, and
+deterministic sign canonicalization.
+
+Non-goals: recursive projection, support growth, global Lowdin, or retained
+policy changes.
 
 ### HP-FN-01 — terminal basis realizer
 
-Approved internal surface:
+Lifecycle: implemented. Permission: source maintenance.
 
-```julia
-pqs_terminal_basis_realization(
-    support_records,
-    retained_records,
-    transform_contracts,
-    bundles;
-    identity_atol = 1.0e-8,
-    cross_atol = 1.0e-8,
-    weight_atol = 1.0e-14,
-)
-```
+Owner/canonical: `CartesianFinalBasisRealization`;
+[terminal basis and base assembly](terminal_basis_and_base_assembly.md).
 
-Returns `CartesianTerminalBasisRealization` on success. It owns direct-sector
-checks, PQS shell realization, positive final-integral sign canonicalization,
-and construction of `CartesianTerminalBasisBlock`.
+Source: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`.
+
+Validation: `test/driver_public/cartesian_base_hamiltonian_runtests.jl` and
+downstream augmented H2 validation.
+
+Dependencies: `HP-FN-00`, terminal support/retained records, transform
+contracts, and mapped axis bundles.
+
+Permission: maintain the live `pqs_terminal_basis_realization(...)` signature
+and direct/shell/compact-slab dispatch recorded in the canonical contract.
+
+Non-goals: removed `cross_atol` plumbing, global overlap repair, route
+reconstruction, or public API.
 
 ### HP-FN-02 — structural terminal support checks
 
-Corrected design authority: parent gausslet rows are orthonormal to machine
-precision and terminal regions own disjoint parent rows. Therefore block-local
-terminal basis supports are structurally orthogonal across blocks, and
-cross-block overlap is zero by construction.
+Lifecycle: implemented. Permission: source maintenance.
 
-Production validation should check:
+Owner/canonical: `CartesianFinalBasisRealization`;
+[terminal basis and base assembly](terminal_basis_and_base_assembly.md).
 
-- every block support equals its authoritative terminal support;
-- terminal support sets are pairwise disjoint;
-- each shell-local overlap is identity within tolerance.
+Source: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`.
 
-A nonzero structural overlap means duplicated support rows, incorrect row
-restriction, wrong support ownership, or an indexing error. It is not a
-physical residual to compute or repair, and production code must not mix
-coefficients into previous supports to reduce it. This correction does not
-approve source cleanup by itself; removing `max_cross_overlap` and replacing
-the audit plumbing needs a separate implementation blurb or approved cleanup
-surface.
+Validation: structural support checks in the live realizer and base/terminal
+consumer gates; implementation commit `d6968d15b`.
+
+Dependencies: orthonormal parent rows and authoritative disjoint supports.
+
+Permission: maintain exact support equality, duplicate-row rejection,
+pairwise disjointness, and shell-local identity validation.
+
+Non-goals: computed cross-block residuals, previous-block projection, or
+removal of the legacy object field without separate authority.
 
 ### HP-WIRE-01 — terminal-basis stage integration
 
-Approved owner: `cartesian_transforms`.
+Lifecycle: implemented. Permission: source maintenance.
 
-It connects supported PQS terminal plans to
-`pqs_terminal_basis_realization(...)` from typed terminal support, retained, and
-transform records. It must serve one-center atomic, contact-core diatomic, and
-separated diatomic terminal plans through the same entry point.
+Owner/canonical: `cartesian_transforms`;
+[terminal basis and base assembly](terminal_basis_and_base_assembly.md).
+
+Source: `src/pqs_source_box_route_driver_helpers.jl`.
+
+Validation: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`.
+
+Dependencies: typed terminal plans and `HP-FN-01`.
+
+Permission: pass current PQS support, retained, transform, and bundle objects
+directly into the terminal realizer.
+
+Non-goals: report reconstruction, new stage fields, WL policy, artifacts, or
+public workflow changes.
 
 ## Approved For White-Lindsey Terminal Basis Implementation
 
@@ -1047,71 +1051,45 @@ committed test file was added.
 
 ### HP-FN-03 — blockwise one-body assembly
 
-Approved file:
+Lifecycle: implemented. Permission: source maintenance.
 
-```text
-src/cartesian_final_basis_realization/pqs_terminal_one_body.jl
-```
+Owner/canonical: `CartesianFinalBasisRealization`;
+[terminal basis and base assembly](terminal_basis_and_base_assembly.md).
 
-Approved public internal helper:
+Source: `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`.
 
-```julia
-assemble_terminal_product_operator!(
-    destination,
-    basis::CartesianTerminalBasisRealization,
-    axis_x,
-    axis_y,
-    axis_z;
-    scale = 1.0,
-)
-```
+Validation: `test/driver_public/cartesian_base_hamiltonian_runtests.jl` and
+`test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
 
-Approved file-local Gaussian-sum helper:
+Dependencies: `HP-OBJ-01`, `HP-OBJ-02`, reusable one-dimensional product and
+Gaussian factor data.
 
-```julia
-_accumulate_terminal_gaussian_sum!(
-    destination,
-    basis::CartesianTerminalBasisRealization,
-    coefficients,
-    factors_x,
-    factors_y,
-    factors_z;
-    scale = -1.0,
-)
-```
+Permission: maintain block-pair product assembly and the file-local term-first
+Gaussian-sum accumulator within the current workspace bound.
 
-No `K`/`U_A` payload, stage field, report object, persistent cache, or
-orchestration API is approved by HP-FN-03.
+Non-goals: K/U payloads, persistent caches, reports, stage fields, or
+one-body orchestration APIs.
 
 ### HP-FN-04 — localized IDA assembly
 
-Approved file:
+Lifecycle: implemented. Permission: source maintenance.
 
-```text
-src/cartesian_final_basis_realization/pqs_terminal_ida.jl
-```
+Owner/canonical: `CartesianFinalBasisRealization`;
+[terminal basis and base assembly](terminal_basis_and_base_assembly.md).
 
-Approved function:
+Source: `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`.
 
-```julia
-assemble_terminal_ida_interaction!(
-    destination,
-    basis::CartesianTerminalBasisRealization,
-    coefficients,
-    raw_pair_terms_x,
-    raw_pair_terms_y,
-    raw_pair_terms_z,
-    weights_x,
-    weights_y,
-    weights_z;
-    weight_atol = 1.0e-12,
-    symmetry_atol = 1.0e-10,
-)
-```
+Validation: `test/driver_public/cartesian_base_hamiltonian_runtests.jl` and
+downstream augmented H2 validation; implementation commit `a33842fb8`.
 
-This is Slice C1 only: it produces final-basis `electron_electron_ida`. It does
-not authorize Hamiltonian construction, route wiring, artifacts, or a pair
-payload/cache.
+Dependencies: terminal blocks, one-dimensional raw pair terms, positive final
+IDA weights, and the producer-wide Coulomb expansion.
+
+Permission: maintain blockwise final-weight-normalized localized IDA assembly
+and symmetry validation.
+
+Non-goals: Hamiltonian construction, interaction rotation, four-index tensors,
+artifacts, route wiring, or pair payload/cache objects.
 
 ## Reference-Density Measurements And Internal Facilities
 
@@ -1425,25 +1403,29 @@ transforms, `C' V C`, and Cr2 production claims.
 
 ### HP-FN-05 — final Hamiltonian construction
 
-Approved as the narrow Slice C2 construction boundary for the existing
-`CartesianIDAHamiltonian`.
+Lifecycle: implemented. Permission: source maintenance.
 
-Conceptual boundary:
+Owner/canonical: `CartesianIDAHamiltonian` and the staged base producer;
+[terminal basis and base assembly](terminal_basis_and_base_assembly.md).
 
-```julia
-build_cartesian_ida_hamiltonian(
-    kinetic,
-    nuclear_attraction_unit_by_center,
-    electron_electron_ida,
-    nup,
-    ndn;
-    nuclear_charges,
-    nuclear_positions,
-)::CartesianIDAHamiltonian{Float64}
-```
+Sources:
 
-Implementation may call the existing `CartesianIDAHamiltonian(...)`
-constructor directly if no helper is needed.
+- `src/cartesian_ida_hamiltonian.jl`;
+- `src/cartesian_base_hamiltonian.jl`.
+
+Validation:
+
+- `test/ida/cartesian_ida_hamiltonian_runtests.jl`;
+- `test/driver_public/cartesian_base_hamiltonian_runtests.jl`.
+
+Dependencies: `HP-FN-03` one-body matrices, `HP-FN-04` IDA matrix, validated
+charges/positions/electron counts, and the existing Hamiltonian object.
+
+Permission: construct the existing `CartesianIDAHamiltonian` directly and
+assemble `H1 = K + sum_A Z_A U_A` through its current accounting helpers.
+
+Non-goals: wrapper result objects, route reports, new artifact schemas, solver
+workflow, or restoration of retired Slice D materialization.
 
 ### HP-WIRE-02 — historical direct materialization Hamiltonian handoff
 

@@ -698,14 +698,13 @@ result shapes, modules/files, stage-return fields, metadata keys, status or
 blocker symbols, report/artifact fields, committed probes/tests, and cross-file
 or module-owned helpers.
 
-Private file-local helpers are allowed only when they implement the approved
-Slice A/B/C/D pseudocode, create no persistent shape or vocabulary, stay within
-the approved file and line budget, and are reported in the implementation
-handoff.
+Private file-local helpers are allowed only when they implement the assigned
+canonical contract, create no persistent shape or vocabulary, stay within the
+approved source surface, and are reported in the implementation handoff.
 
-`HP-FN-04` approves only the internal Slice C1 localized IDA matrix assembly
-surface. `HP-FN-05` approves only the narrow Slice C2 construction boundary
-for the existing `CartesianIDAHamiltonian`. `HP-WIRE-02` is historical: its
+`HP-OBJ-01` through `HP-FN-05` use
+`docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md`
+as their canonical numerical contract. `HP-WIRE-02` is historical: its
 route-driver materialization wrapper was removed by `e2e164e9b` and is no
 longer source authority. Do not restore that wrapper, its report/save
 choreography, or compatibility adapters without a new docs-only amendment.
@@ -1531,19 +1530,13 @@ Approved canonical-driver call-site wiring for R3 same-construction K/U reuse:
   public inputs, artifacts, committed tests/fixtures, Cr2 workflow, or any file
   outside `bin/cartesian_ham_builder.jl`.
 
-`HP-FN-03` specifically approves
-`src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` as the Slice B
-source file. It does not approve a new K/U payload, stage-return field, report
-object, persistent one-body orchestration API, or status vocabulary.
-
-PQS terminal basis blocks must remain supported on owned terminal regions.
-Previous-block projection, recursive projection, and effective-support growth
-onto earlier terminal supports are not approved. Cross-block overlap is zero by
-construction because parent rows are orthonormal and terminal support regions
-are disjoint. A nonzero structural overlap means duplicated support rows,
-incorrect row restriction, wrong support ownership, or an indexing error; it is
-not a physical residual or repair path. Cross-block kinetic, nuclear, and IDA
-operator terms may still be nonzero.
+Foundational terminal/base work must follow
+`docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md`.
+PQS terminal blocks stay on owned disjoint rows; previous-block projection,
+recursive projection, and support growth are forbidden. Structural overlap is
+zero, while kinetic, nuclear, and IDA block couplings may be nonzero. `HP-FN-03`
+does not approve K/U payloads, stage fields, reports, persistent caches, or a
+one-body orchestration API.
 
 ## Hard Cartesian/PQS anti-bloat gate
 

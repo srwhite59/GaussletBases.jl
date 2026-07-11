@@ -31,9 +31,9 @@ are evidence, not normal startup authority.
 
 | Area | Current implemented state | Canonical contract |
 | --- | --- | --- |
-| Terminal basis | Disjoint owned terminal supports, shell-local realization, common PQS/WL first-step shellification | [Invariants](invariants.md), [common shell decomposition](common_terminal_shell_decomposition.md) |
+| Terminal basis | Disjoint owned terminal supports, support-local realization, structural cross-block overlap, blockwise exact operators | [Terminal basis and base assembly](terminal_basis_and_base_assembly.md), [common shell decomposition](common_terminal_shell_decomposition.md) |
 | Diatomic shell corrections | Angular-z extension, neutral face products, compact PQS/WL thin slabs, and aspect-aware PQS shared complete-shell `(q,q,L)` source modes | [Common shell decomposition](common_terminal_shell_decomposition.md), [aspect-aware source modes](pqs_complete_shell_aspect_source_modes.md) |
-| Base producer | Internal Cartesian IDA construction for the approved origin-centered atom and homonuclear z-axis diatomic scope, with optional existing artifacts | [R1 base producer](r1_public_base_producer.md), [one-center atoms](r1_one_center_base_atoms.md) |
+| Base producer | Blockwise exact H1, localized IDA, and direct `CartesianIDAHamiltonian` construction for the approved atom/diatomic scope | [Terminal basis and base assembly](terminal_basis_and_base_assembly.md), [R1 base producer](r1_public_base_producer.md), [one-center atoms](r1_one_center_base_atoms.md) |
 | Composition and driver | PQS/WL, base/supplemented composition through shared producer boundaries; canonical artifact-producing driver; terminal inventory and due-diligence reporting | [Composition contract](nesting_supplement_composition_plan.md), [driver workflow](cartesian_driver_usability_workflow.md), [due diligence](terminal_shellification_due_diligence.md) |
 | Mapping and source span | Expert `s_factor` and opt-in mapped-COMX source spans with provenance; defaults remain unchanged | [Mapping s_factor](pqs_mapping_s_factor.md), [mapped COMX](mapped_comx_source_span.md) |
 | Coulomb policy | One producer-wide expansion reaches parent/PGDG, base IDA, residual-GTO, and MWG. Compact45 and high135 are implemented | [Coulomb accuracy](coulomb_accuracy_policy.md) |
@@ -122,6 +122,7 @@ energy claim.
 Read only the relevant contract:
 
 - [Terminal and producer invariants](invariants.md)
+- [Terminal basis and base assembly](terminal_basis_and_base_assembly.md)
 - [Residual Gaussian domain](residual_gaussian_domain_module.md)
 - [Numerical-complete residual basis](numerical_complete_residual_basis.md)
 - [Protected-localized basis](protected_localized_basis.md)

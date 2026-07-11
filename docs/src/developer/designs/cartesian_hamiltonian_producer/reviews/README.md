@@ -8,6 +8,10 @@ The compact current authority now lives one directory up:
 - [../current.md](../current.md)
 - [../registry.md](../registry.md)
 - [../invariants.md](../invariants.md)
+- [../terminal_basis_and_base_assembly.md](../terminal_basis_and_base_assembly.md)
+
+The compact historical implementation index is:
+
 - [../implementation_slices.md](../implementation_slices.md)
 
 The full June 2026 design document is preserved at:
@@ -24,8 +28,8 @@ overlap is structurally zero for disjoint owned terminal supports, not a
 physical residual or repair target. Recursive-projection spike and performance
 measurements, including earlier Be2 measurements, are superseded; use
 post-`d2bf139c` Be2 measurements as the valid optimization baseline. Use the
-compact `registry.md`, `invariants.md`, and `implementation_slices.md`
-contract instead.
+compact `registry.md`, `invariants.md`, and
+`terminal_basis_and_base_assembly.md` contract instead.
 
 ## Historical Operating Model
 

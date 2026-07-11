@@ -6,7 +6,8 @@ blocks on authoritative owned support rows, treats structural cross-block
 overlap as zero by construction, and supersedes recursive-projection Be2
 measurements with post-`d2bf139c` Be2 measurements. Use
 `../current.md`, `../registry.md`, `../invariants.md`, and
-`../implementation_slices.md` for live authority.
+`../terminal_basis_and_base_assembly.md` for live authority. The compact
+`../implementation_slices.md` is a historical index only.
 
 Status: **historical archive; superseded by the compact current authority**
 

@@ -34,6 +34,9 @@ authority source.
 
 ## Terminal Basis
 
+The detailed object, realization, one-body, IDA, and Hamiltonian boundary is
+[terminal basis and base assembly](terminal_basis_and_base_assembly.md).
+
 - Terminal basis blocks are supported only on their owned terminal support
   regions.
 - Previous-block projection, recursive projection, and effective-support growth

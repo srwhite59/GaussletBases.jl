@@ -9,9 +9,12 @@ their numerical contracts. On disagreement, follow the fail-closed rule in
 
 ## Orientation
 
-Status: Slice A, Slice B, Slice C1, Slice C2, and the direct staged base
-Hamiltonian construction are implemented for the internal base PQS path. The
-historical Slice D route-driver wrapper is retired. R1 public base
+Status: the foundational
+[terminal-basis and base-assembly contract](terminal_basis_and_base_assembly.md)
+is implemented for the internal base path. It owns support-local terminal
+realization, blockwise exact one-body assembly, localized IDA, and direct
+`CartesianIDAHamiltonian` construction. The historical Slice D route-driver
+wrapper is retired. R1 public base
 producer implementation is approved for the H/H2 scope recorded in
 `r1_public_base_producer.md`, with a narrow explicit origin-centered
 one-center all-electron atom relaxation recorded in
@@ -149,6 +152,11 @@ ID or subsystem.
 - [current.md](current.md)
 - [registry.md](registry.md)
 - [invariants.md](invariants.md)
+- [Terminal basis and base assembly](terminal_basis_and_base_assembly.md) for
+  the implemented foundational terminal objects, support-local realization,
+  blockwise one-body/IDA matrices, and Hamiltonian construction boundary
+- [Historical implementation slices](implementation_slices.md) for the compact
+  non-authoritative Slice A/B/C/D disposition and later subsystem index
 - [Residual Gaussian domain module](residual_gaussian_domain_module.md) for
   current RG algorithm authority
 - [Residual Gaussian orthogonality robustness](residual_gaussian_orthogonality_robustness.md)

@@ -28411,3 +28411,37 @@ Carrying-cost note:
 - **MT6 old flat-path classification - maintenance.** Protected replacement,
   dormant rho0/FAPP/JANCHOR, and the unrelated EGOI WIP remain separate and
   are not compatibility dependencies of the numerical-complete member.
+
+## Cartesian Hamiltonian Producer Pass 376 - Canonical Terminal Basis And Base Assembly
+
+Commit(s):
+- this commit - extract the foundational terminal/base contract and compress
+  the historical implementation ledger.
+
+Summary:
+- Added `terminal_basis_and_base_assembly.md` as the single numerical owner for
+  the exact terminal block/realization objects, support-local PQS construction,
+  structural cross-block overlap, blockwise one-body and localized IDA
+  assembly, and direct `CartesianIDAHamiltonian` construction. Reconciled the
+  live terminal-realizer signature by removing stale documentation of the
+  deleted `cross_atol` keyword.
+- Reduced `implementation_slices.md` from `2,050` to `106` lines. It now keeps
+  only the Slice A/B/C/D disposition, durable rejected-path lessons, and links
+  to later canonical subsystem owners. The ten foundational registry IDs are
+  individually headed metadata records rather than parallel algorithms.
+
+Validation / evidence:
+- Compared object fields, signatures, current callers, and validation values
+  with committed terminal, one-body, IDA, Hamiltonian, base, and route-helper
+  source. Exact-ID heading counts, source/test paths, relative Markdown links,
+  stale-signature/retired-wrapper scans, local Documenter, and
+  `git diff --check` passed. No Julia numerical tests were needed.
+
+Goal advancement / guardrail:
+- MT5: removes the largest remaining mixed-role producer ledger and gives the
+  foundational IDs one canonical home. Before this log entry the docs-only
+  change is approximately `+647/-2243`, net `-1596` lines.
+- MT4 remains parallel: the controlled CR2 numerical-complete comparison is
+  unaffected. No source, test, lifecycle, terminal algorithm, residual, WL,
+  artifact, driver, or solver behavior changed. The retired Slice D wrapper
+  remains explicitly non-restorable.
