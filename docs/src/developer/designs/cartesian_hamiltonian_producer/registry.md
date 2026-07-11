@@ -4211,147 +4211,119 @@ Candidate future IDs, not approved:
 - `HP-RHO0-REFDENS-FN-01`;
 - `HP-RHO0-REFDENS-ERI-01`.
 
-## Approved For Cartesian Gaussian Raw-Block Nuclear Owner
-
-This section approves only the neutral uncharged by-center nuclear raw-block
-slice recorded in `cartesian_gaussian_raw_blocks_nuclear.md`. It does not
-approve a broad Gaussian raw-block framework.
+## Implemented Cartesian Gaussian Raw-Block Nuclear Owner
 
 ### HP-CGRB-FILE-01 — neutral Cartesian Gaussian raw-block module files
 
-Approved internal module and files:
+Lifecycle: implemented. Permission: source maintenance.
+
+Owner/canonical: `CartesianGaussianRawBlocks`;
+[nuclear raw blocks](cartesian_gaussian_raw_blocks_nuclear.md).
+
+Source:
 
 ```text
 src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl
 src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
+src/GaussletBases.jl
 ```
 
-`src/GaussletBases.jl` may add only the internal include needed to load the
-module, with include-order changes limited to immediate dependency/caller
-needs. No public export is approved.
+The `GaussletBases.jl` surface is internal include wiring only.
+
+Validation: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` and
+`test/core/runtests.jl`.
+
+Dependencies: shared Gaussian analytic integrals, Qiu-White proxy primitives,
+and the producer-resolved Coulomb expansion.
+
+Permission: maintain the internal module and nuclear owner; no public export.
+
+Non-goals: mixed-Hartree/non-nuclear expansion, routes, caches, artifacts,
+drivers, or solver/public API.
 
 ### HP-CGRB-FN-01 — exact uncharged Gaussian nuclear raw blocks
 
-Approved internal kernel family:
+Lifecycle: implemented. Permission: source maintenance.
 
-```text
-cartesian Gaussian nuclear raw blocks by center
-```
+Owner/canonical: neutral nuclear kernel;
+[nuclear raw blocks](cartesian_gaussian_raw_blocks_nuclear.md).
 
-The exact Julia names may follow local module style, but they must be neutral:
-no `r3`, `residual`, `qw`, route-stage, report, or status vocabulary.
-
-Approved numerical outputs:
-
-- parent-supplement `G-A` matrices by nuclear center;
-- supplement-supplement `A-A` matrices by nuclear center;
-- uncharged unit attraction convention, `U_A = -1/r_A`.
-
-Approved construction details:
-
-- analytic one-dimensional nuclear factor construction;
-- reuse across unique nuclear coordinates;
-- upper-triangular `A-A` assembly and mirroring;
-- function-local scratch/workspace reuse;
-- term-first contraction over the Gaussian expansion.
-
-The kernel must not apply physical nuclear charges, perform terminal
-projection, transform into residual bases, create overlap/kinetic/moment
-blocks, assemble Hamiltonians, or create persistent caches/bundles.
-
-### HP-CGRB-FN-02 — nuclear one-dimensional axis-family reuse
-
-Approved source owner:
+Source:
 
 ```text
 src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
 ```
 
-Approved optimization target: reorganize exact uncharged nuclear raw-block
-construction around unique supplement one-dimensional axis families rather
-than flattened 3D orbital labels.
+Entry point: `gaussian_nuclear_raw_blocks_by_center(...)`.
 
-Approved concepts:
+Validation/evidence: H2/core tests above and manager-log Pass 078.
 
-- unique supplement axis-family inventory independent of flattened 3D orbital
-  labels;
-- integer map `orbital_axis_family[orbital, axis] -> family_id`;
-- unique `G-A` table keys
-  `(axis, supplement_axis_family, nuclear_axis_coordinate)`;
-- unique `A-A` table keys
-  `(axis, canonical(left_family, right_family), nuclear_axis_coordinate)`;
-- transpose/orientation flags when canonical `A-A` family order is reversed;
-- term-first filling of each required one-dimensional table at most once per
-  Coulomb Gaussian term;
-- reuse of those tables across all 3D orbitals and orbital pairs that reference
-  the same axis families;
-- coupled primitive-pair contraction
-  `sum_pq c_p c_q Ix[p,q] Iy[p,q] Iz[p,q]`;
-- function-local workspaces and integer lookup plans only.
+Dependencies: `HP-CGRB-FILE-01` and producer-wide Coulomb expansion parity.
 
-Independent contraction of x/y/z axis tables into separate scalar contractions
-is forbidden. The kernel must not introduce persistent caches, metadata,
-status/report fields, route objects, payload structs, public API/export,
-artifact changes, Residual Gaussian algorithm changes, Qiu-White route
-semantic changes, overlap/kinetic/moment migration, Cr2 facade support, or Cr2
-artifact workflow.
+Permission: maintain exact uncharged by-center `G-A`/`A-A` output and the
+stable pairwise analytic factor formula.
+
+Non-goals: physical charge application, terminal/residual transforms,
+non-nuclear blocks, Hamiltonian assembly, or persistent providers.
+
+### HP-CGRB-FN-02 — nuclear one-dimensional axis-family reuse
+
+Lifecycle: implemented. Permission: source maintenance.
+
+Owner/canonical: neutral nuclear kernel;
+[nuclear raw blocks](cartesian_gaussian_raw_blocks_nuclear.md).
+
+Source:
+
+```text
+src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
+```
+
+Validation/evidence: H2/core tests and manager-log Pass 082B.
+
+Dependencies: `HP-CGRB-FN-01`, supplement axis-family inventory, and one
+resolved Coulomb expansion.
+
+Permission: maintain function-local family maps, unique center/family-pair
+tables, orientation flags, term-first filling, and coupled primitive products.
+
+Non-goals: independent x/y/z contraction, persistent caches, metadata,
+non-nuclear work, route semantics, public/artifact/Cr2 workflow.
 
 ### HP-CGAI-FN-01 — optional Cartesian Gaussian axis helper
 
-Approved source owner:
+Lifecycle: unused optional authority; superseded as a performance endpoint.
+Permission: dormant optional source support only.
+
+Owner/canonical: nuclear axis-helper disposition;
+[nuclear raw blocks](cartesian_gaussian_raw_blocks_nuclear.md).
+
+Potential source surface:
 
 ```text
 src/cartesian_gaussian_axis_integrals.jl
 ```
 
-Status: superseded as a performance endpoint. It remains an optional helper
-surface only if needed by `HP-CGRB-FN-02`.
+Implemented object/caller: none. The proposed in-place table helper never
+landed; nuclear family reuse succeeded inside `nuclear_blocks.jl`.
 
-Optional internal helper concept:
+Dependencies: only a future demonstrated need from `HP-CGRB-FN-02`.
 
-```julia
-_cartesian_gaussian_axis_integral_table!(
-    destination,
-    left_exponents,
-    left_centers,
-    left_powers,
-    left_prefactors,
-    right_exponents,
-    right_centers,
-    right_powers,
-    right_prefactors,
-    term;
-    factor_exponent = 0.0,
-    factor_center = 0.0,
-)
-```
+Permission: no active work. A separately assigned pass may use this ID only
+for the originally approved nonallocating nuclear factor/table support.
 
-The helper fills an already allocated destination matrix and must return the
-same values as `_cartesian_gaussian_axis_integral_table(...)` without
-allocating the result matrix. The existing scalar
-`_cartesian_gaussian_axis_integral(...)` behavior is unchanged. The allocating
-helper may delegate to the in-place helper if that preserves behavior cleanly.
-The same owner may also add a specialized nonallocating nuclear-factor scalar
-integral for the `:factor` term if needed by the `HP-CGRB-FN-02` family-reuse
-kernel.
-
-Allowed consumer surface:
-
-```text
-src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
-```
-
-That file may consume the optional helper only inside the exact uncharged
-by-center Gaussian nuclear raw-block construction under `HP-CGRB-FN-02`. Do
-not treat result-matrix allocation removal as the accepted Cr2 optimization
-target. No public API, export, persistent cache, raw-block payload,
-metadata/status/report field, artifact change, route object, Residual Gaussian
-algorithm change, Qiu-White route semantic change, overlap/kinetic/moment
-migration, Cr2 facade, or Cr2 artifact workflow is approved by this ID.
+Non-goals: treating the later live allocating generic axis helpers as this
+implementation, broad axis/raw-block rewrites, public API, caches, or route,
+artifact, residual, Qiu-White, and Cr2 behavior.
 
 ### HP-CGRB-WIRE-01 — Residual Gaussian and Qiu-White rewiring
 
-Approved caller rewiring surfaces:
+Lifecycle: implemented. Permission: caller maintenance.
+
+Owner/canonical: neutral nuclear consumer boundary;
+[nuclear raw blocks](cartesian_gaussian_raw_blocks_nuclear.md).
+
+Live caller surfaces:
 
 ```text
 src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
@@ -4359,101 +4331,106 @@ src/ordinary_qw_raw_blocks.jl
 src/ordinary_qw_operator_assembly.jl
 ```
 
-The implementation sequence is binding:
+Validation/evidence: H2 endpoint and manager-log Pass 078 Qiu-White/Be2/Cr2
+parity.
 
-1. Extract current nuclear `G-A`/`A-A` behavior preserving conventions.
-2. Rewire Residual Gaussian and Qiu-White callers to the neutral kernel.
-3. Delete duplicate route-local nuclear loops once parity is established.
-4. Optimize allocation inside the neutral owner only after extraction parity.
+Dependencies: `HP-CGRB-FN-01`; downstream residual/Qiu-White contracts remain
+separate owners.
 
-No Qiu-White route objects, Residual Gaussian selection logic, augmented
-operator transforms, terminal projection, parent construction, artifact
-workflow, report/status/payload fields, public API, or Cr2 facade/artifact
-workflow may be added under this ID.
+Permission: maintain the two direct neutral-kernel call sites and indirect
+Qiu-White assembly compatibility.
+
+Non-goals: residual selection/transforms, Qiu-White route objects, terminal or
+parent construction, reports, artifacts, public API, or Cr2 workflow.
 
 ### HP-CGRB-TEST-01 — nuclear extraction validation
 
-Approved validation:
+Lifecycle: validation completed; tracked coverage is indirect. Permission:
+test maintenance.
 
-- existing H2 Residual Gaussian endpoint unchanged;
-- Be2 Residual Gaussian endpoint unchanged, as ignored validation if needed;
-- Cr2 q4 exact nuclear `G-A`/`A-A` blocks match the current implementation at
-  roundoff, as ignored measurement only;
-- one small Qiu-White nuclear parity fixture.
+Owner/canonical: neutral nuclear validation;
+[nuclear raw blocks](cartesian_gaussian_raw_blocks_nuclear.md).
 
-Approved committed standalone parity file, if needed:
+Test/evidence:
 
 ```text
-test/nested/cartesian_gaussian_raw_blocks_nuclear_runtests.jl
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+test/core/runtests.jl
+docs/src/developer/pqs_manager_running_log.md (Passes 078-082B)
 ```
 
-This file must not be added to `test/runtests.jl` without a later amendment.
-It must not validate Cr2 workflow, artifacts, public API, route statuses,
-report mirrors, payload fields, or Residual Gaussian internals.
+Dependencies: implemented kernel/wiring and accepted ignored Qiu-White, Be2,
+and Cr2 parity evidence.
 
-## Approved For Cartesian Gaussian Raw-Block Non-Nuclear Owner
+Permission: maintain the H2 endpoint and stable-factor oracle. No dedicated
+raw-block test file currently exists.
 
-This section approves only the non-nuclear raw-block slice recorded in
-`cartesian_gaussian_raw_blocks_non_nuclear.md`. It extends the existing neutral
-Cartesian Gaussian raw-block owner under new `HP-CGRB-NN-*` IDs. It must not be
-implemented under `HP-CGRB-FN-02`.
+Non-goals: Cr2 workflow, artifact/public API, route/status/payload, or residual
+internal-vocabulary tests.
+
+## Implemented Cartesian Gaussian Raw-Block Non-Nuclear Owner
 
 ### HP-CGRB-NN-FILE-01 — non-nuclear raw-block file
 
-Approved owner file:
+Lifecycle: implemented. Permission: source maintenance.
+
+Owner/canonical: `CartesianGaussianRawBlocks`;
+[non-nuclear raw blocks](cartesian_gaussian_raw_blocks_non_nuclear.md).
+
+Source:
 
 ```text
 src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl
-```
-
-Allowed module plumbing:
-
-```text
 src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl
 ```
 
-Only the include needed to load `non_nuclear_blocks.jl` is approved there.
-Root include changes in `src/GaussletBases.jl` are not expected and are not
-approved unless a later amendment identifies a real include-order blocker.
+Validation: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`.
+
+Dependencies: shared private axis-family and analytic axis-table helpers.
+
+Permission: maintain the internal non-nuclear owner and module include.
+
+Non-goals: root/public exports, nuclear/mixed-Hartree expansion, route/cache,
+artifact, driver, or solver ownership.
 
 ### HP-CGRB-NN-FN-01 — exact non-nuclear Gaussian raw blocks
 
-Approved internal kernel family:
+Lifecycle: implemented. Permission: source maintenance.
+
+Owner/canonical: neutral non-nuclear kernel;
+[non-nuclear raw blocks](cartesian_gaussian_raw_blocks_non_nuclear.md).
+
+Source:
 
 ```text
-cartesian Gaussian non-nuclear raw blocks
+src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl
+src/cartesian_gaussian_axis_integrals.jl
 ```
 
-The exact Julia names may follow local module style, but they must be neutral:
-no `r3`, `residual`, `qw`, route-stage, report, or status vocabulary.
+The axis-integral file supplies shared private analytic tables.
 
-Approved numerical outputs:
+Entry points: `gaussian_non_nuclear_raw_blocks(...)` and
+`gaussian_non_nuclear_overlap_blocks(...)`.
 
-- parent-supplement `G-A` overlap, kinetic, coordinate moments, and second
-  moments;
-- supplement-supplement `A-A` overlap, kinetic, coordinate moments, and second
-  moments.
+Validation/evidence: H2 endpoint and manager-log Passes 084B-086B.
 
-Approved construction details:
+Dependencies: `HP-CGRB-NN-FILE-01`, deterministic supplement order, and
+shared axis-family/table conventions.
 
-- analytic one-dimensional table construction;
-- unique supplement axis-family reuse;
-- canonical `A-A` family-pair table keys and orientation handling;
-- upper-triangular `A-A` assembly and mirroring;
-- function-local scratch/workspace reuse;
-- coupled product-axis contraction preserving existing Qiu-White values;
-- reuse of once-built overlap `G-A` for residual setup mixed overlap
-  `X = G' S A` and exact augmented-operator assembly when both are built in
-  the same local construction call.
+Permission: maintain exact `G-A`/`A-A` overlap, kinetic, x/y/z, and x2/y2/z2
+blocks, symmetry, family reuse, and the overlap-only path.
 
-The kernel may return a compact fixed-field internal result containing only the
-approved raw matrices. It must not be a status object, route stage, report
-payload, metadata carrier, persistent cache, broad provider bundle, or artifact
-data.
+Non-goals: status/provider/cache objects, nuclear/mixed-Hartree blocks,
+terminal `G-G`, residual transforms, routes, artifacts, or public API.
 
 ### HP-CGRB-NN-WIRE-01 — Residual Gaussian and Qiu-White non-nuclear rewiring
 
-Approved caller rewiring surfaces:
+Lifecycle: implemented. Permission: caller maintenance.
+
+Owner/canonical: neutral non-nuclear kernel;
+[non-nuclear raw blocks](cartesian_gaussian_raw_blocks_non_nuclear.md).
+
+Source/callers:
 
 ```text
 src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
@@ -4461,53 +4438,41 @@ src/ordinary_qw_raw_blocks.jl
 src/ordinary_qw_operator_assembly.jl
 ```
 
-The implementation sequence is binding:
+Validation: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
+and manager-log Passes 084B-086B.
 
-1. Extract current Qiu-White non-nuclear `G-A`/`A-A` behavior preserving
-   conventions.
-2. Rewire Residual Gaussian exact-operator construction and residual mixed
-   overlap setup to consume the neutral output.
-3. Rewire Qiu-White consumers to the neutral output.
-4. Delete duplicate route-local non-nuclear loops once parity is established.
-5. Optimize allocation inside the neutral owner only after extraction parity.
+Dependencies: `HP-CGRB-NN-FN-01`, Residual Gaussian exact operators, and the
+live Qiu-White operator-assembly path.
 
-No nuclear raw-block changes, final-basis `G-G` product-matrix optimization,
-terminal projection, Residual Gaussian algorithm changes, augmented-operator
-transform changes, Qiu-White semantic changes, Qiu-White route objects, parent
-construction, persistent cache, report/status/payload fields, public API,
-artifact workflow, or Cr2 facade/artifact workflow may be added under this ID.
+Permission: maintain the Residual Gaussian and main diatomic Qiu-White callers
+of the neutral blocks.
 
-Post-extraction clarification: the accepted diatomic Qiu-White non-nuclear
-path consumes the neutral owner. Remaining QW-local non-nuclear cross/self
-helpers used by `_qwrg_atomic_cartesian_blocks_3d`, atomic QW reference
-operators, factor-term output, hybrid sidecars, dense-parent probes, and
-CPB/provider surfaces are retained live reference/sidecar/provider surfaces.
-They are not dead duplicates approved for deletion under this ID. Future
-rewiring must first name the affected sidecar/provider surfaces and, if needed,
-approve neutral ownership for factor blocks such as `factor_ga`/`factor_aa`.
+Non-goals: rewiring or deleting the retained atomic-reference, factor-term,
+hybrid-sidecar, dense-parent-probe, or CPB/provider Qiu-White helpers; changing
+residual transforms, terminal `G-G`, routes, caches, artifacts, or public API.
 
 ### HP-CGRB-NN-TEST-01 — non-nuclear extraction validation
 
-Approved validation:
+Lifecycle: completed validation. Permission: test maintenance.
 
-- existing H2 Residual Gaussian endpoint unchanged;
-- Be2 Residual Gaussian endpoint unchanged, as ignored validation if needed;
-- Cr2 q4 non-nuclear `G-A`/`A-A` overlap, kinetic, coordinate moment, and
-  second-moment blocks match the current implementation at roundoff, as
-  ignored measurement only;
-- residual setup mixed overlap `X` matches the current construction at
-  roundoff;
-- one small Qiu-White non-nuclear parity fixture.
+Owner/canonical: neutral non-nuclear kernel;
+[non-nuclear raw blocks](cartesian_gaussian_raw_blocks_non_nuclear.md).
 
-Approved committed standalone parity file, if needed:
+Test/evidence:
 
 ```text
-test/nested/cartesian_gaussian_raw_blocks_non_nuclear_runtests.jl
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+docs/src/developer/pqs_manager_running_log.md (Passes 084B-086B)
 ```
 
-This file must not be added to `test/runtests.jl` without a later amendment.
-It must not validate Cr2 workflow, artifacts, public API, route statuses,
-report mirrors, payload fields, or Residual Gaussian internals.
+Dependencies: implemented kernel/wiring and accepted ignored Qiu-White, Be2,
+and Cr2 parity evidence.
+
+Permission: maintain the H2 endpoint and existing indirect parity coverage. No
+dedicated raw-block test file currently exists.
+
+Non-goals: Cr2 workflow, artifacts, public API, route/status/payload, or
+residual internal-vocabulary tests.
 
 ## Approved For R3 Terminal G-G Product Matrices
 

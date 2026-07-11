@@ -156,9 +156,10 @@ The module must not own:
 The module may consume already-validated base Hamiltonian facts, terminal
 basis realization, parent axis/bundle data, supplement representations, raw
 exact blocks, and donor factor tables. Exact uncharged nuclear raw blocks are
-owned by the neutral Cartesian Gaussian raw-block nuclear owner when that
-kernel is present. Exact non-nuclear overlap/kinetic/moment raw blocks are
-owned by the neutral non-nuclear raw-block owner when that kernel is present.
+owned by the implemented
+[neutral nuclear raw-block kernel](cartesian_gaussian_raw_blocks_nuclear.md).
+Exact non-nuclear overlap/kinetic/moment raw blocks are owned by the implemented
+[neutral non-nuclear raw-block kernel](cartesian_gaussian_raw_blocks_non_nuclear.md).
 RG consumes these blocks as exact operator inputs to
 `transform_augmented_operator(...)`; it must not turn those inputs into a new
 report or provider payload framework.

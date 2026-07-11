@@ -1275,78 +1275,24 @@ Cr2-specific facade support, full Cr2 Hamiltonian/artifact, new committed
 tests, driver/bin/tool workflow, artifact schema expansion, or further
 unapproved tolerance changes without a prior docs-only amendment.
 
-Approved neutral Cartesian Gaussian raw-block nuclear owner:
+Implemented neutral Cartesian Gaussian raw-block ownership is canonical in
+`cartesian_gaussian_raw_blocks_nuclear.md` and
+`cartesian_gaussian_raw_blocks_non_nuclear.md`.
 
-- `HP-CGRB-FILE-01` approves only
-  `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`,
-  `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`, and the internal
-  `src/GaussletBases.jl` include needed to load the module. No public export is
-  approved.
-- `HP-CGRB-FN-01` approves only exact uncharged by-center Cartesian Gaussian
-  nuclear parent-supplement `G-A` and supplement-supplement `A-A` raw-block
-  construction, including analytic 1D nuclear factors, unique coordinate reuse,
-  upper-triangular `A-A` assembly/mirroring, function-local scratch reuse, and
-  term-first contraction.
-- `HP-CGRB-FN-02` approves only
-  `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl` for reorganizing the
-  neutral nuclear kernel around unique one-dimensional supplement axis-family
-  reuse. It must not be used for non-nuclear overlap/kinetic/moment work.
-- `HP-CGAI-FN-01` is optional helper authority only for
-  `src/cartesian_gaussian_axis_integrals.jl` support needed by
-  `HP-CGRB-FN-02`; it is not a broad raw-block or non-nuclear authority.
-- `HP-CGRB-WIRE-01` approves only behavior-preserving rewiring of the Residual
-  Gaussian and Qiu-White nuclear callers in
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
-  `src/ordinary_qw_raw_blocks.jl`, and `src/ordinary_qw_operator_assembly.jl`,
-  with duplicate route-local nuclear loops deleted after parity.
-- `HP-CGRB-TEST-01` approves the existing H2 Residual Gaussian endpoint,
-  ignored Be2 Residual Gaussian parity/performance if needed, ignored Cr2 q4
-  exact nuclear block parity, and one small standalone Qiu-White nuclear parity
-  fixture at `test/nested/cartesian_gaussian_raw_blocks_nuclear_runtests.jl` if
-  no existing test can host it cleanly. Do not add it to `test/runtests.jl`
-  without a later amendment.
-
-Approved neutral Cartesian Gaussian raw-block non-nuclear owner:
-
-- `HP-CGRB-NN-FILE-01` approves only
-  `src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl` and the include in
-  `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` needed to
-  load it. Root include changes are not approved unless a later amendment names
-  a real include-order blocker.
-- `HP-CGRB-NN-FN-01` approves only exact non-nuclear Cartesian Gaussian
-  parent-supplement `G-A` and supplement-supplement `A-A` raw-block
-  construction for overlap, kinetic, coordinate moments `x`/`y`/`z`, and
-  second moments `x^2`/`y^2`/`z^2`. It may use analytic 1D tables, unique
-  supplement axis-family reuse, canonical `A-A` family-pair keys, orientation
-  handling, upper-triangular `A-A` assembly/mirroring, function-local scratch
-  reuse, and coupled product-axis contraction.
-- `HP-CGRB-NN-WIRE-01` approves only behavior-preserving rewiring of Residual
-  Gaussian exact-operator/mixed-overlap setup and Qiu-White non-nuclear callers
-  in `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
-  `src/ordinary_qw_raw_blocks.jl`, and
-  `src/ordinary_qw_operator_assembly.jl`, with duplicate route-local
-  non-nuclear loops deleted after parity.
-- The main diatomic Qiu-White non-nuclear path has crossed this lane. Remaining
-  QW-local non-nuclear cross/self helpers used by atomic QW reference,
-  factor-term, hybrid sidecar, dense-parent probe, or CPB/provider surfaces are
-  not dead duplicates under `HP-CGRB-NN-WIRE-01`. They remain retained
-  reference/sidecar/provider surfaces until a later amendment either adds
-  neutral factor-block ownership or explicitly approves rewiring those
-  callers.
-- `HP-CGRB-NN-TEST-01` approves the existing H2 Residual Gaussian endpoint,
-  ignored Be2 Residual Gaussian parity/performance if needed, ignored Cr2 q4
-  non-nuclear raw-block parity, residual mixed-overlap parity, and one small
-  standalone Qiu-White non-nuclear parity fixture at
-  `test/nested/cartesian_gaussian_raw_blocks_non_nuclear_runtests.jl` if no
-  existing test can host it cleanly. Do not add it to `test/runtests.jl`
-  without a later amendment.
-
-The neutral raw-block owner must not construct pair factors, MWG interaction,
-terminal projection, Residual Gaussian selection/transforms, Qiu-White route
-objects, parent construction, final-basis `G-G` product-matrix optimization,
-persistent caches, metadata/report/status/payload fields, artifacts, public
-API, Cr2 facade support, or Cr2 artifact workflow. Physical nuclear charges
-are applied by consumers, not by the neutral uncharged nuclear kernel.
+- Nuclear blocks are exact uncharged, by-center `G-A` and `A-A` blocks. The
+  neutral owner consumes the producer-wide expansion; Hamiltonian consumers
+  apply physical nuclear charges only once, while the raw blocks own the
+  attractive sign.
+- Non-nuclear blocks are exact `G-A` and `A-A` overlap, kinetic, x/y/z, and
+  x2/y2/z2 operators in deterministic supplement order. They do not own
+  terminal `G-G` products or residual transforms.
+- `HP-CGAI-FN-01` remains unused optional authority: its proposed in-place
+  analytic-axis helper did not land and has no caller.
+- Retained Qiu-White atomic-reference, factor-term, hybrid-sidecar,
+  dense-parent-probe, and CPB/provider helpers are live surfaces, not raw-block
+  duplication approved for deletion.
+- The neutral owner does not own routes, caches, metadata, artifacts, public
+  API, residual selection, MWG, EGOI, or solver behavior.
 
 Approved R3/RG terminal `G-G` product-matrix optimization:
 

@@ -22,9 +22,10 @@ one-center all-electron atom relaxation recorded in
 exact augmented operators, and residual MWG/IDA interaction now belong to the
 internal `CartesianResidualGaussians` module. The R3 usability lane approves
 only a non-exported supported facade for H2 and internal/performance-supported
-Be2 artifacts. A neutral Cartesian Gaussian raw-block owner is approved for the
-uncharged by-center nuclear slice and the narrow non-nuclear
-overlap/kinetic/moment slice. A narrow R3/RG terminal `G-G` product-matrix
+Be2 artifacts. The neutral Cartesian Gaussian raw-block owner is implemented
+for the [uncharged by-center nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
+and the exact [non-nuclear overlap/kinetic/moment slice](cartesian_gaussian_raw_blocks_non_nuclear.md).
+A narrow R3/RG terminal `G-G` product-matrix
 optimization lane is approved separately. A narrow unit-nuclear `U_GG`
 Gaussian-sum allocation lane is approved after the remaining-allocation audit.
 The canonical Cartesian driver usability lane is approved so the standard

@@ -28599,3 +28599,37 @@ Goal advancement / guardrail:
 - **MT6 old flat-path classification - maintenance.** Protected-additive,
   retained-GTO EGOI, Coulomb, driver, and shell-resolution lanes remain
   independent and were neither activated nor reinterpreted here.
+
+## Cartesian Hamiltonian Producer Pass 381 - Canonicalize Neutral Gaussian Raw Blocks
+
+Commit(s):
+- `5da4c8a6e`, `47d9b2a3e`, `82b3f697f`, and `7c9afa8bd` - accepted nuclear
+  extraction, reuse, and stable arithmetic;
+- `00d052e29`, `9fa0cc16d`, `806b37e32`, and `71a89433c` - accepted
+  non-nuclear extraction and family reuse;
+- this commit - reconcile and compress their canonical documentation.
+
+Summary:
+- Replaced implementation plans and profiling chronology with source-backed
+  nuclear and non-nuclear contracts: exact return fields, uncharged attractive
+  nuclear sign, consumer-applied charges, deterministic supplement ordering,
+  term/family reuse, and Residual-Gaussian/Qiu-White caller boundaries.
+- Reconciled all ten IDs into individual registry records. `HP-CGAI-FN-01`
+  remains unused optional authority because its proposed in-place helper never
+  landed. Retained Qiu-White atomic, factor, sidecar, probe, and provider
+  helpers remain live and are not deletion targets under the neutral owner.
+
+Validation / evidence:
+- Compared committed helpers, exact returned fields and dimensions, charge/sign
+  assembly, operator families, direct and retained callers, implementation
+  commits, focused tests, and manager Passes 078-086B. Heading/path/lifecycle
+  scans, `git diff --check`, and the full local Documenter build passed. No
+  Julia numerical test was needed because source and numerical behavior are
+  unchanged.
+
+Goal advancement / guardrail:
+- MT5: the two canonical pages now own the numerical contract and the registry
+  is metadata-oriented, removing `237` net documentation lines including
+  this entry. MT4 remains parallel. Mixed-Hartree, terminal `G-G`, residual
+  transforms, Qiu-White provider semantics, routes, artifacts, and solvers are
+  unchanged and remain separate owners.
