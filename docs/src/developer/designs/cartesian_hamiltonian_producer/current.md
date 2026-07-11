@@ -176,8 +176,8 @@ Implemented base path:
   explicit external-GTO orbital import by `C_F = <F|G_external>*C_G` and now
   approve a narrow protected-member composition using native
   `S_LG = <L|G_external>`. `HP-REP-XGTO-PROTECT-SIDECAR-FN-01` and
-  `HP-REP-XGTO-PROTECT-SIDECAR-TEST-01` approve, but do not yet implement, one
-  standalone native-order representation sidecar retaining `S_LG`, direct
+  `HP-REP-XGTO-PROTECT-SIDECAR-TEST-01` implement one standalone native-order
+  representation sidecar retaining `S_LG`, direct
   spin imports, member/packet identity, and metric-aware capture diagnostics.
   External `S_GG` remains validation/diagnostic data, not a generalized final
   metric. The canonical contract is

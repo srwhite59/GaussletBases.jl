@@ -262,7 +262,7 @@ needed to assemble a new exact cross overlap.
 Therefore, cross-overlap construction currently requires reconstructing both
 protected members in memory from the recipe. A bundle cannot derive a new
 transfer from member artifacts alone. Raw-`L` coefficient fields remain
-forbidden. `HP-REP-XGTO-PROTECT-SIDECAR-*` separately approves saving an exact
+forbidden. `HP-REP-XGTO-PROTECT-SIDECAR-*` separately implements saving an exact
 external `S_LG` once while one in-memory member exists; it does not let the
 bundle reconstruct other overlaps or add member fields.
 

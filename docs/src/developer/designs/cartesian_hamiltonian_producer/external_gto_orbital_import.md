@@ -1,9 +1,9 @@
 # External GTO Orbital Import
 
-Status: the general import facility is implemented under
-`HP-REP-XGTO-IMPORT-FN-01` and `HP-REP-XGTO-IMPORT-TEST-01`. A narrow
-protected-localized composition extension is approved under those IDs. The
-durable representation sidecar is approved, but not yet implemented, under
+Status: the general import facility and narrow protected-localized composition
+are implemented under `HP-REP-XGTO-IMPORT-FN-01` and
+`HP-REP-XGTO-IMPORT-TEST-01`. The durable representation sidecar is implemented
+under
 `HP-REP-XGTO-PROTECT-SIDECAR-FN-01` and
 `HP-REP-XGTO-PROTECT-SIDECAR-TEST-01`.
 
@@ -308,11 +308,6 @@ At the current Cr2 dimensions, `6945 x 448` Float64 `S_LG` storage is about
 25 MB and is intentionally retained. Do not replace it with reconstruction
 metadata or lossy compression in this lane.
 
-Until the source-backed sidecar lands, CR2 may use the same private exact
-handoff and save `S_LG`, direct imports, fingerprints, native ordering, and
-diagnostics under ignored consumer-owned paths. That transition does not make
-the file a recognized repo artifact or authorize solver/endpoint claims.
-
 ## Consumer Boundary
 
 The repo owns exact representation transfer, packet/member identity, capture
@@ -375,13 +370,11 @@ Forbidden in this lane:
 - ladder manifest, transfer-sidecar, or restart-sidecar changes;
 - reuse of ladder sidecar identities for external-GTO representation.
 
-The first source pass must use the existing source and test files. It may add
-one compact internal protected-import/readback result shape, but no new module,
+The implementation remains in the existing source and test files and owns one
+compact internal protected-import/readback result shape. It adds no module,
 source file, public export, driver input, protected/ladder artifact schema, or
-fixture. Target
-at most 350 added source lines and 220 added test lines. Stop if implementation
-requires persistent raw protected coefficients, a generalized final metric,
-or changes outside the approved source surface.
+fixture. Persistent raw protected coefficients, a generalized final metric,
+or changes outside the approved source surface remain forbidden.
 
 ## Decision Rule
 

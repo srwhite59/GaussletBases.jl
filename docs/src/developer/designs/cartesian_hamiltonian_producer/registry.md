@@ -2254,8 +2254,8 @@ molecule-trained fitting, or consumption of polished packets.
 
 ### HP-REP-XGTO-IMPORT-FN-01 / HP-REP-XGTO-IMPORT-TEST-01 — external GTO orbital import
 
-Lifecycle: the general packet/import facility is implemented. A narrow
-protected-localized composition extension is approved pending implementation.
+Lifecycle: the general packet/import facility and narrow protected-localized
+composition extension are implemented.
 
 Owner and canonical contract:
 
@@ -2293,7 +2293,7 @@ overlap, screened-Hartree/EGOI/selection changes, or Cr2 endpoint claims.
 
 ### HP-REP-XGTO-PROTECT-SIDECAR-FN-01 / HP-REP-XGTO-PROTECT-SIDECAR-TEST-01 — protected external-GTO representation sidecar
 
-Lifecycle: approved pending internal source and validation; not implemented.
+Lifecycle: implemented internal source and validation contract.
 
 Owner and canonical contract:
 

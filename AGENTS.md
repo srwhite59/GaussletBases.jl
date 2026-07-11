@@ -793,7 +793,7 @@ protected member uses native `S_LG = <L|G_external>` from the existing exact
 handoff. External `S_GG` is validation and metric-aware capture data, not a
 generalized final-basis metric. Direct imported coefficients are not
 solver-orthonormalized. `HP-REP-XGTO-PROTECT-SIDECAR-FN-01` and
-`HP-REP-XGTO-PROTECT-SIDECAR-TEST-01` additionally approve one standalone
+`HP-REP-XGTO-PROTECT-SIDECAR-TEST-01` additionally implement one standalone
 native-order sidecar containing `S_LG`, direct spin imports, packet/member
 fingerprints, provenance, and metric-aware capture diagnostics. The sidecar is
 not a protected Hamiltonian field or ladder transfer/restart. No PySCF

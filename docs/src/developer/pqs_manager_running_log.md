@@ -27929,3 +27929,68 @@ Goal advancement / guardrail:
 - Exact next step: implement the private K60 preset, fingerprint provenance,
   three-value facade/driver validation, and bounded compact/standard/high gates
   in the already-approved files.
+
+## Cartesian Hamiltonian Producer Pass 365 - Protected External-GTO Representation Sidecar
+
+Commit(s):
+- this commit - implement exact protected-localized external-orbital import and
+  the standalone native representation sidecar.
+
+Summary:
+- Added the internal composition from an in-memory protected member to native
+  `S_LG = <L|G_external>`, with direct alpha/beta imports
+  `C_L = S_LG*C_G`. Full external capture is whitened in the source `S_GG`
+  metric; occupied capture remains in the orthonormal native `L` basis.
+- Added the fixed v1 JLD2 sidecar with exact `S_LG`, packet/member/Coulomb
+  identity, direct spin imports, and capture diagnostics. It supports fresh
+  same-AO imports and validates either the in-memory member or a relocated
+  protected artifact by content. It stores no `G_L`, `A_L`, `H1_L`, or
+  `Vee_L` payload and performs no orbital orthonormalization or solver work.
+
+Validation / evidence:
+- Doer reported package load, generic importer `30/30`, protected sidecar
+  `49/49`, the complete 82-key inventory, and `git diff --check`. Manager
+  reviewed the source/test diff, corrected one source-metric singular-value
+  sign/order boundary check, and reran the focused test: `30/30` and `49/49`
+  passed in `3.6s` and `3.9s` after package precompilation.
+- No endpoint producer basis was built, so terminal shell due diligence was
+  not applicable. The sidecar delegates Coulomb provenance to the centralized
+  serializer and does not implement the separately approved `:standard` tier.
+
+Goal advancement / guardrail:
+- LT2/LT5/LT8 and MT4: removes the repeated protected-member rebuild needed to
+  import an external HF state for the controlled CR2 screened/unscreened
+  comparison. CR2 still owns solver-ready orthonormalization, HF state,
+  per-sweep overlap reporting, and physical interpretation.
+- The facility remains internal and standalone. No PySCF dependency, public
+  workflow, generalized final metric, Hamiltonian/interaction transform,
+  protected/ladder schema change, screened-Hartree/EGOI change, or Cr2 endpoint
+  claim was added.
+
+Carrying-cost result:
+- Source delta is `+387/-37`, net `+350`; focused tests add `220` lines, exactly
+  the approved bounds. Shared validated-cross-overlap import removes duplicate
+  generic/protected assembly; no new source file, module, export, or fixture
+  was introduced.
+- Exact next step: CR2 may consume the sidecar and own the warm-start workflow.
+  The producer-wide `:standard` implementation remains an independent lane.
+
+### Medium-Term Goal Checkpoint After Pass 365
+
+- MT1 fake-PQS quarantine: completed/maintained. Representation persistence
+  does not alter route construction.
+- MT2 independent PQS recovery: completed for the supported producer; no new
+  recovery or generalized-overlap path was introduced.
+- MT3 common physical support vocabulary: active/maintained through native
+  `L` ordering, exact cross overlaps, source-metric capture, and explicit
+  packet/member fingerprints.
+- MT4 supplement staging: active and materially advanced. Additive reference
+  construction and durable external-state representation are implemented; the
+  current physics target is the controlled CR2 screened-Hartree off/on run on
+  one basis and one imported start.
+- MT5 cleanup pressure: active. The sidecar landed at its explicit carrying-
+  cost cap without public scaffolding; dormant FAPP/JANCHOR cleanup and further
+  single-home documentation work remain separate candidates.
+- MT6 old flat-path classification: maintenance. No row-gauge, interaction
+  rotation, retained-GTO EGOI WIP, or legacy compatibility adapter was
+  promoted.
