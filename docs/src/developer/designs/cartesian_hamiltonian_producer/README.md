@@ -164,8 +164,8 @@ ID or subsystem.
 - [Residual Gaussian domain module](residual_gaussian_domain_module.md) for
   current RG algorithm authority
 - [Residual Gaussian orthogonality robustness](residual_gaussian_orthogonality_robustness.md)
-  for the narrow final residual identity-check robustness, tolerance, and
-  cutoff-policy lanes
+  for the current merge/identity checks, production cutoff precedence, and
+  superseded tolerance history
 - [Default-off direct-G residual injection](residual_gaussian_injection_hybrid.md)
   for the implemented preservation-only compatibility path and its completed
   measurement history
@@ -291,10 +291,8 @@ ID or subsystem.
   exact augmented operators, matched-width Gaussian descriptors, and residual
   IDA interaction blocks.
 - [Residual Gaussian orthogonality robustness](residual_gaussian_orthogonality_robustness.md)
-  approves only a narrow robust final residual identity validation pass for
-  small floating-point overshoots with healthy owner-local and merge metrics,
-  plus the default final identity tolerance and residual occupation cutoff
-  policy.
+  owns the current robust final merge, identity validation, production
+  `1e-6` cutoff, and superseded IDTOL/CUTOFF-01 history.
 - [Cartesian Gaussian raw blocks - nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
   approves only the neutral owner for exact uncharged by-center Gaussian
   nuclear `G-A`/`A-A` raw blocks shared by Residual Gaussian and Qiu-White

@@ -573,10 +573,6 @@ these approved design IDs:
 - `HP-RG-TEST-01`
 - `HP-RG-ORTHO-FN-01`
 - `HP-RG-ORTHO-TEST-01`
-- `HP-RG-IDTOL-FN-01`
-- `HP-RG-IDTOL-TEST-01`
-- `HP-RG-CUTOFF-FN-01`
-- `HP-RG-CUTOFF-TEST-01`
 - `HP-RG-CUTOFF-FN-02`
 - `HP-RG-CUTOFF-TEST-02`
 - `HP-RG-NUMCOMP-FN-01`
@@ -1002,77 +998,22 @@ same-construction composition, and existing standalone H2 validation. Read
 file may keep live composition and writer hooks, but must not duplicate moved
 Residual Gaussian physics.
 
-Approved Residual Gaussian module surfaces:
+Implemented Residual Gaussian source ownership is canonical in
+`residual_gaussian_domain_module.md`; numerical precedence is canonical in
+`residual_gaussian_orthogonality_robustness.md`.
 
-- `HP-RG-FILE-01` approves only
-  `src/cartesian_residual_gaussians/CartesianResidualGaussians.jl`,
-  `src/cartesian_residual_gaussians/residual_basis.jl`,
-  `src/cartesian_residual_gaussians/augmented_operators.jl`, and
-  `src/cartesian_residual_gaussians/mwg_interaction.jl`.
-- `HP-RG-OBJ-01` approves the residual Gaussian basis object.
-- `HP-RG-FN-01` approves `build_residual_gaussian_basis(...)`.
-- `HP-RG-FN-02` approves `transform_augmented_operator(...)`.
-- `HP-RG-FN-03` approves `moment_matched_gaussians(...)`.
-- `HP-RG-FN-04` approves `assemble_residual_ida_interaction(...)`.
-- `HP-RG-WIRE-01` approves migration/delegation from the old terminal residual
-  file.
-- `HP-RG-TEST-01` approves only validation through the existing standalone H2
-  residual-GTO/MWG endpoint and optional ignored Be2 measurement.
-- `HP-RG-ORTHO-FN-01` approves only robust final residual
-  orthogonalization/identity validation in
-  `src/cartesian_residual_gaussians/residual_basis.jl`, with
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
-  only for narrow internal keyword plumbing if needed.
-- `HP-RG-ORTHO-TEST-01` approves only the existing H2 residual-GTO/MWG endpoint,
-  H2 readback if the facade path is touched, ignored strict N2 q5 p10 residual
-  audit/artifact smoke, and one passing N2 comparison.
-- `HP-RG-IDTOL-FN-01` approves only the default final residual
-  `R' S R` identity validation tolerance update to `1.0e-8` in
-  `src/cartesian_residual_gaussians/residual_basis.jl`, with
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
-  only for narrow compatibility keyword default plumbing if needed. This
-  older default policy is superseded for production by `HP-RG-CUTOFF-FN-01`
-  and then `HP-RG-CUTOFF-FN-02`.
-- `HP-RG-IDTOL-TEST-01` approves only Be atom cc-pV5Z `lmax = 1`
-  residual audit/artifact validation with the same `21` retained residual
-  directions, Be atom cc-pVDZ `lmax = 1` comparison, the unchanged H2
-  residual-GTO/MWG endpoint, and reporting of `max |G' S R|`,
-  `max |R' S R - I|`, allowed tolerance, retained count, minimum retained
-  occupation, and final merge condition.
-- `HP-RG-CUTOFF-FN-01` supersedes the RG default cutoff/tolerance policy in
-  `src/cartesian_residual_gaussians/residual_basis.jl`, with
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
-  only for narrow compatibility keyword default plumbing if needed. The default
-  `residual_occupation_cutoff` was `5.0e-8`, and the default final residual
-  `R' S R` identity validation `identity_atol` was `5.0e-8`. This older
-  production cutoff is superseded by `HP-RG-CUTOFF-FN-02`; the identity
-  tolerance remains `5.0e-8`.
-- `HP-RG-CUTOFF-TEST-01` approves only Cr atom
-  `basis_ns = 9`, `map_ns = 11`, `lmax = 1` residual validation showing the
-  marginal `3.637e-8` direction is dropped or the construction passes under the
-  new policy, Be atom cc-pV5Z still passing, the unchanged H2 residual-GTO/MWG
-  endpoint, and reporting of retained counts, minimum retained occupation,
-  `max |G' S R|`, `max |R' S R - I|`, allowed tolerance, and final merge
-  condition. It also approves exactly updating the existing H2 endpoint test
-  `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` so both cutoff
-  assertions expect `5.0e-8` instead of `1.0e-8`: the in-memory
-  `residual.occupation_cutoff` assertion and the artifact/provenance
-  `values[:occupation_cutoff]` assertion. No other committed test or fixture
-  change is approved.
-- `HP-RG-CUTOFF-FN-02` supersedes the production residual occupation cutoff in
-  `src/cartesian_residual_gaussians/residual_basis.jl`, with
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` allowed
-  only for narrow compatibility keyword default plumbing if needed. The default
-  `residual_occupation_cutoff` is `1.0e-6`; the default final residual
-  identity validation `identity_atol` remains `5.0e-8`.
-- `HP-RG-CUTOFF-TEST-02` approves only residual-only validation after that
-  cutoff change: Cr2 owner retained counts should drop from `68 + 68` to
-  `62 + 62`; recompute and report residual spectra including `min eig(K_RR)`,
-  `min eig(H1_RR)`, and low-mode candidate composition; Be high-zeta and H2
-  residual-GTO/MWG endpoints must still pass; existing H2 cutoff/provenance
-  assertions may be updated from `5.0e-8` to `1.0e-6`. It does not approve
-  full HF, Cr2 artifact/workflow, kinetic/H1 spectral guards, width-filtering
-  defaults, or new committed fixtures/tests.
+- Core RG source work is limited to the internal module, basis object,
+  owner-local builder, exact augmented transform, final-residual descriptors,
+  and weight-aware MWG/IDA assembly named by `HP-RG-FILE/OBJ/FN-*`.
+- `HP-RG-WIRE-01` permits only live terminal/facade/driver delegation and
+  composition. Artifact writing and facade parsing remain outside RG.
+- `HP-RG-ORTHO-*` maintains the symmetric final merge, hard near-singular
+  failure, strict `G-R` check, and scale-aware residual identity check.
+- `HP-RG-CUTOFF-FN-02` owns the current production cutoff `1e-6` while
+  `identity_atol` remains `5e-8`. IDTOL and CUTOFF-01 are superseded history
+  and are absent from the active source whitelist.
+- Validation IDs permit maintenance of existing bounded tests only; they are
+  not new source, fixture, endpoint, or Cr2-workflow authority.
 - `HP-RG-SPECTRAL-AUDIT-01` is measurement-only authority after the
   `1.0e-6` cutoff cleanup. Ignored probes may report retained residual counts
   by owner, low `K_RR`, low `H1_RR = K_RR + sum_A Z_A U_A_RR`, low-mode owner
@@ -1221,53 +1162,33 @@ Approved Residual Gaussian module surfaces:
 Non-negotiable RG guardrails:
 
 - residual directions are selected separately on each physical owner atom and
-  merged once;
-- the ordinary production residual-occupation cutoff is not numerical rank,
-  not an integral weight, and not a conditioning repair knob. The explicit
-  `HP-RG-NUMCOMP-*` opt-in is the sole current exception: it interprets the
-  same owner-local residual-metric spectrum only to discard numerical nulls at
-  its fixed `1e-10` threshold;
+  merged once by a symmetric inverse square root;
+- materially negative owner metrics and zero/near-singular final merges fail.
+  Never floor or clamp eigenvalues to preserve rank;
+- `HP-RG-CUTOFF-FN-02` owns the ordinary production cutoff `1e-6`;
+  `identity_atol = 5e-8` remains separate. IDTOL and CUTOFF-01 values are
+  historical, not selectable production alternatives;
+- the explicit `HP-RG-NUMCOMP-*` opt-in alone uses cutoff `1e-10`, with
+  injection disabled and no compactness prefilter. It is not a production
+  default, integral weight, or conditioning repair;
 - exact augmented one-body/moment transformation is not the MWG approximation;
 - MWG descriptors are not invariant under arbitrary residual rotations and must
   be computed from the final merged residual basis;
 - `V_GM` uses weight-aware final-basis density normalization for PQS shell
   blocks;
-- final residual identity validation may use the approved
-  `HP-RG-ORTHO-FN-01` combined absolute/relative check only for small
-  floating-point overshoots after owner-local selection and a healthy final
-  merge; it must not change occupation cutoff, selection semantics, or merge
-  failure rules;
-- `HP-RG-IDTOL-FN-01` sets the production default final residual identity
-  tolerance to `1.0e-8` in the older Be tolerance lane. This is now superseded
-  by `HP-RG-CUTOFF-FN-01` and `HP-RG-CUTOFF-FN-02` for production defaults;
-- `HP-RG-CUTOFF-FN-02` supersedes the production residual occupation cutoff:
-  `residual_occupation_cutoff = 1.0e-6`, while
-  `identity_atol = 5.0e-8` remains unchanged. This is an explicit owner-local
-  residual selection policy for marginal Cr2 directions; it does not change
-  owner grouping, merge checks,
-  `G' S R` validation, width/zeta filtering, MWG/IDA, artifacts, driver
-  workflow, public API, or source files outside the approved RG owner/plumbing
-  surface;
-- `HP-RG-NUMCOMP-FN-01` and `HP-RG-NUMCOMP-TEST-01` approve only the
-  implemented internal opt-in numerical-complete policy in
-  `numerical_complete_residual_basis.md`. Reuse
-  `build_residual_gaussian_basis(...)` with explicit `1e-10` cutoff,
-  injection disabled, and no compactness prefilter; preserve `G`, keep the
-  existing unlocalized final merge, and validate packet occupied capture only
-  after construction. The production default remains `1e-6`. No second RG
-  builder/object, replacement/injection, localization, artifact/public/solver
-  work, interaction rotation, Gaussian-array enrichment, or Cr2-specific
-  behavior is authorized;
+- final identity validation may absorb only scale-aware floating-point cleanup
+  after healthy selection, merge, and strict `G-R` orthogonality. It must not
+  change retained rank or failure rules;
 - `HP-RG-SPECTRAL-AUDIT-01` is a follow-up residual-sector measurement lane,
   not a guard implementation. It may classify the remaining low Cr2
-  residual-only `H1_RR` mode after the `1.0e-6` cutoff, but it must not change
+  residual-only `H1_RR` mode after the `1e-6` cutoff, but it must not change
   selection policy, add pruning, or add production instrumentation;
 - RG does not own basis loading, parent lattice construction, terminal topology,
   raw analytic formula ownership, facade parsing, artifact writing,
   `supplement_provenance/`, report/status/payload objects, or public exports.
 
 The active H2 owner-local residual-MWG endpoint has augmented dimension `505`
-and lowest-orbital IDA self-Coulomb `0.4574161883692301` within `1.0e-10`.
+and lowest-orbital IDA self-Coulomb `0.4574161883692301` within `1e-10`.
 Older R3-B scalars and global-selection construction paths are historical only.
 Do not add width scaling, tolerance relaxation, global raw-candidate Lowdin,
 global raw-column pivoted-Cholesky residual selection, public export,

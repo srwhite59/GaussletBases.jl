@@ -28633,3 +28633,36 @@ Goal advancement / guardrail:
   this entry. MT4 remains parallel. Mixed-Hartree, terminal `G-G`, residual
   transforms, Qiu-White provider semantics, routes, artifacts, and solvers are
   unchanged and remain separate owners.
+
+## Cartesian Hamiltonian Producer Pass 382 - Canonicalize Residual Core And Cutoff Policy
+
+Commit(s):
+- `93ac83ab5`, `7c0651be5`, and `7e45d5da1` - implemented the RG domain
+  object, exact transforms, and MWG owner;
+- `76453cc39`, `47e56593c`, `f0b662dca`, and `1f7f04e56` - implemented the
+  robustness and successive default policies;
+- this commit - reconcile and compress current RG authority.
+
+Summary:
+- Made the 324-line domain page the sole core-algorithm contract and the
+  171-line robustness page the sole numerical-precedence contract. They now
+  record the exact live object fields, owner-local metric, one final merge,
+  hard negative/near-singular failures, exact operator formulas, final-basis
+  MWG descriptors, weight-aware `V_GM`, and live compatibility callers.
+- Converted all sixteen registry IDs to metadata records. Core and ORTHO
+  remain implemented maintenance surfaces; CUTOFF-02 owns production `1e-6`.
+  IDTOL and CUTOFF-01 remain addressable historical evidence but no longer
+  grant source/test work. Explicit numerical-complete `1e-10` remains opt-in.
+
+Validation / evidence:
+- Reconciled source defaults, all 24 object fields, functions, callers,
+  implementation commits, H2 assertions, and manager Passes 065-185. ID
+  heading/whitelist, stale-language, path, cutoff-precedence, and staged-scope
+  scans passed, as did `git diff --check` and the full local Documenter build.
+  No numerical Julia test was needed because source and defaults are unchanged.
+
+Goal advancement / guardrail:
+- MT5 removes `545` net documentation lines including this entry. MT4
+  remains parallel. No cutoff, tolerance, orientation, MWG, numerical-complete,
+  injection/protected, artifact, solver, or Cr2 behavior changed; eigenvalue
+  flooring and global residual selection remain forbidden.
