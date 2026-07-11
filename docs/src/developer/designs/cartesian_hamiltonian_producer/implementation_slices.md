@@ -497,128 +497,24 @@ Approved robustness lane:
   measurement. `HP-RG-PROTECT-LADDER-BUNDLE-FN-01` /
   `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` are implemented and governed only by
   [protected-localized ladder bundles](protected_localized_ladder.md).
-- `HP-RG-RHO0-GAL-AUDIT-01` approves only a measurement-only rho0/Galerkin IDA
-  correction audit on top of that protected-localized baseline. The audit may
-  use ignored probes, `/Users/srw/dmrgtmp` outputs, in-memory experiments over
-  existing protected-localized geometry and one-body/Vee data, analytic
-  IDA/Coulomb checks, small H/He/H2 checks, Cr2 fixed-density diagnostics, and
-  one bounded Cr2 HF replay only if static diagnostics are sane. It does not
-  approve source edits, public wiring, artifact/provenance changes, production
-  Hamiltonian workflow, `C' V C` revival, rejected broad directions as MWG
-  residual channels, Vee scaling as the fix, screened-reference production
-  claims, Cr2 production energy claims, publication-scale sweeps, or committed
-  tests.
-  Later row-gauge audits retired this as the target formulation. It remains
-  measurement evidence, not source direction.
-- `HP-RHO0-REFDENS-AUDIT-01` approves only a measurement-only
-  reference-density-matrix correction audit. The object is a fixed `P0`, not a
-  scalar rho0 or row gauge. The audit must compare
-  `F_exact0[P0]` and `F_app0[P0]` for the same represented reference density,
-  build `Delta_F0 = F_exact0 - F_app0`, and include the anchoring constant
-  `C0 = E_exact0 - E_app0 - Tr(P0 * Delta_F0)` so both energy and first
-  derivative match at `P0`. First audit is Hartree-only. The lane may use
-  ignored probes, `/Users/srw/dmrgtmp` outputs, small H/He/H2/Be/Be2
-  constructions, and optional Cr/Cr2 read-only diagnostics after small systems
-  pass. It does not approve source edits, public wiring, artifact/provenance
-  changes, production Hamiltonian or solver workflow, direct `C' V C`,
-  residual/MWG default changes, basis-fate policy changes, broad rejected
-  directions as MWG residuals, Cr2 production claims, publication-scale
-  sweeps, or committed tests. `HP-RHO0-REFDENS-FN-01` and
-  `HP-RHO0-REFDENS-ERI-01` are candidate future IDs only.
-- `HP-RHO0-REFDENS-MIXH-AUDIT-01` approves only a measurement-first exact
-  mixed Hartree seam audit. The target operator is
-  `(final final | reference reference)` for computing `F_exact[P0]` in a real
-  final/protected-localized basis. Allowed scope is ignored probes,
-  `/Users/srw/dmrgtmp` outputs, H/Be/Be2 only, exact Hartree only, helper/kernel
-  inventory, and a Be/Be2 fixed-`P0` audit only if the exact seam is feasible
-  without source edits. If not feasible, the pass must report the smallest
-  source owner needed. It does not approve source edits, artifacts, public
-  workflow, solver workflow, Cr/Cr2 diagnostics, HF exchange, row-action or
-  `diag(J)` substitutes, `q0`, center metadata, IDA proxy shortcuts, direct
-  `C' V C`, residual/MWG default changes, basis-fate changes, or committed
-  tests.
-- `HP-RHO0-MIXH-GG-FN-01` approves only the first source-backed exact Hartree
-  `GG` seam under `CartesianGaussianRawBlocks`: one-center atomic `P_A`,
-  same-center reference pair-density terms, Coulomb-expanded separable
-  one-body packets, and terminal/base `GG` output plus compact diagnostics.
-  It does not approve `GA`/`AA`, protected-localized transforms,
-  `F_app[P0]`, `Delta_F0`, `C0`, artifacts, public workflow, Cr/Cr2, HF
-  exchange, dense final ERIs, or residual/MWG/basis-fate changes.
-  `HP-RHO0-MIXH-GG-TEST-01` requires bounded H/Be/Be2 `GG` validation, dense
-  oracle spot checks, and at least one angular/off-diagonal same-center
-  reference-pair check.
-- `HP-RHO0-MIXH-GAAA-FN-01` approves only the raw exact Hartree `GA`/`AA`
-  extension under the same neutral owner. It reuses one-center `P_A`
-  validation, same-center pair-density terms, and factor packets to build
-  `GA = <G|v_P_A|A>` and `AA = <A|v_P_A|A>`. It does not approve
-  protected/final transforms, `F_app[P0]`, `Delta_F0`, `C0`, artifacts,
-  public workflow, Cr/Cr2, exchange, dense final ERIs, cross-atom reference
-  density products, or residual/MWG/basis-fate changes.
-  `HP-RHO0-MIXH-GAAA-TEST-01` requires bounded H/Be `GA`/`AA` validation and
-  dense-oracle spot checks, including angular reference pairs and angular
-  supplement rows.
-- `HP-RHO0-MIXH-FEXACT-FN-01` approves only transforming exact mixed Hartree
-  raw blocks into the current final/protected-localized sector using existing
-  protected one-body transform helpers in `augmented_operators.jl`. It does
-  not approve approximate Fock, correction constants, artifacts, public
-  workflow, Cr/Cr2, exchange, new raw kernels, geometry selection changes, or
-  IDA/MWG interaction transforms. `HP-RHO0-MIXH-FEXACT-TEST-01` requires
-  H/Be/Be2-only final/protected `F_exact_Hartree[P0]` validation and
-  dense-oracle spot checks.
-- `HP-RHO0-FAPP-AUDIT-01` approves only the measurement audit for the
-  approximate-side `F_app[P0]` seam. The audit must derive `F_app[P0]` from the
-  actual current IDA/MWG approximate energy convention for represented
-  `P0_final` and finite-difference validate
-  `dE_app[P0; dP] = Tr(dP * F_app[P0])` on H/Be/Be2. It does not approve
-  source edits, correction constants, artifacts/public workflow, Cr/Cr2, or
-  row-action/`diag(J)`/`q0`/center-metadata/direct-`C' V C` substitutes.
-- `HP-RHO0-FAPP-FN-01` approves only paired approximate energy/Fock helper(s)
-  in `src/cartesian_ida_hamiltonian.jl` for fixed represented spin densities
-  in a `CartesianIDAHamiltonian` basis. The helper(s) must use the actual
-  two-index IDA/MWG density-density convention, keep interaction-only and
-  total contributions unambiguous, and return alpha/beta Fock matrices that
-  finite-difference match the source-owned energy helper. It does not approve
-  public API/export/default changes, artifacts, correction constants, Cr/Cr2,
-  exact exchange extensions, residual/MWG defaults, or row-action/`diag(J)`/
-  `q0`/center-metadata/direct-`C' V C` substitutes.
-  `HP-RHO0-FAPP-TEST-01` approves only package load, compact alpha/beta
-  finite-difference checks, and H/Be/Be2-only ignored endpoint replay if the
-  helper is consumed by the rho0 audit.
-- `HP-RHO0-ANCHOR-FN-01` is implemented but superseded for Hartree-correction
-  physics/stability interpretation. It formed `Delta_F0_alpha/beta` by
-  subtracting the full approximate interaction Fock, including the current
-  same-spin exchange-like term, from `F_exact_Hartree[P0]`. Do not use that
-  `Delta_F0` as the Hartree reference-density correction.
-- `HP-RHO0-CORR-AUDIT-01` remains measurement-only, but is suspended until the
-  direct-Hartree anchor replacement lands. A corrected-Hamiltonian audit using
-  the old full-interaction `Delta_F0_alpha/beta` is invalid as physics/
-  stability evidence.
-- `HP-RHO0-JANCHOR-FN-01` approves the direct-Hartree replacement:
-  `src/cartesian_ida_hamiltonian.jl` may add private direct-only helpers with
-  `q = diag(P_alpha) + diag(P_beta)`,
-  `E_app_direct = 1/2 * q' * V * q`, and
-  `F_app_direct = Diagonal(V * q)`;
-  `src/cartesian_residual_gaussians/augmented_operators.jl` may form
-  `Delta_J0 = F_exact_Hartree[P0] - F_app_direct[P0]` and `C0_J`. The
-  corrected full interaction keeps existing approximate exchange:
-  `E_corr_int = E_app_full_int + Tr((P_alpha + P_beta) * Delta_J0) + C0_J`.
-  `HP-RHO0-JANCHOR-TEST-01` requires direct-only finite-difference validation,
-  direct anchor equality, shared alpha/beta `Delta_J0`, full corrected
-  interaction finite differences, and H/Be/Be2 corrected audit replay. It does
-  not approve artifacts/public workflow, production integration, solver
-  workflow, Cr/Cr2, exact exchange correction, or changes to the current
-  approximate exchange convention.
-- `HP-RHO0-XPAIR-AUDIT-01` approves only a measurement audit for the remaining
-  exchange/direct pairing blocker. It records that supplement-space atomic
-  `P0` and direct-Hartree anchor algebra are viable, while corrected
-  Hamiltonian behavior with inherited approximate exchange-like terms is not
-  ready. Ignored H/Be/Be2 probes may compare direct-Hartree correction,
-  inherited approximate exchange-like contributions, exact/supplement-space
-  exchange diagnostics where feasible, and an explicitly non-production
-  direct-only corrected-operator diagnostic. It does not approve source edits,
-  artifacts/public workflow, solver integration, Cr/Cr2, exact exchange
-  implementation, changes to the current approximate exchange convention, or
-  direct-only physics as a Hamiltonian.
+- `HP-RHO0-MIXH-GG-FN-01` / `HP-RHO0-MIXH-GG-TEST-01`,
+  `HP-RHO0-MIXH-GAAA-FN-01` / `HP-RHO0-MIXH-GAAA-TEST-01`, and
+  `HP-RHO0-MIXH-FEXACT-FN-01` / `HP-RHO0-MIXH-FEXACT-TEST-01` are
+  implemented neutral infrastructure governed by
+  [reference Hartree numerics](reference_hartree_numerics.md).
+- The row-gauge, fixed-`P0`, mixed-seam, FAPP, old-anchor, and
+  corrected-Hamiltonian audit slices are completed or superseded history.
+  Their durable findings and the deferred `HP-RHO0-XPAIR-AUDIT-01`
+  measurement question are recorded in
+  [rho0 and reference-density correction history](rho0_reference_density_matrix.md).
+- `HP-RHO0-REFDENS-FN-01` and `HP-RHO0-REFDENS-ERI-01` remain unapproved
+  candidates. `HP-RHO0-ANCHOR-*` carry no authority.
+  `HP-RHO0-FAPP-*` and `HP-RHO0-JANCHOR-*` are dormant retirement
+  candidates and approve no new callers or source work.
+- Current correction ownership is separate:
+  [screened Hartree residual density](screened_hartree_residual_density.md),
+  [screened Hartree correction assembly](screened_hartree_correction_assembly.md),
+  and [protected additive reference correction](protected_additive_reference_correction.md).
 
 ## Compact Hamiltonian Artifact Manifest
 

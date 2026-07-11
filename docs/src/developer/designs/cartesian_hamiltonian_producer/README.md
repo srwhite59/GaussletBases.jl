@@ -135,16 +135,14 @@ The old complete-core-shell RHF payload stack was removed by `28e9b2c84` under
 were removed by `e2e164e9b`, and the dangling ladder runners by `77fa2700b`.
 Those IDs are historical deletion records; the canonical producer path is the
 staged human-facing driver plus `CartesianIDAHamiltonian` artifacts.
-The row-gauge `rho0/Galerkin` measurement lane remains historical evidence
-only. The current screened-correction target is the reference-density-matrix
-path in `rho0_reference_density_matrix.md`: fixed `P0`, exact Hartree side,
-direct-only approximate Hartree anchor `Delta_J0`/`C0_J`, and later
-small-system corrected behavior. The older full-interaction anchor is
-superseded for Hartree-correction interpretation. H/Be/Be2 evidence now makes
-the remaining blocker exchange/direct pairing, not unrepresented `P0`;
-`HP-RHO0-XPAIR-AUDIT-01` is the measurement-only next lane. Artifact, solver,
-public workflow, Cr2 production, and exact exchange correction remain
-deferred.
+The implemented [reference Hartree numerics](reference_hartree_numerics.md)
+remain neutral exact `GG/GA/AA` and protected-transform infrastructure. Old
+row-gauge, fixed-`P0`, FAPP, anchor, and corrected-Hamiltonian experiments are
+compressed in
+[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
+Live screened-Hartree and additive-reference policy belongs to their separate
+canonical pages; deferred `HP-RHO0-XPAIR-AUDIT-01` is not a current source
+lane or blocker.
 
 ## Documentation Map
 
@@ -178,10 +176,10 @@ ID or subsystem.
 - [Protected additive atomic reference correction](protected_additive_reference_correction.md)
   for the internal occupied-union, additive packet `P0/J0/E0`, and native
   protected-localized screened-Hartree correction lane
-- [Reference-density-matrix IDA correction](rho0_reference_density_matrix.md)
-  for the successor to row-gauge rho0/Galerkin probes: fixed `P0`, exact and
-  approximate reference Fock/energy matching, and the measurement-only
-  `HP-RHO0-REFDENS-AUDIT-01` lane
+- [Reference Hartree numerics](reference_hartree_numerics.md) for implemented
+  neutral exact `GG/GA/AA` kernels and protected fixed/localized transforms
+- [Rho0 and reference-density correction history](rho0_reference_density_matrix.md)
+  for superseded fixed-`P0` experiments and the deferred XPAIR question
 - [Terminal shellification due diligence](terminal_shellification_due_diligence.md)
   for the derived basis review report and advisory warning contract
 - [PQS complete-shell aspect source modes](pqs_complete_shell_aspect_source_modes.md)

@@ -27802,3 +27802,47 @@ Carrying-cost result:
   determinant. No new fit policy, artifact, or workflow surface was added.
 - Exact remaining blocker: regenerate the Cr packet through the ordinary path;
   there is no Be/Ne/Be2 source blocker.
+
+## Cartesian Hamiltonian Producer Pass 362 - Canonical Reference-Hartree Numerics
+
+Commit(s):
+- this commit - separate durable neutral Hartree numerics from superseded
+  rho0 correction experiments and compress their active documentation.
+
+Summary:
+- Added `reference_hartree_numerics.md` as the single contract for the
+  implemented `HP-RHO0-MIXH-GG-*`, `HP-RHO0-MIXH-GAAA-*`, and
+  `HP-RHO0-MIXH-FEXACT-*` kernels and protected transforms. Preserved the
+  mixed-Hartree raw-block owners, the dense Gaussian oracle/pair-term algebra,
+  exact fixed/localized transforms, and their independence from correction
+  policy.
+- Reduced the two rho0 documents to a compact fixed-`P0` history and historical
+  plan stub. FAPP and JANCHOR remain source facts but dormant retirement
+  candidates outside the source whitelist; the old anchor has no authority;
+  XPAIR remains deferred measurement only; REFDENS source names remain
+  unapproved.
+
+Validation / evidence:
+- Compared the canonical page and compact registry entries with committed
+  mixed-Hartree, protected-transform, approximate-Fock, direct-anchor, and
+  screened-Hartree source/callers. Verified every retained source/test path,
+  active-whitelist membership, lifecycle wording, and canonical links.
+- Local Documenter completed in `10.45s`; focused scans and
+  `git diff --check` passed. No Julia numerical tests were needed for this
+  documentation-only pass.
+
+Goal advancement / guardrail:
+- MT5: removes duplicated formulas, pass chronology, probe paths, and stale
+  authority while preserving neutral numerical infrastructure. This is
+  parallel cleanup; the active physics direction remains the controlled CR2
+  screened-Hartree off/on measurement and exact external-orbital warm start.
+- No source, test, artifact, API, workflow, numerical, exchange, solver, or
+  Cr/Cr2 authority changed.
+
+Carrying-cost result:
+- Documentation delta including the new canonical page but before this record
+  is `+520/-4157`, net `-3637` lines. No compatibility layer or generated
+  authority mechanism was added.
+- Exact next cleanup candidate: separately review and delete dormant FAPP and
+  JANCHOR source/tests only after a fresh caller audit; this pass deliberately
+  leaves their implementation untouched.

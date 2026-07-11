@@ -5333,991 +5333,181 @@ target energy, provenance, and summary roundtrip.
 Exclusions: committed large Cr2 fixtures, production HF, solver continuation,
 and alternate artifact or transfer conventions.
 
-### HP-RG-RHO0-GAL-AUDIT-01 — rho0/Galerkin IDA correction audit
+### HP-RG-RHO0-GAL-AUDIT-01 - row-gauge rho0 audit
 
-Status: approved measurement-only audit authority. This is not source
-authority and not production Hamiltonian authority.
+Status: completed and superseded historical measurement evidence.
 
-Purpose: test whether a reference-density / Galerkin correction can improve
-the existing IDA interaction after the protected-localized injection
-convention has removed the broad residual-collapse mechanism. This is an
-IDA-improvement lane on top of the protected-localized inherited-site baseline,
-not a basis-fate rule, not a replacement for compact RG/injection selection,
-and not permission to revive `C' V C`.
+Owner and evidence:
+[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
+No source or test authority remains.
 
-Baseline convention:
+### HP-RHO0-REFDENS-AUDIT-01 - fixed-P0 audit
 
-- build protected-localized injected basis `L`;
-- use exact one-body operators in `L`;
-- inherit pre-injection site-order `Vee_M` as the IDA/MWG interaction;
-- judge by small-system and Cr2 physics diagnostics.
+Status: completed and superseded historical measurement evidence.
 
-Approved audit surfaces:
+Owner and evidence:
+[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
+Candidate source IDs `HP-RHO0-REFDENS-FN-01` and
+`HP-RHO0-REFDENS-ERI-01` remain unapproved.
 
-- ignored `tmp/work/*.jl` measurement probes only;
-- outputs under `/Users/srw/dmrgtmp/...`;
-- in-memory experiments over existing protected-localized geometry and
-  one-body/Vee data;
-- analytic IDA/Coulomb sanity checks;
-- small H, He, and H2 checks;
-- Cr2 fixed-density diagnostics;
-- one bounded Cr2 HF replay only if static rho0/Galerkin diagnostics are sane.
+### HP-RHO0-REFDENS-MIXH-AUDIT-01 - exact mixed-Hartree seam audit
 
-Required diagnostics:
+Status: completed historical measurement evidence. Its durable result is
+the implemented neutral MIXH/FEXACT family below.
 
-- exact rho0 definition and normalization;
-- whether rho0 is a spherical one-Gaussian, multi-Gaussian, or fitted atomic
-  density;
-- Galerkin/reference vector or matrix convention used;
-- finite and symmetry checks;
-- analytic 1s self-Coulomb checks where applicable;
-- H, He, and H2 IDA sanity shifts;
-- Cr2 low `H1` / interaction incentive diagnostics;
-- fixed-density energy shift on the saved bad density if available;
-- bounded HF residual, compact-`R`, and injected-site occupation;
-- comparison to the protected-localized inherited-site `Vee_M` baseline.
+### HP-RHO0-MIXH-GG-FN-01 - exact mixed-Hartree GG block
 
-Decision rule: if rho0/Galerkin improves small IDA sanity checks and Cr2
-diagnostics without reviving broad/residual occupation, the result may justify
-a later source-design amendment. If it introduces negative broad
-residual/interaction modes, inconsistent energy accounting, or large
-occupation incentives, stop and record rho0/Galerkin as the current blocker.
+Status: implemented.
 
-Forbidden:
+Owner:
+`CartesianGaussianRawBlocks`.
 
-- tracked source edits;
-- public driver/API/input wiring or exports;
-- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
-- production Hamiltonian workflow;
-- `C' V C` interaction transform revival;
-- treating rejected broad directions as MWG residual channels;
-- treating Vee scaling as the fix;
-- screened-reference production claims;
-- Cr2 production energy claims;
-- publication-scale validation sweeps;
-- committed tests or fixtures.
+Canonical contract:
+[reference Hartree numerics](reference_hartree_numerics.md).
 
-This is repo-level algorithm engineering validation. Larger molecule and
-convergence sweeps belong to a consumer-oriented workflow after the repo path
-is stable.
-
-Historical status update: later row-gauge measurements showed this lane is
-algebraically under-specified as a correction target. `(J*w)/w`, `diag(J)`,
-and the IDA/MWG density-proxy potential are different objects. Keep
-`HP-RG-RHO0-GAL-AUDIT-01` as measurement evidence and guardrail text, not as
-source direction.
-
-### HP-RHO0-REFDENS-AUDIT-01 — reference-density-matrix correction audit
-
-Status: approved measurement-only authority. This is not source authority,
-artifact authority, solver authority, or Cr2 production authority.
-
-Purpose: replace the ambiguous row-gauge `rho0/Galerkin` target with a fixed
-reference density matrix `P0`. The corrected model must match both exact
-reference energy and exact reference first derivative at the same represented
-`P0`.
-
-Target equations:
-
-```text
-Delta_F0_sigma = F_exact0_sigma[P0] - F_app0_sigma[P0]
-
-C0 =
-    E_exact0[P0]
-  - E_app0[P0]
-  - sum_sigma Tr(P0_sigma * Delta_F0_sigma)
-```
-
-The audit target is:
-
-```text
-E_new[P0] = E_exact0[P0]
-dE_new/dP_sigma at P0 = F_exact0_sigma[P0]
-```
-
-First audit: Hartree-only, spin-summed where practical. HF exchange correction
-is a later candidate lane.
-
-Approved measurement surfaces:
-
-- ignored `tmp/work/*.jl` probes;
-- durable text/TSV output under `/Users/srw/dmrgtmp/...`;
-- committed docs report only if manager review asks for durable evidence;
-- existing small H, He, H2, Be, or Be2 constructions;
-- optional Cr/Cr2 read-only diagnostics after small systems pass.
-
-Required first systems:
-
-- H `q5` direct-core sanity;
-- Be atom or Be2 small protected-localized basis;
-- only then Cr atom / Cr2 measurement.
-
-Required outputs:
-
-- `P0` definition: atom, basis, `lmax`, electron count, spin treatment, and
-  core/full choice;
-- reference density construction and normalization;
-- representability in the protected-localized final basis: projected trace
-  loss, occupied orbital overlap loss, and per-owner/angular-channel loss;
-- exact reference: `E_exact[P0]`, `F_exact[P0]`, and finite-difference
-  derivative check;
-- approximate reference: `E_app[P0]`, `F_app[P0]` from the actual
-  solver/Hamiltonian convention, and finite-difference derivative check;
-- correction: `Delta_F`, `C0`, verification of
-  `E_new[P0] = E_exact[P0]`, and verification of
-  `F_new[P0] = F_exact[P0]`;
-- safety diagnostics: `Delta_F` spectra by sector, occupied-orbital
-  expectations, compact RG row expectations, protected-injected row
-  expectations, and whether broad negative modes are introduced.
-
-Reference-density rules:
-
-- use a density matrix `P0`, not only scalar `rho0(r)`;
-- record whether the reference is full atom, core-only, or valence-screened;
-- record whether `P0` came from an internal or external atomic Hartree/HF
-  calculation;
-- stop or mark approximate if the reference uses directions not represented by
-  the protected-localized basis.
-
-Exact integral families to name in the audit:
-
-```text
-(phi_i phi_j | chi_a chi_b)     final pair against reference GTO pair
-(chi_a chi_b | chi_c chi_d)     reference self-energy
-```
-
-Do not hide future exact mixed-integral work in ad hoc RG probe code. If
-source work becomes justified, the exact mixed-integral owner should be
-decided explicitly.
-
-Forbidden:
-
-- tracked source edits;
-- public driver/API/input wiring or exports;
-- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
-- production Hamiltonian workflow;
-- solver workflow changes;
-- Cr2 production energy claims;
-- direct `C' V C` interaction revival;
-- residual/MWG default changes;
-- basis-fate policy changes;
-- broad rejected directions as MWG residuals;
-- publication-scale validation sweeps;
-- committed tests or fixtures.
-
-Failure rule: if the audit cannot define `F_app[P0]` from the actual
-IDA/MWG solver convention, cannot validate exact/approximate derivative
-checks, or finds that `P0` is not represented by the protected-localized
-basis, stop and report the blocker. Do not add source instrumentation or
-reinterpret discarded broad directions as MWG residuals.
-
-### HP-RHO0-REFDENS-MIXH-AUDIT-01 — exact mixed Hartree seam audit
-
-Status: approved measurement-only authority. This is not source authority,
-artifact authority, solver authority, or Cr/Cr2 authority.
-
-Purpose: find or prototype, in ignored measurement code only, the missing exact
-Hartree mixed operator
-
-```text
-(final final | reference reference)
-```
-
-needed to compute `F_exact[P0]` for a final/protected-localized basis against a
-reference GTO density matrix `P0`.
-
-Approved measurement surfaces:
-
-- ignored `tmp/work/*.jl` probes;
-- durable text/TSV output under `/Users/srw/dmrgtmp/...`;
-- H, Be, and Be2 only;
-- exact Hartree only;
-- existing helper/kernel inventory and candidate call-path classification;
-- Be/Be2 fixed-`P0` audit only if the exact mixed Hartree seam is feasible
-  inside ignored measurement code.
-
-Required outputs:
-
-- identify existing kernels/helpers that can or cannot build
-  `(final final | reference reference)`;
-- report whether each candidate supports final/protected-localized rows,
-  compact RG rows, injected localized rows, and reference GTO pairs;
-- report the exact mixed Hartree construction convention used by any probe;
-- finite and symmetry checks for the mixed Hartree operator;
-- small H sanity if needed to validate the probe convention;
-- Be/Be2 fixed-`P0` audit result if feasible;
-- candidate future source owner and rationale if source is needed;
-- exact missing native fact or kernel if no existing seam can compute the
-  operator.
-
-Forbidden:
-
-- tracked source edits;
-- public driver/API/input wiring or exports;
-- artifact schema, provenance, writer, reader, manifest, or sidecar changes;
-- production Hamiltonian or solver workflow;
-- Cr atom, Cr2, or Cr2 production diagnostics;
-- HF exchange;
-- direct `C' V C` interaction revival;
-- row action `(J*w)/w`, `diag(J)`, `q0`, center metadata, or IDA proxy
-  shortcuts as substitutes for `F_exact[P0]`;
-- residual/MWG default changes;
-- basis-fate policy changes;
-- broad rejected directions as MWG residuals;
-- committed tests or fixtures.
-
-Decision rule: if the exact mixed Hartree operator can be built in ignored
-measurement code, proceed only to the bounded Be/Be2 fixed-`P0` audit. If it
-cannot, stop and report the smallest neutral source seam needed. Do not run Cr
-atom or Cr2 diagnostics until the Be/Be2 protected-localized `P0` audit has a
-real exact Hartree mixed operator.
-
-### HP-RHO0-MIXH-GG-FN-01 — first exact mixed Hartree GG block
-
-Status: approved narrow source authority.
-
-Purpose: implement the first source-backed exact Hartree seam for the
-reference-density lane:
-
-```text
-one-center atomic P_A
--> same-center reference pair-density terms
--> Coulomb-expanded separable one-body packets
--> terminal/base GG Hartree block
-```
-
-Approved source surface:
+Source:
 
 - `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`;
-- `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` only for
-  internal include/import wiring;
-- `src/gaussian_coulomb_reference.jl` only for narrow oracle or pair-term
-  algebra extraction/reuse if needed.
+- `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` for
+  internal module wiring;
+- `src/gaussian_coulomb_reference.jl` only for the existing dense oracle or
+  narrow pair-term algebra reuse.
 
-Approved behavior:
+Dependencies and permission: one-center finite symmetric `P_A`, reference
+Gaussian supplement data, the existing Coulomb Gaussian expansion, and
+terminal Gaussian-sum accumulation may produce exact finite symmetric
+terminal/base `GG` plus compact diagnostics. No correction policy,
+exchange, artifact, public workflow, solver, residual selection, or Cr/Cr2
+authority is implied.
 
-- add private, module-internal vector-backed records/helpers for atomic
-  reference pair-density terms and compact diagnostics;
-- validate finite/symmetric one-center atomic `P_A` inputs and report
-  electron-count normalization diagnostics;
-- support angular and off-diagonal same-center reference pairs;
-- use the existing Coulomb Gaussian expansion convention to build separable
-  one-body factor packets;
-- construct only exact terminal/base `GG` Hartree blocks;
-- keep dense Gaussian Coulomb matrices as bounded oracle/debug validation
-  only.
+### HP-RHO0-MIXH-GG-TEST-01 - exact mixed-Hartree GG validation
 
-Forbidden:
+Status: implemented validation authority.
 
-- `GA`, `AA`, protected-localized transforms, injected-sector transforms, or
-  residual augmented output;
-- `F_app[P0]`, `Delta_F0`, `C0`, reference-energy assembly, or corrected
-  Hamiltonian construction;
-- public driver/API/export/defaults, solver workflow, artifacts, manifests,
-  provenance, writers, readers, or sidecars;
-- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
-- HF exchange and `(final GTO | GTO final)` kernels;
-- row action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
-  shortcuts as substitutes for exact Hartree;
-- residual/MWG default changes, basis-fate changes, or broad rejected
-  directions as MWG residuals;
-- dense final four-index ERI materialization;
-- runtime-keyed `NamedTuple` or basis-size tuple inventories;
-- committed tests or fixtures.
+Committed consumer test:
+`test/nested/cartesian_screened_hartree_correction_runtests.jl`.
 
-Failure rule: stop if `GG` construction requires dense final four-index ERIs,
-source outside the approved surface, `GA`/`AA`, protected transforms,
-artifact/schema work, or broader reference-density correction machinery.
+Compact gate: package load; bounded H/Be/Be2 finite/symmetric output;
+angular and off-diagonal same-center pair coverage; dense-oracle spots; no
+Cr/Cr2. Historical acceptance is manager Pass 284 and commit `efaee93f6`.
 
-### HP-RHO0-MIXH-GG-TEST-01 — first exact mixed Hartree GG validation
+### HP-RHO0-MIXH-GAAA-FN-01 - exact mixed-Hartree GA/AA blocks
 
-Status: approved validation gates for `HP-RHO0-MIXH-GG-FN-01`.
+Status: implemented.
 
-Required validation:
+Owner:
+`CartesianGaussianRawBlocks`.
 
-- `git diff --check`;
-- package load;
-- ignored H direct-core or one-center terminal `GG` replay;
-- bounded one-center Be or Be2 terminal/base `GG` smoke with finite/symmetric
-  output;
-- dense Gaussian Coulomb oracle spot checks for small `GG` subsets;
-- at least one angular/off-diagonal same-center reference-pair oracle check;
-- report pair-term counts, Coulomb expansion packet counts, reference
-  electron-count normalization, dense-oracle deltas, and whether dense paths
-  were validation-only;
-- no `GA`/`AA`, no protected transform, no artifacts, no public workflow, and
-  no Cr/Cr2 run.
+Canonical contract:
+[reference Hartree numerics](reference_hartree_numerics.md).
 
-### HP-RHO0-MIXH-GAAA-FN-01 — exact mixed Hartree GA/AA blocks
-
-Status: approved narrow source authority.
-
-Purpose: extend the source-backed exact Hartree seam from `GG` to the
-supplement block shapes needed by later protected/final transforms:
-
-```text
-GA = <G_i | v_P_A | A_j>
-AA = <A_i | v_P_A | A_j>
-```
-
-This lane consumes one atom's same-center `P_A` per call. A molecular `P0`
-remains a sum of one-center atomic contributions; cross-atom reference density
-products are not approved.
-
-Approved source surface:
+Source:
 
 - `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`;
-- `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` only for
-  internal file-map/docstring cleanup if needed.
-
-Approved behavior:
-
-- preserve existing `atomic_reference_hartree_gg_block(...)` behavior;
-- reuse the existing reference-density validation, pair-density term stream,
-  and Coulomb-expanded factor packets;
-- add internal helper(s), or a combined internal raw-block helper, returning
-  exact `GA` and `AA` Hartree blocks;
-- support angular/off-diagonal reference pair-density terms and angular
-  supplement rows;
-- validate `GA`/`AA` dimensions, finite values, `AA` symmetry, and compact
-  diagnostics;
-- keep dense Gaussian Coulomb matrices as bounded oracle/debug validation
-  only.
-
-Forbidden:
-
-- protected-localized, injected, residual, or final correction transforms;
-- `F_app[P0]`, `Delta_F0`, `C0`, reference self-energy production, or
-  corrected Hamiltonian construction;
-- public driver/API/export/defaults, solver workflow, artifacts, manifests,
-  provenance, writers, readers, or sidecars;
-- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
-- HF exchange and `(final GTO | GTO final)` kernels;
-- row action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
-  shortcuts as substitutes for exact Hartree;
-- residual/MWG default changes, residual selection changes, basis-fate policy,
-  or broad rejected directions as MWG residuals;
-- dense final four-index ERI materialization;
-- cross-atom reference density pair products;
-- source files outside the approved surface;
-- committed tests or fixtures.
-
-Failure rule: stop if `GA`/`AA` construction needs source outside the approved
-surface, a new terminal projection owner, dense final four-index ERIs,
-protected transforms, artifact/schema work, or broader reference-density
-correction machinery.
-
-### HP-RHO0-MIXH-GAAA-TEST-01 — exact mixed Hartree GA/AA validation
-
-Status: approved validation gates for `HP-RHO0-MIXH-GAAA-FN-01`.
-
-Required validation:
-
-- `git diff --check`;
-- package load;
-- prior `GG` validation still passes or is covered by an equivalent replay;
-- bounded H or Be one-center `GA`/`AA` smoke with finite output and symmetric
-  `AA`;
-- dense Gaussian Coulomb oracle spot checks for `GA` and `AA`, including at
-  least one angular/off-diagonal same-center reference-pair case and one
-  angular supplement row;
-- if a combined raw-block helper is added, verify its `GG` output matches
-  `atomic_reference_hartree_gg_block(...)` within roundoff;
-- report `GA`/`AA` dimensions, finite/symmetry diagnostics, pair-term counts,
-  packet counts, reference electron-count normalization, and dense-oracle
-  deltas;
-- no protected transform, no artifacts, no public workflow, and no Cr/Cr2 run.
-
-### HP-RHO0-MIXH-FEXACT-FN-01 — exact-side protected/final Hartree transform
-
-Status: approved narrow source authority.
-
-Purpose: transform exact mixed Hartree raw blocks into the current
-final/protected-localized fixed sector:
-
-```text
-(GG, GA, AA) + F = [Z, M Q_perp] -> F_exact_Hartree[P0]
-```
-
-This is exact-side source work only. It is not approximate-Fock, correction,
-artifact, public workflow, or solver authority.
-
-Approved source surface:
-
-- `src/cartesian_residual_gaussians/augmented_operators.jl`;
-- `src/cartesian_residual_gaussians/residual_basis.jl` only if a narrow
-  transform-ready geometry accessor or diagnostic field is missing.
-
-Approved behavior:
-
-- add private/internal helper(s) consuming exact raw block triples
-  `(; GG, GA, AA)` or equivalent matrices;
-- use `protected_original_fixed_sector_components(...)` and
-  `transform_protected_original_fixed_sector_operator(...)`;
-- allow caller-side summation of one-center atomic raw-block contributions
-  before or during transformation, with no cross-atom reference density
-  products;
-- return an in-memory dense exact Hartree operator in the final/protected
-  sector plus compact diagnostics;
-- validate dimensions, finite values, transformed symmetry, and protected
-  geometry facts such as `B` singular values when available;
-- preserve all default residual behavior unless the helper is explicitly
-  called.
-
-Forbidden:
-
-- new raw mixed Hartree kernels beyond the approved `GG`/`GA`/`AA` lanes;
-- protected geometry selection changes;
-- `F_app[P0]`, `Delta_F0`, `C0`, reference-energy assembly, or corrected
-  Hamiltonian construction;
-- IDA/MWG interaction transforms or approximate Fock construction;
-- public driver/API/export/defaults, solver workflow, artifacts, manifests,
-  provenance, writers, readers, or sidecars;
-- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
-- HF exchange and `(final GTO | GTO final)` kernels;
-- row action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
-  shortcuts;
-- residual/MWG default changes, residual selection changes, basis-fate policy,
-  or broad rejected directions as MWG residuals;
-- committed tests or fixtures.
-
-Failure rule: stop if the exact-side transform needs source outside the
-approved surface, new raw kernels, a new geometry selector, artifact/schema
-work, public wiring, approximate-Fock construction, correction assembly, or
-IDA/MWG interaction plumbing.
-
-### HP-RHO0-MIXH-FEXACT-TEST-01 — exact-side protected/final Hartree validation
-
-Status: approved validation gates for `HP-RHO0-MIXH-FEXACT-FN-01`.
-
-Required validation:
-
-- `git diff --check`;
-- package load;
-- raw `GG` and `GA`/`AA` mixed Hartree validation still passes or is covered
-  by equivalent replay;
-- H, Be, or Be2 only;
-- at least one bounded final/protected transform smoke producing finite and
-  symmetric `F_exact_Hartree[P0]`;
-- final/protected-sector spot values compared against a direct dense
-  oracle/probe for a small case;
-- report raw block dimensions, transformed dimension, symmetry/finite
-  diagnostics, trace or representative low-spectrum diagnostics,
-  representability/protected geometry facts such as `B_min` when available,
-  and any projected-density facts already exposed by the geometry;
-- no `F_app[P0]`, no `Delta_F0`, no `C0`, no artifact, no public workflow, and
-  no Cr/Cr2 run.
-
-### HP-RHO0-FAPP-AUDIT-01 — approximate-side fixed-P0 Fock seam audit
-
-Status: approved measurement-only audit.
-
-Purpose: identify and validate the approximate Hartree/Fock-from-density seam
-for fixed `P0` before any reference-density correction assembly. The audited
-object is:
-
-```text
-F_app[P0] = d E_app[P] / dP at P = P0
-```
-
-where `E_app[P]` is generated by the actual current IDA/MWG Hamiltonian
-convention for the represented density. This is not source authority and not
-correction assembly authority.
-
-Allowed:
-
-- ignored `tmp/work/*.jl` probes only;
-- `/Users/srw/dmrgtmp` text/TSV outputs;
-- H, Be, and Be2 only;
-- consume current final/protected geometry and source-backed
-  `F_exact_Hartree[P0]` only for shape/comparison diagnostics;
-- construct and report represented `P0_final`;
-- compute `E_app[P0]` and a candidate `F_app[P0]` from the actual IDA/MWG
-  energy/Fock convention;
-- finite-difference validation:
-
-```text
-(E_app[P0 + eps*dP] - E_app[P0 - eps*dP]) / (2eps)
-    ~= Tr(dP * F_app[P0])
-```
-
-Required diagnostics:
-
-- the exact approximate-energy convention used;
-- whether the first audit is Hartree-only/spin-summed or spin-resolved;
-- `P0_final` normalization, trace, and representability facts;
-- perturbation directions, epsilon sweep, and finite-difference residuals;
-- finite/symmetry diagnostics for `F_app[P0]`;
-- dimensions and sector labels needed to compare to `F_exact_Hartree[P0]`;
-- the missing evaluator seam if no actual approximate derivative can be
-  identified.
-
-Forbidden:
-
-- tracked source edits;
-- public driver/API/export/default changes;
-- artifacts, manifests, provenance, writers, readers, or sidecars;
-- production Hamiltonian or solver workflow;
-- `Delta_F0`, `C0`, corrected Hamiltonian assembly, or reference self-energy
-  assembly;
-- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
-- exchange work unless already present in the current approximate evaluator;
-- row action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
-  shortcuts as substitutes for `F_app[P0]`;
-- residual/MWG defaults, residual selection, basis-fate policy, or broad
-  rejected directions as MWG residuals;
-- committed tests or fixtures.
-
-Decision rule: if the approximate-energy derivative can be identified and
-finite-difference validated on H/Be/Be2, a later lane may approve source
-helper or correction-anchor work. If not, report the exact missing seam and
-stop.
-
-### HP-RHO0-FAPP-FN-01 — Cartesian IDA approximate energy/Fock seam
-
-Status: approved narrow source authority.
-
-Purpose: source-own paired approximate energy and Fock helper(s) for
-`CartesianIDAHamiltonian`, for fixed represented spin densities in the
-Hamiltonian's own orthonormal basis:
-
-```text
-E_app(ham, P_alpha, P_beta)
-F_app_alpha(ham, P_alpha, P_beta)
-F_app_beta(ham, P_alpha, P_beta)
-```
-
-or equivalent private/internal names. A Fock helper without matching energy
-and finite-difference validation is not approved.
-
-Approved source surface:
-
-- `src/cartesian_ida_hamiltonian.jl`.
-
-Approved validation surface:
-
-- `test/ida/cartesian_ida_hamiltonian_runtests.jl` only for compact
-  finite-difference checks if committed validation is useful;
-- ignored `tmp/work/*.jl` probes and `/Users/srw/dmrgtmp` output for H/Be/Be2
-  endpoint-style replay.
-
-Approved behavior:
-
-- validate fixed symmetric finite `P_alpha` and `P_beta` matrices with the
-  Hamiltonian dimension;
-- use the two-index IDA/MWG density-density convention represented by
-  `ham.electron_electron_ida`;
-- keep interaction-only and total-energy contributions unambiguous. If total
-  energy/Fock includes `one_body_hamiltonian(ham)` or `nuclear_repulsion(ham)`,
-  the density-dependent interaction piece needed by the reference-density
-  correction must remain separated or explicitly documented;
-- return symmetric alpha and beta Fock matrices;
-- finite-difference check both spin sectors against the matching source-owned
-  energy helper.
-
-Expected current convention:
-
-- Hartree/direct term depends on `diag(P_alpha + P_beta)` and
-  `ham.electron_electron_ida`;
-- same-spin exchange-like terms are only those implied by the current
-  two-index IDA/MWG model, not a new exact exchange extension.
-
-Forbidden:
-
-- public driver/API/export/default changes;
-- artifacts, manifests, provenance, writers, readers, or sidecars;
-- `Delta_F0`, `C0`, corrected Hamiltonian assembly, reference self-energy
-  assembly, or rho0 workflow wiring;
-- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
-- exact exchange extensions beyond the current IDA/MWG convention;
-- row action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
-  shortcuts;
-- residual/MWG defaults, residual selection, basis-fate policy, or broad
-  rejected directions as MWG residuals;
-- source outside the approved file.
-
-Failure rule: if the paired energy/Fock seam cannot be implemented from the
-stored Cartesian IDA matrices and current IDA/MWG convention, stop and report
-the missing source owner. If existing live solver/Fock logic uses a different
-convention, report that owner instead of changing semantics silently.
-
-### HP-RHO0-FAPP-TEST-01 — Cartesian IDA approximate energy/Fock validation
-
-Status: approved validation gates for `HP-RHO0-FAPP-FN-01`.
-
-Required validation:
-
-- `git diff --check`;
-- package load;
-- alpha and beta finite-difference checks against the paired energy helper;
-- H/Be/Be2-only ignored endpoint replay if consumed by the rho0 audit;
-- report dimensions, density traces, energy contribution convention, Fock
-  symmetry, epsilon sweep, finite-difference residuals, and whether
-  interaction-only and total contributions are separated;
-- no `Delta_F0`, no `C0`, no artifact/public workflow, and no Cr/Cr2 run.
-
-### HP-RHO0-ANCHOR-FN-01 — Hartree reference correction anchor
-
-Status: implemented, superseded, and closed to new source work. Current
-direct-Hartree correction authority is `HP-RHO0-JANCHOR-FN-01`.
-
-Correction note: this lane validated the algebra for the object it built, but
-the object subtracted the full approximate interaction Fock, including the
-current same-spin exchange-like term, from an exact Hartree operator. Do not
-use its `Delta_F0_alpha/beta` as evidence for the Hartree reference-density
-correction.
-
-Purpose: form and validate the fixed-`P0` Hartree correction anchor from the
-source-backed exact and approximate sides:
-
-```text
-Delta_F0_sigma = F_exact_Hartree[P0] - F_app_interaction_sigma[P0]
-
-C0 =
-    E_exact_Hartree[P0]
-  - E_app_interaction[P0]
-  - sum_sigma Tr(P0_sigma * Delta_F0_sigma)
-```
-
-The corrected interaction model must satisfy:
-
-```text
-E_new_int[P0] = E_exact_Hartree[P0]
-dE_new_int/dP_sigma at P0 = F_exact_Hartree[P0]
-```
-
-Approved source surface:
-
-- `src/cartesian_residual_gaussians/augmented_operators.jl`;
-- `src/cartesian_ida_hamiltonian.jl` only if a narrow interaction-only
-  accessor is missing.
-
-Approved behavior:
-
-- build or consume represented `P0_final` spin densities;
-- consume approved exact mixed Hartree `GG`/`GA`/`AA` final/protected
-  transform output;
-- consume paired Cartesian IDA approximate interaction energy/Fock helpers;
-- form `Delta_F0_alpha`, `Delta_F0_beta`, and `C0` in memory;
-- verify the reference energy and derivative anchors in memory;
-- keep interaction-only and total-with-common-one-body checks separated. The
-  primary anchor must not subtract `one_body_hamiltonian(ham)` or nuclear
-  repulsion because the exact side is Hartree interaction only;
-- report spectra, diagonals/ranges, occupied/reference expectations, sector
-  expectations when labels are available, density traces, representability,
-  and anchor errors.
-
-Allowed validation scope:
-
-- H, Be, and Be2 only;
-- ignored `tmp/work/*.jl` probes and `/Users/srw/dmrgtmp` outputs;
-- committed compact validation only if it stays fixture-free and in-memory.
-
-Forbidden:
-
-- public driver/API/export/default changes;
-- artifacts, manifests, provenance, writers, readers, or sidecars;
-- production Hamiltonian integration or solver workflow;
-- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
-- HF exchange or exact exchange correction;
-- reference density self-energy production beyond the `C0` anchor for this
-  Hartree lane;
-- row action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
-  shortcuts;
-- residual/MWG defaults, residual selection, basis-fate policy, or broad
-  rejected directions as MWG residuals;
-- source outside the approved surface.
-
-Failure rule: stop if the anchor cannot be formed from existing exact
-Hartree-transform and Cartesian IDA interaction energy/Fock helpers. Do not
-widen into artifacts, public workflow, solver integration, exchange, Cr/Cr2,
-or a broad reference-density framework.
-
-### HP-RHO0-ANCHOR-TEST-01 — Hartree reference correction anchor validation
-
-Status: historical validation evidence for the superseded anchor; closed to
-new test work.
-
-Required validation:
-
-- `git diff --check`;
-- package load;
-- prior exact-side and approximate-side helper validations still pass or are
-  covered by equivalent replay;
-- H/Be/Be2-only in-memory anchor replay;
-- report represented `P0_final` trace/normalization and representability;
-- report `F_exact_Hartree[P0]`, `F_app_interaction[P0]`, `Delta_F0`, and `C0`
-  dimensions and finite/symmetry diagnostics;
-- verify `E_new_int[P0] = E_exact_Hartree[P0]` and
-  `dE_new_int/dP_sigma = F_exact_Hartree[P0]` by direct algebra and/or
-  finite-difference checks;
-- report `Delta_F0` spectra/diagonals/occupied expectations;
-- no artifact/public workflow, no solver workflow, and no Cr/Cr2 run.
-
-### HP-RHO0-CORR-AUDIT-01 — corrected-Hamiltonian small-system audit
-
-Status: historical measurement-only audit. The old full-interaction-anchor run
-is invalid; `HP-RHO0-JANCHOR-*` is implemented, and the later H/Be/Be2 rerun
-remains a stop-signal pending `HP-RHO0-XPAIR-AUDIT-01`.
-
-Correction note: any result using old `Delta_F0_alpha/beta` is invalid as a
-Hartree-correction physics/stability result. A valid rerun must use
-`Delta_J0` and `C0_J` from `HP-RHO0-JANCHOR-*`.
-
-Purpose: apply the anchored Hartree correction in memory to H/Be/Be2
-Cartesian IDA systems and decide whether the corrected model behaves sanely
-before any production integration.
-
-After `HP-RHO0-JANCHOR-*`, the audit consumes the direct-Hartree anchor
-pieces:
-
-```text
-F_exact_Hartree[P0]
-F_app_direct[P0]
-Delta_J0
-C0_J
-```
-
-and evaluates:
-
-```text
-E_corr_int[P_alpha, P_beta] =
-    E_app[P_alpha, P_beta]
-  + Tr((P_alpha + P_beta) * Delta_J0)
-  + C0_J
-```
-
-If `E_app` includes one-body terms, the audit must keep common one-body
-accounting separate from the interaction anchor.
-
-Allowed:
-
-- ignored `tmp/work/*.jl` probes only;
-- `/Users/srw/dmrgtmp` outputs only;
-- H, Be, and Be2 only;
-- consume source-backed exact, direct-Hartree approximate, and anchor helpers;
-- apply the correction to current in-memory Cartesian IDA energy/Fock
-  evaluation;
-- use existing in-memory endpoint, HF-like, or bounded SCF helpers only without
-  production workflow, artifact, public API, or source changes.
-
-Required diagnostics:
-
-- anchor check at `P0`;
-- `Delta_J0` spectra, diagonal/range summaries, occupied/reference
-  expectations, and sector expectations when labels are available;
-- corrected versus uncorrected low spectra of the effective Fock or
-  one-particle operator used by the probe;
-- corrected versus uncorrected energies, occupations, density traces, and any
-  bounded endpoint/SCF convergence behavior available in memory;
-- finite/symmetry checks, density trace/normalization, and representability;
-- any negative/broad occupation incentive or unstable low mode introduced by
-  the correction.
-
-Forbidden:
-
-- tracked source edits;
-- public driver/API/export/default changes;
-- artifacts, manifests, provenance, writers, readers, or sidecars;
-- production Hamiltonian integration or solver workflow;
-- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
-- HF exchange or exact exchange correction;
-- publication-scale validation or paper claims;
-- row action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
-  shortcuts;
-- residual/MWG defaults, residual selection, basis-fate policy, or broad
-  rejected directions as MWG residuals;
-- committed tests or fixtures.
-
-Decision rule: if H/Be/Be2 corrected in-memory behavior is finite, stable, and
-does not introduce suspicious low modes or occupation incentives, a later lane
-may choose between limited Cr measurement and stronger small-system
-benchmarks. If it destabilizes small systems, stop and record the failing
-diagnostic.
-
-### HP-RHO0-JANCHOR-FN-01 — direct-Hartree reference anchor replacement
-
-Status: approved narrow source authority.
-
-Purpose: replace the full-interaction approximate subtraction in
-`HP-RHO0-ANCHOR-*` with the direct/Hartree part of the current Cartesian IDA
-interaction. The exact side remains `F_exact_Hartree[P0]`.
-
-Approved source surface:
-
-- `src/cartesian_ida_hamiltonian.jl` for private/internal direct-only
-  approximate Hartree energy/Fock helpers;
-- `src/cartesian_residual_gaussians/augmented_operators.jl` for replacing or
-  supplementing the in-memory Hartree anchor helper.
-
-Required direct-only convention:
-
-```text
-q = diag(P_alpha) + diag(P_beta)
-E_app_direct[P] = 1/2 * q' * V * q
-F_app_direct[P] = Diagonal(V * q)
-```
-
-Required anchor:
-
-```text
-Delta_J0 = F_exact_Hartree[P0] - F_app_direct[P0]
-
-C0_J =
-    E_exact_Hartree[P0]
-  - E_app_direct[P0]
-  - Tr((P0_alpha + P0_beta) * Delta_J0)
-```
-
-The full corrected interaction keeps the current approximate exchange-like
-contribution:
-
-```text
-E_corr_int[P] =
-    E_app_full_int[P]
-  + Tr((P_alpha + P_beta) * Delta_J0)
-  + C0_J
-```
-
-Approved behavior:
-
-- keep the paired energy/Fock finite-difference discipline from
-  `HP-RHO0-FAPP-*`;
-- form one spin-independent `Delta_J0` matrix and `C0_J`;
-- verify the direct-Hartree anchor at `P0`;
-- verify the full corrected interaction derivative at `P0`:
-  `dE_corr_int/dP_sigma = F_exact_Hartree[P0] - K_app_sigma[P0]`, where
-  `K_app_sigma[P0]` is the existing approximate same-spin exchange-like
-  contribution;
-- report `Delta_J0` spectra, diagonal/range summaries, occupied/reference
-  expectations, density traces, representability facts, and anchor errors;
-- rerun the H/Be/Be2 corrected-Hamiltonian audit with `Delta_J0` and `C0_J`
-  after the helper validates.
-
-Forbidden:
-
-- public driver/API/export/default changes;
-- artifacts, manifests, provenance, writers, readers, or sidecars;
-- production Hamiltonian integration or solver workflow;
-- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
-- exact exchange correction or changes to the current approximate exchange
-  convention;
-- row action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
-  shortcuts;
-- residual/MWG defaults, residual selection, basis-fate policy, or broad
-  rejected directions as MWG residuals;
-- source outside the approved surface;
-- committed fixtures.
-
-Failure rule: if direct-only Hartree terms cannot be separated from the
-current Cartesian IDA interaction without changing solver semantics, artifact
-shape, public workflow, or the exchange-like convention, stop and report the
-missing seam. Do not reuse the old full-interaction `Delta_F0_alpha/beta` as a
-Hartree correction.
-
-### HP-RHO0-JANCHOR-TEST-01 — direct-Hartree anchor validation
-
-Status: implemented validation gates for `HP-RHO0-JANCHOR-FN-01`.
-
-Required validation:
-
-- `git diff --check`;
-- package load;
-- compact direct-only finite-difference validation against
-  `F_app_direct[P]` for alpha and beta density perturbations;
-- prior exact-side mixed Hartree and final/protected transform replay, or an
-  equivalent bounded H/Be/Be2 replay;
-- direct-Hartree anchor equality at `P0`;
-- equality or shared representation showing
-  `Delta_J0_alpha == Delta_J0_beta`;
-- full corrected interaction finite-difference check against
-  `E_corr_int[P]`;
-- H/Be/Be2 corrected-Hamiltonian audit replay using `Delta_J0` and `C0_J`;
-- report `Delta_J0` spectra, diagonal/range summaries, occupied/reference
-  expectations, corrected versus uncorrected low spectra or endpoint behavior
-  when available, density traces, and representability facts;
-- no artifact/public workflow, solver workflow, Cr/Cr2, or production
-  integration run.
-
-Interpretation after implementation: supplement-space atomic `P0` is
-represented at roundoff in H/Be/Be2, and the direct-Hartree anchor algebra is
-viable. Corrected-Hamiltonian replay with inherited approximate exchange-like
-terms is still not production-ready; negative low-mode shifts remain a stop
-signal.
-
-### HP-RHO0-XPAIR-AUDIT-01 — exchange/direct pairing measurement audit
-
-Status: approved measurement-only audit.
-
-Purpose: diagnose the remaining small-system blocker after
-`HP-RHO0-JANCHOR-*`: exact/direct Hartree replacement plus inherited
-approximate exchange-like terms is not yet a benign corrected Hamiltonian.
-
-Allowed:
-
-- ignored `tmp/work/*.jl` probes only;
-- `/Users/srw/dmrgtmp` output only;
-- H, Be, and Be2 only;
-- consume source-backed supplement-space atomic `P0`, exact Hartree
-  `F_exact_Hartree[P0]`, direct anchor `Delta_J0`/`C0_J`, and current
-  approximate full-interaction helpers;
-- compare inherited approximate exchange-like contributions against
-  exact/supplement-space exchange diagnostics where feasible for small
-  systems;
-- run a direct-only corrected-operator diagnostic explicitly labeled as not a
-  full Hamiltonian;
-- report fixed-density and low-mode diagnostics before any bounded endpoint or
-  HF-like replay.
-
-Required diagnostics:
-
-- `P0` representability and density trace facts;
-- direct-Hartree anchor errors and `Delta_J0` spectra/diagonal/occupied
-  expectations;
-- corrected versus uncorrected low spectra and low-mode sector weights;
-- expectation values of the direct Hartree correction and inherited
-  approximate exchange-like contributions on flagged low modes;
-- approximate exchange-like spectra/diagonals/occupied expectations by spin;
-- exact or supplement-space exchange comparison where a small dense oracle is
-  feasible, with basis/density convention recorded;
-- direct-only corrected-operator diagnostic clearly marked as not a production
-  Hamiltonian;
-- finite/symmetry checks and fixed-density energy shifts;
-- classification of whether the negative low-mode behavior is dominated by
-  exchange pairing, affine correction away from `P0`, or an unresolved
-  diagnostic.
-
-Forbidden:
-
-- tracked source edits;
-- public driver/API/export/default changes;
-- artifacts, manifests, provenance, writers, readers, or sidecars;
-- production Hamiltonian integration or solver workflow;
-- Cr atom, Cr2, Cr2 HF, or Cr2 production diagnostics;
-- exact exchange source implementation;
-- changes to the current approximate exchange convention;
-- using the direct-only diagnostic as a full Hamiltonian;
-- row action, `diag(J)`, `q0`, center metadata, direct `C' V C`, or IDA proxy
-  shortcuts;
-- residual/MWG defaults, residual selection, basis-fate policy, or broad
-  rejected directions as MWG residuals;
-- committed tests or fixtures.
-
-Decision rule: if diagnostics identify inherited approximate exchange pairing
-as the low-mode driver, request a later source-design lane for the exchange
-pairing convention or exact/supplement-space exchange audit. If the direct-
-only diagnostic is stable but the full corrected model is not, record that as
-evidence against promotion of the inherited-exchange model, not as approval to
-ship direct-only physics. If the blocker remains ambiguous, stop with the
-exact low-mode and sector diagnostics. Do not proceed to Cr/Cr2.
+- `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` for
+  internal module wiring.
+
+Dependencies and permission: reuse the validated one-center `P_A` pair
+stream and Coulomb-expanded factors to form exact `GA` and symmetric `AA`,
+including angular reference pairs and supplement rows. The wrapper remains
+a neutral oracle seam. It grants no correction, exchange, artifact, public
+workflow, solver, residual-selection, or Cr/Cr2 authority.
+
+### HP-RHO0-MIXH-GAAA-TEST-01 - exact mixed-Hartree GA/AA validation
+
+Status: implemented validation authority.
+
+Test ownership: no dedicated committed test file. The accepted compact
+ignored-probe gate covered prior `GG` parity, finite `GA`, symmetric `AA`,
+angular cases, and dense-oracle spots. Historical acceptance is manager
+Pass 286 and commit `daac231d0`.
+
+### HP-RHO0-MIXH-FEXACT-FN-01 - protected exact-Hartree transform
+
+Status: implemented.
+
+Owner:
+`CartesianResidualGaussians`.
+
+Canonical contract:
+[reference Hartree numerics](reference_hartree_numerics.md).
+
+Source:
+`src/cartesian_residual_gaussians/augmented_operators.jl`.
+
+Dependencies and permission: consume exact `GG/GA/AA`, existing protected
+geometry `F = [Z, M Q_perp]`, and an existing localization `W` to form the
+exact fixed-sector operator and `sym(W' * J0_F * W)`. It grants no geometry
+selection, interaction transform, correction, artifact, public workflow,
+solver, exchange, or Cr/Cr2 authority.
+
+### HP-RHO0-MIXH-FEXACT-TEST-01 - protected exact-Hartree validation
+
+Status: implemented validation authority.
+
+Test ownership: no dedicated committed test file. The accepted compact
+ignored-probe gate covered H/Be/Be2 raw-block replay, fixed/localized finite
+symmetry, dimension and protected-geometry checks, and dense-oracle spots.
+Historical acceptance is manager Pass 288 and commit `40a6f7e99`.
+
+### HP-RHO0-FAPP-AUDIT-01 - approximate fixed-P0 Fock audit
+
+Status: completed historical measurement evidence.
+
+### HP-RHO0-FAPP-FN-01 / HP-RHO0-FAPP-TEST-01 - approximate IDA energy/Fock seam
+
+Status: implemented, caller-free, and dormant retirement candidates.
+
+Owner and source:
+`src/cartesian_ida_hamiltonian.jl`.
+
+Canonical lifecycle:
+[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
+There is no committed live caller or dedicated committed test. These IDs
+authorize no new caller, source work, correction policy, or public surface.
+
+### HP-RHO0-ANCHOR-FN-01 / HP-RHO0-ANCHOR-TEST-01 - old full-interaction anchor
+
+Status: superseded historical evidence with no authority.
+
+The old `Delta_F0_alpha/beta` interpretation is not a Hartree correction
+contract and must not be revived.
+
+### HP-RHO0-CORR-AUDIT-01 - corrected-Hamiltonian audit
+
+Status: completed and superseded historical measurement evidence.
+
+### HP-RHO0-JANCHOR-FN-01 / HP-RHO0-JANCHOR-TEST-01 - direct-Hartree anchor
+
+Status: source-backed but superseded in use; dormant retirement candidates.
+
+Source:
+
+- `src/cartesian_ida_hamiltonian.jl`;
+- `src/cartesian_residual_gaussians/augmented_operators.jl`.
+
+Current replacement:
+`src/cartesian_reference_density/screened_hartree_correction.jl`, governed
+by [screened Hartree correction assembly](screened_hartree_correction_assembly.md)
+and [screened Hartree residual density](screened_hartree_residual_density.md).
+
+These IDs authorize no new caller, source work, artifact, public workflow,
+solver, exchange, or Cr/Cr2 work.
+
+### HP-RHO0-XPAIR-AUDIT-01 - exchange/direct pairing question
+
+Status: approved but deferred measurement-only question.
+
+Owner and evidence:
+[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
+It is not a current blocker or source lane and authorizes no tracked source,
+test, artifact, public workflow, solver, exchange implementation, or Cr/Cr2
+work.
 
 Candidate future IDs, not approved:
 
-- `HP-RHO0-REFDENS-FN-01` - possible future source authority for reference
-  density construction and correction assembly;
-- `HP-RHO0-REFDENS-ERI-01` - possible future neutral exact mixed-ERI owner for
-  `(final final | GTO GTO)`, `(GTO GTO | GTO GTO)`, and optional
-  `(final GTO | GTO final)` exchange blocks.
+- `HP-RHO0-REFDENS-FN-01`;
+- `HP-RHO0-REFDENS-ERI-01`.
 
 ## Approved For Cartesian Gaussian Raw-Block Nuclear Owner
 
