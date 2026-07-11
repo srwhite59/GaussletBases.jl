@@ -2627,20 +2627,20 @@ report the exact blocker before touching CR2 production scripts.
 
 ### HP-PQS-COULOMB-ACCURACY-FN-01 - producer-wide Coulomb accuracy policy
 
-Status: producer policy implemented; narrow canonical-driver exposure approved
-for implementation.
+Status: compact/high producer policy implemented; fixed standard tier and
+narrow canonical-driver exposure approved for implementation.
 
 Canonical design: `coulomb_accuracy_policy.md`.
 
-Purpose: let expert consumers request the existing high-accuracy Coulomb
-Gaussian expansion while preserving one internally consistent approximation
-from parent/PGDG construction through base IDA and residual-GTO/MWG
-augmentation.
+Purpose: let expert consumers select a fixed compact, standard, or high
+Coulomb Gaussian expansion while preserving one internally consistent
+approximation from parent/PGDG construction through base IDA and
+residual-GTO/MWG augmentation.
 
 Approved producer input:
 
 ```text
-coulomb_accuracy = :compact | :high
+coulomb_accuracy = :compact | :standard | :high
 default = :compact
 ```
 
@@ -2648,8 +2648,16 @@ Exact presets:
 
 ```text
 :compact -> doacc=false, 45 terms, del=0.6, s=0.5, c=0.03, maxu=27.0
+:standard -> doacc=false, 60 terms, del=1.0,
+             s=0.34257593251905827, c=0.042605721927199074, maxu=60.0
 :high    -> doacc=true, 135 terms, del=1.0, s=0.16, c=0.01, maxu=135.0
 ```
+
+The standard preset is the fixed analytic K60 midpoint quadrature. Its
+canonical little-endian Float64 coefficient-then-exponent SHA-256 fingerprint is
+`2de3ec44fc3d6b11ea26b7551e6b5ddef8bb2de1898fe0702d65f91cbf6c0f3a`.
+The canonical contract owns its exact operation order and evidence. `doacc`
+is legacy compatibility metadata, not preset identity.
 
 Only those names are user-facing. This ID does not approve user inputs for
 `doacc`, `del`, `s`, `c`, `maxu`, coefficients, exponents, or custom
@@ -2658,9 +2666,9 @@ expansion objects.
 Canonical-driver amendment: `bin/cartesian_ham_builder.jl` may expose the same
 `coulomb_accuracy` symbol with visible default `:compact`, accept it through
 the existing trusted input-file/`key=value` allowlist, validate only
-`:compact | :high`, add it to `common_basis`, and print it in the existing
-basis contract summary. The driver passes the symbol to the producer and must
-not resolve or inspect the expansion itself.
+`:compact | :standard | :high`, add it to `common_basis`, and print it in the
+existing basis contract summary. The driver passes the symbol to the producer
+and must not resolve or inspect the expansion itself.
 
 The option is route-family-neutral wherever current PQS and White-Lindsey
 construction paths share parent/base/supplemented machinery. Neither route may
@@ -2718,15 +2726,17 @@ Approved artifact behavior:
 
 - new base and supplemented artifacts write one Hamiltonian-wide
   `coulomb_expansion/` summary with `policy`, `doacc`, `term_count`,
-  `del`, `s`, `c`, and `maxu`;
+  `del`, `s`, `c`, `maxu`, and the coefficient/exponent `fingerprint`;
 - supplemented artifacts do not write separate base and augmentation
   expansion policies;
 - ordinary matrix-only Cartesian readback may remain unchanged;
 - protected-localized artifacts and protected ladder members/manifests preserve
   and expose the summary on readback;
-- legacy artifacts without the summary remain readable where already readable,
-  but missing provenance is unavailable and must never be inferred as
-  `:high`;
+- legacy artifacts without the summary remain readable where already readable;
+  compact/high summaries without fingerprints remain legacy-readable with the
+  fingerprint unavailable, but no fingerprint or missing policy is inferred
+  as `:standard` or `:high`;
+- a summary claiming `:standard` without the exact K60 fingerprint fails;
 - new summaries must validate against the named deterministic preset.
 
 Atomic HF reference packets are a deliberate exception to the one-Hamiltonian
@@ -2749,6 +2759,7 @@ src/cartesian_residual_gaussians/mwg_interaction.jl
 src/cartesian_ida_hamiltonian.jl
 src/cartesian_protected_ladder_bundle.jl
 src/cartesian_reference_density/atomic_hf_reference_packets.jl
+src/ordinary_coulomb.jl
 src/GaussianAnalyticIntegrals.jl
 src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
 bin/cartesian_ham_builder.jl
@@ -2802,6 +2813,8 @@ Approved validation:
 - package load;
 - omitted policy and explicit `:compact` produce equal matrices in a bounded
   base case;
+- bounded `:standard` construction records the exact K60 parameters, 60-term
+  count, fingerprint, and parent/PGDG exponent parity;
 - bounded `:high` base construction records the exact 135-term summary and
   parent/PGDG exponent parity;
 - bounded White-Lindsey base construction confirms the policy reaches the
@@ -2812,20 +2825,22 @@ Approved validation:
   summary;
 - atomic packet roundtrip preserves separate RHF, density/self-energy, and
   potential-tail expansion provenance;
-- at least one bounded compact/high comparison reports term-dependent timing
-  and allocation;
-- a small core analytic-kernel test compares compact/high exponent cases to a
-  BigFloat oracle, preserves moderate-exponent parity, and covers finite
-  nonnegative s-type factors plus translated-center cancellation cases;
+- at least one bounded compact/standard/high comparison reports term-dependent
+  timing and allocation;
+- a small core analytic-kernel test compares compact/standard/high exponent
+  cases to a BigFloat oracle, preserves moderate-exponent parity, reproduces
+  the exact standard fingerprint, and covers finite nonnegative s-type factors
+  plus translated-center cancellation cases;
 - every endpoint-style probe used for interpretation includes terminal
   due-diligence review.
 
 The existing docs policy test may check the driver input/default/validation/
 forwarding/printing contract without executing a Hamiltonian. Bounded
 canonical-driver validation must separately show omitted-versus-explicit
-compact matrix/artifact parity and one accepted high request with finite/
-symmetric matrices and `:high`/`135`-term artifact provenance. Use temporary or
-ignored outputs; do not add a committed driver fixture or endpoint value.
+compact matrix/artifact parity, one accepted standard request with exact
+K60 provenance, and one accepted high request with finite/symmetric matrices
+and `:high`/`135`-term artifact provenance. Use temporary or ignored outputs;
+do not add a committed driver fixture or endpoint value.
 
 High supplemented and protected-ladder checks may remain ignored bounded probes
 if committed execution would materially increase routine test time. No new

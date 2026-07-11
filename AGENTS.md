@@ -737,23 +737,29 @@ mapping cannot unambiguously support the same semantics, implement only the
 one-center path and report the exact blocker.
 `HP-PQS-COULOMB-ACCURACY-FN-01` and
 `HP-PQS-COULOMB-ACCURACY-TEST-01` approve only the producer-wide
-`coulomb_accuracy = :compact | :high` policy in
+`coulomb_accuracy = :compact | :standard | :high` policy in
 `docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md`.
-The default remains `:compact`; the presets are the existing 45-term
-`doacc=false` and 135-term `doacc=true` expansions. One resolved
+The default remains `:compact`; the presets are the legacy 45-term compact,
+fixed analytic K60 standard, and 135-term high expansions. `:standard` is the
+recommended opt-in accuracy/cost tier; `:high` remains reference-grade.
+Policy, exact parameters, term count, and coefficient/exponent fingerprint
+define the preset; `doacc` is only a legacy compatibility field. One resolved
 `CoulombGaussianExpansion` must be carried from parent/PGDG construction
 through base unit-nuclear/IDA, residual-GTO exact Coulomb-expanded blocks, and
 MWG. New artifacts may add one Hamiltonian-wide compact expansion summary;
 protected/ladder readback must not infer missing legacy provenance as
-`:high`. Atomic packet RHF remains high accuracy while its current
-density/self-energy and fitted-potential scaffold evaluations remain
-role-qualified compact approximations. This authority does not approve custom
-expansion inputs or a high default. It narrowly allows
+`:standard` or `:high`. Atomic packet RHF remains high accuracy while its
+current density/self-energy and fitted-potential scaffold evaluations remain
+role-qualified compact approximations. This authority narrowly allows
+`src/ordinary_coulomb.jl` to own the exact fixed K60 construction without
+changing compact/high bit patterns. It does not approve custom expansion
+inputs or a standard/high default. It narrowly allows
 `bin/cartesian_ham_builder.jl` to expose the same `coulomb_accuracy` symbol,
-default `:compact`, validate `:compact | :high`, forward it in `common_basis`,
-and print it; the driver must not resolve the expansion. No other canonical
-driver/CLI changes, ordinary QW/legacy cleanup, solver workflow, EGOI or
-screened-Hartree formula changes, or Cr2-specific behavior are approved.
+default `:compact`, validate `:compact | :standard | :high`, forward it in
+`common_basis`, and print it; the driver must not resolve the expansion. No
+other canonical driver/CLI changes, ordinary QW/legacy cleanup, solver
+workflow, EGOI or screened-Hartree formula changes, or Cr2-specific behavior
+are approved.
 The same IDs narrowly add `src/GaussianAnalyticIntegrals.jl` and
 `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl` for algebraically
 stable determinant and pairwise weighted-distance forms in

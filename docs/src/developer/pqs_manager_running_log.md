@@ -27893,3 +27893,39 @@ Carrying-cost result:
   350 source plus 220 test lines, with no module, export, or large fixture.
 - exact next step: implement the protected import/result and sidecar roundtrip
   on a bounded synthetic/small member, then let CR2 reuse the saved `S_LG`.
+
+## Cartesian Hamiltonian Producer Pass 364 - Standard Coulomb Accuracy Tier Authority
+
+Commit(s):
+- this commit - amend the existing producer-wide Coulomb authority with the
+  deterministic analytic K60 `:standard` tier.
+
+Summary:
+- Approved `coulomb_accuracy = :compact | :standard | :high` under the
+  existing `HP-PQS-COULOMB-ACCURACY-*` IDs. The default remains `:compact`;
+  `:standard` is the recommended opt-in accuracy/cost balance; `:high` remains
+  reference-grade and stays fixed for the controlled Cr2 screened off/on run.
+- Froze K60 parameters, midpoint construction, 60-term count, and canonical
+  coefficient/exponent fingerprint. New Hamiltonian summaries add the
+  fingerprint; `doacc=false` is shared by compact and standard and is only a
+  legacy field. Legacy compact/high summaries without fingerprints remain
+  readable, but no legacy standard identity may be inferred.
+
+Validation / evidence:
+- The bounded audit records compact45 about `5.75 mHa` from the Cr s/p RHF
+  control and standard60 within `2.43e-10 Ha` of high135, with H/Be/Ne/Cr
+  integral controls close to high135. Extremely long-range pointwise behavior
+  is explicitly not claimed to dominate compact45.
+- Design review reproduced 60 terms and found that the generic override path
+  differs in final Float64 bits from the audited K60 operation order. Authority
+  therefore preserves the audited order and exact `2de3ec44...` fingerprint
+  rather than accepting algebraic parameter equality as bitwise identity.
+
+Goal advancement / guardrail:
+- LT2/LT5/LT8 and MT4: adds a practical producer accuracy tier without
+  changing defaults, packet-local compact roles, Cr2 settings, or scientific
+  construction outside the one-expansion policy. No custom parameters,
+  automatic tuning, solver workflow, or endpoint claim is approved.
+- Exact next step: implement the private K60 preset, fingerprint provenance,
+  three-value facade/driver validation, and bounded compact/standard/high gates
+  in the already-approved files.

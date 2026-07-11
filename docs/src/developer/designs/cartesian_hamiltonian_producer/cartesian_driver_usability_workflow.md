@@ -97,7 +97,8 @@ Approved user-facing configuration concepts:
   White-Lindsey low-order construction family;
 - `hamfile`;
 - `padding`;
-- `coulomb_accuracy`, with `:compact` default and `:compact | :high` values;
+- `coulomb_accuracy`, with `:compact` default and
+  `:compact | :standard | :high` values;
 - `check_file`;
 - `print_contract`;
 - `print_timing`;

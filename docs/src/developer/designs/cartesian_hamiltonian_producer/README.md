@@ -84,7 +84,9 @@ final retained support when the physical parent extent dominates.
 This is the only approved public mapping-strength knob and does not revive
 public `d` or `parent_mapping_d`.
 `HP-PQS-COULOMB-ACCURACY-*` approves a separate expert producer accuracy
-choice, `coulomb_accuracy = :compact | :high`, default `:compact`. One
+choice, `coulomb_accuracy = :compact | :standard | :high`, default
+`:compact`. The fixed analytic K60 `:standard` tier is the recommended
+accuracy/cost opt-in, while `:high` remains the reference tier. One
 resolved `CoulombGaussianExpansion` must govern parent/PGDG, base IDA,
 residual-GTO, and MWG construction, with one Hamiltonian-wide provenance
 summary. Its narrow stability amendment replaces cancellation-prone analytic
@@ -211,7 +213,8 @@ ID or subsystem.
   for the expert mapping-strength scalar that preserves default behavior while
   allowing CR2-style scans
 - [Producer-wide Coulomb accuracy](coulomb_accuracy_policy.md)
-  for the expert compact/high preset and one-expansion construction/provenance
+  for the expert compact/standard/high presets and one-expansion
+  construction/provenance
   contract
 - [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)
   for the compact artifact-producing canonical driver lane

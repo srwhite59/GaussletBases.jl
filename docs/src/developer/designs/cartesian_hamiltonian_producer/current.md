@@ -66,13 +66,18 @@ Implemented base path:
   workflow, EGOI, rho0/P0, or protected-localized interaction changes.
 - `HP-PQS-COULOMB-ACCURACY-FN-01` and
   `HP-PQS-COULOMB-ACCURACY-TEST-01` approve an expert
-  `coulomb_accuracy = :compact | :high` producer choice with default
-  `:compact`. The producer resolves one existing
+  `coulomb_accuracy = :compact | :standard | :high` producer choice with
+  default `:compact`. The fixed analytic K60 `:standard` tier is the
+  recommended opt-in accuracy/cost balance; `:high` remains the reference
+  tier. The producer resolves one
   `CoulombGaussianExpansion` before parent/PGDG construction and carries it
   through base unit-nuclear/IDA, residual-GTO exact Coulomb-expanded blocks,
   and MWG. New artifacts record one Hamiltonian-wide expansion summary;
   protected/ladder readback exposes it, while missing legacy provenance is
-  never inferred as high accuracy. Atomic reference packets remain a separate
+  never inferred as standard or high accuracy. New summaries include a
+  deterministic coefficient/exponent fingerprint; `doacc` is legacy
+  compatibility metadata and does not distinguish compact from standard.
+  Atomic reference packets remain a separate
   role-qualified exception: packet RHF is high accuracy, while current
   density/self-energy and fitted-potential scaffold evaluations are compact.
   A narrow amendment also stabilizes cancellation-prone analytic Gaussian
@@ -80,8 +85,9 @@ Implemented base path:
   raw-block owner. High-exponent failure is not authority for scaled/log PGDG
   carriers or terminal-contraction redesign.
   The canonical driver may now expose the same expert symbol, default it to
-  `:compact`, validate `:compact | :high`, forward it in `common_basis`, and
-  print it. This does not approve other CLI controls, custom parameters,
+  `:compact`, validate `:compact | :standard | :high`, forward it in
+  `common_basis`, and print it. This does not approve other CLI controls,
+  custom parameters,
   shellification, residual/injection/EGOI/screened-Hartree policy, solver
   workflow, or Cr2-specific behavior.
 - `HP-COMP-NSCORE-*` approves direct nucleus-centered core side parity:

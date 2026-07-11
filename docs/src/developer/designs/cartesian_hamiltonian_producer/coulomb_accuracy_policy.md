@@ -1,7 +1,7 @@
 # Producer-Wide Coulomb Accuracy Policy
 
-Status: producer-wide policy implemented, with narrow canonical-driver
-exposure approved for implementation under
+Status: compact/high producer policy implemented; the fixed standard tier and
+narrow canonical-driver exposure are approved for implementation under
 `HP-PQS-COULOMB-ACCURACY-FN-01` and
 `HP-PQS-COULOMB-ACCURACY-TEST-01`.
 
@@ -30,6 +30,7 @@ The source-backed base and supplemented producer facades accept:
 
 ```julia
 coulomb_accuracy = :compact  # default
+coulomb_accuracy = :standard
 coulomb_accuracy = :high
 ```
 
@@ -42,15 +43,57 @@ expansion.
 
 The only accepted values and exact presets are:
 
-| policy | `doacc` | terms | `del` | `s` | `c` | `maxu` |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `:compact` | `false` | 45 | 0.6 | 0.5 | 0.03 | 27.0 |
-| `:high` | `true` | 135 | 1.0 | 0.16 | 0.01 | 135.0 |
+| policy | `doacc` | terms | `del` | `s` | `c` | `maxu` | role |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| `:compact` | `false` | 45 | 0.6 | 0.5 | 0.03 | 27.0 | cheapest legacy approximation |
+| `:standard` | `false` | 60 | 1.0 | 0.34257593251905827 | 0.042605721927199074 | 60.0 | normal accuracy/cost balance |
+| `:high` | `true` | 135 | 1.0 | 0.16 | 0.01 | 135.0 | reference-grade production |
 
-These are names for the existing deterministic
-`coulomb_gaussian_expansion(...)` presets. They are not a new fitting
-algorithm. The default of the general expansion utility is outside this lane;
-the Cartesian/PQS producer default remains `:compact`.
+`:compact` and `:high` retain their existing deterministic generator paths.
+`:standard` is the fixed analytic K60 quadrature with the existing implicit
+midpoint phase `theta = 0.5`. For `k = 0:59`, its canonical coefficient and
+exponent construction is:
+
+```text
+u_k = s * (k + 0.5)
+x_k = c * sinh(u_k)
+exponent_k = x_k^2
+coefficient_k = (2s/sqrt(pi)) * sqrt(x_k^2 + c^2)
+```
+
+The coefficient vector followed by the exponent vector, encoded as canonical
+little-endian Float64 bytes, has SHA-256 fingerprint:
+
+```text
+2de3ec44fc3d6b11ea26b7551e6b5ddef8bb2de1898fe0702d65f91cbf6c0f3a
+```
+
+The fixed operation order above is part of the deterministic preset. Calling
+the generic keyword-override utility with algebraically equivalent parameters
+can differ in final Float64 bits and therefore does not establish preset
+identity. The implementation may add one private fixed-preset constructor in
+the existing Coulomb expansion owner; it must not change compact/high bit
+patterns or expose a new public custom-expansion interface.
+
+`doacc` is a legacy compatibility field, not preset identity: it is `false`
+for both `:compact` and `:standard`. Policy, exact parameters, term count, and
+the coefficient/exponent fingerprint define a preset. These are fixed
+quadratures, not runtime fits. The default of the general expansion utility is
+outside this lane; the Cartesian/PQS producer default remains `:compact`.
+
+The accepted bounded evidence is:
+
+- compact45 misses the Cr closed-shell s/p-only RHF control by about
+  `5.75 mHa`;
+- standard60 differs from high135 by about `2.43e-10 Ha` for that control;
+- H, Be, Ne, and Cr s/p/d integral controls agree closely with high135.
+
+Standard60 does not strictly dominate compact45 at extremely long range. It is
+the recommended opt-in for serious atomic and ordinary molecular work, not a
+claim of uniform pointwise superiority. The controlled Cr2 screened off/on
+calculation remains `:high`; changing it to `:standard` would confound that
+comparison. A producer-default change requires separate authority after
+bounded molecular/PQS validation.
 
 Do not expose `doacc`, `del`, `s`, `c`, `maxu`, coefficient vectors,
 exponent vectors, or custom expansion objects as new user inputs.
@@ -60,7 +103,7 @@ exponent vectors, or custom expansion objects as new user inputs.
 `bin/cartesian_ham_builder.jl` may add exactly one public expert input:
 
 ```julia
-coulomb_accuracy = :compact  # :compact or :high
+coulomb_accuracy = :compact  # :compact, :standard, or :high
 ```
 
 Required driver behavior:
@@ -69,7 +112,7 @@ Required driver behavior:
 2. Include `:coulomb_accuracy` in the existing trusted input-file and
    `key=value` override allowlist.
 3. Normalize with `Symbol(...)` and reject values outside
-   `(:compact, :high)` before construction.
+   `(:compact, :standard, :high)` before construction.
 4. Add the normalized symbol to the existing `common_basis` `NamedTuple`.
 5. Print the resolved policy in the existing basis contract summary.
 
@@ -236,6 +279,7 @@ coulomb_expansion/del
 coulomb_expansion/s
 coulomb_expansion/c
 coulomb_expansion/maxu
+coulomb_expansion/fingerprint
 ```
 
 The summary describes the expansion used for parent/PGDG, base IDA, exact
@@ -249,10 +293,13 @@ readback because consumers use those artifacts to resume expensive Cr/Cr2
 work.
 
 Legacy artifacts without the group remain readable where they were readable
-before. Missing provenance is `nothing`/unavailable; it must never be
-inferred as `:high`. A new artifact claiming `:compact` or `:high` must
-validate the stored term count and parameters against the named deterministic
-preset.
+before. Existing compact/high summaries without `fingerprint` remain readable
+as legacy provenance, but the missing fingerprint is unavailable and must not
+be invented. No legacy `:standard` summary exists: a summary claiming
+`:standard` without the exact fingerprint is invalid. Every new summary for
+any named preset writes and validates the fingerprint together with policy,
+term count, and parameters. Missing provenance must never be inferred as
+`:standard` or `:high`.
 
 Protected-localized matrices remain in their existing native order, and this
 summary does not change protected-localized interaction semantics, sector maps,
@@ -291,6 +338,7 @@ src/cartesian_residual_gaussians/mwg_interaction.jl
 src/cartesian_ida_hamiltonian.jl
 src/cartesian_protected_ladder_bundle.jl
 src/cartesian_reference_density/atomic_hf_reference_packets.jl
+src/ordinary_coulomb.jl
 src/GaussianAnalyticIntegrals.jl
 src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
 bin/cartesian_ham_builder.jl
@@ -311,6 +359,8 @@ No new source file, struct, public export, driver input other than the exact
 - package load;
 - omitted policy versus explicit `:compact` matrix equality for a bounded
   base construction;
+- a bounded `:standard` base construction with 60-term artifact provenance,
+  exact K60 fingerprint, and parent/PGDG exponent parity;
 - a bounded `:high` base construction with 135-term artifact provenance and
   exact parent/PGDG exponent parity;
 - a bounded White-Lindsey base smoke confirming the same policy is carried
@@ -322,7 +372,7 @@ No new source file, struct, public export, driver input other than the exact
 - atomic packet roundtrip preserving separate RHF, density/self-energy, and
   potential-tail expansion provenance;
 - stage timing and expansion-dependent allocation reporting for at least one
-  bounded compact/high comparison;
+  bounded compact/standard/high comparison;
 - terminal due-diligence inspection for every endpoint-style base or
   supplemented probe used to interpret the result.
 
@@ -344,6 +394,8 @@ resolution. Do not create a new committed driver test or input fixture.
 Source validation must also run bounded one-center canonical-driver smokes for:
 
 - omitted policy and explicit `:compact`, with exact matrix/artifact parity;
+- explicit `:standard`, with successful input acceptance, finite/symmetric
+  output, and exact `:standard`/60-term/fingerprint provenance;
 - explicit `:high`, with successful input acceptance, finite/symmetric output,
   and `coulomb_expansion/` provenance reporting `:high` and `135` terms.
 
@@ -351,10 +403,11 @@ These may use ignored temporary input/output paths. Inspect terminal due
 diligence, but do not add a high-accuracy endpoint or energy baseline.
 
 The core test addition is limited to a small focused analytic-kernel test. It
-must compare the stable formulas with a BigFloat oracle across compact and high
-exponent ranges, preserve moderate-exponent values within roundoff, and cover
-finite nonnegative s-type factors plus translated centers that trigger the old
-cancellation.
+must compare the stable formulas with a BigFloat oracle across compact,
+standard, and high exponent ranges, preserve moderate-exponent values within
+roundoff, reproduce the exact standard K60 coefficient/exponent fingerprint,
+and cover finite nonnegative s-type factors plus translated centers that
+trigger the old cancellation.
 
 The high supplemented and protected-ladder checks may remain ignored bounded
 probes if adding them to a committed endpoint would materially increase normal
@@ -379,6 +432,7 @@ Stop without a source commit and report the exact boundary if:
 This authority does not approve:
 
 - changing the producer default to `:high`;
+- changing the producer default to `:standard`;
 - custom expansion parameters or coefficient/exponent inputs;
 - canonical driver inputs or CLI behavior beyond the single policy symbol
   approved above;
@@ -399,7 +453,8 @@ or materially exceeds that size, stop for design review.
 The stable-formula amendment itself should remain below about 60 added source
 lines and must not introduce a new carrier, cache, status object, or module.
 
-The canonical-driver extension should target at most 20 added `bin`/test lines.
-If it needs a parser abstraction, new configuration carrier, producer change,
-artifact change, or another committed test file, stop and report the missing
-seam.
+The driver-only portion should target at most 25 added `bin`/test lines. If
+that portion needs a parser abstraction, new configuration carrier, or another
+committed test file, stop and report the missing seam. The fixed K60 resolver
+and fingerprint provenance belong to the producer/artifact implementation
+portion approved above, not to the driver.
