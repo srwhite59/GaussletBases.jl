@@ -232,6 +232,12 @@ padded Be2 retained `42/42`, recovered packet occupied spaces at about
 bad residual-weighted low mode. Terminal due diligence was inspected. A Cr2
 measurement remains a consumer diagnostic, not a production energy claim.
 
+The separately approved-pending
+[semantic shell-q override](pqs_semantic_shell_q_overrides.md) may rebuild this
+private composition from a selectively refined terminal basis. It changes no
+residual-rank rule and must rerun all capture, operator, correction, and due-
+diligence checks in the resulting basis.
+
 ## Explicit Non-Goals
 
 This authority does not approve:

@@ -640,6 +640,8 @@ these approved design IDs:
 - `HP-DRV-SHELLDD-TEST-01`
 - `HP-PQS-ASPECTSHELL-FN-01`
 - `HP-PQS-ASPECTSHELL-TEST-01`
+- `HP-PQS-SHELLQ-OVERRIDE-FN-01`
+- `HP-PQS-SHELLQ-OVERRIDE-TEST-01`
 - `HP-HAM-MANIFEST-FN-01`
 - `HP-HAM-MANIFEST-TEST-01`
 - `HP-HAM-MANIFEST-SRC-FN-01`
@@ -1388,6 +1390,22 @@ records are frozen; multilayer realization and due diligence consume the same
 shape. This does not authorize new source work, public inputs, WL policy,
 shell ownership, artifacts, RG/MWG/IDA, solver workflow, or Cr2 production
 claims.
+`HP-PQS-SHELLQ-OVERRIDE-FN-01` and
+`HP-PQS-SHELLQ-OVERRIDE-TEST-01` approve only the private semantic complete-
+shell source-q refinement in
+`docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md`.
+The source ceiling is `src/pqs_source_box_route_driver_helpers.jl`, private
+working-basis forwarding in `src/cartesian_base_hamiltonian.jl`, and private
+call-site-only numerical-complete additive-reference forwarding in
+`src/cartesian_protected_ladder_bundle.jl`; validation is limited to the
+existing nested H2 test plus ignored padded Be2/CR2 measurement gates. Omitted
+or empty input must preserve ordinary behavior. Only symmetric `owner = :all`
+atom-local/shared complete-shell requests with `source_q > route_q` are
+allowed, and only for `source_span = :ordinary`. This authority adds no
+public/default input, direct `L`/shape control, mapped-COMX behavior, new
+result/artifact field, artifact round-trip, dense final-final overlap,
+WL/one-center behavior, support/shell/slab policy, solver/HF workflow, or
+Cr2-specific source branch.
 `HP-DRV-NEST-FN-01` and `HP-DRV-NEST-WIRE-01` implement one visible construction
 family input, `nesting = :pqs` or `nesting = :wl`, in
 `bin/cartesian_ham_builder.jl` plus narrow input plumbing in

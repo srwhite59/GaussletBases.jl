@@ -193,3 +193,8 @@ This contract does not approve:
 
 Terminal due diligence remains advisory reporting. It exposes actual and
 expected physical-aspect shapes but does not itself choose `L`.
+
+The separately approved-pending
+[semantic shell-q override](pqs_semantic_shell_q_overrides.md) may rerun this
+same angular-band selector with a larger transverse source size for one matched
+shared shell. It does not replace or modify the ordinary aspect policy.

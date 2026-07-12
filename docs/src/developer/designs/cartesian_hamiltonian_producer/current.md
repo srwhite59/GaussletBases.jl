@@ -54,6 +54,7 @@ claim.
 | Lane | State | Exact next boundary |
 | --- | --- | --- |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
+| `HP-PQS-SHELLQ-OVERRIDE-*` | Private ordinary-span semantic source-q refinement approved, not implemented | Add strict owner-balanced role/shell matching and rewrite only selected complete-shell source shapes before retained/support records freeze; no mapped-COMX, artifact, public/default input, or dense final-final overlap |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |
@@ -136,6 +137,7 @@ Read only the relevant contract:
 - [Screened Hartree formalism](screened_hartree_residual_density.md)
 - [External GTO import](external_gto_orbital_import.md)
 - [Coulomb accuracy policy](coulomb_accuracy_policy.md)
+- [Semantic per-shell PQS source-q overrides](pqs_semantic_shell_q_overrides.md)
 
 Use [registry.md](registry.md) only for the assigned ID. Use
 [README.md](README.md) for the broader task-specific document map.

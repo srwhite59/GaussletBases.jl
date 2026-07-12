@@ -245,6 +245,13 @@ The canonical RG algorithm contract is
   realization; White-Lindsey may then split shell boundaries into faces, edges,
   corners, and strata for product-of-1D contractions. Those are
   retained-construction geometries, not separate first-step shellifiers.
+- A private semantic shell `source_q` is a source-span refinement, not a second
+  public/route `q`. It may be applied only after common shellification and must
+  not change public `ns`, PQS route `q`, direct-core side, parent axes, shell
+  boxes, support ownership, or region order. Shared-shell longitudinal `L`
+  remains owned by the existing angular-band selector; callers may not supply
+  `L` or a full shape. The first override lane is ordinary-span only and does
+  not establish mapped-COMX or artifact semantics.
 - Z-axis diatomic thin slab stacks are not real shell regions and are not
   direct identity sectors. For both PQS and White-Lindsey,
   `:direct_midpoint_slab` and `:outer_mismatch_slab` must lower through the

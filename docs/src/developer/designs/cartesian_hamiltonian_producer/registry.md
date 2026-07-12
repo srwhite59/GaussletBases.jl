@@ -4219,6 +4219,67 @@ artifact/readback, and due-diligence checks recorded in manager Pass 247.
 Non-goals: a new longitudinal-resolution policy, public inputs, WL policy,
 shell ownership, thin-slab/direct-core changes, artifacts, RG/MWG/IDA,
 injection, solvers, or Cr2 claims.
+
+### HP-PQS-SHELLQ-OVERRIDE-FN-01 — semantic per-shell PQS source-q overrides
+
+Lifecycle: approved pending internal source implementation; not implemented in
+committed source. Permission: source implementation and maintenance within the
+listed surfaces.
+
+Owner/canonical: terminal low-order PQS source-shape enrichment;
+[semantic per-shell PQS source-q overrides](pqs_semantic_shell_q_overrides.md).
+
+Source: `src/pqs_source_box_route_driver_helpers.jl` for strict private-input
+normalization, semantic matching, and authoritative lowering-contract shapes;
+`src/cartesian_base_hamiltonian.jl` for the private working-basis keyword and
+internal forwarding; and `src/cartesian_protected_ladder_bundle.jl` only for
+explicit call-site forwarding from
+`_plb_build_numerical_complete_additive_reference_member(...)` through
+`_plb_build_inputs(...)`. Sibling member builders and empty-placement fallbacks
+must reject nonempty overrides.
+
+Permission: implement `owner = :all` overrides for positive semantic
+`:atom_local_shell` or `:shared_molecular_shell` indices with integer
+`source_q > route_q`. Atom-local shells use `(source_q,source_q,source_q)`;
+shared shells rerun the existing angular-band selector for
+`(source_q,source_q,L)`, with route metadata `q` unchanged. Selector retention,
+`nside`, and `selected_q` use `source_q`. One authoritative shape must reach
+existing retained/support/transform/realization/due-diligence consumers
+unchanged.
+
+Scope: private in-memory `source_span = :ordinary` construction only. Mapped-
+COMX and artifact-producing paths reject the input.
+
+Dependencies: `HP-PQS-ASPECTSHELL-*`, `HP-RG-NUMCOMP-*`, current terminal
+due diligence, and the existing private additive-reference composition.
+
+Non-goals: public/default controls, direct `L` or full-shape input, owner
+asymmetry, WL/one-center behavior, parent/support/shell/slab policy,
+artifacts, residual/MWG/screened-Hartree/EGOI changes, dense final-final
+overlaps, solvers, or Cr2-specific source behavior and claims.
+
+### HP-PQS-SHELLQ-OVERRIDE-TEST-01 — semantic source-q override validation
+
+Lifecycle: approved pending bounded validation; no committed shell-q override
+validation exists. Permission: test implementation and maintenance within the
+listed surface.
+
+Owner/canonical: semantic source-q override validation;
+[semantic per-shell PQS source-q overrides](pqs_semantic_shell_q_overrides.md).
+
+Test: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` for omitted
+versus empty parity, bounded atom-local/shared H2 refinement, exact semantic
+row selection, unchanged parent/support/slab facts, retained-count agreement,
+finite/symmetric operators, and malformed-input rejection. A physically padded
+Be2 numerical-complete additive-reference gate and later CR2 fixed imported-
+density comparison remain ignored measurement surfaces without committed large
+fixtures or HF assertions.
+
+Permission: validate rebuilt residual, packet-capture, `J0/E0`, correction,
+source-shape, dimension, and due-diligence facts. No dense baseline-to-variant
+overlap API, source-pass HF, endpoint energy assertion, or production claim is
+approved.
+
 ### HP-DRV-TEST-01 — driver workflow validation
 
 Lifecycle: completed validation contract. Permission: validation maintenance.

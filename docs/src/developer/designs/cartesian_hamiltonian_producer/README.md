@@ -42,6 +42,12 @@ shapes, retained counts, and warning flags before interpreting energies or
 residual/injection behavior. `HP-PQS-ASPECTSHELL-*` implements the separate
 construction policy that selects explicit aspect-aware `(q,q,L)` source
 modes for PQS shared complete shells.
+`HP-PQS-SHELLQ-OVERRIDE-*` separately approves a pending private diagnostic
+that raises transverse source `q` for selected semantic atom-local or shared
+complete shells while preserving route `q`, parent geometry, support, and
+ordinary defaults. It is limited to ordinary-span numerical-complete
+additive-reference composition and adds no mapped-COMX, public, or artifact
+control.
 The implemented [protected-localized basis convention](protected_localized_basis.md)
 owns compact-main replacement, localized `L`, exact `H1_L`, and inherited-site
 `Vee_L`. The implemented
@@ -196,6 +202,8 @@ ID or subsystem.
   for the derived basis review report and advisory warning contract
 - [PQS complete-shell aspect source modes](pqs_complete_shell_aspect_source_modes.md)
   for the separate `(q,q,L)` source-policy lane
+- [Semantic per-shell PQS source-q overrides](pqs_semantic_shell_q_overrides.md)
+  for the approved-pending private owner-balanced refinement diagnostic
 - [Cartesian Gaussian raw blocks - nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
   for the neutral uncharged nuclear raw-block owner
 - [Cartesian Gaussian raw blocks - non-nuclear slice](cartesian_gaussian_raw_blocks_non_nuclear.md)

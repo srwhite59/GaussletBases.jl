@@ -28827,3 +28827,45 @@ Goal advancement / guardrail:
 - Next: decide separately whether a normalized lifecycle/permission taxonomy is
   useful. Do not generate authority views or cut over execution authority in
   that decision pass.
+
+## Cartesian Hamiltonian Producer Pass 387 - Approve Semantic Shell Source-q Refinement
+
+Commit(s):
+- this commit - approve a private semantic complete-shell source-q override and
+  bounded validation lane.
+
+Summary:
+- Added `HP-PQS-SHELLQ-OVERRIDE-FN-01` and
+  `HP-PQS-SHELLQ-OVERRIDE-TEST-01`. The input identifies an atom-local or
+  shared complete shell by actual terminal role plus positive native
+  `shell_index`, requires symmetric `owner = :all`, and accepts only a
+  shell-local integer `source_q > route_q`. Route metadata `q` remains fixed;
+  shared selector retention, `nside`, and `selected_q` use `source_q`.
+- The override acts after common shellification and before lowering,
+  retained/support, and transform records freeze. Atom-local pairs receive
+  cubic source dimensions; shared shells rerun the existing angular-band
+  selector for `L`. Parent axes, route `q`, shell boxes/support, direct cores,
+  slabs, and unmatched regions remain unchanged. The first lane is ordinary-
+  span, in-memory, numerical-complete additive composition only.
+- Consumer comparison imports the same external occupied determinant into each
+  variant independently. No dense final-final overlap, artifact round-trip,
+  mapped-COMX behavior, public/default input, or Cr2-specific source branch is
+  approved.
+
+Validation / evidence:
+- Read-only source-seam and authority audits confirmed the existing
+  post-shellification rewrite point and authoritative shape propagation through
+  retained units, support, transforms, due diligence, and realization. Focused
+  ID/link/scope scans, shadow parity, local Documenter, and `git diff --check`
+  passed. No numerical test ran because this pass changes docs authority only.
+
+Goal advancement / guardrail:
+- MT3 gains a bounded diagnostic for testing local source resolution without
+  changing common shell geometry or the ordinary aspect policy. MT4 may use it
+  only after H2 and padded Be2 source gates pass, then compare CR2 shell 7 and
+  shell 8 independently before any pair or HF run.
+- Next: implement only the three approved private source surfaces and existing
+  nested test. Only the numerical-complete additive call site may forward the
+  recipe value; sibling/empty-reference builders reject it. Stop rather than
+  edit multilayer consumers or add provenance, result fields, compatibility
+  metadata, or transfer APIs.
