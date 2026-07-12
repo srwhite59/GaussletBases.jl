@@ -57,7 +57,7 @@ claim.
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |
-| Documentation architecture | Active cleanup | Normalize the remaining explicit permission/canonical-owner fields, then introduce shadow machine-readable metadata only after parity |
+| Documentation architecture | Metadata-normalized | Introduce non-authoritative shadow machine-readable metadata and prove exact parity before any authority cutover |
 
 Other approved IDs may remain actionable even when not listed here. Read the
 assigned registry entry. Completed retirement, superseded, rejected, and
@@ -94,11 +94,11 @@ energy claim.
 4. **Protected atoms and counterpoise.** One-center protected compactness,
    separated kinetic/unit-nuclear persistence, and counterpoise sidecars remain
    separate future designs.
-5. **Machine-registry prerequisites.** Every registry ID now has an individual
-   heading and explicit lifecycle, but some mature records still rely on
-   section-level permission or canonical ownership. Normalize those fields
-   before introducing non-authoritative shadow metadata; do not infer callers
-   or tests from ID names.
+5. **Shadow registry parity.** Every registry ID now has an individual heading
+   and explicit lifecycle, permission, and canonical/history ownership. The
+   next lane must encode those facts as non-authoritative shadow metadata and
+   prove exact parity; do not infer callers, tests, or dependencies from ID
+   names, and do not cut over authority in the same pass.
 
 ## Non-Negotiable Boundaries
 

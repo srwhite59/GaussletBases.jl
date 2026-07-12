@@ -21,8 +21,10 @@ without remaining on the active source whitelist in `AGENTS.md`; a historical
 implementation may remain preservation-only only when its entry says so and it
 is still whitelisted. Numerical formulas, behavioral invariants, and rationale
 belong in the linked canonical subsystem document. Every ID has its own
-heading. The remaining transition work is to normalize explicit permission and
-canonical-owner fields before any machine-readable shadow registry is added.
+heading plus explicit lifecycle, permission, and canonical or historical
+ownership. The next transition step is non-authoritative machine-readable
+shadow metadata with exact parity checks. This Markdown registry remains the
+authority until a separately reviewed atomic cutover.
 
 ## Approved And Implemented
 
@@ -173,6 +175,9 @@ Canonical contract:
 
 Lifecycle: implemented. Permission: source maintenance.
 
+Canonical contract:
+[White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md).
+
 Owner/source:
 `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
 and its include in `CartesianFinalBasisRealization.jl`.
@@ -184,6 +189,9 @@ artifact, report, or export is authorized.
 ### HP-WLTERM-FN-01 — WL low-order terminal basis realization
 
 Lifecycle: implemented. Permission: source maintenance.
+
+Owner/canonical: White-Lindsey terminal basis realization;
+[White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md).
 
 Source:
 
@@ -205,6 +213,9 @@ public API, raw blocks, RG/MWG/IDA, solvers, or Cr2 workflow.
 
 Lifecycle: implemented. Permission: source maintenance.
 
+Canonical contract:
+[White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md).
+
 Owner/source: `src/pqs_source_box_route_driver_helpers.jl`.
 
 Permission: pass native `:white_lindsey_low_order` support, retained, and
@@ -215,6 +226,9 @@ restoring old WL materialization.
 
 Lifecycle: completed validation contract. Permission: validation maintenance.
 
+Owner/canonical: White-Lindsey terminal basis realization;
+[White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md).
+
 Evidence: accepted bounded PQS parity, WL atom/H2 artifact/readback, and
 supplemented endpoint smokes recorded in the manager log. No dedicated
 committed WL fixture is owned by this ID.
@@ -222,6 +236,9 @@ committed WL fixture is owned by this ID.
 ### HP-COMP-WLDIAT-FN-01 — WL z-axis diatomic base terminal records
 
 Lifecycle: implemented. Permission: source maintenance.
+
+Owner/canonical: White-Lindsey terminal basis realization;
+[White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md).
 
 Source:
 
@@ -246,12 +263,18 @@ materialization, artifacts/readers, RG/MWG/IDA policy, solver/ECP, or Cr2.
 
 Lifecycle: completed validation contract. Permission: validation maintenance.
 
+Owner/canonical: White-Lindsey terminal basis realization;
+[White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md).
+
 Evidence: bounded PQS/WL atom and H2 artifact/readback, route-provenance, and
 downstream supplemented smokes recorded in the manager log.
 
 ### HP-WLDIAT-COMPACT-FN-01 — WL diatomic compact retained basis
 
 Lifecycle: implemented. Permission: source maintenance.
+
+Canonical contract:
+[White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md).
 
 Owner/source:
 
@@ -273,12 +296,18 @@ units; support rows are not themselves retained functions.
 
 Lifecycle: completed validation contract. Permission: validation maintenance.
 
+Owner/canonical: White-Lindsey terminal basis realization;
+[White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md).
+
 Evidence: bounded H2/Be2 WL base and supplemented artifact/readback,
 finite/symmetric operators, retained-count, and PQS parity smokes.
 
 ### HP-WLDIAT-PARITY-FN-01 — WL boundary retained-count parity
 
 Lifecycle: implemented. Permission: source maintenance.
+
+Canonical contract:
+[White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md).
 
 Owner/source:
 `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`.
@@ -306,6 +335,9 @@ Canonical contract:
 ### HP-COMP-NSCORE-FN-01 — public ns direct-core side
 
 Lifecycle: implemented. Permission: source maintenance.
+
+Owner/canonical: public `ns` direct-core side parity;
+[Public ns direct-core side parity](public_ns_core_side_parity.md).
 
 Source:
 
@@ -356,6 +388,9 @@ which have a separate canonical contract and IDs.
 
 Status: implemented.
 
+Canonical contract:
+[common terminal shell decomposition](common_terminal_shell_decomposition.md).
+
 Owner/source:
 `src/cartesian_shellification/terminal_geometry.jl`, with narrow caller
 plumbing in `src/pqs_source_box_route_driver_helpers.jl`.
@@ -367,6 +402,12 @@ coverage, and owned support before PQS/WL retained construction diverges.
 
 Status: completed validation evidence.
 
+Permission: none. The completed evidence does not authorize test maintenance
+or a committed fixture.
+
+Owner/canonical: common shell decomposition;
+[common terminal shell decomposition](common_terminal_shell_decomposition.md).
+
 Evidence: bounded same-input PQS/WL shell/support comparisons and downstream
 artifact/endpoint smokes recorded in the manager log. No committed fixture is
 owned by this ID.
@@ -374,6 +415,9 @@ owned by this ID.
 ### HP-COMP-SHELLGEOM-DIAT-FN-01 — diatomic common shellifier entry
 
 Status: implemented.
+
+Canonical contract:
+[common terminal shell decomposition](common_terminal_shell_decomposition.md).
 
 Owner/source:
 `src/cartesian_shellification/terminal_geometry.jl` and narrow
@@ -387,12 +431,23 @@ lowering. Central-gap/contact redesign is not approved.
 
 Status: completed validation evidence.
 
+Permission: none. The completed evidence does not authorize test maintenance
+or a committed Cr2 gate.
+
+Owner/canonical: common diatomic shell geometry;
+[common terminal shell decomposition](common_terminal_shell_decomposition.md).
+
 Evidence: bounded PQS/WL same-function/same-argument and shell-region parity;
 no Cr2 committed gate.
 
 ### HP-COMP-OUTERMM-FN-01 — outer-mismatch-only correction
 
 Status: superseded; no permission.
+
+Permission: none.
+
+Owner/history:
+[common terminal shell decomposition](common_terminal_shell_decomposition.md).
 
 Superseded by `HP-COMP-THINSLAB-FN-01`. Do not restore a separate
 outer-mismatch path.
@@ -401,11 +456,19 @@ outer-mismatch path.
 
 Status: superseded; no permission.
 
+Permission: none.
+
+Owner/history:
+[common terminal shell decomposition](common_terminal_shell_decomposition.md).
+
 Historical evidence is subsumed by common thin-slab validation.
 
 ### HP-COMP-ANGBOX-FN-01 — angular-balanced diatomic shellification
 
 Status: implemented.
+
+Canonical contract:
+[common terminal shell decomposition](common_terminal_shell_decomposition.md).
 
 Owner/source:
 `src/cartesian_shellification/terminal_geometry.jl`.
@@ -419,12 +482,21 @@ central-gap/contact ownership.
 
 Status: completed validation evidence.
 
+Permission: none. The completed evidence does not authorize test maintenance
+or a committed Cr2 fixture.
+
+Owner/canonical: angular extension shell geometry;
+[common terminal shell decomposition](common_terminal_shell_decomposition.md).
+
 Evidence: ignored H2/Be2/Cr2-style geometry inventories and accepted
 shellification Passes 179/186; no production Cr2 claim.
 
 ### HP-COMP-FACEPROD-FN-01 — neutral terminal face-product helper
 
 Status: implemented.
+
+Canonical contract:
+[common terminal shell decomposition](common_terminal_shell_decomposition.md).
 
 Owner/source:
 
@@ -440,12 +512,21 @@ normal-axis indices. It is not a new terminal-basis policy.
 
 Status: completed validation evidence.
 
+Permission: none. The completed evidence does not authorize test maintenance
+or a dedicated committed fixture.
+
+Owner/canonical: neutral terminal face products;
+[common terminal shell decomposition](common_terminal_shell_decomposition.md).
+
 Evidence: exact White-Lindsey facet coefficient parity and compact slab reuse;
 no committed fixture.
 
 ### HP-COMP-THINSLAB-FN-01 — common compact thin-slab lowering
 
 Status: implemented.
+
+Canonical contract:
+[common terminal shell decomposition](common_terminal_shell_decomposition.md).
 
 Owner/source:
 
@@ -464,12 +545,21 @@ shells remain family-specific.
 
 Status: completed validation evidence.
 
+Permission: none. The completed evidence does not authorize test maintenance
+or a committed Cr2 gate.
+
+Owner/canonical: common compact thin-slab lowering;
+[common terminal shell decomposition](common_terminal_shell_decomposition.md).
+
 Evidence: PQS/WL H2/Be2 artifact/readback, compact retained counts, exact WL
 facet parity, and H2 residual-GTO endpoint replay; no committed Cr2 gate.
 
 ### HP-COMP-THINSLAB-META-FN-01 — thin-slab inventory metadata
 
 Status: implemented.
+
+Canonical contract:
+[common terminal shell decomposition](common_terminal_shell_decomposition.md).
 
 Owner/source:
 `src/cartesian_terminal_shellification_geometry.jl`.
@@ -481,6 +571,12 @@ artifact/report payloads.
 ### HP-COMP-THINSLAB-META-TEST-01 — thin-slab inventory validation
 
 Status: completed validation evidence.
+
+Permission: none. The completed evidence does not authorize test maintenance,
+coefficient work, or report/artifact payloads.
+
+Owner/canonical: terminal shellification inventory metadata;
+[common terminal shell decomposition](common_terminal_shell_decomposition.md).
 
 Evidence: focused inventory checks confirm midpoint, outer-mismatch, and
 angular-z-extension slabs no longer advertise direct identity lowering.
@@ -500,6 +596,12 @@ remains opt-in after the bounded He `ns=5` physics limitation.
 
 Status: implemented.
 
+Permission: source maintenance in the existing owners only; no new production
+file or second COMX owner.
+
+Owner/canonical: mapped-COMX source span;
+[mapped-COMX source span](mapped_comx_source_span.md).
+
 Source owners:
 `src/cartesian_nested_faces.jl` and narrow existing PQS source-axis plumbing.
 No new production file was created under `CartesianRawProductSources`.
@@ -508,12 +610,18 @@ No new production file was created under `CartesianRawProductSources`.
 
 Status: implemented internal construction specification.
 
+Owner/canonical: mapped-COMX source span;
+[Mapped-COMX source span](mapped_comx_source_span.md).
+
 Permission: fixed protected-P2, mapped-Chebyshev, lambda/no-sqrt-J, and
 physical-localization facts. No public export or general tuning object.
 
 ### HP-MCOMX-FN-01 — mapped source-span construction
 
 Status: implemented.
+
+Canonical contract:
+[mapped-COMX source span](mapped_comx_source_span.md).
 
 Owner/source:
 `src/cartesian_nested_faces.jl`.
@@ -525,6 +633,9 @@ existing physical-coordinate COMX cleanup. Ordinary behavior remains default.
 
 Status: implemented.
 
+Canonical contract:
+[mapped-COMX source span](mapped_comx_source_span.md).
+
 Owner/source:
 `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`.
 
@@ -535,12 +646,21 @@ and return ordinary carried `AxisSourceTransformFact` objects.
 
 Status: completed validation evidence.
 
+Permission: none. The completed evidence does not authorize test maintenance,
+a committed fixture, or default-promotion work.
+
+Owner/canonical: mapped-COMX source span;
+[mapped-COMX source span](mapped_comx_source_span.md).
+
 Evidence: `ns=5/6/7` rank/protected-span/coordinate/orthogonality checks and
 bounded H/He/H2 comparisons. He `ns=5` blocks default promotion.
 
 ### HP-MCOMX-TERM-FN-01 — terminal shell-seed consumption
 
 Status: implemented.
+
+Canonical contract:
+[mapped-COMX source span](mapped_comx_source_span.md).
 
 Owner/source:
 
@@ -556,12 +676,21 @@ restriction, Lowdin, and canonicalization.
 
 Status: completed validation evidence.
 
+Permission: none. The completed evidence does not authorize test maintenance
+or a new committed test surface.
+
+Owner/canonical: mapped-COMX terminal consumption;
+[mapped-COMX source span](mapped_comx_source_span.md).
+
 Evidence: carried-fact coefficient parity/difference checks plus ordinary and
 supplemented bounded endpoints; no committed Cr2 gate.
 
 ### HP-MCOMX-DRV-FN-01 — canonical source-span selector
 
 Status: implemented.
+
+Canonical contract:
+[mapped-COMX source span](mapped_comx_source_span.md).
 
 Owner/source:
 
@@ -576,6 +705,12 @@ switch.
 ### HP-MCOMX-DRV-TEST-01 — driver source-span validation
 
 Status: completed validation evidence.
+
+Permission: none. The completed evidence does not authorize test maintenance
+or a new committed test surface.
+
+Owner/canonical: mapped-COMX driver selection;
+[mapped-COMX source span](mapped_comx_source_span.md).
 
 Evidence: ordinary default parity, mapped PQS artifact/readback/provenance, and
 bounded endpoint smokes.
@@ -597,6 +732,9 @@ Canonical contracts:
 
 Lifecycle: implemented. Permission: source maintenance.
 
+Owner/canonical: nesting/supplement composition;
+[Nesting/supplement composition](nesting_supplement_composition_plan.md).
+
 Source: `src/cartesian_base_hamiltonian.jl`.
 
 Dependencies: the shared base producer and the implemented nesting-specific
@@ -615,6 +753,9 @@ supplement, route/shellification, artifact, solver/ECP, or Cr2-specific work.
 
 Lifecycle: completed validation contract. Permission: validation maintenance.
 
+Owner/canonical: nesting/supplement composition;
+[Nesting/supplement composition](nesting_supplement_composition_plan.md).
+
 Evidence and test surfaces:
 
 - `docs/src/developer/pqs_manager_running_log.md`, Pass 139;
@@ -628,6 +769,9 @@ ID-specific committed test file was added.
 ### HP-COMP-SUPPWL-FN-01 — supplemented WL z-axis diatomics
 
 Lifecycle: implemented. Permission: source maintenance.
+
+Owner/canonical: nesting/supplement composition;
+[Nesting/supplement composition](nesting_supplement_composition_plan.md).
 
 Source owners:
 
@@ -650,6 +794,9 @@ route/lowering, RG/MWG convention, artifact, solver/ECP, or Cr2 changes.
 
 Lifecycle: completed validation contract. Permission: validation maintenance.
 
+Owner/canonical: nesting/supplement composition;
+[Nesting/supplement composition](nesting_supplement_composition_plan.md).
+
 Evidence and test surfaces:
 
 - `docs/src/developer/pqs_manager_running_log.md`, Pass 141;
@@ -663,6 +810,9 @@ ID-specific committed test file was added.
 ### HP-COMP-SUPPATOM-FN-01 — supplemented one-center atoms
 
 Lifecycle: implemented. Permission: source maintenance.
+
+Owner/canonical: nesting/supplement composition;
+[Nesting/supplement composition](nesting_supplement_composition_plan.md).
 
 Source owners:
 
@@ -686,6 +836,9 @@ artifact, solver/ECP, or Cr2 changes.
 ### HP-COMP-SUPPATOM-TEST-01 — supplemented atom validation
 
 Lifecycle: completed validation contract. Permission: validation maintenance.
+
+Owner/canonical: nesting/supplement composition;
+[Nesting/supplement composition](nesting_supplement_composition_plan.md).
 
 Evidence and test surfaces:
 
@@ -721,6 +874,9 @@ redesign, route/RG/MWG/IDA, artifact, solver/ECP, or Cr2 changes.
 
 Lifecycle: completed validation contract. Permission: validation maintenance.
 
+Owner/canonical: one-center physical parent extent;
+[R1 one-center base atoms](r1_one_center_base_atoms.md).
+
 Evidence and test surfaces:
 
 - `docs/src/developer/pqs_manager_running_log.md`, Pass 146;
@@ -734,6 +890,9 @@ ID-specific committed test file was added.
 ### HP-COMP-NS-FN-01 — public ns and derived q
 
 Lifecycle: implemented. Permission: source maintenance.
+
+Owner/canonical: nesting/supplement composition;
+[Nesting/supplement composition](nesting_supplement_composition_plan.md).
 
 Source:
 
@@ -756,6 +915,9 @@ workflow.
 
 Lifecycle: completed validation contract. Permission: validation maintenance.
 
+Owner/canonical: nesting/supplement composition;
+[Nesting/supplement composition](nesting_supplement_composition_plan.md).
+
 Evidence and test surfaces:
 
 - `docs/src/developer/pqs_manager_running_log.md`, Pass 145;
@@ -769,6 +931,9 @@ and provenance. No dedicated ID-specific committed test file was added.
 ### HP-COMP-WLNS-FN-01 — WL diatomic ns guard
 
 Lifecycle: implemented. Permission: source maintenance.
+
+Owner/canonical: nesting/supplement composition;
+[Nesting/supplement composition](nesting_supplement_composition_plan.md).
 
 Source: `src/cartesian_base_hamiltonian.jl`.
 
@@ -786,6 +951,9 @@ shellification/lowering, artifacts, RG/MWG/IDA, solver/ECP, or Cr2 workflow.
 ### HP-COMP-WLNS-TEST-01 — WL diatomic ns validation
 
 Lifecycle: completed validation contract. Permission: validation maintenance.
+
+Owner/canonical: nesting/supplement composition;
+[Nesting/supplement composition](nesting_supplement_composition_plan.md).
 
 Evidence and test surfaces:
 
@@ -848,6 +1016,8 @@ artifacts, route wiring, or pair payload/cache objects.
 Status: completed historical H/Be/Be2 measurement; not active source
 authority.
 
+Permission: none.
+
 Owner: Cartesian Hamiltonian producer screened-Hartree formalism.
 
 Canonical contract:
@@ -869,6 +1039,8 @@ Status: historical and operationally superseded by the fitted-cloud,
 packet-driven practical path. The direct occupied-pair construction remains an
 oracle, not a normal workflow.
 
+Permission: none.
+
 Owner: Cartesian Hamiltonian producer screened-Hartree formalism.
 
 Canonical contract:
@@ -887,6 +1059,8 @@ first-row claims, exchange, EGOI, and Cr/Cr2 production claims.
 ### HP-PQS-SCREEN-HARTREE-NE-FITCLOUD-AUDIT-01 - Ne fitted-cloud measurement
 
 Status: completed historical measurement; not active source authority.
+
+Permission: none.
 
 Owner: Cartesian Hamiltonian producer screened-Hartree formalism.
 
@@ -907,6 +1081,8 @@ workflow, artifacts, solver integration, exchange, EGOI, and Cr/Cr2 claims.
 
 Status: completed historical measurement; its durable packet semantics are now
 implemented under the atomic reference packet contract.
+
+Permission: none.
 
 Owner: historical screened-Hartree measurement; durable fit semantics are
 owned by the `CartesianReferenceDensity` atomic packet subsystem.
@@ -975,6 +1151,9 @@ to rewrite that data.
 
 Lifecycle: retired. Permission: none.
 
+Owner/history:
+[atomic HF reference packets](atomic_hf_reference_packets.md).
+
 This same-day false start was approved in commit `9739c22a6` and implemented
 as the moment-polish portion of manager Pass 353. It adjusted fitted-potential
 coefficients against determinant moments on a fixed separation grid to force
@@ -989,6 +1168,9 @@ adapter, molecule-trained fit, or polished-packet consumption is authorized.
 ### HP-PQS-ATOMREF-POTMOM-TEST-01 - retired polish validation
 
 Lifecycle: retired historical evidence. Permission: none.
+
+Owner/history:
+[atomic HF reference packets](atomic_hf_reference_packets.md).
 
 Evidence: manager Passes 351 and 353. The moment and padded-Be2 checks explain
 the false start; they are not current packet or endpoint validation.
@@ -1142,6 +1324,11 @@ workflow, or restoration of retired Slice D materialization.
 Status: retired by `e2e164e9b`. This entry is historical and no longer
 authorizes source work.
 
+Permission: none.
+
+Owner/history:
+[route-driver materialization retirement](route_driver_materialization_retirement.md).
+
 Historically approved and implemented Slice D wrapper boundary:
 
 ```julia
@@ -1275,7 +1462,11 @@ fit/provenance, invalid-input, artifact/readback, and protected-recipe smokes.
 Status: compact/high producer policy implemented; fixed standard tier and
 narrow canonical-driver exposure approved for implementation.
 
-Canonical design: `coulomb_accuracy_policy.md`.
+Permission: source maintenance, including only completion of the already
+approved Standard60 fingerprint/provenance and canonical-driver exposure.
+
+Owner/canonical: Cartesian producer-wide Coulomb policy;
+[Coulomb accuracy policy](coulomb_accuracy_policy.md).
 
 Purpose: let expert consumers select a fixed compact, standard, or high
 Coulomb Gaussian expansion while preserving one internally consistent
@@ -1440,6 +1631,12 @@ lines and must not introduce a new carrier, cache, status object, or module.
 ### HP-PQS-COULOMB-ACCURACY-TEST-01 - Coulomb accuracy validation
 
 Status: approved validation authority.
+
+Permission: validation maintenance for implemented compact/high behavior and
+the already-approved Standard60/driver completion only.
+
+Owner/canonical: Coulomb policy validation;
+[Coulomb accuracy policy](coulomb_accuracy_policy.md).
 
 Approved committed test surfaces:
 
@@ -1746,6 +1943,9 @@ Canonical contract:
 
 Lifecycle: implemented. Permission: source maintenance.
 
+Canonical contract:
+[R1 one-center base atoms](r1_one_center_base_atoms.md).
+
 Owner/source: `src/cartesian_base_hamiltonian.jl`.
 
 Permission: maintain explicit origin-centered, neutral, all-electron atom
@@ -1760,6 +1960,9 @@ solver workflow, API redesign, artifact expansion, or atom-only construction.
 
 Lifecycle: implemented. Permission: source maintenance.
 
+Canonical contract:
+[R1 one-center base atoms](r1_one_center_base_atoms.md).
+
 Owner/source: `src/cartesian_base_hamiltonian.jl`.
 
 Permission: map explicit charge and `core_spacing` into the private atomic
@@ -1771,6 +1974,9 @@ base producer. Atom routes remain `:one_center_pqs_base` or
 ### HP-R1-ATOM-TEST-01 — one-center base atom validation
 
 Lifecycle: completed validation contract. Permission: validation maintenance.
+
+Owner/canonical: one-center base atom validation;
+[R1 one-center base atoms](r1_one_center_base_atoms.md).
 
 Validation: `test/driver_public/cartesian_base_hamiltonian_runtests.jl` plus
 accepted bounded non-H atom smokes recorded in the manager log.
@@ -2426,6 +2632,9 @@ guards, full HF, Cr2 artifacts/workflow, driver, solver, ECP, or EGOI work.
 
 Status: implemented internal opt-in facility at `b2da7070c`.
 
+Permission: source maintenance for the fixed `eta_num = 1e-10` numerical-
+complete composition and existing private additive consumer only.
+
 Owner: `CartesianResidualGaussians`, with narrow private additive-reference
 composition near the protected ladder owner.
 
@@ -2461,6 +2670,13 @@ Gaussian-array enrichment, or Cr2-specific behavior and claims.
 
 Status: completed bounded validation contract at `b2da7070c`.
 
+Permission: validation maintenance for the existing compact rank/malformed-
+metric and bounded H2 surfaces; ignored H2/Be2 and one gated Cr2 comparison
+remain measurement-only.
+
+Owner/canonical: numerical-complete residual validation;
+[numerical-complete residual Gaussian basis](numerical_complete_residual_basis.md).
+
 Approved surfaces:
 
 - `test/misc/runtests.jl` for compact numerical-rank and malformed-metric
@@ -2485,6 +2701,12 @@ it is not a production claim or further source authority.
 
 Status: approved measurement-only authority. This is not production source
 authority.
+
+Permission: measurement-only through ignored probes and external text/TSV
+outputs; no tracked source, test, artifact, or workflow changes.
+
+Owner/canonical: residual-sector numerical diagnostics;
+[orthogonality/cutoff policy](residual_gaussian_orthogonality_robustness.md).
 
 Evidence after `HP-RG-CUTOFF-FN-02`: the tightened
 `residual_occupation_cutoff = 1.0e-6` performs the intended first cleanup,
@@ -2546,6 +2768,8 @@ seam. Do not add source instrumentation as part of this lane.
 
 Status: completed historical measurement; no active permission.
 
+Permission: none.
+
 Canonical record:
 [Default-off direct-G residual injection](residual_gaussian_injection_hybrid.md).
 
@@ -2557,6 +2781,9 @@ artifact, workflow, or renewed measurement work.
 ### HP-RG-INJECT-FN-01 — default-off direct-G injection compatibility
 
 Status: implemented preservation-only internal compatibility facility.
+
+Permission: source maintenance for existing default-off behavior only; no
+feature expansion or new caller.
 
 Owner:
 `CartesianResidualGaussians`, with narrow terminal residual-GTO compatibility
@@ -2591,6 +2818,9 @@ injected directions, spectral pruning, solver/HF, or Cr2 production claims.
 Status: completed design rationale; not source authority by itself. The
 implemented source lanes below realize the accepted contract.
 
+Permission: design-only rationale maintenance; no source, test, artifact, or
+workflow execution authority.
+
 Owner and canonical contract:
 
 - `CartesianResidualGaussians` protected geometry;
@@ -2611,6 +2841,11 @@ production claims.
 ### HP-RG-OCC-FIRST-INJECT-AUDIT-01 — occupied-first global injection measurement audit
 
 Status: completed historical measurement record; not active source authority.
+
+Permission: none.
+
+Owner/canonical:
+[occupied-first injection geometry](occupied_first_injection.md).
 
 Purpose: established mandatory occupied protection and capture-spectrum
 selection on Be/Ne before the source-backed helper was approved. Evidence is
@@ -2738,6 +2973,11 @@ these IDs, solvers, selection-policy changes, or Cr2 production claims.
 
 Status: completed historical measurement; not active source authority.
 
+Permission: none.
+
+Owner/canonical: protected exact one-body history;
+[protected-localized basis](protected_localized_basis.md).
+
 Evidence: manager running-log Passes 254-255 and
 `docs/src/developer/reports/cr2_protected_onebody_audit_eaf05a38c/README.md`.
 The audit established the dataflow later implemented under the source/test IDs
@@ -2775,6 +3015,8 @@ production claims.
 ### HP-RG-PROTECT-VEE-AUDIT-01 — protected interaction decision audit
 
 Status: completed historical measurement; not source authority.
+
+Permission: none.
 
 Owner and canonical outcome:
 
@@ -2912,6 +3154,8 @@ production defaults, or converged Cr2 claims.
 Lifecycle: completed historical measurement; not active source, test,
 artifact, or workflow authority.
 
+Permission: none.
+
 Owner and evidence:
 
 - [Retained-GTO local-product EGOI](retained_gto_egoi.md);
@@ -2973,6 +3217,8 @@ tests, and validation of uncommitted WIP.
 
 Lifecycle: completed historical measurement; not active source, artifact, or
 workflow authority.
+
+Permission: none.
 
 Owner and evidence:
 
@@ -3038,6 +3284,8 @@ and alternate artifact or transfer conventions.
 
 Status: completed and superseded historical measurement evidence.
 
+Permission: none.
+
 Owner and evidence:
 [rho0 and reference-density correction history](rho0_reference_density_matrix.md).
 No source or test authority remains.
@@ -3046,12 +3294,17 @@ No source or test authority remains.
 
 Status: completed and superseded historical measurement evidence.
 
+Permission: none.
+
 Owner and evidence:
 [rho0 and reference-density correction history](rho0_reference_density_matrix.md).
 
 ### HP-RHO0-REFDENS-FN-01 - historical candidate correction owner
 
 Lifecycle: unapproved historical planning name. Permission: none.
+
+Owner/history:
+[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
 
 No source surface, caller, or implementation authority was approved. The
 historical proposal is retained only in
@@ -3060,6 +3313,9 @@ historical proposal is retained only in
 ### HP-RHO0-REFDENS-ERI-01 - historical candidate mixed-ERI owner
 
 Lifecycle: unapproved historical planning name. Permission: none.
+
+Owner/history:
+[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
 
 No source surface, kernel, test, or implementation authority was approved.
 Durable neutral mixed-Hartree numerics are governed by the implemented MIXH
@@ -3070,9 +3326,17 @@ families below, not by this candidate name.
 Status: completed historical measurement evidence. Its durable result is
 the implemented neutral MIXH/FEXACT family below.
 
+Permission: none.
+
+Owner/history:
+[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
+
 ### HP-RHO0-MIXH-GG-FN-01 - exact mixed-Hartree GG block
 
 Status: implemented.
+
+Permission: source maintenance for exact one-center finite symmetric-`P_A`
+`GG` construction and compact diagnostics only.
 
 Owner:
 `CartesianGaussianRawBlocks`.
@@ -3099,6 +3363,12 @@ authority is implied.
 
 Status: implemented validation authority.
 
+Permission: validation maintenance for the stated compact gate and existing
+consumer test only.
+
+Owner/canonical: `CartesianGaussianRawBlocks`;
+[reference Hartree numerics](reference_hartree_numerics.md).
+
 Committed consumer test:
 `test/nested/cartesian_screened_hartree_correction_runtests.jl`.
 
@@ -3109,6 +3379,9 @@ Cr/Cr2. Historical acceptance is manager Pass 284 and commit `efaee93f6`.
 ### HP-RHO0-MIXH-GAAA-FN-01 - exact mixed-Hartree GA/AA blocks
 
 Status: implemented.
+
+Permission: source maintenance for exact `GA`, symmetric `AA`, and compact
+diagnostics only.
 
 Owner:
 `CartesianGaussianRawBlocks`.
@@ -3132,6 +3405,12 @@ workflow, solver, residual-selection, or Cr/Cr2 authority.
 
 Status: implemented validation authority.
 
+Permission: validation maintenance for the accepted bounded parity, angular,
+dimension, and oracle gate only; no dedicated committed test file.
+
+Owner/canonical: `CartesianGaussianRawBlocks`;
+[reference Hartree numerics](reference_hartree_numerics.md).
+
 Test ownership: no dedicated committed test file. The accepted compact
 ignored-probe gate covered prior `GG` parity, finite `GA`, symmetric `AA`,
 angular cases, and dense-oracle spots. Historical acceptance is manager
@@ -3140,6 +3419,9 @@ Pass 286 and commit `daac231d0`.
 ### HP-RHO0-MIXH-FEXACT-FN-01 - protected exact-Hartree transform
 
 Status: implemented.
+
+Permission: source maintenance for the exact protected fixed-sector transform,
+localized `sym(W' * J0_F * W)`, and existing convenience composition only.
 
 Owner:
 `CartesianResidualGaussians`.
@@ -3160,6 +3442,12 @@ solver, exchange, or Cr/Cr2 authority.
 
 Status: implemented validation authority.
 
+Permission: validation maintenance for bounded H/Be/Be2 raw, fixed-sector,
+localized, and oracle checks only; no dedicated committed test file.
+
+Owner/canonical: `CartesianResidualGaussians`;
+[reference Hartree numerics](reference_hartree_numerics.md).
+
 Test ownership: no dedicated committed test file. The accepted compact
 ignored-probe gate covered H/Be/Be2 raw-block replay, fixed/localized finite
 symmetry, dimension and protected-geometry checks, and dense-oracle spots.
@@ -3168,6 +3456,11 @@ Historical acceptance is manager Pass 288 and commit `40a6f7e99`.
 ### HP-RHO0-FAPP-AUDIT-01 - approximate fixed-P0 Fock audit
 
 Status: completed historical measurement evidence.
+
+Permission: none.
+
+Owner/history:
+[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
 
 ### HP-RHO0-FAPP-FN-01 - approximate IDA energy/Fock seam
 
@@ -3183,12 +3476,18 @@ No new caller, source work, correction policy, or public surface is authorized.
 
 Lifecycle: completed historical validation. Permission: none.
 
+Owner/history:
+[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
+
 Evidence: ignored finite-difference gates recorded in the rho0 history; no
 dedicated committed test or live caller remains.
 
 ### HP-RHO0-ANCHOR-FN-01 - old full-interaction anchor
 
 Lifecycle: superseded. Permission: none.
+
+Owner/history:
+[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
 
 The old `Delta_F0_alpha/beta` interpretation is not a Hartree correction
 contract and must not be revived.
@@ -3197,13 +3496,24 @@ contract and must not be revived.
 
 Lifecycle: superseded historical evidence. Permission: none.
 
+Owner/history:
+[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
+
 ### HP-RHO0-CORR-AUDIT-01 - corrected-Hamiltonian audit
 
 Status: completed and superseded historical measurement evidence.
 
+Permission: none.
+
+Owner/history:
+[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
+
 ### HP-RHO0-JANCHOR-FN-01 - direct-Hartree anchor helper
 
 Lifecycle: implemented but superseded in use and dormant. Permission: none.
+
+Owner/history:
+[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
 
 Source:
 
@@ -3222,6 +3532,9 @@ Cr/Cr2 work is authorized.
 
 Lifecycle: completed historical validation. Permission: none.
 
+Owner/history:
+[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
+
 Evidence: ignored direct-anchor and finite-difference gates recorded in the
 rho0 history. The live equivalent formula is validated under screened-Hartree
 correction authority.
@@ -3229,6 +3542,9 @@ correction authority.
 ### HP-RHO0-XPAIR-AUDIT-01 - exchange/direct pairing question
 
 Status: approved but deferred measurement-only question.
+
+Permission: measurement-only after explicit design-manager reactivation, for
+ignored H/Be/Be2 diagnostics only.
 
 Owner and evidence:
 [rho0 and reference-density correction history](rho0_reference_density_matrix.md).
@@ -3688,6 +4004,9 @@ Canonical contract:
 
 Lifecycle: implemented. Permission: source maintenance.
 
+Canonical contract:
+[Cartesian driver usability workflow](cartesian_driver_usability_workflow.md).
+
 Owner/source: `bin/cartesian_ham_builder.jl`.
 
 Permission: maintain the canonical trusted local scientific driver. No other
@@ -3696,6 +4015,9 @@ Permission: maintain the canonical trusted local scientific driver. No other
 ### HP-DRV-FN-01 — compact functional driver workflow
 
 Lifecycle: implemented. Permission: source maintenance.
+
+Canonical contract:
+[Cartesian driver usability workflow](cartesian_driver_usability_workflow.md).
 
 Owner/source: `bin/cartesian_ham_builder.jl`, with separately authorized
 non-exported producer stages.
@@ -3911,6 +4233,9 @@ Canonical contract:
 
 Lifecycle: implemented. Permission: source maintenance.
 
+Canonical contract:
+[Cartesian driver atom workflow](cartesian_driver_atom_workflow.md).
+
 Owner/source: `bin/cartesian_ham_builder.jl`.
 
 Permission: maintain `Natom=1`, `basisname === nothing` base-atom selection;
@@ -3921,6 +4246,9 @@ unsupported-input failures. There is no public `mode=:base` input.
 ### HP-DRV-ATOM-WIRE-01 — driver atom-to-base-facade wiring
 
 Lifecycle: implemented. Permission: source maintenance.
+
+Canonical contract:
+[Cartesian driver atom workflow](cartesian_driver_atom_workflow.md).
 
 Owner/source: `bin/cartesian_ham_builder.jl`.
 
@@ -3946,6 +4274,9 @@ validation remains owned by `HP-COMP-SUPPATOM-TEST-01`.
 
 Lifecycle: implemented cleanup. Permission: source preservation.
 
+Canonical contract:
+[Cartesian driver atom workflow](cartesian_driver_atom_workflow.md).
+
 Owner/source: `bin/cartesian_ham_builder.jl`.
 
 Permission: preserve the absence of hidden atom `d`; visible atom basis uses
@@ -3966,6 +4297,11 @@ producer path.
 ### HP-RETIRE-CCS-RHF-FN-01 — remove stale RHF payload stack
 
 Status: completed and closed by `28e9b2c84`.
+
+Permission: none.
+
+Owner/history:
+[complete-core-shell RHF retirement](complete_core_shell_rhf_retirement.md).
 
 Approved source files:
 
@@ -4010,6 +4346,11 @@ Do not preserve the path through an adapter.
 
 Status: completed validation evidence; closed to new test work.
 
+Permission: none.
+
+Owner/history:
+[complete-core-shell RHF retirement](complete_core_shell_rhf_retirement.md).
+
 Approved validation:
 
 - `git diff --check`;
@@ -4039,6 +4380,11 @@ producer path; the current path is the staged human-facing driver plus
 ### HP-RETIRE-DRV-MAT-FN-01 — remove old materialization/report/save wrappers
 
 Status: completed and closed by `e2e164e9b`.
+
+Permission: none.
+
+Owner/history:
+[route-driver materialization retirement](route_driver_materialization_retirement.md).
 
 Approved source files:
 
@@ -4088,6 +4434,11 @@ adapters.
 
 Status: completed and closed by `e2e164e9b`.
 
+Permission: none.
+
+Owner/history:
+[route-driver materialization retirement](route_driver_materialization_retirement.md).
+
 Approved tool files:
 
 ```text
@@ -4108,6 +4459,11 @@ Approved behavior:
 ### HP-RETIRE-DRV-MAT-DOC-01 — active docs cleanup
 
 Status: completed and closed by `e2e164e9b`.
+
+Permission: none.
+
+Owner/history:
+[route-driver materialization retirement](route_driver_materialization_retirement.md).
 
 Approved docs files:
 
@@ -4130,6 +4486,11 @@ Approved behavior:
 ### HP-RETIRE-DRV-MAT-TEST-01 — retirement validation
 
 Status: completed validation evidence; closed to new test work.
+
+Permission: none.
+
+Owner/history:
+[route-driver materialization retirement](route_driver_materialization_retirement.md).
 
 Approved test file:
 
@@ -4161,6 +4522,11 @@ No new committed test or fixture is approved.
 
 Status: completed and closed by `77fa2700b`.
 
+Permission: none.
+
+Owner/history:
+[route-driver materialization retirement](route_driver_materialization_retirement.md).
+
 Approved tool files:
 
 ```text
@@ -4190,6 +4556,11 @@ exact dependency. Do not preserve them through an adapter.
 ### HP-RETIRE-LADDER-RUNNERS-TEST-01 — ladder runner deletion validation
 
 Status: completed validation evidence; closed to new test work.
+
+Permission: none.
+
+Owner/history:
+[route-driver materialization retirement](route_driver_materialization_retirement.md).
 
 Approved validation:
 

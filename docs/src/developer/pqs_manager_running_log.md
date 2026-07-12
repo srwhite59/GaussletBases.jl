@@ -28738,3 +28738,58 @@ Goal advancement / guardrail:
   remaining `50` mature registry records, then introduce non-authoritative
   shadow metadata only after exact parity. Pass 385 is the next medium-term
   checkpoint.
+
+## Cartesian Hamiltonian Producer Pass 385 - Normalize Registry Metadata
+
+Commit(s):
+- this commit - make every registry record self-contained for later shadow
+  metadata generation.
+
+Summary:
+- Added explicit permission to the remaining `50` records and explicit local
+  canonical/history ownership where records still depended on parent-section
+  context. All `230` unique IDs now have individual headings, lifecycle,
+  permission, owner/canonical fields, and local canonical/history document
+  links; all `181` whitelist IDs resolve.
+- Preserved lifecycle and execution boundaries. Independent review caught and
+  corrected nine evidence-only test IDs that must remain `Permission: none`
+  rather than becoming validation-maintenance lanes. Closed audits,
+  superseded helpers, retired workflows, and unapproved candidates remain
+  non-executable. Standard60, NUMCOMP, direct-G compatibility, SPECTRAL,
+  XPAIR, MIXH/FEXACT, and pending EGOI retain their prior exact boundaries.
+
+Validation / evidence:
+- Five family audits, three follow-up ownership audits, and two independent
+  final reviews were reconciled. Structural checks found no missing or
+  duplicate headings, lifecycle, permission, owner, or canonical links;
+  whitelist parity, `git diff --check`, and local Documenter passed. No
+  numerical Julia tests were run because source and behavior are unchanged.
+
+Goal advancement / guardrail:
+- MT5 completes prose-registry normalization and moves to shadow metadata.
+  The pass adds about `371` net registry/status lines before this log entry;
+  that deliberate carrying cost makes each authority record independently
+  parseable and removes hidden section context. No source, test, API, artifact,
+  numerical policy, EGOI WIP, solver, or Cr2 authority changed.
+- Next: define non-authoritative `authority.toml` metadata and exact parity
+  checks. Do not generate or cut over `registry.md`/`current.md` authority in
+  the same pass.
+
+### Medium-Term Goal Checkpoint After Pass 385
+
+- **MT1 fake-PQS quarantine - completed/maintained.** Metadata normalization
+  restores no retired route or wrapper path.
+- **MT2 independent PQS recovery - completed for supported cells.** No
+  construction or endpoint behavior changed.
+- **MT3 common physical support vocabulary - active refinement.** The open
+  shared-shell longitudinal COMX-resolution rule remains a separate design
+  question and was not inferred from documentation metadata.
+- **MT4 supplement/reference staging - active.** The controlled
+  numerical-complete Cr2 screened/unscreened measurement remains consumer
+  work; registry normalization changes no physics permission.
+- **MT5 documentation and carrying-cost cleanup - active, next phase.**
+  Canonical contracts and the prose registry are normalized. The next bounded
+  step is non-authoritative shadow metadata plus parity tooling.
+- **MT6 old flat-path classification - maintenance.** Retired and superseded
+  records now carry explicit `Permission: none` and history ownership without
+  compatibility restoration.
