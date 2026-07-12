@@ -263,7 +263,8 @@ function _cartesian_base_atom_parent_axis_counts(input)
     return (x = side, y = side, z = side)
 end
 
-function _cartesian_base_stages(input, coulomb_expansion::CoulombGaussianExpansion)
+function _cartesian_base_stages(input, coulomb_expansion::CoulombGaussianExpansion;
+    source_mode_overrides = ())
     atom_symbols = Tuple(Symbol.(input.symbols))
     nuclear_charges = Tuple(input.charges)
     atom_locations = Tuple(input.locations)
@@ -297,7 +298,7 @@ function _cartesian_base_stages(input, coulomb_expansion::CoulombGaussianExpansi
     recipe = cartesian_recipe(_cartesian_base_route(input.kind, input.nesting, input.source_span))
     parent = cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
     shells = cartesian_shells(parent, spacing_inputs, recipe)
-    units = cartesian_units(parent, shells, recipe)
+    units = cartesian_units(parent, shells, recipe; source_mode_overrides)
     transforms = cartesian_transforms(units, recipe)
     return parent, transforms
 end
@@ -949,12 +950,14 @@ function _cartesian_base_terminal_basis(base)
     throw(ArgumentError("nesting=$(repr(nesting)) base Hamiltonian path is not yet wired to a terminal basis"))
 end
 
-function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple, supplemented::Bool = false)
+function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple,
+    supplemented::Bool = false, source_mode_overrides = ())
     input = supplemented ? _cartesian_supplemented_inputs(system, basis) :
         _cartesian_base_inputs(system, basis)
     coulomb_expansion =
         _cartesian_base_resolve_coulomb_expansion(input.coulomb_accuracy)
-    parent, transforms = _cartesian_base_stages(input, coulomb_expansion)
+    parent, transforms = _cartesian_base_stages(
+        input, coulomb_expansion; source_mode_overrides)
     source_mode_provenance = _cartesian_source_mode_provenance(transforms)
     basis_realization = transforms.terminal_basis_realization
     terminal_inventory = isnothing(basis_realization) ? nothing :

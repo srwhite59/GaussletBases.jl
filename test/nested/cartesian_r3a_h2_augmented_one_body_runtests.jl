@@ -43,6 +43,49 @@ function symmetry_error(matrix)
     return norm(matrix - transpose(matrix), Inf)
 end
 
+function due_row_geometry(row)
+    return (;
+        row.terminal_order, row.role, row.region_kind, row.shell_index,
+        row.index_ranges, row.physical_ranges, row.outer_box, row.inner_box,
+        row.support_rows, row.slab_axis, row.slab_side, row.slab_thickness,
+        row.slab_stack_index, row.slab_stack_count)
+end
+
+function check_override_geometry_parity(ordinary, refined, role, shell_index)
+    due0 = ordinary.terminal_due_diligence
+    due1 = refined.terminal_due_diligence
+    @test due0.geometry.parent_axis_counts == due1.geometry.parent_axis_counts
+    @test due0.geometry.parent_physical_bounds == due1.geometry.parent_physical_bounds
+    @test due0.geometry.q == due1.geometry.q
+    @test length(due0.terminal_rows) == length(due1.terminal_rows)
+    matched = Int[]
+    for (index, (row0, row1)) in enumerate(zip(due0.terminal_rows, due1.terminal_rows))
+        @test due_row_geometry(row0) == due_row_geometry(row1)
+        ismatch = row0.role === role && row0.shell_index == shell_index
+        ismatch && push!(matched, index)
+        if !ismatch
+            @test row0.source_mode_shape == row1.source_mode_shape
+            @test row0.retained_count == row1.retained_count
+        end
+    end
+    return matched
+end
+
+function due_summary(due)
+    return (;
+        bounds = due.geometry.parent_physical_bounds,
+        axes = due.geometry.parent_axis_counts,
+        q = due.geometry.q,
+        final_dimension = due.dimensions.base_final_dimension,
+        retained = [row.retained_count for row in due.terminal_rows],
+        topology = [row.region_kind for row in due.terminal_rows],
+        source_shapes = [row.source_mode_shape for row in due.terminal_rows],
+        row_warnings = [row.warning_summary for row in due.terminal_rows],
+        warnings = due.warnings)
+end
+
+boundary_count(shape) = prod(shape) - prod(max(value - 2, 0) for value in shape)
+
 function self_coulomb(V, orbital)
     density = orbital * transpose(orbital)
     rho = 0.5 .* (density .+ transpose(density))
@@ -258,6 +301,107 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
         source_shapes = [row.source_mode_shape for row in due.terminal_rows],
         row_warnings = [row.warning_summary for row in due.terminal_rows],
         warnings = due.warnings))
+
+    empty_working = GaussletBases.cartesian_base_working_basis(
+        FACADE_SYSTEM; basis = FACADE_BASIS, supplemented = true,
+        source_mode_overrides = NamedTuple[])
+    empty_ham = GaussletBases.cartesian_base_hamiltonian_assembly(empty_working)
+    @test empty_working.terminal_basis.final_dimension == basis.final_dimension
+    @test due_summary(empty_working.terminal_due_diligence) ==
+        due_summary(base_working.terminal_due_diligence)
+    @test one_body_hamiltonian(empty_ham) == one_body_hamiltonian(base_ham)
+    @test empty_ham.electron_electron_ida == base_ham.electron_electron_ida
+
+    shared_override = [(; role = :shared_molecular_shell,
+        shell_index = 1, owner = :all, source_q = 6)]
+    shared_working = GaussletBases.cartesian_base_working_basis(
+        FACADE_SYSTEM; basis = FACADE_BASIS, supplemented = true,
+        source_mode_overrides = shared_override)
+    shared_rows = check_override_geometry_parity(
+        base_working, shared_working, :shared_molecular_shell, 1)
+    @test length(shared_rows) == 1
+    shared_row = shared_working.terminal_due_diligence.terminal_rows[only(shared_rows)]
+    @test shared_row.source_mode_shape == (6, 6, 7)
+    @test shared_row.retained_count == boundary_count(shared_row.source_mode_shape)
+    shared_ham = GaussletBases.cartesian_base_hamiltonian_assembly(shared_working)
+    @test symmetry_error(one_body_hamiltonian(shared_ham)) <= 1.0e-10
+    @test symmetry_error(shared_ham.electron_electron_ida) <= 1.0e-10
+
+    separated_system = merge(FACADE_SYSTEM, (;
+        atom_locations = [(0.0, 0.0, -6.0), (0.0, 0.0, 6.0)]))
+    separated_basis = merge(FACADE_BASIS, (; xmax_parallel = 14.0))
+    separated = GaussletBases.cartesian_base_working_basis(
+        separated_system; basis = separated_basis, supplemented = true)
+    atom_override = [(; role = :atom_local_shell,
+        shell_index = 1, owner = :all, source_q = 6)]
+    separated_refined = GaussletBases.cartesian_base_working_basis(
+        separated_system; basis = separated_basis, supplemented = true,
+        source_mode_overrides = atom_override)
+    atom_rows = check_override_geometry_parity(
+        separated, separated_refined, :atom_local_shell, 1)
+    @test length(atom_rows) == 2
+    @test all(index -> separated_refined.terminal_due_diligence.terminal_rows[index].source_mode_shape ==
+        (6, 6, 6), atom_rows)
+    @test all(index -> begin
+        row = separated_refined.terminal_due_diligence.terminal_rows[index]
+        row.retained_count == boundary_count(row.source_mode_shape)
+    end, atom_rows)
+    separated_ham = GaussletBases.cartesian_base_hamiltonian_assembly(separated_refined)
+    @test symmetry_error(one_body_hamiltonian(separated_ham)) <= 1.0e-10
+    @test symmetry_error(separated_ham.electron_electron_ida) <= 1.0e-10
+
+    normalize = GaussletBases._pqs_source_box_route_driver_source_mode_overrides
+    ordered = normalize(vcat(atom_override, shared_override), 5)
+    @test ordered == normalize(vcat(shared_override, atom_override), 5)
+    invalid_overrides = Any[
+        [(; role = :atom_local_shell, shell_index = 0, owner = :all, source_q = 6)],
+        [(; role = :atom_local_shell, shell_index = true, owner = :all, source_q = 6)],
+        [(; role = :atom_local_shell, shell_index = 1.5, owner = :all, source_q = 6)],
+        [(; role = :atom_local_shell, shell_index = -1, owner = :all, source_q = 6)],
+        [(; role = :atom_local_shell, shell_index = 1, owner = :all, source_q = 5)],
+        [(; role = :atom_local_shell, shell_index = 1, owner = :all, source_q = -1)],
+        [(; role = :atom_local_shell, shell_index = 1, owner = :all, source_q = 6.5)],
+        [(; role = :atom_local_shell, shell_index = 1, owner = :all, source_q = true)],
+        [(; role = :atom_local_shell, shell_index = 1, owner = :left, source_q = 6)],
+        [(; role = :midpoint_slab, shell_index = 1, owner = :all, source_q = 6)],
+        [(; role = :atom_local_shell, shell_index = 1, owner = :all, source_q = 6, L = 7)],
+        [(; role = :atom_local_shell, shell_index = 1, owner = :all,
+            source_q = 6, source_mode_shape = (6, 6, 6))],
+        [(; role = :atom_local_shell, shell_index = 1, owner = :all,
+            source_q = 6, terminal_region_key = :terminal_region_3)],
+        [(; role = :atom_local_shell, shell_index = 1, owner = :all,
+            source_q = 6, order_index = 3)],
+        vcat(atom_override, atom_override),
+    ]
+    for overrides in invalid_overrides
+        @test_throws ArgumentError normalize(overrides, 5)
+    end
+    @test_throws ArgumentError GaussletBases.cartesian_base_working_basis(
+        FACADE_SYSTEM; basis = FACADE_BASIS, supplemented = true,
+        source_mode_overrides = [(; role = :shared_molecular_shell,
+            shell_index = 99, owner = :all, source_q = 6)])
+    @test_throws ArgumentError GaussletBases.cartesian_base_working_basis(
+        FACADE_SYSTEM; basis = merge(FACADE_BASIS, (; nesting = :wl)),
+        supplemented = true, source_mode_overrides = shared_override)
+    @test_throws ArgumentError GaussletBases.cartesian_base_working_basis(
+        FACADE_SYSTEM; basis = merge(FACADE_BASIS, (; source_span = :mapped_comx)),
+        supplemented = true, source_mode_overrides = shared_override)
+    atom_system = (; atom_symbols = ["H"], nuclear_charges = [1.0],
+        atom_locations = [(0.0, 0.0, 0.0)], nup = 1, ndn = 0)
+    @test_throws ArgumentError GaussletBases.cartesian_base_working_basis(
+        atom_system; basis = (; q = 5, core_spacing = 0.5, radius = 4.0),
+        supplemented = true, source_mode_overrides = atom_override)
+    @test_throws ArgumentError GaussletBases._plb_build_member(
+        (; source_mode_overrides = shared_override), NamedTuple[])
+    @test_throws ArgumentError GaussletBases._plb_build_numerical_complete_additive_reference_member(
+        (; source_mode_overrides = shared_override), NamedTuple[], Any[])
+    @test_throws ArgumentError GaussletBases._plb_build_numerical_complete_additive_reference_member(
+        (; source_mode_overrides = shared_override, source_span = :mapped_comx),
+        NamedTuple[], Any[nothing])
+
+    println("source_q_override_h2_due_diligence=", (;
+        shared = due_summary(shared_working.terminal_due_diligence),
+        atom_local = due_summary(separated_refined.terminal_due_diligence)))
 end
 
 println("cartesian_r3a_h2_augmented_one_body_elapsed_s=", elapsed)

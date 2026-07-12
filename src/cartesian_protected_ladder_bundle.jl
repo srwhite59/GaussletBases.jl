@@ -124,10 +124,11 @@ function _plb_supplement_spec(recipe)
         basisfile = _plb_get(recipe, :basisfile, nothing))
 end
 
-function _plb_build_inputs(recipe, stages)
+function _plb_build_inputs(recipe, stages; source_mode_overrides = ())
     base = _plb_stage!(stages, "ns$(recipe.ns) base working basis", () ->
         cartesian_base_working_basis(_plb_system_spec(recipe);
-            basis = _plb_basis_spec(recipe), supplemented = true))
+            basis = _plb_basis_spec(recipe), supplemented = true,
+            source_mode_overrides))
     supplement_basis = _plb_stage!(stages, "ns$(recipe.ns) supplement basis", () ->
         cartesian_residual_gto_supplement_basis(base, _plb_supplement_spec(recipe)))
     supplement = supplement_basis.basis
@@ -151,6 +152,19 @@ function _plb_build_inputs(recipe, stages)
         for center in centers]
     return (; recipe, base, supplement_basis, supplement, X, S_AA, ham,
         labels, centers, owners)
+end
+
+function _plb_recipe_source_mode_overrides(recipe)
+    overrides = _plb_get(recipe, :source_mode_overrides, ())
+    (overrides isa Tuple || overrides isa AbstractVector) || throw(ArgumentError(
+        "source_mode_overrides must be a tuple or vector of records"))
+    return collect(overrides)
+end
+
+function _plb_reject_recipe_source_mode_overrides(recipe, caller)
+    isempty(_plb_recipe_source_mode_overrides(recipe)) || throw(ArgumentError(
+        "source_mode_overrides are unsupported by $(caller)"))
+    return nothing
 end
 
 function _plb_compactness(inputs)
@@ -281,6 +295,7 @@ function _plb_finish_member(recipe, inputs, residual, geometry, stages)
 end
 
 function _plb_build_member(recipe, stages)
+    _plb_reject_recipe_source_mode_overrides(recipe, "protected member construction")
     inputs = _plb_build_inputs(recipe, stages)
     residual = _plb_compact_residual(inputs, stages)
     geometry = _plb_protected_geometry(inputs, residual, stages)
@@ -299,6 +314,8 @@ function _plb_finish_numerical_complete_member(recipe, inputs, residual, stages)
 end
 
 function _plb_build_numerical_complete_member(recipe, stages)
+    _plb_reject_recipe_source_mode_overrides(
+        recipe, "numerical-complete no-reference construction")
     inputs = _plb_build_inputs(recipe, stages)
     residual = _plb_numerical_complete_residual(inputs, stages)
     return _plb_finish_numerical_complete_member(recipe, inputs, residual, stages)
@@ -333,6 +350,8 @@ function _plb_additive_reference_raw_blocks(inputs, embeddings, stages)
 end
 function _plb_build_additive_reference_member(
     recipe, stages, placements; correction_options = (;))
+    _plb_reject_recipe_source_mode_overrides(
+        recipe, "protected additive-reference construction")
     isempty(placements) && return (; member = _plb_build_member(recipe, stages),
         correction = nothing, reference = nothing)
     inputs = _plb_build_inputs(recipe, stages)
@@ -369,10 +388,18 @@ end
 
 function _plb_build_numerical_complete_additive_reference_member(
     recipe, stages, placements; correction_options = (;))
+    source_mode_overrides = _plb_recipe_source_mode_overrides(recipe)
+    !isempty(placements) || isempty(source_mode_overrides) ||
+        throw(ArgumentError(
+            "source_mode_overrides require nonempty additive-reference placements"))
+    isempty(source_mode_overrides) ||
+        _plb_get(recipe, :source_span, :ordinary) === :ordinary ||
+        throw(ArgumentError(
+            "source_mode_overrides require source_span=:ordinary"))
     isempty(placements) && return (;
         member = _plb_build_numerical_complete_member(recipe, stages),
         correction = nothing, reference = nothing)
-    inputs = _plb_build_inputs(recipe, stages)
+    inputs = _plb_build_inputs(recipe, stages; source_mode_overrides)
     residual = _plb_numerical_complete_residual(inputs, stages)
     embeddings = _plb_reference_embeddings(inputs, placements, stages)
     member = _plb_finish_numerical_complete_member(

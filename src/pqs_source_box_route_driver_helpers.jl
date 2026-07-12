@@ -1220,12 +1220,133 @@ function _pqs_source_box_route_driver_aspect_shell_lowering_plan(
         plan.policy, available, selected, plan.summary, plan.metadata)
 end
 
+function _pqs_source_box_route_driver_source_mode_overrides(overrides, route_q)
+    q = _pqs_source_box_route_driver_positive_integer(route_q, :q)
+    normalized = NamedTuple{(:role, :shell_index, :owner, :source_q),
+        Tuple{Symbol,Int,Symbol,Int}}[]
+    (overrides isa Tuple || overrides isa AbstractVector) ||
+        throw(ArgumentError("source_mode_overrides must be a tuple or vector of records"))
+    isempty(overrides) && return normalized
+    selectors = Set{Tuple{Symbol,Int,Symbol}}()
+    expected = Set((:role, :shell_index, :owner, :source_q))
+    for record in overrides
+        record isa NamedTuple && length(propertynames(record)) == 4 &&
+            Set(propertynames(record)) == expected ||
+            throw(ArgumentError("source_mode_overrides records require exactly role, shell_index, owner, source_q"))
+        role = record.role
+        role in (:atom_local_shell, :shared_molecular_shell) ||
+            throw(ArgumentError("source_mode_overrides role is unsupported"))
+        record.shell_index isa Integer && !(record.shell_index isa Bool) &&
+            record.shell_index > 0 ||
+            throw(ArgumentError("source_mode_overrides shell_index must be a positive non-Boolean integer"))
+        record.owner === :all ||
+            throw(ArgumentError("source_mode_overrides owner must be :all"))
+        record.source_q isa Integer && !(record.source_q isa Bool) &&
+            record.source_q > q ||
+            throw(ArgumentError("source_mode_overrides source_q must be a non-Boolean integer greater than route q"))
+        selector = (role, Int(record.shell_index), :all)
+        selector in selectors &&
+            throw(ArgumentError("duplicate source_mode_overrides selector $(selector)"))
+        push!(selectors, selector)
+        push!(normalized, (; role, shell_index = Int(record.shell_index),
+            owner = :all, source_q = Int(record.source_q)))
+    end
+    sort!(normalized; by = row ->
+        (row.role === :atom_local_shell ? 1 : 2, row.shell_index))
+    return normalized
+end
+
+function _pqs_source_box_route_driver_atom_shell_override_contract(contract, source_q)
+    shape = (source_q, source_q, source_q)
+    return CartesianTerminalLowering.TerminalLoweringContract(
+        contract.contract_key, contract.terminal_region_key,
+        contract.terminal_region_role, contract.terminal_region_kind,
+        contract.lowering_kind, contract.owned_support, contract.source_cpbs,
+        contract.retained_rule, contract.realization_rule,
+        contract.final_unit_granularity, contract.materialized,
+        merge(contract.metadata, (; source_mode_shape = shape,
+            pqs_retained_count =
+                _nested_diatomic_projected_q_shell_retained_count(shape))))
+end
+
+function _pqs_source_box_route_driver_source_mode_override_plan(
+    parent, shellification_plan, plan, normalized)
+    isempty(normalized) && return plan
+    plan isa CartesianTerminalLowering.TerminalLoweringPlan ||
+        throw(ArgumentError("source_mode_overrides require a terminal lowering plan"))
+    CartesianTerminalLowering.policy_kind(plan.policy) === :pqs_terminal_lowering ||
+        throw(ArgumentError("source_mode_overrides require PQS lowering"))
+    regions = CartesianShellification.terminal_regions(shellification_plan)
+    region_by_key = Dict(region.key => region for region in regions)
+    selected = CartesianTerminalLowering.selected_contracts(plan)
+    eligible = Dict(contract.terminal_region_key => contract for contract in selected
+        if contract.lowering_kind === :pqs_filled_source_cpb &&
+            contract.terminal_region_kind === :complete_shell)
+    match_map = Dict{Symbol,Any}()
+    for override in normalized
+        matches = [region for region in regions
+            if region.role === override.role &&
+                region.raw_region.shell_index == override.shell_index &&
+                haskey(eligible, region.key)]
+        if override.role === :atom_local_shell
+            length(matches) == 2 || throw(ArgumentError(
+                "atom-local source_mode_overrides must match a complete symmetric owner pair"))
+            sort([Int(region.raw_region.atom_index) for region in matches]) == [1, 2] ||
+                throw(ArgumentError("atom-local source_mode_overrides owner pair is incomplete"))
+        else
+            length(matches) == 1 || throw(ArgumentError(
+                "shared-shell source_mode_overrides must match exactly one region"))
+        end
+        for region in matches
+            match_map[region.key] = override
+        end
+    end
+    dimensions = Dict{Symbol,Any}()
+    function rewritten(contract)
+        contract.lowering_kind === :pqs_filled_source_cpb || return contract
+        contract.terminal_region_kind === :complete_shell || return contract
+        override = get(match_map, contract.terminal_region_key, nothing)
+        isnothing(override) && return contract
+        region = region_by_key[contract.terminal_region_key]
+        override.role === :atom_local_shell &&
+            return _pqs_source_box_route_driver_atom_shell_override_contract(
+                contract, override.source_q)
+        dims = get!(dimensions, contract.terminal_region_key) do
+            _pqs_source_box_route_driver_complete_shell_source_dimensions(
+                parent, region, override.source_q)
+        end
+        return _pqs_source_box_route_driver_aspect_shell_contract(contract, dims)
+    end
+    available_contracts = CartesianTerminalLowering.TerminalLoweringContract[
+        rewritten(contract) for contract in
+        CartesianTerminalLowering.available_contracts(plan)]
+    selected_contracts = CartesianTerminalLowering.TerminalLoweringContract[
+        rewritten(contract) for contract in selected]
+    return CartesianTerminalLowering.TerminalLoweringPlan(
+        plan.policy, available_contracts, selected_contracts,
+        plan.summary, plan.metadata)
+end
+
 function _pqs_source_box_route_driver_terminal_lowering_plan(
     parent,
     shellification_plan,
     route_lowering_family,
     retained_q,
+    source_span,
+    source_mode_overrides,
 )
+    normalized_overrides =
+        _pqs_source_box_route_driver_source_mode_overrides(
+            source_mode_overrides, retained_q)
+    if !isempty(normalized_overrides)
+        parent.system_classification === :bond_aligned_diatomic ||
+            throw(ArgumentError(
+                "source_mode_overrides require a bond-aligned diatomic"))
+        parent.bond_axis === :z || throw(ArgumentError(
+            "source_mode_overrides require the z-axis diatomic path"))
+        source_span === :ordinary || throw(ArgumentError(
+            "source_mode_overrides require source_span=:ordinary"))
+    end
     shellification_plan isa CartesianShellification.ShellificationPlan || return nothing
 
     policy =
@@ -1233,15 +1354,20 @@ function _pqs_source_box_route_driver_terminal_lowering_plan(
             route_lowering_family,
             retained_q,
         )
-    isnothing(policy) && return nothing
+    if isnothing(policy)
+        isempty(normalized_overrides) && return nothing
+        throw(ArgumentError("source_mode_overrides require PQS lowering"))
+    end
     plan = CartesianTerminalLowering.lower_terminal_regions(shellification_plan, policy)
     plan = _pqs_source_box_route_driver_wl_retained_count_plan(plan, retained_q)
-    return _pqs_source_box_route_driver_aspect_shell_lowering_plan(
+    plan = _pqs_source_box_route_driver_aspect_shell_lowering_plan(
         parent,
         shellification_plan,
         plan,
         retained_q,
     )
+    return _pqs_source_box_route_driver_source_mode_override_plan(
+        parent, shellification_plan, plan, normalized_overrides)
 end
 
 function _pqs_source_box_route_driver_terminal_lowering_kind_counts(contracts)
@@ -1670,7 +1796,8 @@ function _pqs_source_box_route_driver_enriched_retained_unit_plan(
     )
 end
 
-function _pqs_source_box_route_driver_unit_stage_low_order_summary(parent, shells, recipe)
+function _pqs_source_box_route_driver_unit_stage_low_order_summary(
+    parent, shells, recipe; source_mode_overrides = ())
     shellification_plan = get(shells, :shellification_plan, nothing)
     shellification_scaffold = get(shells, :shellification_scaffold, nothing)
     shellification_kind = get(shells, :shellification_kind, nothing)
@@ -1684,12 +1811,15 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(parent, shell
     route_lowering_family =
         _pqs_source_box_route_driver_terminal_lowering_family(
             shells.route_family)
+    source_span = _pqs_source_box_route_driver_source_span(recipe)
     lowering_plan =
         _pqs_source_box_route_driver_terminal_lowering_plan(
             parent,
             shellification_plan,
             route_lowering_family,
             shells.spacing_inputs.q,
+            source_span,
+            source_mode_overrides,
         )
     lowering_contract_inventory =
         lowering_plan isa CartesianTerminalLowering.TerminalLoweringPlan ?
@@ -1707,7 +1837,7 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(parent, shell
             parent,
             shellification_plan,
             retained_unit_plan,
-            _pqs_source_box_route_driver_source_span(recipe),
+            source_span,
         )
     end
 
@@ -1718,9 +1848,10 @@ function _pqs_source_box_route_driver_unit_stage_low_order_summary(parent, shell
     )
 end
 
-function cartesian_units(parent, shells, recipe)
+function cartesian_units(parent, shells, recipe; source_mode_overrides = ())
     low_order_units =
-        _pqs_source_box_route_driver_unit_stage_low_order_summary(parent, shells, recipe)
+        _pqs_source_box_route_driver_unit_stage_low_order_summary(
+            parent, shells, recipe; source_mode_overrides)
     retained_units = shells.retained_units
     pair_entries = shells.pair_entries
     unit_inventory = _pqs_source_box_route_driver_unit_inventory(retained_units)
