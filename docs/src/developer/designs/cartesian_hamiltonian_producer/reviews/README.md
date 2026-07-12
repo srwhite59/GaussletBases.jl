@@ -21,6 +21,12 @@ The full June 2026 design document is preserved at:
 Review files are historical discussion and reconciliation artifacts. They are
 not normal startup reading and do not override the compact current authority.
 
+The current machine-authority transition review is:
+
+- [Authority transition rehearsal - 2026-07-12](authority_transition_rehearsal_2026-07-12.md),
+  a completed no-go review that records candidate and tooling reconciliation
+  required before another cutover rehearsal.
+
 Historical recursive/previous-block projection material in these reviews is
 stale. The live Slice A authority rejects previous-block projection and
 effective-support growth for PQS terminal shell realization. Cross-block

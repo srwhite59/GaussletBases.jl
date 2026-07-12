@@ -29035,3 +29035,41 @@ Goal advancement / guardrail:
   carrying cost: a later atomic cutover must retire the raw shadow, transition
   snapshot and checker, transition CI job, and duplicate Documenter hooks
   rather than preserve both authority systems.
+
+## Cartesian Hamiltonian Producer Pass 392 - Second Authority Transition Rehearsal
+
+Commit(s):
+- this commit - record the completed no-go rehearsal; no candidate or authority
+  semantics changed.
+
+Summary:
+- Generated two byte-identical external rehearsals from exact HEAD
+  `321194193`, candidate digest `0028eadd...`, `232` records, `44` document
+  entries, and `150` derived execution IDs. Three independent reviewers then
+  covered disjoint ranges totaling `232/232` records; a fourth reviewed tooling
+  and cutover readiness.
+- Execution membership matched exactly, but semantic review found 19 candidate
+  records with missing or over-broad owned paths, missing dependencies,
+  incorrect canonical/history roles, or wrong evidence. Tooling review found
+  full-document whitelist-context, manifest-binding, generated-link, preview
+  warning, and cutover-transaction gaps that structural checks do not cover.
+- Added one compact historical review record and updated live status; this
+  docs-only pass is `+165/-7` lines. Prose authority remains unchanged.
+
+Validation / evidence:
+- Shadow, candidate, and transition checks passed before review; rehearsal
+  outputs and manifests matched byte-for-byte. Reviewers covered `80 + 80 + 72`
+  records with no unreviewed semantic subset. Manager triage confirmed the
+  no-go categories and separated non-owned dependencies from edit authority.
+  No source, test, candidate, registry, whitelist, artifact, API, or numerical
+  behavior changed. Local Documenter passed. The focused docs group remains
+  `55/58`; the same three pre-existing stale prose assertions failed and no new
+  failure appeared.
+
+Goal advancement / guardrail:
+- MT5 advances from structural dual representation to a complete semantic
+  defect inventory, but cutover is blocked. Next is one bounded metadata and
+  tooling reconciliation, followed by another independent rehearsal. Do not
+  treat transition-snapshot regeneration as review, convert dependency paths
+  into owned surfaces, or reuse the external preview writer as an atomic
+  authority installer.
