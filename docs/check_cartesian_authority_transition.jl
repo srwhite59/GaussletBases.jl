@@ -16,7 +16,7 @@ const TRANSITION_PATH = joinpath(
 )
 const ARTIFACT_KIND = "cartesian_authority_transition_snapshot"
 const RECONCILIATION_SOURCE =
-    "docs/src/developer/designs/cartesian_hamiltonian_producer/reviews/authority_transition_rehearsal_2026-07-12.md"
+    "docs/src/developer/designs/cartesian_hamiltonian_producer/reviews/authority_transition_rehearsal_pass394_2026-07-12.md"
 const TOP_LEVEL_KEYS = Set([
     "schema_version",
     "artifact_kind",
@@ -103,8 +103,8 @@ function expected_snapshot(candidate, registry_text, agents_text)
         "agents_whitelist_block_sha256" => whitelist_block_digest,
         "record_count" => length(candidate.data["records"]),
         "execution_whitelist_count" => length(whitelist),
-        "semantic_parity" => "manual_review_required",
-        "semantic_review_status" => "pending_independent_rehearsal",
+        "semantic_parity" => "manual_review_complete",
+        "semantic_review_status" => "independent_rehearsal_and_focused_reconciliation_passed",
         "reconciliation_source" => RECONCILIATION_SOURCE,
     )
 end

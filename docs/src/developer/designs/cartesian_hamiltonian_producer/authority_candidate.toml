@@ -531,7 +531,15 @@ title = "neutral terminal face-product helper"
     state = "existing"
     [[records.paths]]
     kind = "source"
+    path = "src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
     path = "src/cartesian_final_basis_realization/terminal_face_product_blocks.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl"
     state = "existing"
 [[records]]
 dependency_ids = []
@@ -832,7 +840,7 @@ evidence_refs = []
 grant = "maintenance"
 id = "HP-COMP-THINSLAB-FN-01"
 lifecycle = "implemented"
-scope = "midpoint, outer-mismatch, and angular-z-extension slabs lower as compact face stacks for both PQS and WL, never as full identity CPBs. Real shells remain family-specific."
+scope = "midpoint, outer-mismatch, and angular-z-extension slabs lower as compact face stacks for both PQS and WL, never as full identity CPBs. Maintenance includes both terminal realizers plus only conditionally required native slab metadata and route-summary caller support in the named shellification/helper files. Real shells remain family-specific."
 surfaces = ["source"]
 title = "common compact thin-slab lowering"
 
@@ -843,6 +851,14 @@ title = "common compact thin-slab lowering"
 
     [[records.paths]]
     kind = "source"
+    path = "src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
     path = "src/cartesian_retained_unit_transform_contracts/unit_contracts.jl"
     state = "existing"
     [[records.paths]]
@@ -851,11 +867,23 @@ title = "common compact thin-slab lowering"
     state = "existing"
     [[records.paths]]
     kind = "source"
+    path = "src/cartesian_shellification/terminal_geometry.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
     path = "src/cartesian_terminal_lowering/region_contracts.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
     path = "src/cartesian_terminal_lowering/selection.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/pqs_source_box_diatomic_complete_core_shell.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/pqs_source_box_route_driver_helpers.jl"
     state = "existing"
 [[records]]
 dependency_ids = []

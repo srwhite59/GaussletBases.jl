@@ -29111,3 +29111,45 @@ Goal advancement / guardrail:
   net growth is concentrated in fail-closed transition tooling; do not expand
   this dual system further before the next rehearsal decides whether an atomic
   cutover can retire the shadow and transition machinery.
+
+## Cartesian Hamiltonian Producer Pass 394 - Independent Authority Rehearsal And Reconciliation
+
+Commit(s):
+- this commit - complete the semantic rehearsal and its confined two-record
+  reconciliation without promoting machine authority.
+
+Summary:
+- Generated two byte-identical transition-bound rehearsals from exact HEAD
+  `5226ad711`, candidate digest `5af669e1...`, 232 records, 44 hashed
+  documents, and 150 execution IDs. Three fresh reviewers covered disjoint
+  `80 + 80 + 72` ranges; a fourth reviewed tooling and cutover readiness.
+- Tooling and records 81-232 passed. Records 1-80 initially exposed two
+  semantic omissions: `HP-COMP-FACEPROD-FN-01` lacked both terminal-realizer
+  consumers, and `HP-COMP-THINSLAB-FN-01` lacked those realizers plus its
+  conditionally authorized native metadata/route-summary support surfaces.
+  All other 230 records and the full execution set agreed.
+- At user direction, corrected those two records in the same pass. Parsed diff
+  confinement showed that only their paths and the thin-slab conditional scope
+  changed. The original finder and a fresh reviewer both accepted the fix,
+  exact 150-ID parity, and deterministic corrected rehearsals. Candidate digest
+  is now `30cf4ed840b00c09da39ba4e15b3cb6c3d2c1376263877a2e7778f5a15bef716`.
+- Added a durable review report and marked manual semantic review complete. The
+  candidate, whitelist, and prose permissions remain non-authoritative/unchanged;
+  no source, test, numerical, artifact, or workflow behavior changed.
+
+Validation / evidence:
+- Candidate, shadow, and transition checks/self-tests passed before review and
+  after final status recording; manifests and output hashes matched and each
+  independent render pair was deterministic. Review covered every record plus
+  tooling. Local Documenter and `git diff --check` passed. The aggregate docs
+  group remains `55/58` only because of the same three stale prose assertions.
+
+Goal advancement / guardrail:
+- MT5 now has reviewed semantic parity for all 232 records and clean transition
+  tooling, but still no cutover authority. Next is a separate atomic
+  cutover-design decision covering machine-source promotion, generated live
+  views, dual-system archival/removal, and whole-commit rollback/fail-closed
+  behavior. Do not execute cutover in that design pass. This pass is
+  `+225/-20` lines: 134 lines preserve review evidence, while the candidate
+  growth is confined to the missing path inventory and one scope sentence; no
+  new checker or schema layer was added.
