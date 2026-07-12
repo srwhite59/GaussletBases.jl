@@ -1,8 +1,10 @@
 # Cartesian Driver Atom Workflow
 
-Status: implemented canonical-driver contract for explicit origin-centered
-one-center atoms under `HP-DRV-ATOM-*`. Producer-side atom semantics remain
-owned by [R1 one-center base atoms](r1_one_center_base_atoms.md).
+Status: implemented canonical-driver source contract for explicit
+origin-centered one-center atoms under `HP-DRV-ATOM-FN-01` and
+`HP-DRV-ATOM-WIRE-01`. The paired test ID is completed evidence with no
+continuing permission. Producer-side atom semantics remain owned by
+[R1 one-center base atoms](r1_one_center_base_atoms.md).
 
 ## Live Selection
 

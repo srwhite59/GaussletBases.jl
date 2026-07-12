@@ -31,15 +31,18 @@ in supported supplemented callers.
 The canonical Cartesian driver is implemented so the standard
 driver can directly produce base and supported supplemented Hamiltonian
 artifacts from visible public `system`, `basis`, and optional `supplement`
-contracts. `HP-DRV-INV-*` implements a bounded terminal-region inventory summary
+contracts. `HP-DRV-INV-FN-01` implements a bounded terminal-region inventory
+summary
 in the canonical driver output so users can see region kind, support rows,
 final columns, compression, and identity-vs-compact realization without
-turning the driver into a route diagnostic dump. `HP-DRV-SHELLDD-*` implements
+turning the driver into a route diagnostic dump. `HP-DRV-SHELLDD-FN-01`
+implements
 a standard terminal due-diligence report so consumers can review derived
 system/geometry facts, parent axes and 1D centers, gausslet/IDA weight stats,
 dimension accounting, shell-by-shell physical aspect ratios, source-mode
 shapes, retained counts, and warning flags before interpreting energies or
-residual/injection behavior. `HP-PQS-ASPECTSHELL-*` implements the separate
+residual/injection behavior. `HP-PQS-ASPECTSHELL-FN-01` implements the
+separate
 construction policy that selects explicit aspect-aware `(q,q,L)` source
 modes for PQS shared complete shells.
 `HP-PQS-SHELLQ-OVERRIDE-*` separately approves a pending private diagnostic
@@ -108,37 +111,41 @@ summary. Its narrow stability amendment replaces cancellation-prone analytic
 Gaussian determinant/weighted-variance forms; it does not add a scaled PGDG
 carrier or terminal-contraction redesign.
 The WL z-axis diatomic compact retained-basis correction is implemented under
-`HP-WLDIAT-COMPACT-*`; boundary strata are compact products rather than
+`HP-WLDIAT-COMPACT-FN-01`; boundary strata are compact products rather than
 full-support identity rows.
 The follow-up WL boundary-stratum parity cleanup is implemented under
-`HP-WLDIAT-PARITY-*`: direct nucleus-centered core blocks keep odd-side
+`HP-WLDIAT-PARITY-FN-01`: direct nucleus-centered core blocks keep odd-side
 centering, but boundary shells retain the requested shell count such as
 `ns = 4 -> 4^3 - 2^3 = 56`.
 Common terminal shell decomposition is implemented as a shared route-family-free
-first step under `HP-COMP-SHELLGEOM-*`: PQS and White-Lindsey differ only after
+first step under `HP-COMP-SHELLGEOM-FN-01`: PQS and White-Lindsey differ only
+after
 common shell/core support regions exist.
-For z-axis diatomics, `HP-COMP-SHELLGEOM-DIAT-*` requires PQS and
+For z-axis diatomics, `HP-COMP-SHELLGEOM-DIAT-FN-01` requires PQS and
 White-Lindsey to call the common shellifier with the same first-step arguments;
 central-gap/contact and shared-shell ownership are common shell geometry.
-`HP-COMP-THINSLAB-*` implements the matching lowering guardrail for midpoint slabs
+`HP-COMP-THINSLAB-FN-01` implements the matching lowering guardrail for
+midpoint slabs
 and outer-mismatch slab stacks: PQS and White-Lindsey use the same compact
 slab lowering, with unit-slice scale `ns x ns x 1`, and neither may retain
 those slabs as full identity rows.
-`HP-COMP-THINSLAB-META-*` implements the matching metadata/scaffold inventory
+`HP-COMP-THINSLAB-META-FN-01` implements the matching metadata/scaffold
+inventory
 cleanup so terminal-shellification summaries no longer claim midpoint,
 outer-mismatch, or angular z-extension slabs are direct identity sectors.
-`HP-COMP-FACEPROD-*` implements the neutral terminal face-product helper seam
+`HP-COMP-FACEPROD-FN-01` implements the neutral terminal face-product helper seam
 needed by that lowering: WL facets and thin slabs reuse the same
 module-internal face-like product block builder instead of putting shared
 coefficient assembly in a PQS- or WL-owned terminal file.
-`HP-COMP-ANGBOX-*` implements the shellification side of that correction:
+`HP-COMP-ANGBOX-FN-01` implements the shellification side of that correction:
 z-axis diatomic shared-shell growth may emit planned angular z-extension slab
 stacks when the ordinary index-layer shell body underreaches the physical
 outer-nucleus angular target. Lowering those slabs remains governed by
-`HP-COMP-THINSLAB-*`.
+`HP-COMP-THINSLAB-FN-01`.
 Mapped-COMX source spans, terminal consumption of carried axis facts, and the
 compact `source_span = :ordinary | :mapped_comx` driver choice are
-implemented under `HP-MCOMX-*`. Ordinary remains default; mapped-COMX is
+implemented under the six `HP-MCOMX` source IDs. Ordinary remains default;
+mapped-COMX is
 PQS-only and high-order remains a consumer/benchmark lane.
 The old complete-core-shell RHF payload stack was removed by `28e9b2c84` under
 `HP-RETIRE-CCS-RHF-*`. The route-driver materialization/report/save wrappers

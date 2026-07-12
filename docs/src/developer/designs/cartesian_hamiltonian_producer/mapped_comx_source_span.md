@@ -1,7 +1,8 @@
 # Mapped-COMX Source Span
 
 Status: implemented opt-in source-span, terminal-consumption, and canonical
-driver facility under the `HP-MCOMX-*` IDs.
+driver facility under the six `HP-MCOMX` source IDs. The three corresponding
+test IDs are completed evidence with no continuing permission.
 
 This page is the canonical numerical and workflow contract. The registry owns
 individual ID lifecycle and source/test surfaces.

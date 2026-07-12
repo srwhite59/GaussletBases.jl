@@ -28903,3 +28903,38 @@ Goal advancement / guardrail:
   override remains private, in-memory, ordinary-span, and numerical-complete
   additive only. Production defaults and the common aspect policy are
   unchanged.
+
+## Cartesian Hamiltonian Producer Pass 389 - Reconcile Execution And Validation Authority
+
+Commit(s):
+- this commit - reconcile whitelist grants and exact validation ownership.
+
+Summary:
+- Completed a lifecycle/grant/path audit of all `232` producer IDs, then
+  reconciled prose authority without changing physics or source. Removed `33`
+  IDs from the execution whitelist: ten contradictory no-grant records and 23
+  validation IDs backed only by completed evidence, ignored probes, reports,
+  or docs-only record maintenance. The whitelist now contains `150` exact
+  executable IDs.
+- Retained test authority only where ownership is concrete: mapping `s_factor`
+  owns its public-facade assertions, WL terminal validation inherits one exact
+  one-center smoke, and mixed-Hartree GAAA inherits placed `A-A` kernel checks.
+  Pending retained-GTO EGOI now names one exact planned focused test path.
+  Probe/report records remain documented but non-whitelisted.
+- Retired the never-landed `HP-CGAI-FN-01` proposal rather than preserving an
+  overlapping dormant grant. The regenerated shadow remains checked but
+  explicitly non-authoritative.
+
+Validation / evidence:
+- Six family audits and three focused follow-ups reviewed registry text,
+  canonical pages, committed Git objects, callers, tests, probes, and manager
+  evidence. Exact-path, whitelist/grant, lifecycle, canonical-link, shadow,
+  Documenter, staged-scope, and `git diff --check` checks passed. No numerical
+  Julia test was needed for this docs-only pass.
+
+Goal advancement / guardrail:
+- MT5 removes ambiguous execution permission before candidate-v2 metadata. No
+  source, test, API, artifact, numerical policy, solver, EGOI WIP, shell-q
+  behavior, or Cr2 workflow changed. Next: encode the reviewed
+  lifecycle/grant/surface/path decisions in a non-authoritative semantic
+  candidate; authority cutover remains a later atomic decision.

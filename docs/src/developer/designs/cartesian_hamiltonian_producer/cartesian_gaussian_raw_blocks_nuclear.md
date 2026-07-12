@@ -11,7 +11,7 @@ infrastructure, not a route, cache, artifact, or public API.
 | `HP-CGRB-FILE-01` | Implemented | Neutral module and nuclear owner file |
 | `HP-CGRB-FN-01` | Implemented | Exact uncharged by-center `G-A`/`A-A` blocks |
 | `HP-CGRB-FN-02` | Implemented | Term-first one-dimensional axis-family reuse |
-| `HP-CGAI-FN-01` | Unused optional authority; superseded as an endpoint | Proposed nonallocating axis-table helper never landed |
+| `HP-CGAI-FN-01` | Superseded; no permission | Proposed nonallocating axis-table helper never landed |
 | `HP-CGRB-WIRE-01` | Implemented | Residual-Gaussian and Qiu-White callers use the neutral owner |
 | `HP-CGRB-TEST-01` | Validation completed; tracked coverage is indirect | H2/core tests plus accepted QW/Be2/Cr2 parity evidence |
 
@@ -139,14 +139,15 @@ Cr2-specific contract.
 factor helper in `src/cartesian_gaussian_axis_integrals.jl`. That symbol and
 consumer never landed. `HP-CGRB-FN-02` succeeded with the private
 `_factor_axis_integral(...)` and `_fill_axis_factor_table!(...)` owned directly
-by `nuclear_blocks.jl`; therefore `HP-CGAI-FN-01` remains unused optional
-authority and is superseded as a performance endpoint.
+by `nuclear_blocks.jl`; therefore `HP-CGAI-FN-01` is a superseded historical
+proposal with no current permission.
 
 The later allocating `_cartesian_gaussian_axis_integral(...)` and
 `_cartesian_gaussian_axis_integral_table(...)` helpers are committed and live
 for Qiu-White and non-nuclear callers. They were introduced under later neutral
 axis-kernel consolidation and do not make the unimplemented in-place helper
-source-backed.
+source-backed. Any future cross-owner in-place helper requires a new docs-only
+amendment rather than reactivation of `HP-CGAI-FN-01`.
 
 ## Validation And Failure Boundary
 

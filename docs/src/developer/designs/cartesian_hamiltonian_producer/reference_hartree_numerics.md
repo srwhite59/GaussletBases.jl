@@ -1,9 +1,10 @@
 # Reference Hartree Numerics
 
-Status: implemented neutral internal infrastructure under
-`HP-RHO0-MIXH-GG-FN-01` / `HP-RHO0-MIXH-GG-TEST-01`,
-`HP-RHO0-MIXH-GAAA-FN-01` / `HP-RHO0-MIXH-GAAA-TEST-01`, and
-`HP-RHO0-MIXH-FEXACT-FN-01` / `HP-RHO0-MIXH-FEXACT-TEST-01`.
+Status: implemented neutral internal infrastructure under the three source
+IDs. `HP-RHO0-MIXH-GG-TEST-01` retains its committed consumer gate, and
+`HP-RHO0-MIXH-GAAA-TEST-01` retains only shared placed-`A-A` kernel coverage.
+`HP-RHO0-MIXH-FEXACT-TEST-01` is probe-only completed evidence outside the
+execution whitelist.
 
 This page is the canonical contract for exact reference-density Hartree raw
 blocks and their protected fixed/localized one-body transforms. These

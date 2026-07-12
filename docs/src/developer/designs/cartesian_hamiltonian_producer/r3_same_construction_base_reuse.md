@@ -6,8 +6,10 @@ This page is the canonical contract for:
 
 - `HP-R3BASE-FN-01`;
 - `HP-R3BASE-TEST-01`;
-- `HP-R3BASE-DRV-WIRE-01`;
-- `HP-R3BASE-DRV-TEST-01`.
+- `HP-R3BASE-DRV-WIRE-01`.
+
+`HP-R3BASE-DRV-TEST-01` is completed docs/evidence maintenance and is not on
+the execution whitelist.
 
 The facility avoids rebuilding exact terminal `G-G` kinetic and by-center unit
 nuclear blocks when a supplemented Residual Gaussian construction already owns

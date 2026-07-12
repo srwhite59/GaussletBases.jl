@@ -187,8 +187,10 @@ returned.
 
 ## Validation Contract
 
-`HP-RG-PROTECT-EGOI-TEST-01` is pending with the source helper. No committed
-protected retained-GTO helper test currently exists.
+`HP-RG-PROTECT-EGOI-TEST-01` is pending with the source helper. Its only
+approved committed path is the planned focused test
+`test/nested/cartesian_retained_gto_egoi_runtests.jl`; that file does not yet
+exist.
 
 The approved validation shape is:
 
@@ -200,8 +202,8 @@ The approved validation shape is:
 - exact `max_disallowed_delta_v = 0`;
 - no production Cr2 HF and no committed large Cr2 fixture.
 
-The exact focused test file should be assigned when implementation resumes;
-this extraction does not create one or accept the current worktree WIP.
+The ignored Cr2 replay remains external evidence. This contract does not
+create the focused test or accept the current worktree WIP.
 
 ## Failure Behavior
 

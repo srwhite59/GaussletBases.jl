@@ -1,26 +1,26 @@
 agents_source = "AGENTS.md"
-agents_whitelist_count = 183
-agents_whitelist_sha256 = "a816b7ccfe5161238114e86bddbd0a5a444248d8d7a5e89509f7df4b02ae4440"
+agents_whitelist_count = 150
+agents_whitelist_sha256 = "92064b7ead724bfd745455724ce2b8712c319e0154d9ea4e86ba0b6b0e032ad7"
 artifact_kind = "cartesian_registry_whitelist_shadow"
 authoritative = false
 authorization_complete = false
 generated = true
 registry_record_count = 232
-registry_sha256 = "9b0b24a34ae0499849b9fa18c54a6bf6fc939896af47966ded91fad6398ef922"
+registry_sha256 = "4f8b6085fb753cd9d26f853d3a070f42aac216741d45294edef726521b163f1a"
 registry_source = "docs/src/developer/designs/cartesian_hamiltonian_producer/registry.md"
 schema_version = 1
 scope = "registry_metadata_and_agents_whitelist_membership_only"
 
 [[records]]
-agents_whitelisted = true
-heading_title = "optional Cartesian Gaussian axis helper"
+agents_whitelisted = false
+heading_title = "historical Cartesian Gaussian axis-helper proposal"
 id = "HP-CGAI-FN-01"
 owner_document_links = ["cartesian_gaussian_raw_blocks_nuclear.md"]
 ownership_texts = ["Owner/canonical: nuclear axis-helper disposition; [nuclear raw blocks](cartesian_gaussian_raw_blocks_nuclear.md)."]
-permission_texts = ["dormant optional source support only.", "no active work. A separately assigned pass may use this ID only for the originally approved nonallocating nuclear factor/table support."]
-record_sha256 = "299c5b3073b03e25522e16fee53f6cad0449e9a82745006991df08a8e0f4fc8a"
+permission_texts = ["none.", "none. Any future cross-owner in-place helper requires a new docs-only amendment rather than reactivation of this ID."]
+record_sha256 = "c5e9aa3beccbce276b6ffc5acb13a3f454fbd73a6eee0c9404f2440c28f171c8"
 state_label = "Lifecycle"
-state_text = "unused optional authority; superseded as a performance endpoint. Permission: dormant optional source support only."
+state_text = "superseded; never implemented. Permission: none."
 [[records]]
 agents_whitelisted = true
 heading_title = "neutral Cartesian Gaussian raw-block module files"
@@ -142,7 +142,7 @@ record_sha256 = "9ac040d5bdcb72c5829ee87a0c279b7a0fc7c13c9f84f2b78d32fe847c8f78a
 state_label = "Status"
 state_text = "implemented."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "angular shellification validation"
 id = "HP-COMP-ANGBOX-TEST-01"
 owner_document_links = ["common_terminal_shell_decomposition.md"]
@@ -202,7 +202,7 @@ record_sha256 = "9c77acb748a2e59e43e811784ec4e52560a8ff390dcc45e1ebe4f1525438ea3
 state_label = "Status"
 state_text = "implemented."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "face-product validation"
 id = "HP-COMP-FACEPROD-TEST-01"
 owner_document_links = ["common_terminal_shell_decomposition.md"]
@@ -282,7 +282,7 @@ record_sha256 = "9b36ecc61e4eb922dcc7a1413042233455402b17786d71dc42519442027e145
 state_label = "Status"
 state_text = "implemented."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "diatomic shellifier-entry validation"
 id = "HP-COMP-SHELLGEOM-DIAT-TEST-01"
 owner_document_links = ["common_terminal_shell_decomposition.md"]
@@ -302,7 +302,7 @@ record_sha256 = "38eb4bbaa1da8ab0a21447a51d0bda07c3ea257b7202b6265fcfe97fcbe0d97
 state_label = "Status"
 state_text = "implemented."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "common shell validation"
 id = "HP-COMP-SHELLGEOM-TEST-01"
 owner_document_links = ["common_terminal_shell_decomposition.md"]
@@ -372,7 +372,7 @@ record_sha256 = "58d0ab25d434d10567c0a990c5848acd206081a5d0e3aca2149f269a2888c7f
 state_label = "Status"
 state_text = "implemented."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "thin-slab inventory validation"
 id = "HP-COMP-THINSLAB-META-TEST-01"
 owner_document_links = ["common_terminal_shell_decomposition.md"]
@@ -382,7 +382,7 @@ record_sha256 = "52e1987e4636bdf8417ff742445674b438ae2373e5f4270e4eea35b38d58a41
 state_label = "Status"
 state_text = "completed validation evidence."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "compact thin-slab validation"
 id = "HP-COMP-THINSLAB-TEST-01"
 owner_document_links = ["common_terminal_shell_decomposition.md"]
@@ -402,15 +402,15 @@ record_sha256 = "facd23790f92f26cc92e6e0550d76d7668a9acd7f394cae895794cf6936aa6b
 state_label = "Lifecycle"
 state_text = "implemented. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "WL z-axis diatomic base validation"
 id = "HP-COMP-WLDIAT-TEST-01"
 owner_document_links = ["white_lindsey_terminal_basis_realization.md"]
 ownership_texts = ["Owner/canonical: White-Lindsey terminal basis realization; [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "93ea078bf9d6e6133ebeac0c3408264b144925ca102eebdb2d087135e89471c5"
+permission_texts = ["ignored-probe maintenance only."]
+record_sha256 = "2d50d41afa5491f12f761896465c4ff6449c35c0bbf4ff7fc8be6d5c06cd8083"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: ignored-probe maintenance only."
 [[records]]
 agents_whitelisted = true
 heading_title = "WL diatomic ns guard"
@@ -442,15 +442,15 @@ record_sha256 = "7f945722eae9a6605722958c792c3781db8b4ae34bd4957e23f061357bc06ed
 state_label = "Lifecycle"
 state_text = "implemented by `5938ddbc5`. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "contract-plan validation"
 id = "HP-CONTRACT-VEC-TEST-01"
 owner_document_links = ["route_stage_metadata_contract.md"]
 ownership_texts = ["Owner/canonical: terminal lowering and transform contracts; [route/stage metadata](route_stage_metadata_contract.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "6e3da07c651dbaa9690ec0e3599fad1c837790d4aba1ac6b3412c14ff2dcbeb5"
+permission_texts = ["none."]
+record_sha256 = "68f6fee639b2a93e5a4a8a8ea3f28f30ea58bfc23d7c5fddb96a4c01b5f21474"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: none."
 [[records]]
 agents_whitelisted = true
 heading_title = "remove hidden atom `d` driver residue"
@@ -472,15 +472,15 @@ record_sha256 = "9c5907380e5c87a6f653b43dbe7e62e4ea14d52ba8008ef42923431c05482d6
 state_label = "Lifecycle"
 state_text = "implemented. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "base atom driver validation"
 id = "HP-DRV-ATOM-TEST-01"
 owner_document_links = ["cartesian_driver_atom_workflow.md"]
 ownership_texts = ["Owner/canonical: driver atom workflow; [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "f7f053c2c575fb3483aeb14a48e5549dd7ae4f655399132d124886e20dbf0baf"
+permission_texts = ["none."]
+record_sha256 = "2e2a9a15e3c802f691e9cabb8dc0e3d1163dc1e2647e740770eeb2a4fc06dcdb"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: none."
 [[records]]
 agents_whitelisted = true
 heading_title = "driver atom-to-base-facade wiring"
@@ -522,15 +522,15 @@ record_sha256 = "6d221c0d4746290491ad07a7976889e53ce1d54332668bff82891c009e744aa
 state_label = "Lifecycle"
 state_text = "implemented. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "terminal-region inventory validation"
 id = "HP-DRV-INV-TEST-01"
 owner_document_links = ["cartesian_driver_usability_workflow.md"]
 ownership_texts = ["Owner/canonical: terminal-region inventory; [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "590cb17e577e3da9c65c0521e4b157fd62b710c7b36a7fc4ea7f63c732cfa10e"
+permission_texts = ["ignored-probe maintenance only."]
+record_sha256 = "831da5220fb705dbbcda4740bb327c8c1e044da3fdb0a7aac6fb6ff7ae972ad3"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: ignored-probe maintenance only."
 [[records]]
 agents_whitelisted = true
 heading_title = "construction-family driver input"
@@ -542,15 +542,15 @@ record_sha256 = "6d1ab1cfbcf4bc6f06d2844c84692dbb132980c6cd50da3f6d5a67019ea0c00
 state_label = "Lifecycle"
 state_text = "implemented. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "construction-family validation"
 id = "HP-DRV-NEST-TEST-01"
 owner_document_links = ["cartesian_driver_usability_workflow.md"]
 ownership_texts = ["Owner/canonical: driver construction-family input; [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "94ae871781e609e2a8727647c95a2d72f1a6ddab1aa5b5cc894a5f31a96e8524"
+permission_texts = ["none."]
+record_sha256 = "53a965a8ae2eb7fc438f486a49ad92fb72cfea4fd6fefd2a716624fc4b804a50"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: none."
 [[records]]
 agents_whitelisted = true
 heading_title = "construction-family route mapping"
@@ -572,15 +572,15 @@ record_sha256 = "6f69aee0981bd118f3eac756af43c725297d518bec754d6f81f064a6730ba16
 state_label = "Lifecycle"
 state_text = "implemented. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "terminal shellification due-diligence validation"
 id = "HP-DRV-SHELLDD-TEST-01"
 owner_document_links = ["terminal_shellification_due_diligence.md"]
 ownership_texts = ["Owner/canonical: terminal due diligence; [terminal shellification due diligence](terminal_shellification_due_diligence.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "e6695053dad15ad7ceb2ce64056a01a73e5ee53d52957fac3c0b81ae61f784d7"
+permission_texts = ["docs/evidence maintenance only."]
+record_sha256 = "7f8e0728282249318d2328d6ff5635cbc01745068f3cbeba23fd34893ab3e402"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: docs/evidence maintenance only."
 [[records]]
 agents_whitelisted = true
 heading_title = "visible physics-stage producer surface"
@@ -592,15 +592,15 @@ record_sha256 = "ae923aad392d91864919055ef44aa92be80f70d6aa01bad47a3a0dd194e4420
 state_label = "Lifecycle"
 state_text = "implemented. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "staged driver validation"
 id = "HP-DRV-STAGE-TEST-01"
 owner_document_links = ["cartesian_driver_usability_workflow.md"]
 ownership_texts = ["Owner/canonical: staged driver workflow; [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "5a94ad8ff7eb106db7fb7aa26bfebd821428a43f463e9e06785ad64837a79f82"
+permission_texts = ["none."]
+record_sha256 = "811c72b187a87144176c6c0776344b53be8add03ae21d45f9cc2a461ff5c3858"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: none."
 [[records]]
 agents_whitelisted = true
 heading_title = "canonical driver staged wiring"
@@ -612,15 +612,15 @@ record_sha256 = "a51c099aa75eea2df89115000504ea6cb42d7491d343ef2f867ddda6ccbac3f
 state_label = "Lifecycle"
 state_text = "implemented. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "driver workflow validation"
 id = "HP-DRV-TEST-01"
 owner_document_links = ["cartesian_driver_usability_workflow.md"]
 ownership_texts = ["Owner/canonical: canonical driver; [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "d46283321669dea544fd46e9a4de136f90050ad044b49e96b12e63a059e0ff0b"
+permission_texts = ["none."]
+record_sha256 = "b6595e620d8a410f3e83459c2b4166c31354aae0cec67e07709c6a103e34c728"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: none."
 [[records]]
 agents_whitelisted = true
 heading_title = "terminal realization file"
@@ -742,7 +742,7 @@ record_sha256 = "318ad6dfa128e5b86704812670135f8a27e4ca89799eea3b1c3c51988025d85
 state_label = "Status"
 state_text = "implemented."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "driver source-span validation"
 id = "HP-MCOMX-DRV-TEST-01"
 owner_document_links = ["mapped_comx_source_span.md"]
@@ -792,7 +792,7 @@ record_sha256 = "072f8b3a89149b0625ee439e710e3adc1756674687e810171915f53453f036c
 state_label = "Status"
 state_text = "implemented."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "terminal seam validation"
 id = "HP-MCOMX-TERM-TEST-01"
 owner_document_links = ["mapped_comx_source_span.md"]
@@ -802,7 +802,7 @@ record_sha256 = "0af738dd100a3b150cb1a28913c8fd72caf885567e496b3df52b70ad76c259c
 state_label = "Status"
 state_text = "completed validation evidence."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "mapped source validation"
 id = "HP-MCOMX-TEST-01"
 owner_document_links = ["mapped_comx_source_span.md"]
@@ -882,15 +882,15 @@ record_sha256 = "bc7534a33469210d394c406c244dc0d4d0fd36a80e70d3689fa07ebc707b67f
 state_label = "Lifecycle"
 state_text = "implemented. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "aspect-source validation"
 id = "HP-PQS-ASPECTSHELL-TEST-01"
 owner_document_links = ["pqs_complete_shell_aspect_source_modes.md"]
 ownership_texts = ["Owner/canonical: PQS aspect-aware shell source policy; [PQS complete-shell aspect-aware source modes](pqs_complete_shell_aspect_source_modes.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "37b0bd03c8af7e265e0d559a76533e1cd8d178a1ba38aa4d8a502fc5c7ecba0f"
+permission_texts = ["ignored-probe maintenance only."]
+record_sha256 = "2d2d0a8705981b37d52f8026d5fdc578d0b30f2fbe48c9e2f0fa00112d8defc2"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: ignored-probe maintenance only."
 [[records]]
 agents_whitelisted = true
 heading_title = "reusable atomic HF reference packets"
@@ -967,8 +967,8 @@ heading_title = "mapping `s_factor` validation"
 id = "HP-PQS-MAP-SFACTOR-TEST-01"
 owner_document_links = ["pqs_mapping_s_factor.md"]
 ownership_texts = ["Owner/canonical: mapping-factor validation; [PQS/WL mapping `s_factor`](pqs_mapping_s_factor.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "963727594931b68bd9d3b84708d10824a6bcb92c50af68192ab2bcd80bd451b8"
+permission_texts = ["validation maintenance.", "maintain only the existing committed `s_factor` assertions in that file. New fixtures or endpoint policy require separate authority."]
+record_sha256 = "29b4c9414a7da2fdb56d8e514642d7ca8242762b781ae99428ad94c530de2dde"
 state_label = "Lifecycle"
 state_text = "completed validation contract. Permission: validation maintenance."
 [[records]]
@@ -1202,7 +1202,7 @@ record_sha256 = "2f6a390d743cca032e1dcf7d448d2038dec2bf263becf29fd21ac1799e6d965
 state_label = "Lifecycle"
 state_text = "implemented validation contract. Permission: validation maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "canonical-driver reuse validation"
 id = "HP-R3BASE-DRV-TEST-01"
 owner_document_links = ["r3_same_construction_base_reuse.md"]
@@ -1327,8 +1327,8 @@ heading_title = "homonuclear diatomic validation"
 id = "HP-R3U-ZDI-TEST-01"
 owner_document_links = ["r3_homonuclear_diatomic_supplemented_workflow.md"]
 ownership_texts = ["Owner/canonical: homonuclear supplemented workflow; [R3 homonuclear supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md)."]
-permission_texts = ["validation maintenance.", "maintain bounded H2/Be2 correctness checks and optional ignored generic stress evidence."]
-record_sha256 = "4a0f0b0ebb9272186b738f186a0568fcc62cd1c8868410689f6aa747e3d09aa5"
+permission_texts = ["validation maintenance.", "maintain only the existing homonuclear H2 assertions in that committed file. New fixtures or broader geometry require separate authority."]
+record_sha256 = "dde93d0da862dfafc631629881855e51335044c27d5d4a7f67bcf48c0d5015a0"
 state_label = "Lifecycle"
 state_text = "implemented validation contract. Permission: validation maintenance."
 [[records]]
@@ -1372,15 +1372,15 @@ record_sha256 = "d72e5decab205ba643db971eb93e67ed409eead0eaae592be81d6b7c9aee7a8
 state_label = "Lifecycle"
 state_text = "implemented by `34cf8f106`. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "raw source-mode validation"
 id = "HP-RAW-SRCMODE-TEST-01"
 owner_document_links = ["route_stage_metadata_contract.md"]
 ownership_texts = ["Owner/canonical: raw product source modes; [route/stage metadata](route_stage_metadata_contract.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "fb03628c0960734b90ad82ede5bb81793ac59c9b1cf40e8ee25098035397cb73"
+permission_texts = ["none."]
+record_sha256 = "e1a3f1ae41980498bc3d446bfef85dbd8be2ca47beec490481b72d359da6700a"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: none."
 [[records]]
 agents_whitelisted = true
 heading_title = "external GTO orbital import"
@@ -1752,15 +1752,15 @@ record_sha256 = "8c7fabbc50463c1195f0c0cd44ca8e383a51d5fd2ea76246c21159166a58c4c
 state_label = "Status"
 state_text = "implemented."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "protected artifact validation"
 id = "HP-RG-PROTECT-ART-TEST-01"
 owner_document_links = ["protected_localized_artifact.md"]
 ownership_texts = ["Owner and canonical contract: `src/cartesian_ida_hamiltonian.jl` and [Protected-localized artifact contract](protected_localized_artifact.md)."]
-permission_texts = ["validate matrix/count/metadata roundtrip and reject wrong or missing protected artifact identity and convention data."]
-record_sha256 = "c073536d0943232596550d3acb2aa932eaa9762a25e74b20546f722e5cff5989"
+permission_texts = ["none."]
+record_sha256 = "13e6733a21361f9e4f7f66ac2104a74a82771ca9826e9ffe4be3678326bc6fbf"
 state_label = "Status"
-state_text = "implemented validation contract."
+state_text = "completed validation evidence. Permission: none."
 [[records]]
 agents_whitelisted = true
 heading_title = "protected artifact row-locality metadata"
@@ -1772,15 +1772,15 @@ record_sha256 = "eda6a71f56dd8226cfae579fc7139db82efc880e754b40eab3e58de1987c027
 state_label = "Status"
 state_text = "implemented."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "row-locality validation"
 id = "HP-RG-PROTECT-ARTLOC-TEST-01"
 owner_document_links = ["protected_localized_artifact.md"]
 ownership_texts = ["Owner and canonical contract: `src/cartesian_residual_gaussians/augmented_operators.jl`, `src/cartesian_ida_hamiltonian.jl`, and [Protected-localized artifact contract](protected_localized_artifact.md)."]
-permission_texts = ["validate native centers and sectors, deterministic inverse permutations, optional all-or-none spreads, and legacy `row_locality = nothing` readback."]
-record_sha256 = "27ec1c234f9074c64e97553811dece45416e7218d35a2767b84b22552fd666a6"
+permission_texts = ["none."]
+record_sha256 = "94734b0547a89f242d7d69e748bd7c37f82cd6ead6e88c55cc91a742a8891c93"
 state_label = "Status"
-state_text = "implemented validation contract."
+state_text = "completed validation evidence. Permission: none."
 [[records]]
 agents_whitelisted = false
 heading_title = "protected-localized EGOI measurement audit"
@@ -1807,10 +1807,10 @@ heading_title = "retained-GTO EGOI validation"
 id = "HP-RG-PROTECT-EGOI-TEST-01"
 owner_document_links = ["retained_gto_egoi.md"]
 ownership_texts = ["""Owner:\n- [Retained-GTO local-product EGOI](retained_gto_egoi.md)."""]
-permission_texts = ["bounded H/Be/Be2 smokes plus an ignored Cr2 replay, with target projection, rank, block residual, `DeltaV`, saturation, symmetry, and low-Fock diagnostics. `max_disallowed_delta_v` must equal zero exactly."]
-record_sha256 = "46acc3212883ec1a20d574e19a6a0b27bff1f2c547e2a2695d8f28e49f9bf98c"
+permission_texts = ["test implementation on one exact planned path."]
+record_sha256 = "f08180af64e03b6f069bd28b9ae3a58d6e0c9ea97d9fe87eb11a3f6ba48ebf57"
 state_label = "Lifecycle"
-state_text = "approved pending validation contract; no committed protected retained-GTO helper test exists."
+state_text = "approved pending validation contract. Permission: test implementation on one exact planned path."
 [[records]]
 agents_whitelisted = false
 heading_title = "protected-original compact-main injection design"
@@ -1832,15 +1832,15 @@ record_sha256 = "6ed979f2e4891ca4a697ae62c10cab127ddd9e47b8f90f4af751e3db8d4955b
 state_label = "Lifecycle"
 state_text = "implemented internal/default-off. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "protected geometry validation"
 id = "HP-RG-PROTECT-INJECT-TEST-01"
 owner_document_links = ["protected_localized_basis.md"]
 ownership_texts = ["Owner/canonical: protected geometry; [protected-localized basis](protected_localized_basis.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "2278fc5cf51745aa4f8f4f18d141fa5497fcf3a25d3170626d2636e90d3499fb"
+permission_texts = ["ignored-probe and report maintenance only."]
+record_sha256 = "3b85273d7b164922a43e865138358790ad1f5634c16f27ec60deda3d34405ca7"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: ignored-probe and report maintenance only."
 [[records]]
 agents_whitelisted = true
 heading_title = "protected-localized ladder bundle facility"
@@ -1852,15 +1852,15 @@ record_sha256 = "13193d693ae499c96a28a8124edf8bed80cca54d174ae9d7e33512325f37d17
 state_label = "Lifecycle"
 state_text = "implemented internal opt-in facility."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "ladder bundle validation"
 id = "HP-RG-PROTECT-LADDER-BUNDLE-TEST-01"
 owner_document_links = ["protected_localized_ladder.md"]
 ownership_texts = ["""Owner:\n- [Protected-localized ladder bundles](protected_localized_ladder.md)."""]
-permission_texts = ["validate identity/layout, member readback, shared-parent proof, same supplement/Coulomb policy, cross-overlap shape and singular values, native restart ordering, transferred traces/orthogonality, fixed-density target energy, provenance, and summary roundtrip."]
-record_sha256 = "f20614dc5522bd4d35e0ca81d5a5f9640ae228b96d306654b1dce77c43503c39"
+permission_texts = ["none."]
+record_sha256 = "9daf2e27fd497ab9b4de08e27a74e368992a3a659e2b9780a5861d08852afb66"
 state_label = "Lifecycle"
-state_text = "implemented validation contract."
+state_text = "completed validation evidence. Permission: none."
 [[records]]
 agents_whitelisted = false
 heading_title = "same-parent ladder transfer audit"
@@ -1892,15 +1892,15 @@ record_sha256 = "c6c6eb689898f6976bec6fd7ec61d2ea94880938e6c99a0f27787ef2bf6382d
 state_label = "Lifecycle"
 state_text = "implemented internal/default-off. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "protected one-body validation"
 id = "HP-RG-PROTECT-ONEBODY-TEST-01"
 owner_document_links = ["protected_localized_basis.md"]
 ownership_texts = ["Owner/canonical: protected exact one-body operators; [protected-localized basis](protected_localized_basis.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "799377ae4076719049d273c1da37aec4ca7e2185a992a01626f62533fe6d3db8"
+permission_texts = ["ignored-probe and report maintenance only."]
+record_sha256 = "8d83faefcdf9b52b1832f323b57576cbbf800136ce9cd55c2788151f6fcf9d6b"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: ignored-probe and report maintenance only."
 [[records]]
 agents_whitelisted = false
 heading_title = "protected interaction decision audit"
@@ -2042,15 +2042,15 @@ record_sha256 = "7c58dfe43591f1b2250adcd7cde3b39d7edadcfe425c8264f1d1200fd9321c4
 state_label = "Status"
 state_text = "implemented."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "protected exact-Hartree validation"
 id = "HP-RHO0-MIXH-FEXACT-TEST-01"
 owner_document_links = ["reference_hartree_numerics.md"]
 ownership_texts = ["Owner/canonical: `CartesianResidualGaussians`; [reference Hartree numerics](reference_hartree_numerics.md)."]
-permission_texts = ["validation maintenance for bounded H/Be/Be2 raw, fixed-sector, localized, and oracle checks only; no dedicated committed test file."]
-record_sha256 = "e97fc12294c16c16ab1d45fac383e53353378932d850466f14ecbcc8ceafcaeb"
+permission_texts = ["ignored-probe maintenance only."]
+record_sha256 = "d2bcae09f03457247083417bc14b7e6242ada42c9b8bf99b0107f68e5bce7c3e"
 state_label = "Status"
-state_text = "implemented validation authority."
+state_text = "completed validation evidence. Permission: ignored-probe maintenance only."
 [[records]]
 agents_whitelisted = true
 heading_title = "exact mixed-Hartree GA/AA blocks"
@@ -2067,8 +2067,8 @@ heading_title = "exact mixed-Hartree GA/AA validation"
 id = "HP-RHO0-MIXH-GAAA-TEST-01"
 owner_document_links = ["reference_hartree_numerics.md"]
 ownership_texts = ["Owner/canonical: `CartesianGaussianRawBlocks`; [reference Hartree numerics](reference_hartree_numerics.md)."]
-permission_texts = ["validation maintenance for the accepted bounded parity, angular, dimension, and oracle gate only; no dedicated committed test file."]
-record_sha256 = "6248ad05d5f1e0416c764a0c87440bb0cd440e778fb49f53935af66d46d117c6"
+permission_texts = ["inherited committed-test maintenance for the placed-potential `A-A` kernel checks only."]
+record_sha256 = "1890537a34ac98bb8d3da8be2f50f78028933a430ea482218bc89be6710ef9c7"
 state_label = "Status"
 state_text = "implemented validation authority."
 [[records]]
@@ -2152,15 +2152,15 @@ record_sha256 = "3f0295ea6d984eaaefbe09e80f13c7058e6acdcde619063a4a86a7d49ca6ba9
 state_label = "Lifecycle"
 state_text = "implemented by `c985723c7`. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "route inventory validation"
 id = "HP-ROUTE-INV-TEST-01"
 owner_document_links = ["route_stage_metadata_contract.md"]
 ownership_texts = ["Owner/canonical: route inventory; [route/stage metadata](route_stage_metadata_contract.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "27740eda0dac384a74ffca0c99555b65714df4b228c3992841fbbeb34ae5770e"
+permission_texts = ["none."]
+record_sha256 = "45b6b5d94e6882d9b5b1873b01674cdfe773749d47d1a5dff1f03e36c855d787"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: none."
 [[records]]
 agents_whitelisted = true
 heading_title = "family-selective route recipes"
@@ -2172,15 +2172,15 @@ record_sha256 = "083cc4f6fb3c4d0af0f1e7c40a8d1add3555010ee590d478e1d1d80409ef250
 state_label = "Lifecycle"
 state_text = "implemented by `c6307a16d`. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "route recipe validation"
 id = "HP-ROUTE-RECIPE-TEST-01"
 owner_document_links = ["nesting_supplement_composition_plan.md"]
 ownership_texts = ["Owner/canonical: route recipe construction; [nesting/supplement composition](nesting_supplement_composition_plan.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "7a02cbc24a352d415c0a3b69e79e5e4b64dbe8a0a90eb04128950eddfeb808de"
+permission_texts = ["none."]
+record_sha256 = "28ff7b872236ddb4f98a2dd9d0cfdbafdea0f9f3a2d2dd5320d071f94340f6f3"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: none."
 [[records]]
 agents_whitelisted = true
 heading_title = "route/stage carriers"
@@ -2192,15 +2192,15 @@ record_sha256 = "fbeab18dff783bc1e44adbd04c7d450f68eb58af241f9b80de90bf0f7c99a6a
 state_label = "Lifecycle"
 state_text = "implemented by `8c3df2ad9`. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "carrier validation"
 id = "HP-ROUTE-STAGE-CARRIER-TEST-01"
 owner_document_links = ["route_stage_metadata_contract.md"]
 ownership_texts = ["Owner/canonical: route/stage carriers; [route/stage metadata](route_stage_metadata_contract.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "6c643a499db80e6224e72613a4e29cd9774f565c6fe895237ed7382ed0bf1d0e"
+permission_texts = ["none."]
+record_sha256 = "eb640c9286a6dbb25bfabe67e7546434221aacc66b2fbb327bb96441df2e8c0e"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: none."
 [[records]]
 agents_whitelisted = true
 heading_title = "route/stage type surface"
@@ -2212,15 +2212,15 @@ record_sha256 = "b0f611daa174ebfcd70071d2b810251b6317c49a638803368e5e35313ad1a3b
 state_label = "Lifecycle"
 state_text = "implemented by `118a639bf`. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "type-surface validation"
 id = "HP-ROUTE-STAGE-TYPE-TEST-01"
 owner_document_links = ["route_stage_metadata_contract.md"]
 ownership_texts = ["Owner/canonical: route/stage type surfaces; [route/stage metadata](route_stage_metadata_contract.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "07064b960c6e43e84cb29a761eed5351d1a181d326d46f3061bc0d9dec33f5fc"
+permission_texts = ["none."]
+record_sha256 = "a834bcc80cc51da00169afca1584dd4572be852b995851d607a9df8188cdb270"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: none."
 [[records]]
 agents_whitelisted = false
 heading_title = "new committed terminal smoke — rejected"
@@ -2262,15 +2262,15 @@ record_sha256 = "0bb1ce8c56b46a244e16d628d3dcb968898780d9d17e091b9110bde390e0364
 state_label = "Lifecycle"
 state_text = "implemented. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "WL compact-basis validation"
 id = "HP-WLDIAT-COMPACT-TEST-01"
 owner_document_links = ["white_lindsey_terminal_basis_realization.md"]
 ownership_texts = ["Owner/canonical: White-Lindsey terminal basis realization; [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "8db0e242ff16084e71a9217e976f3014edfb1da8617bb58c41ada5c4313f0641"
+permission_texts = ["ignored-probe maintenance only."]
+record_sha256 = "096bdb13bfd1f35ca4096677405ed13a5c4d39530c903f26212a675fa655351e"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: ignored-probe maintenance only."
 [[records]]
 agents_whitelisted = true
 heading_title = "WL boundary retained-count parity"
@@ -2282,15 +2282,15 @@ record_sha256 = "8fd6b27abed195c0ab12dbd69d7e41f4673ee9998ac81d399c8232e712d4d02
 state_label = "Lifecycle"
 state_text = "implemented. Permission: source maintenance."
 [[records]]
-agents_whitelisted = true
+agents_whitelisted = false
 heading_title = "WL parity validation"
 id = "HP-WLDIAT-PARITY-TEST-01"
 owner_document_links = ["white_lindsey_terminal_basis_realization.md"]
 ownership_texts = ["Owner/canonical: White-Lindsey terminal basis realization; [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "99caaa923b1dc40f9f1736649d2cab89d2259a6e713df699186492847be4ffc8"
+permission_texts = ["ignored-probe maintenance only."]
+record_sha256 = "97ea578011f5d18eea47df541673e2ebc3a0c88f5b936be3fa26dbe264ab5802"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation evidence. Permission: ignored-probe maintenance only."
 [[records]]
 agents_whitelisted = true
 heading_title = "WL terminal realization file"
@@ -2317,10 +2317,10 @@ heading_title = "WL terminal-basis validation"
 id = "HP-WLTERM-TEST-01"
 owner_document_links = ["white_lindsey_terminal_basis_realization.md"]
 ownership_texts = ["Owner/canonical: White-Lindsey terminal basis realization; [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md)."]
-permission_texts = ["validation maintenance."]
-record_sha256 = "91f72e58e1db6afaceef38df1b6c976dbe6b28bc311388c50e72a5e0c6182aab"
+permission_texts = ["inherited committed-test maintenance only."]
+record_sha256 = "941228d4968fc1877c6e6d61707ab78de7ef136b2ab2041f9ed59e78d487bfd7"
 state_label = "Lifecycle"
-state_text = "completed validation contract. Permission: validation maintenance."
+state_text = "completed validation contract. Permission: inherited committed-test maintenance only."
 [[records]]
 agents_whitelisted = true
 heading_title = "WL route helper terminal-basis wiring"

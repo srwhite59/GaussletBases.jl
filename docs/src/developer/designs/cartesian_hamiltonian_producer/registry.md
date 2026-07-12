@@ -8,6 +8,11 @@ completed evidence without that permission authorizes no work. Measurement-
 only entries do not authorize production source edits. Candidate or rejected
 entries do not authorize implementation.
 
+Continuing committed-test permission must name an exact test path or an
+explicit shared owner plus exact path. An approved future test must name its
+exact planned path. Ignored probes and reports are separate non-whitelisted
+surfaces; completed evidence with no maintained path has permission `none`.
+
 This registry is the authority lookup, not the algorithm manual. An entry's
 explicit permission and lifecycle govern when present; surrounding section
 headings are navigation only. During this transition, a legacy entry without
@@ -228,14 +233,17 @@ restoring old WL materialization.
 
 ### HP-WLTERM-TEST-01 — WL terminal-basis validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation contract. Permission: inherited committed-test
+maintenance only.
 
 Owner/canonical: White-Lindsey terminal basis realization;
 [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md).
 
-Evidence: accepted bounded PQS parity, WL atom/H2 artifact/readback, and
-supplemented endpoint smokes recorded in the manager log. No dedicated
-committed WL fixture is owned by this ID.
+Validation: the one-center WL construction smoke in
+`test/driver_public/cartesian_base_hamiltonian_runtests.jl`, shared with
+`HP-PQS-COULOMB-ACCURACY-TEST-01`. Accepted diatomic, artifact/readback, and
+supplemented endpoint smokes remain evidence. This ID owns no dedicated WL
+fixture and grants no broader test expansion.
 
 ### HP-COMP-WLDIAT-FN-01 — WL z-axis diatomic base terminal records
 
@@ -265,13 +273,15 @@ materialization, artifacts/readers, RG/MWG/IDA policy, solver/ECP, or Cr2.
 
 ### HP-COMP-WLDIAT-TEST-01 — WL z-axis diatomic base validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: ignored-probe
+maintenance only.
 
 Owner/canonical: White-Lindsey terminal basis realization;
 [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md).
 
-Evidence: bounded PQS/WL atom and H2 artifact/readback, route-provenance, and
-downstream supplemented smokes recorded in the manager log.
+Probe/evidence: optional ignored `tmp/work/wl_diatomic_base_validation.jl` and
+manager-log Pass 137. No committed test is owned, and this ID is not on the
+execution whitelist.
 
 ### HP-WLDIAT-COMPACT-FN-01 — WL diatomic compact retained basis
 
@@ -298,13 +308,15 @@ units; support rows are not themselves retained functions.
 
 ### HP-WLDIAT-COMPACT-TEST-01 — WL compact-basis validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: ignored-probe
+maintenance only.
 
 Owner/canonical: White-Lindsey terminal basis realization;
 [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md).
 
-Evidence: bounded H2/Be2 WL base and supplemented artifact/readback,
-finite/symmetric operators, retained-count, and PQS parity smokes.
+Probe/evidence: optional ignored `tmp/work/wl_compact_block_size_audit.jl` and
+`tmp/work/wl_diatomic_base_validation.jl`, plus manager-log Pass 152. No
+committed test is owned, and this ID is not on the execution whitelist.
 
 ### HP-WLDIAT-PARITY-FN-01 — WL boundary retained-count parity
 
@@ -322,13 +334,15 @@ WL boundary products retain the requested count. Canonical examples remain
 
 ### HP-WLDIAT-PARITY-TEST-01 — WL parity validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: ignored-probe
+maintenance only.
 
 Owner/canonical: White-Lindsey terminal basis realization;
 [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md).
 
-Evidence: bounded `ns=4/5` retained-count, artifact/readback,
-finite/symmetric-operator, supplemented, and PQS endpoint smokes.
+Probe/evidence: optional ignored `tmp/work/wl_compact_block_size_audit.jl` and
+`tmp/work/wl_diatomic_base_validation.jl`, plus manager-log Pass 154. No
+committed test is owned, and this ID is not on the execution whitelist.
 
 Family-wide non-goals: public input changes, shell ownership changes, direct
 core changes, artifact/schema changes, old WL materialization, route reports,
@@ -1461,8 +1475,13 @@ Lifecycle: completed validation contract. Permission: validation maintenance.
 Owner/canonical: mapping-factor validation;
 [PQS/WL mapping `s_factor`](pqs_mapping_s_factor.md).
 
-Evidence: default parity, nonunit one-center mapping/provenance, multicenter
-fit/provenance, invalid-input, artifact/readback, and protected-recipe smokes.
+Validation: `test/driver_public/cartesian_base_hamiltonian_runtests.jl` owns
+the committed default-parity, nonunit mapping/provenance, invalid-input, and
+facade regression. Multicenter, artifact/readback, and protected-recipe smokes
+remain accepted evidence rather than additional test ownership.
+
+Permission: maintain only the existing committed `s_factor` assertions in that
+file. New fixtures or endpoint policy require separate authority.
 
 ### HP-PQS-COULOMB-ACCURACY-FN-01 - producer-wide Coulomb accuracy policy
 
@@ -1738,13 +1757,15 @@ materialization revival, or route-stage redesign.
 
 ### HP-ROUTE-RECIPE-TEST-01 — route recipe validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: none.
 
 Owner/canonical: route recipe construction;
 [nesting/supplement composition](nesting_supplement_composition_plan.md).
 
 Evidence: bounded family-selective recipe, atom/H2 base, and supplemented
 artifact/readback smokes accepted with implementation `c6307a16d`.
+
+No committed test or maintained probe is owned by this ID.
 
 ### HP-ROUTE-INV-FN-01 — retained-unit route inventory
 
@@ -1761,13 +1782,15 @@ artifacts, reports, compatibility shapes, or Cr2 workflow.
 
 ### HP-ROUTE-INV-TEST-01 — route inventory validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: none.
 
 Owner/canonical: route inventory;
 [route/stage metadata](route_stage_metadata_contract.md).
 
 Evidence: focused type-shape/order checks and bounded base/supplemented
 artifact gates accepted with `c985723c7`.
+
+No committed test or maintained probe is owned by this ID.
 
 ### HP-RAW-SRCMODE-FN-01 — raw product source-mode inventory
 
@@ -1795,13 +1818,15 @@ artifact schema, compatibility tuple shapes, or Cr2 workflow.
 
 ### HP-RAW-SRCMODE-TEST-01 — raw source-mode validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: none.
 
 Owner/canonical: raw product source modes;
 [route/stage metadata](route_stage_metadata_contract.md).
 
 Evidence: focused mode/order/retained-rule checks plus bounded base,
 supplemented, R3, and manifest validation accepted with `34cf8f106`.
+
+No committed test or maintained probe is owned by this ID.
 
 ### HP-CONTRACT-VEC-FN-01 — vector-backed contract plans
 
@@ -1833,13 +1858,15 @@ artifact schema, compatibility tuple shapes, or Cr2 workflow.
 
 ### HP-CONTRACT-VEC-TEST-01 — contract-plan validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: none.
 
 Owner/canonical: terminal lowering and transform contracts;
 [route/stage metadata](route_stage_metadata_contract.md).
 
 Evidence: lowering/transform order checks and bounded base, supplemented, and
 R3 gates accepted with `5938ddbc5`.
+
+No committed test or maintained probe is owned by this ID.
 
 ### HP-ROUTE-STAGE-TYPE-FN-01 — route/stage type surface
 
@@ -1859,13 +1886,15 @@ artifacts, reports, precompile machinery, or Cr2 workflow.
 
 ### HP-ROUTE-STAGE-TYPE-TEST-01 — type-surface validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: none.
 
 Owner/canonical: route/stage type surfaces;
 [route/stage metadata](route_stage_metadata_contract.md).
 
 Evidence: focused shape/order scans and bounded base/supplemented gates
 accepted with `118a639bf`.
+
+No committed test or maintained probe is owned by this ID.
 
 ### HP-ROUTE-STAGE-CARRIER-FN-01 — route/stage carriers
 
@@ -1889,13 +1918,15 @@ public/driver changes, artifacts, reports, precompile machinery, or Cr2.
 
 ### HP-ROUTE-STAGE-CARRIER-TEST-01 — carrier validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: none.
 
 Owner/canonical: route/stage carriers;
 [route/stage metadata](route_stage_metadata_contract.md).
 
 Evidence: terminal support/shellification/lowering order and bounded
 base/supplemented/R3 validation accepted with `8c3df2ad9`.
+
+No committed test or maintained probe is owned by this ID.
 
 ### HP-R1-ART-01 — public base producer artifact provenance
 
@@ -2964,14 +2995,16 @@ and diagnostics. Rejected broad directions never become MWG channels.
 
 ### HP-RG-PROTECT-INJECT-TEST-01 — protected geometry validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: ignored-probe and report
+maintenance only.
 
 Owner/canonical: protected geometry;
 [protected-localized basis](protected_localized_basis.md).
 
-Evidence: source-backed staged-geometry probes and
+Probe/evidence: optional ignored
+`tmp/work/cr2_source_backed_staged_protected_geometry_probe.jl` and
 `docs/src/developer/reports/cr2_staged_subspace_filter_870498b54/README.md`;
-no dedicated committed unit-test file.
+no committed test is owned, and this ID is not on the execution whitelist.
 
 Non-goals: public/default workflow, artifacts, operator/interaction work under
 these IDs, solvers, selection-policy changes, or Cr2 production claims.
@@ -3006,14 +3039,16 @@ one-body transform, with orthogonality and symmetry diagnostics.
 
 ### HP-RG-PROTECT-ONEBODY-TEST-01 — protected one-body validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: ignored-probe and report
+maintenance only.
 
 Owner/canonical: protected exact one-body operators;
 [protected-localized basis](protected_localized_basis.md).
 
-Evidence: source-backed dense replay and
+Probe/evidence: optional ignored
+`tmp/work/cr2_protected_onebody_dense_source_replay.jl` and
 `docs/src/developer/reports/cr2_protected_onebody_audit_eaf05a38c/README.md`;
-no dedicated committed unit-test file.
+no committed test is owned, and this ID is not on the execution whitelist.
 
 Non-goals: matrix-action frameworks, public/default workflow, artifacts,
 interaction rotation, solvers, residual policy, screened references, or Cr2
@@ -3082,7 +3117,7 @@ alternative interaction transforms, and Cr2-specific production behavior.
 
 ### HP-RG-PROTECT-ART-TEST-01 — protected artifact validation
 
-Status: implemented validation contract.
+Status: completed validation evidence. Permission: none.
 
 Owner and canonical contract:
 `src/cartesian_ida_hamiltonian.jl` and
@@ -3097,8 +3132,8 @@ it is not core protected-artifact coverage.
 Dependencies: `HP-RG-PROTECT-ART-FN-01` and the ordinary reader's strict
 artifact-kind boundary.
 
-Permission: validate matrix/count/metadata roundtrip and reject wrong or
-missing protected artifact identity and convention data.
+No committed core protected-artifact test or maintained probe is owned by this
+ID. Future test work requires an exact-path amendment.
 
 Exclusions: solver, endpoint, public workflow, rho0, production-default, or
 converged Cr2 claims.
@@ -3135,7 +3170,7 @@ claims.
 
 ### HP-RG-PROTECT-ARTLOC-TEST-01 — row-locality validation
 
-Status: implemented validation contract.
+Status: completed validation evidence. Permission: none.
 
 Owner and canonical contract:
 `src/cartesian_residual_gaussians/augmented_operators.jl`,
@@ -3149,9 +3184,8 @@ dedicated committed row-locality test file exists.
 Dependencies: `HP-RG-PROTECT-ARTLOC-FN-01` and native-order artifact
 roundtrip under `HP-RG-PROTECT-ART-TEST-01`.
 
-Permission: validate native centers and sectors, deterministic inverse
-permutations, optional all-or-none spreads, and legacy
-`row_locality = nothing` readback.
+No committed row-locality regression or maintained probe is owned by this ID.
+Future test work requires an exact-path amendment.
 
 Exclusions: z-sorted canonical matrices, solver/public workflow, rho0,
 production defaults, or converged Cr2 claims.
@@ -3206,16 +3240,18 @@ change this lifecycle.
 
 ### HP-RG-PROTECT-EGOI-TEST-01 - retained-GTO EGOI validation
 
-Lifecycle: approved pending validation contract; no committed protected
-retained-GTO helper test exists.
+Lifecycle: approved pending validation contract. Permission: test
+implementation on one exact planned path.
 
 Owner:
 
 - [Retained-GTO local-product EGOI](retained_gto_egoi.md).
 
-Permission: bounded H/Be/Be2 smokes plus an ignored Cr2 replay, with target
+Planned test: `test/nested/cartesian_retained_gto_egoi_runtests.jl` for bounded
+H/Be/Be2 smokes, with target
 projection, rank, block residual, `DeltaV`, saturation, symmetry, and low-Fock
-diagnostics. `max_disallowed_delta_v` must equal zero exactly.
+diagnostics. `max_disallowed_delta_v` must equal zero exactly. An ignored Cr2
+replay may remain external evidence; it is not part of the committed fixture.
 
 Exclusions: production Cr2 HF, large committed fixtures, artifact/workflow
 tests, and validation of uncommitted WIP.
@@ -3270,7 +3306,7 @@ sidecar does not change this permission.
 
 ### HP-RG-PROTECT-LADDER-BUNDLE-TEST-01 - ladder bundle validation
 
-Lifecycle: implemented validation contract.
+Lifecycle: completed validation evidence. Permission: none.
 
 Owner:
 
@@ -3279,10 +3315,8 @@ Owner:
 Validation evidence: source commit `3eaa812a9`, manager running-log Pass 313,
 a bounded H2 bundle/readback smoke, and an ignored Cr2 `ns=7 -> ns=9` replay.
 
-Permission: validate identity/layout, member readback, shared-parent proof,
-same supplement/Coulomb policy, cross-overlap shape and singular values,
-native restart ordering, transferred traces/orthogonality, fixed-density
-target energy, provenance, and summary roundtrip.
+The accepted H2 smoke and ignored Cr2 replay own no stable committed test or
+probe path. Future test work requires an exact-path amendment.
 
 Exclusions: committed large Cr2 fixtures, production HF, solver continuation,
 and alternate artifact or transfer conventions.
@@ -3412,16 +3446,17 @@ workflow, solver, residual-selection, or Cr/Cr2 authority.
 
 Status: implemented validation authority.
 
-Permission: validation maintenance for the accepted bounded parity, angular,
-dimension, and oracle gate only; no dedicated committed test file.
+Permission: inherited committed-test maintenance for the placed-potential
+`A-A` kernel checks only.
 
 Owner/canonical: `CartesianGaussianRawBlocks`;
 [reference Hartree numerics](reference_hartree_numerics.md).
 
-Test ownership: no dedicated committed test file. The accepted compact
-ignored-probe gate covered prior `GG` parity, finite `GA`, symmetric `AA`,
-angular cases, and dense-oracle spots. Historical acceptance is manager
-Pass 286 and commit `daac231d0`.
+Validation: `test/nested/cartesian_screened_hartree_correction_runtests.jl`,
+shared with `HP-RG-PROTECT-ADDREF-TEST-01`, exercises the live density-fit and
+potential-fit placed `A-A` kernels. The prior finite `GA`, angular, dimension,
+and dense-oracle gate remains historical evidence under manager Pass 286 and
+commit `daac231d0`; this ID grants no new dedicated fixture.
 
 ### HP-RHO0-MIXH-FEXACT-FN-01 - protected exact-Hartree transform
 
@@ -3447,17 +3482,16 @@ solver, exchange, or Cr/Cr2 authority.
 
 ### HP-RHO0-MIXH-FEXACT-TEST-01 - protected exact-Hartree validation
 
-Status: implemented validation authority.
+Status: completed validation evidence. Permission: ignored-probe maintenance
+only.
 
-Permission: validation maintenance for bounded H/Be/Be2 raw, fixed-sector,
-localized, and oracle checks only; no dedicated committed test file.
+Probe: optional ignored `tmp/work/rho0_mixh_fexact_source_validation.jl` for
+the bounded H/Be/Be2 raw, fixed-sector, localized, and oracle replay.
 
 Owner/canonical: `CartesianResidualGaussians`;
 [reference Hartree numerics](reference_hartree_numerics.md).
 
-Test ownership: no dedicated committed test file. The accepted compact
-ignored-probe gate covered H/Be/Be2 raw-block replay, fixed/localized finite
-symmetry, dimension and protected-geometry checks, and dense-oracle spots.
+No committed test is owned, and this ID is not on the execution whitelist.
 Historical acceptance is manager Pass 288 and commit `40a6f7e99`.
 
 ### HP-RHO0-FAPP-AUDIT-01 - approximate fixed-P0 Fock audit
@@ -3638,15 +3672,14 @@ tables, orientation flags, term-first filling, and coupled primitive products.
 Non-goals: independent x/y/z contraction, persistent caches, metadata,
 non-nuclear work, route semantics, public/artifact/Cr2 workflow.
 
-### HP-CGAI-FN-01 — optional Cartesian Gaussian axis helper
+### HP-CGAI-FN-01 — historical Cartesian Gaussian axis-helper proposal
 
-Lifecycle: unused optional authority; superseded as a performance endpoint.
-Permission: dormant optional source support only.
+Lifecycle: superseded; never implemented. Permission: none.
 
 Owner/canonical: nuclear axis-helper disposition;
 [nuclear raw blocks](cartesian_gaussian_raw_blocks_nuclear.md).
 
-Potential source surface:
+Historical proposed source surface:
 
 ```text
 src/cartesian_gaussian_axis_integrals.jl
@@ -3655,10 +3688,11 @@ src/cartesian_gaussian_axis_integrals.jl
 Implemented object/caller: none. The proposed in-place table helper never
 landed; nuclear family reuse succeeded inside `nuclear_blocks.jl`.
 
-Dependencies: only a future demonstrated need from `HP-CGRB-FN-02`.
+Dependencies: the implemented nuclear reuse belongs to `HP-CGRB-FN-02`; live
+allocating generic axis helpers belong to `HP-CGRB-NN-FN-01`.
 
-Permission: no active work. A separately assigned pass may use this ID only
-for the originally approved nonallocating nuclear factor/table support.
+Permission: none. Any future cross-owner in-place helper requires a new
+docs-only amendment rather than reactivation of this ID.
 
 Non-goals: treating the later live allocating generic axis helpers as this
 implementation, broad axis/raw-block rewrites, public API, caches, or route,
@@ -4067,13 +4101,15 @@ unsupported combinations without exposing internal route vocabulary.
 
 ### HP-DRV-NEST-TEST-01 — construction-family validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: none.
 
 Owner/canonical: driver construction-family input;
 [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md).
 
 Evidence: default PQS, supported WL base/supplemented artifact/readback, and
 unsupported-combination rejection smokes.
+
+No committed test or maintained probe is owned by this ID.
 
 Family-wide non-goals: route algorithms, shell/lowering policy, old WL
 materialization, raw-block/RG/MWG/IDA changes, artifacts, public API, solvers,
@@ -4113,7 +4149,7 @@ providers, allocation probes, or solver controls.
 
 ### HP-DRV-STAGE-TEST-01 — staged driver validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: none.
 
 Owner/canonical: staged driver workflow;
 [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md).
@@ -4145,14 +4181,16 @@ artifacts/readers, numerical or shell policy, RG/MWG/IDA, solvers, or Cr2.
 
 ### HP-DRV-INV-TEST-01 — terminal-region inventory validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: ignored-probe
+maintenance only.
 
 Owner/canonical: terminal-region inventory;
 [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md).
 
-Evidence: bounded PQS/WL base and supplemented inventory output,
-artifact/readback parity, required geometry/slab columns, and bounded-output
-checks. No dedicated committed fixture is owned by this ID.
+Probe/evidence: optional ignored
+`tmp/work/terminal_inventory_native_shell_index_probe.jl` and manager-log
+Pass 188. No committed test is owned, and this ID is not on the execution
+whitelist.
 
 ### HP-DRV-SHELLDD-FN-01 — terminal shellification due-diligence report
 
@@ -4181,14 +4219,15 @@ Hamiltonian or solver changes, and Cr2 workflow.
 
 ### HP-DRV-SHELLDD-TEST-01 — terminal shellification due-diligence validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: docs/evidence
+maintenance only.
 
 Owner/canonical: terminal due diligence;
 [terminal shellification due diligence](terminal_shellification_due_diligence.md).
 
-Evidence: bounded H2/H2+ producer/driver reports, rectangular-shell warning,
-system/axis/weight/dimension/shell-row inspection, bounded-output checks, and
-artifact/readback parity. No dedicated committed fixture is owned by this ID.
+Evidence owner: `terminal_shellification_due_diligence.md` and manager-log
+Passes 242 and 245. No committed test or maintained probe is owned, and this
+ID is not on the execution whitelist.
 
 ### HP-PQS-ASPECTSHELL-FN-01 — PQS aspect-aware source modes
 
@@ -4208,13 +4247,16 @@ realization, and reporting.
 
 ### HP-PQS-ASPECTSHELL-TEST-01 — aspect-source validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: ignored-probe
+maintenance only.
 
 Owner/canonical: PQS aspect-aware shell source policy;
 [PQS complete-shell aspect-aware source modes](pqs_complete_shell_aspect_source_modes.md).
 
-Evidence: bounded H2/H2+ noncubic retained-count, finite/symmetric
-artifact/readback, and due-diligence checks recorded in manager Pass 247.
+Probe/evidence: optional ignored `tmp/work/pqs_aspect_shell_validation.jl` and
+`tmp/work/h2plus_aspect_shell_completeness_replay.jl`, with manager-log
+Passes 247-248. No committed test is owned, and this ID is not on the execution
+whitelist.
 
 Non-goals: a new longitudinal-resolution policy, public inputs, WL policy,
 shell ownership, thin-slab/direct-core changes, artifacts, RG/MWG/IDA,
@@ -4281,7 +4323,7 @@ approved.
 
 ### HP-DRV-TEST-01 — driver workflow validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: none.
 
 Owner/canonical: canonical driver;
 [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md).
@@ -4328,7 +4370,7 @@ route reports/status payloads, artifact fields, or unsupported atom broadening.
 
 ### HP-DRV-ATOM-TEST-01 — base atom driver validation
 
-Lifecycle: completed validation contract. Permission: validation maintenance.
+Lifecycle: completed validation evidence. Permission: none.
 
 Owner/canonical: driver atom workflow;
 [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md).
@@ -4336,6 +4378,8 @@ Owner/canonical: driver atom workflow;
 Evidence: origin-centered H base artifact/readback and malformed origin,
 electron-count, size/spacing, and unsupported-input smokes. Supplemented atom
 validation remains owned by `HP-COMP-SUPPATOM-TEST-01`.
+
+No committed test or maintained probe is owned by this ID.
 
 ### HP-DRV-ATOM-CLEAN-01 — remove hidden atom `d` driver residue
 
@@ -4697,14 +4741,16 @@ Owner/canonical: homonuclear supplemented workflow;
 
 Source: no production source permission.
 
-Validation: standalone H2 facade gate, accepted H2/Be2 driver artifact
-readback, and optional ignored/user-run Cr2 stress after those gates pass.
+Validation: the standalone H2 facade gate in
+`test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`. Accepted H2/Be2
+driver artifact readback and optional user-run Cr2 stress remain evidence,
+not additional committed test ownership.
 
-Dependencies: `HP-R3U-TEST-01`, `HP-DRV-TEST-01`, and generic homonuclear
-input validation.
+Dependencies: `HP-R3U-TEST-01`, the committed nested H2 gate, and generic
+homonuclear input validation.
 
-Permission: maintain bounded H2/Be2 correctness checks and optional ignored
-generic stress evidence.
+Permission: maintain only the existing homonuclear H2 assertions in that
+committed file. New fixtures or broader geometry require separate authority.
 
 Non-goals: new committed tests or Cr2 fixtures, heteronuclear/general-geometry
 gates, solver runs, or artifact schema expansion.

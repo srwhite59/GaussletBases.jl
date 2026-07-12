@@ -100,6 +100,14 @@ not recover mapping controls from an artifact sidecar.
 No package export or source owner outside those surfaces is introduced by the
 `s_factor` contract.
 
+## Validation Ownership
+
+`HP-PQS-MAP-SFACTOR-TEST-01` owns only the existing `s_factor` assertions in
+`test/driver_public/cartesian_base_hamiltonian_runtests.jl`: omitted/default
+parity, nonunit mapping and provenance, invalid input, and facade behavior.
+Other accepted multicenter, artifact, and protected-recipe smokes are evidence,
+not additional committed test surfaces.
+
 ## Failure Behavior
 
 Nonfinite or nonpositive `s_factor` throws `ArgumentError`. One-center mapping

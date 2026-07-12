@@ -503,6 +503,12 @@ docs-only reconciliation. Historical, superseded, rejected, measurement-only,
 and completed-retirement IDs may remain documented in the registry without
 being source-authorized here.
 
+A validation/test ID belongs in this whitelist only when its registry entry
+names an exact committed or exact planned test path, or an explicit shared
+test owner plus path. One-time smokes and completed evidence grant no work.
+Ignored probes, reports, and docs/evidence maintenance remain outside this
+execution whitelist even when their historical ID stays in the registry.
+
 Cartesian Hamiltonian producer source work is currently authorized only for
 these approved design IDs:
 
@@ -538,17 +544,11 @@ these approved design IDs:
 - `HP-R1-ATOM-WIRE-01`
 - `HP-R1-ATOM-TEST-01`
 - `HP-ROUTE-RECIPE-FN-01`
-- `HP-ROUTE-RECIPE-TEST-01`
 - `HP-ROUTE-INV-FN-01`
-- `HP-ROUTE-INV-TEST-01`
 - `HP-RAW-SRCMODE-FN-01`
-- `HP-RAW-SRCMODE-TEST-01`
 - `HP-CONTRACT-VEC-FN-01`
-- `HP-CONTRACT-VEC-TEST-01`
 - `HP-ROUTE-STAGE-TYPE-FN-01`
-- `HP-ROUTE-STAGE-TYPE-TEST-01`
 - `HP-ROUTE-STAGE-CARRIER-FN-01`
-- `HP-ROUTE-STAGE-CARRIER-TEST-01`
 - `HP-WLTERM-FILE-01`
 - `HP-WLTERM-FN-01`
 - `HP-WLTERM-WIRE-01`
@@ -583,27 +583,20 @@ these approved design IDs:
 - `HP-RG-PROTECT-ADDREF-FN-01`
 - `HP-RG-PROTECT-ADDREF-TEST-01`
 - `HP-RG-PROTECT-INJECT-FN-01`
-- `HP-RG-PROTECT-INJECT-TEST-01`
 - `HP-RG-PROTECT-ONEBODY-FN-01`
-- `HP-RG-PROTECT-ONEBODY-TEST-01`
 - `HP-RG-PROTECT-ART-FN-01`
-- `HP-RG-PROTECT-ART-TEST-01`
 - `HP-RG-PROTECT-ARTLOC-FN-01`
-- `HP-RG-PROTECT-ARTLOC-TEST-01`
 - `HP-RG-PROTECT-EGOI-FN-01`
 - `HP-RG-PROTECT-EGOI-TEST-01`
 - `HP-RG-PROTECT-LADDER-BUNDLE-FN-01`
-- `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01`
 - `HP-RHO0-MIXH-GG-FN-01`
 - `HP-RHO0-MIXH-GG-TEST-01`
 - `HP-RHO0-MIXH-GAAA-FN-01`
 - `HP-RHO0-MIXH-GAAA-TEST-01`
 - `HP-RHO0-MIXH-FEXACT-FN-01`
-- `HP-RHO0-MIXH-FEXACT-TEST-01`
 - `HP-CGRB-FILE-01`
 - `HP-CGRB-FN-01`
 - `HP-CGRB-FN-02`
-- `HP-CGAI-FN-01`
 - `HP-CGRB-WIRE-01`
 - `HP-CGRB-TEST-01`
 - `HP-CGRB-NN-FILE-01`
@@ -617,29 +610,21 @@ these approved design IDs:
 - `HP-R3BASE-FN-01`
 - `HP-R3BASE-TEST-01`
 - `HP-R3BASE-DRV-WIRE-01`
-- `HP-R3BASE-DRV-TEST-01`
 - `HP-DRV-FILE-01`
 - `HP-DRV-FN-01`
-- `HP-DRV-TEST-01`
 - `HP-DRV-NEST-FN-01`
 - `HP-DRV-NEST-WIRE-01`
-- `HP-DRV-NEST-TEST-01`
 - `HP-DRV-ATOM-FN-01`
 - `HP-DRV-ATOM-WIRE-01`
-- `HP-DRV-ATOM-TEST-01`
 - `HP-DRV-ATOM-CLEAN-01`
 - `HP-R3U-ZDI-FN-01`
 - `HP-R3U-ZDI-WIRE-01`
 - `HP-R3U-ZDI-TEST-01`
 - `HP-DRV-STAGE-FN-01`
 - `HP-DRV-STAGE-WIRE-01`
-- `HP-DRV-STAGE-TEST-01`
 - `HP-DRV-INV-FN-01`
-- `HP-DRV-INV-TEST-01`
 - `HP-DRV-SHELLDD-FN-01`
-- `HP-DRV-SHELLDD-TEST-01`
 - `HP-PQS-ASPECTSHELL-FN-01`
-- `HP-PQS-ASPECTSHELL-TEST-01`
 - `HP-PQS-SHELLQ-OVERRIDE-FN-01`
 - `HP-PQS-SHELLQ-OVERRIDE-TEST-01`
 - `HP-HAM-MANIFEST-FN-01`
@@ -649,7 +634,6 @@ these approved design IDs:
 - `HP-NEST-ART-FN-01`
 - `HP-NEST-ART-TEST-01`
 - `HP-COMP-WLDIAT-FN-01`
-- `HP-COMP-WLDIAT-TEST-01`
 - `HP-COMP-BASEDIAT-FN-01`
 - `HP-COMP-BASEDIAT-TEST-01`
 - `HP-COMP-SUPPWL-FN-01`
@@ -663,32 +647,21 @@ these approved design IDs:
 - `HP-COMP-NSCORE-FN-01`
 - `HP-COMP-NSCORE-TEST-01`
 - `HP-COMP-SHELLGEOM-FN-01`
-- `HP-COMP-SHELLGEOM-TEST-01`
 - `HP-COMP-SHELLGEOM-DIAT-FN-01`
-- `HP-COMP-SHELLGEOM-DIAT-TEST-01`
 - `HP-COMP-THINSLAB-FN-01`
-- `HP-COMP-THINSLAB-TEST-01`
 - `HP-COMP-THINSLAB-META-FN-01`
-- `HP-COMP-THINSLAB-META-TEST-01`
 - `HP-COMP-FACEPROD-FN-01`
-- `HP-COMP-FACEPROD-TEST-01`
 - `HP-COMP-ANGBOX-FN-01`
-- `HP-COMP-ANGBOX-TEST-01`
 - `HP-MCOMX-FILE-01`
 - `HP-MCOMX-OBJ-01`
 - `HP-MCOMX-FN-01`
 - `HP-MCOMX-WIRE-01`
-- `HP-MCOMX-TEST-01`
 - `HP-MCOMX-TERM-FN-01`
-- `HP-MCOMX-TERM-TEST-01`
 - `HP-MCOMX-DRV-FN-01`
-- `HP-MCOMX-DRV-TEST-01`
 - `HP-COMP-WLNS-FN-01`
 - `HP-COMP-WLNS-TEST-01`
 - `HP-WLDIAT-COMPACT-FN-01`
-- `HP-WLDIAT-COMPACT-TEST-01`
 - `HP-WLDIAT-PARITY-FN-01`
-- `HP-WLDIAT-PARITY-TEST-01`
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
@@ -724,7 +697,9 @@ current public mapping-strength exception: optional positive expert
 `s_factor`, default `1.0`, with one-center
 `effective_s = s_factor * sqrt(Z * core_spacing)` and mapping provenance
 recording `mapping_s_factor`, `mapping_s_standard`, and
-`mapping_s_effective`. This does not revive public `d`, public
+`mapping_s_effective`. Test authority is limited to the existing assertions in
+`test/driver_public/cartesian_base_hamiltonian_runtests.jl`. This does not
+revive public `d`, public
 `parent_mapping_d`, public `parent_mapping_Z`, route-specific mapping controls,
 element defaults, automatic tuning, solver workflow, EGOI, rho0/P0, or
 protected-localized convention changes. If multicenter combined-invsqrt
@@ -966,8 +941,8 @@ Implemented Residual Gaussian source ownership is canonical in
   not an alternative or diagnostic option. This contract does not approve
   public/default workflow, artifact/schema changes, EGOI, ladder behavior,
   screened-reference work, solver/HF, or Cr2 production claims.
-- `HP-RG-PROTECT-ART-FN-01` and `HP-RG-PROTECT-ART-TEST-01` govern only the
-  implemented opt-in protected-localized Hamiltonian artifact contract in
+- `HP-RG-PROTECT-ART-FN-01` governs only the implemented opt-in
+  protected-localized Hamiltonian artifact contract in
   `docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_artifact.md`.
   Source ownership remains
   `src/cartesian_residual_gaussians/augmented_operators.jl` and
@@ -976,10 +951,11 @@ Implemented Residual Gaussian source ownership is canonical in
   behavior. This lane does not approve ordinary artifact changes,
   public/default workflow, driver/API/solver behavior, selection changes,
   EGOI, rho0 or screened-Hartree, alternative interaction transforms,
-  committed tests by default, or Cr2-specific production behavior.
-- `HP-RG-PROTECT-ARTLOC-FN-01` and
-  `HP-RG-PROTECT-ARTLOC-TEST-01` govern the implemented native-order locality
-  metadata in the same canonical artifact contract. Centers come from actual
+  committed tests by default, or Cr2-specific production behavior. Its test ID
+  is completed evidence with no continuing permission.
+- `HP-RG-PROTECT-ARTLOC-FN-01` governs the implemented native-order locality
+  metadata in the same canonical artifact contract. Its test ID is completed
+  evidence with no continuing permission. Centers come from actual
   `L`-basis position expectations; deterministic inverse z permutations are
   metadata only and never reorder canonical matrices or native ranges. This
   lane does not approve label-derived centers, new second-moment construction,
@@ -991,24 +967,26 @@ Implemented Residual Gaussian source ownership is canonical in
   but pending; the canonical contract is
   `docs/src/developer/designs/cartesian_hamiltonian_producer/retained_gto_egoi.md`.
   No protected retained-GTO helper or focused test is implemented in committed
-  source, and uncommitted `src/hamiltonian_corrections.jl` additions are not
-  authoritative. The only approved first target is owner-balanced retained
+  source; the only approved planned test path is
+  `test/nested/cartesian_retained_gto_egoi_runtests.jl`. Uncommitted
+  `src/hamiltonian_corrections.jl` additions are not authoritative. The only
+  approved first target is owner-balanced retained
   original `s1+s2`, local symmetric products with `AA-BB` Coulomb acceptance,
   the `M2` mask, and exactly zero disallowed/long-range `DeltaV`. This does not
   approve AB overlap products, `s3`/`p`/`d`, artifacts, public/solver workflow,
   rho0/screened-Hartree changes, or Cr2 production claims.
 - `HP-RG-PROTECT-LADDER-XFER-AUDIT-01` is completed historical
   measurement evidence.
-- `HP-RG-PROTECT-LADDER-BUNDLE-FN-01` and
-  `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` govern the implemented internal
-  opt-in facility in
+- `HP-RG-PROTECT-LADDER-BUNDLE-FN-01` governs the implemented internal opt-in
+  facility in
   `docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_ladder.md`.
   Transfers require shared parent lattice, identical supplement and Coulomb
   expansion, and use only `S_BA = <L_B|L_A>` with `C_B = S_BA*C_A`.
   Final self-overlaps are diagnostic only; evaluate transferred densities
   with target `H1_L` and target inherited-site `Vee_L`. Never use generalized
   overlap, source-Hamiltonian/`Vee` transforms, or interaction rotation.
-  Restarts are native order. The lane does not approve new representation
+  Restarts are native order. Its test ID is completed evidence with no
+  continuing permission. The lane does not approve new representation
   sidecars, solver/UHF continuation, EGOI, screened-Hartree/rho0 changes,
   public defaults, or Cr2 production claims.
 - `HP-RG-RHO0-GAL-AUDIT-01`, `HP-RHO0-REFDENS-AUDIT-01`,
@@ -1019,8 +997,10 @@ Implemented Residual Gaussian source ownership is canonical in
   They authorize no current source work.
 - `HP-RHO0-MIXH-GG-FN-01` / `HP-RHO0-MIXH-GG-TEST-01`,
   `HP-RHO0-MIXH-GAAA-FN-01` / `HP-RHO0-MIXH-GAAA-TEST-01`, and
-  `HP-RHO0-MIXH-FEXACT-FN-01` / `HP-RHO0-MIXH-FEXACT-TEST-01` remain
-  implemented neutral exact-Hartree authority. Their source ownership,
+  `HP-RHO0-MIXH-FEXACT-FN-01` remain implemented neutral exact-Hartree
+  authority. `HP-RHO0-MIXH-GAAA-TEST-01` owns only the shared committed
+  placed-`A-A` checks named in the registry. The FEXACT test ID is probe-only
+  completed evidence and is not on the execution whitelist. Source ownership,
   numerical contract, validation gates, and exclusions are canonical in
   `docs/src/developer/designs/cartesian_hamiltonian_producer/reference_hartree_numerics.md`.
   Correction-policy retirement does not retire these kernels or transforms.
@@ -1088,8 +1068,9 @@ Implemented neutral Cartesian Gaussian raw-block ownership is canonical in
 - Non-nuclear blocks are exact `G-A` and `A-A` overlap, kinetic, x/y/z, and
   x2/y2/z2 operators in deterministic supplement order. They do not own
   terminal `G-G` products or residual transforms.
-- `HP-CGAI-FN-01` remains unused optional authority: its proposed in-place
-  analytic-axis helper did not land and has no caller.
+- `HP-CGAI-FN-01` is a superseded, never-implemented proposal with no current
+  permission. Nuclear axis reuse belongs to `HP-CGRB-FN-02`; live allocating
+  generic axis helpers belong to the non-nuclear owner.
 - Retained Qiu-White atomic-reference, factor-term, hybrid-sidecar,
   dense-parent-probe, and CPB/provider helpers are live surfaces, not raw-block
   duplication approved for deletion.
@@ -1296,8 +1277,7 @@ Cartesian Hamiltonian producer driver. Its job is to prove the approved
 producer paths work together by producing a Hamiltonian artifact directly.
 
 Implemented under `HP-DRV-FILE-01`, `HP-DRV-FN-01`, `HP-DRV-STAGE-FN-01`,
-`HP-DRV-STAGE-WIRE-01`, `HP-DRV-STAGE-TEST-01`, `HP-DRV-INV-FN-01`,
-`HP-DRV-INV-TEST-01`, and `HP-DRV-TEST-01`:
+`HP-DRV-STAGE-WIRE-01`, and `HP-DRV-INV-FN-01`:
 
 - visible editable defaults near the top of the file;
 - optional trusted local Julia input file for project-specific defaults;
@@ -1327,8 +1307,8 @@ existing facade fields. The driver must not expose private route-stage
 choreography as a substitute for constructing public `system`, `basis`, and
 optional `supplement` objects.
 
-`HP-DRV-INV-FN-01` and `HP-DRV-INV-TEST-01` govern the implemented compact
-terminal-region / shellification inventory summary in the canonical driver
+`HP-DRV-INV-FN-01` governs the implemented compact terminal-region /
+shellification inventory summary in the canonical driver
 output. Approved files are `bin/cartesian_ham_builder.jl` and
 `src/cartesian_base_hamiltonian.jl`, with optional compact accessors in
 `src/pqs_source_box_route_driver_helpers.jl`,
@@ -1351,8 +1331,8 @@ terminal lowering, retained units, transform contracts, terminal realization,
 RG/MWG/IDA, Hamiltonian assembly, artifacts/readers, public exports, Cr2
 workflow, stage sequence, or driver inputs.
 
-`HP-DRV-SHELLDD-FN-01` and `HP-DRV-SHELLDD-TEST-01` govern the implemented
-standard terminal due-diligence report for Cartesian/PQS terminal bases,
+`HP-DRV-SHELLDD-FN-01` governs the implemented standard terminal due-diligence
+report for Cartesian/PQS terminal bases,
 as recorded in
 `docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_shellification_due_diligence.md`.
 The implementation extends
@@ -1382,8 +1362,8 @@ diagnostic only and are not residual integral weights, MWG weights, or proof of
 quadrature quality. Maintenance must remain one bounded report/table surface,
 not a new reporting subsystem.
 
-`HP-PQS-ASPECTSHELL-FN-01` and `HP-PQS-ASPECTSHELL-TEST-01`
-record the implemented aspect-aware source policy for z-axis diatomic PQS
+`HP-PQS-ASPECTSHELL-FN-01` records the implemented aspect-aware source policy
+for z-axis diatomic PQS
 shared complete shells. The terminal low-order route selects angular-band
 `(q,q,L)` dimensions after shellification and before lowering/retained/support
 records are frozen; multilayer realization and due diligence consume the same
@@ -1417,8 +1397,8 @@ switches, stop-after controls, diagnostics, route reports, or route-stage
 labels. Supplemented `nesting = :wl` is governed by `HP-COMP-SUPPWL-*` for the
 supported homonuclear z-axis diatomic composition cell; unsupported geometry or
 supplement combinations must still reject clearly.
-`HP-DRV-NEST-TEST-01` approves default `:pqs` validation plus one small base
-artifact/readback path with `nesting = :wl`, and no Cr2 run.
+`HP-DRV-NEST-TEST-01` is completed validation evidence with no continuing
+permission; it does not authorize a fixture or Cr2 run.
 
 The implemented producer shape is the 2 x 2 x 2 composition of geometry
 (`atom` or z-axis diatomic), `nesting` (`:pqs` or `:wl`), and supplement state
@@ -1427,8 +1407,8 @@ The implemented producer shape is the 2 x 2 x 2 composition of geometry
 All bounded cells use the shared producer. Do not add driver-level special
 cases or parallel Hamiltonian builders for geometry or nesting variants.
 
-`HP-COMP-WLDIAT-FN-01` and `HP-COMP-WLDIAT-TEST-01` implement the
-`Natom = 2`, `nesting = :wl`, `basisname = nothing` composition cell.
+`HP-COMP-WLDIAT-FN-01` implements the `Natom = 2`, `nesting = :wl`,
+`basisname = nothing` composition cell.
 Approved source files are
 `src/pqs_source_box_diatomic_complete_core_shell.jl`,
 `src/cartesian_terminal_shellification_geometry.jl`,
@@ -1489,8 +1469,8 @@ element defaults, separate atom/WL supplement paths, route/shellification or
 RG/MWG/IDA changes, new driver controls, artifact changes, solver/ECP work, or
 Cr2-specific workflow.
 
-`HP-COMP-SHELLGEOM-FN-01` and `HP-COMP-SHELLGEOM-TEST-01` govern the
-implemented common terminal shell decomposition in
+`HP-COMP-SHELLGEOM-FN-01` governs the implemented common terminal shell
+decomposition in
 `src/cartesian_shellification/terminal_geometry.jl` and narrow caller plumbing
 in `src/pqs_source_box_route_driver_helpers.jl`. Direct core regions, terminal
 shell regions, owned support rows, ordering, and coverage are common geometry
@@ -1503,9 +1483,8 @@ changes, WL boundary coefficient changes, artifact/manifest/reader changes,
 Hamiltonian/IDA/MWG/RG/raw-block changes, old WL materialization, committed
 tests/fixtures, or Cr2 workflow.
 
-`HP-COMP-SHELLGEOM-DIAT-FN-01` and
-`HP-COMP-SHELLGEOM-DIAT-TEST-01` implement the common z-axis diatomic
-shellifier entry. For a fixed public z-axis diatomic system,
+`HP-COMP-SHELLGEOM-DIAT-FN-01` implements the common z-axis diatomic shellifier
+entry. For a fixed public z-axis diatomic system,
 parent axes, public `ns`, direct core side, nuclear centers, and bond axis,
 PQS and WL must call the same common shellifier with the same first-step
 arguments. Central-gap/contact, shared-shell, and outer-mismatch ownership are
@@ -1518,9 +1497,9 @@ central-gap/contact algorithm, terminal lowering, retained units, PQS retained
 realization, WL boundary coefficients, route skeletons, artifacts, driver
 inputs, committed tests/fixtures, or Cr2 workflow.
 
-`HP-COMP-THINSLAB-FN-01` and `HP-COMP-THINSLAB-TEST-01` supersede the
-outer-mismatch-only `HP-COMP-OUTERMM-*` lane and implement one unified
-thin-slab stack compact lowering for z-axis diatomics. Source
+`HP-COMP-THINSLAB-FN-01` supersedes the outer-mismatch-only
+`HP-COMP-OUTERMM-*` lane and implements one unified thin-slab stack compact
+lowering for z-axis diatomics. Source
 files are `src/cartesian_terminal_lowering/selection.jl`,
 `src/cartesian_terminal_lowering/region_contracts.jl`,
 `src/cartesian_retained_units/lower_contract_units.jl`,
@@ -1548,8 +1527,8 @@ changes, RG/MWG/IDA changes, route skeleton redesign, broad terminal
 realization redesign, direct slab deletion, committed Cr2 fixtures/tests, or
 Cr2 workflow.
 
-`HP-COMP-THINSLAB-META-FN-01` and `HP-COMP-THINSLAB-META-TEST-01` implement
-the terminal-shellification metadata/scaffold inventory in
+`HP-COMP-THINSLAB-META-FN-01` implements the terminal-shellification
+metadata/scaffold inventory in
 `src/cartesian_terminal_shellification_geometry.jl`, with
 `src/pqs_source_box_route_driver_helpers.jl` and
 `src/pqs_source_box_diatomic_complete_core_shell.jl` allowed only in support
@@ -1564,8 +1543,8 @@ payloads, change shellification geometry, redesign route skeletons, add a new
 reporting framework, or reintroduce direct identity slab lowering under a new
 name. Direct core and atom-contact core identity mappings remain unchanged.
 
-`HP-COMP-FACEPROD-FN-01` and `HP-COMP-FACEPROD-TEST-01` implement the
-neutral `CartesianFinalBasisRealization` face-product terminal helper for
+`HP-COMP-FACEPROD-FN-01` implements the neutral
+`CartesianFinalBasisRealization` face-product terminal helper for
 compact thin-slab lowering and WL facet reuse. Approved source files are
 `src/cartesian_final_basis_realization/terminal_face_product_blocks.jl`,
 `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`,
@@ -1575,7 +1554,7 @@ The helper is private/module-internal, reuses `_nested_doside_1d(...)` and
 `_nested_face_product(...)`, supports normal axes `:x`, `:y`, and `:z`, one
 fixed normal-axis index or an ordered stack of fixed normal indices, and a
 caller-supplied retained count normally equal to public `ns`. WL facet terminal
-realization should use this neutral helper, and `HP-COMP-THINSLAB-*` may use it
+realization should use this neutral helper, and `HP-COMP-THINSLAB-FN-01` may use it
 for midpoint, outer-mismatch fallback, and angular z-extension slabs. This
 lane does not approve driver changes, public API/export, artifact/schema/
 reader/provenance changes, shellification changes, terminal lowering policy
@@ -1584,8 +1563,8 @@ changes, old high-order workflow revival, committed tests/fixtures, Cr2
 workflow, duplicate face-product assembly, PQS-specific thin-slab projection,
 or treating thin slabs as WL boundary strata for naming convenience.
 
-`HP-COMP-ANGBOX-FN-01` and `HP-COMP-ANGBOX-TEST-01` implement z-axis
-diatomic angular-balanced shellification in
+`HP-COMP-ANGBOX-FN-01` implements z-axis diatomic angular-balanced
+shellification in
 `src/cartesian_shellification/terminal_geometry.jl`, with narrow route-driver
 or complete-core-shell summary plumbing only if directly required. The
 ordinary index-layer shared-shell body remains valid, but when shared-shell
@@ -1596,15 +1575,16 @@ stack, bond-axis, angular-rule, margin, transverse-scale, and extension-size
 metadata. The same thin-slab concept applies to midpoint slabs, planned
 non-boundary angular z-extension slabs, planned boundary angular z-extension
 slabs, and unexpected outer-mismatch fallback slabs. Planned z-extension
-stacks lower through the implemented `HP-COMP-THINSLAB-*` path;
+stacks lower through the implemented `HP-COMP-THINSLAB-FN-01` path;
 real shells remain route-specific after common shellification. This lane does
 not approve driver changes, artifact/schema/reader/provenance changes,
 terminal lowering, retained units, transform contracts, terminal realization,
 RG/MWG/IDA/Hamiltonian/raw-block changes, route-family-specific PQS/WL
 geometry, committed tests/fixtures, Cr2-specific branches, or Cr2 workflow.
 
-`HP-MCOMX-*` records the implemented opt-in mapped-COMX facility governed
-by
+`HP-MCOMX-FILE-01`, `HP-MCOMX-OBJ-01`, `HP-MCOMX-FN-01`,
+`HP-MCOMX-WIRE-01`, `HP-MCOMX-TERM-FN-01`, and `HP-MCOMX-DRV-FN-01` record the
+implemented opt-in mapped-COMX facility governed by
 `docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md`.
 The existing doside seam constructs fixed protected-P2 mapped-Chebyshev
 enrichment in normalized local coordinates, existing physical-coordinate COMX
@@ -1616,6 +1596,8 @@ mapped-COMX remains PQS-only. No second COMX path, numerical
 route/report payload, artifact, Hamiltonian/RG/MWG/IDA/EGOI/screening/solver
 change, or Cr2 production claim is authorized. The bounded He `ns=5` result
 blocks physics-default promotion pending later `ns=6/7` evidence.
+The three `HP-MCOMX-*-TEST-01` IDs are completed evidence records with no
+continuing test permission and are not on the execution whitelist.
 `HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` implement
 the White-Lindsey terminal-basis seam for `nesting = :wl`. Source owners are
 `src/pqs_source_box_route_driver_helpers.jl`,
@@ -1630,8 +1612,10 @@ This does not approve old WL H1/H1+J materialization adaptation, route
 skeleton changes, shellification or retained-selection changes, raw-block
 changes, Residual Gaussian/MWG/IDA changes, supplemented WL behavior,
 diagnostics/status/report expansion, artifact schema changes, public API/export
-changes, or Cr2 workflow. `HP-WLTERM-TEST-01` maintains the accepted bounded
-PQS parity and WL atom/H2 artifact/readback gates.
+changes, or Cr2 workflow. `HP-WLTERM-TEST-01` inherits only the one-center WL
+smoke in `test/driver_public/cartesian_base_hamiltonian_runtests.jl`, shared
+with `HP-PQS-COULOMB-ACCURACY-TEST-01`; broader WL evidence is not committed
+test authority.
 
 `HP-DRV-STAGE-FN-01` implements the non-exported, non-underscored
 driver-facing staged producer surface. Source files are
@@ -1691,9 +1675,8 @@ supported supplemented one-center atoms are governed by
 `HP-COMP-SUPPATOM-*`. They also do not approve translated atoms, element
 lookup/default tables, ECP, solver workflow, artifact schema changes, public
 API/export changes, route diagnostics, metadata/status/report fields,
-committed atom fixtures, or committed tests. `HP-DRV-ATOM-TEST-01` approves
-only H atom driver artifact write/readback and optional ignored negative
-checks.
+committed atom fixtures, or committed tests. `HP-DRV-ATOM-TEST-01` is
+completed validation evidence with no continuing permission.
 
 `HP-DRV-ATOM-CLEAN-01` preserves the implemented removal of hidden
 `d = vars[:core_spacing]` from one-center atom basis construction in

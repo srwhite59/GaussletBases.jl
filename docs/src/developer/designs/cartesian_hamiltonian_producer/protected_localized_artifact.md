@@ -1,8 +1,8 @@
 # Protected-Localized Artifact Contract
 
 Status: implemented, internal, and opt-in under
-`HP-RG-PROTECT-ART-FN-01` / `HP-RG-PROTECT-ART-TEST-01` and
-`HP-RG-PROTECT-ARTLOC-FN-01` / `HP-RG-PROTECT-ARTLOC-TEST-01`.
+`HP-RG-PROTECT-ART-FN-01` and `HP-RG-PROTECT-ARTLOC-FN-01`. Both artifact test
+IDs are completed evidence with no continuing permission.
 
 This page is the canonical persistence and row-locality contract for the
 protected-localized Hamiltonian. The numerical construction of the protected

@@ -2,7 +2,9 @@
 
 Status: implemented canonical contract for the human-facing Cartesian
 Hamiltonian driver and its non-exported staged producer calls. Registry entries
-own the lifecycle and source permissions for the `HP-DRV-*` IDs.
+own the lifecycle and source permissions for the `HP-DRV-*` IDs. Driver
+validation IDs without committed fixtures are completed evidence or explicitly
+named probe records, not continuing test authority.
 
 ## Boundary
 

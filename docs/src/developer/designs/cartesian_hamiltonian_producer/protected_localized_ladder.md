@@ -6,8 +6,8 @@ Lifecycle:
   measurement;
 - `HP-RG-PROTECT-LADDER-BUNDLE-FN-01` is an implemented internal opt-in
   facility;
-- `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` is the implemented validation
-  contract.
+- `HP-RG-PROTECT-LADDER-BUNDLE-TEST-01` is completed acceptance evidence with
+  no continuing permission.
 
 This page is the canonical contract for protected-localized ladder transfer
 and bundle persistence. The registry owns lifecycle, permission, and source

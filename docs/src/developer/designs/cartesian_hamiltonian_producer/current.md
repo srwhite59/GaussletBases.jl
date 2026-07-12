@@ -57,7 +57,7 @@ claim.
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |
-| Documentation architecture | Non-authoritative registry/whitelist shadow generated and checked by Documenter | Review whether a normalized lifecycle/permission taxonomy is warranted; any authority cutover remains a separate atomic design decision |
+| Documentation architecture | The 232-record lifecycle/grant/path audit is complete; evidence-only and probe-only IDs are separated from exact committed/planned test authority | Build a normalized non-authoritative candidate-v2 metadata file with semantic checks; any authority cutover remains a separate atomic design decision |
 
 Other approved IDs may remain actionable even when not listed here. Read the
 assigned registry entry. Completed retirement, superseded, rejected, and
@@ -94,12 +94,12 @@ energy claim.
 4. **Protected atoms and counterpoise.** One-center protected compactness,
    separated kinetic/unit-nuclear persistence, and counterpoise sidecars remain
    separate future designs.
-5. **Authority cutover remains unapproved.** The generated shadow records
-   normalized registry metadata and text fingerprints plus raw whitelist
-   membership, and the docs build rejects drift. It intentionally does not
-   classify effective authorization or infer callers, tests, dependencies, or
-   lifecycle enums. Any normalized taxonomy, generated authority view, or
-   cutover requires a separate design decision.
+5. **Authority cutover remains unapproved.** The prose authority now requires
+   exact committed/planned test paths or explicit shared ownership; one-time
+   evidence and ignored probes are outside the execution whitelist. The
+   generated shadow still records raw text and membership only. Candidate-v2
+   normalized metadata and semantic checks are the next docs lane; generated
+   authority views or cutover require a later atomic decision.
 
 ## Non-Negotiable Boundaries
 

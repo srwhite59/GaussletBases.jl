@@ -1,8 +1,8 @@
 # PQS Complete-Shell Aspect-Aware Source Modes
 
 Status: implemented internal construction policy under
-`HP-PQS-ASPECTSHELL-FN-01` and
-`HP-PQS-ASPECTSHELL-TEST-01`.
+`HP-PQS-ASPECTSHELL-FN-01`. The paired test ID is probe-only completed
+evidence and is not on the execution whitelist.
 
 This page is the canonical contract for aspect-aware source dimensions of
 shared complete shells in bond-aligned diatomic PQS construction. The registry

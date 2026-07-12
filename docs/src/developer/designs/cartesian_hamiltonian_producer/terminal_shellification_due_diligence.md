@@ -1,9 +1,10 @@
 # Terminal Shellification Due Diligence
 
 Status: implemented producer/driver reporting under
-`HP-DRV-SHELLDD-FN-01` and `HP-DRV-SHELLDD-TEST-01`. The registry owns exact
-ID lifecycle and source permission. This contract changes no numerical
-construction, source policy, retained policy, or artifact schema.
+`HP-DRV-SHELLDD-FN-01`. `HP-DRV-SHELLDD-TEST-01` is completed docs/evidence
+maintenance with no committed test or execution-whitelist entry. The registry
+owns exact ID lifecycle and source permission. This contract changes no
+numerical construction, source policy, retained policy, or artifact schema.
 
 ## Role
 

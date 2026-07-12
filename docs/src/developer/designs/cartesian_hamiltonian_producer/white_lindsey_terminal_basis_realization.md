@@ -1,10 +1,11 @@
 # White-Lindsey Terminal Basis Realization
 
-Status: implemented under `HP-WLTERM-*`, `HP-COMP-WLDIAT-*`,
-`HP-WLDIAT-COMPACT-*`, and `HP-WLDIAT-PARITY-*`. The registry owns exact ID
-lifecycle and file permission. This page owns the current numerical boundary
-for realizing native White-Lindsey retained units as the terminal basis used
-by the shared Hamiltonian producer.
+Status: the four White-Lindsey source families are implemented. Only
+`HP-WLTERM-TEST-01` retains narrow inherited committed-test maintenance; the
+diatomic, compact, and parity test IDs are probe-only completed evidence. The
+registry owns exact ID lifecycle and file permission. This page owns the
+current numerical boundary for realizing native White-Lindsey retained units
+as the terminal basis used by the shared Hamiltonian producer.
 
 ## Input And Output Boundary
 

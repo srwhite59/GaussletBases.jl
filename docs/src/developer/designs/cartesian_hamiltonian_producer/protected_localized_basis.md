@@ -3,8 +3,9 @@
 Status: implemented internal, default-off subsystem. The compact-main design
 rationale is recorded under `HP-RG-PROTECT-INJECT-DESIGN-01`; staged geometry
 and exact one-body source ownership are implemented under
-`HP-RG-PROTECT-INJECT-FN-01` / `HP-RG-PROTECT-INJECT-TEST-01` and
-`HP-RG-PROTECT-ONEBODY-FN-01` / `HP-RG-PROTECT-ONEBODY-TEST-01`. The durable
+`HP-RG-PROTECT-INJECT-FN-01` and `HP-RG-PROTECT-ONEBODY-FN-01`. Their test IDs
+are probe/report-only completed evidence and are not on the execution
+whitelist. The durable
 interaction decision comes from completed audit
 `HP-RG-PROTECT-VEE-AUDIT-01`.
 

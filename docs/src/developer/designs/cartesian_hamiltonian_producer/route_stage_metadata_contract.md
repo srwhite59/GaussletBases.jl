@@ -1,8 +1,7 @@
 # Route/Stage Metadata Contract
 
-Status: implemented under `HP-ROUTE-INV-*`, `HP-RAW-SRCMODE-*`,
-`HP-CONTRACT-VEC-*`, `HP-ROUTE-STAGE-TYPE-*`, and
-`HP-ROUTE-STAGE-CARRIER-*`.
+Status: the five route/stage source IDs are implemented. Their paired test IDs
+are completed implementation-time evidence with no continuing permission.
 
 This page is the canonical current contract for internal route/stage inventory,
 plan, and carrier semantics established by those cleanup families. The

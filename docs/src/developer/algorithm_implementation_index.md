@@ -105,7 +105,7 @@ Key docs:
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_nuclear.md`
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/registry.md`,
   `HP-CGRB-FILE-01`, `HP-CGRB-FN-01`, `HP-CGRB-FN-02`,
-  `HP-CGAI-FN-01`, `HP-CGRB-WIRE-01`, `HP-CGRB-TEST-01`
+  `HP-CGRB-WIRE-01`, `HP-CGRB-TEST-01`
 
 Source anchors:
 - **active implementation surface after extraction**:

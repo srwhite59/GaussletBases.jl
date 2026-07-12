@@ -6,8 +6,9 @@ owns exact ID lifecycle and source permission. The implemented source IDs are
 `HP-COMP-SHELLGEOM-FN-01`, `HP-COMP-SHELLGEOM-DIAT-FN-01`,
 `HP-COMP-ANGBOX-FN-01`, `HP-COMP-FACEPROD-FN-01`,
 `HP-COMP-THINSLAB-FN-01`, and `HP-COMP-THINSLAB-META-FN-01`; their test IDs
-are completed validation evidence. `HP-COMP-OUTERMM-*` is superseded with no
-source permission and must not be restored as a separate path.
+are completed validation evidence with no continuing permission.
+`HP-COMP-OUTERMM-*` is superseded with no source permission and must not be
+restored as a separate path.
 
 This page owns the current geometry and compact-slab contract. It does not own
 PQS complete-shell source dimensions, White-Lindsey retained products, public

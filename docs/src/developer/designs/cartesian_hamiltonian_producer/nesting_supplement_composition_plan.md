@@ -1,8 +1,9 @@
 # Nesting/Supplement Composition
 
-Status: implemented under `HP-ROUTE-RECIPE-*`, `HP-COMP-BASEDIAT-*`,
+Status: implemented under `HP-ROUTE-RECIPE-FN-01`, `HP-COMP-BASEDIAT-*`,
 `HP-COMP-SUPPWL-*`, `HP-COMP-SUPPATOM-*`, `HP-COMP-NS-*`, and
-`HP-COMP-WLNS-*`.
+`HP-COMP-WLNS-*`. `HP-ROUTE-RECIPE-TEST-01` is completed evidence with no
+continuing permission.
 
 This page is the canonical contract for the supported geometry, nesting, and
 supplement composition and for family-selective route recipes. The registry
