@@ -293,10 +293,13 @@ generated raw-text [registry/whitelist shadow](registry_whitelist_shadow.toml),
 the self-contained schema-v3 semantic
 [authority candidate](authority_candidate.toml), and the exact
 [transition snapshot](authority_transition_snapshot.toml) binding candidate
-bytes to current prose authority. Candidate-derived registry and whitelist
-previews are deterministic rehearsal output only. All remain non-authoritative
-and authorization-incomplete; they do not grant work or replace `AGENTS.md`,
-`registry.md`, or a canonical contract.
+bytes to current prose authority. Transition-bound manifests also record the
+exact prose files, marked block, candidate/checkers, Git HEAD, and semantic
+review status. Candidate-derived registry and warned whitelist previews are
+deterministic rehearsal output only. All remain non-authoritative and
+authorization-incomplete; they do not grant work or replace `AGENTS.md`,
+`registry.md`, or a canonical contract. Automated transition parity is
+structural; semantic parity requires the recorded independent review.
 
 Completed implementation plans remain as short historical pointers only where
 their names are still useful for old links. Completed retirement records remain

@@ -59,6 +59,7 @@ const DOCUMENT_KINDS = Set(["canonical", "history", "evidence"])
 const PATH_KINDS = Set(["source", "test", "tool", "driver", "docs", "measurement"])
 const PATH_STATES = Set(["existing", "planned", "optional_local"])
 const EVIDENCE_KINDS = Set(["git_commit", "manager_pass", "repo_path", "external_path"])
+const SAFE_REPO_PATH = r"^[A-Za-z0-9._/-]+$"
 const EXECUTION_GRANTS = Set(["implementation", "maintenance", "preservation", "retirement"])
 const EXECUTION_SURFACES = Set(["source", "tests", "tools", "artifacts", "driver"])
 const CLOSED_LIFECYCLES = Set(["superseded", "retired", "rejected"])
@@ -157,6 +158,7 @@ function safe_repo_path(path; allow_missing = false, root = ROOT, root_real = RO
     normalized = normpath(String(path))
     normalized == path || return nothing
     (normalized == ".." || startswith(normalized, "../")) && return nothing
+    occursin(SAFE_REPO_PATH, normalized) || return nothing
     _has_glob_or_ellipsis(normalized) && return nothing
     absolute = joinpath(root, normalized)
     _contains_symlink(absolute, root) && return nothing
@@ -566,6 +568,17 @@ function render_whitelist_block(snapshot = load_snapshot())
     return String(take!(io))
 end
 
+function render_whitelist_preview(snapshot = load_snapshot())
+    io = IOBuffer()
+    println(io, "# Cartesian Authority Whitelist Preview")
+    println(io)
+    print(io, REHEARSAL_WARNING)
+    println(io, "> Candidate SHA-256: `$(snapshot.sha256)`.")
+    println(io)
+    print(io, render_whitelist_block(snapshot))
+    return String(take!(io))
+end
+
 function render_registry_preview(snapshot = load_snapshot())
     io = IOBuffer()
     println(io, "# Cartesian Hamiltonian Producer Authority Registry Preview")
@@ -710,12 +723,13 @@ function _atomic_write(path, content; parent_real)
     return path
 end
 
-function write_rehearsal(output_dir, snapshot = load_snapshot())
+function write_rehearsal(output_dir, snapshot = load_snapshot(); transition_bindings)
+    isempty(transition_bindings) && error("transition-bound rehearsal metadata is required")
     checker_text = read(@__FILE__, String)
     checker_sha256 = digest(checker_text)
     check_candidate(snapshot)
     registry = render_registry_preview(snapshot)
-    whitelist = render_whitelist_block(snapshot)
+    whitelist = render_whitelist_preview(snapshot)
     combined = render_rehearsal(snapshot)
     assert_render_structure(snapshot, registry, whitelist)
     assert_snapshot_unchanged(snapshot, Set(document["path"] for document in snapshot.data["documents"]))
@@ -735,12 +749,13 @@ function write_rehearsal(output_dir, snapshot = load_snapshot())
         assert_snapshot_unchanged(snapshot, Set(document["path"] for document in snapshot.data["documents"]))
         read(@__FILE__, String) == checker_text || error("candidate checker changed during rendering")
         manifest = Dict{String,Any}(
-            "artifact_kind" => "cartesian_authority_candidate_rehearsal",
+            "artifact_kind" => "cartesian_authority_transition_rehearsal",
             "authoritative" => false,
             "authorization_complete" => false,
             "candidate_sha256" => snapshot.sha256,
             "checker_sha256" => checker_sha256,
             "document_inventory_sha256" => digest(serialized(Dict("documents" => snapshot.data["documents"]))),
+            "transition_bindings" => transition_bindings,
             "outputs" => Dict(name => digest(content) for (name, content) in outputs),
             "record_count" => length(snapshot.data["records"]),
             "execution_whitelist_count" => length(execution_ids(snapshot.data)),
@@ -782,6 +797,11 @@ function self_test()
     _expect_failure(broken, "is invalid")
 
     broken = deepcopy(snapshot.data)
+    measurement_record = first(record for record in broken["records"] if record["grant"] == "measurement")
+    measurement_record["paths"][end]["path"] = "tmp/work/unsafe).jl"
+    _expect_failure(broken, "is invalid")
+
+    broken = deepcopy(snapshot.data)
     broken["records"][1]["document_refs"][1]["heading"] = "Missing Heading"
     _expect_failure(broken, "heading is absent or nonunique")
 
@@ -817,9 +837,13 @@ function self_test()
 
     registry = render_registry_preview(snapshot)
     whitelist = render_whitelist_block(snapshot)
+    whitelist_preview = render_whitelist_preview(snapshot)
     registry == render_registry_preview(snapshot) || error("registry render changed")
     whitelist == render_whitelist_block(snapshot) || error("whitelist render changed")
     assert_render_structure(snapshot, registry, whitelist)
+    assert_render_structure(snapshot, registry, whitelist_preview)
+    occursin("Generated rehearsal only", whitelist_preview) ||
+        error("standalone whitelist preview lacks rehearsal warning")
 
     mktempdir() do directory
         symlink(ROOT, joinpath(directory, "repo-link"))
@@ -872,10 +896,8 @@ function main(args = ARGS)
         output = render_rehearsal(snapshot)
         assert_snapshot_unchanged(snapshot, Set(document["path"] for document in snapshot.data["documents"]))
         print(output)
-    elseif length(args) == 2 && args[1] == "--write-rehearsal"
-        println(write_rehearsal(args[2]))
     else
-        error("usage: julia --project=docs docs/check_cartesian_authority_candidate.jl [--check|--self-test|--rehearse|--write-rehearsal DIR]")
+        error("usage: julia --project=docs docs/check_cartesian_authority_candidate.jl [--check|--self-test|--rehearse]")
     end
 end
 

@@ -57,7 +57,7 @@ claim.
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |
-| Documentation architecture | The second independent rehearsal reviewed all 232 records and correctly returned no-go: 19 candidate records and transition tooling need reconciliation | Reconcile only the recorded metadata/tooling gaps, regenerate, and repeat the independent rehearsal; no generated authority view or cutover is approved |
+| Documentation architecture | The reviewed candidate discrepancies, one follow-up live dependency, and pre-rehearsal tooling gaps are reconciled in a transition-bound candidate that still derives 150 execution IDs | Repeat the independent semantic/tooling rehearsal; no generated authority view or cutover is approved |
 
 Other approved IDs may remain actionable even when not listed here. Read the
 assigned registry entry. Completed retirement, superseded, rejected, and
@@ -94,15 +94,14 @@ energy claim.
 4. **Protected atoms and counterpoise.** One-center protected compactness,
    separated kinetic/unit-nuclear persistence, and counterpoise sidecars remain
    separate future designs.
-5. **Authority cutover remains unapproved.** The second independent rehearsal
-   covered all 232 candidate records and the transition tooling. It preserved
-   the exact 150-ID execution set but found 19 record-level ownership,
-   dependency, role, or evidence discrepancies plus tooling gaps around
-   full-document whitelist visibility, rehearsal binding, generated-link
-   safety, and preview warnings. The durable
-   [review result](reviews/authority_transition_rehearsal_2026-07-12.md) owns
-   the reconciliation list. Correct and independently rehearse it before any
-   atomic cutover decision.
+5. **Authority cutover remains unapproved.** The no-go findings in the durable
+   [review result](reviews/authority_transition_rehearsal_2026-07-12.md) are
+   reconciled: owned paths no longer absorb dependencies, missing paths and
+   dependency records are restored, full-document whitelist context is
+   checked, generated links are conservative, standalone previews are warned,
+   and manifests bind candidate, prose, checker, snapshot, and Git inputs. The
+   transition snapshot still says semantic parity requires manual review and
+   the reconciled candidate is pending another independent rehearsal.
 
 ## Non-Negotiable Boundaries
 

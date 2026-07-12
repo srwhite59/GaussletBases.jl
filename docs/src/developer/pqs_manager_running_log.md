@@ -29073,3 +29073,41 @@ Goal advancement / guardrail:
   treat transition-snapshot regeneration as review, convert dependency paths
   into owned surfaces, or reuse the external preview writer as an atomic
   authority installer.
+
+## Cartesian Hamiltonian Producer Pass 393 - Reconcile And Bind The Authority Candidate
+
+Commit(s):
+- this commit - reconcile the reviewed candidate metadata and make rehearsals
+  bind one captured transition state.
+
+Summary:
+- Corrected all 19 Pass 392 candidate discrepancies and one follow-up live
+  dependency. Owned paths now exclude consumer dependencies, missing exact
+  source/test surfaces and dependency IDs are restored, historical/canonical
+  document roles and evidence are corrected, and supersession remains explicit
+  scope rather than a false dependency edge. Candidate digest is
+  `5af669e1517ccbb3a8cc35589541660320f7b6c74878dcaba64c758711bf86fd`.
+- Hardened path/link and full-document whitelist parsing, warned standalone
+  previews, and moved CI rehearsal generation behind the transition checker.
+  The writer now captures candidate, transition snapshot, registry, `AGENTS.md`,
+  checkers, and Git HEAD before validation; derives parity from that exact byte
+  set; rejects candidate/snapshot mismatch; and rechecks every input after
+  rendering.
+- The candidate and transition snapshot remain non-authoritative and
+  authorization-incomplete. Their semantic status remains
+  `pending_independent_rehearsal`; the execution set is unchanged at 150 IDs.
+
+Validation / evidence:
+- Candidate, shadow, and transition `--check` and negative `--self-test` gates
+  passed. Two transition-bound `/private/tmp` rehearsals were byte-identical.
+  Independent reviewers confirmed the metadata reconciliation and stress-tested
+  candidate mismatch plus post-capture registry mutation. Local Documenter and
+  `git diff --check` passed. The focused docs group remains `55/58`; only the
+  same three pre-existing stale prose assertions fail.
+
+Goal advancement / guardrail:
+- MT5 now has a reconciled, structurally bound rehearsal candidate ready for a
+  new independent semantic review. It does not authorize cutover. The temporary
+  net growth is concentrated in fail-closed transition tooling; do not expand
+  this dual system further before the next rehearsal decides whether an atomic
+  cutover can retire the shadow and transition machinery.

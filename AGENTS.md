@@ -506,8 +506,8 @@ being source-authorized here.
 The checked `registry_whitelist_shadow.toml`, self-contained
 `authority_candidate.toml`, and `authority_transition_snapshot.toml` files are
 non-authoritative transition metadata. Candidate-derived registry/whitelist
-rehearsals do not grant work or replace this marked whitelist, `registry.md`,
-or the linked canonical contract.
+rehearsals are warned and transition-bound, but do not grant work or replace
+this marked whitelist, `registry.md`, or the linked canonical contract.
 
 A validation/test ID belongs in this whitelist only when its registry entry
 names an exact committed or exact planned test path, or an explicit shared

@@ -1356,6 +1356,18 @@ title = "visible physics-stage producer surface"
     kind = "source"
     path = "src/cartesian_base_hamiltonian.jl"
     state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/pqs_terminal_one_body.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/pqs_source_box_low_order_materialization.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 evidence_refs = []
@@ -1777,6 +1789,10 @@ title = "mapped-COMX source ownership"
     kind = "source"
     path = "src/cartesian_nested_faces.jl"
     state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 evidence_refs = []
@@ -1999,7 +2015,7 @@ title = "generic build-result wrapper — rejected"
 
     [[records.document_refs]]
     heading = "Terminal Basis And Base Assembly"
-    kind = "history"
+    kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
 [[records]]
 dependency_ids = []
@@ -2062,7 +2078,7 @@ title = "aspect-source validation"
     path = "tmp/work/pqs_aspect_shell_validation.jl"
     state = "optional_local"
 [[records]]
-dependency_ids = []
+dependency_ids = ["HP-RHO0-MIXH-GAAA-FN-01", "HP-RHO0-MIXH-GG-FN-01"]
 evidence_refs = []
 grant = "maintenance"
 id = "HP-PQS-ATOMREF-PACKET-FN-01"
@@ -2331,6 +2347,18 @@ title = "internal screened-Hartree correction"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartree_correction_assembly.md"
 
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_reference_density/CartesianReferenceDensity.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_reference_density/atomic_hf_reference_packets.jl"
+    state = "existing"
     [[records.paths]]
     kind = "source"
     path = "src/cartesian_reference_density/screened_hartree_correction.jl"
@@ -2860,10 +2888,6 @@ title = "same-construction base K/U reuse"
     kind = "source"
     path = "src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl"
     state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_protected_ladder_bundle.jl"
-    state = "existing"
 [[records]]
 dependency_ids = []
 evidence_refs = []
@@ -2942,21 +2966,18 @@ title = "remaining exact-operator allocation audit"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_remaining_exact_operator_allocation_audit.md"
 [[records]]
 dependency_ids = []
+evidence_refs = []
 grant = "maintenance"
 id = "HP-R3U-FILE-01"
 lifecycle = "implemented"
 scope = "maintain the non-exported facade in the existing source and test files."
-surfaces = ["source"]
+surfaces = ["source", "tests"]
 title = "supplemented workflow source and validation files"
 
     [[records.document_refs]]
     heading = "R3 Usability Supplemented Workflow"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_usability_supplemented_workflow.md"
-
-    [[records.evidence_refs]]
-    kind = "repo_path"
-    value = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
 
     [[records.paths]]
     kind = "source"
@@ -2965,6 +2986,10 @@ title = "supplemented workflow source and validation files"
     [[records.paths]]
     kind = "source"
     path = "src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-R3U-ZDI-FN-01"]
@@ -3212,18 +3237,6 @@ title = "external GTO orbital import"
     kind = "source"
     path = "src/cartesian_external_gto_import.jl"
     state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_gto_probes.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_protected_ladder_bundle.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_representation_transfer.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-REP-XGTO-IMPORT-FN-01"]
 evidence_refs = []
@@ -3265,14 +3278,6 @@ title = "protected external-GTO representation sidecar"
     kind = "source"
     path = "src/cartesian_external_gto_import.jl"
     state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_gto_probes.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_protected_ladder_bundle.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-REP-XGTO-PROTECT-SIDECAR-FN-01"]
 evidence_refs = []
@@ -3305,7 +3310,7 @@ title = "terminal basis build result — rejected"
 
     [[records.document_refs]]
     heading = "Terminal Basis And Base Assembly"
-    kind = "history"
+    kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
 [[records]]
 dependency_ids = []
@@ -3466,7 +3471,7 @@ title = "production residual cutoff tightening"
     path = "src/cartesian_residual_gaussians/residual_basis.jl"
     state = "existing"
 [[records]]
-dependency_ids = []
+dependency_ids = ["HP-RG-CUTOFF-FN-01"]
 evidence_refs = []
 grant = "none"
 id = "HP-RG-CUTOFF-TEST-01"
@@ -3481,7 +3486,7 @@ title = "residual cutoff/tolerance validation"
     kind = "history"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
 [[records]]
-dependency_ids = []
+dependency_ids = ["HP-RG-CUTOFF-FN-02"]
 evidence_refs = []
 grant = "maintenance"
 id = "HP-RG-CUTOFF-TEST-02"
@@ -3549,7 +3554,7 @@ title = "residual Gaussian basis construction"
 
     [[records.evidence_refs]]
     kind = "repo_path"
-    value = "test/misc/runtests.jl"
+    value = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
 
     [[records.paths]]
     kind = "source"
@@ -3613,13 +3618,13 @@ title = "residual IDA interaction assembly"
     path = "src/cartesian_residual_gaussians/mwg_interaction.jl"
     state = "existing"
 [[records]]
-dependency_ids = []
+dependency_ids = ["HP-RG-ORTHO-FN-01"]
 evidence_refs = []
 grant = "none"
 id = "HP-RG-IDTOL-FN-01"
 lifecycle = "superseded"
 paths = []
-scope = "residual final-identity tolerance default."
+scope = "historical `identity_atol = 1e-8` transition, superseded by `HP-RG-CUTOFF-FN-01`; no execution authority."
 surfaces = []
 title = "residual final-identity tolerance default"
 
@@ -3628,7 +3633,7 @@ title = "residual final-identity tolerance default"
     kind = "history"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
 [[records]]
-dependency_ids = []
+dependency_ids = ["HP-RG-IDTOL-FN-01"]
 evidence_refs = []
 grant = "none"
 id = "HP-RG-IDTOL-TEST-01"
@@ -3747,7 +3752,7 @@ title = "numerical-complete residual validation"
     path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
     state = "existing"
 [[records]]
-dependency_ids = []
+dependency_ids = ["HP-RG-FILE-01"]
 evidence_refs = []
 grant = "maintenance"
 id = "HP-RG-OBJ-01"
@@ -3846,7 +3851,7 @@ title = "residual final-orthogonality robustness"
     path = "src/cartesian_residual_gaussians/residual_basis.jl"
     state = "existing"
 [[records]]
-dependency_ids = []
+dependency_ids = ["HP-RG-ORTHO-FN-01"]
 evidence_refs = []
 grant = "maintenance"
 id = "HP-RG-ORTHO-TEST-01"
@@ -4326,7 +4331,7 @@ title = "Residual Gaussian endpoint validation"
     path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
     state = "existing"
 [[records]]
-dependency_ids = []
+dependency_ids = ["HP-RG-FN-01", "HP-RG-FN-02", "HP-RG-FN-03", "HP-RG-FN-04"]
 evidence_refs = []
 grant = "maintenance"
 id = "HP-RG-WIRE-01"
@@ -5017,6 +5022,10 @@ title = "WL terminal realization file"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_terminal_basis_realization.md"
 
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl"
+    state = "existing"
     [[records.paths]]
     kind = "source"
     path = "src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl"

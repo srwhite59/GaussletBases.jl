@@ -29,7 +29,7 @@ jobs:
           julia --project=docs docs/check_cartesian_authority_candidate.jl --self-test
           julia --project=docs docs/check_cartesian_authority_transition.jl --check
           julia --project=docs docs/check_cartesian_authority_transition.jl --self-test
-          julia --project=docs docs/check_cartesian_authority_candidate.jl --rehearse > "$RUNNER_TEMP/cartesian-authority-rehearsal.md"
+          julia --project=docs docs/check_cartesian_authority_transition.jl --write-rehearsal "$RUNNER_TEMP/cartesian-authority-rehearsal"
 
   docs:
     runs-on: ubuntu-latest

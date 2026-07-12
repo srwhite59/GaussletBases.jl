@@ -234,8 +234,7 @@ function _permission_fields(paragraphs, id)
     return values
 end
 
-function _registry_records()
-    text = read(REGISTRY_PATH, String)
+function _registry_records(text::AbstractString)
     lines = _normalized_lines(text)
     levels = _visible_heading_levels(lines)
     boundaries = sort!(collect(keys(levels)))
@@ -272,6 +271,8 @@ function _registry_records()
     return records, _digest(_normalized_block(lines))
 end
 
+_registry_records() = _registry_records(read(REGISTRY_PATH, String))
+
 function _standalone_marker(text, range)
     before = first(range) == firstindex(text) || text[prevind(text, first(range))] == '\n'
     after_index = nextind(text, last(range))
@@ -301,7 +302,36 @@ function _raw_marked_whitelist_block(text)
     return String(SubString(text, first(start), block_end))
 end
 
+function _active_whitelist_marker_indices(lines)
+    starts = Int[]
+    stops = Int[]
+    fence = nothing
+    in_comment = false
+    for (index, line) in pairs(lines)
+        stripped = strip(line)
+        if !isnothing(fence)
+            _fence_marker(line) == fence && (fence = nothing)
+            continue
+        end
+        if !in_comment && stripped in (WHITELIST_BEGIN, WHITELIST_END)
+            push!(stripped == WHITELIST_BEGIN ? starts : stops, index)
+            continue
+        end
+        uncommented, in_comment = _without_html_comments(line, in_comment)
+        marker = _fence_marker(uncommented)
+        isnothing(marker) || (fence = marker)
+    end
+    isnothing(fence) || error("unterminated Markdown fence")
+    in_comment && error("unterminated Markdown HTML comment")
+    length(starts) == 1 || error("expected one visible AGENTS whitelist begin marker")
+    length(stops) == 1 || error("expected one visible AGENTS whitelist end marker")
+    only(starts) < only(stops) || error("visible AGENTS whitelist markers are reversed")
+    return only(starts), only(stops)
+end
+
 function _marked_whitelist_lines(text)
+    _active_whitelist_marker_indices(_normalized_lines(text))
+
     raw_block = _raw_marked_whitelist_block(text)
     lines = _normalized_lines(raw_block)
     starts = findall(line -> line == WHITELIST_BEGIN, lines)
@@ -352,7 +382,7 @@ function expected_shadow()
         record["agents_whitelisted"] = record["id"] in whitelist_set
     end
     return Dict{String,Any}(
-        "schema_version" => 2,
+        "schema_version" => 3,
         "artifact_kind" => ARTIFACT_KIND,
         "authoritative" => false,
         "authorization_complete" => false,
@@ -361,6 +391,8 @@ function expected_shadow()
         "registry_source" => REGISTRY_SOURCE,
         "agents_source" => AGENTS_SOURCE,
         "registry_sha256" => registry_digest,
+        "registry_file_sha256" => _digest(read(REGISTRY_PATH, String)),
+        "agents_file_sha256" => _digest(read(AGENTS_PATH, String)),
         "agents_whitelist_sha256" => whitelist_digest,
         "agents_whitelist_block_sha256" => whitelist_block_digest,
         "registry_record_count" => length(records),
@@ -456,6 +488,12 @@ function self_test()
     changed_ids, _, changed_block_digest = _parse_agents_whitelist(whitespace_changed)
     ids == changed_ids || error("whitelist whitespace mutation changed parsed IDs")
     block_digest != changed_block_digest || error("raw whitelist block digest ignored byte drift")
+    fenced = replace(text, WHITELIST_BEGIN => "```text\n" * WHITELIST_BEGIN)
+    fenced = replace(fenced, WHITELIST_END => WHITELIST_END * "\n```")
+    _expect_parse_failure(fenced, "visible AGENTS whitelist begin marker")
+    commented = replace(text, WHITELIST_BEGIN => "<!--\n" * WHITELIST_BEGIN)
+    commented = replace(commented, WHITELIST_END => WHITELIST_END * "\n-->")
+    _expect_parse_failure(commented, "visible AGENTS whitelist begin marker")
     return nothing
 end
 

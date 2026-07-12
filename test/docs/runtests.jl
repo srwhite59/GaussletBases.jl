@@ -345,7 +345,7 @@
             "docs/check_cartesian_authority_shadow.jl --self-test",
             "docs/check_cartesian_authority_candidate.jl --self-test",
             "docs/check_cartesian_authority_transition.jl --self-test",
-            "cartesian-authority-rehearsal.md",
+            "cartesian-authority-rehearsal",
         )
 
         @test count(
@@ -359,13 +359,15 @@
         @test contains_all(
             authority_candidate_check,
             "Generated rehearsal only.",
-            "--write-rehearsal",
+            "transition-bound rehearsal metadata is required",
             "candidate must remain authoritative=false",
         )
         @test contains_all(
             authority_transition_check,
             "candidate-derived execution whitelist mismatch",
             "document-owner path mismatch",
+            "--write-rehearsal",
+            "transition_snapshot_sha256",
         )
 
         @test contains_all(

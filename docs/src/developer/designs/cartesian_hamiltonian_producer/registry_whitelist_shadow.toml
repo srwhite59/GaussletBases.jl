@@ -1,3 +1,4 @@
+agents_file_sha256 = "3ef64368618702a15ee81c19a58a870c1f6e1d804a518ae398657e3f55031a0c"
 agents_source = "AGENTS.md"
 agents_whitelist_block_sha256 = "35c944b5bda9225e2e33a1fc0c712e236a5147bc0679fa1fd459d7bfb8914ec5"
 agents_whitelist_count = 150
@@ -6,10 +7,11 @@ artifact_kind = "cartesian_registry_whitelist_shadow"
 authoritative = false
 authorization_complete = false
 generated = true
+registry_file_sha256 = "2f94bba9f88cf171efe705a8da4fd1f71a07a58c8d964596cdd5b336cf48fccb"
 registry_record_count = 232
-registry_sha256 = "a3ab3713240f24ca02662d859de78745d7425bf01150eec3a67a5a90d44c22d0"
+registry_sha256 = "2f94bba9f88cf171efe705a8da4fd1f71a07a58c8d964596cdd5b336cf48fccb"
 registry_source = "docs/src/developer/designs/cartesian_hamiltonian_producer/registry.md"
-schema_version = 2
+schema_version = 3
 scope = "registry_metadata_and_agents_whitelist_membership_only"
 
 [[records]]

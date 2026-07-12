@@ -38,15 +38,22 @@ references, lifecycle, grant, surfaces, dependencies, and scope. Its core
 checker does not read this registry or `AGENTS.md`. The separate
 [transition snapshot](authority_transition_snapshot.toml) binds the complete
 candidate bytes to the still-authoritative prose registry and marked
-whitelist. All three remain non-authoritative and authorization-incomplete.
-This Markdown registry and `AGENTS.md` remain authority until a separately
-reviewed atomic cutover.
+whitelist. Transition-bound rehearsal manifests additionally record exact
+prose-file, checker, snapshot, candidate, and Git inputs. This is structural
+binding, not automatic semantic proof. All three remain non-authoritative and
+authorization-incomplete. This Markdown registry and `AGENTS.md` remain
+authority until a separately reviewed atomic cutover.
 
 Validate the raw shadow, candidate, and transition with their `--check` and
 `--self-test` commands. Candidate dependency IDs are non-topological
 references; they may contain reciprocal relationships and do not define
 generation or build order. Candidate-generated previews are rehearsal output
-only and must stay outside live authority files.
+only and must stay outside live authority files. Generate a bound rehearsal
+with:
+
+```sh
+julia --project=docs docs/check_cartesian_authority_transition.jl --write-rehearsal <external-directory>
+```
 
 ## Approved And Implemented
 
