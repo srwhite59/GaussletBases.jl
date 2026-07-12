@@ -29244,3 +29244,32 @@ Goal advancement / guardrail:
   hashed canonical document and removes more than 5,600 net lines. Any failed
   post-activation authority/docs CI requires a whole-commit revert before
   producer work resumes.
+
+## Cartesian Hamiltonian Producer Pass 397 - Compress Startup Guidance
+
+Commit(s):
+- this commit - remove duplicated live status from producer startup pages and
+  record the post-cutover maintenance procedure.
+
+Summary:
+- Replaced the long subsystem-by-subsystem `README.md` orientation with a
+  stable six-stage pipeline and task-directed contract map. Compressed
+  `current.md` to live facilities, active work, the Cr2 target, and current
+  blockers; architecture guardrails remain in `invariants.md`.
+- Added the compact one-way authority maintenance sequence: edit the machine
+  record and contracts, update explicit document hashes, render externally,
+  replace only the generated views, and validate before one atomic commit.
+  No authority record, generated view, canonical contract, source, test,
+  artifact, or numerical behavior changed.
+
+Validation / evidence:
+- Permanent authority `--check` and `--self-test`, focused documentation tests
+  (`53/53` and `10/10`), local Documenter, link/path review, staged docs-only
+  scope review, and `git diff --check` passed.
+
+Goal advancement / guardrail:
+- MT5 documentation cleanup remains active after the authority cutover. Startup
+  reading is materially shorter without weakening fail-closed authority or
+  endpoint due-diligence rules. Further AGENTS or hashed-contract compression
+  remains a separately reviewed lane. This pass changes `+86/-220` lines, a
+  net reduction of 134 lines.

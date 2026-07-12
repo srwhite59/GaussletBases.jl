@@ -9,157 +9,37 @@ contracts. On disagreement, follow the fail-closed rule in `invariants.md`.
 
 ## Orientation
 
-Status: the foundational
-[terminal-basis and base-assembly contract](terminal_basis_and_base_assembly.md)
-is implemented for the internal base path. It owns support-local terminal
-realization, blockwise exact one-body assembly, localized IDA, and direct
-`CartesianIDAHamiltonian` construction. The historical Slice D route-driver
-wrapper is retired. The exported R1 public base
-producer is implemented for the atom/diatomic scope recorded in
-`r1_public_base_producer.md`, with a narrow explicit origin-centered
-one-center all-electron atom relaxation recorded in
-`r1_one_center_base_atoms.md`. Residual Gaussian basis,
-exact augmented operators, and residual MWG/IDA interaction now belong to the
-internal `CartesianResidualGaussians` module. The implemented R3 usability
-lane provides a non-exported supported facade for H2 and internal/performance-supported
-Be2 artifacts. The neutral Cartesian Gaussian raw-block owner is implemented
-for the [uncharged by-center nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
-and the exact [non-nuclear overlap/kinetic/moment slice](cartesian_gaussian_raw_blocks_non_nuclear.md).
-The terminal `G-G` product and by-center unit-nuclear `U_GG` optimization
-layers are implemented, including trusted same-construction base-block reuse
-in supported supplemented callers.
-The canonical Cartesian driver is implemented so the standard
-driver can directly produce base and supported supplemented Hamiltonian
-artifacts from visible public `system`, `basis`, and optional `supplement`
-contracts. `HP-DRV-INV-FN-01` implements a bounded terminal-region inventory
-summary
-in the canonical driver output so users can see region kind, support rows,
-final columns, compression, and identity-vs-compact realization without
-turning the driver into a route diagnostic dump. `HP-DRV-SHELLDD-FN-01`
-implements
-a standard terminal due-diligence report so consumers can review derived
-system/geometry facts, parent axes and 1D centers, gausslet/IDA weight stats,
-dimension accounting, shell-by-shell physical aspect ratios, source-mode
-shapes, retained counts, and warning flags before interpreting energies or
-residual/injection behavior. `HP-PQS-ASPECTSHELL-FN-01` implements the
-separate
-construction policy that selects explicit aspect-aware `(q,q,L)` source
-modes for PQS shared complete shells.
-`HP-PQS-SHELLQ-OVERRIDE-*` separately approves a pending private diagnostic
-that raises transverse source `q` for selected semantic atom-local or shared
-complete shells while preserving route `q`, parent geometry, support, and
-ordinary defaults. It is limited to ordinary-span numerical-complete
-additive-reference composition and adds no mapped-COMX, public, or artifact
-control.
-The implemented [protected-localized basis convention](protected_localized_basis.md)
-owns compact-main replacement, localized `L`, exact `H1_L`, and inherited-site
-`Vee_L`. The implemented
-[protected-localized artifact contract](protected_localized_artifact.md) owns
-its opt-in persistence, native-order locality metadata, compatibility, and
-readback failure behavior.
-The retained-GTO EGOI audit is complete;
-[`HP-RG-PROTECT-EGOI-*`](retained_gto_egoi.md) records the approved but
-unimplemented retained-original-GTO local-product helper and validation
-contract. It is not an artifact or solver workflow.
-The same-parent ladder audit is complete. The implemented
-[protected-localized ladder bundle](protected_localized_ladder.md) owns the
-opt-in directory manifest, protected member references, exact final-basis
-cross-overlap sidecars, optional native-order restarts, and bounded summaries.
-`HP-RG-PROTECT-ADDREF-*` implements a separate internal in-memory lane that
-makes the full union of placed atomic packet occupied spaces mandatory in the
-protected basis, preserves the original per-packet blocks for additive `P0`,
-and assembles native-order screened-Hartree `Delta_J0/C` without changing the
-protected artifact or inherited-site `Vee_L` convention.
-`HP-RG-NUMCOMP-*` separately implements an internal opt-in lane that preserves
-`G`, retains the owner-local numerical supplement
-complement at `eta_num = 1e-10`, validates packet occupied capture after
-construction, and assembles the same in-memory additive correction in native
-unlocalized `[G,R_num]` order. It does not change the production `1e-6`
-residual cutoff.
-The supported supplemented
-workflow now accepts explicit homonuclear
-z-axis diatomics without element-specific branches. The implemented compact
-artifact manifest adds matrix-order labels and recipe provenance without
-changing matrix keys or reader behavior. Its construction-native source-mode
-seam remains partial: terminal shell/mode and retained boundary-seed facts are
-written, while direct/residual relations and ray/radial labels remain
-unavailable. Broad public
-API/export, translated atoms, Cr2-specific production workflow, ECP, broad
-EGOI workflow, RHF, and solver work remain deferred.
-The bounded 2 x 2 x 2 matrix over geometry, nesting, and supplement state is
-implemented for origin-centered atoms and homonuclear z-axis diatomics.
-[Nesting/supplement composition](nesting_supplement_composition_plan.md) owns
-the shared producer path, public `ns` and derived route-local `q`, the WL
-diatomic `ns < 4` guard, and retained-support saturation. One-center
-`radius` is physical box-extent authority, while
-[public-`ns` direct-core parity](public_ns_core_side_parity.md) limits
-oddization to direct nucleus-centered core blocks.
-`HP-PQS-MAP-SFACTOR-*` implements a narrow expert mapping-strength scalar:
-`s_factor`, default `1.0`, with one-center
-`effective_s = s_factor * sqrt(Z * core_spacing)` and explicit provenance.
-This is the only approved public mapping-strength knob and does not revive
-public `d` or `parent_mapping_d`.
-`HP-PQS-COULOMB-ACCURACY-*` implements the compact45 and high135 producer
-tiers. The fixed analytic K60 `:standard` tier and canonical-driver exposure
-are approved but not yet implemented; the default remains `:compact` and the
-driver currently does not expose the policy. Once implemented, `:standard`
-is the recommended accuracy/cost opt-in while `:high` remains the reference
-tier. One
-resolved `CoulombGaussianExpansion` must govern parent/PGDG, base IDA,
-residual-GTO, and MWG construction, with one Hamiltonian-wide provenance
-summary. Its narrow stability amendment replaces cancellation-prone analytic
-Gaussian determinant/weighted-variance forms; it does not add a scaled PGDG
-carrier or terminal-contraction redesign.
-The WL z-axis diatomic compact retained-basis correction is implemented under
-`HP-WLDIAT-COMPACT-FN-01`; boundary strata are compact products rather than
-full-support identity rows.
-The follow-up WL boundary-stratum parity cleanup is implemented under
-`HP-WLDIAT-PARITY-FN-01`: direct nucleus-centered core blocks keep odd-side
-centering, but boundary shells retain the requested shell count such as
-`ns = 4 -> 4^3 - 2^3 = 56`.
-Common terminal shell decomposition is implemented as a shared route-family-free
-first step under `HP-COMP-SHELLGEOM-FN-01`: PQS and White-Lindsey differ only
-after
-common shell/core support regions exist.
-For z-axis diatomics, `HP-COMP-SHELLGEOM-DIAT-FN-01` requires PQS and
-White-Lindsey to call the common shellifier with the same first-step arguments;
-central-gap/contact and shared-shell ownership are common shell geometry.
-`HP-COMP-THINSLAB-FN-01` implements the matching lowering guardrail for
-midpoint slabs
-and outer-mismatch slab stacks: PQS and White-Lindsey use the same compact
-slab lowering, with unit-slice scale `ns x ns x 1`, and neither may retain
-those slabs as full identity rows.
-`HP-COMP-THINSLAB-META-FN-01` implements the matching metadata/scaffold
-inventory
-cleanup so terminal-shellification summaries no longer claim midpoint,
-outer-mismatch, or angular z-extension slabs are direct identity sectors.
-`HP-COMP-FACEPROD-FN-01` implements the neutral terminal face-product helper seam
-needed by that lowering: WL facets and thin slabs reuse the same
-module-internal face-like product block builder instead of putting shared
-coefficient assembly in a PQS- or WL-owned terminal file.
-`HP-COMP-ANGBOX-FN-01` implements the shellification side of that correction:
-z-axis diatomic shared-shell growth may emit planned angular z-extension slab
-stacks when the ordinary index-layer shell body underreaches the physical
-outer-nucleus angular target. Lowering those slabs remains governed by
-`HP-COMP-THINSLAB-FN-01`.
-Mapped-COMX source spans, terminal consumption of carried axis facts, and the
-compact `source_span = :ordinary | :mapped_comx` driver choice are
-implemented under the six `HP-MCOMX` source IDs. Ordinary remains default;
-mapped-COMX is
-PQS-only and high-order remains a consumer/benchmark lane.
-The old complete-core-shell RHF payload stack was removed by `28e9b2c84` under
-`HP-RETIRE-CCS-RHF-*`. The route-driver materialization/report/save wrappers
-were removed by `e2e164e9b`, and the dangling ladder runners by `77fa2700b`.
-Those IDs are historical deletion records; the canonical producer path is the
-staged human-facing driver plus `CartesianIDAHamiltonian` artifacts.
-The implemented [reference Hartree numerics](reference_hartree_numerics.md)
-remain neutral exact `GG/GA/AA` and protected-transform infrastructure. Old
-row-gauge, fixed-`P0`, FAPP, anchor, and corrected-Hamiltonian experiments are
-compressed in
-[rho0 and reference-density correction history](rho0_reference_density_matrix.md).
-Live screened-Hartree and additive-reference policy belongs to their separate
-canonical pages; deferred `HP-RHO0-XPAIR-AUDIT-01` is not a current source
-lane or blocker.
+The producer constructs orthonormal Cartesian working bases and their
+one-body/IDA Hamiltonians through one staged pipeline:
+
+1. normalize explicit atom or bond-aligned diatomic inputs;
+2. build the mapped parent lattice and route-independent terminal supports;
+3. realize those supports as direct identity blocks or PQS/White-Lindsey
+   contractions;
+4. assemble exact one-body operators and the final-basis IDA interaction;
+5. optionally add Gaussian supplements through the Residual Gaussian boundary;
+6. optionally form protected members, in-memory reference corrections, or
+   transfer sidecars without changing the underlying interaction convention.
+
+The stable conceptual boundaries are:
+
+- [terminal basis and base assembly](terminal_basis_and_base_assembly.md) for
+  support ownership, realization, exact operators, and base Hamiltonians;
+- [composition](nesting_supplement_composition_plan.md) and
+  [Residual Gaussians](residual_gaussian_domain_module.md) for optional
+  supplements and MWG augmentation;
+- [protected-localized bases](protected_localized_basis.md),
+  [reference corrections](screened_hartree_correction_assembly.md), and
+  [representation transfer](external_gto_orbital_import.md) for opt-in internal
+  consumers;
+- [artifact provenance](cartesian_hamiltonian_artifact_manifest.md) and the
+  [canonical driver](cartesian_driver_usability_workflow.md) for persisted
+  producer output.
+
+Read [current status](current.md) for implemented facilities, active lanes,
+physics targets, and blockers. Read [invariants](invariants.md) for
+cross-subsystem guardrails. For work on a specific ID, use its generated
+[registry entry](registry.md) and linked canonical contract.
 
 ## Documentation Map
 

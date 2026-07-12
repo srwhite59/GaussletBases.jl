@@ -1,31 +1,13 @@
 # Current Cartesian Hamiltonian Producer Status
 
-This page owns a concise snapshot of implemented facilities, active work,
-blockers, and next steps. It does not grant source authority or restate
-subsystem mathematics.
+This page owns live implementation status, active work, blockers, and next
+steps. It does not grant authority or restate subsystem contracts.
 
-For a task, authority requires agreement among:
-
-1. the assigned record in [authority.toml](authority.toml);
-2. its generated entry in `registry.md` and generated `AGENTS.md` membership;
-3. the canonical subsystem contract linked by that entry;
-4. any explicit boundary on this page.
-
-Silence here is neutral. A conflict is not: fail closed and request a
-docs-only reconciliation.
-
-Normal producer startup is:
-
-- [README](README.md) for orientation and task-specific navigation;
-- this page for live status;
-- [invariants](invariants.md) for cross-subsystem guardrails;
-- only the assigned registry entry and linked subsystem contract.
-
-Before numerical implementation, also consult
-`docs/src/developer/algorithm_implementation_index.md`. Endpoint work must
-follow the operational-facts and terminal due-diligence rules in `AGENTS.md`.
-History, reviews, reports, implementation ledgers, and the manager running log
-are evidence, not normal startup authority.
+Start with [README](README.md), this page, and [invariants](invariants.md), then
+read only the assigned generated registry entry and linked canonical contract.
+`authority.toml` remains the record-level source. Silence here is neutral; an
+explicit conflict fails closed. History, reviews, reports, and the manager log
+are evidence rather than startup authority.
 
 ## Implemented Facilities
 
@@ -57,7 +39,6 @@ claim.
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |
-| Documentation architecture | Pass 396 atomically promoted 232 reviewed records and 150 execution IDs to machine authority with generated registry/AGENTS views and one permanent checker | Maintain the one-way machine-to-view contract; no reverse parser or prose fallback |
 
 Other approved IDs may remain actionable even when not listed here. Read the
 assigned registry entry. Completed retirement, superseded, rejected, and
@@ -94,47 +75,8 @@ energy claim.
 4. **Protected atoms and counterpoise.** One-center protected compactness,
    separated kinetic/unit-nuclear persistence, and counterpoise sidecars remain
    separate future designs.
-The documentation authority cutover is complete. The Pass 394
-[review result](reviews/authority_transition_rehearsal_pass394_2026-07-12.md)
-and [cutover record](authority_atomic_cutover_plan.md) preserve semantic parity,
-activation, and rollback evidence; they are not parallel authority sources.
 
-## Non-Negotiable Boundaries
-
-- The terminal due-diligence report must be inspected before interpreting any
-  endpoint, residual, injection, screened-Hartree, EGOI, Be2, or Cr2 result.
-- Final working bases are orthonormal. Normal representation transfer uses
-  only `S_BA = <B|A>` and `C_B = S_BA*C_A`; self-overlaps are diagnostics.
-- Exact one-body operators transform through the actual represented basis.
-  A two-index IDA/MWG density interaction is not transformed by `C' V C`.
-- Residual directions are selected owner-locally and merged once. Rejected
-  broad protected directions never become MWG residual channels.
-- `Vnuc_G` remains Galerkin in screened Hartree. Represented occupied
-  determinants define `P0/q0`; density fits define `E0`; fitted potentials
-  are approximate fast `J0` evaluators.
-- One Hamiltonian construction uses one resolved Coulomb expansion. Atomic
-  packet RHF/density/potential roles remain separately qualified exceptions.
-- No element-specific defaults, automatic mapping/Coulomb tuning, ECP,
-  generalized-overlap final workflow, public solver, or Cr2 production path is
-  implied by existing internal facilities.
-
-## Canonical Reading
-
-Read only the relevant contract:
-
-- [Terminal and producer invariants](invariants.md)
-- [Terminal basis and base assembly](terminal_basis_and_base_assembly.md)
-- [Residual Gaussian domain](residual_gaussian_domain_module.md)
-- [Numerical-complete residual basis](numerical_complete_residual_basis.md)
-- [Protected-localized basis](protected_localized_basis.md)
-- [Protected-localized artifacts](protected_localized_artifact.md)
-- [Retained-GTO EGOI](retained_gto_egoi.md)
-- [Protected ladders](protected_localized_ladder.md)
-- [Atomic HF reference packets](atomic_hf_reference_packets.md)
-- [Screened Hartree formalism](screened_hartree_residual_density.md)
-- [External GTO import](external_gto_orbital_import.md)
-- [Coulomb accuracy policy](coulomb_accuracy_policy.md)
-- [Semantic per-shell PQS source-q overrides](pqs_semantic_shell_q_overrides.md)
-
-Use [registry.md](registry.md) only for the assigned ID. Use
-[README.md](README.md) for the broader task-specific document map.
+Durable numerical and workflow guardrails live in
+[invariants](invariants.md); the task-specific contract map lives in
+[README](README.md). Endpoint work also follows the operational-facts and
+terminal due-diligence rules in `AGENTS.md`.

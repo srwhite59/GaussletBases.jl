@@ -38,6 +38,21 @@ producer edit and request a docs-only authority reconciliation. No prose view,
 Git parent, cached output, or historical transition record is fallback
 authority.
 
+Authority maintenance is one-way and atomic:
+
+1. Edit `authority.toml` and any affected canonical contract together. If a
+   hashed contract changes, update its `[[documents]]` digest explicitly.
+2. Render into a new external directory with
+   `julia --project=docs docs/check_cartesian_authority.jl --render DIR`.
+3. Replace all of `registry.md` and only the marked generated block in
+   `AGENTS.md` with those rendered views.
+4. Run the checker in `--check` and `--self-test` modes before the docs tests
+   and Documenter build, then commit the machine record, contracts, and views
+   together.
+
+Do not edit generated records by hand, render into the live tree, recover
+authority from prose, or introduce a reverse parser.
+
 ## Terminal Basis
 
 The detailed object, realization, one-body, IDA, and Hamiltonian boundary is
