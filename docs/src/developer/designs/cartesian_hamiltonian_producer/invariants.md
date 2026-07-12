@@ -53,6 +53,12 @@ Authority maintenance is one-way and atomic:
 Do not edit generated records by hand, render into the live tree, recover
 authority from prose, or introduce a reverse parser.
 
+For execution records, `dependency_ids` are immediate normative prerequisites,
+not navigation. An execution record must not depend on a retired, rejected,
+superseded, or no-grant record. No-grant historical records may retain
+dependency lineage as evidence, but it grants no work and cannot serve as an
+execution prerequisite. The full dependency graph must remain acyclic.
+
 ## Terminal Basis
 
 The detailed object, realization, one-body, IDA, and Hamiltonian boundary is

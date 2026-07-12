@@ -334,6 +334,65 @@ function _path_errors(item, id, index, tracked)
     return errors
 end
 
+function _dependency_errors(records)
+    errors = String[]
+    by_id = Dict{String,Any}()
+    for record in records
+        record isa AbstractDict || continue
+        id = get(record, "id", nothing)
+        id isa AbstractString || continue
+        by_id[String(id)] = record
+    end
+
+    dependencies(record) = begin
+        values = get(record, "dependency_ids", nothing)
+        values isa AbstractVector || return String[]
+        return String[value for value in values if value isa AbstractString]
+    end
+
+    for (id, record) in by_id
+        grant = get(record, "grant", nothing)
+        surface_values = get(record, "surfaces", nothing)
+        surfaces = surface_values isa AbstractVector ?
+            Set(String[value for value in surface_values if value isa AbstractString]) :
+            Set{String}()
+        executable = grant in EXECUTION_GRANTS &&
+            !isempty(intersect(surfaces, EXECUTION_SURFACES))
+        executable || continue
+        for dependency in dependencies(record)
+            haskey(by_id, dependency) || continue
+            prerequisite = by_id[dependency]
+            prerequisite_lifecycle = get(prerequisite, "lifecycle", nothing)
+            prerequisite_grant = get(prerequisite, "grant", nothing)
+            (prerequisite_lifecycle in CLOSED_LIFECYCLES || prerequisite_grant == "none") &&
+                push!(errors,
+                    "$id execution record has inactive dependency: $dependency")
+        end
+    end
+
+    state = Dict(id => 0 for id in keys(by_id))
+    stack = String[]
+    function visit(id)
+        state[id] == 2 && return
+        if state[id] == 1
+            start = findfirst(==(id), stack)
+            cycle = vcat(stack[start:end], id)
+            push!(errors, "dependency cycle: $(join(cycle, " -> "))")
+            return
+        end
+        state[id] = 1
+        push!(stack, id)
+        for dependency in dependencies(by_id[id])
+            haskey(by_id, dependency) && visit(dependency)
+        end
+        pop!(stack)
+        state[id] = 2
+        return
+    end
+    foreach(visit, sort!(collect(keys(by_id))))
+    return errors
+end
+
 function validation_errors(data; tracked = _tracked_paths())
     errors = String[]
     Set(String.(keys(data))) == TOP_LEVEL_KEYS ||
@@ -509,6 +568,7 @@ function validation_errors(data; tracked = _tracked_paths())
     for record in records, dependency in get(record, "dependency_ids", String[])
         dependency in id_set || push!(errors, "$(record["id"]) has unknown dependency: $dependency")
     end
+    append!(errors, _dependency_errors(records))
     document_paths == referenced_documents ||
         push!(errors, "documents must exactly equal the referenced document set")
     return sort!(unique!(errors))
@@ -839,6 +899,10 @@ function self_test()
     _expect_failure(broken, "unknown grant")
 
     broken = deepcopy(snapshot.data)
+    broken["records"][1]["surfaces"] = 1
+    _expect_failure(broken, "surfaces must be sorted unique strings")
+
+    broken = deepcopy(snapshot.data)
     source_record = first(record for record in broken["records"] if "source" in record["surfaces"])
     empty!(source_record["paths"])
     _expect_failure(broken, "lacks matching owned path")
@@ -868,6 +932,21 @@ function self_test()
     broken = deepcopy(snapshot.data)
     broken["records"][1]["dependency_ids"] = [broken["records"][1]["id"]]
     _expect_failure(broken, "depends on itself")
+
+    broken = deepcopy(snapshot.data)
+    first_record, second_record = broken["records"][1:2]
+    first_record["dependency_ids"] = [second_record["id"]]
+    second_record["dependency_ids"] = [first_record["id"]]
+    _expect_failure(broken, "dependency cycle")
+
+    broken = deepcopy(snapshot.data)
+    execution_record = first(record for record in broken["records"] if
+        record["grant"] in EXECUTION_GRANTS &&
+        !isempty(intersect(Set(record["surfaces"]), EXECUTION_SURFACES)))
+    inactive_record = first(record for record in broken["records"] if
+        record["grant"] == "none")
+    execution_record["dependency_ids"] = [inactive_record["id"]]
+    _expect_failure(broken, "inactive dependency")
 
     broken = deepcopy(snapshot.data)
     broken["records"][1]["scope"] = "valid prefix\n## injected heading"

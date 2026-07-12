@@ -29273,3 +29273,39 @@ Goal advancement / guardrail:
   endpoint due-diligence rules. Further AGENTS or hashed-contract compression
   remains a separately reviewed lane. This pass changes `+86/-220` lines, a
   net reduction of 134 lines.
+
+## Cartesian Hamiltonian Producer Pass 398 - Audit Execution Conformance
+
+Commit(s):
+- this commit - preserve the first complete post-cutover conformance audit and
+  harden authority dependency semantics.
+
+Summary:
+- Eight disjoint static reviews covered all `150` execution records at exact
+  baseline `c8c1a4911`. Results are `107` matched, `11` accurately documented
+  gaps, `8` requiring numerical validation, and `24` source/test/authority or
+  wording discrepancies. The durable review separates fail-fast correctness,
+  stale compatibility code, missing endpoint gates, and wording-only fixes so
+  later passes remain bounded.
+- The audit confirmed that current screened-Hartree source and contracts agree:
+  determinant orbitals define `P0/q0`, the density fit defines `E0`, and the
+  fitted potential approximates `J0`. Determinant-exact `J0/E0` would be a new
+  scientific policy, not a conformance repair.
+- Fixed the sole authority dependency cycle by retaining only the z-axis
+  extension's dependency on the generic R3U facade. The checker now rejects
+  dependency cycles and execution dependencies on closed/no-grant records.
+
+Validation / evidence:
+- Permanent authority check/self-test, focused docs tests, deterministic
+  external rendering, generated-view parity, local Documenter, report-matrix
+  completeness, staged scope review, and `git diff --check` form the gate. No
+  producer source or numerical endpoint changed in this pass.
+
+Goal advancement / guardrail:
+- MT5 broad documentation reorganization is complete and moves to maintenance.
+  Next work is conformance remediation under existing IDs, beginning with
+  packet/one-body/injection fail-fast checks and misleading completed-test
+  claims. Do not combine that work with a screened-reference policy change.
+  Carrying cost is concentrated in one 224-line evidence report and a 79-line
+  checker hardening; generated-view changes are three digest/dependency rows
+  and no producer source is added.

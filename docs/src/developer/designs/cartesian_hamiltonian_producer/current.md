@@ -9,6 +9,10 @@ read only the assigned generated registry entry and linked canonical contract.
 explicit conflict fails closed. History, reviews, reports, and the manager log
 are evidence rather than startup authority.
 
+The broad documentation reorganization and machine-authority cutover are
+complete. Remaining documentation work is maintenance attached to concrete
+source/contract findings, not another migration campaign.
+
 ## Implemented Facilities
 
 | Area | Current implemented state | Canonical contract |
@@ -39,6 +43,7 @@ claim.
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |
+| Existing execution IDs | Post-cutover conformance remediation | Reconcile the bounded discrepancies recorded in the [2026-07-12 execution audit](reviews/execution_conformance_audit_2026-07-12.md), beginning with fail-fast correctness and misleading completed-test claims |
 
 Other approved IDs may remain actionable even when not listed here. Read the
 assigned registry entry. Completed retirement, superseded, rejected, and
@@ -47,8 +52,9 @@ historical audit IDs are not active work.
 ## Current Physics Target
 
 The current consumer-facing target is the authorized controlled Cr2
-screened-Hartree off/on fixed-density comparison. The numerical-complete
-H2/Be2 source and validation gates have passed:
+screened-Hartree off/on fixed-density comparison under the currently approved
+fitted-cloud reference convention. The numerical-complete H2/Be2 source and
+validation gates have passed:
 
 - one high-accuracy `M=[G,R_num]` Hamiltonian basis that preserves `G`;
 - one imported external-GTO occupied start represented by the source-backed
@@ -75,6 +81,11 @@ energy claim.
 4. **Protected atoms and counterpoise.** One-center protected compactness,
    separated kinetic/unit-nuclear persistence, and counterpoise sidecars remain
    separate future designs.
+5. **Screened-reference exactness policy.** Current source uses determinant
+   orbitals for `P0/q0`, the density fit for `E0`, and the fitted potential for
+   approximate `J0`, with consistency error reported. Determinant-exact
+   `J0/E0` would be a new scientific amendment, not a conformance repair; do
+   not interpret a run under the other convention without deciding this first.
 
 Durable numerical and workflow guardrails live in
 [invariants](invariants.md); the task-specific contract map lives in

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `6057ef50fd48ff329c9e7226665ea29f59ae4e35db3f43cb71bf29f5c4c2175e`.
+> [authority.toml](authority.toml), SHA-256 `9e36c82d198dfbfcdbcf9dae01003ae1279fc7470a48202a49dfebbf74a6b5d3`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1926,7 +1926,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
-- **Dependencies:** `HP-R3U-ZDI-FN-01`
+- **Dependencies:** none
 - **Scope:** maintain \`cartesian\_residual\_gto\_mwg\_hamiltonian(system; basis, supplement, hamfile)\` as a non-exported direct-\`CartesianIDAHamiltonian{Float64}\` facade.
 
 ### HP-R3U-TEST-01 - supplemented facade endpoint

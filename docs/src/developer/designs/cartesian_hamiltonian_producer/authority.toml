@@ -3020,7 +3020,7 @@ title = "supplemented workflow source and validation files"
     path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
     state = "existing"
 [[records]]
-dependency_ids = ["HP-R3U-ZDI-FN-01"]
+dependency_ids = []
 grant = "maintenance"
 id = "HP-R3U-FN-01"
 lifecycle = "implemented"

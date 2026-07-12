@@ -31,6 +31,13 @@ The machine-authority transition reviews are:
   cutover. The live record-level authority is now `../authority.toml`; these
   reviews remain evidence only.
 
+The first post-cutover source/contract audit is:
+
+- [Execution conformance audit - 2026-07-12](execution_conformance_audit_2026-07-12.md),
+  a static review of all 150 execution records against committed source,
+  tests, callers, and canonical contracts. It records remediation candidates
+  but grants no implementation authority.
+
 Historical recursive/previous-block projection material in these reviews is
 stale. The live Slice A authority rejects previous-block projection and
 effective-support growth for PQS terminal shell realization. Cross-block
