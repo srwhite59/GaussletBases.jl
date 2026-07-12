@@ -1,7 +1,7 @@
 # Semantic Per-Shell PQS Source-q Overrides
 
-Status: approved pending internal source implementation and bounded
-validation; no committed shell-q override implementation or test exists.
+Status: implemented internal opt-in facility with completed bounded H2 and
+padded Be2 validation.
 Authority is recorded under `HP-PQS-SHELLQ-OVERRIDE-FN-01` and
 `HP-PQS-SHELLQ-OVERRIDE-TEST-01`.
 
@@ -280,10 +280,10 @@ Tests must reject:
 - one-center and White-Lindsey construction;
 - mapped-COMX source spans and any artifact-producing use.
 
-## Consumer Measurement After Source Acceptance
+## Consumer Measurement
 
-After the source implementation and H2/Be2 gates are reviewed and accepted, an
-ignored CR2 measurement may refine shell 7 and shell 8 independently at
+With the source implementation and H2/Be2 gates accepted, an ignored CR2
+measurement may refine shell 7 and shell 8 independently at
 `source_q = 8`, then their pair only if the individual measurements justify
 it.
 

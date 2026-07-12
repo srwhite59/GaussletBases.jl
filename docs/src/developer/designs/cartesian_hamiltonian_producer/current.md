@@ -32,7 +32,7 @@ are evidence, not normal startup authority.
 | Area | Current implemented state | Canonical contract |
 | --- | --- | --- |
 | Terminal basis | Disjoint owned terminal supports, support-local realization, structural cross-block overlap, blockwise exact operators | [Terminal basis and base assembly](terminal_basis_and_base_assembly.md), [common shell decomposition](common_terminal_shell_decomposition.md) |
-| Diatomic shell corrections | Angular-z extension, neutral face products, compact PQS/WL thin slabs, and aspect-aware PQS shared complete-shell `(q,q,L)` source modes | [Common shell decomposition](common_terminal_shell_decomposition.md), [aspect-aware source modes](pqs_complete_shell_aspect_source_modes.md) |
+| Diatomic shell corrections | Angular-z extension, neutral face products, compact PQS/WL thin slabs, aspect-aware PQS shared complete-shell `(q,q,L)` source modes, and private semantic per-shell source-q refinement | [Common shell decomposition](common_terminal_shell_decomposition.md), [aspect-aware source modes](pqs_complete_shell_aspect_source_modes.md), [semantic source-q overrides](pqs_semantic_shell_q_overrides.md) |
 | Base producer | Exported facade plus blockwise exact H1, localized IDA, and direct `CartesianIDAHamiltonian` construction for the implemented atom/diatomic scope | [Terminal basis and base assembly](terminal_basis_and_base_assembly.md), [R1 base producer](r1_public_base_producer.md), [one-center atoms](r1_one_center_base_atoms.md) |
 | Ordinary artifacts | Unchanged matrix payload and reader, plus facade-written native-order labels, recipe truth, and the implemented subset of construction-native source provenance | [Artifact manifest](cartesian_hamiltonian_artifact_manifest.md) |
 | Composition and driver | PQS/WL, base/supplemented composition through shared producer boundaries; canonical artifact-producing driver; terminal inventory and due-diligence reporting | [Composition contract](nesting_supplement_composition_plan.md), [driver workflow](cartesian_driver_usability_workflow.md), [due diligence](terminal_shellification_due_diligence.md) |
@@ -54,7 +54,6 @@ claim.
 | Lane | State | Exact next boundary |
 | --- | --- | --- |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
-| `HP-PQS-SHELLQ-OVERRIDE-*` | Private ordinary-span semantic source-q refinement approved, not implemented | Add strict owner-balanced role/shell matching and rewrite only selected complete-shell source shapes before retained/support records freeze; no mapped-COMX, artifact, public/default input, or dense final-final overlap |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |

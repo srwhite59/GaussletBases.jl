@@ -6,7 +6,7 @@ authoritative = false
 authorization_complete = false
 generated = true
 registry_record_count = 232
-registry_sha256 = "34088829e8cd1229fa010ebd72d1cf89fad603f64efa3b79a40205b36039eaf0"
+registry_sha256 = "9b0b24a34ae0499849b9fa18c54a6bf6fc939896af47966ded91fad6398ef922"
 registry_source = "docs/src/developer/designs/cartesian_hamiltonian_producer/registry.md"
 schema_version = 1
 scope = "registry_metadata_and_agents_whitelist_membership_only"
@@ -1037,20 +1037,20 @@ heading_title = "semantic per-shell PQS source-q overrides"
 id = "HP-PQS-SHELLQ-OVERRIDE-FN-01"
 owner_document_links = ["pqs_semantic_shell_q_overrides.md"]
 ownership_texts = ["Owner/canonical: terminal low-order PQS source-shape enrichment; [semantic per-shell PQS source-q overrides](pqs_semantic_shell_q_overrides.md)."]
-permission_texts = ["source implementation and maintenance within the listed surfaces.", "implement `owner = :all` overrides for positive semantic `:atom_local_shell` or `:shared_molecular_shell` indices with integer `source_q > route_q`. Atom-local shells use `(source_q,source_q,source_q)`; shared shells rerun the existing angular-band selector for `(source_q,source_q,L)`, with route metadata `q` unchanged. Selector retention, `nside`, and `selected_q` use `source_q`. One authoritative shape must reach existing retained/support/transform/realization/due-diligence consumers unchanged."]
-record_sha256 = "1fc1058c2a8fb3344e15f573b0981f6515b7b85d9893c43a20c2c5010db0a617"
+permission_texts = ["source maintenance within the listed surfaces.", "maintain `owner = :all` overrides for positive semantic `:atom_local_shell` or `:shared_molecular_shell` indices with integer `source_q > route_q`. Atom-local shells use `(source_q,source_q,source_q)`; shared shells rerun the existing angular-band selector for `(source_q,source_q,L)`, with route metadata `q` unchanged. Selector retention, `nside`, and `selected_q` use `source_q`. One authoritative shape must reach existing retained/support/transform/realization/due-diligence consumers unchanged."]
+record_sha256 = "5b5a41cec7ca3eb62d3dc74cbae7f0e8eb9102e8e8bbae7401562e73c280f272"
 state_label = "Lifecycle"
-state_text = "approved pending internal source implementation; not implemented in committed source. Permission: source implementation and maintenance within the listed surfaces."
+state_text = "implemented internal opt-in facility. Permission: source maintenance within the listed surfaces."
 [[records]]
 agents_whitelisted = true
 heading_title = "semantic source-q override validation"
 id = "HP-PQS-SHELLQ-OVERRIDE-TEST-01"
 owner_document_links = ["pqs_semantic_shell_q_overrides.md"]
 ownership_texts = ["Owner/canonical: semantic source-q override validation; [semantic per-shell PQS source-q overrides](pqs_semantic_shell_q_overrides.md)."]
-permission_texts = ["test implementation and maintenance within the listed surface.", "validate rebuilt residual, packet-capture, `J0/E0`, correction, source-shape, dimension, and due-diligence facts. No dense baseline-to-variant overlap API, source-pass HF, endpoint energy assertion, or production claim is approved."]
-record_sha256 = "ac08c1aa07be1d645d54a9cefb723cdd7797315a2c860c75b1aa90776b013042"
+permission_texts = ["validation maintenance within the listed surface.", "validate rebuilt residual, packet-capture, `J0/E0`, correction, source-shape, dimension, and due-diligence facts. No dense baseline-to-variant overlap API, source-pass HF, endpoint energy assertion, or production claim is approved."]
+record_sha256 = "7d90005cb25798c8c3d75193f5ed85315eab89bf819fb0d8b3d208f93c9a0f1f"
 state_label = "Lifecycle"
-state_text = "approved pending bounded validation; no committed shell-q override validation exists. Permission: test implementation and maintenance within the listed surface."
+state_text = "completed bounded validation contract. Permission: validation maintenance within the listed surface."
 [[records]]
 agents_whitelisted = true
 heading_title = "public base producer artifact provenance"

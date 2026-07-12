@@ -28869,3 +28869,37 @@ Goal advancement / guardrail:
   recipe value; sibling/empty-reference builders reject it. Stop rather than
   edit multilayer consumers or add provenance, result fields, compatibility
   metadata, or transfer APIs.
+
+## Cartesian Hamiltonian Producer Pass 388 - Implement Semantic Shell Source-q Refinement
+
+Commit(s):
+- `adc98163f` - implement private semantic per-shell PQS source-q overrides and
+  bounded validation;
+- this commit - reconcile lifecycle and record acceptance.
+
+Summary:
+- The numerical-complete additive-reference composer can now refine symmetric
+  atom-local or shared complete shells by semantic role and native shell index.
+  Parent geometry, support, route `q`, cores, slabs, ordering, and unmatched
+  regions remain unchanged; shared shells reuse the existing angular selector
+  to derive `L`. Omitted and empty requests retain exact matrix parity.
+- Manager review added fail-closed collection validation, real sibling/empty
+  placement/mapped-COMX composer rejection, and bounded due-diligence summary
+  comparison. No public input, artifact field, mapped-COMX path, HF behavior,
+  or Cr2-specific source branch was added.
+
+Validation / evidence:
+- Package load passed. The focused H2 gate passed `146/146` and the existing
+  supplemented facade gate passed `69/69`; shared shell 1 changed from
+  `(5,5,6)` to `(6,6,7)`, while both atom-local shell-1 owners changed from
+  `(5,5,5)` to `(6,6,6)`. The doer's physically padded Be2 gate also passed
+  packet recovery, metric, correction, no-reference parity, symmetry, and
+  low-mode checks. `git diff --check` passed.
+
+Goal advancement / guardrail:
+- MT3 now has an implemented bounded source-resolution diagnostic; MT4 may
+  proceed to the authorized CR2 shell-7 versus shell-8 fixed-density
+  comparison. Source changed `+174/-13`; focused tests added `144` lines. The
+  override remains private, in-memory, ordinary-span, and numerical-complete
+  additive only. Production defaults and the common aspect policy are
+  unchanged.
