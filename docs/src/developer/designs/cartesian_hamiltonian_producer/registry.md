@@ -30,10 +30,19 @@ heading plus explicit lifecycle, permission, and canonical or historical
 ownership. The generated
 [registry/whitelist shadow](registry_whitelist_shadow.toml) preserves these
 records and raw `AGENTS.md` whitelist membership for exact parity checks. It is
-explicitly non-authoritative and authorization-incomplete; this Markdown
-registry and `AGENTS.md` remain the authority until a separately reviewed
-atomic cutover. Regenerate the shadow only with
-`julia --project=docs docs/check_cartesian_authority_shadow.jl --write`.
+explicitly non-authoritative and authorization-incomplete. The reviewed
+[semantic authority candidate](authority_candidate.toml) separately records
+closed lifecycle/grant/surface enums, exact canonical headings and document
+hashes, source/test paths, planned tests, dependencies, scope, a reviewed
+semantic digest, and the same raw-record hashes. It is also non-authoritative
+and authorization-incomplete. This Markdown registry and `AGENTS.md` remain
+the authority until a separately reviewed atomic cutover. Regenerate only the
+raw shadow with
+`julia --project=docs docs/check_cartesian_authority_shadow.jl --write`; edit
+the semantic candidate explicitly and validate it with
+`julia --project=docs docs/check_cartesian_authority_candidate.jl --check`.
+Candidate dependency IDs are non-topological authority references; they may
+contain reciprocal relationships and do not define generation or build order.
 
 ## Approved And Implemented
 

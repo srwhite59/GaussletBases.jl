@@ -28938,3 +28938,60 @@ Goal advancement / guardrail:
   behavior, or Cr2 workflow changed. Next: encode the reviewed
   lifecycle/grant/surface/path decisions in a non-authoritative semantic
   candidate; authority cutover remains a later atomic decision.
+
+## Cartesian Hamiltonian Producer Pass 390 - Add Reviewed Semantic Authority Candidate
+
+Commit(s):
+- this commit - add explicit candidate-v2 authority metadata and semantic
+  validation without changing the authority source.
+
+Summary:
+- Added one explicit record for each of the `232` producer IDs with separate
+  lifecycle, grant, and surface enums; raw `AGENTS.md` membership for all `150`
+  executable IDs; exact canonical document headings; present source/test paths;
+  planned tests; dependency IDs; scope; and raw registry-record hashes.
+- Four read-only family audits reviewed every record. Manager reconciliation
+  resolved mixed implemented/pending Coulomb and manifest grants,
+  preservation-only compatibility, dormant-but-present rho0 helpers,
+  measurement/probe records, and the pending retained-GTO EGOI test.
+- The candidate is hand-reviewed rather than generated. It remains
+  `authoritative = false` and `authorization_complete = false`; Markdown plus
+  `AGENTS.md` continue to grant work.
+
+Validation / evidence:
+- Candidate positive checks and negative mutation checks cover enums,
+  whitelist/grant compatibility, closed lifecycles, canonical headings,
+  present/planned paths, dependencies, sorting, hashes, and deterministic TOML.
+  Independent reviews found and closed path traversal/symlink escape and
+  semantic-binding gaps; canonical owner mappings, canonical document hashes,
+  and one reviewed semantic digest now fail closed. Raw-shadow parity, local
+  Documenter, staged scope, and `git diff --check` also passed. No numerical
+  Julia test was needed because source behavior is unchanged.
+
+Goal advancement / guardrail:
+- MT5 reaches reviewed dual representation but not authority cutover. The
+  temporary carrying cost is one roughly 4,000-line candidate plus a focused
+  checker; it is justified only while proving parity and should replace, not
+  permanently duplicate, hand-maintained authority after a separate decision.
+- Next: decide separately whether to perform one atomic authority cutover. Do
+  not generate registry/current/whitelist views or flip authority flags under
+  this pass.
+
+### Medium-Term Goal Checkpoint After Pass 390
+
+- **MT1 fake-PQS quarantine - completed/maintained.** No retired route or
+  materialization authority was restored.
+- **MT2 independent PQS recovery - completed for supported cells.** This pass
+  changes no numerical construction or endpoint behavior.
+- **MT3 common physical support vocabulary - active refinement.** Semantic
+  shell-q overrides are implemented; the shared-shell longitudinal physical
+  resolution rule remains a separate design question.
+- **MT4 supplement/reference staging - active.** The controlled
+  numerical-complete Cr2 screened/unscreened comparison remains consumer work.
+- **MT5 documentation and carrying-cost cleanup - active, cutover decision
+  next.** Canonical contracts, normalized prose records, raw shadow, and the
+  independently reviewed semantic candidate agree under fail-closed checks.
+  Authority remains Markdown.
+- **MT6 old flat-path classification - maintenance.** Superseded, retired,
+  preservation-only, evidence-only, and dormant-present cases are explicit and
+  remain fail-closed.

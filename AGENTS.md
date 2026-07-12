@@ -503,6 +503,10 @@ docs-only reconciliation. Historical, superseded, rejected, measurement-only,
 and completed-retirement IDs may remain documented in the registry without
 being source-authorized here.
 
+The checked `registry_whitelist_shadow.toml` and `authority_candidate.toml`
+files are non-authoritative transition metadata. They do not grant work or
+replace this whitelist, `registry.md`, or the linked canonical contract.
+
 A validation/test ID belongs in this whitelist only when its registry entry
 names an exact committed or exact planned test path, or an explicit shared
 test owner plus path. One-time smokes and completed evidence grant no work.

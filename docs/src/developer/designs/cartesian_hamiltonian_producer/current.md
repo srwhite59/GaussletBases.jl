@@ -57,7 +57,7 @@ claim.
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |
-| Documentation architecture | The 232-record lifecycle/grant/path audit is complete; evidence-only and probe-only IDs are separated from exact committed/planned test authority | Build a normalized non-authoritative candidate-v2 metadata file with semantic checks; any authority cutover remains a separate atomic design decision |
+| Documentation architecture | The independently reviewed 232-record candidate v2 explicitly separates lifecycle, grant, surfaces, canonical headings, paths, and dependency references while remaining non-authoritative | Decide separately whether to perform one atomic authority cutover; no generated authority view or cutover is approved yet |
 
 Other approved IDs may remain actionable even when not listed here. Read the
 assigned registry entry. Completed retirement, superseded, rejected, and
@@ -96,10 +96,11 @@ energy claim.
    separate future designs.
 5. **Authority cutover remains unapproved.** The prose authority now requires
    exact committed/planned test paths or explicit shared ownership; one-time
-   evidence and ignored probes are outside the execution whitelist. The
-   generated shadow still records raw text and membership only. Candidate-v2
-   normalized metadata and semantic checks are the next docs lane; generated
-   authority views or cutover require a later atomic decision.
+   evidence and ignored probes are outside the execution whitelist. The raw
+   generated shadow and explicit semantic candidate are both checked, but both
+   remain non-authoritative and authorization-incomplete. Independent reviews
+   completed; every finding is covered by fail-closed fixes and negative tests.
+   Generated authority views or cutover require a later atomic decision.
 
 ## Non-Negotiable Boundaries
 

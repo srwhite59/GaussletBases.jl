@@ -288,6 +288,12 @@ The task-specific map above is the contract index. The registry supplies each
 ID's lifecycle, permission, code owner, and validation surface; linked pages
 own behavior. Do not copy their specifications into this navigation page.
 
+Two checked transition files support the documentation reorganization:
+the generated raw-text [registry/whitelist shadow](registry_whitelist_shadow.toml)
+and the explicit semantic [authority candidate](authority_candidate.toml).
+Both remain non-authoritative and authorization-incomplete. They do not grant
+work or replace `AGENTS.md`, `registry.md`, or a canonical contract.
+
 Completed implementation plans remain as short historical pointers only where
 their names are still useful for old links. Completed retirement records remain
 available for restoration guardrails, not as active implementation authority.

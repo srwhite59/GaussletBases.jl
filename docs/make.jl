@@ -2,6 +2,8 @@ using Documenter
 
 include(joinpath(@__DIR__, "check_cartesian_authority_shadow.jl"))
 CartesianAuthorityShadow.check_shadow()
+include(joinpath(@__DIR__, "check_cartesian_authority_candidate.jl"))
+CartesianAuthorityCandidate.check_candidate()
 
 push!(LOAD_PATH, joinpath(@__DIR__, ".."))
 using GaussletBases
