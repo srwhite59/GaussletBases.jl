@@ -301,6 +301,10 @@ authorization-incomplete; they do not grant work or replace `AGENTS.md`,
 `registry.md`, or a canonical contract. Automated transition parity is
 structural; semantic parity requires the recorded independent review.
 
+The reviewed [atomic cutover plan](authority_atomic_cutover_plan.md) defines a
+future one-commit transition to machine-owned record authority. It is planning
+material only and does not authorize flag changes or cutover execution.
+
 Completed implementation plans remain as short historical pointers only where
 their names are still useful for old links. Completed retirement records remain
 available for restoration guardrails, not as active implementation authority.

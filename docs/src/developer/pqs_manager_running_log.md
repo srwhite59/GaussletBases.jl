@@ -29153,3 +29153,57 @@ Goal advancement / guardrail:
   `+225/-20` lines: 134 lines preserve review evidence, while the candidate
   growth is confined to the missing path inventory and one scope sentence; no
   new checker or schema layer was added.
+
+## Cartesian Hamiltonian Producer Pass 395 - Review Atomic Authority Cutover
+
+Commit(s):
+- this commit - add the reviewed one-commit cutover design; no cutover executed.
+
+Summary:
+- Added `authority_atomic_cutover_plan.md` for the future transition from the
+  reviewed schema-v3 candidate to one machine-owned record authority. The plan
+  pins base `9b283e16c`, candidate digest `30cf4ed8...`, 232 records, 44 hashed
+  documents, and 150 execution IDs. Exact promotion preserves every record and
+  changes only artifact kind plus the two authority flags; expected promoted
+  digest is `6057ef50...`.
+- The design permits one direction only: `authority.toml` generates the full
+  registry and marked `AGENTS.md` block. It removes active per-ID prose
+  duplication, all shadow/transition files and reverse parsing, and replaces
+  three temporary checkers with one permanent fail-closed checker.
+- Activation is one Git commit/ref update prepared and validated in clean
+  machine-local worktrees. The plan defines exact files, CI dependency,
+  deterministic rendering, file-link/heading validation, expected docs-test
+  cleanup, line-reduction gate, source freeze, and whole-commit rollback. It
+  grants no execution authority.
+
+Validation / evidence:
+- Three independent read-only audits covered transaction safety, generated
+  views/prose retirement, and permanent tooling/CI carrying cost. Written-plan
+  review found and closed parent-pin, frozen-document, negative-test,
+  external-render, AGENTS-range, file-allowlist, rollback, and terminology
+  gaps. All three reviewers returned go for the plan only. Cutover execution
+  remains no-go; no source or live authority changed.
+
+Goal advancement / guardrail:
+- MT5 moves from semantic parity to a concrete atomic transaction design. The
+  next action is explicit user approval pinning this Pass 395 commit, not an
+  inferred cutover.
+  The implementation should remove roughly 5,200 or more net lines; a result
+  below that gate requires review for retained dual machinery.
+
+### Medium-Term Goal Checkpoint After Pass 395
+
+- **MT1 fake-PQS quarantine - completed/maintained.** No retired materializer
+  or compatibility authority is restored.
+- **MT2 independent PQS recovery - completed for supported cells.** This pass
+  changes no basis, operator, or endpoint behavior.
+- **MT3 common physical support vocabulary - active refinement.** Semantic
+  shell-q overrides are implemented; shared-shell longitudinal resolution
+  remains a separate physics/design question.
+- **MT4 supplement/reference staging - active.** Controlled numerical-complete
+  Cr2 consumer measurements remain separate from documentation authority.
+- **MT5 documentation and carrying-cost cleanup - active, cutover design
+  reviewed.** Record parity and the transaction plan are reviewed; execution
+  remains explicitly unapproved pending a new user/design-manager handoff.
+- **MT6 old flat-path classification - maintenance.** Closed and historical
+  records remain explicit and fail-closed.
