@@ -1,5 +1,5 @@
-# Validate and rehearse the self-contained, non-authoritative Cartesian authority candidate.
-module CartesianAuthorityCandidate
+# Validate the authoritative Cartesian producer metadata and its generated views.
+module CartesianAuthority
 
 using Markdown
 using SHA
@@ -15,16 +15,20 @@ const PRODUCER_DOCS = joinpath(
     "designs",
     "cartesian_hamiltonian_producer",
 )
-const CANDIDATE_PATH = joinpath(PRODUCER_DOCS, "authority_candidate.toml")
-const ARTIFACT_KIND = "cartesian_authority_candidate"
+const AUTHORITY_PATH = joinpath(PRODUCER_DOCS, "authority.toml")
+const REGISTRY_PATH = joinpath(PRODUCER_DOCS, "registry.md")
+const AGENTS_PATH = joinpath(ROOT, "AGENTS.md")
+const ARTIFACT_KIND = "cartesian_authority"
 const WHITELIST_BEGIN = "<!-- BEGIN CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST -->"
 const WHITELIST_END = "<!-- END CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST -->"
-const REHEARSAL_WARNING = """> **Generated rehearsal only.** This output is non-authoritative and
-> authorization-incomplete. The existing pre-cutover prose in `AGENTS.md`,
-> `registry.md`, `current.md`, `invariants.md`, and linked canonical contracts
-> remains authority. This output grants no work and must not replace a live
-> marked block.
-"""
+const LEGACY_PATHS = [
+    joinpath(PRODUCER_DOCS, "authority_candidate.toml"),
+    joinpath(PRODUCER_DOCS, "authority_transition_snapshot.toml"),
+    joinpath(PRODUCER_DOCS, "registry_whitelist_shadow.toml"),
+    joinpath(@__DIR__, "check_cartesian_authority_candidate.jl"),
+    joinpath(@__DIR__, "check_cartesian_authority_shadow.jl"),
+    joinpath(@__DIR__, "check_cartesian_authority_transition.jl"),
+]
 
 const LIFECYCLES = Set([
     "proposed",
@@ -89,7 +93,7 @@ const DOCUMENT_REF_KEYS = Set(["kind", "path", "heading"])
 const PATH_KEYS = Set(["kind", "state", "path"])
 const EVIDENCE_REF_KEYS = Set(["kind", "value"])
 
-struct CandidateSnapshot
+struct AuthoritySnapshot
     path::String
     text::String
     data::Dict{String,Any}
@@ -106,10 +110,10 @@ function serialized(data)
     return endswith(text, '\n') ? text : text * "\n"
 end
 
-function load_snapshot(path = CANDIDATE_PATH)
+function load_snapshot(path = AUTHORITY_PATH)
     text = read(path, String)
     data = TOML.parse(text)
-    return CandidateSnapshot(abspath(path), text, data, digest(text))
+    return AuthoritySnapshot(abspath(path), text, data, digest(text))
 end
 
 function _sorted_unique_strings(values)
@@ -333,12 +337,12 @@ end
 function validation_errors(data; tracked = _tracked_paths())
     errors = String[]
     Set(String.(keys(data))) == TOP_LEVEL_KEYS ||
-        push!(errors, "candidate has unexpected or missing top-level keys")
+        push!(errors, "authority has unexpected or missing top-level keys")
     get(data, "schema_version", nothing) === 3 || push!(errors, "schema_version must be integer 3")
     get(data, "artifact_kind", nothing) == ARTIFACT_KIND || push!(errors, "artifact_kind mismatch")
-    get(data, "authoritative", nothing) === false || push!(errors, "candidate must remain authoritative=false")
-    get(data, "authorization_complete", nothing) === false ||
-        push!(errors, "candidate must remain authorization_complete=false")
+    get(data, "authoritative", nothing) === true || push!(errors, "authority must set authoritative=true")
+    get(data, "authorization_complete", nothing) === true ||
+        push!(errors, "authority must set authorization_complete=true")
 
     document_errors, document_bytes, headings_by_path = _document_errors(data, tracked)
     append!(errors, document_errors)
@@ -511,7 +515,7 @@ function validation_errors(data; tracked = _tracked_paths())
 end
 
 function assert_snapshot_unchanged(snapshot, document_paths)
-    read(snapshot.path, String) == snapshot.text || error("candidate changed during validation/rendering")
+    read(snapshot.path, String) == snapshot.text || error("authority changed during validation/rendering")
     for document in snapshot.data["documents"]
         document["path"] in document_paths || continue
         digest(read(joinpath(ROOT, document["path"]))) == document["sha256"] ||
@@ -520,16 +524,35 @@ function assert_snapshot_unchanged(snapshot, document_paths)
     return nothing
 end
 
-function check_candidate(snapshot = load_snapshot())
+function legacy_live_errors(paths = LEGACY_PATHS; tracked = _tracked_paths())
+    errors = String[]
+    for path in paths
+        relative = relpath(path, ROOT)
+        (ispath(path) || islink(path) || relative in tracked) &&
+            push!(errors, "legacy authority artifact remains live: $path")
+    end
+    return errors
+end
+
+function check_authority(snapshot = load_snapshot())
+    checker_text = read(@__FILE__, String)
+    registry_text = read(REGISTRY_PATH, String)
+    agents_text = read(AGENTS_PATH, String)
     errors = validation_errors(snapshot.data)
-    snapshot.text == serialized(snapshot.data) || push!(errors, "candidate TOML serialization is not canonical")
-    isempty(errors) || error("Cartesian authority candidate errors:\n" * join(first(errors, 100), "\n"))
+    snapshot.text == serialized(snapshot.data) || push!(errors, "authority TOML serialization is not canonical")
+    append!(errors, legacy_live_errors())
+    isempty(errors) || error("Cartesian authority errors:\n" * join(first(errors, 100), "\n"))
     assert_snapshot_unchanged(snapshot, Set(document["path"] for document in snapshot.data["documents"]))
-    registry = render_registry_preview(snapshot)
+    registry = render_registry(snapshot)
     whitelist = render_whitelist_block(snapshot)
-    registry == render_registry_preview(snapshot) || error("registry preview is nondeterministic")
-    whitelist == render_whitelist_block(snapshot) || error("whitelist preview is nondeterministic")
+    registry == render_registry(snapshot) || error("registry render is nondeterministic")
+    whitelist == render_whitelist_block(snapshot) || error("whitelist render is nondeterministic")
     assert_render_structure(snapshot, registry, whitelist)
+    validate_committed_views(snapshot, registry, whitelist; registry_text, agents_text)
+    assert_snapshot_unchanged(snapshot, Set(document["path"] for document in snapshot.data["documents"]))
+    read(REGISTRY_PATH, String) == registry_text || error("registry changed during authority check")
+    read(AGENTS_PATH, String) == agents_text || error("AGENTS changed during authority check")
+    read(@__FILE__, String) == checker_text || error("authority checker changed during authority check")
     return nothing
 end
 
@@ -557,6 +580,10 @@ end
 function render_whitelist_block(snapshot = load_snapshot())
     io = IOBuffer()
     println(io, WHITELIST_BEGIN)
+    println(io, "> **Generated authority view. Do not edit this block.**")
+    println(io, "> Source: `docs/src/developer/designs/cartesian_hamiltonian_producer/authority.toml`.")
+    println(io, "> Authority SHA-256: `$(snapshot.sha256)`.")
+    println(io)
     println(io, "Cartesian Hamiltonian producer source work is currently authorized only for")
     println(io, "these approved design IDs:")
     println(io)
@@ -565,28 +592,17 @@ function render_whitelist_block(snapshot = load_snapshot())
     end
     println(io)
     println(io, WHITELIST_END)
-    return String(take!(io))
+    return chomp(String(take!(io))) * "\n"
 end
 
-function render_whitelist_preview(snapshot = load_snapshot())
+function render_registry(snapshot = load_snapshot())
     io = IOBuffer()
-    println(io, "# Cartesian Authority Whitelist Preview")
+    println(io, "# Cartesian Hamiltonian Producer Authority Registry")
     println(io)
-    print(io, REHEARSAL_WARNING)
-    println(io, "> Candidate SHA-256: `$(snapshot.sha256)`.")
+    println(io, "> **Generated authority view. Do not edit.** The record-level source is")
+    println(io, "> [authority.toml](authority.toml), SHA-256 `$(snapshot.sha256)`.")
     println(io)
-    print(io, render_whitelist_block(snapshot))
-    return String(take!(io))
-end
-
-function render_registry_preview(snapshot = load_snapshot())
-    io = IOBuffer()
-    println(io, "# Cartesian Hamiltonian Producer Authority Registry Preview")
-    println(io)
-    print(io, REHEARSAL_WARNING)
-    println(io, "> Candidate SHA-256: `$(snapshot.sha256)`.")
-    println(io)
-    println(io, "Tracked producer work would be authorized only when a unique record has an")
+    println(io, "Tracked producer work is authorized only when a unique record has an")
     println(io, "execution grant and surface, and the requested change stays within its exact")
     println(io, "owned paths, scope, `current.md`, `invariants.md`, and canonical contract.")
     println(io, "Lifecycle never grants work by itself. Any missing or conflicting fact fails closed.")
@@ -629,42 +645,65 @@ function render_registry_preview(snapshot = load_snapshot())
         println(io, "- **Scope:** $(markdown_text(record["scope"]))")
         println(io)
     end
-    return String(take!(io))
+    return rstrip(String(take!(io))) * "\n"
 end
 
 function assert_render_structure(snapshot, registry, whitelist)
     registry_lines = _normalized_lines(registry)
     record_headings = count(line -> startswith(line, "### HP-"), registry_lines)
     record_headings == length(snapshot.data["records"]) ||
-        error("registry preview record-heading count mismatch")
+        error("registry record-heading count mismatch")
     count(==(WHITELIST_BEGIN), _normalized_lines(whitelist)) == 1 ||
-        error("whitelist preview begin-marker count mismatch")
+        error("whitelist begin-marker count mismatch")
     count(==(WHITELIST_END), _normalized_lines(whitelist)) == 1 ||
-        error("whitelist preview end-marker count mismatch")
-    occursin(WHITELIST_BEGIN, registry) && error("registry preview contains whitelist begin marker")
-    occursin(WHITELIST_END, registry) && error("registry preview contains whitelist end marker")
+        error("whitelist end-marker count mismatch")
+    occursin(WHITELIST_BEGIN, registry) && error("registry contains whitelist begin marker")
+    occursin(WHITELIST_END, registry) && error("registry contains whitelist end marker")
     Markdown.parse(registry)
     Markdown.parse(whitelist)
     return nothing
 end
 
-function render_rehearsal(snapshot = load_snapshot())
-    io = IOBuffer()
-    println(io, "# Cartesian Authority Candidate Rehearsal")
-    println(io)
-    print(io, REHEARSAL_WARNING)
-    println(io, "> Candidate SHA-256: `$(snapshot.sha256)`.")
-    println(io)
-    println(io, "## Candidate-Derived Whitelist Block")
-    println(io)
-    print(io, render_whitelist_block(snapshot))
-    println(io)
-    println(io, "## Candidate-Derived Registry")
-    println(io)
-    registry = render_registry_preview(snapshot)
-    body = join(_normalized_lines(registry)[2:end], "\n")
-    print(io, body)
-    return String(take!(io))
+function _standalone_marker(text, range)
+    before = first(range) == firstindex(text) || text[prevind(text, first(range))] == '\n'
+    after_index = nextind(text, last(range))
+    after = after_index > lastindex(text) || text[after_index] in ('\r', '\n')
+    return before && after
+end
+
+function marked_whitelist_block(text)
+    starts = collect(findall(WHITELIST_BEGIN, text))
+    stops = collect(findall(WHITELIST_END, text))
+    length(starts) == 1 || error("expected one AGENTS whitelist begin marker")
+    length(stops) == 1 || error("expected one AGENTS whitelist end marker")
+    start, stop = only(starts), only(stops)
+    first(start) < first(stop) || error("AGENTS whitelist markers are reversed")
+    _standalone_marker(text, start) || error("AGENTS whitelist begin marker must occupy one line")
+    _standalone_marker(text, stop) || error("AGENTS whitelist end marker must occupy one line")
+
+    block_end = last(stop)
+    following = nextind(text, block_end)
+    if following <= lastindex(text) && text[following] == '\r'
+        block_end = following
+        following = nextind(text, following)
+        following <= lastindex(text) && text[following] == '\n' && (block_end = following)
+    elseif following <= lastindex(text) && text[following] == '\n'
+        block_end = following
+    end
+    return String(SubString(text, first(start), block_end))
+end
+
+function validate_committed_views(
+    snapshot,
+    registry = render_registry(snapshot),
+    whitelist = render_whitelist_block(snapshot);
+    registry_text = read(REGISTRY_PATH, String),
+    agents_text = read(AGENTS_PATH, String),
+)
+    registry_text == registry || error("generated registry is stale or partially edited")
+    marked_whitelist_block(agents_text) == whitelist ||
+        error("generated AGENTS whitelist block is stale or partially edited")
+    return nothing
 end
 
 function _inside(path, root)
@@ -684,18 +723,19 @@ end
 
 function _prepare_external_output_dir(path)
     output = normpath(abspath(path))
+    ispath(output) && error("render output must be a new directory: $output")
     ancestor = _nearest_existing_ancestor(output)
-    isnothing(ancestor) && error("rehearsal output has no existing ancestor")
-    isdir(ancestor) || error("rehearsal output ancestor is not a directory: $ancestor")
+    isnothing(ancestor) && error("render output has no existing ancestor")
+    isdir(ancestor) || error("render output ancestor is not a directory: $ancestor")
     realpath(ancestor) == normpath(ancestor) ||
-        error("rehearsal output path contains a symlink: $ancestor")
+        error("render output path contains a symlink: $ancestor")
     _inside(realpath(ancestor), ROOT_REAL) &&
-        error("rehearsal output must be outside the repository")
+        error("render output must be outside the repository")
     mkpath(output)
-    isdir(output) || error("rehearsal output is not a directory: $output")
+    isdir(output) || error("render output is not a directory: $output")
     real = realpath(output)
-    real == output || error("rehearsal output path contains a symlink: $output")
-    _inside(real, ROOT_REAL) && error("rehearsal output must be outside the repository")
+    real == output || error("render output path contains a symlink: $output")
+    _inside(real, ROOT_REAL) && error("render output must be outside the repository")
     return real
 end
 
@@ -723,48 +763,27 @@ function _atomic_write(path, content; parent_real)
     return path
 end
 
-function write_rehearsal(output_dir, snapshot = load_snapshot(); transition_bindings)
-    isempty(transition_bindings) && error("transition-bound rehearsal metadata is required")
+function render_external(output_dir, snapshot = load_snapshot())
     checker_text = read(@__FILE__, String)
-    checker_sha256 = digest(checker_text)
-    check_candidate(snapshot)
-    registry = render_registry_preview(snapshot)
-    whitelist = render_whitelist_preview(snapshot)
-    combined = render_rehearsal(snapshot)
+    errors = validation_errors(snapshot.data)
+    snapshot.text == serialized(snapshot.data) || push!(errors, "authority TOML serialization is not canonical")
+    append!(errors, legacy_live_errors())
+    isempty(errors) || error("Cartesian authority errors:\n" * join(first(errors, 100), "\n"))
+    registry = render_registry(snapshot)
+    whitelist = render_whitelist_block(snapshot)
     assert_render_structure(snapshot, registry, whitelist)
     assert_snapshot_unchanged(snapshot, Set(document["path"] for document in snapshot.data["documents"]))
-    read(@__FILE__, String) == checker_text || error("candidate checker changed during rendering")
+    read(@__FILE__, String) == checker_text || error("authority checker changed during rendering")
     output_dir = _prepare_external_output_dir(output_dir)
-    lock = joinpath(output_dir, ".cartesian-authority-rehearsal-lock")
-    mkdir(lock)
     outputs = Dict(
-        "agents_whitelist.preview.md" => whitelist,
-        "registry.preview.md" => registry,
-        "rehearsal.md" => combined,
+        "agents_whitelist_block.md" => whitelist,
+        "registry.md" => registry,
     )
-    try
-        for (name, content) in outputs
-            _atomic_write(joinpath(output_dir, name), content; parent_real = output_dir)
-        end
-        assert_snapshot_unchanged(snapshot, Set(document["path"] for document in snapshot.data["documents"]))
-        read(@__FILE__, String) == checker_text || error("candidate checker changed during rendering")
-        manifest = Dict{String,Any}(
-            "artifact_kind" => "cartesian_authority_transition_rehearsal",
-            "authoritative" => false,
-            "authorization_complete" => false,
-            "candidate_sha256" => snapshot.sha256,
-            "checker_sha256" => checker_sha256,
-            "document_inventory_sha256" => digest(serialized(Dict("documents" => snapshot.data["documents"]))),
-            "transition_bindings" => transition_bindings,
-            "outputs" => Dict(name => digest(content) for (name, content) in outputs),
-            "record_count" => length(snapshot.data["records"]),
-            "execution_whitelist_count" => length(execution_ids(snapshot.data)),
-        )
-        _atomic_write(joinpath(output_dir, "manifest.toml"), serialized(manifest); parent_real = output_dir)
-        read(@__FILE__, String) == checker_text || error("candidate checker changed during rendering")
-    finally
-        isdir(lock) && rm(lock)
+    for (name, content) in outputs
+        _atomic_write(joinpath(output_dir, name), content; parent_real = output_dir)
     end
+    assert_snapshot_unchanged(snapshot, Set(document["path"] for document in snapshot.data["documents"]))
+    read(@__FILE__, String) == checker_text || error("authority checker changed during rendering")
     return output_dir
 end
 
@@ -774,17 +793,50 @@ function _expect_failure(data, needle)
         error("negative check did not produce $(repr(needle)); got $(join(errors, "; "))")
 end
 
+function _expect_error(operation, needle)
+    error_value = try
+        operation()
+        nothing
+    catch caught
+        caught
+    end
+    isnothing(error_value) &&
+        error("negative check unexpectedly passed; expected $(repr(needle))")
+    message = sprint(showerror, error_value)
+    occursin(needle, message) || throw(error_value)
+    return nothing
+end
+
 function self_test()
     snapshot = load_snapshot()
-    isempty(validation_errors(snapshot.data)) || error("candidate must pass before self-test")
+    isempty(validation_errors(snapshot.data)) || error("authority must pass before self-test")
+    registry = render_registry(snapshot)
+    whitelist = render_whitelist_block(snapshot)
+    validate_committed_views(snapshot, registry, whitelist)
 
     broken = deepcopy(snapshot.data)
-    broken["authoritative"] = true
-    _expect_failure(broken, "authoritative=false")
+    broken["authoritative"] = false
+    _expect_failure(broken, "authoritative=true")
+
+    broken = deepcopy(snapshot.data)
+    broken["authorization_complete"] = false
+    _expect_failure(broken, "authorization_complete=true")
+
+    broken = deepcopy(snapshot.data)
+    broken["schema_version"] = 4
+    _expect_failure(broken, "schema_version")
+
+    broken = deepcopy(snapshot.data)
+    broken["artifact_kind"] = "cartesian_authority_candidate"
+    _expect_failure(broken, "artifact_kind")
 
     broken = deepcopy(snapshot.data)
     broken["records"][1]["lifecycle"] = "historical"
     _expect_failure(broken, "unknown lifecycle")
+
+    broken = deepcopy(snapshot.data)
+    broken["records"][1]["grant"] = "caller-maintenance"
+    _expect_failure(broken, "unknown grant")
 
     broken = deepcopy(snapshot.data)
     source_record = first(record for record in broken["records"] if "source" in record["surfaces"])
@@ -835,26 +887,66 @@ function self_test()
     evidence_record["evidence_refs"][1]["kind"] = "authority"
     _expect_failure(broken, "unknown kind")
 
-    registry = render_registry_preview(snapshot)
-    whitelist = render_whitelist_block(snapshot)
-    whitelist_preview = render_whitelist_preview(snapshot)
-    registry == render_registry_preview(snapshot) || error("registry render changed")
+    registry == render_registry(snapshot) || error("registry render changed")
     whitelist == render_whitelist_block(snapshot) || error("whitelist render changed")
     assert_render_structure(snapshot, registry, whitelist)
-    assert_render_structure(snapshot, registry, whitelist_preview)
-    occursin("Generated rehearsal only", whitelist_preview) ||
-        error("standalone whitelist preview lacks rehearsal warning")
+
+    agents_text = read(AGENTS_PATH, String)
+    _expect_error("registry is stale") do
+        validate_committed_views(
+            snapshot,
+            registry,
+            whitelist;
+            registry_text = registry * "\n",
+            agents_text,
+        )
+    end
+    _expect_error("AGENTS whitelist block is stale") do
+        changed = replace(agents_text, first(execution_ids(snapshot.data)) => "HP-BROKEN-ID"; count = 1)
+        validate_committed_views(snapshot, registry, whitelist; registry_text = registry, agents_text = changed)
+    end
+    _expect_error("begin marker") do
+        changed = replace(agents_text, WHITELIST_BEGIN => ""; count = 1)
+        validate_committed_views(snapshot, registry, whitelist; registry_text = registry, agents_text = changed)
+    end
+
+    mktempdir() do directory
+        missing = joinpath(directory, "missing.toml")
+        _expect_error("No such file") do
+            load_snapshot(missing)
+        end
+        corrupt = joinpath(directory, "corrupt.toml")
+        write(corrupt, "not = [valid")
+        _expect_error("TOML") do
+            load_snapshot(corrupt)
+        end
+        legacy = joinpath(directory, "legacy.toml")
+        write(legacy, "legacy")
+        isempty(legacy_live_errors([legacy])) &&
+            error("legacy live artifact was not rejected")
+        dangling = joinpath(directory, "dangling.toml")
+        symlink(joinpath(directory, "missing-target"), dangling)
+        isempty(legacy_live_errors([dangling])) &&
+            error("dangling legacy symlink was not rejected")
+    end
 
     mktempdir() do directory
         symlink(ROOT, joinpath(directory, "repo-link"))
-        try
-            _prepare_external_output_dir(joinpath(directory, "repo-link", "rehearsal"))
-            error("symlinked external output path was not rejected")
-        catch error_value
-            occursin("symlink", sprint(showerror, error_value)) || rethrow()
+        _expect_error("symlink") do
+            _prepare_external_output_dir(joinpath(directory, "repo-link", "render"))
         end
         isnothing(safe_repo_path("../escape"; root = directory, root_real = realpath(directory))) ||
             error("repository traversal path was not rejected")
+
+        output = joinpath(directory, "render")
+        render_external(output, snapshot)
+        read(joinpath(output, "registry.md"), String) == registry ||
+            error("external registry render mismatch")
+        read(joinpath(output, "agents_whitelist_block.md"), String) == whitelist ||
+            error("external whitelist render mismatch")
+        _expect_error("new directory") do
+            _prepare_external_output_dir(output)
+        end
 
         parent = realpath(directory)
         destination = joinpath(parent, "existing-directory")
@@ -870,16 +962,17 @@ function self_test()
         read(sentinel, String) == "preserve" || error("atomic-write directory rejection lost data")
     end
 
+    _expect_error("outside the repository") do
+        _prepare_external_output_dir(tempname(joinpath(ROOT, "tmp")))
+    end
+
     mktempdir() do directory
-        copy = joinpath(directory, "candidate.toml")
+        copy = joinpath(directory, "authority.toml")
         write(copy, snapshot.text)
         local_snapshot = load_snapshot(copy)
         write(copy, snapshot.text * "\n")
-        try
+        _expect_error("authority changed") do
             assert_snapshot_unchanged(local_snapshot, Set{String}())
-            error("concurrent candidate replacement was not detected")
-        catch error_value
-            occursin("candidate changed", sprint(showerror, error_value)) || rethrow()
         end
     end
     return nothing
@@ -887,22 +980,19 @@ end
 
 function main(args = ARGS)
     if isempty(args) || args == ["--check"]
-        check_candidate()
+        check_authority()
     elseif args == ["--self-test"]
         self_test()
-    elseif args == ["--rehearse"]
+    elseif length(args) == 2 && args[1] == "--render"
         snapshot = load_snapshot()
-        check_candidate(snapshot)
-        output = render_rehearsal(snapshot)
-        assert_snapshot_unchanged(snapshot, Set(document["path"] for document in snapshot.data["documents"]))
-        print(output)
+        println(render_external(args[2], snapshot))
     else
-        error("usage: julia --project=docs docs/check_cartesian_authority_candidate.jl [--check|--self-test|--rehearse]")
+        error("usage: julia --project=docs docs/check_cartesian_authority.jl [--check|--self-test|--render DIR]")
     end
 end
 
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    CartesianAuthorityCandidate.main()
+    CartesianAuthority.main()
 end

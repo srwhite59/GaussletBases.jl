@@ -29207,3 +29207,40 @@ Goal advancement / guardrail:
   remains explicitly unapproved pending a new user/design-manager handoff.
 - **MT6 old flat-path classification - maintenance.** Closed and historical
   records remain explicit and fail-closed.
+
+## Cartesian Hamiltonian Producer Pass 396 - Activate Machine Authority
+
+Commit(s):
+- this commit - atomically promote the reviewed authority and remove the dual
+  prose/shadow system.
+
+Summary:
+- Promoted the exact schema-v3 candidate to authoritative `authority.toml`
+  with digest `6057ef50...`, preserving all 232 records, 44 hashed documents,
+  and 150 execution IDs. The generated registry and marked `AGENTS.md` block
+  are now checked one-way views; manually authored policy and contracts may
+  restrict but never broaden machine authority.
+- Frozen subsystem wording that the registry "owns" an ID is now explicitly
+  interpreted as the exact generated human view, never a second prose source;
+  machine authority controls any discrepancy.
+- Replaced three temporary checkers with one permanent fail-closed checker,
+  removed the raw shadow and transition snapshot, and made the docs workflow
+  depend on the read-only `cartesian-authority` job. The completed cutover
+  record preserves activation and whole-commit rollback rules.
+
+Validation / evidence:
+- The exact authorized parent `a8076f2fa` passed all six legacy gates and the
+  reviewed `30cf4ed8...` candidate, `232/44/150` counts, whitelist digest, and
+  two AGENTS range digests matched. Permanent check/self-test, repeated fresh
+  rendering, focused docs tests (`53/53` plus `10/10`), local Documenter, link
+  and legacy-absence scans, staged scope, detached-checkout replay, and
+  whole-commit revert/tree proof form the activation gate.
+
+Goal advancement / guardrail:
+- MT5 machine-authority cutover is completed. Future authority amendments must
+  edit `authority.toml`, regenerate both views externally, and land them in one
+  checked commit; reverse parsing or prose fallback is forbidden.
+- The transaction changes no source, numerical contract, artifact, driver, or
+  hashed canonical document and removes more than 5,600 net lines. Any failed
+  post-activation authority/docs CI requires a whole-commit revert before
+  producer work resumes.

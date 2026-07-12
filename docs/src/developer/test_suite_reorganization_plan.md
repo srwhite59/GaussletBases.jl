@@ -101,6 +101,9 @@ This should be treated as ownership cleanup, not as a test-framework rewrite.
 - preserve current test names unless a rename adds real clarity
 - do not hide important fixture logic behind too much abstraction
 - prefer local helpers inside a domain file when they are not genuinely shared
+- keep the fail-closed Cartesian authority checker as its own required CI job;
+  docs tests should verify permanent command wiring and markers, not duplicate
+  prose inventories or transition-era filenames
 - keep legacy/internal route tests clearly quarantined instead of mixed through
   active public-contract coverage
 - do not combine unrelated domains just to reduce file count

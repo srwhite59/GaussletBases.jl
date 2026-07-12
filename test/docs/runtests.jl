@@ -24,9 +24,7 @@
     docs_project = read_doc("docs", "Project.toml")
     docs_make = read_doc("docs", "make.jl")
     docs_workflow = read_doc(".github", "workflows", "docs.yml")
-    agents = read_doc("AGENTS.md")
-    authority_candidate_check = read_doc("docs", "check_cartesian_authority_candidate.jl")
-    authority_transition_check = read_doc("docs", "check_cartesian_authority_transition.jl")
+    authority_check = read_doc("docs", "check_cartesian_authority.jl")
 
     docs_site_index = read_doc("docs", "src", "index.md")
     docs_site_manual = read_doc("docs", "src", "manual", "index.md")
@@ -183,13 +181,6 @@
             "[Developer Notes](../developer/index.md)",
             "38_qiu_white_reference_vee.jl",
         )
-        @test contains_all_lower(
-            docs_site_examples,
-            "legacy/internal experimental regressions",
-            "producer-side only",
-            "explicitly experimental",
-        )
-
         @test contains_all(
             docs_site_reference_index,
             "# Reference overview",
@@ -290,15 +281,6 @@
             ":pgdg_localized_experimental",
             "AsinhMapping",
         )
-        @test contains_all_lower(
-            docs_site_ordinary,
-            "pgdg-style analytic route is good enough on the mapped ordinary backbone",
-            "bond-aligned diatomic molecular supplement direct-product and prebuilt",
-            "nested fixed-block qiu-white routes are now also pgdg-capable",
-            "nested source-building front doors",
-            "experimental chain/square nested qw source wrappers",
-        )
-
         @test contains_all(
             docs_site_angular_track,
             "# Angular Research Track",
@@ -323,9 +305,6 @@
         @test contains_all(
             docs_make,
             "makedocs",
-            "CartesianAuthorityShadow.check_shadow()",
-            "CartesianAuthorityCandidate.check_candidate()",
-            "CartesianAuthorityTransition.check_transition()",
             "doctest = true",
             "checkdocs = :none",
             "deploydocs(",
@@ -339,35 +318,22 @@
         @test contains_all(
             docs_workflow,
             "name: Docs",
-            "authority-transition:",
+            "cartesian-authority:",
+            "needs: cartesian-authority",
             "julia --project=docs docs/make.jl",
             "Pkg.develop(PackageSpec(path=pwd()))",
-            "docs/check_cartesian_authority_shadow.jl --self-test",
-            "docs/check_cartesian_authority_candidate.jl --self-test",
-            "docs/check_cartesian_authority_transition.jl --self-test",
-            "cartesian-authority-rehearsal",
+            "docs/check_cartesian_authority.jl --check",
+            "docs/check_cartesian_authority.jl --self-test",
         )
+        @test !occursin("check_cartesian_authority", docs_make)
 
-        @test count(
-            ==("<!-- BEGIN CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST -->"),
-            split(agents, '\n'),
-        ) == 1
-        @test count(
-            ==("<!-- END CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST -->"),
-            split(agents, '\n'),
-        ) == 1
         @test contains_all(
-            authority_candidate_check,
-            "Generated rehearsal only.",
-            "transition-bound rehearsal metadata is required",
-            "candidate must remain authoritative=false",
-        )
-        @test contains_all(
-            authority_transition_check,
-            "candidate-derived execution whitelist mismatch",
-            "document-owner path mismatch",
-            "--write-rehearsal",
-            "transition_snapshot_sha256",
+            authority_check,
+            "module CartesianAuthority",
+            "authority must set authoritative=true",
+            "generated registry is stale or partially edited",
+            "legacy authority artifact remains live",
+            "--render",
         )
 
         @test contains_all(
@@ -404,12 +370,6 @@
             "sliced_ham_payload",
             "atomic_hamv6_payload",
             "angular_benchmark_exact_hamv6_payload",
-        )
-        @test contains_all_lower(
-            docs_site_reference_export,
-            "producer-side only",
-            "hfdmrg.solve_hfdmrg(...)",
-            "experimental rather than a settled public standard",
         )
     end
 

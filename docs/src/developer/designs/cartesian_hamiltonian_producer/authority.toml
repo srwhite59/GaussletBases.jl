@@ -1,6 +1,6 @@
-artifact_kind = "cartesian_authority_candidate"
-authoritative = false
-authorization_complete = false
+artifact_kind = "cartesian_authority"
+authoritative = true
+authorization_complete = true
 schema_version = 3
 
 [[documents]]

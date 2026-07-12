@@ -2,10 +2,10 @@
 
 This page is navigation and orientation for the Cartesian/PQS Hamiltonian
 producer. It does not independently grant source authority: `current.md` owns
-live status, `registry.md` owns ID permission/lifecycle/surfaces,
-`invariants.md` owns cross-subsystem guardrails, and linked subsystem pages own
-their numerical contracts. On disagreement, follow the fail-closed rule in
-`invariants.md`.
+live status, `authority.toml` owns record-level permissions and surfaces,
+`registry.md` is its generated human view, `invariants.md` owns
+cross-subsystem guardrails, and linked subsystem pages own their numerical
+contracts. On disagreement, follow the fail-closed rule in `invariants.md`.
 
 ## Orientation
 
@@ -284,26 +284,18 @@ ID or subsystem.
 
 ## Contracts, Amendments, And Completed Records
 
-The task-specific map above is the contract index. The registry supplies each
-ID's lifecycle, permission, code owner, and validation surface; linked pages
-own behavior. Do not copy their specifications into this navigation page.
+The task-specific map above is the contract index. The schema-v3
+[machine authority](authority.toml) owns each ID's lifecycle, grant, exact
+surfaces, dependencies, and canonical references. The generated
+[registry](registry.md) and marked `AGENTS.md` whitelist are checked views;
+linked pages own behavior. Surrounding policy and contracts may restrict
+machine authority but cannot broaden it. Do not copy their specifications into
+this navigation page.
 
-Three checked transition files support the documentation reorganization: the
-generated raw-text [registry/whitelist shadow](registry_whitelist_shadow.toml),
-the self-contained schema-v3 semantic
-[authority candidate](authority_candidate.toml), and the exact
-[transition snapshot](authority_transition_snapshot.toml) binding candidate
-bytes to current prose authority. Transition-bound manifests also record the
-exact prose files, marked block, candidate/checkers, Git HEAD, and semantic
-review status. Candidate-derived registry and warned whitelist previews are
-deterministic rehearsal output only. All remain non-authoritative and
-authorization-incomplete; they do not grant work or replace `AGENTS.md`,
-`registry.md`, or a canonical contract. Automated transition parity is
-structural; semantic parity requires the recorded independent review.
-
-The reviewed [atomic cutover plan](authority_atomic_cutover_plan.md) defines a
-future one-commit transition to machine-owned record authority. It is planning
-material only and does not authorize flag changes or cutover execution.
+The [atomic cutover record](authority_atomic_cutover_plan.md) preserves the
+reviewed transition digest, activation boundary, validation, and whole-commit
+rollback rule. Earlier shadow/candidate/transition files were removed rather
+than retained as a second authority system.
 
 Completed implementation plans remain as short historical pointers only where
 their names are still useful for old links. Completed retirement records remain

@@ -6,8 +6,8 @@ subsystem mathematics.
 
 For a task, authority requires agreement among:
 
-1. the source-ID whitelist in `AGENTS.md`;
-2. the assigned entry in `registry.md`;
+1. the assigned record in [authority.toml](authority.toml);
+2. its generated entry in `registry.md` and generated `AGENTS.md` membership;
 3. the canonical subsystem contract linked by that entry;
 4. any explicit boundary on this page.
 
@@ -57,7 +57,7 @@ claim.
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |
-| Documentation architecture | Pass 394 established reviewed parity for all 232 records/150 execution IDs; the Pass 395 one-commit cutover plan passed independent review | Request explicit execution authority that pins the accepted Pass 395 commit; no generated live view or cutover execution is approved |
+| Documentation architecture | Pass 396 atomically promoted 232 reviewed records and 150 execution IDs to machine authority with generated registry/AGENTS views and one permanent checker | Maintain the one-way machine-to-view contract; no reverse parser or prose fallback |
 
 Other approved IDs may remain actionable even when not listed here. Read the
 assigned registry entry. Completed retirement, superseded, rejected, and
@@ -94,15 +94,10 @@ energy claim.
 4. **Protected atoms and counterpoise.** One-center protected compactness,
    separated kinetic/unit-nuclear persistence, and counterpoise sidecars remain
    separate future designs.
-5. **Authority cutover remains unapproved.** The complete Pass 394
-   [review result](reviews/authority_transition_rehearsal_pass394_2026-07-12.md)
-   cleared transition tooling and all 232 candidate records. Two initial
-   composition source-surface omissions were corrected in a diff confined to
-   those records, then independently re-reviewed with exact 150-ID execution
-   parity. The [Pass 395 cutover plan](authority_atomic_cutover_plan.md) now
-   defines the exact promotion, one-way views, dual-system removal, CI,
-   activation, and rollback transaction. Plan review passed; explicit execution
-   authority is still absent.
+The documentation authority cutover is complete. The Pass 394
+[review result](reviews/authority_transition_rehearsal_pass394_2026-07-12.md)
+and [cutover record](authority_atomic_cutover_plan.md) preserve semantic parity,
+activation, and rollback evidence; they are not parallel authority sources.
 
 ## Non-Negotiable Boundaries
 

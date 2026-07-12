@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  authority-transition:
+  cartesian-authority:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -21,17 +21,13 @@ jobs:
         with:
           version: "1.10"
 
-      - name: Check Cartesian authority transition
+      - name: Check Cartesian authority
         run: |
-          julia --project=docs docs/check_cartesian_authority_shadow.jl --check
-          julia --project=docs docs/check_cartesian_authority_shadow.jl --self-test
-          julia --project=docs docs/check_cartesian_authority_candidate.jl --check
-          julia --project=docs docs/check_cartesian_authority_candidate.jl --self-test
-          julia --project=docs docs/check_cartesian_authority_transition.jl --check
-          julia --project=docs docs/check_cartesian_authority_transition.jl --self-test
-          julia --project=docs docs/check_cartesian_authority_transition.jl --write-rehearsal "$RUNNER_TEMP/cartesian-authority-rehearsal"
+          julia --startup-file=no --project=docs docs/check_cartesian_authority.jl --check
+          julia --startup-file=no --project=docs docs/check_cartesian_authority.jl --self-test
 
   docs:
+    needs: cartesian-authority
     runs-on: ubuntu-latest
     permissions:
       contents: write

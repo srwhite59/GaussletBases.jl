@@ -27,7 +27,9 @@ The machine-authority transition reviews are:
   the first completed no-go review and reconciliation inventory;
 - [Authority transition rehearsal Pass 394 - 2026-07-12](authority_transition_rehearsal_pass394_2026-07-12.md),
   the complete follow-up review and same-pass focused reconciliation that
-  establishes reviewed semantic parity for all 232 candidate records.
+  established reviewed semantic parity for all 232 records before the atomic
+  cutover. The live record-level authority is now `../authority.toml`; these
+  reviews remain evidence only.
 
 Historical recursive/previous-block projection material in these reviews is
 stale. The live Slice A authority rejects previous-block projection and

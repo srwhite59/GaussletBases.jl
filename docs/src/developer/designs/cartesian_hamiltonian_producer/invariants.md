@@ -6,12 +6,17 @@ Gaussian work.
 
 ## Authority
 
-- `AGENTS.md` supplies the deny-by-default execution whitelist and repo-wide
-  operating rules. Presence there is necessary but not sufficient for source
-  work.
-- `registry.md` owns each ID's permission, lifecycle, owner, approved source or
-  test surface, and canonical contract link. Registry section nesting is
-  navigation only; an entry's own status governs.
+- `authority.toml` is the sole record-level authority for each ID's lifecycle,
+  grant, exact owned paths, dependencies, and canonical references.
+- `registry.md` and the marked `AGENTS.md` execution whitelist are
+  deterministic checked views. They grant no independent authority.
+- Existing subsystem wording that the registry "owns" or "remains
+  authoritative" for an ID means this exact generated human view of the
+  machine record. It does not create a second prose authority source; on any
+  discrepancy, `authority.toml` and the fail-closed checker control.
+- Surrounding `AGENTS.md` policy supplies repo-wide operating restrictions.
+  It may restrict machine authority but cannot add or broaden an ID, grant,
+  surface, path, or scope.
 - `current.md` owns concise live status: implemented facilities, active lanes,
   blockers, and next work. It does not restate full contracts.
 - subsystem design pages own normative mathematics, object semantics,
@@ -24,15 +29,14 @@ Gaussian work.
   and the manager running log are decision/evidence records unless explicitly
   promoted by current authority.
 
-An ID authorizes source work only when the `AGENTS.md` whitelist, registry
-permission/lifecycle, and canonical subsystem contract agree and `current.md`
-does not explicitly contradict them. Silence in the concise current-status
-page is neutral; an explicit conflict is not. On conflict, fail closed: make no
-source edit and request a docs-only authority reconciliation. This transition
-rule remains in force until a later amendment establishes one machine-readable
-authority source. The self-contained schema-v3 candidate, its generated
-previews, raw shadow, and transition snapshot are checked rehearsal metadata;
-they grant no work and cannot override prose authority.
+An ID authorizes source-bearing work only when its machine record derives
+execution membership, both generated views are current, its canonical contract
+agrees, and `current.md` does not explicitly contradict it. Silence in the
+concise current-status page is neutral; an explicit conflict is not. On any
+missing fact, stale view, checker failure, or conflict, fail closed: make no
+producer edit and request a docs-only authority reconciliation. No prose view,
+Git parent, cached output, or historical transition record is fallback
+authority.
 
 ## Terminal Basis
 
