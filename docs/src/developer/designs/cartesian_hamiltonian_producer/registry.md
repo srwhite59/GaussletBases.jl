@@ -22,9 +22,13 @@ implementation may remain preservation-only only when its entry says so and it
 is still whitelisted. Numerical formulas, behavioral invariants, and rationale
 belong in the linked canonical subsystem document. Every ID has its own
 heading plus explicit lifecycle, permission, and canonical or historical
-ownership. The next transition step is non-authoritative machine-readable
-shadow metadata with exact parity checks. This Markdown registry remains the
-authority until a separately reviewed atomic cutover.
+ownership. The generated
+[registry/whitelist shadow](registry_whitelist_shadow.toml) preserves these
+records and raw `AGENTS.md` whitelist membership for exact parity checks. It is
+explicitly non-authoritative and authorization-incomplete; this Markdown
+registry and `AGENTS.md` remain the authority until a separately reviewed
+atomic cutover. Regenerate the shadow only with
+`julia --project=docs docs/check_cartesian_authority_shadow.jl --write`.
 
 ## Approved And Implemented
 
@@ -319,6 +323,9 @@ WL boundary products retain the requested count. Canonical examples remain
 ### HP-WLDIAT-PARITY-TEST-01 — WL parity validation
 
 Lifecycle: completed validation contract. Permission: validation maintenance.
+
+Owner/canonical: White-Lindsey terminal basis realization;
+[White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md).
 
 Evidence: bounded `ns=4/5` retained-count, artifact/readback,
 finite/symmetric-operator, supplemented, and PQS endpoint smokes.

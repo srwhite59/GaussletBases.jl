@@ -1,6 +1,8 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 GaussletBases = "5d4de616-c9ab-4678-9ab9-e835b9559837"
+SHA = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 
 [compat]
 Documenter = "1"

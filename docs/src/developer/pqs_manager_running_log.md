@@ -28793,3 +28793,37 @@ Goal advancement / guardrail:
 - **MT6 old flat-path classification - maintenance.** Retired and superseded
   records now carry explicit `Permission: none` and history ownership without
   compatibility restoration.
+
+## Cartesian Hamiltonian Producer Pass 386 - Add Non-Authoritative Authority Shadow
+
+Commit(s):
+- this commit - add generated registry/whitelist shadow metadata and a
+  fail-closed docs-build parity gate.
+
+Summary:
+- Added `registry_whitelist_shadow.toml` as an explicitly generated,
+  non-authoritative, authorization-incomplete mirror of all `230` normalized
+  registry records and raw membership in the `181`-ID `AGENTS.md` whitelist.
+  The shadow preserves normalized lifecycle/status, permission, and
+  ownership/link text plus record/source hashes; it does not infer effective
+  authorization, callers, tests, dependencies, or semantic enums.
+- Added a deterministic Julia generator/checker and made local/CI Documenter
+  builds reject missing records, ambiguous fields, broken canonical links,
+  whitelist drift, content drift, or noncanonical serialization. Markdown plus
+  `AGENTS.md` remain the authority. Also repaired the missing local canonical
+  link on `HP-WLDIAT-PARITY-TEST-01` found by the parser audit.
+
+Validation / evidence:
+- Standalone generation/check, byte-determinism, deliberate field/record drift,
+  duplicate-state and missing-permission negative checks, full local Documenter,
+  and `git diff --check` passed. Independent tooling and authority-safety
+  reviews found no unaddressed authority cutover or numerical/source change.
+
+Goal advancement / guardrail:
+- MT5 advances from normalized prose to checked shadow metadata. The deliberate
+  carrying cost is one roughly `400`-line checker and a generated `156` KiB
+  shadow; it replaces no human contract yet. No source, test, API, artifact,
+  physics, default, EGOI WIP, solver, or Cr2 authority changed.
+- Next: decide separately whether a normalized lifecycle/permission taxonomy is
+  useful. Do not generate authority views or cut over execution authority in
+  that decision pass.
