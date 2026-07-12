@@ -21,6 +21,8 @@ const REGISTRY_SOURCE = "docs/src/developer/designs/cartesian_hamiltonian_produc
 const AGENTS_SOURCE = "AGENTS.md"
 const ARTIFACT_KIND = "cartesian_registry_whitelist_shadow"
 const SCOPE = "registry_metadata_and_agents_whitelist_membership_only"
+const WHITELIST_BEGIN = "<!-- BEGIN CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST -->"
+const WHITELIST_END = "<!-- END CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST -->"
 const EM_DASH_SEPARATOR = string(' ', Char(0x2014), ' ')
 const ASCII_DASH_SEPARATOR = " - "
 const OWNERSHIP_PREFIXES = (
@@ -270,18 +272,53 @@ function _registry_records()
     return records, _digest(_normalized_block(lines))
 end
 
-function _parse_agents_whitelist(lines)
-    visible = _visible_markdown_lines(lines)
-    start_phrase = "Cartesian Hamiltonian producer source work is currently authorized only for"
-    stop_phrase = "No other production surface may be added"
-    starts = findall(line -> !isnothing(line) && strip(line) == start_phrase, visible)
-    stops = findall(line -> !isnothing(line) && startswith(strip(line), stop_phrase), visible)
-    length(starts) == 1 || error("expected one AGENTS whitelist start marker")
-    length(stops) == 1 || error("expected one AGENTS whitelist stop marker")
+function _standalone_marker(text, range)
+    before = first(range) == firstindex(text) || text[prevind(text, first(range))] == '\n'
+    after_index = nextind(text, last(range))
+    after = after_index > lastindex(text) || text[after_index] in ('\r', '\n')
+    return before && after
+end
+
+function _raw_marked_whitelist_block(text)
+    starts = collect(findall(WHITELIST_BEGIN, text))
+    stops = collect(findall(WHITELIST_END, text))
+    length(starts) == 1 || error("expected one AGENTS whitelist begin marker")
+    length(stops) == 1 || error("expected one AGENTS whitelist end marker")
     start, stop = only(starts), only(stops)
-    start < stop || error("AGENTS whitelist markers are reversed")
+    first(start) < first(stop) || error("AGENTS whitelist markers are reversed")
+    _standalone_marker(text, start) || error("AGENTS whitelist begin marker must occupy one line")
+    _standalone_marker(text, stop) || error("AGENTS whitelist end marker must occupy one line")
+
+    block_end = last(stop)
+    following = nextind(text, block_end)
+    if following <= lastindex(text) && text[following] == '\r'
+        block_end = following
+        following = nextind(text, following)
+        following <= lastindex(text) && text[following] == '\n' && (block_end = following)
+    elseif following <= lastindex(text) && text[following] == '\n'
+        block_end = following
+    end
+    return String(SubString(text, first(start), block_end))
+end
+
+function _marked_whitelist_lines(text)
+    raw_block = _raw_marked_whitelist_block(text)
+    lines = _normalized_lines(raw_block)
+    starts = findall(line -> line == WHITELIST_BEGIN, lines)
+    stops = findall(line -> line == WHITELIST_END, lines)
+    start, stop = only(starts), only(stops)
+    return lines[(start + 1):(stop - 1)], _digest(raw_block)
+end
+
+function _parse_agents_whitelist(text)
+    block_lines, block_digest = _marked_whitelist_lines(text)
+    visible = _visible_markdown_lines(block_lines)
+    start_phrase = "Cartesian Hamiltonian producer source work is currently authorized only for"
+    starts = findall(line -> !isnothing(line) && strip(line) == start_phrase, visible)
+    length(starts) == 1 || error("expected one AGENTS whitelist start marker")
+    start = only(starts)
     ids = String[]
-    for line in visible[(start + 1):(stop - 1)]
+    for line in visible[(start + 1):end]
         isnothing(line) && continue
         stripped = strip(line)
         if startswith(stripped, "- ")
@@ -298,15 +335,15 @@ function _parse_agents_whitelist(lines)
     length(ids) == length(unique(ids)) || error("duplicate AGENTS whitelist ID")
     sorted = sort(ids)
     digest = _digest(join(sorted, "\n") * "\n")
-    return sorted, digest
+    return sorted, digest, block_digest
 end
 
 _agents_whitelist() =
-    _parse_agents_whitelist(_normalized_lines(read(AGENTS_PATH, String)))
+    _parse_agents_whitelist(read(AGENTS_PATH, String))
 
 function expected_shadow()
     records, registry_digest = _registry_records()
-    whitelist, whitelist_digest = _agents_whitelist()
+    whitelist, whitelist_digest, whitelist_block_digest = _agents_whitelist()
     registry_ids = Set(record["id"] for record in records)
     missing = sort!(collect(setdiff(Set(whitelist), registry_ids)))
     isempty(missing) || error("AGENTS whitelist IDs missing from registry: $(join(missing, ", "))")
@@ -315,7 +352,7 @@ function expected_shadow()
         record["agents_whitelisted"] = record["id"] in whitelist_set
     end
     return Dict{String,Any}(
-        "schema_version" => 1,
+        "schema_version" => 2,
         "artifact_kind" => ARTIFACT_KIND,
         "authoritative" => false,
         "authorization_complete" => false,
@@ -325,6 +362,7 @@ function expected_shadow()
         "agents_source" => AGENTS_SOURCE,
         "registry_sha256" => registry_digest,
         "agents_whitelist_sha256" => whitelist_digest,
+        "agents_whitelist_block_sha256" => whitelist_block_digest,
         "registry_record_count" => length(records),
         "agents_whitelist_count" => length(whitelist),
         "records" => records,
@@ -377,8 +415,48 @@ function check_shadow()
 end
 
 function write_shadow()
-    write(SHADOW_PATH, _serialized(expected_shadow()))
+    temporary, io = mktemp(dirname(SHADOW_PATH))
+    try
+        write(io, _serialized(expected_shadow()))
+        flush(io)
+        close(io)
+        mv(temporary, SHADOW_PATH; force = true)
+    catch
+        isopen(io) && close(io)
+        ispath(temporary) && rm(temporary; force = true)
+        rethrow()
+    end
     return SHADOW_PATH
+end
+
+function _expect_parse_failure(text, needle)
+    try
+        _parse_agents_whitelist(text)
+        error("negative whitelist check unexpectedly passed")
+    catch error_value
+        message = sprint(showerror, error_value)
+        occursin(needle, message) || rethrow()
+    end
+end
+
+function self_test()
+    text = read(AGENTS_PATH, String)
+    ids, _, block_digest = _parse_agents_whitelist(text)
+    _expect_parse_failure(replace(text, WHITELIST_BEGIN => ""), "begin marker")
+    _expect_parse_failure(text * "\n" * WHITELIST_BEGIN, "begin marker")
+    reversed = replace(
+        replace(text, WHITELIST_BEGIN => "TEMP-WHITELIST-MARKER"),
+        WHITELIST_END => WHITELIST_BEGIN,
+    )
+    reversed = replace(reversed, "TEMP-WHITELIST-MARKER" => WHITELIST_END)
+    _expect_parse_failure(reversed, "reversed")
+    malformed = replace(text, "- `HP-OBJ-01`" => "- HP-OBJ-01")
+    _expect_parse_failure(malformed, "malformed AGENTS whitelist item")
+    whitespace_changed = replace(text, "- `HP-OBJ-01`" => "- `HP-OBJ-01`  ")
+    changed_ids, _, changed_block_digest = _parse_agents_whitelist(whitespace_changed)
+    ids == changed_ids || error("whitelist whitespace mutation changed parsed IDs")
+    block_digest != changed_block_digest || error("raw whitelist block digest ignored byte drift")
+    return nothing
 end
 
 function main(args = ARGS)
@@ -386,8 +464,10 @@ function main(args = ARGS)
         check_shadow()
     elseif args == ["--write"]
         println(write_shadow())
+    elseif args == ["--self-test"]
+        self_test()
     else
-        error("usage: julia --project=docs docs/check_cartesian_authority_shadow.jl [--check|--write]")
+        error("usage: julia --project=docs docs/check_cartesian_authority_shadow.jl [--check|--write|--self-test]")
     end
 end
 

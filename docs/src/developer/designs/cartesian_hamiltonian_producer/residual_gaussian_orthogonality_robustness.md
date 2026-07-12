@@ -131,6 +131,41 @@ The post-CUTOFF-02 audit dropped retained Cr2 counts from `68 + 68` to
 historical measurement evidence, not authority for spectral pruning, another
 cutoff change, or a Cr2 production claim.
 
+## Active Residual-Sector Spectral Measurement
+
+`HP-RG-SPECTRAL-AUDIT-01` remains an approved measurement-only follow-up to
+`HP-RG-CUTOFF-FN-02`. It owns no tracked source, test, artifact, driver, or
+workflow surface.
+
+The exact optional local probe is:
+
+```text
+tmp/work/rg_spectral_cutoff1e6_audit.jl
+```
+
+It may report durable text/TSV evidence under the existing external CR2 run
+directory, but those outputs are evidence rather than repository authority.
+The audit must report:
+
+- retained residual counts by owner;
+- low eigenvalues of `K_RR`;
+- low eigenvalues of `H1_RR = K_RR + sum_A Z_A U_A_RR`;
+- owner weights and residual-occupation composition for low or flagged modes;
+- comparison with an available one-center Cr residual baseline;
+- whether low modes are dominated by the smallest retained occupations or by
+  otherwise healthy retained directions.
+
+Validation is package load, `git diff --check`, a residual-only Cr baseline
+when available, and the current residual-only Cr2 fixture. No full HF or new
+Hamiltonian artifact belongs to this lane.
+
+The audit must not change production source, committed tests or fixtures,
+artifacts or provenance, drivers, MWG/IDA, residual selection or merging,
+cutoffs or tolerances, or add automatic pruning, kinetic guards, `H1_RR`
+guards, dense `Vee`, HF, or solver workflow. If existing construction seams
+cannot reconstruct `K_RR` and `H1_RR` cheaply enough, stop and report the exact
+missing reusable seam. Do not add source instrumentation under this ID.
+
 ## Validation
 
 Tracked maintenance coverage is:
@@ -150,7 +185,8 @@ a materially negative residual metric under the explicit numerical-complete
 uses `1e-10`.
 
 Historical N2, Be, Cr, and residual-only Cr2 measurements remain in the
-manager log. No machine-local probe path or old endpoint scalar is normative.
+manager log. Except for the exact active spectral probe above, machine-local
+paths and old endpoint scalars are evidence rather than normative contracts.
 
 ## Non-Goals
 

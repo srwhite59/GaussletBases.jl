@@ -30,7 +30,9 @@ does not explicitly contradict them. Silence in the concise current-status
 page is neutral; an explicit conflict is not. On conflict, fail closed: make no
 source edit and request a docs-only authority reconciliation. This transition
 rule remains in force until a later amendment establishes one machine-readable
-authority source.
+authority source. The self-contained schema-v3 candidate, its generated
+previews, raw shadow, and transition snapshot are checked rehearsal metadata;
+they grant no work and cannot override prose authority.
 
 ## Terminal Basis
 

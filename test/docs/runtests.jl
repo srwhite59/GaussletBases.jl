@@ -24,6 +24,9 @@
     docs_project = read_doc("docs", "Project.toml")
     docs_make = read_doc("docs", "make.jl")
     docs_workflow = read_doc(".github", "workflows", "docs.yml")
+    agents = read_doc("AGENTS.md")
+    authority_candidate_check = read_doc("docs", "check_cartesian_authority_candidate.jl")
+    authority_transition_check = read_doc("docs", "check_cartesian_authority_transition.jl")
 
     docs_site_index = read_doc("docs", "src", "index.md")
     docs_site_manual = read_doc("docs", "src", "manual", "index.md")
@@ -320,6 +323,9 @@
         @test contains_all(
             docs_make,
             "makedocs",
+            "CartesianAuthorityShadow.check_shadow()",
+            "CartesianAuthorityCandidate.check_candidate()",
+            "CartesianAuthorityTransition.check_transition()",
             "doctest = true",
             "checkdocs = :none",
             "deploydocs(",
@@ -333,9 +339,33 @@
         @test contains_all(
             docs_workflow,
             "name: Docs",
+            "authority-transition:",
             "julia --project=docs docs/make.jl",
             "Pkg.develop(PackageSpec(path=pwd()))",
-            "GITHUB_TOKEN",
+            "docs/check_cartesian_authority_shadow.jl --self-test",
+            "docs/check_cartesian_authority_candidate.jl --self-test",
+            "docs/check_cartesian_authority_transition.jl --self-test",
+            "cartesian-authority-rehearsal.md",
+        )
+
+        @test count(
+            ==("<!-- BEGIN CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST -->"),
+            split(agents, '\n'),
+        ) == 1
+        @test count(
+            ==("<!-- END CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST -->"),
+            split(agents, '\n'),
+        ) == 1
+        @test contains_all(
+            authority_candidate_check,
+            "Generated rehearsal only.",
+            "--write-rehearsal",
+            "candidate must remain authoritative=false",
+        )
+        @test contains_all(
+            authority_transition_check,
+            "candidate-derived execution whitelist mismatch",
+            "document-owner path mismatch",
         )
 
         @test contains_all(

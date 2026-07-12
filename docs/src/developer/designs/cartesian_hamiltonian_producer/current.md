@@ -57,7 +57,7 @@ claim.
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |
-| Documentation architecture | The independently reviewed 232-record candidate v2 explicitly separates lifecycle, grant, surfaces, canonical headings, paths, and dependency references while remaining non-authoritative | Decide separately whether to perform one atomic authority cutover; no generated authority view or cutover is approved yet |
+| Documentation architecture | The 232-record schema-v3 candidate is self-contained and renders deterministic registry/whitelist rehearsals; a separate transition snapshot binds it to current prose authority | Run a second independent rehearsal review; no generated authority view or cutover is approved yet |
 
 Other approved IDs may remain actionable even when not listed here. Read the
 assigned registry entry. Completed retirement, superseded, rejected, and
@@ -94,13 +94,13 @@ energy claim.
 4. **Protected atoms and counterpoise.** One-center protected compactness,
    separated kinetic/unit-nuclear persistence, and counterpoise sidecars remain
    separate future designs.
-5. **Authority cutover remains unapproved.** The prose authority now requires
-   exact committed/planned test paths or explicit shared ownership; one-time
-   evidence and ignored probes are outside the execution whitelist. The raw
-   generated shadow and explicit semantic candidate are both checked, but both
-   remain non-authoritative and authorization-incomplete. Independent reviews
-   completed; every finding is covered by fail-closed fixes and negative tests.
-   Generated authority views or cutover require a later atomic decision.
+5. **Authority cutover remains unapproved.** The first generated-view rehearsal
+   correctly stopped on semantic and machine-first transition gaps. Schema v3
+   now types measurement/docs/evidence paths and document roles, derives the
+   same 150 execution IDs, renders only non-authoritative previews, and is
+   checked independently from Documenter plus against the legacy-prose transition
+   snapshot. A second independent rehearsal review is required before any
+   atomic cutover decision.
 
 ## Non-Negotiable Boundaries
 

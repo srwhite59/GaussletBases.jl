@@ -31,18 +31,22 @@ ownership. The generated
 [registry/whitelist shadow](registry_whitelist_shadow.toml) preserves these
 records and raw `AGENTS.md` whitelist membership for exact parity checks. It is
 explicitly non-authoritative and authorization-incomplete. The reviewed
-[semantic authority candidate](authority_candidate.toml) separately records
-closed lifecycle/grant/surface enums, exact canonical headings and document
-hashes, source/test paths, planned tests, dependencies, scope, a reviewed
-semantic digest, and the same raw-record hashes. It is also non-authoritative
-and authorization-incomplete. This Markdown registry and `AGENTS.md` remain
-the authority until a separately reviewed atomic cutover. Regenerate only the
-raw shadow with
-`julia --project=docs docs/check_cartesian_authority_shadow.jl --write`; edit
-the semantic candidate explicitly and validate it with
-`julia --project=docs docs/check_cartesian_authority_candidate.jl --check`.
-Candidate dependency IDs are non-topological authority references; they may
-contain reciprocal relationships and do not define generation or build order.
+[semantic authority candidate](authority_candidate.toml) is now a
+self-contained schema-v3 rehearsal input with typed
+canonical/history/evidence documents, owned path kind/state, evidence
+references, lifecycle, grant, surfaces, dependencies, and scope. Its core
+checker does not read this registry or `AGENTS.md`. The separate
+[transition snapshot](authority_transition_snapshot.toml) binds the complete
+candidate bytes to the still-authoritative prose registry and marked
+whitelist. All three remain non-authoritative and authorization-incomplete.
+This Markdown registry and `AGENTS.md` remain authority until a separately
+reviewed atomic cutover.
+
+Validate the raw shadow, candidate, and transition with their `--check` and
+`--self-test` commands. Candidate dependency IDs are non-topological
+references; they may contain reciprocal relationships and do not define
+generation or build order. Candidate-generated previews are rehearsal output
+only and must stay outside live authority files.
 
 ## Approved And Implemented
 
@@ -642,6 +646,9 @@ Status: implemented internal construction specification.
 
 Owner/canonical: mapped-COMX source span;
 [Mapped-COMX source span](mapped_comx_source_span.md).
+
+Source: `src/cartesian_nested_faces.jl`, where the private construction
+specification is defined. This is not a public or persistent object.
 
 Permission: fixed protected-P2, mapped-Chebyshev, lambda/no-sqrt-J, and
 physical-localization facts. No public export or general tuning object.
@@ -2749,67 +2756,16 @@ it is not a production claim or further source authority.
 Status: approved measurement-only authority. This is not production source
 authority.
 
-Permission: measurement-only through ignored probes and external text/TSV
-outputs; no tracked source, test, artifact, or workflow changes.
+Permission: measurement-only through the exact ignored probe
+`tmp/work/rg_spectral_cutoff1e6_audit.jl` and external text/TSV evidence; no
+tracked source, test, artifact, or workflow changes.
 
 Owner/canonical: residual-sector numerical diagnostics;
 [orthogonality/cutoff policy](residual_gaussian_orthogonality_robustness.md).
 
-Evidence after `HP-RG-CUTOFF-FN-02`: the tightened
-`residual_occupation_cutoff = 1.0e-6` performs the intended first cleanup,
-dropping Cr2 retained residuals from `68 + 68` to `62 + 62`, but residual-only
-spectra still show a low two-owner residual mode:
-
-```text
-min eig(K_RR)  =  0.3700413519
-min eig(H1_RR) = -7.1647854052
-owner weights  = approximately 0.5 / 0.5
-```
-
-Approved behavior:
-
-- measurement-only residual-sector audit;
-- compute retained residual count by owner;
-- compute low eigenvalues of `K_RR`;
-- compute low eigenvalues of
-  `H1_RR = K_RR + sum_A Z_A U_A_RR`;
-- report owner weights for low or flagged eigenvectors;
-- report residual occupation composition of low or flagged eigenvectors;
-- compare Cr2 residual spectra against one-center atom residual baselines when
-  available;
-- classify whether low modes are dominated by the smallest retained
-  occupations or by otherwise healthy retained modes.
-
-Approved surfaces:
-
-- ignored `tmp/work/*.jl` probes only;
-- durable text/TSV output under `/Users/srw/dmrgtmp/...` or CR2 run
-  directories.
-
-Forbidden:
-
-- production source changes;
-- committed tests or fixtures;
-- artifact schema/provenance/reader/manifest changes;
-- driver changes;
-- MWG/IDA changes;
-- dense Vee, full HF, or solver workflow;
-- automatic residual pruning;
-- kinetic or `H1_RR` spectral-guard implementation;
-- cutoff, tolerance, owner grouping, residual-selection, or merge-policy
-  changes.
-
-Validation for later audit:
-
-- `git diff --check`;
-- package load;
-- residual-only audit for one-center Cr atom baseline if available;
-- residual-only audit for the current Cr2 fixture;
-- no full HF and no new Hamiltonian artifact.
-
-Failure rule: if the audit cannot reconstruct `K_RR`/`H1_RR` cheaply enough
-from existing construction seams, stop and report the exact missing reusable
-seam. Do not add source instrumentation as part of this lane.
+The canonical page owns required outputs, validation, exclusions, and the
+stop-without-source-instrumentation rule. Existing run tables and manager-log
+entries are evidence, not additional authority.
 
 ### HP-RG-INJECT-AUDIT-01 — direct-G injection measurement audit
 

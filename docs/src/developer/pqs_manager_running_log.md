@@ -28995,3 +28995,43 @@ Goal advancement / guardrail:
 - **MT6 old flat-path classification - maintenance.** Superseded, retired,
   preservation-only, evidence-only, and dormant-present cases are explicit and
   remain fail-closed.
+
+## Cartesian Hamiltonian Producer Pass 391 - Harden The Authority Transition Rehearsal
+
+Commit(s):
+- this commit - separate candidate validation from legacy parity and harden the
+  non-authoritative rehearsal path.
+
+Summary:
+- Migrated the reviewed `232`-record candidate to self-contained schema v3 with
+  typed document roles, owned path kinds/states, evidence references, lifecycle,
+  grant, surfaces, dependencies, and scope. It derives the same `150` execution
+  IDs and remains `authoritative = false` and
+  `authorization_complete = false`.
+- Kept the prose registry and marked `AGENTS.md` block authoritative. A separate
+  transition checker/snapshot now binds complete candidate bytes to current
+  registry records and the exact marked whitelist block. Deterministic previews
+  can be written only outside the repository and carry explicit rehearsal
+  warnings.
+- Closed review gaps for the active residual spectral probe, rejected
+  `HP-CHANGE-01` qualification, and `HP-MCOMX-OBJ-01` ownership. Hardened
+  traversal/symlink containment, raw-block parity, single-snapshot rendering,
+  Markdown structure, path typing, atomic writes, and concurrent-change checks.
+
+Validation / evidence:
+- All shadow, candidate, and transition `--check` and negative `--self-test`
+  gates passed. Two independent `/private/tmp` rehearsals were byte-identical,
+  with the current checker hash recorded in each manifest. Local Documenter and
+  `git diff --check` passed. The focused docs group remains `55/58`; its three
+  failures are pre-existing stale prose assertions over unchanged pages, while
+  every new authority assertion passed.
+
+Goal advancement / guardrail:
+- MT5 now has a fail-closed, CI-checked dual representation suitable for a
+  second independent read-only rehearsal. No authority cutover, generated live
+  registry/whitelist, physics/source/API/artifact change, or solver work is
+  approved. This transition pass is `+4,007/-2,368` lines (net `+1,639`), mostly
+  explicit candidate metadata and fail-closed tooling. That is temporary
+  carrying cost: a later atomic cutover must retire the raw shadow, transition
+  snapshot and checker, transition CI job, and duplicate Documenter hooks
+  rather than preserve both authority systems.

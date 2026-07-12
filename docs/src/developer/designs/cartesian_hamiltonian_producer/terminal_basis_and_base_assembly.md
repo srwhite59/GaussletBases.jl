@@ -155,6 +155,11 @@ Unsupported transform kinds, missing contracts, retained/source mismatches,
 support mismatches, duplicate rows, nonidentity local overlaps, and
 ungaugeable final weights are construction failures.
 
+`HP-CHANGE-01` is rejected as standalone authority. Returning a shell overlap
+may exist only as a private implementation detail of `HP-FN-00` inside its
+already approved source surface. It creates no independent helper, result
+field, object, module, or source permission.
+
 ## Route Wiring
 
 `cartesian_transforms` reaches terminal realization through the current helper

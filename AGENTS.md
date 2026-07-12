@@ -503,9 +503,11 @@ docs-only reconciliation. Historical, superseded, rejected, measurement-only,
 and completed-retirement IDs may remain documented in the registry without
 being source-authorized here.
 
-The checked `registry_whitelist_shadow.toml` and `authority_candidate.toml`
-files are non-authoritative transition metadata. They do not grant work or
-replace this whitelist, `registry.md`, or the linked canonical contract.
+The checked `registry_whitelist_shadow.toml`, self-contained
+`authority_candidate.toml`, and `authority_transition_snapshot.toml` files are
+non-authoritative transition metadata. Candidate-derived registry/whitelist
+rehearsals do not grant work or replace this marked whitelist, `registry.md`,
+or the linked canonical contract.
 
 A validation/test ID belongs in this whitelist only when its registry entry
 names an exact committed or exact planned test path, or an explicit shared
@@ -513,165 +515,174 @@ test owner plus path. One-time smokes and completed evidence grant no work.
 Ignored probes, reports, and docs/evidence maintenance remain outside this
 execution whitelist even when their historical ID stays in the registry.
 
+<!-- BEGIN CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST -->
 Cartesian Hamiltonian producer source work is currently authorized only for
 these approved design IDs:
 
-- `HP-OBJ-01`
-- `HP-OBJ-02`
-- `HP-FILE-01`
-- `HP-FN-00`
-- `HP-FN-01`
-- `HP-FN-02`
-- `HP-WIRE-01`
-- `HP-FN-03`
-- `HP-FN-04`
-- `HP-FN-05`
-- `HP-R1-FILE-01`
-- `HP-R1-FN-01`
-- `HP-R1-CORE-FN-01`
-- `HP-PQS-MAP-SFACTOR-FN-01`
-- `HP-PQS-MAP-SFACTOR-TEST-01`
-- `HP-PQS-COULOMB-ACCURACY-FN-01`
-- `HP-PQS-COULOMB-ACCURACY-TEST-01`
-- `HP-PQS-ATOMREF-PACKET-FN-01`
-- `HP-PQS-ATOMREF-PACKET-TEST-01`
-- `HP-REP-XGTO-IMPORT-FN-01`
-- `HP-REP-XGTO-IMPORT-TEST-01`
-- `HP-REP-XGTO-PROTECT-SIDECAR-FN-01`
-- `HP-REP-XGTO-PROTECT-SIDECAR-TEST-01`
-- `HP-PQS-SCREEN-HARTREE-CORR-FN-01`
-- `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`
-- `HP-R1-WIRE-01`
-- `HP-R1-ART-01`
-- `HP-R1-TEST-01`
-- `HP-R1-ATOM-FN-01`
-- `HP-R1-ATOM-WIRE-01`
-- `HP-R1-ATOM-TEST-01`
-- `HP-ROUTE-RECIPE-FN-01`
-- `HP-ROUTE-INV-FN-01`
-- `HP-RAW-SRCMODE-FN-01`
-- `HP-CONTRACT-VEC-FN-01`
-- `HP-ROUTE-STAGE-TYPE-FN-01`
-- `HP-ROUTE-STAGE-CARRIER-FN-01`
-- `HP-WLTERM-FILE-01`
-- `HP-WLTERM-FN-01`
-- `HP-WLTERM-WIRE-01`
-- `HP-WLTERM-TEST-01`
-- `HP-R3-OBJ-01`
-- `HP-R3-FN-01`
-- `HP-R3-FN-02`
-- `HP-R3-FN-03`
-- `HP-R3-ART-01`
-- `HP-R3-TEST-01`
-- `HP-R3U-FILE-01`
-- `HP-R3U-FN-01`
-- `HP-R3U-WIRE-01`
-- `HP-R3U-TEST-01`
-- `HP-RG-FILE-01`
-- `HP-RG-OBJ-01`
-- `HP-RG-FN-01`
-- `HP-RG-FN-02`
-- `HP-RG-FN-03`
-- `HP-RG-FN-04`
-- `HP-RG-WIRE-01`
-- `HP-RG-TEST-01`
-- `HP-RG-ORTHO-FN-01`
-- `HP-RG-ORTHO-TEST-01`
-- `HP-RG-CUTOFF-FN-02`
-- `HP-RG-CUTOFF-TEST-02`
-- `HP-RG-NUMCOMP-FN-01`
-- `HP-RG-NUMCOMP-TEST-01`
-- `HP-RG-INJECT-FN-01`
-- `HP-RG-OCC-FIRST-INJECT-FN-01`
-- `HP-RG-OCC-FIRST-INJECT-TEST-01`
-- `HP-RG-PROTECT-ADDREF-FN-01`
-- `HP-RG-PROTECT-ADDREF-TEST-01`
-- `HP-RG-PROTECT-INJECT-FN-01`
-- `HP-RG-PROTECT-ONEBODY-FN-01`
-- `HP-RG-PROTECT-ART-FN-01`
-- `HP-RG-PROTECT-ARTLOC-FN-01`
-- `HP-RG-PROTECT-EGOI-FN-01`
-- `HP-RG-PROTECT-EGOI-TEST-01`
-- `HP-RG-PROTECT-LADDER-BUNDLE-FN-01`
-- `HP-RHO0-MIXH-GG-FN-01`
-- `HP-RHO0-MIXH-GG-TEST-01`
-- `HP-RHO0-MIXH-GAAA-FN-01`
-- `HP-RHO0-MIXH-GAAA-TEST-01`
-- `HP-RHO0-MIXH-FEXACT-FN-01`
 - `HP-CGRB-FILE-01`
 - `HP-CGRB-FN-01`
 - `HP-CGRB-FN-02`
-- `HP-CGRB-WIRE-01`
-- `HP-CGRB-TEST-01`
 - `HP-CGRB-NN-FILE-01`
 - `HP-CGRB-NN-FN-01`
-- `HP-CGRB-NN-WIRE-01`
 - `HP-CGRB-NN-TEST-01`
-- `HP-R3GG-FN-01`
-- `HP-R3GG-TEST-01`
-- `HP-R3UN-FN-01`
-- `HP-R3UN-TEST-01`
-- `HP-R3BASE-FN-01`
-- `HP-R3BASE-TEST-01`
-- `HP-R3BASE-DRV-WIRE-01`
-- `HP-DRV-FILE-01`
-- `HP-DRV-FN-01`
-- `HP-DRV-NEST-FN-01`
-- `HP-DRV-NEST-WIRE-01`
-- `HP-DRV-ATOM-FN-01`
-- `HP-DRV-ATOM-WIRE-01`
-- `HP-DRV-ATOM-CLEAN-01`
-- `HP-R3U-ZDI-FN-01`
-- `HP-R3U-ZDI-WIRE-01`
-- `HP-R3U-ZDI-TEST-01`
-- `HP-DRV-STAGE-FN-01`
-- `HP-DRV-STAGE-WIRE-01`
-- `HP-DRV-INV-FN-01`
-- `HP-DRV-SHELLDD-FN-01`
-- `HP-PQS-ASPECTSHELL-FN-01`
-- `HP-PQS-SHELLQ-OVERRIDE-FN-01`
-- `HP-PQS-SHELLQ-OVERRIDE-TEST-01`
-- `HP-HAM-MANIFEST-FN-01`
-- `HP-HAM-MANIFEST-TEST-01`
-- `HP-HAM-MANIFEST-SRC-FN-01`
-- `HP-HAM-MANIFEST-SRC-TEST-01`
-- `HP-NEST-ART-FN-01`
-- `HP-NEST-ART-TEST-01`
-- `HP-COMP-WLDIAT-FN-01`
-- `HP-COMP-BASEDIAT-FN-01`
-- `HP-COMP-BASEDIAT-TEST-01`
-- `HP-COMP-SUPPWL-FN-01`
-- `HP-COMP-SUPPWL-TEST-01`
-- `HP-COMP-SUPPATOM-FN-01`
-- `HP-COMP-SUPPATOM-TEST-01`
+- `HP-CGRB-NN-WIRE-01`
+- `HP-CGRB-TEST-01`
+- `HP-CGRB-WIRE-01`
+- `HP-COMP-ANGBOX-FN-01`
 - `HP-COMP-ATOMBOX-FN-01`
 - `HP-COMP-ATOMBOX-TEST-01`
+- `HP-COMP-BASEDIAT-FN-01`
+- `HP-COMP-BASEDIAT-TEST-01`
+- `HP-COMP-FACEPROD-FN-01`
 - `HP-COMP-NS-FN-01`
 - `HP-COMP-NS-TEST-01`
 - `HP-COMP-NSCORE-FN-01`
 - `HP-COMP-NSCORE-TEST-01`
-- `HP-COMP-SHELLGEOM-FN-01`
 - `HP-COMP-SHELLGEOM-DIAT-FN-01`
+- `HP-COMP-SHELLGEOM-FN-01`
+- `HP-COMP-SUPPATOM-FN-01`
+- `HP-COMP-SUPPATOM-TEST-01`
+- `HP-COMP-SUPPWL-FN-01`
+- `HP-COMP-SUPPWL-TEST-01`
 - `HP-COMP-THINSLAB-FN-01`
 - `HP-COMP-THINSLAB-META-FN-01`
-- `HP-COMP-FACEPROD-FN-01`
-- `HP-COMP-ANGBOX-FN-01`
-- `HP-MCOMX-FILE-01`
-- `HP-MCOMX-OBJ-01`
-- `HP-MCOMX-FN-01`
-- `HP-MCOMX-WIRE-01`
-- `HP-MCOMX-TERM-FN-01`
-- `HP-MCOMX-DRV-FN-01`
+- `HP-COMP-WLDIAT-FN-01`
 - `HP-COMP-WLNS-FN-01`
 - `HP-COMP-WLNS-TEST-01`
+- `HP-CONTRACT-VEC-FN-01`
+- `HP-DRV-ATOM-CLEAN-01`
+- `HP-DRV-ATOM-FN-01`
+- `HP-DRV-ATOM-WIRE-01`
+- `HP-DRV-FILE-01`
+- `HP-DRV-FN-01`
+- `HP-DRV-INV-FN-01`
+- `HP-DRV-NEST-FN-01`
+- `HP-DRV-NEST-WIRE-01`
+- `HP-DRV-SHELLDD-FN-01`
+- `HP-DRV-STAGE-FN-01`
+- `HP-DRV-STAGE-WIRE-01`
+- `HP-FILE-01`
+- `HP-FN-00`
+- `HP-FN-01`
+- `HP-FN-02`
+- `HP-FN-03`
+- `HP-FN-04`
+- `HP-FN-05`
+- `HP-HAM-MANIFEST-FN-01`
+- `HP-HAM-MANIFEST-SRC-FN-01`
+- `HP-HAM-MANIFEST-SRC-TEST-01`
+- `HP-HAM-MANIFEST-TEST-01`
+- `HP-MCOMX-DRV-FN-01`
+- `HP-MCOMX-FILE-01`
+- `HP-MCOMX-FN-01`
+- `HP-MCOMX-OBJ-01`
+- `HP-MCOMX-TERM-FN-01`
+- `HP-MCOMX-WIRE-01`
+- `HP-NEST-ART-FN-01`
+- `HP-NEST-ART-TEST-01`
+- `HP-OBJ-01`
+- `HP-OBJ-02`
+- `HP-PQS-ASPECTSHELL-FN-01`
+- `HP-PQS-ATOMREF-PACKET-FN-01`
+- `HP-PQS-ATOMREF-PACKET-TEST-01`
+- `HP-PQS-COULOMB-ACCURACY-FN-01`
+- `HP-PQS-COULOMB-ACCURACY-TEST-01`
+- `HP-PQS-MAP-SFACTOR-FN-01`
+- `HP-PQS-MAP-SFACTOR-TEST-01`
+- `HP-PQS-SCREEN-HARTREE-CORR-FN-01`
+- `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`
+- `HP-PQS-SHELLQ-OVERRIDE-FN-01`
+- `HP-PQS-SHELLQ-OVERRIDE-TEST-01`
+- `HP-R1-ART-01`
+- `HP-R1-ATOM-FN-01`
+- `HP-R1-ATOM-TEST-01`
+- `HP-R1-ATOM-WIRE-01`
+- `HP-R1-CORE-FN-01`
+- `HP-R1-FILE-01`
+- `HP-R1-FN-01`
+- `HP-R1-TEST-01`
+- `HP-R1-WIRE-01`
+- `HP-R3-ART-01`
+- `HP-R3-FN-01`
+- `HP-R3-FN-02`
+- `HP-R3-FN-03`
+- `HP-R3-OBJ-01`
+- `HP-R3-TEST-01`
+- `HP-R3BASE-DRV-WIRE-01`
+- `HP-R3BASE-FN-01`
+- `HP-R3BASE-TEST-01`
+- `HP-R3GG-FN-01`
+- `HP-R3GG-TEST-01`
+- `HP-R3U-FILE-01`
+- `HP-R3U-FN-01`
+- `HP-R3U-TEST-01`
+- `HP-R3U-WIRE-01`
+- `HP-R3U-ZDI-FN-01`
+- `HP-R3U-ZDI-TEST-01`
+- `HP-R3U-ZDI-WIRE-01`
+- `HP-R3UN-FN-01`
+- `HP-R3UN-TEST-01`
+- `HP-RAW-SRCMODE-FN-01`
+- `HP-REP-XGTO-IMPORT-FN-01`
+- `HP-REP-XGTO-IMPORT-TEST-01`
+- `HP-REP-XGTO-PROTECT-SIDECAR-FN-01`
+- `HP-REP-XGTO-PROTECT-SIDECAR-TEST-01`
+- `HP-RG-CUTOFF-FN-02`
+- `HP-RG-CUTOFF-TEST-02`
+- `HP-RG-FILE-01`
+- `HP-RG-FN-01`
+- `HP-RG-FN-02`
+- `HP-RG-FN-03`
+- `HP-RG-FN-04`
+- `HP-RG-INJECT-FN-01`
+- `HP-RG-NUMCOMP-FN-01`
+- `HP-RG-NUMCOMP-TEST-01`
+- `HP-RG-OBJ-01`
+- `HP-RG-OCC-FIRST-INJECT-FN-01`
+- `HP-RG-OCC-FIRST-INJECT-TEST-01`
+- `HP-RG-ORTHO-FN-01`
+- `HP-RG-ORTHO-TEST-01`
+- `HP-RG-PROTECT-ADDREF-FN-01`
+- `HP-RG-PROTECT-ADDREF-TEST-01`
+- `HP-RG-PROTECT-ART-FN-01`
+- `HP-RG-PROTECT-ARTLOC-FN-01`
+- `HP-RG-PROTECT-EGOI-FN-01`
+- `HP-RG-PROTECT-EGOI-TEST-01`
+- `HP-RG-PROTECT-INJECT-FN-01`
+- `HP-RG-PROTECT-LADDER-BUNDLE-FN-01`
+- `HP-RG-PROTECT-ONEBODY-FN-01`
+- `HP-RG-TEST-01`
+- `HP-RG-WIRE-01`
+- `HP-RHO0-MIXH-FEXACT-FN-01`
+- `HP-RHO0-MIXH-GAAA-FN-01`
+- `HP-RHO0-MIXH-GAAA-TEST-01`
+- `HP-RHO0-MIXH-GG-FN-01`
+- `HP-RHO0-MIXH-GG-TEST-01`
+- `HP-ROUTE-INV-FN-01`
+- `HP-ROUTE-RECIPE-FN-01`
+- `HP-ROUTE-STAGE-CARRIER-FN-01`
+- `HP-ROUTE-STAGE-TYPE-FN-01`
+- `HP-WIRE-01`
 - `HP-WLDIAT-COMPACT-FN-01`
 - `HP-WLDIAT-PARITY-FN-01`
+- `HP-WLTERM-FILE-01`
+- `HP-WLTERM-FN-01`
+- `HP-WLTERM-TEST-01`
+- `HP-WLTERM-WIRE-01`
+
+<!-- END CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST -->
 
 No other production surface may be added in this lane without a prior
 documentation-only design amendment. This includes new structs, persistent
 result shapes, modules/files, stage-return fields, metadata keys, status or
 blocker symbols, report/artifact fields, committed probes/tests, and cross-file
 or module-owned helpers.
+
+The marked IDs are lexically sorted. Their order carries no lifecycle,
+dependency, priority, or implementation-sequence meaning.
+
+The hand-written guardrails below may restrict an approved ID further, but
+they cannot add or broaden an ID, grant, surface, path, or scope.
 
 Private file-local helpers are allowed only when they implement the assigned
 canonical contract, create no persistent shape or vocabulary, stay within the

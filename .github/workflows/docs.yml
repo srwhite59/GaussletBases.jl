@@ -7,6 +7,30 @@ on:
   pull_request:
 
 jobs:
+  authority-transition:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.10"
+
+      - name: Check Cartesian authority transition
+        run: |
+          julia --project=docs docs/check_cartesian_authority_shadow.jl --check
+          julia --project=docs docs/check_cartesian_authority_shadow.jl --self-test
+          julia --project=docs docs/check_cartesian_authority_candidate.jl --check
+          julia --project=docs docs/check_cartesian_authority_candidate.jl --self-test
+          julia --project=docs docs/check_cartesian_authority_transition.jl --check
+          julia --project=docs docs/check_cartesian_authority_transition.jl --self-test
+          julia --project=docs docs/check_cartesian_authority_candidate.jl --rehearse > "$RUNNER_TEMP/cartesian-authority-rehearsal.md"
+
   docs:
     runs-on: ubuntu-latest
     permissions:

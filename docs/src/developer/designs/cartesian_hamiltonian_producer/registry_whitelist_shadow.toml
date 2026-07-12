@@ -1,4 +1,5 @@
 agents_source = "AGENTS.md"
+agents_whitelist_block_sha256 = "35c944b5bda9225e2e33a1fc0c712e236a5147bc0679fa1fd459d7bfb8914ec5"
 agents_whitelist_count = 150
 agents_whitelist_sha256 = "92064b7ead724bfd745455724ce2b8712c319e0154d9ea4e86ba0b6b0e032ad7"
 artifact_kind = "cartesian_registry_whitelist_shadow"
@@ -6,9 +7,9 @@ authoritative = false
 authorization_complete = false
 generated = true
 registry_record_count = 232
-registry_sha256 = "b09a1f22733130af616ed7d1a2fa25b56aff79ab0f510ed122e7705625c94fd4"
+registry_sha256 = "a3ab3713240f24ca02662d859de78745d7425bf01150eec3a67a5a90d44c22d0"
 registry_source = "docs/src/developer/designs/cartesian_hamiltonian_producer/registry.md"
-schema_version = 1
+schema_version = 2
 scope = "registry_metadata_and_agents_whitelist_membership_only"
 
 [[records]]
@@ -778,7 +779,7 @@ id = "HP-MCOMX-OBJ-01"
 owner_document_links = ["mapped_comx_source_span.md"]
 ownership_texts = ["Owner/canonical: mapped-COMX source span; [Mapped-COMX source span](mapped_comx_source_span.md)."]
 permission_texts = ["fixed protected-P2, mapped-Chebyshev, lambda/no-sqrt-J, and physical-localization facts. No public export or general tuning object."]
-record_sha256 = "732e364c0269b5c58b9500fe1450f5ec103cb00562739e667ad1a310c1116338"
+record_sha256 = "477777fc88c244b7f59359ff42cdcb02b9d13d18e8c016b533b44d1cfd0f8acf"
 state_label = "Status"
 state_text = "implemented internal construction specification."
 [[records]]
@@ -1927,8 +1928,8 @@ heading_title = "residual-sector spectral audit"
 id = "HP-RG-SPECTRAL-AUDIT-01"
 owner_document_links = ["residual_gaussian_orthogonality_robustness.md"]
 ownership_texts = ["Owner/canonical: residual-sector numerical diagnostics; [orthogonality/cutoff policy](residual_gaussian_orthogonality_robustness.md)."]
-permission_texts = ["measurement-only through ignored probes and external text/TSV outputs; no tracked source, test, artifact, or workflow changes."]
-record_sha256 = "ebd5d6c603d2c0656c15ade699775930b69a1c7473c8a79d3f93059f35fac231"
+permission_texts = ["measurement-only through the exact ignored probe `tmp/work/rg_spectral_cutoff1e6_audit.jl` and external text/TSV evidence; no tracked source, test, artifact, or workflow changes."]
+record_sha256 = "844785ab75a3bce7ec93255f996b0338ddc7aea67773683311a5f08abe501f80"
 state_label = "Status"
 state_text = "approved measurement-only authority. This is not production source authority."
 [[records]]

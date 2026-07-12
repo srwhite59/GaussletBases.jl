@@ -1,0 +1,10 @@
+agents_whitelist_block_sha256 = "35c944b5bda9225e2e33a1fc0c712e236a5147bc0679fa1fd459d7bfb8914ec5"
+agents_whitelist_sha256 = "92064b7ead724bfd745455724ce2b8712c319e0154d9ea4e86ba0b6b0e032ad7"
+artifact_kind = "cartesian_authority_transition_snapshot"
+authoritative = false
+authorization_complete = false
+candidate_sha256 = "0028eaddbad0317f193508d59ec77d40e8443cd1d8b08cf46a0bfc11e8d1d1b0"
+execution_whitelist_count = 150
+record_count = 232
+registry_sha256 = "a3ab3713240f24ca02662d859de78745d7425bf01150eec3a67a5a90d44c22d0"
+schema_version = 1
