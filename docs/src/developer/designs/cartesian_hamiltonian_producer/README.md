@@ -20,15 +20,15 @@ producer is implemented for the atom/diatomic scope recorded in
 one-center all-electron atom relaxation recorded in
 `r1_one_center_base_atoms.md`. Residual Gaussian basis,
 exact augmented operators, and residual MWG/IDA interaction now belong to the
-internal `CartesianResidualGaussians` module. The R3 usability lane approves
-only a non-exported supported facade for H2 and internal/performance-supported
+internal `CartesianResidualGaussians` module. The implemented R3 usability
+lane provides a non-exported supported facade for H2 and internal/performance-supported
 Be2 artifacts. The neutral Cartesian Gaussian raw-block owner is implemented
 for the [uncharged by-center nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
 and the exact [non-nuclear overlap/kinetic/moment slice](cartesian_gaussian_raw_blocks_non_nuclear.md).
 The terminal `G-G` product and by-center unit-nuclear `U_GG` optimization
 layers are implemented, including trusted same-construction base-block reuse
 in supported supplemented callers.
-The canonical Cartesian driver usability lane is approved so the standard
+The canonical Cartesian driver is implemented so the standard
 driver can directly produce base and supported supplemented Hamiltonian
 artifacts from visible public `system`, `basis`, and optional `supplement`
 contracts. `HP-DRV-INV-*` implements a bounded terminal-region inventory summary
@@ -85,46 +85,47 @@ diatomic `ns < 4` guard, and retained-support saturation. One-center
 `radius` is physical box-extent authority, while
 [public-`ns` direct-core parity](public_ns_core_side_parity.md) limits
 oddization to direct nucleus-centered core blocks.
-`HP-PQS-MAP-SFACTOR-*` approves a narrow expert mapping-strength scalar:
+`HP-PQS-MAP-SFACTOR-*` implements a narrow expert mapping-strength scalar:
 `s_factor`, default `1.0`, with one-center
 `effective_s = s_factor * sqrt(Z * core_spacing)` and explicit provenance.
 This is the only approved public mapping-strength knob and does not revive
 public `d` or `parent_mapping_d`.
-`HP-PQS-COULOMB-ACCURACY-*` approves a separate expert producer accuracy
-choice, `coulomb_accuracy = :compact | :standard | :high`, default
-`:compact`. The fixed analytic K60 `:standard` tier is the recommended
-accuracy/cost opt-in, while `:high` remains the reference tier. One
+`HP-PQS-COULOMB-ACCURACY-*` implements the compact45 and high135 producer
+tiers. The fixed analytic K60 `:standard` tier and canonical-driver exposure
+are approved but not yet implemented; the default remains `:compact` and the
+driver currently does not expose the policy. Once implemented, `:standard`
+is the recommended accuracy/cost opt-in while `:high` remains the reference
+tier. One
 resolved `CoulombGaussianExpansion` must govern parent/PGDG, base IDA,
 residual-GTO, and MWG construction, with one Hamiltonian-wide provenance
 summary. Its narrow stability amendment replaces cancellation-prone analytic
 Gaussian determinant/weighted-variance forms; it does not add a scaled PGDG
 carrier or terminal-contraction redesign.
-The WL z-axis diatomic compact retained-basis correction is approved under
-`HP-WLDIAT-COMPACT-*`: the current mechanical boundary-stratum identity path is
-not the intended compact WL retained basis and must not be used as the final
-PQS/WL comparison story.
-The follow-up WL boundary-stratum parity cleanup is approved under
+The WL z-axis diatomic compact retained-basis correction is implemented under
+`HP-WLDIAT-COMPACT-*`; boundary strata are compact products rather than
+full-support identity rows.
+The follow-up WL boundary-stratum parity cleanup is implemented under
 `HP-WLDIAT-PARITY-*`: direct nucleus-centered core blocks keep odd-side
 centering, but boundary shells retain the requested shell count such as
 `ns = 4 -> 4^3 - 2^3 = 56`.
-Common terminal shell decomposition is approved as a shared route-family-free
+Common terminal shell decomposition is implemented as a shared route-family-free
 first step under `HP-COMP-SHELLGEOM-*`: PQS and White-Lindsey differ only after
 common shell/core support regions exist.
 For z-axis diatomics, `HP-COMP-SHELLGEOM-DIAT-*` requires PQS and
 White-Lindsey to call the common shellifier with the same first-step arguments;
 central-gap/contact and shared-shell ownership are common shell geometry.
-`HP-COMP-THINSLAB-*` adds the matching lowering guardrail for midpoint slabs
+`HP-COMP-THINSLAB-*` implements the matching lowering guardrail for midpoint slabs
 and outer-mismatch slab stacks: PQS and White-Lindsey use the same compact
 slab lowering, with unit-slice scale `ns x ns x 1`, and neither may retain
 those slabs as full identity rows.
-`HP-COMP-THINSLAB-META-*` approves the matching metadata/scaffold inventory
+`HP-COMP-THINSLAB-META-*` implements the matching metadata/scaffold inventory
 cleanup so terminal-shellification summaries no longer claim midpoint,
 outer-mismatch, or angular z-extension slabs are direct identity sectors.
-`HP-COMP-FACEPROD-*` approves the neutral terminal face-product helper seam
-needed by that lowering: WL facets and future thin slabs should reuse the same
+`HP-COMP-FACEPROD-*` implements the neutral terminal face-product helper seam
+needed by that lowering: WL facets and thin slabs reuse the same
 module-internal face-like product block builder instead of putting shared
 coefficient assembly in a PQS- or WL-owned terminal file.
-`HP-COMP-ANGBOX-*` approves the shellification side of that correction:
+`HP-COMP-ANGBOX-*` implements the shellification side of that correction:
 z-axis diatomic shared-shell growth may emit planned angular z-extension slab
 stacks when the ordinary index-layer shell body underreaches the physical
 outer-nucleus angular target. Lowering those slabs remains governed by
@@ -239,7 +240,7 @@ ID or subsystem.
 - [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md)
   for the narrow terminal-basis seam needed by `nesting = :wl`
 - [Nesting/supplement composition](nesting_supplement_composition_plan.md)
-  for the target 2 x 2 x 2 composition matrix and dependency order
+  for the implemented 2 x 2 x 2 composition matrix and dependency order
 - [Public ns direct-core side parity](public_ns_core_side_parity.md)
   for deriving direct nucleus-centered core side from public `ns` rather than
   route-local `q`
@@ -255,18 +256,10 @@ ID or subsystem.
   for compact JLD2 sidecar groups describing matrix-order basis rows and public
   recipe provenance, plus the narrow construction-native source-mode
   provenance seam
-- [Route inventory type-surface cleanup](route_inventory_type_surface_cleanup.md)
-  for the first retained-unit route inventory cleanup lane
-- [Raw product source-mode inventory cleanup](raw_product_source_mode_inventory_cleanup.md)
-  for the vector-backed raw product source-mode inventory cleanup lane
-- [Contract-plan vector cleanup](contract_plan_vector_cleanup.md)
-  for the terminal-lowering and retained-unit transform contract-plan vector
-  cleanup lane
-- [Route/stage type-surface cleanup](route_stage_type_surface_cleanup.md)
-  for the Be2 q5 compile-attributed route/stage compatibility-inventory
-  cleanup lane
-- [Route/stage carrier cleanup](route_stage_carrier_cleanup.md)
-  for the post-cleanup route/stage carrier and plan-signature cleanup lane
+- [Route/stage metadata contract](route_stage_metadata_contract.md)
+  for current vector-backed inventory, plan, deterministic-order, and compact
+  stage-carrier semantics. The five former cleanup pages are historical
+  pointers to this contract.
 - [Completed complete-core-shell RHF retirement record](complete_core_shell_rhf_retirement.md)
   records deletion of the stale RHF payload stack
 - [Completed route-driver materialization retirement record](route_driver_materialization_retirement.md)
@@ -276,130 +269,13 @@ ID or subsystem.
 
 ## Contracts, Amendments, And Completed Records
 
-- [R1 public base producer](r1_public_base_producer.md) defines the implemented
-  exported base Hamiltonian facade, exact input validation, report-free
-  composition, and base-producer provenance boundary.
-- [R1 one-center base atoms](r1_one_center_base_atoms.md)
-  relaxes the one-center base producer from H-only to explicit origin-centered
-  all-electron atoms, while requiring atoms and diatomics to share the same
-  producer workflow after geometry/shellification normalization.
-- [R3 residual-GTO/MWG compatibility history](r3_residual_gto_mwg_augmentation.md)
-  indexes the R3-A/B/C milestones, migrations, and rejected legacy paths;
-  current numerical and artifact authority lives in the linked subsystem pages.
-- [R3 usability supplemented workflow](r3_usability_supplemented_workflow.md)
-  defines the implemented non-exported same-construction facade for explicit
-  system, base-basis, and supplement inputs.
-- [Residual Gaussian domain module](residual_gaussian_domain_module.md)
-  is the canonical current RG algorithm contract for residual basis selection,
-  exact augmented operators, matched-width Gaussian descriptors, and residual
-  IDA interaction blocks.
-- [Residual Gaussian orthogonality robustness](residual_gaussian_orthogonality_robustness.md)
-  owns the current robust final merge, identity validation, production
-  `1e-6` cutoff, and superseded IDTOL/CUTOFF-01 history.
-- [Cartesian Gaussian raw blocks - nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
-  approves only the neutral owner for exact uncharged by-center Gaussian
-  nuclear `G-A`/`A-A` raw blocks shared by Residual Gaussian and Qiu-White
-  consumers.
-- [Cartesian Gaussian raw blocks - non-nuclear slice](cartesian_gaussian_raw_blocks_non_nuclear.md)
-  approves only the neutral owner for exact non-nuclear Gaussian
-  overlap/kinetic/coordinate-moment/second-moment `G-A`/`A-A` raw blocks.
-- [R3 terminal G-G product matrices](r3_terminal_gg_product_matrices.md)
-  defines the implemented terminal final-basis kinetic and moment `G-G`
-  products used by residual-Gaussian exact augmented operators.
-- [R3 remaining exact-operator allocation audit](r3_remaining_exact_operator_allocation_audit.md)
-  approves only a measurement-only audit of the post-`954c86cd` Cr2 exact
-  augmented-operator allocation. It does not approve a unit-nuclear, route
-  setup, raw-block setup, or other source lane.
-- [R3 unit-nuclear U_GG Gaussian sum](r3_unit_nuclear_ugg_gaussian_sum.md)
-  defines implemented terminal final-basis uncharged by-center `U_GG`
-  Gaussian-sum assembly under `CartesianFinalBasisRealization`.
-- [R3 same-construction base reuse](r3_same_construction_base_reuse.md)
-  defines the implemented trusted base kinetic/unit-nuclear handoff, exact
-  fallbacks, and canonical-driver call-site wiring.
-- [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)
-  approves only the compact canonical `bin/cartesian_ham_builder.jl` workflow:
-  visible defaults, optional trusted input file, command-line overrides,
-  visible public contract construction, the public `nesting = :pqs` / `:wl`
-  construction-family input, compact run-level hooks, visible physics-level
-  construction stages, coarse timing/summary, and artifact production through
-  approved producer surfaces. The staged producer surface remains
-  driver-facing through `src/cartesian_base_hamiltonian.jl`; lower operator
-  owners may be factored only to expose coarse product/moment, unit-nuclear,
-  and electron-electron stage timings. This is not route-stage/report
-  authority.
-- [White-Lindsey terminal basis realization](white_lindsey_terminal_basis_realization.md)
-  approves only the narrow seam that lets the existing
-  `:white_lindsey_low_order` route produce the same
-  `CartesianTerminalBasisRealization` consumed by the staged Hamiltonian path,
-  and records the separate WL diatomic compact retained-basis correction.
-- [Public ns direct-core side parity](public_ns_core_side_parity.md)
-  approves only deriving the direct nucleus-centered core side from public
-  `ns`, with oddization limited to direct core identity blocks and no change to
-  boundary retained-count construction.
-- [Common terminal shell decomposition](common_terminal_shell_decomposition.md)
-  approves only route-family-free common shell/core region decomposition and a
-  narrow audit/cleanup surface before PQS/WL retained-realization geometry.
-- [Mapped-COMX source span](mapped_comx_source_span.md)
-  approves only the mainline doside source-span option, compact provenance,
-  narrow wiring, terminal-basis consumption of materialized axis facts, compact
-  driver/facade selection, and bounded real-atom validation gates. It does not
-  import high-order scaffolding, add a CRPS numerical builder, change source
-  defaults, or change artifacts.
-- [Completed complete-core-shell RHF retirement record](complete_core_shell_rhf_retirement.md)
-  records deletion of the stale `pqs_multilayer_complete_core_shell_rhf.jl`
-  stack and root include without replacements or adapters.
-- [Completed route-driver materialization retirement record](route_driver_materialization_retirement.md)
-  records retirement of the old `cartesian_materialization`,
-  `cartesian_print_summary`, `cartesian_print_details`, and `cartesian_save`
-  wrapper workflow plus stale tool/test/docs pressure.
-- [Cartesian driver atom workflow](cartesian_driver_atom_workflow.md)
-  approves only explicit origin-centered one-center base atom driver inputs
-  through the existing base facade. Current validation remains the
-  origin-centered H endpoint for that base-only driver lane. Implemented
-  supplemented atoms are governed separately by `HP-COMP-SUPPATOM-*`.
-- [R3 homonuclear z-axis diatomic supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md)
-  approves explicit homonuclear two-center z-axis diatomic supplemented inputs
-  through the existing facade and canonical driver, with no element-specific
-  defaults or Cr2-specific branch.
-- [Nesting/supplement composition plan](nesting_supplement_composition_plan.md)
-  owns the implemented three-choice contract:
-  `geometry = atom | z-axis diatomic`, `nesting = :pqs | :wl`, and
-  `supplement = off | on`, together with public `ns` normalization, the WL
-  diatomic size guard, and shared residual-GTO/MWG supplementation. The compact
-  WL diatomic retained-basis correction remains separately governed by
-  `HP-WLDIAT-COMPACT-*`.
-- [Cartesian Hamiltonian artifact manifest](cartesian_hamiltonian_artifact_manifest.md)
-  approves only compact JLD2 sidecar groups for matrix-order basis labels and
-  uniform recipe provenance, and separately approves a compact source-mode
-  provenance seam for optional source-shell/source-mode manifest groups. It
-  does not change the Hamiltonian object, matrix keys, public inputs, or
-  `read_cartesian_ida_hamiltonian`.
-- [Route inventory type-surface cleanup](route_inventory_type_surface_cleanup.md)
-  approves only replacing runtime-keyed retained-unit and pair-family
-  `NamedTuple` route inventories in `src/pqs_source_box_route_driver_helpers.jl`
-  with vector/table or stable-dictionary storage. Raw product source-mode tuple
-  inventories were deferred from that lane.
-- [Raw product source-mode inventory cleanup](raw_product_source_mode_inventory_cleanup.md)
-  approves replacing `RawProductBoxPlan` source-mode and source-mode-column
-  tuple inventories with vector-backed storage while preserving deterministic
-  source-mode ordering, retained-rule behavior, and manifest source-mode
-  provenance.
-- [Contract-plan vector cleanup](contract_plan_vector_cleanup.md)
-  approves replacing terminal-lowering and retained-unit transform plan-level
-  contract tuple inventories with vector-backed storage while preserving
-  accessors, iteration order, summaries, and behavior. Per-contract
-  `source_cpbs` tuples remain out of scope.
-- [Route/stage type-surface cleanup](route_stage_type_surface_cleanup.md)
-  approves a narrow cleanup of Be2 q5 compile-attributed route/stage
-  compatibility inventories in `src/pqs_source_box_route_driver_helpers.jl`
-  and `src/cartesian_terminal_shellification_geometry.jl`. It does not approve
-  driver changes, artifact changes, numerical changes, route diagnostics, or
-  precompile/sysimage work.
-- [Route/stage carrier cleanup](route_stage_carrier_cleanup.md)
-  approves a narrow follow-up cleanup of stage-carried shellification,
-  route-skeleton, support-plan, retained-rule-plan, and terminal-plan carriers
-  in the route helper and complete-core-shell path. It preserves driver,
-  artifact, route semantic, and numerical behavior.
+The task-specific map above is the contract index. The registry supplies each
+ID's lifecycle, permission, code owner, and validation surface; linked pages
+own behavior. Do not copy their specifications into this navigation page.
+
+Completed implementation plans remain as short historical pointers only where
+their names are still useful for old links. Completed retirement records remain
+available for restoration guardrails, not as active implementation authority.
 
 Candidate amendments:
 

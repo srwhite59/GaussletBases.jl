@@ -431,13 +431,15 @@ Source anchors:
   `CartesianIDAHamiltonian`, `write_cartesian_ida_hamiltonian`
 - **active implementation surface**: `src/cartesian_base_hamiltonian.jl`,
   staged base/supplemented producer functions used by the canonical driver
-- **active implementation helper**:
-  `src/pqs_source_box_low_order_materialization.jl`,
-  `_cartesian_base_ida_hamiltonian`
+- **active staged construction surface**:
+  `cartesian_base_working_basis`, `cartesian_base_products`,
+  `cartesian_base_unit_nuclear`, `cartesian_base_vee`, and
+  `cartesian_base_hamiltonian_assembly` in
+  `src/cartesian_base_hamiltonian.jl`
 - **retired/do not call**:
-  `src/pqs_source_box_route_driver_helpers.jl`,
   `cartesian_materialization(report, terminal_basis_realization,
-  materialization_inputs)`
+  materialization_inputs)` and its former wrapper choreography; the route
+  helper file itself remains active for construction
 - **retired/do not call**:
   `cartesian_print_summary`, `cartesian_print_details`, `cartesian_save`, and
   their underscored route-driver materialization/report/save helpers
@@ -445,20 +447,21 @@ Source anchors:
   `HP-DRV-FILE-01` / `HP-DRV-FN-01` / `HP-DRV-ATOM-FN-01`
 
 Do-not-forget rule:
-Requested base PQS materialization returns `CartesianIDAHamiltonian{Float64}`
-directly; no-request materialization returns `nothing`. Do not add a materialized
-wrapper, status mirror, report field, metadata-carried matrix, or new artifact
-shape for the base handoff, except the approved `HP-R1-ART-01`
+The public facade and final assembly return `CartesianIDAHamiltonian{Float64}`
+directly. Do not restore a materialized wrapper, status mirror, report field,
+metadata-carried matrix, or new artifact shape for the base handoff, except the
+approved `HP-R1-ART-01`
 `producer_provenance/` keys stored in the final Hamiltonian file. The canonical
 driver may write artifacts and print compact timings/summaries, but must call
 approved producer surfaces rather than underscored route internals. That
 provenance is for consumer tracking, not a staged algorithm input after initial
-lattice/parent construction. The atom driver workflow is base-only through the
-existing base facade. `HP-R1-ATOM-*` approves explicit origin-centered
-all-electron one-center atom source support in that facade, and requires atoms
-and diatomics to share the same producer workflow after geometry/shellification
-normalization. It does not approve supplemented atom Hamiltonians, translated
-atoms, element lookup/default tables, or atom-only materialization paths.
+lattice/parent construction. The atom driver uses the same named base producer
+stages and artifact path as the facade. `HP-R1-ATOM-*` owns explicit
+origin-centered all-electron one-center atom source support; supplemented atom
+composition remains separately governed. Atoms and diatomics share the same
+producer workflow after geometry/shellification normalization. No translated
+atoms, element lookup/default tables, or atom-only materialization paths are
+implied.
 
 ## Performance And Reuse Policy
 

@@ -1,218 +1,136 @@
 # White-Lindsey Terminal Basis Realization
 
-Status: approved narrow source authority under `HP-WLTERM-FILE-01`,
-`HP-WLTERM-FN-01`, `HP-WLTERM-WIRE-01`, and `HP-WLTERM-TEST-01`. The
-z-axis diatomic extension is approved separately under
-`HP-COMP-WLDIAT-FN-01` and `HP-COMP-WLDIAT-TEST-01`. The compact
-White-Lindsey z-axis diatomic retained-basis correction is approved separately
-under `HP-WLDIAT-COMPACT-FN-01` and `HP-WLDIAT-COMPACT-TEST-01`.
+Status: implemented under `HP-WLTERM-*`, `HP-COMP-WLDIAT-*`,
+`HP-WLDIAT-COMPACT-*`, and `HP-WLDIAT-PARITY-*`. The registry owns exact ID
+lifecycle and file permission. This page owns the current numerical boundary
+for realizing native White-Lindsey retained units as the terminal basis used
+by the shared Hamiltonian producer.
 
-## Reason
+## Input And Output Boundary
 
-The canonical driver now exposes `nesting = :pqs` and `nesting = :wl` as
-public construction-family choices. The driver/facade plumbing can route
-`nesting = :wl` to `route_family = :white_lindsey_low_order`, but the staged
-Hamiltonian path still requires a `CartesianTerminalBasisRealization`.
-
-The current terminal-basis seam deliberately drops non-PQS routes:
-
-```julia
-recipe.route_family === :pqs_source_box || return nothing
-```
-
-This is the real missing seam. White-Lindsey complete shells lower to native
-White-Lindsey boundary-stratum concepts, including
-`:white_lindsey_boundary_strata` and
-`:white_lindsey_boundary_stratum_product`, while the existing terminal
-realizer supports direct identity blocks and PQS source-mode shell
-realization. The next source pass should make the existing White-Lindsey
-low-order route produce the same terminal-basis object consumed by the staged
-Hamiltonian producer.
-
-## Approved IDs
-
-- `HP-WLTERM-FILE-01` - optional White-Lindsey terminal-realization file and
-  include.
-- `HP-WLTERM-FN-01` - White-Lindsey low-order terminal basis realization.
-- `HP-WLTERM-WIRE-01` - route helper wiring from the WL route to the terminal
-  basis realization.
-- `HP-WLTERM-TEST-01` - validation gates for the WL terminal-basis lane.
-
-## Approved Source Surface
-
-Approved files:
-
-```text
-src/pqs_source_box_route_driver_helpers.jl
-src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl
-src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
-src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl
-```
-
-The route helper file is approved only for removing the PQS-only terminal-basis
-guard where the WL route has sufficient native terminal lowering and retained
-records, and for calling the approved terminal realizer.
-
-`pqs_terminal_basis_realization.jl` may be extended only if the WL lowering
-kinds fit the existing terminal-realizer structure cleanly. If the
-implementation is clearer as a separate sibling, `HP-WLTERM-FILE-01` approves
-creating `white_lindsey_terminal_basis_realization.jl` and adding its include
-to `CartesianFinalBasisRealization.jl`. The sibling must return the same
-`CartesianTerminalBasisRealization` type and must not introduce a new basis
-object, route-stage object, report payload, or public API.
-
-No other `src`, `bin`, `test`, `tools`, or artifact files are approved.
-
-## Approved Behavior
-
-`HP-WLTERM-FN-01` approves only terminal-basis realization for the existing
-`:white_lindsey_low_order` route family. The output must be the existing:
+The existing `:white_lindsey_low_order` route consumes construction-native
+terminal supports, retained units, transform contracts, and parent-axis
+bundles. It returns the same downstream object as PQS:
 
 ```julia
 CartesianTerminalBasisRealization
 ```
 
-with `CartesianTerminalBasisBlock` entries supported on authoritative owned
-terminal rows.
+containing ordered `CartesianTerminalBasisBlock` entries on authoritative
+owned support rows. White-Lindsey does not own a parallel Hamiltonian object,
+route result, report payload, or materialization path.
 
-Allowed construction:
+Both construction families first consume the common geometry contract in
+`common_terminal_shell_decomposition.md`. They differ only afterward:
 
-- preserve direct identity terminal blocks as identity on their owned support;
-- realize White-Lindsey boundary-stratum/product terminal blocks only from
-  existing construction-native terminal support, retained-rule, and transform
-  records;
-- produce support-local coefficients on `support.support_indices` /
-  `support.support_states`;
-- preserve deterministic terminal support, lowering, retained-record, and
-  transform-contract order;
-- validate disjoint owned supports and shell/block-local identity overlaps
-  under the same structural terminal-basis policy as the PQS path;
-- use existing module-local helper structure or a small WL-specific sibling
-  helper, whichever gives the clearer implementation without new persistent
-  vocabulary.
+- PQS realizes a complete shell from a full source box by boundary-mode
+  selection, owned-row restriction, and shell-local Lowdin;
+- White-Lindsey realizes the same common shell support as compact facet,
+  edge, corner, and boundary-stratum products of one-dimensional
+  contractions;
+- midpoint, outer-mismatch, and angular-extension thin slabs use the common
+  compact face-stack realization under both families;
+- true direct/core regions remain identity sectors.
 
-The lane is deliberately not approval to adapt the old White-Lindsey
-H1/H1+J materialization path. The common downstream boundary is terminal basis
-realization followed by the existing final-basis product, unit-nuclear, IDA,
-Hamiltonian construction, artifact, and driver machinery.
+## Realization Contract
 
-## Z-Axis Diatomic Compact-Basis Correction
+Each retained unit must match its transform contract's source CPBs and use the
+transform path appropriate to its unit kind.
 
-The current z-axis diatomic WL path can be mechanically realized, but the audit
-showed that it is still a placeholder-like retained-basis construction:
+Direct units use identity coefficients only on their owned support. A
+`:white_lindsey_boundary_stratum_retained_unit` is not an identity function:
+it realizes compact coefficients on its owned stratum support. Facets use the
+neutral terminal face-product helper, edges use the corresponding nested edge
+product, and corners contribute their local corner product. Compact thin-slab
+units reuse the neutral face-stack helper.
 
-```text
-elongated shared complete shell
--> boundary CPB strata
--> one retained identity unit per stratum
--> identity terminal blocks
-```
+All non-direct coefficients are support-local. Realization must preserve the
+native retained-unit and transform-contract order, and each block's
+`column_range` follows that order. Blocks may not acquire rows from an earlier
+terminal region.
 
-That path is not the intended compact WL retained basis and is not an
-acceptable final comparison against PQS. `HP-WLDIAT-COMPACT-FN-01` approves a
-narrow correction in:
+For every compact block, the local Gram matrix must satisfy the terminal
+identity check at `identity_atol`, whose default is `1.0e-8`. Owned supports
+must be pairwise disjoint, support indices and states must agree, and the
+final object reports zero structural cross-block overlap. Failure is an error;
+the implementation must not repair it by dropping support rows, relabeling a
+unit as identity, or applying a global Lowdin transform.
 
-```text
-src/cartesian_shellification/terminal_geometry.jl
-src/cartesian_terminal_lowering/region_contracts.jl
-src/cartesian_retained_units/lower_contract_units.jl
-src/cartesian_retained_unit_transform_contracts/unit_contracts.jl
-src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl
-src/pqs_source_box_route_driver_helpers.jl
-```
+## Retention Semantics
 
-The WL implementation model remains unit-based: faces, edges, corners, and
-small boundary units after shellification. The correction must not force a
-persistent shell object after splitting. Each WL unit must instead carry or
-realize compact retained columns generated by products of one-dimensional
-contractions on the authoritative owned support.
-
-Identity realization is valid only for true direct/core identity units. A
-metadata-only `:white_lindsey_boundary_stratum_retained_unit` is not already a
-retained basis function and must not be appended as a full-support identity
-block.
-
-The deleted route-global WL stack is historical donor/reference material only.
-Its coefficient helpers expressed the essential primitive:
+Public `ns` remains the common comparison input. The WL route-local size is
 
 ```text
-WL boundary-stratum CPB
--> local product-of-1D coefficient map
--> terminal block coefficients
+q = ns - 2
 ```
 
-Future source work may mine that primitive, but must re-express it behind the
-current `CartesianTerminalBasisRealization` boundary. Do not revive the old
-route-global reports, adapter layers, status surfaces, or H1/H1+J
-materialization path.
+while the direct nucleus-centered core side remains the common public-`ns`
+value
 
-The same public `ns` is the fair starting input for PQS/WL comparison after
-this correction, but WL geometry/contact cases may still produce different
-dimensions. Implementations must not fake compactness by dropping rows,
-relabeling full-support identity units, changing the driver comparison, or
-reviving old WL H1/H1+J materialization.
+```text
+isodd(ns) ? ns : ns + 1
+```
 
-## Boundary Retained-Count Parity
+Odd-side enforcement applies only to that direct nucleus-centered core. It
+must not be inherited by boundary strata or their one-dimensional
+contractions. Boundary products use the requested WL retained count with
+`enforce_symmetric_odd = false`.
 
-The compact coefficient path exposed one remaining inherited-donor rule:
-boundary strata currently apply symmetric-odd enforcement to the retained
-count. That is wrong for boundary shells.
+For the canonical one-layer WL boundary examples:
 
-The odd-side rule belongs only to direct nucleus-centered core blocks, where an
-odd side keeps the block centered on the nucleus. Boundary shells and their
-face/edge/corner strata are outside that core and should retain the requested
-shell contraction count.
+```text
+ns = 4, q = 2:  4^3 - 2^3 = 56 boundary columns
+ns = 5, q = 3:  5^3 - 3^3 = 98 boundary columns
+```
 
-`HP-WLDIAT-PARITY-FN-01` approves only
-`src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
-for this correction. Boundary-stratum product construction must use the
-requested retained count without symmetric-odd coercion. For public
-`nesting = :wl`, `ns = 4`, route-local `q = 2` should produce
-`4^3 - 2^3 = 56` boundary columns, not `26`. For `ns = 5`, the boundary count
-should remain `5^3 - 3^3 = 98`.
+The old `26`-column result for `ns = 4` is not valid retained-count policy.
+Full-support identity retention for WL boundary strata is likewise invalid.
 
-This lane does not approve route/shellification changes, public `ns`
-normalization changes, direct-core odd-centering changes, direct/core identity
-changes, artifact changes, PQS changes, residual-GTO/MWG changes, old WL
-materialization, diagnostics, committed tests, or Cr2 workflow.
+White-Lindsey z-axis diatomics reject normalized `ns < 4` before route
+construction. At supported sizes, physical parent extent and contact geometry
+may saturate retained support or produce a final dimension different from
+PQS. That is not permission to alter common shell ownership, fake compactness,
+or promise equal PQS/WL dimensions.
 
-## Forbidden
+## Downstream Seam
 
-This amendment does not approve:
+After terminal realization, WL uses the shared final-basis product,
+unit-nuclear, one-body, IDA, residual-GTO/MWG, Hamiltonian, artifact, and
+driver machinery. The bounded terminal inventory and due-diligence report
+consume the same native support, retained, transform, and block facts. They do
+not define WL coefficients or retained counts.
 
-- changes to route skeleton construction semantics;
-- changes to terminal shellification behavior or retained-selection policy;
-- old WL H1/H1+J materialization revival or adaptation;
-- new Hamiltonian object, artifact schema, manifest/provenance keys, reader
-  behavior, or public export/API;
-- driver public input changes beyond the already-approved `nesting` field;
-- raw-block, Residual Gaussian, MWG/IDA, Qiu-White, supplement, ECP, solver, or
-  Cr2 workflow changes;
-- report/status/payload expansion, diagnostic route switches, stop-after
-  controls, retained-rule dumps, raw-block switches, or route-stage labels;
-- committed test files or committed driver input fixtures.
+The removed route-global White-Lindsey H1/H1+J stack remains historical only.
+It must not be revived through adapters, reports, route stages, or alternate
+Hamiltonian construction.
 
-If White-Lindsey boundary-stratum final basis cannot be materialized from
-existing terminal lowering, retained-unit, and transform records without
-broader route redesign, implementation must make no source commit and report
-the exact missing native fact.
+## Source Ownership
 
-## Validation
+Current ownership is limited to:
 
-`HP-WLTERM-TEST-01` approves only:
+- `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
+  for WL block realization and validation;
+- `src/cartesian_final_basis_realization/terminal_face_product_blocks.jl` for
+  the neutral facet and thin-slab coefficient primitive;
+- `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  for module wiring;
+- the established terminal-lowering, retained-unit, and transform-contract
+  owners for native WL strata and compact slabs;
+- `src/pqs_source_box_route_driver_helpers.jl` for narrow route-to-terminal
+  wiring.
 
-- `git diff --check`;
-- package load;
-- current default `nesting = :pqs` atom or H2 base artifact/readback remains
-  unchanged;
-- `nesting = :wl` base atom artifact/readback;
-- `nesting = :wl` base H2 artifact/readback only when paired with the later
-  `HP-COMP-WLDIAT-*` authority for native WL diatomic terminal records;
-- H2 residual-GTO/MWG PQS endpoint remains unchanged if terminal realization
-  code is touched;
-- clear unsupported-input/blocker reporting if WL H2 cannot be realized from
-  current native records.
+Common shell geometry belongs to its separate contract. The registry remains
+authoritative for exact source surfaces.
 
-No Cr2 run, supplemented WL run, committed fixture, committed test file,
-solver/RHF/ECP/EGOI workflow, artifact schema validation, or broad WL workflow
-validation is approved.
+## Guardrails
+
+This contract does not change route skeletons, shellification ownership,
+public `ns` normalization, direct-core centering, PQS source dimensions,
+complete-shell or slab retained policies, mapped-COMX defaults, artifacts,
+public APIs, reports, raw blocks, RG/MWG/IDA semantics, solvers, ECP, or Cr2
+workflow. It does not choose a longitudinal `L` or an angular-resolution
+scale.
+
+If a WL unit cannot be realized from its native support and transform facts,
+construction must report the missing fact. It must not restore old WL
+materialization, add a persistent route object, or infer a replacement policy.

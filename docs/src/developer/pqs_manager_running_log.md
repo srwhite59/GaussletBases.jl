@@ -28699,3 +28699,42 @@ Goal advancement / guardrail:
   driver, residual/MWG, artifact, public API, solver, Coulomb, or Cr2 behavior
   changed. Same-construction trust is local call-graph responsibility, not a
   persisted proof or permission to reuse merely dimension-compatible matrices.
+
+## Cartesian Hamiltonian Producer Pass 384 - Batch Canonicalize Producer Authority
+
+Commit(s):
+- this commit - canonicalize driver, mapping, White-Lindsey/shell, route-stage,
+  packet, additive-reference, and protected-artifact documentation.
+
+Summary:
+- Four disjoint canonical-contract batches replaced implementation-era plans
+  and copied registry prose with source-backed contracts. A new
+  `route_stage_metadata_contract.md` now owns the current inventory, plan,
+  carrier, ordering, and stage-handoff semantics; five old cleanup pages are
+  retained only as short historical pointers.
+- Registry authority is now structurally normalized to `230` unique IDs and
+  `230` individual headings, with explicit lifecycle for every ID and no
+  combined headings. All `181` active whitelist IDs resolve. Independent
+  review restored exact per-ID source ceilings, separated dependency owners
+  from executable permission, corrected validation ownership, and added the
+  two previously inline rho0 candidate headings.
+
+Validation / evidence:
+- Five parallel read-only topology audits, four disjoint editing workers, and
+  two independent final reviews were reconciled against committed source.
+  Lifecycle, source/test path, whitelist, heading, formula, driver/facade,
+  due-diligence-field, and stale-wording checks passed, as did local
+  Documenter and `git diff --check`. No numerical Julia test was run because
+  this pass changes documentation only.
+
+Goal advancement / guardrail:
+- MT5 advances substantially: active documentation falls by roughly `2.7k`
+  lines before this entry while preserving equations, failure behavior, exact
+  source ceilings, and scientific distinctions. MT4 remains unchanged. No
+  source, test, API, artifact, shell policy, numerical default, EGOI, solver,
+  or Cr2 authority changed; the open longitudinal shell-resolution question
+  remains a separate design lane.
+- Next: normalize explicit permission and canonical-owner fields for the
+  remaining `50` mature registry records, then introduce non-authoritative
+  shadow metadata only after exact parity. Pass 385 is the next medium-term
+  checkpoint.

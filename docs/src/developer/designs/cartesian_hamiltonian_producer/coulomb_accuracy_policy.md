@@ -14,10 +14,11 @@ Cr2-specific workflow.
 ## Physics Target
 
 Cr and Cr2 consumers need internally consistent high-accuracy Hamiltonians.
-The current producer selects the compact expansion independently in
-parent/PGDG construction, base unit-nuclear and IDA assembly, residual-GTO
-mixed/self and augmented unit-nuclear construction, and residual
-matched-width Gaussian (MWG) interaction assembly.
+The implemented compact/high producer now resolves and carries one expansion
+through parent/PGDG construction, base unit-nuclear and IDA assembly,
+residual-GTO mixed/self and augmented unit-nuclear construction, and residual
+matched-width Gaussian (MWG) interaction assembly. The fixed standard tier is
+the remaining producer extension under this authority.
 
 Choosing high accuracy at only one of those points would not define one
 Hamiltonian approximation. Parent factor packets, base `V_GG`, augmented
@@ -26,17 +27,24 @@ expansion.
 
 ## Expert Input And Presets
 
-The source-backed base and supplemented producer facades accept:
+The source-backed base and supplemented producer facades currently accept:
 
 ```julia
 coulomb_accuracy = :compact  # default
-coulomb_accuracy = :standard
 coulomb_accuracy = :high
 ```
 
+This authority additionally approves, but committed source does not yet
+accept:
+
+```julia
+coulomb_accuracy = :standard
+```
+
 The option belongs with producer basis/construction inputs. The canonical
-human-facing driver may expose the same policy name and default; it does not
-own a second policy or expansion resolver. The option is route-family-neutral
+human-facing driver does not yet expose it; the approved pending amendment may
+add the same policy name and default, but the driver never owns a second policy
+or expansion resolver. The option is route-family-neutral
 wherever current PQS and White-Lindsey constructions share the
 parent/base/supplemented machinery; neither route may re-resolve a different
 expansion.
@@ -100,7 +108,8 @@ exponent vectors, or custom expansion objects as new user inputs.
 
 ## Canonical Driver Exposure
 
-`bin/cartesian_ham_builder.jl` may add exactly one public expert input:
+The canonical driver does not currently expose this input. The approved
+pending amendment may add exactly one expert input:
 
 ```julia
 coulomb_accuracy = :compact  # :compact, :standard, or :high
@@ -164,15 +173,9 @@ because the producer now supplies Hamiltonian-wide expansion authority. MWG
 must validate its expansion against the parent PGDG exponent sequence before
 constructing residual-containing interaction blocks.
 
-The old private `_cartesian_base_ida_hamiltonian(...)` helper currently
-chooses compact accuracy independently. A focused caller scan should decide its
-fate:
-
-- if no live caller remains, delete it;
-- if it is still live, require an explicit carried expansion argument.
-
-Do not preserve an uncalled helper through an adapter, and do not leave any
-private base helper free to select its own expansion.
+The old private `_cartesian_base_ida_hamiltonian(...)` helper was deleted after
+its caller scan proved empty. Do not restore it through an adapter or leave any
+new private base helper free to select its own expansion.
 
 ## Stable Analytic Gaussian Amendment
 

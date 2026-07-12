@@ -57,7 +57,7 @@ claim.
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |
-| Documentation architecture | Active cleanup | Finish canonical ownership/lifecycle reconciliation, compress registry families, then introduce shadow machine-readable metadata only after parity |
+| Documentation architecture | Active cleanup | Normalize the remaining explicit permission/canonical-owner fields, then introduce shadow machine-readable metadata only after parity |
 
 Other approved IDs may remain actionable even when not listed here. Read the
 assigned registry entry. Completed retirement, superseded, rejected, and
@@ -94,10 +94,11 @@ energy claim.
 4. **Protected atoms and counterpoise.** One-center protected compactness,
    separated kinetic/unit-nuclear persistence, and counterpoise sidecars remain
    separate future designs.
-5. **Authority lifecycle drift.** Several older pages still say “approved”
-   after their implementations landed. Correct them only from explicit
-   source/test commits and manager acceptance records; do not infer lifecycle
-   from filenames or current source alone.
+5. **Machine-registry prerequisites.** Every registry ID now has an individual
+   heading and explicit lifecycle, but some mature records still rely on
+   section-level permission or canonical ownership. Normalize those fields
+   before introducing non-authoritative shadow metadata; do not infer callers
+   or tests from ID names.
 
 ## Non-Negotiable Boundaries
 

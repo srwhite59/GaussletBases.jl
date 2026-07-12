@@ -1,19 +1,35 @@
 # Nesting/Supplement Composition
 
-Status: implemented for the bounded composition and input lanes owned here:
-`HP-COMP-BASEDIAT-*`, `HP-COMP-SUPPWL-*`,
-`HP-COMP-SUPPATOM-*`, `HP-COMP-NS-*`, and
+Status: implemented under `HP-ROUTE-RECIPE-*`, `HP-COMP-BASEDIAT-*`,
+`HP-COMP-SUPPWL-*`, `HP-COMP-SUPPATOM-*`, `HP-COMP-NS-*`, and
 `HP-COMP-WLNS-*`.
 
-This page is the canonical contract for how supported geometry, nesting, and
-supplement choices compose. Direct-core side parity is owned separately by
-[Public ns direct-core side parity](public_ns_core_side_parity.md), and
-one-center physical extent is owned by
+This page is the canonical contract for the supported geometry, nesting, and
+supplement composition and for family-selective route recipes. The registry
+owns ID lifecycle and source permission. Internal route/stage inventory and
+carrier semantics are owned by
+[Route/stage metadata](route_stage_metadata_contract.md).
+Direct-core parity and one-center physical extent are owned separately by
+[Public ns direct-core side parity](public_ns_core_side_parity.md) and
 [R1 one-center base atoms](r1_one_center_base_atoms.md).
+
+## Route Recipe
+
+`cartesian_recipe(route_inputs)` selects one real route family:
+
+- `:pqs_source_box` builds the `source_box` subrecipe and does not require
+  inactive `white_lindsey_*` input fields;
+- `:white_lindsey_low_order` builds the `white_lindsey` subrecipe and does not
+  require inactive PQS source-box fields.
+
+The inactive output subrecipe is `nothing`. Already-precomposed recipes with
+both stable field names remain accepted only through the existing compatibility
+path. This family selection removes inactive vocabulary; it does not merge the
+PQS and White-Lindsey algorithms or make either family removable.
 
 ## Composition Contract
 
-The producer accepts three successive choices:
+The producer composes three choices:
 
 ```text
 geometry:   origin-centered atom | homonuclear z-axis diatomic
@@ -21,23 +37,23 @@ nesting:    :pqs | :wl
 supplement: off | on
 ```
 
-All eight bounded cells are implemented through the shared producer:
+All eight bounded cells use the shared producer:
 
 | Geometry | Supplement | `:pqs` | `:wl` |
 | --- | --- | --- | --- |
 | atom | off | implemented | implemented |
-| atom | on | implemented through shared residual-GTO/MWG augmentation | implemented through shared residual-GTO/MWG augmentation |
-| z-axis diatomic | off | implemented | implemented through native WL terminal records |
-| z-axis diatomic | on | implemented through shared residual-GTO/MWG augmentation | implemented through shared residual-GTO/MWG augmentation |
+| atom | on | shared residual-GTO/MWG augmentation | shared residual-GTO/MWG augmentation |
+| z-axis diatomic | off | implemented | native WL terminal realization |
+| z-axis diatomic | on | shared residual-GTO/MWG augmentation | shared residual-GTO/MWG augmentation |
 
-The WL diatomic path remains subject to the separately owned compact retained
-basis and boundary-count contracts. Implemented composition does not imply
-identical PQS/WL dimensions or general molecular support.
+The WL diatomic path remains subject to its compact retained-basis and boundary
+count contracts. Composition does not imply equal PQS/WL dimensions or general
+molecular support.
 
 ## Public Size Rules
 
 Public `ns` is the requested cube/source/nesting size. Route-local `q` is
-derived only after selecting the nesting family:
+derived only after nesting selection:
 
 ```text
 nesting = :pqs  -> q = ns
@@ -45,43 +61,38 @@ nesting = :wl   -> q = ns - 2
 ```
 
 Legacy public `q`, where still accepted, is normalization compatibility only.
-When both `ns` and `q` are supplied, they must agree with the selected
-nesting. New inputs, examples, and provenance use `ns`.
+If both values are supplied, they must agree with the selected nesting. New
+inputs and provenance use `ns`.
 
-For WL z-axis diatomics, normalized `ns < 4` is rejected before route
-construction. The generic WL normalization floor remains `ns >= 3`; the
-stricter diatomic floor is required by the complete-shell inner box.
+White-Lindsey z-axis diatomics reject normalized `ns < 4` before route
+construction because the complete-shell inner box requires the stricter floor;
+the generic WL floor remains `ns >= 3`. WL retained support may saturate across
+working `ns` values when physical parent extent dominates. Changing `ns` can
+still change route-local `q`, decomposition, and row order without changing
+final support. Equal `ns` does not promise equal PQS/WL dimensions.
 
-WL retained support may saturate across working `ns` values when physical
-parent extent dominates. A changed `ns` can still change route-local `q`,
-block decomposition, and row ordering without changing the final retained
-support. This is not an ignored-input bug, and equal `ns` does not promise
-equal PQS/WL dimensions.
-
-Direct nucleus-centered core side is derived separately from public `ns`:
+Direct nucleus-centered core side is independent of route-local `q`:
 
 ```text
 direct_core_side = isodd(ns) ? ns : ns + 1
 ```
 
-That oddization does not apply to boundary retained counts. The full rule is in
-[Public ns direct-core side parity](public_ns_core_side_parity.md).
+This oddization does not apply to boundary retained counts.
 
-## Geometry And Supplement Rules
+## Geometry And Supplement
 
-Base diatomics require explicit:
+Base diatomics require:
 
 - two equal atom symbols used as provenance labels;
 - two equal, finite, positive, integer-valued nuclear charges;
 - two finite, distinct centers on the Cartesian z axis;
-- explicit nonnegative `nup` and `ndn` with
+- explicit nonnegative `nup` and `ndn` satisfying
   `nup + ndn == sum(nuclear_charges)`.
 
 No element table supplies charge, electron count, spin, basis, or geometry.
 
-After geometry and nesting produce a
-`CartesianTerminalBasisRealization`, supplemented atoms and diatomics use the
-same downstream path:
+After either nesting family produces a `CartesianTerminalBasisRealization`,
+supplemented atoms and diatomics share this downstream path:
 
 ```text
 terminal basis
@@ -92,76 +103,38 @@ terminal basis
 -> Hamiltonian assembly and existing artifact
 ```
 
-One-center inputs use `legacy_atomic_gaussian_supplement(...)`. Two-center
-inputs use `legacy_bond_aligned_diatomic_gaussian_supplement(...)`.
-White-Lindsey and PQS differ upstream of the terminal-basis boundary; the
+One-center inputs use `legacy_atomic_gaussian_supplement(...)`; two-center
+inputs use `legacy_bond_aligned_diatomic_gaussian_supplement(...)`. The shared
 residual-GTO/MWG producer does not branch into a second WL implementation.
 
 For one-center atoms, `basis.radius` is physical parent-extent authority.
-Parent counts are derived from the atomic mapping and spacing policy, then
-bounded below by the direct-core side. `ns` is resolution/nesting input, not
-a direct box-size substitute. See
-[R1 one-center base atoms](r1_one_center_base_atoms.md).
+Parent counts follow the atomic mapping and spacing policy and are bounded
+below by the direct-core side. `ns` is resolution/nesting input, not box extent.
 
-## Source Ownership
+## Ownership And Failure
 
-Implemented source owners are:
+`src/cartesian_base_hamiltonian.jl` owns input normalization, family-selective
+base route inputs, public `ns`/derived `q`, WL rejection, one-center sizing, and
+shared supplemented composition. `src/pqs_source_box_route_driver_helpers.jl`
+owns route recipe selection. `bin/cartesian_ham_builder.jl` owns visible driver
+input and dispatch, not a second composition algorithm. Shared residual
+augmentation remains in
+`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
 
-- `src/cartesian_base_hamiltonian.jl` for system/basis normalization, base
-  diatomic validation, public `ns` and derived `q`, WL diatomic rejection,
-  one-center parent sizing, and shared supplemented composition;
-- `bin/cartesian_ham_builder.jl` for the canonical visible `ns` input and
-  atom/diatomic supplemented dispatch;
-- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` for
-  the shared residual-GTO augmentation consumed by both nesting families.
-
-The driver does not own a separate composition algorithm.
-
-## Validation And Evidence
-
-No target lane added a dedicated committed fixture. Accepted bounded
-construction/readback and rejection evidence is recorded in
-`docs/src/developer/pqs_manager_running_log.md`:
-
-| Contract | Implementation | Accepted evidence |
-| --- | --- | --- |
-| base homonuclear diatomic | `095a89d41` | Pass 139 |
-| supplemented WL diatomic | `4cfb47ace` | Pass 141 |
-| supplemented atom | `2e9818c90` | Pass 142 |
-| public `ns` normalization | `5f0185a16` | Pass 145 |
-| atom physical parent sizing | `18d683575` | Pass 146 |
-| WL diatomic `ns` guard | `50327dc1e` | Pass 148 |
-
-Current downstream regression owners include
-`test/driver_public/cartesian_base_hamiltonian_runtests.jl` for the public
-base facade and
-`test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` for the
-supplemented path. They do not replace the historical per-lane evidence above.
-
-## Failure Behavior
-
-Reject unsupported or inconsistent input before expensive construction where
-practical. In particular, reject:
-
-- heteronuclear, translated, non-z-axis, or general molecular geometry;
-- nonneutral or noninteger-charge all-electron systems;
-- inconsistent `ns`/`q`;
-- WL diatomic `ns < 4`;
-- supplement basis count or owner mismatch.
-
-Do not add a geometry-specific Hamiltonian builder when the shared terminal
-basis and residual-GTO/MWG boundaries can express the case.
+Reject heteronuclear, translated, non-z-axis, or general molecular geometry;
+nonneutral or noninteger-charge all-electron systems; inconsistent `ns`/`q`;
+WL diatomic `ns < 4`; and supplement basis-count or owner mismatch before
+expensive construction where practical. Do not add geometry-specific
+Hamiltonian builders when the shared terminal and residual-GTO/MWG boundaries
+express the case.
 
 ## Non-Goals
 
-These contracts do not authorize:
-
-- translated atoms, heteronuclear or generally oriented molecules;
-- ECP, EGOI, solver/RHF, exchange, or Cr2-specific workflow;
-- route, shellification, terminal-lowering, raw-block, RG/MWG/IDA, or
-  interaction-policy changes;
-- new driver controls, route diagnostics, status/report payloads, public
-  exports, artifact schemas, readers, fixtures, or compatibility layers.
-
-The WL compact retained-basis, shellification, and thin-slab families remain
-separate subsystem contracts.
+This contract does not authorize translated atoms, heteronuclear or generally
+oriented molecules, ECP, EGOI, solver/RHF, exchange, Cr2-specific workflow,
+route or shellification changes, terminal-lowering changes, numerical policy
+changes, raw-block or RG/MWG/IDA interaction-policy changes, new driver
+controls, route diagnostics, status/report payloads, public exports, artifact
+schemas, readers, fixtures, compatibility layers, WL materialization deletion,
+or retirement of route/stage machinery. WL compact retained-basis,
+shellification, and thin-slab behavior remain separate subsystem contracts.

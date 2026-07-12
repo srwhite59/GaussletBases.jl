@@ -2,10 +2,12 @@
 
 Status: implemented internal subsystem under
 `HP-PQS-ATOMREF-PACKET-FN-01` and
-`HP-PQS-ATOMREF-PACKET-TEST-01`. The determinant-moment fitted-potential
-polish formerly recorded under `HP-PQS-ATOMREF-POTMOM-FN-01` and
-`HP-PQS-ATOMREF-POTMOM-TEST-01` is retired and must not be produced or
-consumed.
+`HP-PQS-ATOMREF-PACKET-TEST-01`. Commit `1563d4eea` removed the
+determinant-moment fitted-potential polish source, packet fields, persistence,
+and moment-specific tests. Its former `HP-PQS-ATOMREF-POTMOM-FN-01` and
+`HP-PQS-ATOMREF-POTMOM-TEST-01` IDs are retired. Legacy packets carrying
+`potential_fit/moment_polish/*` provenance remain rejected and require
+regeneration.
 
 This page is the canonical contract for reusable one-center atomic
 Hartree-Fock (HF) reference packets. The registry owns permission, lifecycle,
@@ -201,7 +203,7 @@ where packet density fits define `E_aa` and `E_ab`. The total must agree with
 
 The retired determinant-moment polish, separation grid, moment weight,
 fixed-tail moment solve, and element/molecule-specific coefficient adjustment
-must not run. Packet readback must explicitly reject any packet containing
+must not run. Packet readback explicitly rejects any packet containing
 `potential_fit/moment_polish/*`; polished Be, Ne, and Cr packets require
 regeneration through the ordinary pipeline. Do not add a compatibility adapter
 or silently strip the retired provenance.
@@ -252,21 +254,12 @@ validation, unconverged-reference rejection, exact and numerically equivalent
 owner-local embedding, structural mapping failures, Be/Ne consumption,
 explicit compact expansion passage, and the vendored basis-data regression.
 
-For the embedding-equivalence follow-on, source edits are limited to
-`src/cartesian_reference_density/atomic_hf_reference_packets.jl`. The existing
-private additive-reference caller may forward the one nested mapping summary
-only if directly needed. No other packet, correction, artifact, or workflow
-surface is reopened by this amendment.
-
-The moment-polish retirement follow-on must delete
-`_POTENTIAL_MOMENT_DISTANCES`, `_determinant_potential_moments`,
-`_polish_atomic_reference_potential`, its packet fields, writer/readback
-support, and moment-specific tests from the existing packet source/test owner.
-`build_atomic_hf_reference_packet(...)` must consume
-`fit_atomic_reference_potential(...)` directly, and readback must reject the
-retired keys. The matching correction/additive diagnostic changes remain owned
-by their canonical contracts; no replacement fit helper or compatibility
-shape is approved. The source/test pass should be materially line-negative.
+Commit `1563d4eea` is the retirement evidence: packet construction now consumes
+the ordinary radial fit directly, reports its determinant-field consistency,
+and rejects retired polish provenance in memory and on readback. The same pass
+removed `_POTENTIAL_MOMENT_DISTANCES`, `_determinant_potential_moments`,
+`_polish_atomic_reference_potential`, and their persistence/test shape. No
+replacement polish helper or compatibility packet shape is approved.
 
 The packet facility depends on the historical basis collection described in
 [Legacy BasisSets provenance](../../legacy_basissets_provenance.md).

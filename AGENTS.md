@@ -824,138 +824,17 @@ does not approve committed non-H fixtures/tests, translated atoms, supplemented
 atoms, ECP, solver workflow, new artifact keys, driver changes, or source files
 outside `src/cartesian_base_hamiltonian.jl`.
 
-`HP-ROUTE-RECIPE-FN-01` approves only family-selective route recipe cleanup in
-`src/pqs_source_box_route_driver_helpers.jl` and
-`src/cartesian_base_hamiltonian.jl`. `cartesian_recipe(...)` may build only the
-selected `route_family` subrecipe and set the inactive subrecipe to `nothing`;
-`:pqs_source_box` route inputs must not require inactive `white_lindsey_*`
-fields, and `_cartesian_base_route(kind)` may delete those fields. Explicit
-`:white_lindsey_low_order` route support must remain. This ID does not approve
-canonical driver changes, numerical kernel changes, terminal lowering or
-shellification changes, materialization/artifact schema changes, route-stage
-diagnostics, status/report expansion, WL materialization deletion, Cr2 runs, or
-new committed tests. `HP-ROUTE-RECIPE-TEST-01` permits only existing direct
-route-input tests to be adjusted if necessary.
-
-`HP-ROUTE-INV-FN-01` approves only retained-unit route inventory type cleanup
-in `src/pqs_source_box_route_driver_helpers.jl`: remove runtime-keyed
-`NamedTuple{unit_keys}` retained-unit inventory shapes and runtime-keyed
-`pair_family_counts = NamedTuple{families}(...)`, replacing them with
-vector-backed records/tables, stable dictionaries, or helper accessors with
-stable concrete types. `HP-ROUTE-INV-TEST-01` approves only `git diff --check`,
-package load, H2 base artifact readback, H2 supplemented artifact/readback or
-canonical driver path, focused search for absence of those runtime-keyed route
-inventories, and no Cr2 run. This lane does not approve raw product source-mode
-tuple cleanup, terminal-lowering contract tuple cleanup, retained-unit
-transform-contract tuple cleanup, public input `NamedTuple` changes, artifact
-sidecar table changes, source files outside the approved file, numerical
-kernels, driver changes, report/status/payload expansion, compatibility
-adapters, new committed tests, or Cr2 workflow.
-
-`HP-RAW-SRCMODE-FN-01` approves only raw product source-mode inventory cleanup
-in `src/cartesian_raw_product_sources/records.jl`,
-`src/cartesian_raw_product_sources/source_mode_indices.jl`, and
-`src/cartesian_raw_product_sources/summaries.jl`, with narrow consumer wiring
-only as needed in
-`src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`,
-`src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`, and
-`src/cartesian_base_hamiltonian.jl`. The target is replacing
-`RawProductBoxPlan.source_mode_indices` and `source_mode_column_indices`
-variable-length tuple storage with vector-backed storage, or removing the
-column storage when accessors can supply the same `1:count` ordering. Fixed
-`NTuple{3,Int}` source-mode coordinates remain valid. Accessor compatibility
-means preserving deterministic ordered facts, column associations, retained-rule
-parity, and manifest source-mode/relation output, not preserving the old
-variable-length `Tuple` concrete type. `HP-RAW-SRCMODE-TEST-01` approves only
-`git diff --check`, package load, H2 base and supplemented artifact/readback,
-H2 R3 endpoint, focused raw-product source order and retained-rule parity,
-manifest source-mode/relation inspection, focused search for absence of
-tuple-backed `RawProductBoxPlan` source-mode inventories, and no Cr2 run. This
-lane does not approve terminal-lowering contract tuple cleanup, broader
-retained-unit transform-contract tuple cleanup, broad pair-block/source-box
-rewrites, public input `NamedTuple` changes, numerical kernel or route semantic
-changes, driver changes, artifact schema changes, report/status/payload
-expansion, compatibility adapters preserving the old tuple-backed shape, new
-committed tests, or Cr2 workflow.
-
-`HP-CONTRACT-VEC-FN-01` approves only contract-plan vector cleanup in
-`src/cartesian_terminal_lowering/contracts.jl`,
-`src/cartesian_terminal_lowering/selection.jl`,
-`src/cartesian_terminal_lowering/summaries.jl`,
-`src/cartesian_retained_unit_transform_contracts/records.jl`,
-`src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`, and
-`src/cartesian_retained_unit_transform_contracts/summaries.jl`, with narrow
-consumer wiring only as needed in `src/pqs_source_box_route_driver_helpers.jl`,
-`src/cartesian_base_hamiltonian.jl`, and
-`src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`. The
-target is replacing `TerminalLoweringPlan.available_contracts`,
-`TerminalLoweringPlan.contracts`, and
-`RetainedUnitTransformContractPlan.contracts` variable-length tuple storage
-with vector-backed storage while preserving `available_contracts(plan)`,
-`selected_contracts(plan)`, `contracts(plan)`, `transform_contracts(plan)`,
-iteration order, summaries, and existing behavior.
-`source_cpbs::Tuple{Vararg{CoordinateProductBox}}` is explicitly out of
-scope. `HP-CONTRACT-VEC-TEST-01` approves only
-`git diff --check`, package load, H2 base and supplemented artifact/readback,
-H2 R3 endpoint, focused terminal-lowering and retained-unit transform-contract
-order parity, focused search for absence of targeted tuple-backed plan
-inventories, and no Cr2 run. This lane does not approve raw product
-source-mode changes, numerical kernel or route semantic changes, driver
-changes, artifact/manifest schema changes, report/status/payload expansion,
-compatibility adapters preserving old tuple-backed plan field types, new
-committed tests, or Cr2 workflow.
-
-`HP-ROUTE-STAGE-TYPE-FN-01` approves only Be2 q5 compile-attributed
-route/stage type-surface cleanup in `src/pqs_source_box_route_driver_helpers.jl`
-and `src/cartesian_terminal_shellification_geometry.jl`. Approved targets are
-`_pqs_source_box_route_driver_terminal_lowering_contract_inventory_from_plan`,
-`cartesian_units`,
-`_pqs_source_box_route_driver_transform_stage_low_order_summary`,
-`cartesian_transforms`,
-`_cartesian_terminal_shellification_region_unit_inventory`, and related
-terminal-region lowering inventory summary surfaces in
-`src/cartesian_terminal_shellification_geometry.jl` only where the same
-runtime-sized type-surface pattern appears. Stale compatibility inventories may
-be deleted, and remaining runtime-sized `NamedTuple` / `Tuple` carriers may be
-replaced with vector-backed compact internal objects, stable dictionaries,
-accessors, or smaller summaries, provided H2 base/supplemented artifact
-behavior, terminal shellification/lowering order, public driver contract,
-artifact/manifest schema, route semantics, and numerical matrices stay
-unchanged. `HP-ROUTE-STAGE-TYPE-TEST-01` approves only `git diff --check`,
-package load, H2 base and supplemented artifact/readback, H2 R3 endpoint if
-terminal realization behavior is touched, focused terminal shellification/
-lowering order parity, focused scan for newly introduced runtime-sized
-`NamedTuple`/`Tuple` inventories in the approved files, optional Be2 q5
-compile/timing comparison after correctness passes, and no Cr2 run. This lane
-does not approve driver changes, artifact/manifest changes, public API/export
-changes, numerical/raw-block/RG/MWG/IDA changes, route diagnostic/status/report
-expansion, committed tests, PackageCompiler/PrecompileTools/sysimage work, or
-Cr2 workflow.
-
-`HP-ROUTE-STAGE-CARRIER-FN-01` approves only post-cleanup route/stage carrier
-cleanup in `src/pqs_source_box_route_driver_helpers.jl` and
-`src/pqs_source_box_diatomic_complete_core_shell.jl`, with
-`src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
-optional only where directly required to slim terminal realization plan
-carriers in the approved path. Approved targets are `cartesian_shells`,
-`cartesian_units`, `cartesian_transforms`, terminal topology support-region
-planning, terminal retained-rule planning, and directly required terminal
-realization plan carriers. Giant shellification, route-skeleton, support-plan,
-retained-rule-plan, and terminal-plan `NamedTuple` / tuple shapes may stop
-crossing approved stage signatures; necessary facts should move to compact
-typed/vector-backed carriers, smaller summaries, accessors, or local
-recomputation from canonical objects. Route skeleton construction semantics and
-`src/pqs_source_box_route_driver_skeletons.jl` remain out of scope.
-`HP-ROUTE-STAGE-CARRIER-TEST-01` approves only `git diff --check`, package
-load, H2 base and supplemented artifact/readback, H2 R3 endpoint if terminal
-realization is touched, focused terminal support/shellification/lowering order
-parity, focused scan for newly introduced runtime-sized `NamedTuple`/`Tuple`
-inventories in the approved files, optional Be2 q5 post-cleanup compile/timing
-comparison after correctness passes, and no Cr2 run. This lane does not
-approve driver changes, artifact/manifest changes, public API/export changes,
-numerical/raw-block/RG/MWG/IDA changes, route diagnostic/status/report
-expansion, broad route-stage redesign, committed tests,
-PackageCompiler/PrecompileTools/sysimage work, or Cr2 workflow.
+The implemented `HP-ROUTE-RECIPE-*`, `HP-ROUTE-INV-*`,
+`HP-RAW-SRCMODE-*`, `HP-CONTRACT-VEC-*`, `HP-ROUTE-STAGE-TYPE-*`, and
+`HP-ROUTE-STAGE-CARRIER-*` families are governed by
+`nesting_supplement_composition_plan.md` and
+`route_stage_metadata_contract.md`. Preserve family-selective recipes,
+vector-backed variable inventories, fixed three-axis mathematical tuples,
+deterministic shell/lowering/retained/transform/source-mode order, compact
+stage carriers, and active complete-core-shell support. These maintenance IDs
+do not authorize route or tool retirement, source cleanup outside their
+owners, public/driver or artifact changes, numerical/shell policy, route
+diagnostics, precompile machinery, RG/MWG/IDA changes, or Cr2 workflow.
 
 R3/RG current source authority is compact by design. Read
 `docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md`
@@ -1414,7 +1293,7 @@ Current preferred deletion sequence:
 Cartesian Hamiltonian producer driver. Its job is to prove the approved
 producer paths work together by producing a Hamiltonian artifact directly.
 
-Approved under `HP-DRV-FILE-01`, `HP-DRV-FN-01`, `HP-DRV-STAGE-FN-01`,
+Implemented under `HP-DRV-FILE-01`, `HP-DRV-FN-01`, `HP-DRV-STAGE-FN-01`,
 `HP-DRV-STAGE-WIRE-01`, `HP-DRV-STAGE-TEST-01`, `HP-DRV-INV-FN-01`,
 `HP-DRV-INV-TEST-01`, and `HP-DRV-TEST-01`:
 
@@ -1468,8 +1347,7 @@ payload, source-mode dump, pair inventory, raw-block dump, all-row listing, or
 full metadata dump. It must not change numerical construction, shellification,
 terminal lowering, retained units, transform contracts, terminal realization,
 RG/MWG/IDA, Hamiltonian assembly, artifacts/readers, public exports, Cr2
-workflow, stage sequence, or driver inputs. The implementation line-budget
-target was `80` added `src`/`bin` lines.
+workflow, stage sequence, or driver inputs.
 
 `HP-DRV-SHELLDD-FN-01` and `HP-DRV-SHELLDD-TEST-01` govern the implemented
 standard terminal due-diligence report for Cartesian/PQS terminal bases,
@@ -1499,8 +1377,8 @@ changes, dense coefficient/transform/support dumps, source-mode/pair/
 raw-block/all-row/full-metadata dumps, broad report payloads, Cr2 workflow, or
 committed fixtures/tests by default. Gausslet/IDA weight summaries are
 diagnostic only and are not residual integral weights, MWG weights, or proof of
-quadrature quality. Later implementation line budget is target `180` added
-`src`/`bin` lines.
+quadrature quality. Maintenance must remain one bounded report/table surface,
+not a new reporting subsystem.
 
 `HP-PQS-ASPECTSHELL-FN-01` and `HP-PQS-ASPECTSHELL-TEST-01`
 record the implemented aspect-aware source policy for z-axis diatomic PQS
@@ -1510,7 +1388,7 @@ records are frozen; multilayer realization and due diligence consume the same
 shape. This does not authorize new source work, public inputs, WL policy,
 shell ownership, artifacts, RG/MWG/IDA, solver workflow, or Cr2 production
 claims.
-`HP-DRV-NEST-FN-01` and `HP-DRV-NEST-WIRE-01` approve one visible construction
+`HP-DRV-NEST-FN-01` and `HP-DRV-NEST-WIRE-01` implement one visible construction
 family input, `nesting = :pqs` or `nesting = :wl`, in
 `bin/cartesian_ham_builder.jl` plus narrow input plumbing in
 `src/cartesian_base_hamiltonian.jl`. `:pqs` maps to the existing
@@ -1524,18 +1402,15 @@ supplement combinations must still reject clearly.
 `HP-DRV-NEST-TEST-01` approves default `:pqs` validation plus one small base
 artifact/readback path with `nesting = :wl`, and no Cr2 run.
 
-The target producer shape is the 2 x 2 x 2 composition of geometry
+The implemented producer shape is the 2 x 2 x 2 composition of geometry
 (`atom` or z-axis diatomic), `nesting` (`:pqs` or `:wl`), and supplement state
 (`off` or `on`) recorded in
 `docs/src/developer/designs/cartesian_hamiltonian_producer/nesting_supplement_composition_plan.md`.
-This is planning authority except where a composition cell is explicitly
-promoted below. Supplemented atoms and supplemented White-Lindsey are approved
-only where `HP-COMP-SUPPATOM-*` and `HP-COMP-SUPPWL-*` name the exact cells;
-do not implement any remaining missing cells as driver-level special cases or
-parallel Hamiltonian builders.
+All bounded cells use the shared producer. Do not add driver-level special
+cases or parallel Hamiltonian builders for geometry or nesting variants.
 
-`HP-COMP-WLDIAT-FN-01` and `HP-COMP-WLDIAT-TEST-01` promote the first
-composition cell: `Natom = 2`, `nesting = :wl`, `basisname = nothing`.
+`HP-COMP-WLDIAT-FN-01` and `HP-COMP-WLDIAT-TEST-01` implement the
+`Natom = 2`, `nesting = :wl`, `basisname = nothing` composition cell.
 Approved source files are
 `src/pqs_source_box_diatomic_complete_core_shell.jl`,
 `src/cartesian_terminal_shellification_geometry.jl`,
@@ -1556,48 +1431,16 @@ parallel Hamiltonian builder, add committed tests, or run Cr2. Line budget is
 at most 250 added `src` lines, with blocker-only guard cleanup expected where
 practical.
 
-`HP-WLDIAT-COMPACT-FN-01` and `HP-WLDIAT-COMPACT-TEST-01` approve the
-narrow White-Lindsey z-axis diatomic compact retained-basis correction. The
-existing WL diatomic artifact path may be mechanically reachable, but the
-current elongated shared-shell boundary-stratum identity realization is not the
-intended compact WL retained basis and is not a fair production comparison
-against PQS. Approved files are
-`src/cartesian_shellification/terminal_geometry.jl`,
-`src/cartesian_terminal_lowering/region_contracts.jl`,
-`src/cartesian_retained_units/lower_contract_units.jl`,
-`src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`,
-`src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`,
-and narrow route wiring in `src/pqs_source_box_route_driver_helpers.jl` only if
-needed. The pass must preserve the WL unit-based model of faces, edges,
-corners, and small boundary units after shellification, but each WL unit must
-carry or realize the compact retained basis generated by products of
-one-dimensional contractions rather than retaining full-support identity rows.
-Identity realization remains valid only for true direct/core identity units,
-not for WL boundary-stratum retained units. Historical deleted WL coefficient
-helpers may be used only as donor/reference material for the compact
-CPB-local product-of-1D coefficient primitive; do not revive the old
-route-global WL stack, reports, adapters, or H1/H1+J materialization. The pass
-must not force a persistent shell object after splitting, fake compactness by
-dropping rows or relabeling full-support units, change the driver, artifact
-schema/provenance, PQS behavior, Hamiltonian assembly, raw blocks, RG/MWG/IDA,
-diagnostics/status/report payloads, committed tests/fixtures, or Cr2 workflow.
-The same public `ns` is the fair starting input for PQS/WL comparison after
-this correction, but it is not a promise of identical dimensions.
-
-`HP-WLDIAT-PARITY-FN-01` and `HP-WLDIAT-PARITY-TEST-01` approve the narrow
-White-Lindsey boundary-stratum retained-count parity cleanup in
-`src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`.
-Direct nucleus-centered core blocks keep the odd-side requirement, but
-boundary shells/strata and non-direct support regions must not inherit that
-symmetric-odd rule. For public `nesting = :wl`, `ns = 4`, route-local `q = 2`
-must retain the boundary shell count `4^3 - 2^3 = 56`, not the current
-inherited-donor result of `26`; `ns = 5` should retain `5^3 - 3^3 = 98`. This
-lane may only set the boundary-stratum product contraction to use the requested
-retained count without symmetric-odd coercion. It must not change core/direct
-identity rules, public `ns` normalization, route skeletons, shellification,
-retained-unit metadata shape, driver behavior, artifacts/provenance, PQS
-behavior, Hamiltonian assembly, raw blocks, RG/MWG/IDA, old WL materialization,
-diagnostics/status/report payloads, committed tests/fixtures, or Cr2 workflow.
+`HP-WLDIAT-COMPACT-*` and `HP-WLDIAT-PARITY-*` are implemented under
+`white_lindsey_terminal_basis_realization.md`. WL boundary units realize
+compact products of one-dimensional contractions on authoritative support;
+support rows are not retained as identity functions. Direct nucleus-centered
+cores alone keep odd-side centering. Boundary products keep the requested
+count, including `ns=4 -> 56` and `ns=5 -> 98`. Preserve unit order,
+support ownership, direct/core identity semantics, and public `ns`/derived
+`q`. Do not restore old WL H1/H1+J materialization, fake compactness, change
+PQS/shell/driver/artifact/RG/MWG/IDA behavior, or infer equal PQS/WL
+dimensions.
 
 The implemented composition and input family is canonicalized in
 `docs/src/developer/designs/cartesian_hamiltonian_producer/nesting_supplement_composition_plan.md`,
@@ -1628,8 +1471,8 @@ element defaults, separate atom/WL supplement paths, route/shellification or
 RG/MWG/IDA changes, new driver controls, artifact changes, solver/ECP work, or
 Cr2-specific workflow.
 
-`HP-COMP-SHELLGEOM-FN-01` and `HP-COMP-SHELLGEOM-TEST-01` approve only common
-terminal shell decomposition audit/cleanup in
+`HP-COMP-SHELLGEOM-FN-01` and `HP-COMP-SHELLGEOM-TEST-01` govern the
+implemented common terminal shell decomposition in
 `src/cartesian_shellification/terminal_geometry.jl` and narrow caller plumbing
 in `src/pqs_source_box_route_driver_helpers.jl`. Direct core regions, terminal
 shell regions, owned support rows, ordering, and coverage are common geometry
@@ -1643,8 +1486,8 @@ Hamiltonian/IDA/MWG/RG/raw-block changes, old WL materialization, committed
 tests/fixtures, or Cr2 workflow.
 
 `HP-COMP-SHELLGEOM-DIAT-FN-01` and
-`HP-COMP-SHELLGEOM-DIAT-TEST-01` extend common shell decomposition authority to
-z-axis diatomic shellifier entry. For a fixed public z-axis diatomic system,
+`HP-COMP-SHELLGEOM-DIAT-TEST-01` implement the common z-axis diatomic
+shellifier entry. For a fixed public z-axis diatomic system,
 parent axes, public `ns`, direct core side, nuclear centers, and bond axis,
 PQS and WL must call the same common shellifier with the same first-step
 arguments. Central-gap/contact, shared-shell, and outer-mismatch ownership are
@@ -1658,8 +1501,8 @@ realization, WL boundary coefficients, route skeletons, artifacts, driver
 inputs, committed tests/fixtures, or Cr2 workflow.
 
 `HP-COMP-THINSLAB-FN-01` and `HP-COMP-THINSLAB-TEST-01` supersede the
-outer-mismatch-only `HP-COMP-OUTERMM-*` lane. They approve one unified
-thin-slab stack compact-lowering repair for z-axis diatomics. Approved source
+outer-mismatch-only `HP-COMP-OUTERMM-*` lane and implement one unified
+thin-slab stack compact lowering for z-axis diatomics. Source
 files are `src/cartesian_terminal_lowering/selection.jl`,
 `src/cartesian_terminal_lowering/region_contracts.jl`,
 `src/cartesian_retained_units/lower_contract_units.jl`,
@@ -1687,8 +1530,8 @@ changes, RG/MWG/IDA changes, route skeleton redesign, broad terminal
 realization redesign, direct slab deletion, committed Cr2 fixtures/tests, or
 Cr2 workflow.
 
-`HP-COMP-THINSLAB-META-FN-01` and `HP-COMP-THINSLAB-META-TEST-01` approve
-only the live terminal-shellification metadata/scaffold inventory update in
+`HP-COMP-THINSLAB-META-FN-01` and `HP-COMP-THINSLAB-META-TEST-01` implement
+the terminal-shellification metadata/scaffold inventory in
 `src/cartesian_terminal_shellification_geometry.jl`, with
 `src/pqs_source_box_route_driver_helpers.jl` and
 `src/pqs_source_box_diatomic_complete_core_shell.jl` allowed only in support
@@ -1703,8 +1546,8 @@ payloads, change shellification geometry, redesign route skeletons, add a new
 reporting framework, or reintroduce direct identity slab lowering under a new
 name. Direct core and atom-contact core identity mappings remain unchanged.
 
-`HP-COMP-FACEPROD-FN-01` and `HP-COMP-FACEPROD-TEST-01` approve only a
-neutral `CartesianFinalBasisRealization` face-product terminal helper seam for
+`HP-COMP-FACEPROD-FN-01` and `HP-COMP-FACEPROD-TEST-01` implement the
+neutral `CartesianFinalBasisRealization` face-product terminal helper for
 compact thin-slab lowering and WL facet reuse. Approved source files are
 `src/cartesian_final_basis_realization/terminal_face_product_blocks.jl`,
 `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`,
@@ -1723,8 +1566,8 @@ changes, old high-order workflow revival, committed tests/fixtures, Cr2
 workflow, duplicate face-product assembly, PQS-specific thin-slab projection,
 or treating thin slabs as WL boundary strata for naming convenience.
 
-`HP-COMP-ANGBOX-FN-01` and `HP-COMP-ANGBOX-TEST-01` approve only
-z-axis diatomic angular-balanced shellification in
+`HP-COMP-ANGBOX-FN-01` and `HP-COMP-ANGBOX-TEST-01` implement z-axis
+diatomic angular-balanced shellification in
 `src/cartesian_shellification/terminal_geometry.jl`, with narrow route-driver
 or complete-core-shell summary plumbing only if directly required. The
 ordinary index-layer shared-shell body remains valid, but when shared-shell
@@ -1735,7 +1578,7 @@ stack, bond-axis, angular-rule, margin, transverse-scale, and extension-size
 metadata. The same thin-slab concept applies to midpoint slabs, planned
 non-boundary angular z-extension slabs, planned boundary angular z-extension
 slabs, and unexpected outer-mismatch fallback slabs. Planned z-extension
-stacks lower through `HP-COMP-THINSLAB-*`, which remains a separate blocker;
+stacks lower through the implemented `HP-COMP-THINSLAB-*` path;
 real shells remain route-specific after common shellification. This lane does
 not approve driver changes, artifact/schema/reader/provenance changes,
 terminal lowering, retained units, transform contracts, terminal realization,
@@ -1755,29 +1598,25 @@ mapped-COMX remains PQS-only. No second COMX path, numerical
 route/report payload, artifact, Hamiltonian/RG/MWG/IDA/EGOI/screening/solver
 change, or Cr2 production claim is authorized. The bounded He `ns=5` result
 blocks physics-default promotion pending later `ns=6/7` evidence.
-`HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` approve only
-the narrow White-Lindsey terminal-basis seam needed by `nesting = :wl`.
-Approved files are `src/pqs_source_box_route_driver_helpers.jl`,
+`HP-WLTERM-FILE-01`, `HP-WLTERM-FN-01`, and `HP-WLTERM-WIRE-01` implement
+the White-Lindsey terminal-basis seam for `nesting = :wl`. Source owners are
+`src/pqs_source_box_route_driver_helpers.jl`,
 `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`,
-optional
 `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`,
 and the matching include in
 `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`.
-The goal is for the existing `:white_lindsey_low_order` route to produce the
-same `CartesianTerminalBasisRealization` consumed by the staged Hamiltonian
-path, using existing terminal support, retained-rule, and transform records.
+The existing `:white_lindsey_low_order` route produces the shared
+`CartesianTerminalBasisRealization` from native support, retained-rule, and
+transform records.
 This does not approve old WL H1/H1+J materialization adaptation, route
 skeleton changes, shellification or retained-selection changes, raw-block
 changes, Residual Gaussian/MWG/IDA changes, supplemented WL behavior,
 diagnostics/status/report expansion, artifact schema changes, public API/export
-changes, or Cr2 workflow. `HP-WLTERM-TEST-01` approves default `:pqs`
-artifact/readback, `nesting = :wl` base atom artifact/readback, optional
-`nesting = :wl` base H2 artifact/readback only if current native records
-support it, H2 R3 PQS endpoint if terminal realization is touched, and no Cr2
-run.
+changes, or Cr2 workflow. `HP-WLTERM-TEST-01` maintains the accepted bounded
+PQS parity and WL atom/H2 artifact/readback gates.
 
-`HP-DRV-STAGE-FN-01` approves only a narrow non-exported, non-underscored
-driver-facing staged producer surface. Approved source files are
+`HP-DRV-STAGE-FN-01` implements the non-exported, non-underscored
+driver-facing staged producer surface. Source files are
 `src/cartesian_base_hamiltonian.jl`,
 `src/pqs_source_box_low_order_materialization.jl`,
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, and
@@ -1799,7 +1638,7 @@ metadata field cloud, runtime-keyed field group, persistent cache, artifact
 schema, raw-block switch, allocation probe, per-kernel timing framework, or
 source files outside the approved paths.
 
-`HP-DRV-STAGE-WIRE-01` allows `bin/cartesian_ham_builder.jl` to call that staged
+`HP-DRV-STAGE-WIRE-01` implements `bin/cartesian_ham_builder.jl` calls to that staged
 producer surface as separate visible top-level stage calls and time/print the
 visible physics stages. Driver timing must distinguish product/moment,
 unit-nuclear, and electron-electron stages. It does not approve one opaque
@@ -1823,12 +1662,11 @@ write/readback plus optional ignored/user-run Cr2 stress after H2/Be2 pass. It
 does not approve committed Cr2 fixtures, committed Cr2 tests, Cr2-specific
 workflow, or new committed tests.
 
-`HP-DRV-ATOM-FN-01` and `HP-DRV-ATOM-WIRE-01` approve only explicit
+`HP-DRV-ATOM-FN-01` and `HP-DRV-ATOM-WIRE-01` implement explicit
 origin-centered one-center base atom workflow in `bin/cartesian_ham_builder.jl`.
-The driver may normalize explicit `atom_symbols`, `nuclear_charges`,
-`atom_locations`, `nup`, `ndn`, visible one-center basis fields, and call the
-existing `cartesian_base_hamiltonian(system; basis, hamfile)` facade where that
-facade already supports the atom. Current validation remains origin-centered H.
+The driver uses `Natom=1` and `basisname === nothing`, normalizes explicit
+charge/spin/geometry/basis fields, and calls the same named base producer
+stages and artifact path as the public facade. There is no `mode=:base` input.
 These driver IDs do not approve edits to `src/cartesian_base_hamiltonian.jl`;
 producer-side atom support is governed separately by `HP-R1-ATOM-*`, and
 supported supplemented one-center atoms are governed by
@@ -1839,7 +1677,7 @@ committed atom fixtures, or committed tests. `HP-DRV-ATOM-TEST-01` approves
 only H atom driver artifact write/readback and optional ignored negative
 checks.
 
-`HP-DRV-ATOM-CLEAN-01` approves only removing hidden
+`HP-DRV-ATOM-CLEAN-01` preserves the implemented removal of hidden
 `d = vars[:core_spacing]` from one-center atom basis construction in
 `bin/cartesian_ham_builder.jl`. Public inputs, defaults, overrides, hooks,
 timing labels, visible stage sequence, artifact schema, and the driver contract

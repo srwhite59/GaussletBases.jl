@@ -1,81 +1,15 @@
 # R1 One-Center Base Atoms
 
-Status: approved narrow source authority to relax the one-center base producer
-from hydrogen-only validation to explicit origin-centered all-electron atoms.
-The implemented facade contract is canonical in
-[R1 public base producer](r1_public_base_producer.md). This is not
-supplemented-atom, translated-atom, ECP, solver, or broad molecule authority.
+Status: implemented public-facade contract for explicit origin-centered
+all-electron one-center base atoms under `HP-R1-ATOM-*`. The general facade
+and base artifact contracts remain canonical in
+[R1 public base producer](r1_public_base_producer.md).
 
-## Decision
+## Meaning And Interface
 
-Approve `cartesian_base_hamiltonian(...)` to accept explicit one-center base
-atom systems beyond H when the atom is origin-centered and all physical data is
-supplied by the caller.
-
-This amendment extends the existing R1 public base facade input scope. It does
-not create a new public function, new export, new driver mode, new artifact
-schema, or new route vocabulary. The route remains the unsupplemented,
-uncorrected, all-electron localized-IDA base Hamiltonian route.
-
-The current committed endpoint remains origin-centered H. Non-H atoms such as
-Be or Cr are allowed as explicit user-run or ignored validation/stress inputs
-after H remains clean. A committed non-H reference gate requires a later
-decision with an accepted reference value or endpoint criterion.
-
-## Shared Workflow Constraint
-
-Atoms and diatomics must share the same producer workflow except at the narrow
-places where the physics actually differs. The approved public workflow remains:
-
-```text
-system / specification
--> parent and route geometry
--> terminal basis realization
--> Hamiltonian production
--> optional existing Hamiltonian artifact
-```
-
-One-center atoms may have atom-specific geometry and shellification inputs, and
-future supplemented atoms may have atom-specific residual placement. Those
-differences must still feed the same underlying terminal-basis, one-body, IDA,
-Hamiltonian-construction, and artifact-writing machinery whenever possible.
-
-This amendment does not approve:
-
-- an atom-only Hamiltonian builder;
-- a parallel atom materialization path;
-- separate atom route-stage/report/status objects;
-- atom-only one-body or IDA orchestration when the shared kernels already
-  apply;
-- provenance or metadata fields used to route algorithmic data around the
-  shared workflow.
-
-If implementation discovers that a non-H atom cannot use the existing shared
-workflow after geometry/shellification normalization, it must stop and report
-the exact missing shared seam rather than adding an atom-specific workaround.
-
-## Approved IDs
-
-- `HP-R1-ATOM-FN-01` - explicit one-center all-electron base atom facade scope.
-- `HP-R1-ATOM-WIRE-01` - one-center atom normalization to the existing R1 base
-  construction path and shared atom/diatomic producer machinery.
-- `HP-R1-ATOM-TEST-01` - validation gates for the one-center base atom
-  relaxation.
-
-## Approved File
-
-Approved source file:
-
-```text
-src/cartesian_base_hamiltonian.jl
-```
-
-No other `src`, `test`, `tools`, `bin`, or committed input-fixture file is
-approved by this source lane.
-
-## Public Input Scope
-
-The public call shape remains unchanged:
+A base atom Hamiltonian is unsupplemented, uncorrected, and all-electron. It
+uses the shared terminal Cartesian basis, exact assembled one-body operators,
+and localized IDA interaction. The exported call remains:
 
 ```julia
 cartesian_base_hamiltonian(
@@ -85,150 +19,152 @@ cartesian_base_hamiltonian(
 )::CartesianIDAHamiltonian{Float64}
 ```
 
-Approved one-center atom `system` rules:
+No atom-specific function, result wrapper, report, or route object is part of
+the public interface.
 
-- exactly one center;
-- `atom_symbols`, `nuclear_charges`, and `atom_locations` are vectors or other
-  `AbstractVector` values, not variable-size tuples;
-- the single atom location is exactly `(0.0, 0.0, 0.0)` in the supported
-  public contract;
-- the nuclear charge is supplied explicitly, finite, positive, and
-  integer-valued;
-- `nup` and `ndn` are explicit nonnegative integers;
-- neutral all-electron count is derived from the explicit charge:
-  `nup + ndn == round(Int, only(nuclear_charges))`;
-- the atom symbol is provenance/user labeling only and must not be used to infer
-  charge, electron count, spin, basis, or ECP behavior.
+## System Contract
 
-Approved one-center atom `basis` rules:
-
-- required durable public fields: `ns`, `core_spacing`, and `radius`;
-- route-local `q` is derived from `ns` and `nesting` under
-  `HP-COMP-NS-FN-01`;
-- temporary legacy `q` compatibility, if kept, must normalize to `ns` and
-  reject inconsistent `ns`/`q` pairs;
-- optional fields retain existing R1 defaults:
-  `reference_spacing = 1.0`, `tail_spacing = 10.0`, and
-  `parent_axis_family = :G10`;
-- public `d` is deprecated and is not part of the durable atom contract; if a
-  temporary compatibility path accepts it, it must equal resolved
-  `core_spacing`;
-- public `parent_mapping_Z`, `parent_mapping_d`, `parent_mapping_rule`,
-  backend controls, and parent axis counts remain unsupported.
-
-Private one-center mapping remains:
+`system` must contain exactly:
 
 ```text
-spacing_inputs.reference_spacing = basis.reference_spacing
-parent_inputs.parent_mapping_rule = :white_lindsey_atomic_mapping
-parent_inputs.parent_mapping_d = resolved basis.core_spacing
-parent_inputs.parent_mapping_Z = only(system.nuclear_charges)
+atom_symbols, nuclear_charges, atom_locations, nup, ndn
 ```
 
-The public charge, not the atom symbol, supplies `Z`.
-The White-Lindsey `Z` dependence remains the internal mapping-shape rule
-`core_range = sqrt(core_spacing / Z)` and
-`mapping_strength = sqrt(core_spacing * Z)`. Future automatic presets may
-derive `core_spacing` from `Z`, for example through a fixed
-`core_spacing * Z` family, but after resolution `core_spacing` is the single
-authoritative near-nucleus spacing. `reference_spacing`, `tail_spacing`, and
-box controls remain separate concepts. Later `HP-PQS-MAP-SFACTOR-*` approves
-only the expert scalar `s_factor` as a narrow mapping-strength override; it
-does not revive public `d`, public `parent_mapping_d`, or element defaults.
+For a one-center atom:
 
-## Physical Parent Extent
+- the three center collections are `AbstractVector` values of length one;
+- the location is exactly the finite tuple `(0.0, 0.0, 0.0)`;
+- the explicit nuclear charge is finite, positive, and integer-valued;
+- `nup` and `ndn` are nonnegative integers and are not `Bool`;
+- neutrality requires `nup + ndn == round(Int, nuclear_charge)`.
 
-`HP-COMP-ATOMBOX-FN-01` is implemented. Public `basis.radius` is the
-one-center physical parent-extent authority. The producer maps that radius
-through the existing White-Lindsey atomic mapping and spacing policy, rounds
-to an odd axis count, and applies the public-`ns` direct-core side only as a
-minimum:
+The atom symbol is converted to a string and persisted as a label. It does not
+infer charge, electron count, spin, basis, mapping policy, or ECP behavior.
+
+## Basis Contract
+
+The atom `basis` is a plain exact-key `NamedTuple`. It requires:
 
 ```text
-mapped_count = odd count covering basis.radius
+core_spacing, radius, and at least one of ns or legacy q
+```
+
+All spacings and extents are finite and positive. Size inputs are positive
+integers and are not `Bool`. Implemented optional fields and defaults are:
+
+| Field | Default or rule |
+| --- | --- |
+| `parent_axis_family` | `:G10`; other families reject |
+| `reference_spacing` | `1.0` |
+| `tail_spacing` | `10.0` |
+| `nesting` | `:pqs`; accepts `:pqs` or `:wl` |
+| `source_span` | `:ordinary`; `:mapped_comx` is PQS-only |
+| `s_factor` | `1.0`; finite and positive |
+| `coulomb_accuracy` | `:compact`; current source also accepts `:high` |
+
+`nesting`, `source_span`, and `coulomb_accuracy` accept symbols or strings and
+normalize to symbols. `parent_axis_family` must be the symbol `:G10`.
+`:standard` Coulomb accuracy is not implemented at this baseline. Public
+`parent_mapping_Z`, `parent_mapping_d`, `parent_mapping_rule`, backend
+controls, and parent axis counts are unsupported.
+
+Durable calls use `ns`. The producer derives:
+
+```text
+nesting = :pqs  -> q = ns
+nesting = :wl   -> q = ns - 2
+```
+
+Generic WL input requires `ns >= 3`. Legacy `q` may be supplied alone, in
+which case `ns` is reconstructed; if both are present they must agree with the
+selected nesting.
+
+`core_spacing` is the single public near-nucleus physical scale. Deprecated
+atom-only `d`, if supplied, must be finite, positive, and exactly equal to
+`core_spacing`. It is rejected for diatomics and does not revive public
+`parent_mapping_d`.
+
+## Mapping And Parent Extent
+
+For charge `Z`, core spacing `c`, and mapping factor `f`, the one-center
+White-Lindsey mapping is:
+
+```text
+standard_s  = sqrt(Z * c)
+effective_s = f * standard_s
+AsinhMapping(c = c, s = effective_s, tail_spacing = tail_spacing)
+```
+
+The exact expert-factor semantics and provenance are owned by
+[PQS/WL mapping `s_factor`](pqs_mapping_s_factor.md).
+
+`radius` is physical parent-extent authority. The producer finds the odd
+mapped axis count that covers that radius, derives the direct-core minimum from
+public `ns`, and uses:
+
+```text
 direct_core_side = isodd(ns) ? ns : ns + 1
-parent_side = max(mapped_count, direct_core_side)
+parent_side = max(mapped_count_covering_radius, direct_core_side)
 ```
 
-Thus `ns` controls source/nesting resolution; it does not replace atom
-radius or driver padding as physical box size. The shared `ns`/`q` rules
-are canonical in
-[Nesting/supplement composition](nesting_supplement_composition_plan.md), and
-direct-core parity is canonical in
-[Public ns direct-core side parity](public_ns_core_side_parity.md).
+Consequently `ns` does not replace radius, driver padding, reference spacing,
+or tail spacing.
 
-## Artifact Contract
+## Shared Construction
 
-No new artifact schema is approved. Existing `HP-R1-ART-01`
-`producer_provenance/` keys are sufficient for one-center base atoms:
+After one-center geometry and shellification normalization, atoms use the same
+producer stages as diatomics:
 
-- `route = :one_center_pqs_base`;
-- `mapping_kind = :white_lindsey_atomic_mapping`;
-- `mapping_d = resolved basis.core_spacing`;
-- `radius = basis.radius`;
-- `atom_symbols`, `nuclear_charges`, `atom_locations`, `nup`, `ndn`, and
-  `final_dimension` record the explicit public input and result.
+```text
+working terminal basis
+-> product/moment operators
+-> unit-nuclear operators
+-> localized IDA interaction
+-> CartesianIDAHamiltonian assembly
+-> optional artifact
+```
 
-Do not add `mapping_Z`, element-table fields, spin labels, ECP fields, status
-fields, a separate manifest, or a provenance reader in this lane.
+Atom-specific Hamiltonian builders, parallel materialization, and atom-only
+one-body or interaction orchestration are outside this contract.
 
-## Validation
+## Source Ownership
 
-`HP-R1-ATOM-TEST-01` approves validation only for this one-center base atom
-relaxation:
+The one-center atom facade normalization and shared-workflow wiring are owned
+only by `src/cartesian_base_hamiltonian.jl`. The existing export/include in
+`src/GaussletBases.jl` belongs to the broader R1 base facade and is unchanged
+by the atom relaxation. No atom-only source file, committed fixture, or new
+test owner is part of this contract.
 
-- `git diff --check`;
-- package load;
-- existing origin-centered H public facade endpoint remains unchanged,
-  including the reviewed `core_spacing = 0.3`, `reference_spacing = 1.0`
-  baseline and internal `parent_mapping_d = core_spacing`;
-- optional ignored/user-run Be or Cr one-center base atom artifact
-  write/readback using explicit charge, spin sectors, origin geometry, and
-  basis controls;
-- finite/symmetric `K`, unit `U_A`, and IDA `V` for ignored/user-run non-H
-  atom checks;
-- clear `ArgumentError` for translated atom input, mismatched temporary `d`,
-  noninteger or nonpositive charge, nonneutral electron count, or
-  element-table/default requests where practical.
+## Artifact Behavior
 
-No new committed test file, committed non-H atom fixture, public reference
-scalar, solver run, supplemented atom endpoint, ECP gate, or translated-atom
-gate is approved by this ID.
+`hamfile === nothing` writes nothing. A nonempty path writes the ordinary
+version-1 Cartesian IDA artifact and returns the same in-memory Hamiltonian;
+an empty path rejects. The ordinary reader continues to consume only the
+matrix and physical payload and ignores provenance sidecars.
 
-Temporary validation inputs should live under ignored `tmp/work`.
+The existing base sidecars record the explicit system and basis truth,
+including `ns`, derived `q`, `core_spacing`, radius, axis counts, mapping kind,
+`mapping_d`, `mapping_s_factor`, `mapping_s_standard`,
+`mapping_s_effective`, electron counts, and final dimension. Route is
+`:one_center_pqs_base` or `:one_center_wl_base` according to `nesting`. These
+values are provenance, not algorithmic readback input; no atom-specific schema
+is introduced.
 
-## Forbidden
+## Failure Behavior
 
-This amendment does not approve:
+Missing or unknown keys, non-vector center collections, non-tuple or
+translated locations, invalid charge/electron counts, invalid size or
+spacing, inconsistent `ns`/`q`, incompatible nesting/source-span choices,
+invalid `s_factor` or Coulomb policy, mismatched legacy `d`, and empty
+`hamfile` throw before expensive construction where practical. Numerical and
+filesystem failures propagate. The facade never returns a blocker/status or
+partial result.
 
-- supplemented atom Hamiltonians;
-- Residual Gaussian, MWG/IDA, raw-block, or terminal-kernel convention changes;
-- translated one-center atoms;
-- multi-center atom/molecule broadening beyond existing R1 H2 and approved ZDI
-  supplemented diatomics;
-- element lookup tables, inferred nuclear charges, inferred spin, or
-  element-specific defaults;
-- ECP or pseudopotential support;
-- solver/RHF workflow;
-- public API redesign or new export;
-- artifact schema changes or new provenance keys;
-- route diagnostics, report/status/payload fields, metadata-carried numerical
-  data, or new route objects;
-- driver changes beyond already-approved `HP-DRV-ATOM-*` authority;
-- committed atom fixture files or new committed tests.
+## Non-Goals
 
-## Line Budget And Failure Rule
-
-Line budget:
-
-- at most `80` added `src` lines;
-- net simplification expected where H-specific validation is replaced by
-  explicit one-center atom validation;
-- no new committed test, tool, driver, or input-fixture file.
-
-Failure rule: if implementation requires source edits outside
-`src/cartesian_base_hamiltonian.jl`, changes to private materialization
-owners, new artifact keys, translated atom support, supplemented atom support,
-ECP behavior, solver workflow, element lookup/default tables, committed
-fixtures/tests, route/report/status/payload expansion, or an atom-only
-producer/materialization path, stop and request a separate docs-only amendment.
+This contract does not authorize supplements or corrections, translated or
+multicenter broadening, element tables or automatic defaults, ECPs,
+pseudopotentials, solver/RHF workflow, public API redesign, new artifact
+fields/readers, route diagnostics, or changes to terminal, raw-block,
+Residual Gaussian, MWG, or IDA semantics. Supported supplemented atoms are a
+separate shared-composition contract.

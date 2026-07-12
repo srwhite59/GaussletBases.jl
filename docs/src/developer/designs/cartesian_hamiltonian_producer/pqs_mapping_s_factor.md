@@ -1,102 +1,118 @@
 # PQS/WL Mapping `s_factor`
 
-Status: implemented expert input and provenance facility under
-`HP-PQS-MAP-SFACTOR-FN-01` and
-`HP-PQS-MAP-SFACTOR-TEST-01`.
-
-This is a narrow expert knob for Cartesian/PQS/WL parent mapping shape. It is
-not a new default policy, not automatic tuning, and not a statement that small
-`core_spacing` is bad. The purpose is to let expert consumers such as CR2 scan
-mapping strength independently from the near-core physical scale when the
-standard `s = sqrt(Z * core_spacing)` family is too restrictive.
+Status: implemented expert input and provenance contract under
+`HP-PQS-MAP-SFACTOR-FN-01` and `HP-PQS-MAP-SFACTOR-TEST-01`.
 
 ## Public Convention
 
-Add optional positive `s_factor`, default `1.0`.
+`basis.s_factor` is optional, defaults to `1.0`, and must convert to a finite
+positive `Float64`. The canonical driver exposes the same scalar as
+`s_factor`. Omission and explicit `1.0` select the standard mapping family;
+the producer does not tune the value.
+
+For every center with explicit charge `Z` and common `core_spacing = c`:
 
 ```text
-standard_s = sqrt(Z * core_spacing)
-effective_s = s_factor * standard_s
+mapping_s_standard = sqrt(Z * c)
+mapping_s_effective = s_factor * mapping_s_standard
 ```
 
-`s_factor = 1.0` must preserve current behavior. Omitted `s_factor` and
-explicit `s_factor = 1.0` should be numerically identical up to ordinary
-floating-point/reconstruction effects.
+`core_spacing` remains the physical near-nucleus target spacing. `s_factor`
+changes mapping shape independently; it does not replace `core_spacing`,
+radius, padding, reference spacing, or tail spacing.
 
-For one-center White-Lindsey/atom mapping, the convention is literal:
+## One-Center Mapping
+
+An origin-centered atom uses the literal mapping:
 
 ```text
-AsinhMapping(c = core_spacing,
-             s = s_factor * sqrt(Z * core_spacing),
-             tail_spacing = tail_spacing)
+AsinhMapping(
+    c = core_spacing,
+    s = s_factor * sqrt(Z * core_spacing),
+    tail_spacing = tail_spacing,
+)
 ```
 
-The durable public knob is only `s_factor`. Public `d`,
-`parent_mapping_d`, `parent_mapping_Z`, and route-specific mapping internals
-remain unsupported. `core_spacing` remains the near-nucleus physical scale and
-box/radius/padding remain separate concepts.
+Equivalently, its asinh range is:
 
-For multicenter PQS mapping, the intended behavior is the analogous
-per-center mapping-strength factor applied before the combined inverse-sqrt
-mapping is fit. Doer must record exactly how `s_factor` maps into the
-combined-invsqrt construction. If that mapping is ambiguous, implement the
-one-center path only and report the exact multicenter design question before
-touching CR2 production scripts.
+```text
+a = sqrt(core_spacing / Z) / s_factor
+```
+
+The explicit nuclear charge supplies `Z`; the atom label has no mapping
+authority.
+
+## Multicenter Mapping
+
+For each Cartesian axis, the implemented center-list path fits one positive
+combined inverse-sqrt mapping. For center `i` it uses:
+
+```text
+core_range_i = sqrt(core_spacing / Z_i) / s_factor
+target_spacing_i = core_spacing
+```
+
+Centers sharing the same coordinate on that axis are combined using the
+smallest core range and target spacing. The fit solves for positive amplitudes
+`A_i` in the existing local-density condition:
+
+```text
+1 / target_spacing_j = 1 / tail_spacing
+    + sum_i A_i / sqrt((x_j - x_i)^2 + core_range_i^2)
+```
+
+Thus the same scalar factor is applied before each axis's combined mapping is
+fit; it is not a post-fit coordinate rescaling or a route-specific switch.
 
 ## Provenance
 
-Any producer/artifact/manifest path that records mapping controls should
-record enough truth to reproduce the mapping:
+Facade-written base and supplemented artifacts preserve mapping truth in their
+existing provenance groups:
 
-- `mapping_s_factor`;
-- `mapping_s_standard`;
-- `mapping_s_effective`;
-- `mapping_c` / `mapping_d` / `core_spacing` as already appropriate for that
-  path.
+```text
+s_factor
+mapping_s_factor
+mapping_s_standard
+mapping_s_effective
+```
 
-For multicenter paths, provenance should also record whether the values are
-per-center, per-axis, or fitted combined mapping values. Do not hide
-multicenter ambiguity behind a single scalar provenance field.
+For one center, standard and effective values are scalars. For multicenter
+systems they are per-center values in input-center order. Parent metadata also
+carries the per-atom standard/effective values used by the center-list fit.
+Protected ladder recipe readback preserves `s_factor`; legacy recipes without
+it resolve to the unchanged `1.0` default.
 
-## Approved Source Surface
+Provenance is descriptive only. Construction must use the resolved live input,
+not recover mapping controls from an artifact sidecar.
 
-- `src/mappings.jl`;
-- `src/pqs_source_box_route_driver_helpers.jl`;
-- `src/cartesian_base_hamiltonian.jl`;
-- `bin/cartesian_ham_builder.jl` only if needed for the normal expert input
-  path;
-- `src/cartesian_protected_ladder_bundle.jl` only to preserve/read recipe
-  provenance.
+## Source Ownership
 
-No package export, solver workflow, EGOI, rho0/P0, protected-localized
-interaction convention, or automatic element/default-table behavior is
-approved by this lane.
+- `src/mappings.jl` owns the one-center atomic mapping and positive combined
+  inverse-sqrt fit.
+- `src/pqs_source_box_route_driver_helpers.jl` owns factor normalization,
+  multicenter fit inputs, and parent mapping metadata.
+- `src/cartesian_base_hamiltonian.jl` owns the public basis input and ordinary
+  artifact provenance.
+- `bin/cartesian_ham_builder.jl` owns the normal expert driver input.
+- `src/cartesian_protected_ladder_bundle.jl` may only preserve and read recipe
+  provenance for this control.
 
-## Guardrails
+No package export or source owner outside those surfaces is introduced by the
+`s_factor` contract.
 
-- `s_factor` must be finite and positive.
-- Default behavior must be unchanged for omitted `s_factor`.
-- The driver may expose the knob as an expert scalar, but must not tune it.
-- Do not add element-table defaults, charge-derived policy beyond the existing
-  explicit `Z`, or automatic recommendations.
-- Do not reinterpret this as a replacement for `core_spacing`.
-- Do not change `Vee`, IDA/MWG, EGOI, rho0/P0, solver workflow, or protected
-  artifact conventions.
+## Failure Behavior
 
-## Validation
+Nonfinite or nonpositive `s_factor` throws `ArgumentError`. One-center mapping
+also rejects invalid `Z`, `core_spacing`, or `tail_spacing`. Multicenter fitting
+rejects invalid lengths or scales, target spacing not smaller than tail
+spacing, nonfinite amplitudes, or a nonpositive-amplitude solution. These
+errors propagate; the producer does not silently restore `1.0`, clamp a fit,
+or substitute an element-specific value.
 
-Approved validation for `HP-PQS-MAP-SFACTOR-TEST-01`:
+## Non-Goals
 
-- `git diff --check`;
-- package load;
-- default H/H2 or small base artifact/readback path unchanged with omitted
-  `s_factor`;
-- explicit one-center atom with `s_factor != 1` records provenance and
-  changes the mapping;
-- small multicenter smoke if the multicenter path supports the knob;
-- no Cr2 production run required.
-
-Failure rule: if multicenter combined-invsqrt mapping cannot unambiguously
-support the same `s_factor` semantics, stop at one-center implementation and
-report the exact missing mapping fact. Do not guess the combined mapping rule
-and do not patch CR2 scripts around it.
+This contract does not revive public `d`, `parent_mapping_d`,
+`parent_mapping_Z`, or route-specific mapping controls. It does not add
+element tables, automatic tuning/recommendations, custom mapping objects,
+solver workflow, EGOI, rho0/P0, protected-localized interaction changes,
+Residual Gaussian/injection policy changes, or Cr2-specific behavior.

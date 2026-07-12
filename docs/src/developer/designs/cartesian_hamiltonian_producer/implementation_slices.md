@@ -59,11 +59,7 @@ current contracts are listed here instead of repeated.
 | Common shell geometry, thin slabs, and face products | [Common terminal shell decomposition](common_terminal_shell_decomposition.md) |
 | Complete-core-shell RHF removal | [Complete-core-shell RHF retirement](complete_core_shell_rhf_retirement.md) |
 | Route recipe family cleanup | [Nesting/supplement composition](nesting_supplement_composition_plan.md), registry `HP-ROUTE-RECIPE-*` |
-| Route inventory cleanup | [Route inventory type-surface cleanup](route_inventory_type_surface_cleanup.md) |
-| Raw product source-mode inventory cleanup | [Raw product source-mode cleanup](raw_product_source_mode_inventory_cleanup.md) |
-| Contract-plan vector cleanup | [Contract-plan vector cleanup](contract_plan_vector_cleanup.md) |
-| Route/stage type cleanup | [Route/stage type cleanup](route_stage_type_surface_cleanup.md) |
-| Route/stage carrier cleanup | [Route/stage carrier cleanup](route_stage_carrier_cleanup.md) |
+| Route inventories, source modes, contract plans, and stage carriers | [Route/stage metadata contract](route_stage_metadata_contract.md); former cleanup pages are historical pointers |
 | Homonuclear z-axis supplemented workflow | [R3 homonuclear supplemented workflow](r3_homonuclear_diatomic_supplemented_workflow.md) |
 | Protected basis, artifacts, EGOI, ladders, and additive references | [Protected basis](protected_localized_basis.md), [artifact](protected_localized_artifact.md), [EGOI](retained_gto_egoi.md), [ladder](protected_localized_ladder.md), [additive reference](protected_additive_reference_correction.md) |
 | Atomic packets and screened Hartree | [Atomic packets](atomic_hf_reference_packets.md), [screened-Hartree formalism](screened_hartree_residual_density.md), [correction assembly](screened_hartree_correction_assembly.md) |

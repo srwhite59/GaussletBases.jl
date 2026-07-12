@@ -169,16 +169,24 @@ Source ownership:
 - `src/cartesian_ida_hamiltonian.jl`;
 - `src/cartesian_residual_gaussians/augmented_operators.jl`.
 
-Shared committed reader regression:
+There is no dedicated committed core protected-artifact test file.
+`test/ida/cartesian_ida_hamiltonian_runtests.jl` exercises only the ordinary
+Cartesian IDA artifact; it does not cover protected persistence or locality.
+The protected implementation was accepted with bounded smokes rather than
+committed test cases:
 
-- `test/ida/cartesian_ida_hamiltonian_runtests.jl`.
+- commit `fd105b751` and manager running-log Pass 299 record protected
+  write/readback, identity, and rejection smokes;
+- commit `3fe2af697` and manager running-log Pass 301 record native-center,
+  inverse-permutation, sector, spread, and legacy-no-locality smokes.
 
-There is no dedicated committed protected-artifact test file. The bounded
-protected write/readback, rejection, native-center, permutation, sector, and
-legacy-no-locality smokes used for implementation acceptance are recorded by:
-
-- commit `fd105b751` and manager running-log Pass 299;
-- commit `3fe2af697` and manager running-log Pass 301.
+Later committed integration is narrower and separately owned. Commit
+`702aa4a62` added protected external-GTO tests in
+`test/nested/cartesian_external_gto_import_runtests.jl`; they create a
+synthetic protected artifact and validate the standalone `S_LG` sidecar against
+external packet, protected member, and protected artifact identity. That is a
+real protected-artifact consumer integration, not core row-locality coverage,
+and it adds no external-GTO fields to this artifact.
 
 Both artifact persistence and row-locality metadata are implemented. Their
 validation IDs describe the accepted gates; they are not future or
@@ -189,6 +197,8 @@ not-yet-implemented lifecycle entries.
 This contract does not own or authorize:
 
 - protected-basis numerical construction or alternative interaction rules;
+  direct `C' V C` remains rejected, and this artifact persists only the
+  inherited-site `Vee_L` convention;
 - ladder manifests, transfers, restart sidecars, or bundle summaries, which
   belong to [protected-localized ladder bundles](protected_localized_ladder.md);
 - external-GTO `S_LG` representation sidecars, which belong to

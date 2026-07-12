@@ -1,450 +1,192 @@
 # Cartesian Driver Usability Workflow
 
-Status: approved narrow source authority for making
-`bin/cartesian_ham_builder.jl` a compact functional Hamiltonian producer
-driver, plus a narrow internal staged producer surface so the driver can
-execute visible physics-level construction stages and operator-class timing
-stages. This is workflow authority only; it is not new Hamiltonian algorithm,
-raw-kernel, solver, or diagnostic authority.
+Status: implemented canonical contract for the human-facing Cartesian
+Hamiltonian driver and its non-exported staged producer calls. Registry entries
+own the lifecycle and source permissions for the `HP-DRV-*` IDs.
 
-## Decision
+## Boundary
 
-The previous canonical-driver freeze served its purpose: it kept private route
-diagnostics, ladder controls, and provider switches from shaping the production
-implementation. The base and residual-GTO/MWG producer paths are now coherent
-enough that the canonical driver should prove those paths work together.
-
-The driver is not the implementation of the exported library facade. The
-facade's signature, exact `system`/`basis` inputs, and base artifact provenance
-are canonical in [R1 public base producer](r1_public_base_producer.md). This
-page owns only the human-facing script inputs, presentation, and staged timing
-workflow.
-
-Approve `bin/cartesian_ham_builder.jl` as the standard compact, copyable,
-human-facing Cartesian Hamiltonian producer driver. It should follow the
-scientific-driver pattern:
-
-```text
-visible editable defaults
--> optional trusted project input file
--> command-line key=value overrides
--> visible public system / basis / optional supplement contract construction
--> compact normalized run summary
--> coarse timed user-facing physics-level construction stages
--> coarse timed operator-class stages
--> supported base or supplemented Hamiltonian construction
--> artifact write
--> optional readback check
-```
-
-Producing a Hamiltonian artifact is the full success endpoint. Staged
-milestones are allowed only when they are user-facing workflow milestones, not
-private route-stage diagnostics.
-
-## Approved IDs
-
-- `HP-DRV-FILE-01` - canonical Cartesian driver source file.
-- `HP-DRV-FN-01` - compact functional driver workflow.
-- `HP-DRV-NEST-FN-01` - public construction-family `nesting` input.
-- `HP-DRV-NEST-WIRE-01` - driver/facade mapping from construction family to
-  internal route family.
-- `HP-DRV-NEST-TEST-01` - validation gates for the construction-family input.
-- `HP-DRV-STAGE-FN-01` - internal visible physics-stage producer surface.
-- `HP-DRV-STAGE-WIRE-01` - canonical driver wiring to the staged surface.
-- `HP-DRV-STAGE-TEST-01` - validation gates for staged driver execution.
-- `HP-DRV-TEST-01` - validation gates for the driver usability lane.
-- `HP-PQS-COULOMB-ACCURACY-FN-01` / `TEST-01` - the one approved
-  cross-lane expert accuracy input exposed by the canonical driver.
-
-## Approved File
+The canonical driver is:
 
 ```text
 bin/cartesian_ham_builder.jl
-src/cartesian_base_hamiltonian.jl
-src/pqs_source_box_low_order_materialization.jl
-src/cartesian_final_basis_realization/pqs_terminal_one_body.jl
-src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
 ```
 
-`src/cartesian_base_hamiltonian.jl` is approved for the staged driver-facing
-surface. The lower-level `src` files listed here are approved only for
-behavior-preserving operator-class stage factoring needed to expose coarse
-product/moment, unit-nuclear, and electron-electron timings. No other `bin`,
-`tools`, `src`, `test`, or committed input-fixture file is approved by this
-lane. Project-specific copied drivers are acceptable consumer artifacts, but
-they are not part of the canonical driver authority.
+It is a trusted local scientific script, not a public parser or a second
+library API. It owns editable defaults, trusted input loading, command-line
+overrides, construction of visible `system`, `basis`, and `supplement`
+records, terminal due-diligence presentation, coarse stage timing, artifact
+production, and optional readback.
 
-## Input Shape
+The exported library interface remains the base-only facade:
 
-The canonical invocation should support:
+```julia
+cartesian_base_hamiltonian(system; basis, hamfile = nothing)
+```
+
+That facade accepts exact public records and returns
+`CartesianIDAHamiltonian{Float64}` directly. The driver instead calls the
+non-exported staged functions in `src/cartesian_base_hamiltonian.jl` so its
+physics-level timings remain visible and so it can compose the separately
+implemented supplemented workflow. Driver variable names are not facade
+keywords, and driver defaults are not hidden producer defaults.
+
+The canonical driver does not currently accept or forward
+`coulomb_accuracy`. Omission therefore selects the producer's `:compact`
+default. The facade's implemented `:high` opt-in and the unimplemented
+`:standard` tier do not imply canonical-driver support.
+
+## Invocation And Inputs
 
 ```text
 julia --project=. bin/cartesian_ham_builder.jl [input.jl] [key=value ...]
 ```
 
-Approved input policy:
+If the first argument has no `=`, it is included as trusted Julia code. It may
+assign the public driver variables or return a `NamedTuple` or `AbstractDict`
+of replacements. Later `key=value` arguments are trusted Julia expressions
+and take precedence. Unknown driver keys throw `ArgumentError`.
 
-- keep visible editable defaults near the top of the driver;
-- optionally read one trusted local Julia input file for project-specific
-  defaults;
-- apply later command-line `key=value` overrides after the input file;
-- treat the input file and overrides as trusted local scientific workflow
-  inputs, not as a security boundary or safe public parser;
-- keep the normalized internal configuration compact.
+The implemented inputs and checked-in defaults are:
 
-Approved user-facing configuration concepts:
+| Input | Default | Meaning |
+| --- | --- | --- |
+| `Natom` | `2` | `1` for an origin-centered atom; `2` for a homonuclear z-axis diatomic |
+| `atom` | `"H"` | per-center label only |
+| `Z` | `1.0` | explicit per-center nuclear charge |
+| `R` | `4.0` | full diatomic bond length; unused for an atom |
+| `nup`, `ndn` | `1`, `1` | explicit spin-sector electron counts |
+| `ns` | `5` | public source/cube/nesting size |
+| `nesting` | `:pqs` | `:pqs` or `:wl` |
+| `source_span` | `:ordinary` | `:ordinary` or PQS-only `:mapped_comx` |
+| `core_spacing` | `0.3` | near-nucleus physical spacing |
+| `s_factor` | `1.0` | finite positive expert mapping-strength factor |
+| `gausslet_family` | `:G10` | producer `parent_axis_family`; only `:G10` is implemented |
+| `padding` | `10.0` | atom radius or padding beyond diatomic nuclei |
+| `basisname` | `nothing` | `nothing` selects base; a label selects supplementation |
+| `lmax` | `1` | supplement angular cutoff |
+| `uncontracted` | `false` | supplement contraction choice |
+| `supplement_width_max` | `nothing` | optional positive maximum supplement width |
+| `basisfile` | `nothing` | optional trusted local BasisSets path |
+| `hamfile` | `"cartesian_ida_hamiltonian.jld2"` | nonempty artifact filename |
+| `check_file` | `true` | read the written artifact and compare its dimension |
+| `print_contract` | `true` | print the public contract and terminal due diligence |
+| `print_timing` | `true` | print coarse stage timings |
+| `expected_dimension` | `nothing` | optional exact final-dimension check |
 
-- `basisname = nothing` for base mode, or `basisname !== nothing` for
-  supported supplemented diatomic mode;
-- `system` specification;
-- base `basis` specification;
-- optional `supplement` specification for the supported residual-GTO/MWG path;
-- `nesting`, with `:pqs` as the default construction family and `:wl` as the
-  White-Lindsey low-order construction family;
-- `hamfile`;
-- `padding`;
-- `coulomb_accuracy`, with `:compact` default and
-  `:compact | :standard | :high` values;
-- `check_file`;
-- `print_contract`;
-- `print_timing`;
-- `expected_dimension`.
+The driver has no public `q`, `d`, `reference_spacing`, `tail_spacing`, route
+control, raw-provider control, or Coulomb-policy input. The producer derives
+route-local `q`, rejects unsupported combinations, and supplies its own
+`reference_spacing = 1.0`, `tail_spacing = 10.0`, and compact Coulomb defaults.
 
-Compact summary printing and artifact readback checks may remain part of the
-workflow, but they are not open-ended run-level hooks. They must not introduce
-additional route, diagnostic, artifact-schema, or solver controls.
+## Contract Construction
 
-For `coulomb_accuracy`, the driver validates and forwards only the policy
-symbol in the public `basis` object. Expansion resolution, coefficients,
-exponents, and parity checks remain producer-owned under the canonical Coulomb
-policy; the driver must not duplicate them.
+For `Natom = 1`, the driver constructs one center at the origin. For
+`Natom = 2`, it constructs equal labels and charges at
+`(0, 0, -R/2)` and `(0, 0, R/2)`. In both cases the public `system` has exactly
+`atom_symbols`, `nuclear_charges`, `atom_locations`, `nup`, and `ndn`.
+Symbols are labels; explicit charges and electron counts are authority.
 
-The implementation may choose a compact concrete representation, such as a
-small `NamedTuple` or driver-local variables, but it must not grow route-stage
-payloads, report mirrors, status objects, provider bundles, or metadata
-carriers.
-
-## Public Contract Construction
-
-The driver must visibly construct the public contract objects before it calls
-an approved producer facade:
-
-```text
-system
-basis
-optional supplement
-hamfile
-```
-
-For base runs, `basisname = nothing` selects the base facade path. For
-supplemented runs, `basisname !== nothing` selects the supported residual-GTO
-/ MWG supplemented facade and becomes the visible supplement basis label.
-Supported supplemented atom and diatomic cells are governed by the composition
-IDs in `nesting_supplement_composition_plan.md`; unsupported cells must reject
-clearly before route-internal work.
-
-## Construction Family Input
-
-The canonical driver exposes one first-class construction-family input:
-
-```julia
-nesting = :pqs  # or :wl
-```
-
-This is a user construction choice, not a diagnostic route switch. It
-preserves the parallel PQS source-box and White-Lindsey low-order development
-tracks without exposing private route choreography.
-
-Approved values:
-
-- `nesting = :pqs` maps internally to the existing `:pqs_source_box` route
-  family and remains the default.
-- `nesting = :wl` maps internally to the existing
-  `:white_lindsey_low_order` route family.
-
-The driver may include `nesting` in `print_contract` and `check_file` output as
-a public contract fact. It must not expose route skeletons, retained-rule
-plans, raw-block switches, stop-after controls, diagnostics, or private route
-helpers. Public stage labels remain the physics-level labels approved in this
-document; do not rename them to route-stage labels.
-
-`HP-DRV-NEST-FN-01` approves `nesting` as a driver input in
-`bin/cartesian_ham_builder.jl`. `HP-DRV-NEST-WIRE-01` approves only the narrow
-plumbing in `bin/cartesian_ham_builder.jl` and
-`src/cartesian_base_hamiltonian.jl` needed to map the public construction
-family to the existing internal route families.
-
-Supplemented `nesting = :wl` is approved only if the existing supplemented
-facade and staged path can already consume the White-Lindsey low-order base
-route without new route behavior. Otherwise the driver/facade must reject that
-combination clearly and report it as a separate design decision. This
-amendment does not approve broad supplemented White-Lindsey construction, new
-route objects, new terminal policies, new raw blocks, or new artifact shape.
-
-`padding` is a public physical box-padding control, not a route-stage field.
-For one-center atoms, it means the box padding around the atom and maps to the
-one-center base facade's `radius`. For z-axis diatomics, it means the padding
-around the two nuclei and maps internally to the existing facade extents; under
-the current origin-based z-axis contract this is equivalent to
-`xmax_parallel = max(abs(z_i)) + padding` and
-`xmax_transverse = padding`. If a future translated/general geometry needs
-different box-centering semantics, that requires a separate amendment.
-
-## Public Size Input
-
-The canonical driver should expose `ns` as the visible source/cube/nesting
-size. It should not teach users to edit public `q` as the common size control.
-The base facade normalizes `ns` and derives route-local `q` from the selected
-construction family:
-
-- `nesting = :pqs`: `q = ns`;
-- `nesting = :wl`: `q = ns - 2`.
-
-Legacy `q` may remain a temporary compatibility input, but driver defaults,
-examples, copied project templates, `print_contract`, and `check_file` output
-should prefer `ns`. If both fields are present they must agree under the
-selected `nesting`; otherwise the producer must throw `ArgumentError`.
-
-For z-axis diatomics with `nesting = :wl`, normalized `ns < 4` is not a
-supported construction point: it produces route-local `q = 1` and cannot form
-the complete-shell inner box required by the WL terminal shellification path.
-`HP-COMP-WLNS-*` approves rejecting that input early in the producer. For
-working WL diatomics, equal public `ns` should not be presented as an exact
-PQS/WL basis-size comparison, because WL retained support may saturate over
-`ns` ranges when the physical parent extent dominates.
-
-The driver may print the public contract when `print_contract = true`. The
-printed contract is limited to the public `system`, `basis`, optional
-`supplement`, `hamfile`, and run-level hooks. It must not print route-stage
-objects, private helper inputs, raw-provider choices, report payloads,
-metadata clouds, artifact schemas, or internal matrices.
-
-## Public Hooks
-
-The only approved compact run-level hooks are:
-
-- `check_file`;
-- `print_contract`;
-- `print_timing`;
-- `expected_dimension`.
-
-These hooks exist for human expert review and Codex-controlled artifact checks.
-`print_timing` may print coarse user-facing phase timings. `expected_dimension`
-may validate the returned Hamiltonian dimension and throw a clear error on
-mismatch. `check_file` may write a compact check record containing public
-contract facts, artifact path, final dimension, expected-dimension result,
-readback deltas, and coarse timing. It must not become an artifact schema,
-provenance dump, status object, route report, allocation log, or solver output.
-
-## Visible Physics-Level Stages
-
-The canonical driver must not hide the supplemented construction entirely
-inside one opaque facade call. It should execute and optionally time visible
-physics-level stages while still avoiding route-internal choreography.
-
-Approved visible stages are:
-
-- construct public `system`, `basis`, and optional `supplement`;
-- build the base working basis / terminal realization;
-- build base product/moment operators;
-- build base unit-nuclear attraction operators;
-- build base electron-electron / IDA interaction;
-- assemble the base Hamiltonian;
-- load or build the Gaussian supplement basis when `basisname !== nothing`;
-- build residual Gaussian augmentation;
-- build augmented product/moment operators;
-- build augmented unit-nuclear attraction operators;
-- build augmented electron-electron / residual-MWG interaction;
-- assemble the supplemented Hamiltonian;
-- write and check the artifact.
-
-These are workflow stages, not old route stages. They must not expose
-`cartesian_parent`, `cartesian_shells`, `cartesian_units`,
-`cartesian_pair_terms`, `cartesian_assembly`, reports, route skeletons,
-retained-rule internals, raw-block providers, or diagnostic stop points.
-
-`HP-DRV-STAGE-FN-01` approves a small non-exported, non-underscored,
-driver-facing staged producer surface. The primary driver-facing owner remains
-`src/cartesian_base_hamiltonian.jl`. Narrow behavior-preserving factoring is
-also approved in `src/pqs_source_box_low_order_materialization.jl`,
-`src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, and
-`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` only to
-separate the approved physical operator classes. The exact function names may
-follow local style, but their purpose must match the approved construction
-stages above. Public contract construction remains a driver responsibility,
-and artifact write/check remains an approved writer and readback
-responsibility. The source owner may factor the existing base and
-residual-GTO/MWG facade bodies into these stage functions so the canonical
-driver can call named construction stages without calling underscored helpers
-directly.
-
-Approved physical operator classes are:
-
-- product/moment operators: kinetic `K`, Cartesian coordinate moments
-  `x`/`y`/`z`, and second moments `x^2`/`y^2`/`z^2` where that construction
-  exists for the current basis;
-- unit-nuclear attraction operators: uncharged by-center `U_A` / `Vnuc`
-  matrices before applying physical nuclear charges;
-- electron-electron interactions: base localized IDA `Vee` and supplemented
-  residual-MWG/IDA `Vee`.
-
-The product/moment stage should be timed separately from unit-nuclear and
-electron-electron stages because it is expected to remain fast on normal
-scales. Unit-nuclear and electron-electron stages may be long and must be
-visible to an expert user through coarse timing.
-
-The canonical driver must call separate named stage functions with visible
-local variables. A single replacement wrapper such as
-`cartesian_residual_gto_mwg_hamiltonian_staged(...)` that performs the whole
-construction internally is not sufficient. The intended driver shape is closer
-to:
+The common visible basis fields are:
 
 ```text
-base = ...
-base_products = ...
-base_unit_nuclear = ...
-base_vee = ...
-base_ham = ...
-supplement_basis = ...
-residual = ...
-augmented_products = ...
-augmented_unit_nuclear = ...
-augmented_vee = ...
-ham = ...
+ns, core_spacing, s_factor, parent_axis_family, nesting, source_span
 ```
 
-Exact names may follow local style, but the top-level script should make the
-construction sequence readable to an expert user.
+An atom adds `radius = padding`. A diatomic adds:
 
-The staged surface may return existing domain objects and small fixed-key
-ephemeral stage products needed by the next approved stage. It must not create
-a broad payload/report/status object, route-stage object, persistent cache,
-runtime-keyed field cloud, artifact schema, or new public API/export.
+```text
+xmax_parallel = R/2 + padding
+xmax_transverse = padding
+```
 
-The existing one-call facades may remain as convenience wrappers around the
-same staged implementation. The canonical driver should prefer the staged
-surface when it needs visible execution and timing.
+`nesting = :pqs` derives `q = ns`; `nesting = :wl` derives `q = ns - 2`.
+Mapped-COMX source spans are PQS-only, and WL diatomics require `ns >= 4`.
+All detailed geometry, neutrality, spacing, and policy checks remain producer
+owned.
 
-## Allowed Workflow
+`basisname === nothing` selects the base workflow. Otherwise the driver builds:
 
-The driver may call only supported producer surfaces:
+```text
+basis_by_center = fill(String(basisname), Natom)
+lmax
+uncontracted
+width_filtering = nothing | (; max_width = supplement_width_max)
+basisfile
+```
 
-- the approved staged producer surface for base working-basis/base-Hamiltonian
-  construction, including the origin-centered atom workflow approved by
-  `HP-DRV-ATOM-*`;
-- the approved non-exported residual-GTO/MWG usability facade for supported
-  supplemented H2 and internal/performance-supported Be2 scope, or the staged
-  producer surface that factors that facade into visible physics-level stages;
-- the approved Hamiltonian artifact writer and readback check.
+and selects the shared residual-GTO/MWG supplemented workflow. Supported
+origin-centered atoms and homonuclear z-axis diatomics compose with both PQS
+and White-Lindsey nesting through the same terminal-basis boundary.
 
-The selected `nesting` family may affect only the internal construction family
-used by approved producer surfaces. It must not affect the user-facing stage
-sequence, artifact schema, solver workflow, public export/API surface, or
-Cr2-specific behavior.
+## Staged Workflow
 
-Allowed user-facing phases:
+The implemented top-level sequence is:
 
-- validate/normalize input;
-- construct public contract;
-- build base working basis / terminal realization;
-- build base product/moment operators;
-- build base unit-nuclear attraction operators;
-- build base electron-electron / IDA interaction;
-- assemble base Hamiltonian;
-- build Gaussian supplement;
-- build residual augmentation;
-- build augmented product/moment operators;
-- build augmented unit-nuclear attraction operators;
-- build augmented electron-electron / residual-MWG interaction;
-- assemble supplemented Hamiltonian;
-- write artifact;
-- read back artifact for validation;
-- print compact summary and coarse timing.
+```text
+construct and optionally print public contract
+build base working basis and terminal due diligence
+build base product/moment operators
+build base unit-nuclear operators
+build base localized-IDA interaction
+assemble base Hamiltonian
+[load supplement and select owner-local residual Gaussians]
+[build augmented products, unit-nuclear operators, and residual MWG/IDA]
+[assemble supplemented Hamiltonian]
+write artifact
+check expected dimension and optional readback
+print dimension and coarse timings
+```
 
-Driver printing and timing are allowed when they use user-facing labels and
-small summaries. Examples include mode, system, basis label, final dimension,
-artifact path, self-Coulomb/check scalar for known endpoints, elapsed phase
-times, and readback deltas.
+Bracketed stages run only when `basisname !== nothing`. For a base run, base
+assembly writes `hamfile`. For a supplemented run, the intermediate base
+Hamiltonian stays in memory and final supplemented assembly writes `hamfile`.
+The result is always the existing `CartesianIDAHamiltonian{Float64}` artifact,
+with sidecars owned by the base or supplemented producer and the artifact
+manifest contracts.
 
-## Not Approved
+When `print_contract = true`, the driver also prints the terminal
+due-diligence report: normalized geometry, parent bounds and axes, weight
+statistics, dimensions, terminal rows, retained/source counts, slab topology,
+and warning flags. This is a bounded human review surface, not a route report.
+Consumers must inspect it before interpreting endpoint, residual, injection,
+screened-Hartree, EGOI, Be2, or Cr2 results.
 
-This lane does not approve:
+`expected_dimension` and `check_file` run after construction and artifact
+writing. A dimension mismatch throws `ArgumentError`; `check_file` uses
+`read_cartesian_ida_hamiltonian` and checks the readback dimension. It does not
+write a separate check record or validate every provenance sidecar.
 
-- private route-stage controls, stop-after internals, ladder probes, stage
-  markers, fixture hacks, or diagnostic knobs;
-- underscored package helper calls from the driver;
-- raw-block provider switches;
-- private helper contract construction instead of public `system` / `basis` /
-  `supplement` objects;
-- opaque one-call supplemented construction as the only canonical-driver
-  execution shape;
-- residual algorithm, MWG/IDA, raw-block, or terminal-kernel changes;
-- route reports, status symbols, payload dumps, metadata field clouds, or
-  report mirrors;
-- allocation probes, benchmarking harnesses, or Cr2-specific stress controls;
-- solver/RHF/ECP/EGOI/HamV6 workflow;
-- public API/export changes;
-- custom Coulomb parameters or any additional expert driver control beyond the
-  separately approved `coulomb_accuracy` symbol;
-- artifact schema changes beyond the existing approved provenance groups;
-- committed test files or committed driver-input fixtures.
+## Source Ownership
 
-Diagnostics and ladder probing remain in `tools/` or ignored `tmp/work`
-scripts, not in the canonical driver.
+- `bin/cartesian_ham_builder.jl` owns the canonical script, inputs,
+  presentation, staged calls, and artifact/readback workflow.
+- `src/cartesian_base_hamiltonian.jl` owns the non-exported staged producer
+  composition used by the script.
+- `src/pqs_source_box_low_order_materialization.jl` and
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` own the
+  existing behavior-preserving base operator-class factoring.
+- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` owns the
+  existing supplemented operator-class factoring and artifact write.
 
-## Validation
+Artifact format and reader behavior remain with their canonical artifact
+owners. This workflow owns no other `bin`, `src`, `tools`, committed test, or
+committed input-fixture file.
 
-`HP-DRV-TEST-01` approves validation only for the compact driver workflow:
+## Failure Behavior
 
-- `git diff --check`;
-- package load;
-- public contract printing/checking for at least one base run when the driver
-  construction code changes;
-- current default `nesting = :pqs` base path remains unchanged;
-- one small base artifact/readback path with `nesting = :wl`, using a
-  currently supported base geometry;
-- if supplemented `nesting = :wl` is requested and is not already valid through
-  the existing facade, it must fail with a clear unsupported-combination error;
-- visible stage timing or summary for base construction and supplemented H2
-  construction when staged wiring changes;
-- H2 base driver run writes a `CartesianIDAHamiltonian` artifact and optional
-  readback passes;
-- origin-centered H atom driver run writes a `CartesianIDAHamiltonian` artifact
-  and optional readback passes under `HP-DRV-ATOM-TEST-01`;
-- H2 supplemented driver run writes a supplemented
-  `CartesianIDAHamiltonian` artifact with the approved compact
-  `supplement_provenance/` group and optional readback passes;
-- optional ignored Be2 usability run if the implementation touches the
-  supplemented mode;
-- generic explicit homonuclear z-axis Cr2 stress is approved only by
-  `HP-R3U-ZDI-WIRE-01` and remains ignored/user-run after H2/Be2 validation;
-- no Cr2-specific driver run, solver run, committed test file, or committed
-  input fixture is approved by this ID.
+The driver rejects unknown keys, `Natom` outside `1:2`, unsupported `nesting`
+or `source_span`, and an empty `hamfile` before construction where practical.
+The producer then rejects malformed records, nonneutral systems, unsupported
+geometry, invalid sizes/spacings/mapping factors, incompatible source spans,
+and invalid supplement inputs. Input evaluation, numerical construction,
+artifact writing, and readback errors propagate. Failures are not converted
+to status payloads or partial-success objects.
 
-The Coulomb-policy IDs separately allow the existing docs policy test plus
-bounded temporary driver runs proving compact-default parity and one accepted
-high request. Those checks do not broaden this workflow's test-file or endpoint
-authority.
+## Non-Goals
 
-Temporary project input files for validation should live under ignored
-`tmp/work`.
-
-## Line Budget And Failure Rule
-
-Line budget:
-
-- at most `150` added `bin` lines and at most `150` added `src` lines;
-- the canonical driver should remain compact and copyable;
-- no new committed test or tool file.
-
-Failure rule: if implementation requires a parser framework, source files
-outside `bin/cartesian_ham_builder.jl` and `src/cartesian_base_hamiltonian.jl`,
-committed input fixtures, route-stage diagnostics, status/report/payload
-expansion, artifact schema changes, public API/export changes, or Cr2-specific
-workflow support, stop and request a new docs-only amendment.
-
-## Deferred
-
-Cr2 facade/artifact workflow, public API/export, solver/RHF/ECP/EGOI/HamV6,
-diagnostic harnesses, route-stage cleanup, and broad driver feature polish
-remain deferred.
+This contract does not add route-stage controls, stop points, raw-provider
+switches, diagnostic dumps, allocation probes, custom Coulomb parameters,
+solver/RHF/ECP/EGOI behavior, Cr2-specific branches, public exports, result
+wrappers, artifact schemas, committed input fixtures, or a safe untrusted-code
+parser. Route and ladder diagnostics remain outside the canonical driver.

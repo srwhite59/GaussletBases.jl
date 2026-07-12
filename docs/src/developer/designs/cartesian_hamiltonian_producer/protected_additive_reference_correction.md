@@ -2,7 +2,8 @@
 
 Status: implemented narrow internal, opt-in facility under
 `HP-RG-PROTECT-ADDREF-FN-01` and
-`HP-RG-PROTECT-ADDREF-TEST-01`.
+`HP-RG-PROTECT-ADDREF-TEST-01`. The implementation landed in commit
+`0b778a676`.
 
 This protected replacement path remains implemented. The separate
 [numerical-complete residual basis](numerical_complete_residual_basis.md) is an
@@ -40,11 +41,13 @@ own additive contribution to `P0`.
 
 ## Current Live Seams
 
-The current protected builder in
-`src/cartesian_protected_ladder_bundle.jl` calls
-`staged_protected_original_injection_geometry(...)`. The implemented
-[occupied-first injection geometry](occupied_first_injection.md) is tested but
-not wired into that builder. It is not a direct replacement because the
+The implementation in `src/cartesian_protected_ladder_bundle.jl` builds
+`R_compact`, embeds each packet occupied block, and passes those blocks with
+the exact residual object to
+`staged_protected_original_injection_geometry(...)`. The separate
+`occupied_first_injection_geometry(...)`, documented in
+[occupied-first injection geometry](occupied_first_injection.md), is tested but
+is not called by this builder. It is not a direct replacement because the
 protected path operates over `M = [G, R_compact]` under the existing
 [protected-localized basis convention](protected_localized_basis.md).
 
@@ -57,9 +60,10 @@ Existing reusable owners already provide:
 - the existing `ScreenedHartreeCorrection` algebra in
   `src/cartesian_reference_density/screened_hartree_correction.jl`.
 
-The implemented path combines mandatory occupied geometry, fast placed
-fitted-potential `GG/GA/AA`, additive packet reference assembly, and the final
-`F -> L` handoff while reusing the owners above.
+The implemented path combines staged protected-original geometry with
+mandatory occupied blocks, fast placed fitted-potential `GG/GA/AA`, additive
+packet reference assembly, and the final `F -> L` handoff while reusing the
+owners above.
 
 This is an explicit internal opt-in path. A protected member built without
 placed reference packets must preserve the current geometry, `H1_L`, `Vee_L`,
@@ -70,20 +74,19 @@ builder:
 
 ```text
 _plb_build_additive_reference_member(recipe, stages, placements)
-    -> (member, correction)
+    -> (member, correction, reference)
 ```
 
 Each normalized placement is a small stable record containing `packet`,
-`owner_index`, `center`, and explicit `supplement_indices`. The sibling must
-share the existing member-build core; it must not duplicate member
-construction. `_plb_build_member(recipe, stages)` remains the unchanged
-no-reference path.
+`owner_index`, `center`, and explicit `supplement_indices`. The sibling shares
+the existing member-build core rather than duplicating member construction.
+`_plb_build_member(recipe, stages)` remains the unchanged no-reference path.
 
 ## One Compact Residual Construction
 
-The protected path must build `R_compact` once. The staged protected geometry
-must consume that exact `CartesianResidualGaussianBasis`; it must not rerun
-ordered compact-first selection to reconstruct a nominally equivalent `M`.
+The protected path builds `R_compact` once. The staged protected geometry
+consumes that exact `CartesianResidualGaussianBasis`; it does not rerun ordered
+compact-first selection to reconstruct a nominally equivalent `M`.
 
 The residual object carries the native source fact required to protect
 originals corresponding to compact residuals in one vector-backed internal
@@ -217,12 +220,11 @@ a reason to rotate the additive atomic densities.
 ## Placed Fitted-Potential Hartree Field
 
 The practical packet path uses each packet's fitted potential to evaluate the
-same fitted density cloud field efficiently. Add a neutral internal helper in
-`src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` that applies an
-explicit placed spherical Gaussian potential term list to the existing `GG`,
-`GA`, and `AA` machinery. It must reuse the current axis factors and mixed/self
-block assembly; do not duplicate analytic Gaussian loops in the packet or
-ladder owner.
+same fitted density cloud field efficiently. The neutral raw-block owner in
+`src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` applies an explicit
+placed spherical Gaussian potential term list through the existing `GG`, `GA`,
+and `AA` axis factors and block assembly. The packet and ladder owners do not
+duplicate those analytic Gaussian loops.
 
 For every packet placement, build raw blocks:
 
@@ -301,119 +303,52 @@ Delta_J0 = J0_L - Diagonal(Vee_L * q0_L)
 C        = 0.5 * q0_L' * Vee_L * q0_L - 0.5 * E0
 ```
 
-The helper must reuse the existing energy and derivative anchor core. Do not
-copy the correction formula into the ladder owner.
+The helper reuses the existing energy and derivative anchor core. Do not copy
+the correction formula into the ladder owner.
 
 `H1_L` and `Vee_L` remain unchanged. The correction is returned separately in
 memory for an explicit off/on comparison. No corrected artifact is approved.
 
-## Approved Source Surface
+## Implemented Ownership
 
-- `src/cartesian_residual_gaussians/residual_basis.jl`
-  - carry native compact residual source indices if needed;
-  - consume the already-built compact residual in staged geometry;
-  - build the mandatory occupied union before optional selection;
-  - delete/delegate duplicate compact selection.
-- `src/cartesian_residual_gaussians/augmented_operators.jl`
-  - reuse the protected fixed-sector raw operator transform;
-  - represent original packet occupied blocks in native `L` order;
-  - apply the existing localized `W` transform to `J0_F`.
-- `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
-  - add one neutral explicit fitted-potential `GG/GA/AA` entry point reusing
-    existing factor/block kernels.
-- `src/cartesian_reference_density/atomic_hf_reference_packets.jl`
-  - validate packet self-integrity and exact owner-local mapping;
-  - accept only numerically equivalent mapped overlap blocks and return one
-    nested overlap-mapping summary;
-  - validate/place packet occupied blocks;
-  - expose placed fitted-potential raw blocks through the neutral owner;
-  - evaluate compact density-cloud cross energies.
-- `src/cartesian_reference_density/screened_hartree_correction.jl`
-  - assemble additive `P0_L/q0_L` from separately validated blocks;
-  - call the existing correction/anchor core.
-- `src/cartesian_protected_ladder_bundle.jl`
-  - a private additive-reference sibling that reuses the existing member-build
-    core and returns the member plus existing correction object;
-  - no new public recipe input and no artifact field.
+- `src/cartesian_residual_gaussians/residual_basis.jl` owns compact residual
+  source indices, the mandatory occupied union, and staged protected geometry.
+- `src/cartesian_residual_gaussians/augmented_operators.jl` owns native-`L`
+  packet representation and protected fixed/localized Hartree transforms.
+- `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` owns placed
+  fitted-potential `GG/GA/AA` assembly.
+- `src/cartesian_reference_density/atomic_hf_reference_packets.jl` owns packet
+  identity and embedding checks, fitted fields, and compact density-cloud
+  self/cross energies.
+- `src/cartesian_reference_density/screened_hartree_correction.jl` owns
+  additive `P0_L/q0_L`, consistency diagnostics, and correction algebra.
+- `src/cartesian_protected_ladder_bundle.jl` owns the private composition
+  sibling and returns the member, correction, and reference diagnostics.
 
-No new source file, public export, artifact schema, or persistent workflow
-object is approved. Related diagnostics must be nested in compact module-owned
-records rather than added as a flat staged field cloud.
+The registry owns exact source authority. This lane adds no public export,
+artifact field, corrected artifact, or persistent workflow object. Diagnostics
+remain compact module-owned records, and the ordinary no-reference member path
+must remain numerically unchanged.
 
-The embedding-equivalence follow-on itself may edit only
-`src/cartesian_reference_density/atomic_hf_reference_packets.jl` and, if
-diagnostic forwarding is directly required, the existing private additive-
-reference caller. The amendment does not reopen the other implemented source
-surfaces above.
+## Validation And Evidence
 
-The moment-polish retirement follow-on may use the already-approved packet and
-screened-Hartree owners to remove the retired fit and energy rejection. This
-additive lane may edit only its existing private caller when needed to report
-the total/self/cross consistency decomposition or reject retired packets. It
-must not change protected geometry, `H1_L`, `Vee_L`, placement algebra, or the
-ordinary no-reference path.
+Commit `0b778a676` is the implementation evidence. Its committed checks cover:
 
-The no-reference protected member path must remain numerically unchanged.
+- mandatory occupied-union rank and recovery in `test/misc/runtests.jl`;
+- packet embedding and identity failures in the atomic-packet and
+  screened-Hartree nested tests;
+- separate packet-block traces, additive `P0_L/q0_L`, self/cross density-cloud
+  energy, raw fitted-potential blocks, and correction-anchor algebra in
+  `test/nested/cartesian_screened_hartree_correction_runtests.jl`.
 
-Target source budget is at most 350 added lines across the approved files,
-with deletion of the duplicate compact-selection construction counted
-separately. If the numerical work needs substantially more or needs a second
-correction model, stop and report the missing abstraction.
-
-## Validation
-
-Committed correctness coverage may extend only:
-
-- `test/misc/runtests.jl` for a tiny mandatory-union/additive-density contract;
-- `test/nested/cartesian_screened_hartree_correction_runtests.jl` for additive
-  block validation and anchor algebra.
-
-Do not add a new committed test file or binary fixture in this lane.
-
-Focused embedding coverage must prove that exact same-packet mapping passes;
-a numerically equivalent translated/reconstructed block with a different hash
-passes; an infinity-norm difference above `1e-10` fails; and a corrupted stored
-packet fingerprint fails. Reordered labels or powers, wrong owner, wrong
-center, or changed packet-to-molecular order remain hard failures. Rerun Cr2
-preflight only after these focused source tests and existing packet/additive-
-reference tests pass.
-
-The first end-to-end acceptance gate is an ignored, source-backed, physically
-padded Be2 construction using two converged Be core `2e` cc-pV5Z, `lmax = 1`
-packets. Use driver-style padding of at least `10` bohr and inspect terminal
-due diligence before interpreting the result.
-
-The Be2 gate may use one ignored `tmp/work/*.jl` probe and durable text/TSV
-outputs under `/Users/srw/dmrgtmp`. Do not commit its generated packet,
-Hamiltonian, or matrix fixtures.
-
-Required Be2 evidence:
-
-- omitted-reference protected member parity with the current path;
-- one compact residual basis is shared by geometry and operators;
-- mandatory occupied union rank/Gram spectrum and roundoff recovery for each
-  packet before and after localization;
-- per-packet represented trace `2`, total `P0/q0` charge `4`;
-- explicit `E_AA`, `E_BB`, `E_AB`, reversed-cross parity, and total
-  `E0 = E_AA + E_BB + 2E_AB`;
-- finite/symmetric placed raw blocks, `J0_F`, `J0_L`, and `Delta_J0`;
-- strict derivative/algebra checks;
-- fitted-potential total consistency error and its self/cross decomposition,
-  without a `1e-8 Ha` magnitude gate;
-- optional staged capture/fake-RDM counts after mandatory inclusion;
-- exact confirmation that the unscreened `H1_L` and `Vee_L` inputs were not
-  mutated;
-- terminal parent bounds, axis counts, padding/radius, final dimension,
-  retained counts, shell/slab topology, and warning flags;
-- phase timings and carrying-cost report.
-
-No endpoint energy or SCF assertion is required. The earlier padded Be2 run
-used the now-retired determinant-moment polish; its structural, recovery, and
-derivative evidence remains useful, but its forced sub-`1e-8 Ha` energy result
-is historical false-start evidence. Regenerate ordinary Be/Ne/Cr packets and
-rerun the bounded construction before further consumption. The additive
-implementation itself remains accepted; this is not a production claim or
-repo test.
+Exact same-packet and numerically equivalent mapped overlaps pass only after
+packet identity checks; overlap error above `1e-10`, corrupted packet storage,
+or changed owner/order metadata fails. The accepted bounded Be2 smoke used the
+now-retired determinant-moment polish, so only its structural, recovery, and
+derivative evidence remains relevant. Its forced sub-`1e-8 Ha` fitted-field
+result is historical false-start evidence, not validation of the ordinary fit
+or an endpoint claim. Current consumption of those legacy references requires
+regenerated ordinary packets.
 
 ## Failure Rules
 

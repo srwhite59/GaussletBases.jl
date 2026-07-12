@@ -1,180 +1,105 @@
 # Cartesian Driver Atom Workflow
 
-Status: approved narrow canonical-driver workflow for explicit one-center base
-atom inputs. This is driver workflow authority only. It does not broaden the
-base producer, Residual Gaussian, artifact schema, solver, or public API
-contracts.
+Status: implemented canonical-driver contract for explicit origin-centered
+one-center atoms under `HP-DRV-ATOM-*`. Producer-side atom semantics remain
+owned by [R1 one-center base atoms](r1_one_center_base_atoms.md).
 
-## Decision
+## Live Selection
 
-Approve a compact atom workflow in `bin/cartesian_ham_builder.jl` for
-origin-centered one-center atoms in `mode = :base`.
+The driver selects a base atom with:
 
-This approval is for base atom driver output only. The driver may accept an
-explicit one-center atom system, validate the visible workflow input, and call
-the existing `cartesian_base_hamiltonian(...)` facade with `hamfile` when the
-base facade already supports the requested atom. Current committed validation
-remains the approved origin-centered H endpoint. The separate `HP-R1-ATOM-*`
-amendment may broaden the base facade to explicit origin-centered
-all-electron atoms; the driver may consume that support through the same
-base-facade call without new driver authority.
-
-Historical boundary: this base-atom driver lane did not itself approve
-supplemented atom Hamiltonians. That restriction is superseded for supported
-origin-centered one-center supplemented atoms by `HP-COMP-SUPPATOM-*`, which
-uses `legacy_atomic_gaussian_supplement(...)` and the common Residual
-Gaussian/MWG path. This document still owns only the original base-atom driver
-workflow.
-
-## Approved IDs
-
-- `HP-DRV-ATOM-FN-01` - canonical-driver explicit base atom workflow.
-- `HP-DRV-ATOM-WIRE-01` - driver-to-base-facade wiring for one-center atoms.
-- `HP-DRV-ATOM-TEST-01` - validation gates for the base atom workflow.
-
-## Approved File
-
-Approved source file:
-
-```text
-bin/cartesian_ham_builder.jl
+```julia
+Natom = 1
+basisname = nothing
 ```
 
-No `src`, `test`, `tools`, other `bin`, or committed input-fixture file is
-approved by this atom-driver lane.
+There is no live `mode = :base` input. `basisname === nothing` is the base
+selection used by the script; a non-`nothing` basis label selects the
+separately governed supplemented-atom composition path.
 
-## System Scope
+The checked-in defaults describe H2 (`Natom = 2`, `nup = 1`, `ndn = 1`). An
+atom run must supply electron counts consistent with its explicit charge. For
+example, changing only `Natom` to `1` does not produce a valid neutral H input;
+neutral H also requires one total electron.
 
-Approved system input shape:
+## Atom Contract
 
-- `atom_symbols::AbstractVector`;
-- `nuclear_charges::AbstractVector`;
-- `atom_locations::AbstractVector{<:NTuple{3}}`;
-- `nup`;
-- `ndn`.
+For `Natom = 1`, the driver constructs:
 
-Approved first workflow scope:
+```julia
+system = (
+    atom_symbols = [String(atom)],
+    nuclear_charges = [Float64(Z)],
+    atom_locations = [(0.0, 0.0, 0.0)],
+    nup = nup,
+    ndn = ndn,
+)
+```
 
-- exactly one center;
-- origin-centered location `(0.0, 0.0, 0.0)`;
-- finite positive nuclear charge supplied explicitly;
-- `nup` and `ndn` are explicit nonnegative integers;
-- neutral all-electron count uses the explicit charge:
-  `nup + ndn == round(Int, only(nuclear_charges))`;
-- no element lookup table, element-specific default, isotope/default-charge
-  inference, ECP, pseudopotential, or solver behavior.
+The producer requires finite positive integer-valued `Z`, nonnegative integer
+spin-sector counts, and `nup + ndn == round(Int, Z)`. The `atom` value is a
+provenance label only; it never supplies charge, electron count, spin, basis,
+or ECP behavior. Translated atoms are rejected.
 
-Translated atoms are not approved. One-center base construction and the
-reviewed R1 endpoint use the origin-centered atom contract; supporting
-translated atoms would need a separate design decision for mapping,
-provenance, and endpoint validation.
+The driver constructs the atom basis from:
 
-## Basis Scope
+```julia
+(
+    ns = ns,
+    core_spacing = core_spacing,
+    s_factor = s_factor,
+    parent_axis_family = gausslet_family,
+    nesting = nesting,
+    source_span = source_span,
+    radius = padding,
+)
+```
 
-The driver may pass the explicit base `basis` group to the existing base facade.
-For the current approved H endpoint, the visible basis fields include:
+Thus `padding`, not `ns`, is the physical atom-box radius. `ns` controls the
+source/nesting size, and route-local `q` is derived from `nesting`. The driver
+does not pass legacy `d`; `core_spacing` is the sole public near-nucleus scale.
+It also does not expose atom-specific `reference_spacing`, `tail_spacing`, or
+`coulomb_accuracy`, so the producer defaults apply.
 
-- `ns`;
-- `core_spacing`;
-- `radius`;
-- optional `reference_spacing`;
-- optional `tail_spacing`;
-- optional `parent_axis_family`.
+## Execution And Artifact
 
-`core_spacing` is the public physical near-nucleus spacing. The canonical
-driver should not expose `d` as a separate input; if an implementation still
-passes through a temporary compatibility `d`, the producer must require it to
-equal resolved `core_spacing`. `reference_spacing` remains a separate
-reference-grid spacing. `ns` is the public source/cube/nesting size; route
-local `q` is derived from `ns` and `nesting` under `HP-COMP-NS-FN-01`.
-
-The canonical driver may carry visible, easily edited project defaults, such
-as `core_spacing = 0.3` and a template `padding`. Those defaults are treated as
-explicit driver/input-file values after construction, not hidden universal
-producer defaults. Command-line or input-file overrides such as
-`core_spacing = 0.5` for quick tests remain normal driver behavior.
-Routine correctness tests may override driver physics defaults, but any
-asserted scalar must be tied to the exact test input and not described as a
-physics-default result.
-
-## Wiring Contract
-
-`HP-DRV-ATOM-FN-01` may add driver-local input normalization for one-center
-base atom systems. It must keep the driver compact and copyable: visible
-defaults, optional trusted input file, command-line overrides, compact summary,
-coarse timing, artifact write, and optional readback.
-
-`HP-DRV-ATOM-WIRE-01` may call:
+The exported base facade remains:
 
 ```julia
 cartesian_base_hamiltonian(system; basis, hamfile)
 ```
 
-for base atom construction. The driver must not compose package-internal
-route-stage helpers, terminal basis objects, raw-block providers, or
-report/status/payload objects.
+The driver does not call that facade as one opaque operation. It invokes the
+same non-exported working-basis, product, unit-nuclear, localized-IDA, and
+assembly stages directly for timing and due-diligence presentation. Base
+assembly writes the ordinary Cartesian IDA artifact to the nonempty `hamfile`.
+With `check_file = true`, the driver reads it through
+`read_cartesian_ida_hamiltonian` and checks its dimension.
 
-If the requested one-center atom is outside the existing base facade support,
-the driver or facade must throw a clear `ArgumentError` before or at the
-supported producer boundary. This driver approval does not itself authorize
-changing `src/cartesian_base_hamiltonian.jl`; broader one-center base atom
-facade support is governed by `HP-R1-ATOM-*`.
+`print_contract = true` prints the explicit atom inputs and the standard
+terminal due-diligence report before an energy or residual result is
+interpreted. `expected_dimension`, when supplied, must match exactly.
 
-## Validation
+## Source Ownership
 
-`HP-DRV-ATOM-TEST-01` approves validation only for the base atom driver
-workflow:
+The `HP-DRV-ATOM-*` driver contract owns atom input normalization and wiring
+only in `bin/cartesian_ham_builder.jl`. Public atom validation and construction
+in `src/cartesian_base_hamiltonian.jl` remain under `HP-R1-ATOM-*`, while
+supplemented atom composition remains under `HP-COMP-SUPPATOM-*`. This driver
+contract owns no package source, test, tool, or committed input fixture.
 
-- `git diff --check`;
-- package load;
-- origin-centered H base driver artifact write/readback using explicit
-  `atom_symbols`, `nuclear_charges`, `atom_locations`, `nup`, `ndn`, and
-  one-center basis fields;
-- optional ignored negative checks for non-origin atom input, nonneutral
-  electron count, mismatched temporary `d` if accepted, or unsupported atom
-  input;
-- no committed atom fixture, committed test file, solver run, supplemented
-  atom endpoint, or translated-atom gate.
+## Failure Behavior
 
-Temporary project input files for validation should live under ignored
-`tmp/work`. Supplemented atom validation is governed separately by
-`HP-COMP-SUPPATOM-TEST-01`.
+Unsupported or malformed atom inputs throw, normally with `ArgumentError`.
+This includes nonpositive or noninteger charge, nonneutral electron count,
+invalid `ns`, spacing, nesting, source span, or `s_factor`, an empty artifact
+name, and any translated or multicenter shape presented as an atom. Numerical,
+writer, and readback failures propagate.
 
-## Forbidden
+## Non-Goals
 
-This amendment does not approve:
-
-- supplemented atom Hamiltonians under the original base-only atom workflow;
-  supported supplemented one-center atoms are governed separately by
-  `HP-COMP-SUPPATOM-*`;
-- changes to Residual Gaussian selection, MWG/IDA conventions, raw blocks, or
-  terminal kernels;
-- changes to `src/cartesian_base_hamiltonian.jl` or any other source file
-  outside the canonical driver, except under separate `HP-R1-ATOM-*`
-  authority;
-- general atom support beyond the existing base facade and `HP-R1-ATOM-*`;
-- translated atoms;
-- element-specific defaults beyond visible example inputs;
-- ECP or pseudopotential support;
-- solver/RHF workflow;
-- new artifact schema or provenance keys;
-- public API/export redesign;
-- committed atom fixture files or committed tests;
-- private route-stage controls, diagnostics, metadata/status/report fields, or
-  payload objects.
-
-## Line Budget And Failure Rule
-
-Line budget:
-
-- at most `80` added `bin` lines;
-- net simplification preferred if existing H-only driver branches are replaced
-  by explicit one-center input validation;
-- no new committed test, tool, or input-fixture file.
-
-Failure rule: if implementation requires source changes outside
-`bin/cartesian_ham_builder.jl`, translated atoms, ECP, solver workflow,
-artifact schema changes, route diagnostics, metadata/status/report fields,
-committed fixtures/tests, or element lookup/default tables, stop and request a
-separate docs-only amendment. Supported one-center supplemented atom work is
-handled by `HP-COMP-SUPPATOM-*`, not by this base-only lane.
+This driver contract does not broaden the public facade, infer element data,
+accept translated atoms, add ECP/pseudopotential or solver/RHF behavior, alter
+Residual Gaussian or IDA/MWG conventions, create an atom-only Hamiltonian
+builder, add artifact fields, or expose route diagnostics. Supplemented atoms
+reuse the shared composition contract and are not redefined here.
