@@ -948,3 +948,36 @@ Goal advancement / guardrail:
   complete; the live ledger is now bounded and historical evidence task-gated.
 - **MT6 carrying-cost control - active.** Mandatory manager reading is reduced
   without deleting evidence or adding a tooling layer.
+
+## Cartesian Hamiltonian Producer Pass 401 - Reject Nonfinite Terminal Coefficients
+
+Commit(s):
+- `af44e43b2` - fail before terminal Gaussian-sum one-body assembly can consume
+  a nonfinite coefficient.
+
+Summary:
+- The shared terminal Gaussian-sum accumulator now rejects `NaN`, positive
+  infinity, and negative infinity after coefficient conversion and before
+  factor preparation or destination mutation. This closes the Pass 398
+  `HP-FN-03` discrepancy for base unit-nuclear, residual-GTO, and mixed-Hartree
+  callers without duplicating checks at each caller.
+- Finite signed coefficients remain valid. No positivity, normalization,
+  magnitude, workspace, factor, Coulomb-policy, or matrix convention changed.
+  Terminal IDA retains its separate existing guard at its distinct entry
+  boundary.
+
+Validation / evidence:
+- Package load passed in `0.45 s`; the public Cartesian base test passed
+  `134/134` in `39.5 s`; malformed inputs left a prefilled destination exactly
+  unchanged. Omitted and explicit compact matrices remained exactly equal, and
+  existing compact/high H/H2 endpoints, artifacts, finiteness, and symmetry
+  checks passed. Compact/high due diligence retained bounds
+  `[-2.46794,2.46794]^3`, axes `7x7x7`, dimension `79`, direct-core plus
+  complete-shell topology, and no warning flags. `git diff --check` passed.
+
+Goal advancement / guardrail:
+- MT1 closes its second fail-fast item with only `+2` source and `+15` test
+  lines. The next immediate conformance target is direct-injection
+  negative-Gram/final-identity validation, followed by protected one-body
+  diagnostics; neither should be combined with a residual or screening policy
+  change.
