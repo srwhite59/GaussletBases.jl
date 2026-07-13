@@ -95,7 +95,7 @@ respective interaction conventions.
 
 ## Evidence Lookup
 
-Use the append-only `docs/src/developer/pqs_manager_running_log.md` for accepted
+Use the bounded live `docs/src/developer/pqs_manager_running_log.md` for accepted
 pass interpretation and `git log -- <path>` for source chronology. The
 foundational implementation sequence is concentrated around manager Passes
 8-33; later entries record structural correction, optimization, retirement,

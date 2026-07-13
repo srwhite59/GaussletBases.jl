@@ -44,7 +44,7 @@ This section is where to go when you want:
 - [High-order Cr side-29 support policy audit](high_order_cr_side29_support_policy_audit_2026-05-27.md)
 - [High-order q4 recipe CR2 validation handoff](high_order_q4_recipe_cr2_validation_handoff_2026-05-27.md)
 - [PQS source-box operator framework](pqs_source_box_operator_framework.md)
-- [PQS manager running log](https://github.com/srwhite59/GaussletBases.jl/blob/main/docs/src/developer/pqs_manager_running_log.md) (append-only source log; not rendered into the docs site)
+- [PQS manager running log](https://github.com/srwhite59/GaussletBases.jl/blob/main/docs/src/developer/pqs_manager_running_log.md) (bounded live manager ledger with task-gated historical volumes; not rendered into the docs site)
 - [Projected q-Shell policy](projected_q_shell_policy.md) (compatibility pointer)
 - [High-order doside terminology](high_order_doside_terminology.md)
 - [Test suite reorganization plan](test_suite_reorganization_plan.md)

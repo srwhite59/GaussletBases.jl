@@ -16,7 +16,7 @@ makedocs(
         edit_link = "main",
         canonical = DOCS_CI ? "https://srwhite59.github.io/GaussletBases.jl/dev/" : nothing,
         size_threshold_ignore = [
-            "developer/pqs_manager_running_log.md",
+            "developer/designs/cartesian_hamiltonian_producer/history/manager_log/pqs_manager_running_log_through_pass_379.md",
             "developer/designs/cartesian_hamiltonian_producer/registry.md",
         ],
     ),

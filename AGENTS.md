@@ -160,10 +160,11 @@ For Cartesian/PQS manager-led work, read:
 
 before drafting a blurb, accepting a pass, or resuming after compaction.
 
-The running log is a manager-level decision ledger. It records strategic
-interpretation, long-term goals, current medium-term goals, guardrails, and
-remaining blockers. It does not replace per-pass doer responses, baton reviews,
-or `state.md`.
+The live running log is a bounded manager-level decision ledger. It records
+strategic interpretation, long-term goals, current medium-term goals,
+guardrails, and remaining blockers. It does not replace per-pass doer
+responses, baton reviews, or `state.md`. Older volumes are linked from its
+archive index and are task-gated archaeology, not startup reading.
 
 After each accepted substantive manager-reviewed pass, append a compact but real
 entry to the running log. The default is not a two-sentence tick; use roughly
@@ -190,9 +191,10 @@ stale, or needing refinement, and update MT wording when evidence warrants it.
 
 Every 10-20 accepted passes, or after a major correction, add a strategic
 compression entry summarizing durable decisions, stale stories, false starts,
-and next lane direction. Do not prune prior running-log entries by default;
-prefer append-only compression unless the user asks for archival
-reorganization.
+and next lane direction. Follow the live log's rotation policy: archive old
+entries verbatim, retain the recent decision window, and refresh the current
+strategic preamble. Rotation must not rewrite or silently summarize accepted
+history.
 
 Do not duplicate the doer response. Use the running log to preserve strategic
 interpretation and prevent drift.
