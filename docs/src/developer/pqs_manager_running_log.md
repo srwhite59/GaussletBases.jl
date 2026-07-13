@@ -53,10 +53,10 @@ archaeology and are not normal startup reading.
 ## Current Medium-Term Goals
 
 **MT1 - Conformance remediation (active).** Resolve the bounded Pass 398
-discrepancies under existing authority. Next priorities are the nonfinite
-one-body coefficient boundary, direct-injection Gram/identity guards,
-protected one-body diagnostics, then consumer/readback correctness and missing
-validation gates. Keep each repair lane narrow.
+discrepancies under existing authority. The immediate fail-fast sequence is
+closed; continue with remaining consumer/readback correctness, due-diligence
+warning shape, stale-path removal, and missing validation gates. Keep each
+repair lane narrow.
 
 **MT2 - Controlled Cr2 measurement (active).** Complete the authorized
 numerical-complete screened-Hartree fixed-density comparison without changing
@@ -1081,3 +1081,54 @@ Goal advancement / guardrail:
   with protected ladder readback/trace-loss or due-diligence warning shapes;
   protected physics, interaction semantics, and Cr2 measurement inputs remain
   unchanged.
+
+## Cartesian Hamiltonian Producer Pass 405 - Reconcile Protected Ladder Readback
+
+Commit(s):
+- `c46b9e9ff` - return the complete written v1 manifest facts and compute
+  restart trace loss from the actual source density trace.
+
+Summary:
+- Protected ladder readback now exposes the geometry, electron-count, and
+  basis facts already written by the manifest: symbols, charges, locations,
+  spin counts, `core_spacing`, `s_factor`, basis name, and `lmax`. Original v1
+  bundles without `s_factor` retain their historical `1.0` default, while
+  missing Coulomb provenance remains unavailable rather than inferred.
+- Alpha and beta transfer loss are now each `source_trace - target_trace`.
+  This remains signed, so a transfer-induced norm increase is visible instead
+  of being hidden by occupied-column count. The obsolete private `nup/ndn`
+  aliases were removed. No writer key, schema, transfer matrix, restart matrix,
+  fixed-density formula, or sidecar convention changed.
+
+Validation / evidence:
+- The `/tmp` readback/trace smoke passed `37/37` in `1.6 s`, including exact
+  current-manifest roundtrip with nonunit `s_factor`, two legacy manifests,
+  absent Coulomb provenance, nonorthonormal source orbitals, and a negative
+  beta trace loss. Package load and `git diff --check` passed. No Hamiltonian
+  was built, so terminal due diligence was not applicable. Source carrying
+  cost is `+18/-7`, with two stale private fields deleted and no committed test
+  added.
+
+Goal advancement / guardrail:
+- MT1 closes the first consumer/readback discrepancy from Pass 398. The next
+  bounded correctness target is due-diligence warning-shape reconciliation;
+  ladder construction, transfer physics, solver behavior, and the controlled
+  Cr2 inputs remain unchanged.
+
+### Medium-Term Goal Checkpoint After Pass 405
+
+- **MT1 conformance remediation - active.** The four immediate fail-fast items
+  and protected ladder readback/trace-loss are closed. Continue with warning
+  shape, stale compatibility paths, and truthful missing validation claims.
+- **MT2 controlled Cr2 measurement - active.** Passes 401-405 changed no basis,
+  imported state, screening convention, or solver interpretation.
+- **MT3 pending producer facilities - active.** Standard60, canonical-driver
+  Coulomb exposure, and retained-GTO EGOI remain separate authorized lanes.
+- **MT4 residual/protected evidence - active.** No injection, localization,
+  cutoff, or protected-basis policy was promoted by conformance work.
+- **MT5 documentation/authority maintenance - maintenance.** The generated
+  authority views and bounded manager ledger remain current; no new migration
+  campaign is needed.
+- **MT6 carrying-cost control - active.** This pass deletes obsolete aliases;
+  subsequent reconciliation should continue removing stale paths rather than
+  adding adapters or compatibility vocabulary.
