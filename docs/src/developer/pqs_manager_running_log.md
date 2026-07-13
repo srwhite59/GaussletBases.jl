@@ -109,6 +109,8 @@ it replaces.
   exceeds roughly `2,000` lines. Move old entries verbatim to a task-gated
   archive, retain at least the latest 20 passes live, refresh this strategic
   preamble, and record the archive line count and SHA-256.
+- `docs/check_manager_log.jl` enforces the `2,000`-line ceiling before every
+  Documenter build; exceeding it is a CI failure, not an advisory warning.
 - Never reorder, renumber, silently summarize, or delete accepted historical
   entries during rotation.
 
@@ -981,3 +983,28 @@ Goal advancement / guardrail:
   negative-Gram/final-identity validation, followed by protected one-body
   diagnostics; neither should be combined with a residual or screening policy
   change.
+
+## Cartesian Hamiltonian Producer Pass 402 - Enforce The Live Ledger Bound
+
+Commit(s):
+- this commit - fail documentation builds when the live manager ledger exceeds
+  `2,000` lines.
+
+Summary:
+- Added one evidence-policy checker, separate from Cartesian execution
+  authority, and invoked it before Documenter setup. The live log still rotates
+  by manager judgment, but ignored rotation can no longer pass docs CI.
+- Focused fixtures prove that exactly `2,000` lines pass and `2,001` fail. No
+  authority record, generated view, subsystem contract, producer source,
+  artifact, workflow semantics, or numerical behavior changed.
+
+Validation / evidence:
+- The standalone live check, focused docs tests, authority check/self-test,
+  local Documenter, and `git diff --check` passed. The actual live ledger
+  remains well below its ceiling.
+
+Goal advancement / guardrail:
+- MT5 gains automatic carrying-cost enforcement without coupling historical
+  evidence to `authority.toml` or adding a manager-log generator. Archive
+  timing and content selection remain reviewed manager decisions; CI enforces
+  only the hard cognitive-load ceiling.

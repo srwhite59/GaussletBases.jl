@@ -1,3 +1,6 @@
+include(joinpath(@__DIR__, "check_manager_log.jl"))
+ManagerLogPolicy.check_live_log()
+
 using Documenter
 
 push!(LOAD_PATH, joinpath(@__DIR__, ".."))

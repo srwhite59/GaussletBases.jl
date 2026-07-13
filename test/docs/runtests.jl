@@ -1,4 +1,6 @@
 @testset "Documentation consistency" begin
+    include(joinpath(_PROJECT_ROOT, "docs", "check_manager_log.jl"))
+
     read_doc(parts...) = read(joinpath(_PROJECT_ROOT, parts...), String)
     contains_all(text, phrases...) = all(phrase -> occursin(phrase, text), phrases)
     contains_all_lower(text, phrases...) = begin
@@ -309,6 +311,8 @@
             "checkdocs = :none",
             "deploydocs(",
             "prettyurls = DOCS_CI",
+            "check_manager_log.jl",
+            "ManagerLogPolicy.check_live_log()",
             "\"Manual\"",
             "\"Examples\"",
             "\"Reference\"",
@@ -326,6 +330,22 @@
             "docs/check_cartesian_authority.jl --self-test",
         )
         @test !occursin("check_cartesian_authority", docs_make)
+
+        @test ManagerLogPolicy.check_live_log() <= ManagerLogPolicy.LIVE_LOG_MAX_LINES
+        mktempdir() do directory
+            fixture = joinpath(directory, "manager_log.md")
+            open(fixture, "w") do io
+                for line in 1:ManagerLogPolicy.LIVE_LOG_MAX_LINES
+                    println(io, "line $(line)")
+                end
+            end
+            @test ManagerLogPolicy.check_live_log(fixture) ==
+                  ManagerLogPolicy.LIVE_LOG_MAX_LINES
+            open(fixture, "a") do io
+                println(io, "over limit")
+            end
+            @test_throws ErrorException ManagerLogPolicy.check_live_log(fixture)
+        end
 
         @test contains_all(
             authority_check,
