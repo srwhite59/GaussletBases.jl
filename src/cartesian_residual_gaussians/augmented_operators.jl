@@ -88,8 +88,18 @@ function protected_original_fixed_sector_components(geometry)
         z_dimension = nZ, f_dimension = nM)
 end
 
-function transform_protected_original_fixed_sector_operator(O_GG, O_GA, O_AA, components)
+function _transform_protected_original_fixed_sector_operator_result(
+    O_GG, O_GA, O_AA, components)
     Z, Gp, Ap = components.Z, components.G_perp, components.A_perp
+    nG, nA = size(Gp, 1), size(Z, 1)
+    size(O_GG) == (nG, nG) ||
+        throw(DimensionMismatch("protected fixed-sector operator GG dimension mismatch"))
+    size(O_GA) == (nG, nA) ||
+        throw(DimensionMismatch("protected fixed-sector operator GA dimension mismatch"))
+    size(O_AA) == (nA, nA) ||
+        throw(DimensionMismatch("protected fixed-sector operator AA dimension mismatch"))
+    all(isfinite, O_GG) && all(isfinite, O_GA) && all(isfinite, O_AA) ||
+        throw(ArgumentError("protected fixed-sector operator raw blocks must be finite"))
     O_ZZ = transpose(Z) * O_AA * Z
     O_ZQ = transpose(Z) * (transpose(O_GA) * Gp + O_AA * Ap)
     O_QQ = _augmented_operator_block(O_GG, O_GA, O_AA, Gp, Ap, Gp, Ap)
@@ -100,27 +110,73 @@ function transform_protected_original_fixed_sector_operator(O_GG, O_GA, O_AA, co
     out[1:nZ, qrange] .= O_ZQ
     out[qrange, 1:nZ] .= transpose(O_ZQ)
     out[qrange, qrange] .= O_QQ
-    return symmetrize_operator(out)
+    size(out) == (components.f_dimension, components.f_dimension) ||
+        throw(DimensionMismatch("protected fixed-sector operator dimension mismatch"))
+    all(isfinite, out) ||
+        throw(ArgumentError("protected fixed-sector transformed operator must be finite"))
+    operator = symmetrize_operator(out)
+    all(isfinite, operator) ||
+        throw(ArgumentError("protected fixed-sector symmetrized operator must be finite"))
+    return (; operator, diagnostics = (;
+        raw_gg_symmetry_error = norm(O_GG - transpose(O_GG), Inf),
+        raw_aa_symmetry_error = norm(O_AA - transpose(O_AA), Inf),
+        transformed_pre_cleanup_symmetry_error = norm(out - transpose(out), Inf),
+        trace = tr(out)))
+end
+
+function transform_protected_original_fixed_sector_operator(O_GG, O_GA, O_AA, components)
+    return _transform_protected_original_fixed_sector_operator_result(
+        O_GG, O_GA, O_AA, components).operator
 end
 
 function transform_protected_original_fixed_sector_one_body(kinetic, unit_nuclear_by_center,
     nuclear_charges, geometry)
     components = protected_original_fixed_sector_components(geometry)
-    K = transform_protected_original_fixed_sector_operator(
-        kinetic.GG, kinetic.GA, kinetic.AA, components)
-    U = Matrix{Float64}[transform_protected_original_fixed_sector_operator(
-        unit.GG, unit.GA, unit.AA, components) for unit in unit_nuclear_by_center]
-    length(U) == length(nuclear_charges) ||
+    length(unit_nuclear_by_center) == length(nuclear_charges) ||
         throw(DimensionMismatch("protected fixed-sector nuclear charge count mismatch"))
+    charges = Float64.(nuclear_charges)
+    all(isfinite, charges) ||
+        throw(ArgumentError("protected fixed-sector nuclear charges must be finite"))
+    kinetic_result = _transform_protected_original_fixed_sector_operator_result(
+        kinetic.GG, kinetic.GA, kinetic.AA, components)
+    unit_results = [_transform_protected_original_fixed_sector_operator_result(
+        unit.GG, unit.GA, unit.AA, components) for unit in unit_nuclear_by_center]
+    K = kinetic_result.operator
+    U = Matrix{Float64}[result.operator for result in unit_results]
+    expected_size = (components.f_dimension, components.f_dimension)
+    size(K) == expected_size && all(unit -> size(unit) == expected_size, U) ||
+        throw(DimensionMismatch("protected fixed-sector one-body matrix dimension mismatch"))
+    all(isfinite, K) && all(unit -> all(isfinite, unit), U) ||
+        throw(ArgumentError("protected fixed-sector one-body matrices must be finite"))
     H1 = copy(K)
-    for (charge, unit) in zip(nuclear_charges, U)
-        H1 .+= Float64(charge) .* unit
+    for (charge, unit) in zip(charges, U)
+        H1 .+= charge .* unit
     end
+    size(H1) == expected_size ||
+        throw(DimensionMismatch("protected fixed-sector assembled H1 dimension mismatch"))
+    all(isfinite, H1) ||
+        throw(ArgumentError("protected fixed-sector assembled H1 must be finite"))
+    H1_symmetry_error = norm(H1 - transpose(H1), Inf)
     return (; kinetic = K, nuclear_attraction_unit_by_center = U,
         one_body_hamiltonian = symmetrize_operator(H1),
         protected_count = components.protected_count,
         z_dimension = components.z_dimension,
-        f_dimension = components.f_dimension)
+        f_dimension = components.f_dimension,
+        diagnostics = (;
+            dimensions = (; base = size(components.G_perp, 1),
+                supplement = size(components.Z, 1),
+                fixed_sector = components.f_dimension,
+                center_count = length(U)),
+            kinetic = kinetic_result.diagnostics,
+            unit_nuclear_by_center = [result.diagnostics for result in unit_results],
+            one_body_hamiltonian = (;
+                transformed_pre_cleanup_symmetry_error = H1_symmetry_error,
+                trace = tr(H1)),
+            geometry = (;
+                f_s_f_identity_block_max = geometry.f_s_f_identity_block_max,
+                z_m_qperp_max = geometry.z_m_qperp_max,
+                qperp_identity_sample_max = geometry.qperp_identity_sample_max,
+                protected_span_min_sv = geometry.protected_span_min_sv)))
 end
 
 function protected_localized_inherited_site_transform(geometry)
