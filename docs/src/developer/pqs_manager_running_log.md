@@ -1008,3 +1008,37 @@ Goal advancement / guardrail:
   evidence to `authority.toml` or adding a manager-log generator. Archive
   timing and content selection remain reviewed manager decisions; CI enforces
   only the hard cognitive-load ceiling.
+
+## Cartesian Hamiltonian Producer Pass 403 - Validate Direct Injection Geometry
+
+Commit(s):
+- `8d7c8332f` - reject indefinite injected-mode geometry and validate the
+  complete implicit replacement sector.
+
+Summary:
+- The default-off direct-`G` compatibility path now checks the global
+  injected-mode Gram spectrum before rank cleanup. Materially negative
+  directions can no longer disappear when the positive subspace is retained.
+- After global cleanup, the implementation validates the three blocks of
+  `F' S F`: `Y' S_AA Y`, `B' Q_perp`, and `Q_perp' Q_perp`. It uses the
+  existing scale-aware `identity_atol`, handles an empty injected sector, and
+  creates no persistent dense transform, diagnostic field, or new caller.
+- Manager review moved this validation immediately after fixed-sector
+  construction; the first draft checked only after residual construction had
+  already consumed the replacement geometry.
+
+Validation / evidence:
+- Package load passed in `7.0 s`; the augmented H2 test passed `155/155` in
+  `47.0 s`, and the supplemented facade passed `69/69` in `8.0 s`. A synthetic
+  Gram with eigenvalues `[-1,3]` rejects; a valid `nG=3` case has one injected
+  and one residual mode, zero blockwise `F' S F` and `F' S R` errors at printed
+  precision, and `R' S R` error `4.44e-16`. Existing dimensions `487/18/505`,
+  MWG self-Coulomb `0.4574161883692301`, readback parity, and due-diligence
+  warnings remain unchanged. `git diff --check` passed. The pass is
+  `+44/-1` lines.
+
+Goal advancement / guardrail:
+- MT1 closes the direct-injection fail-fast discrepancy without promoting this
+  path or changing residual policy. The next immediate conformance target is
+  the missing protected one-body finite, dimension, symmetry, and geometry
+  diagnostics; protected physics and interaction semantics remain unchanged.
