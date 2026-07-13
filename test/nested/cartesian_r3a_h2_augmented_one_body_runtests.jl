@@ -163,6 +163,35 @@ const FACADE_SUPPLEMENT = (;
 )
 
 elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
+    S_bad = [1.0 2.0; 2.0 1.0]
+    bad_modes = [reshape([1.0, 0.0], 2, 1), reshape([0.0, 1.0], 2, 1)]
+    @test eigvals(Symmetric(S_bad)) == [-1.0, 3.0]
+    @test_throws ArgumentError CRG.injected_fixed_sector(
+        Matrix{Float64}(I, 2, 2), S_bad, bad_modes, 2, 2, 1.0e-12, 1.0e-10)
+
+    X_injected = [sqrt(0.999) 0.0; 0.0 inv(sqrt(2.0)); 0.0 0.0]
+    S_injected = Matrix{Float64}(I, 2, 2)
+    injected = CRG.build_residual_gaussian_basis(
+        3, X_injected, S_injected, ["a_near", "a_residual"],
+        fill((0.0, 0.0, 0.0), 2), [1, 1];
+        residual_occupation_cutoff = 1.0e-6,
+        residual_injection_cutoff = 1.0e-2)
+    Y_injected, B_injected = injected.injected_A, injected.injected_G
+    Qp_injected = CRG.injection_complement(B_injected, 3)
+    @test size(Y_injected) == (2, 1)
+    @test size(Qp_injected) == (3, 2)
+    @test maximum(abs, transpose(Y_injected) * S_injected * Y_injected - I) <= 1.0e-12
+    @test maximum(abs, transpose(B_injected) * Qp_injected) <= 1.0e-12
+    @test maximum(abs, transpose(Qp_injected) * Qp_injected - I) <= 1.0e-12
+    FSR_injected = vcat(
+        transpose(Y_injected) * (transpose(X_injected) * injected.T_G +
+            S_injected * injected.T_A),
+        transpose(Qp_injected) * (injected.T_G + X_injected * injected.T_A))
+    RSR_injected = CRG.residual_gaussian_overlap(
+        injected.T_G, injected.T_A, X_injected, S_injected)
+    @test maximum(abs, FSR_injected) <= 1.0e-12
+    @test maximum(abs, RSR_injected - I) <= 1.0e-12
+
     raw_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
         "H", "cc-pVTZ", NUCLEI; lmax = 1, uncontracted = false, max_width = nothing)
     supplement = basis_representation(raw_supplement)

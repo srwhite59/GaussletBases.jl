@@ -219,6 +219,8 @@ function injected_fixed_sector(X, S_AA, modes, nG, nA, atol, rtol)
     end
     Y0 = hcat(modes...)
     values, vectors = eigen(Symmetric(_rg_sym(transpose(Y0) * S_AA * Y0)))
+    check_residual_gaussian_metric(
+        values, atol, rtol, "global injected-mode Gram")
     rank_tol = max(Float64(atol), Float64(rtol) * max(maximum(values), 1.0))
     keep = findall(>(rank_tol), values); isempty(keep) &&
         throw(ArgumentError("residual injection merge removed all injected modes"))
@@ -739,13 +741,25 @@ function build_injected_residual_gaussian_basis(base_dimension, X, S_AA, labels,
         push!(injected, block.modes[:, index:index])
     end
     fixed = injected_fixed_sector(X, S_AA, injected, nG, nA, injected_overlap_atol, injected_overlap_rtol)
+    B, Y = fixed.injected_G, fixed.injected_A
+    Qp = injection_complement(B, nG)
+    YSY = transpose(Y) * S_AA * Y
+    BQp = transpose(B) * Qp
+    QpQp = transpose(Qp) * Qp
+    y_error = isempty(YSY) ? 0.0 : maximum(abs, YSY - I)
+    cross_error = isempty(BQp) ? 0.0 : maximum(abs, BQp)
+    qperp_error = maximum(abs, QpQp - I)
+    identity_error = max(y_error, cross_error, qperp_error)
+    identity_scale = max(isempty(YSY) ? 0.0 : maximum(abs, YSY),
+        isempty(BQp) ? 0.0 : maximum(abs, BQp), maximum(abs, QpQp))
+    identity_error <= Float64(identity_atol) * (1.0 + max(1.0, identity_scale)) ||
+        throw(ArgumentError("residual-Gaussian F' S F validation failed"))
     blocks = filter(!isnothing, [injected_owner_residual_block(block, fixed, X, S_AA, nA,
         cutoff, injection_cutoff, tau_neg_abs, tau_neg_rel) for block in principal])
     isempty(blocks) && throw(ArgumentError("residual-Gaussian candidate metric has no retained directions"))
     T_G0, T_A0 = hcat((b.T_G for b in blocks)...), hcat((b.T_A for b in blocks)...)
     T_G, T_A = finalize_residual_gaussian_transform(
         T_G0, T_A0, X, S_AA, tau_merge_abs, tau_merge_rel, identity_atol)
-    Qp, Y = injection_complement(fixed.injected_G, nG), fixed.injected_A
     FR = vcat(transpose(Y) * (transpose(X) * T_G + S_AA * T_A),
         transpose(Qp) * (T_G + X * T_A))
     norm(FR, Inf) <= orthogonality_atol ||
