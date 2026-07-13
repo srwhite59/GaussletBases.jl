@@ -387,6 +387,11 @@ end
     @test explicit_density.diagnostics.coulomb_expansion_term_count == 45
 
     unconverged = _unconverged_packet(fixture.packet)
+    @test_throws ArgumentError CRD.atomic_reference_packet_p0_q0(unconverged)
+    for source in (:density_fit, :potential_fit)
+        @test_throws ArgumentError CRD.atomic_reference_packet_terminal_hartree_gg(
+            fixture.base, unconverged; source)
+    end
     @test_throws ArgumentError CRD.atomic_reference_packet_additive_density_energy(
         [(; packet = unconverged, center = fixture.spec.center)])
     @test_throws ArgumentError CRD.build_screened_hartree_correction(
@@ -419,6 +424,11 @@ end
     @test readback_embedding.Y == packet_embedding.Y
     @test readback_embedding.overlap_mapping == packet_embedding.overlap_mapping
     unconverged_readback = merge(readback, (; rhf_converged = false))
+    @test_throws ArgumentError CRD.atomic_reference_packet_p0_q0(unconverged_readback)
+    for source in (:density_fit, :potential_fit)
+        @test_throws ArgumentError CRD.atomic_reference_packet_terminal_hartree_gg(
+            fixture.base, unconverged_readback; source)
+    end
     @test_throws ArgumentError CRD.build_atomic_packet_screened_hartree_correction(
         fixture.base,
         fixture.ham,

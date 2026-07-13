@@ -26,6 +26,24 @@ function _packet_with_potential_row(packet, row)
         packet.validation, packet.provenance)
 end
 
+function _packet_without_potential_row_field(packet, field)
+    names = Tuple(filter(!=(field), propertynames(packet.potential_fit.row)))
+    row = NamedTuple{names}(Tuple(getproperty(packet.potential_fit.row, name)
+        for name in names))
+    return _packet_with_potential_row(packet, row)
+end
+
+function _packet_with_potential_arrays(packet, coefficients, exponents)
+    fit0 = packet.potential_fit
+    fit = typeof(fit0)(coefficients, exponents, fit0.radial_grid,
+        fit0.radial_exact, fit0.radial_fit, fit0.radial_error, fit0.row)
+    return typeof(packet)(packet.spec, packet.supplement, packet.overlap,
+        packet.overlap_fingerprint, packet.occupied_coefficients,
+        packet.occupations, packet.orbital_energies, packet.density_matrix,
+        packet.rhf_diagnostics, packet.density_fit, fit,
+        packet.validation, packet.provenance)
+end
+
 function _packet_roundtrip_smoke(spec, label)
     packet = CRD.build_atomic_hf_reference_packet(spec)
     accepted_potential = CRD.fit_atomic_reference_potential(packet.density_fit)
@@ -35,6 +53,7 @@ function _packet_roundtrip_smoke(spec, label)
     validation = CRD.validate_atomic_hf_reference_packet(path)
     in_memory_validation = CRD.validate_atomic_hf_reference_packet(packet)
     p0 = CRD.atomic_reference_packet_p0_q0(readback)
+    p0_in_memory = CRD.atomic_reference_packet_p0_q0(packet)
 
     @test readback.artifact_kind == :atomic_hf_reference_density_fit
     @test readback.convention_id == :atomic_hf_reference_density_fit_v1
@@ -88,6 +107,7 @@ function _packet_roundtrip_smoke(spec, label)
     @test isnothing(legacy.coulomb_expansions.density_self_energy)
     @test isnothing(legacy.coulomb_expansions.potential_tail_scaffold)
     @test abs(p0.trace - spec.electron_count) < 1.0e-10
+    @test p0_in_memory.P_AA == p0.P_AA
     @test sum(p0.q_AA) > 0.0
 
     retired = _packet_with_potential_row(packet,
@@ -117,10 +137,54 @@ function _packet_roundtrip_smoke(spec, label)
 
     unconverged = _packet_with_convergence(packet, false)
     @test CRD.validate_atomic_hf_reference_packet(unconverged).rhf_converged === false
+    unconverged_path = joinpath(dirname(path), "$(label)_unconverged_packet.jld2")
     @test_throws ArgumentError CRD.write_atomic_hf_reference_packet(
-        joinpath(dirname(path), "$(label)_unconverged_packet.jld2"), unconverged)
+        unconverged_path, unconverged)
+    @test !isfile(unconverged_path)
+    @test_throws ArgumentError CRD.atomic_reference_packet_p0_q0(unconverged)
     @test_throws ArgumentError CRD._require_atomic_reference_converged(
         (; converged = false), "atomic reference packet construction")
+
+    if label == "be_core"
+        missing = _packet_without_potential_row_field(packet, :retained_rank)
+        missing_path = joinpath(dirname(path), "missing_ordinary_field.jld2")
+        @test_throws ArgumentError CRD.write_atomic_hf_reference_packet(
+            missing_path, missing)
+        @test !isfile(missing_path)
+
+        nonfinite = _packet_with_potential_row(packet,
+            merge(packet.potential_fit.row, (; core_relmax = NaN)))
+        nonfinite_path = joinpath(dirname(path), "nonfinite_ordinary_field.jld2")
+        @test_throws ArgumentError CRD.write_atomic_hf_reference_packet(
+            nonfinite_path, nonfinite)
+        @test !isfile(nonfinite_path)
+
+        mismatched = _packet_with_potential_arrays(packet,
+            packet.potential_fit.coefficients[1:(end - 1)],
+            packet.potential_fit.exponents)
+        mismatch_path = joinpath(dirname(path), "mismatched_potential_arrays.jld2")
+        @test_throws ArgumentError CRD.write_atomic_hf_reference_packet(
+            mismatch_path, mismatched)
+        @test !isfile(mismatch_path)
+
+        inconsistent = _packet_with_potential_row(packet,
+            merge(packet.potential_fit.row, (;
+                determinant_field_expectation =
+                    packet.potential_fit.row.determinant_field_expectation + 1.0e-4)))
+        inconsistent_path = joinpath(dirname(path), "inconsistent_ordinary_energy.jld2")
+        @test_throws ArgumentError CRD.write_atomic_hf_reference_packet(
+            inconsistent_path, inconsistent)
+        @test !isfile(inconsistent_path)
+
+        invalid_rank = _packet_with_potential_row(packet,
+            merge(packet.potential_fit.row, (;
+                retained_rank = packet.potential_fit.row.source_coulomb_terms)))
+        invalid_rank_path = joinpath(dirname(path), "invalid_potential_rank.jld2")
+        @test_throws ArgumentError CRD.validate_atomic_hf_reference_packet(invalid_rank)
+        @test_throws ArgumentError CRD.write_atomic_hf_reference_packet(
+            invalid_rank_path, invalid_rank)
+        @test !isfile(invalid_rank_path)
+    end
 
     altered_path = joinpath(dirname(path), "$(label)_altered_unconverged_packet.jld2")
     cp(path, altered_path; force = true)
@@ -129,6 +193,8 @@ function _packet_roundtrip_smoke(spec, label)
         file["hf/converged"] = false
     end
     @test CRD.validate_atomic_hf_reference_packet(altered_path).rhf_converged === false
+    unconverged_readback = CRD.read_atomic_hf_reference_packet(altered_path)
+    @test_throws ArgumentError CRD.atomic_reference_packet_p0_q0(unconverged_readback)
     return readback
 end
 
