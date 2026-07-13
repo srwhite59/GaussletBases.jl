@@ -1042,3 +1042,42 @@ Goal advancement / guardrail:
   path or changing residual policy. The next immediate conformance target is
   the missing protected one-body finite, dimension, symmetry, and geometry
   diagnostics; protected physics and interaction semantics remain unchanged.
+
+## Cartesian Hamiltonian Producer Pass 404 - Validate Protected One-Body Transforms
+
+Commit(s):
+- `3e0df456a` - validate protected fixed-sector operator inputs and return
+  truthful pre-symmetrization diagnostics.
+
+Summary:
+- Exact protected fixed-sector kinetic, per-center unit-nuclear, and assembled
+  `H1_F` construction now rejects malformed dimensions, nonfinite raw blocks,
+  nonfinite charges, and nonfinite transformed matrices at its owned boundary.
+  The existing matrix-returning operator helper and charge-weighted one-body
+  convention remain unchanged.
+- One compact diagnostics record reports dimensions, raw and transformed
+  symmetry errors, traces, and the four existing same-geometry acceptance
+  facts. Symmetry is measured before roundoff cleanup can hide it; no new
+  numerical threshold, low-spectrum production solve, caller, or persistent
+  artifact shape was introduced.
+- Manager review added a post-symmetrization finite check because averaging two
+  finite extreme values can overflow even when the pre-cleanup matrix is
+  finite.
+
+Validation / evidence:
+- A transient synthetic smoke passed `25/25`, including malformed GG/GA/AA
+  dimensions, nonfinite blocks and charges, finite-input symmetrization
+  overflow, exact legacy matrix parity, and diagnostic values. The augmented
+  H2 test passed `155/155` in `46.6 s`; the supplemented facade passed `69/69`
+  in `7.9 s` with dimensions `487/18/505`, self-Coulomb and artifact readback
+  parity unchanged. Due diligence retained axes `9x9x15`, padding `4`, rows
+  `[275,114,98]`, and its existing advisory warnings. `git diff --check`
+  passed. Source carrying cost is `+65/-9`; no committed test was authorized or
+  added.
+
+Goal advancement / guardrail:
+- MT1 closes the final immediate fail-fast item identified in Pass 398. The
+  next conformance work should move to consumer-data correctness, beginning
+  with protected ladder readback/trace-loss or due-diligence warning shapes;
+  protected physics, interaction semantics, and Cr2 measurement inputs remain
+  unchanged.
