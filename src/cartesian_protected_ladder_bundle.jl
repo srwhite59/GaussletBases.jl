@@ -589,7 +589,7 @@ function _plb_read_orbitals(path::AbstractString, row_locality, dim::Int)
         elseif !(order in (:native, :inherited_M_site_order))
             throw(ArgumentError("unknown saved orbital site_order_kind $(order)"))
         end
-        return (; up, dn, order, nup = size(up, 2), ndn = size(dn, 2))
+        return (; up, dn, order)
     end
 end
 
@@ -608,12 +608,14 @@ end
 function _plb_transfer_diagnostics(source_orb, up_target, dn_target)
     up_overlap = transpose(up_target) * up_target
     dn_overlap = transpose(dn_target) * dn_target
-    return (; source_alpha_trace = tr(transpose(source_orb.up) * source_orb.up),
-        source_beta_trace = tr(transpose(source_orb.dn) * source_orb.dn),
-        target_alpha_trace = tr(up_overlap),
-        target_beta_trace = tr(dn_overlap),
-        alpha_trace_loss = source_orb.nup - tr(up_overlap),
-        beta_trace_loss = source_orb.ndn - tr(dn_overlap),
+    source_alpha_trace = tr(transpose(source_orb.up) * source_orb.up)
+    source_beta_trace = tr(transpose(source_orb.dn) * source_orb.dn)
+    target_alpha_trace = tr(up_overlap)
+    target_beta_trace = tr(dn_overlap)
+    return (; source_alpha_trace, source_beta_trace,
+        target_alpha_trace, target_beta_trace,
+        alpha_trace_loss = source_alpha_trace - target_alpha_trace,
+        beta_trace_loss = source_beta_trace - target_beta_trace,
         alpha_orth_inf = norm(up_overlap - I, Inf),
         beta_orth_inf = norm(dn_overlap - I, Inf))
 end
@@ -882,6 +884,15 @@ function read_protected_localized_ladder_bundle(path; load_members::Bool = false
             member_paths = String.(file["member_paths"]),
             transfer_paths = String.(file["transfer_paths"]),
             restart_paths = String.(file["restart_paths"]),
+            atom_symbols = String.(file["atom_symbols"]),
+            nuclear_charges = Float64.(file["nuclear_charges"]),
+            atom_locations = Matrix{Float64}(file["atom_locations"]),
+            nup = Int(file["nup"]),
+            ndn = Int(file["ndn"]),
+            core_spacing = Float64(file["core_spacing"]),
+            s_factor = haskey(file, "s_factor") ? Float64(file["s_factor"]) : 1.0,
+            basisname = String(file["basisname"]),
+            lmax = Int(file["lmax"]),
             coulomb_expansion = _cartesian_read_coulomb_expansion_summary(file),
             parent_lattice_ok = Bool(file["parent_lattice_ok"]),
             summary_dir = String(file["summary_dir"]))
