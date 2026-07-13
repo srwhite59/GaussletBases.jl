@@ -175,6 +175,8 @@ function _accumulate_terminal_gaussian_sum!(
         max_state = ntuple(axis -> max(max_state[axis], state[axis]), 3)
     end
     coeffs = Float64.(coefficients)
+    all(isfinite, coeffs) ||
+        throw(ArgumentError("terminal Gaussian-sum coefficients must be finite"))
     nterms = length(coeffs)
     factor_terms = (
         _check_terminal_factor_terms(_terminal_factor_terms(factors_x), nterms, max_state[1], "x"),

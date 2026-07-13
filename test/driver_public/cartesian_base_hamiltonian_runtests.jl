@@ -127,6 +127,21 @@ end
         compact.ham.nuclear_attraction_unit_by_center
     @test omitted.ham.electron_electron_ida == compact.ham.electron_electron_ida
 
+    compact_factors = Tuple(axis.gaussian_factor_terms for axis in compact.pgdg)
+    for invalid in (NaN, Inf, -Inf)
+        destination = fill(0.25, compact.base.terminal_basis.final_dimension,
+            compact.base.terminal_basis.final_dimension)
+        unchanged = copy(destination)
+        coefficients = copy(compact.base.coulomb_expansion.coefficients)
+        coefficients[1] = invalid
+        @test_throws ArgumentError begin
+            GaussletBases.CartesianFinalBasisRealization._accumulate_terminal_gaussian_sum!(
+                destination, compact.base.terminal_basis, coefficients,
+                compact_factors[1], compact_factors[2], compact_factors[3])
+        end
+        @test destination == unchanged
+    end
+
     high_timed = @timed accuracy_case(
         merge(H_ACCURACY_BASIS, (; coulomb_accuracy = :high)))
     high = high_timed.value
