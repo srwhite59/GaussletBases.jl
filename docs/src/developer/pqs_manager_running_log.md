@@ -29309,3 +29309,36 @@ Goal advancement / guardrail:
   Carrying cost is concentrated in one 224-line evidence report and a 79-line
   checker hardening; generated-view changes are three digest/dependency rows
   and no producer source is added.
+
+## Cartesian Hamiltonian Producer Pass 399 - Fail Fast At Atomic Packet Boundaries
+
+Commit(s):
+- `d1bf11051` - validate atomic packet writes and direct consumers before using
+  unconverged or malformed reference data.
+
+Summary:
+- Direct `P0/q0`, density-fit Hartree, and potential-fit Hartree consumers now
+  reject packet data unless RHF convergence is explicit. Packet writes validate
+  before creating an output file, so invalid in-memory packets leave no partial
+  artifact.
+- One ordinary-potential-fit validator now checks the complete row consumed by
+  readback: compact scaffold count, coefficient/exponent shape and finiteness,
+  positive exponents, fixed/trimmed term algebra, SVD-rank bounds, radial and
+  tail diagnostics, charge/self-energy agreement, and determinant consistency
+  algebra. The finite fitted-potential consistency error remains diagnostic;
+  no `1e-8 Ha` magnitude gate or packet-physics change was introduced.
+- Manager review caught and fixed a narrower first draft that bounded retained
+  rank only by the 45-term source scaffold. Validation now uses the actual
+  pre/post-trim fitted dimension and packet validation shares the same guard.
+
+Validation / evidence:
+- Package load passed in `7.0 s`; atomic packet tests passed `117/117` in
+  `28.6 s`; screened-Hartree correction tests passed `93/93` in `64.3 s`;
+  staged `git diff --check` passed. The source/test change is `+186/-12` lines.
+
+Goal advancement / guardrail:
+- This closes the Pass 398 atomic-packet fail-fast discrepancy under the
+  existing packet IDs and advances MT4 reliability without changing the
+  determinant/density-fit/potential-fit role split. Remaining immediate
+  conformance work is the nonfinite one-body coefficient boundary, direct
+  injection Gram/identity guards, and protected one-body diagnostics.
