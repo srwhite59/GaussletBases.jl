@@ -7,8 +7,8 @@ This page owns the retirement contract for:
 - `HP-RETIRE-QW-DONOR-FN-01`
 - `HP-RETIRE-QW-DONOR-TEST-01`
 
-Status: source retirement approved; deletion and validation are pending a
-separate reviewed implementation pass.
+Status: source retirement completed and validated in Pass 409. The function ID
+is retired, and the validation ID is completed; neither grants further work.
 
 This authority removes an unsuccessful experimental implementation. It does
 not abandon homonuclear linear atomic chains as a future scientific target and
@@ -16,18 +16,18 @@ does not change the current `nesting=:wl` producer.
 
 ## Retirement Decision
 
-Delete these four files together:
+The retirement deleted these four files together:
 
 - `src/cartesian_qw_operator_carried_spaces.jl`
 - `src/ordinary_qw_experimental_paths.jl`
 - `src/cartesian_high_order_doside_experimental.jl`
 - `src/cartesian_high_order_doside_ida_experimental.jl`
 
-They contain `6,008` source lines at the approved baseline. Their exported
+They contained `6,008` source lines at the approved baseline. Their exported
 surfaces are explicitly experimental, have no committed source or test
 consumers outside this cluster, and are not compatibility obligations.
 
-The same retirement removes from `src/GaussletBases.jl`:
+The same retirement removed from `src/GaussletBases.jl`:
 
 - the four includes for those files;
 - the two exported experimental path types;
@@ -53,8 +53,8 @@ At baseline `78cb6f806`:
 - the active chain/square basis types and geometry diagnostics are owned by
   `ordinary_qw_types_and_bases.jl`, not by the retiring implementation.
 
-If a live committed caller is found before deletion, stop and report it. Do not
-narrow the retirement by adding compatibility glue.
+No live committed caller was found. Restoring any retired surface requires new
+authority; compatibility glue remains forbidden.
 
 ## Preserved Source
 
@@ -94,19 +94,19 @@ a long-term target, but any future chain implementation starts from a new
 design and the preserved basis/geometry contracts rather than restoring this
 cluster.
 
-## Validation Contract
+## Accepted Validation
 
-The source retirement pass must verify:
+The source retirement pass verified:
 
-1. no audited include, export, generic, module, type, or function remains in
+1. no audited include, export, generic, module, type, or function remained in
    committed source;
-2. package load succeeds;
-3. existing focused core tests still protect chain/square basis construction
+2. package load succeeded;
+3. existing focused core tests continued to protect chain/square basis construction
    and geometry diagnostics;
-4. the public Cartesian base test protects the current `nesting=:wl` path;
-5. terminal due diligence for that WL endpoint is inspected and reported;
-6. `git diff --check` passes;
-7. source deletion is approximately `6,000` net lines, with no new tests.
+4. the public Cartesian base test protected the current `nesting=:wl` path;
+5. terminal due diligence for that WL endpoint was inspected and reported;
+6. `git diff --check` passed;
+7. source deletion was `6,026` net lines, with no new tests.
 
 Existing tests may be edited only to remove a stale reference discovered during
 deletion. Do not add replacement tests for retired APIs.

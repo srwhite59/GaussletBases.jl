@@ -104,8 +104,6 @@ export AbstractFunction1D,
        OrdinaryCartesianIDAOperators,
        OrdinaryCartesianOperators3D,
        QiuWhiteResidualGaussianOperators,
-       ExperimentalBondAlignedHomonuclearChainNestedQWPath,
-       ExperimentalAxisAlignedHomonuclearSquareLatticeNestedQWPath,
        HalfLineBasisSpec,
        RadialBasisSpec,
        RadialBoundaryPrototype,
@@ -188,8 +186,6 @@ export AbstractFunction1D,
        bond_aligned_diatomic_nested_geometry_diagnostics,
        bond_aligned_homonuclear_chain_geometry_diagnostics,
        axis_aligned_homonuclear_square_lattice_geometry_diagnostics,
-       bond_aligned_homonuclear_chain_nested_geometry_diagnostics,
-       axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics,
        build_one_center_atomic_full_parent_shell_sequence,
        one_center_atomic_full_parent_fixed_block,
        build_one_center_atomic_legacy_profile_shell_sequence,
@@ -200,10 +196,6 @@ export AbstractFunction1D,
        OneCenterAtomicNestedStructureDiagnostics,
        one_center_atomic_nested_structure_diagnostics,
        one_center_atomic_nested_structure_report,
-       experimental_bond_aligned_homonuclear_chain_nested_qw_operators,
-       experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators,
-       write_bond_aligned_homonuclear_chain_nested_geometry_report,
-       write_axis_aligned_homonuclear_square_lattice_nested_geometry_report,
        bond_aligned_diatomic_geometry_payload,
        bond_aligned_diatomic_source_geometry_payload,
        bond_aligned_diatomic_plane_slice,
@@ -451,8 +443,6 @@ function bond_aligned_diatomic_nested_geometry_diagnostics end
 function bond_aligned_homonuclear_chain_geometry_diagnostics end
 function axis_aligned_homonuclear_square_lattice_qw_basis end
 function axis_aligned_homonuclear_square_lattice_geometry_diagnostics end
-function bond_aligned_homonuclear_chain_nested_geometry_diagnostics end
-function axis_aligned_homonuclear_square_lattice_nested_geometry_diagnostics end
 function build_one_center_atomic_full_parent_shell_sequence end
 function one_center_atomic_full_parent_fixed_block end
 function build_one_center_atomic_legacy_profile_shell_sequence end
@@ -460,10 +450,6 @@ function one_center_atomic_legacy_profile_fixed_block end
 function nested_fixed_block_timing_report end
 function one_center_atomic_nested_structure_diagnostics end
 function one_center_atomic_nested_structure_report end
-function experimental_bond_aligned_homonuclear_chain_nested_qw_operators end
-function experimental_axis_aligned_homonuclear_square_lattice_nested_qw_operators end
-function write_bond_aligned_homonuclear_chain_nested_geometry_report end
-function write_axis_aligned_homonuclear_square_lattice_nested_geometry_report end
 function bond_aligned_diatomic_geometry_payload end
 function bond_aligned_diatomic_source_geometry_payload end
 function bond_aligned_diatomic_plane_slice end
@@ -616,8 +602,6 @@ include("legacy_basis_adapter.jl")
 include("ordinary_mapped_backends.jl")
 include("ordinary_sho.jl")
 include("ordinary_cartesian_ida.jl")
-include("cartesian_high_order_doside_experimental.jl")
-include("cartesian_high_order_doside_ida_experimental.jl")
 include("cartesian_nested_faces.jl")
 include("cartesian_nested_owned_units.jl")
 include("cartesian_nested_atomic.jl")
@@ -660,7 +644,6 @@ include("ordinary_qw_residuals.jl")
 include("ordinary_qw_raw_blocks.jl")
 include("ordinary_qw_operator_assembly.jl")
 include("ordinary_qw_corrections.jl")
-include("ordinary_qw_experimental_paths.jl")
 include("cartesian_basis_representation.jl")
 include("cartesian_cross_overlap.jl")
 include("cartesian_representation_constructors.jl")
@@ -670,7 +653,6 @@ include("cartesian_protected_ladder_bundle.jl")
 include("cartesian_gto_probes.jl")
 include("cartesian_external_gto_import.jl")
 include("cartesian_qw_hybrid_representation.jl")
-include("cartesian_qw_operator_carried_spaces.jl")
 include("gaussian_coulomb_reference.jl")
 include("hamiltonian_corrections.jl")
 include("bond_aligned_diatomic_geometry.jl")

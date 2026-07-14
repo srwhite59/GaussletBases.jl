@@ -1231,3 +1231,42 @@ Goal advancement / guardrail:
   obsolete source lines. Pass 409 must delete the complete cluster together,
   preserve chain/square basis constructors and current WL behavior, inspect
   WL terminal due diligence, and stop if any live caller appears.
+
+## Cartesian Hamiltonian Producer Pass 409 - Retire QW/High-Order Experimental Cluster
+
+Commit(s):
+- this commit - delete the obsolete QW carried-space, chain/square operator,
+  high-order doside, and experimental IDA implementation cluster.
+
+Summary:
+- Deleted the four authorized files in full and removed their four includes,
+  eight exports, and six empty generic declarations from `GaussletBases.jl`.
+  The source change is `+0/-6,026`; no compatibility aliases, replacement
+  implementation, or tests were added.
+- Focused caller scans found no committed source or test consumer of the
+  retired surface. Surviving chain/square basis constructors and geometry
+  diagnostics remain covered by core tests, while the current
+  `nesting=:wl` producer continues to use adjacent preserved kernels.
+- Closed the machine-authority lifecycle in the same accepted batch so deleted
+  paths are not recorded as existing: the function ID is now `retired`, the
+  test ID is `completed`, and both have no grant, surface, path ownership, or
+  execution-whitelist entry. This is closure, not new authority.
+
+Validation / evidence:
+- The bloat-fixer package load passed, the core group passed `432` checks, and
+  the public Cartesian base gate passed `134/134`. Deleted-symbol and
+  preserved-owner scans plus `git diff --check` passed. Manager review
+  confirmed the exact deletion boundary and clean staging separation; package
+  load, authority check/self-test, docs tests `56/56` and `10/10`, the
+  manager-log bound, and local Documenter also passed.
+- WL due diligence retained the one-center `ns=5`, derived-`q=3` endpoint:
+  axes `7x7x7`, dimension `223`, one direct core plus one complete shell, and
+  native retained counts `125 + 54 + 36 + 8`. The formal WL row table remains
+  empty; its complete 27-row native inventory remains the equivalent audit.
+
+Goal advancement / guardrail:
+- MT6 closes a coherent `6,008`-line donor retirement and removes another 18
+  lines of public/package surface. Atomic chains remain a future scientific
+  target, not a preserved experimental API. Active WL, adjacent geometry,
+  ordinary-QW kernels, and `cartesian_carried_spaces.jl` remain separately
+  owned; the empty WL due-diligence row table is still a reporting gap.
