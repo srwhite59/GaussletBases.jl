@@ -1317,3 +1317,35 @@ Goal advancement / guardrail:
 - **MT6 carrying-cost control - active.** Pass 409 is complete; delete the
   final orphaned adapter next, then close this retirement sublane. Ordinary-QW
   capability review remains separate and must begin from surviving callers.
+
+## Cartesian Hamiltonian Producer Pass 411 - Retire Cartesian Carried-Space Adapter
+
+Commit(s):
+- this commit - delete the orphaned internal carried-space adapter and its sole
+  root include.
+
+Summary:
+- Deleted `src/cartesian_carried_spaces.jl` in full and removed only its
+  `GaussletBases.jl` include: `+0/-267` source lines. No alias, stub,
+  deprecation, compatibility module, replacement adapter, or test was added.
+- Pre/post scans confirmed that the retired module, type, constructor, and five
+  accessors had no committed source or test consumer. The one ignored reference
+  remains a stale Dropbox conflicted test copy and is not a compatibility
+  obligation.
+- Closed the machine records in the same reviewed batch: the function ID is
+  `retired`, the validation ID is `completed`, and both now have no grant,
+  surface, path ownership, dependency, or whitelist entry.
+
+Validation / evidence:
+- The bloat-fixer package load passed and the unchanged core group passed
+  `432/432`; deleted-symbol scans and `git diff --check` passed. Manager review
+  confirmed the exact two-file source boundary and preserved owner files.
+  Authority check/self-test, generated-view parity, docs tests, manager-log
+  bound, and local Documenter form the closure gate.
+
+Goal advancement / guardrail:
+- MT6 completes the carried-space/QW donor retirement sublane with no behavior
+  change. Representation, overlap, transfer, parent, hybrid, chain/square,
+  ordinary-QW, WL, and PQS ownership remains unchanged. The next carrying-cost
+  decision is the separate ordinary-QW endpoint/correction capability audit;
+  it must begin from live shared-kernel callers rather than file-level labels.

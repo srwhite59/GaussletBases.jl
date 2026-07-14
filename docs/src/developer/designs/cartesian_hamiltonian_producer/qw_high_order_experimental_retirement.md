@@ -81,7 +81,7 @@ and driver behavior must remain unchanged.
 
 ## Cartesian Carried-Space Adapter Retirement
 
-At baseline `839395f63`, `src/cartesian_carried_spaces.jl` is a `266`-line
+At baseline `839395f63`, `src/cartesian_carried_spaces.jl` was a `266`-line
 internal adapter with one root include and no committed source or test caller.
 Its sole production consumer was removed with the four-file cluster in Pass
 409.
@@ -95,14 +95,14 @@ The historical chain is explicit:
 - the only remaining caller is a stale ignored Dropbox conflicted test copy,
   which is not a compatibility obligation.
 
-The follow-on source pass must:
+Pass 411:
 
-1. delete `src/cartesian_carried_spaces.jl` in full;
-2. remove only `include("cartesian_carried_spaces.jl")` from
+1. deleted `src/cartesian_carried_spaces.jl` in full;
+2. removed only `include("cartesian_carried_spaces.jl")` from
    `src/GaussletBases.jl`;
-3. retire `CartesianCarriedSpace3D`, `cartesian_carried_space`, and the five
+3. retired `CartesianCarriedSpace3D`, `cartesian_carried_space`, and the five
    `carried_space_*` accessors;
-4. add no aliases, stubs, deprecations, compatibility module, replacement
+4. added no aliases, stubs, deprecations, compatibility module, replacement
    adapter, or tests.
 
 Qualified external access does not create a compatibility obligation. The
@@ -119,10 +119,11 @@ Preserve these current owners unchanged:
 - chain/square basis types and geometry;
 - current WL/PQS construction.
 
-Validation is package load, deleted-symbol/include scans, the unchanged core
-gate for surviving geometry, and `git diff --check`. The expected source
-deletion is exactly `267` lines. No new test is justified for an adapter being
-removed.
+Validation comprised package load, deleted-symbol/include scans, the unchanged
+core gate for surviving geometry, and `git diff --check`. The source deletion
+was exactly `267` lines. No new test was justified for an adapter being
+removed. The function ID is retired and the validation ID is completed; neither
+grants further work.
 
 ## Historical Scientific Evidence
 
