@@ -1,11 +1,12 @@
 # Semantic Per-Shell PQS Source-q Overrides
 
-Status: implemented internal opt-in facility with completed bounded H2 and
-padded Be2 validation.
+Status: implemented internal opt-in refinement facility with completed bounded
+H2 and padded Be2 validation. Source-order coarsening is approved by the same
+IDs but remains pending implementation and validation.
 Authority is recorded under `HP-PQS-SHELLQ-OVERRIDE-FN-01` and
 `HP-PQS-SHELLQ-OVERRIDE-TEST-01`.
 
-This page is the canonical contract for bounded source-mode refinement of
+This page is the canonical contract for bounded source-mode variation of
 selected complete shells in bond-aligned homonuclear diatomic PQS
 construction. The registry owns lifecycle, permission, and exact source/test
 ceilings. This page owns input semantics, construction order, failure
@@ -16,14 +17,14 @@ behavior, validation, and exclusions.
 The global route `q` controls the ordinary producer construction. A
 measurement may need to ask a narrower question:
 
-> What changes if one semantic complete shell receives a larger PQS source
-> span while parent geometry, shell support, global `ns/q`, and every other
+> What changes if one semantic complete shell receives a different PQS source
+> order while parent geometry, shell support, global `ns/q`, and every other
 > terminal region remain fixed?
 
 This lane permits that question only inside the private numerical-complete
 additive-reference composition with `source_span = :ordinary`. It is a general
 producer diagnostic, not a Cr-specific branch, production policy, or automatic
-refinement rule.
+source-order rule.
 
 Changing a shell source span changes its retained dimension and therefore the
 final basis and Hamiltonian. It does not change which parent points the shell
@@ -54,7 +55,7 @@ Each record has exactly four fields:
 | `role` | `:atom_local_shell` or `:shared_molecular_shell` |
 | `shell_index` | positive native semantic shell index |
 | `owner` | exactly `:all` |
-| `source_q` | non-Boolean integer strictly larger than the route `q` |
+| `source_q` | non-Boolean integer satisfying `source_q >= 3` and `source_q != route_q` |
 
 Unknown fields and alternate spellings are errors. In particular, callers may
 not provide `q`, lowering/retained `q`, `L`, a full source shape, a terminal
@@ -64,11 +65,17 @@ Duplicate `(role, shell_index, owner)` records are errors even when their
 `source_q` values agree. There is no last-wins rule. Record order has no
 semantic effect; normalized application order must be deterministic.
 
-`source_q` is a shell-local source-span size. It is not public/route `q` and
-does not alter `ns`, the route's PQS `q = ns`, direct-core side, parent axes,
-shellification, or lowering policy. Mapped-COMX source spans are rejected in
-this first lane because their later carried-axis enrichment has not yet been
-proved compositional with an overridden shell shape.
+`source_q` is a shell-local source-span size. Values above route `q` refine the
+shell contraction; values below route `q` coarsen it. Equal values are rejected
+as redundant because omitted or empty overrides already provide that control.
+The minimum value `3` is the projected-shell construction floor.
+
+This shell-local value is not public/route `q` and does not alter `ns`, the
+route's PQS `q = ns`, direct-core side, parent axes, shellification, support,
+ownership, or lowering policy. Coarsening a selected contraction is therefore
+not a reduction of parent-lattice resolution. Mapped-COMX source spans are
+rejected because their later carried-axis enrichment has not yet been proved
+compositional with an overridden shell shape.
 
 ## Semantic Matching
 
@@ -89,7 +96,7 @@ unstable key.
 
 For `role = :atom_local_shell`, `owner = :all` means the symmetric pair of
 owner-local shells at that semantic index. Both owner regions must exist and
-must be refined together. A one-sided match, unequal source request, or
+must be varied together. A one-sided match, unequal source request, or
 geometry with no such pair is an error.
 
 For `role = :shared_molecular_shell`, the semantic index identifies the
@@ -221,6 +228,12 @@ Existing multilayer realization files are intentionally outside the source
 ceiling. Their current authoritative-shape path must work unchanged or the
 implementation stops.
 
+The coarsening amendment must reuse the existing post-shellification override
+machinery. It does not approve a new lowering-plan accessor. If a consumer
+later proves that it cannot inspect the staged plan without constructing the
+full Hamiltonian, report that exact seam for separate authority rather than
+adding it here.
+
 `_plb_build_inputs(...)` must default to an empty override and must not inspect
 the recipe implicitly. Only
 `_plb_build_numerical_complete_additive_reference_member(...)` may extract the
@@ -247,17 +260,22 @@ object gains a field.
 
 ### Bounded construction gates
 
-- Exercise one atom-local and one shared-shell refinement on bounded H2
-  constructions.
+- With global `ns` and route `q = 7`, exercise `source_q = 6` and
+  `source_q = 5` for atom-local and shared-shell lowering plans. Require the
+  retained counts to decrease according to the existing boundary formula.
+- Assemble bounded H2 constructions for at least one coarsening value in each
+  semantic role and retain the existing refinement controls.
 - Exercise a physically padded Be2 numerical-complete additive-reference
   construction after the H2 gates pass.
 - Confirm that exactly the selected semantic shell rows change
   `source_mode_shape`; atom-local `owner = :all` changes both paired rows.
 - Confirm parent axes, physical/index shell boxes, support ownership, region
   order, direct cores, angular-extension slabs, thin slabs, and all unmatched
-  regions are unchanged.
+  regions are unchanged; route metadata remains identical.
 - Confirm retained counts agree with the active boundary formula for each new
   authoritative shape.
+- Confirm each overridden shell's realized contraction columns remain
+  orthonormal under the existing metric contract.
 - Rebuild and report final dimension, numerical residual count, packet
   occupied capture, `J0`, `E0`, correction anchors, source shapes, and every
   terminal due-diligence warning.
@@ -272,7 +290,7 @@ Tests must reject:
 
 - duplicate or unmatched semantic targets;
 - zero/negative/noninteger/Boolean shell indices or source sizes;
-- `source_q <= route_q`;
+- `source_q < 3` or `source_q == route_q`;
 - partial-owner or asymmetric atom-local requests;
 - unsupported roles or extra fields;
 - terminal-region/order/ordinal keys;
@@ -282,10 +300,11 @@ Tests must reject:
 
 ## Consumer Measurement
 
-With the source implementation and H2/Be2 gates accepted, an ignored CR2
-measurement may refine shell 7 and shell 8 independently at
-`source_q = 8`, then their pair only if the individual measurements justify
-it.
+With the source amendment and H2/Be2 gates accepted, an ignored CR2
+measurement may coarsen selected route-`q = 7` shells independently to
+`source_q = 6` and `source_q = 5`. Refinement to `source_q = 8` remains
+available. Combine shell changes only when the individual static measurements
+justify it.
 
 The baseline and variants must use the same commit, system geometry, parent
 controls, supplement, Coulomb policy, packet, and numerical-complete settings;
@@ -333,7 +352,7 @@ injection, or create compatibility metadata to force the study through.
 
 This authority does not approve:
 
-- a production/default `q` change or automatic source refinement;
+- a production/default `q` change or automatic source-order policy;
 - public facade, basis, canonical-driver, or solver controls;
 - parent-grid, shell-support, shellification, direct-core, slab, or
   aspect-policy replacement;
@@ -344,4 +363,5 @@ This authority does not approve:
 - shell-projection, Lowdin, sign, rank, or overlap-policy changes;
 - `C' V C`, source-Hamiltonian transforms, or interaction rotation;
 - a dense final-final overlap or durable transfer API;
+- a new lowering-plan accessor or parent-completion mode;
 - Cr2-specific source behavior, production energies, or paper claims.

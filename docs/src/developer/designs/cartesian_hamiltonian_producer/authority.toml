@@ -53,7 +53,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
-sha256 = "d4d562059f6c9e131a8e6e93c75eadbb9b2065f5e548707ae7c5808eb13df2f1"
+sha256 = "8864b88e41bd7fb783f5d2c013618acb75eb73dd4a0098c2ab0773b890a55f61"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_additive_reference_correction.md"
 sha256 = "28f8ba776ea9f21a75b3e5d06368ec7368d82987b1cb126610d9150a1bd36885"
@@ -2468,7 +2468,7 @@ evidence_refs = []
 grant = "maintenance"
 id = "HP-PQS-SHELLQ-OVERRIDE-FN-01"
 lifecycle = "implemented"
-scope = "maintain `owner = :all` overrides for positive semantic `:atom_local_shell` or `:shared_molecular_shell` indices with integer `source_q > route_q`. Atom-local shells use `(source_q,source_q,source_q)`; shared shells rerun the existing angular-band selector for `(source_q,source_q,L)`, with route metadata `q` unchanged. Selector retention, `nside`, and `selected_q` use `source_q`. One authoritative shape must reach existing retained/support/transform/realization/due-diligence consumers unchanged."
+scope = "Maintain `owner = :all` overrides for positive semantic `:atom_local_shell` or `:shared_molecular_shell` indices with non-Boolean integer `source_q >= 3` and `source_q != route_q`. Values above route q refine the shell contraction; values below route q coarsen it while parent axes, support, ownership, cores, slabs, and route metadata remain unchanged. Atom-local shells use `(source_q,source_q,source_q)`; shared shells rerun the existing angular-band selector for `(source_q,source_q,L)`. Selector retention, `nside`, and `selected_q` use `source_q`. One authoritative shape must reach existing retained/support/transform/realization/due-diligence consumers unchanged."
 surfaces = ["source"]
 title = "semantic per-shell PQS source-q overrides"
 
@@ -2492,10 +2492,10 @@ title = "semantic per-shell PQS source-q overrides"
 [[records]]
 dependency_ids = []
 evidence_refs = []
-grant = "maintenance"
+grant = "implementation"
 id = "HP-PQS-SHELLQ-OVERRIDE-TEST-01"
-lifecycle = "completed"
-scope = "validate rebuilt residual, packet-capture, `J0/E0`, correction, source-shape, dimension, and due-diligence facts. No dense baseline-to-variant overlap API, source-pass HF, endpoint energy assertion, or production claim is approved."
+lifecycle = "approved"
+scope = "Validate route-q 7 to source-q 6 and 5 coarsening, expected retained-count reduction, unchanged parent/support/ownership/cores/slabs/route metadata, orthonormal contraction columns, omitted/empty parity, finite symmetric full construction, and rejection of malformed, below-3, Boolean, equal-route, asymmetric, and unmatched requests. Preserve existing refinement, residual, packet-capture, `J0/E0`, correction, dimension, and due-diligence gates. No new accessor, dense baseline-to-variant overlap API, source-pass HF, endpoint energy assertion, or production claim is approved."
 surfaces = ["tests"]
 title = "semantic source-q override validation"
 

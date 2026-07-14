@@ -1402,3 +1402,37 @@ global `ns` and parent resolution are separate unless explicitly varied. No
 producer or interaction authority follows from this clarification; fixed-
 density, dimension, locality, MWG-versus-parent-charge, and exact-oracle
 evidence comes first.
+
+## Cartesian Hamiltonian Producer Pass 413 - Authorize Shell-q Coarsening
+
+Commit(s):
+- this commit - amend the implemented semantic per-shell PQS source-order
+  authority to permit bounded coarsening as well as refinement.
+
+Summary:
+- Source and history review confirmed that `source_q > route_q` was the narrow
+  original refinement question, not a numerical requirement. The existing
+  post-shellification path already rewrites one authoritative shape, preserves
+  symmetric atom ownership, and reruns the shared-shell longitudinal selector.
+- `HP-PQS-SHELLQ-OVERRIDE-FN-01` now permits non-Boolean integer
+  `source_q >= 3` with `source_q != route_q`. Values below route q coarsen only
+  the selected shell contraction; global `ns`, route q, parent axes, support,
+  ownership, cores, slabs, and route metadata remain unchanged. Equal values
+  remain redundant errors.
+- The amended test gate requires route-q `7` to source-q `6` and `5` retained-
+  count reduction, orthonormal columns, full finite/symmetric construction,
+  exact omitted/empty parity, and strict malformed/below-3/equal/asymmetric/
+  unmatched rejection. No lowering-plan accessor or parent-completion mode is
+  approved.
+
+Validation / evidence:
+- Canonical-contract and source-signature review, authority render/check and
+  self-test, generated registry/AGENTS parity, docs tests, local Documenter,
+  manager-log bound, docs-only staged review, and `git diff --check` form the
+  gate. No source or test file changes occur in this pass.
+
+Goal advancement / guardrail:
+- MT4 gains the bounded contraction-coarsening diagnostic needed before any
+  parent-completion design. MT2 may consume reviewed static CR2 measurements,
+  but parent completion, interaction changes, HF claims, public controls, and
+  durable accessors remain separate authority.

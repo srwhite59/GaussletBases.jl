@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `5940411057b9cc8492bc8bc4b1c141d6a3a6cc079c1e54ec9bc861bdd2ef27ec`.
+> [authority.toml](authority.toml), SHA-256 `13e7ec2bc3ce4e6909bcc8798c725a8d38d6377ed9663727295e1e16f76d34f9`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1554,12 +1554,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-PQS-ASPECTSHELL-FN-01`, `HP-RG-NUMCOMP-FN-01`
-- **Scope:** maintain \`owner = :all\` overrides for positive semantic \`:atom\_local\_shell\` or \`:shared\_molecular\_shell\` indices with integer \`source\_q \> route\_q\`. Atom-local shells use \`(source\_q,source\_q,source\_q)\`; shared shells rerun the existing angular-band selector for \`(source\_q,source\_q,L)\`, with route metadata \`q\` unchanged. Selector retention, \`nside\`, and \`selected\_q\` use \`source\_q\`. One authoritative shape must reach existing retained/support/transform/realization/due-diligence consumers unchanged.
+- **Scope:** Maintain \`owner = :all\` overrides for positive semantic \`:atom\_local\_shell\` or \`:shared\_molecular\_shell\` indices with non-Boolean integer \`source\_q \>= 3\` and \`source\_q \!= route\_q\`. Values above route q refine the shell contraction; values below route q coarsen it while parent axes, support, ownership, cores, slabs, and route metadata remain unchanged. Atom-local shells use \`(source\_q,source\_q,source\_q)\`; shared shells rerun the existing angular-band selector for \`(source\_q,source\_q,L)\`. Selector retention, \`nside\`, and \`selected\_q\` use \`source\_q\`. One authoritative shape must reach existing retained/support/transform/realization/due-diligence consumers unchanged.
 
 ### HP-PQS-SHELLQ-OVERRIDE-TEST-01 - semantic source-q override validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1568,7 +1568,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Evidence:** none
 - **Dependencies:** none
-- **Scope:** validate rebuilt residual, packet-capture, \`J0/E0\`, correction, source-shape, dimension, and due-diligence facts. No dense baseline-to-variant overlap API, source-pass HF, endpoint energy assertion, or production claim is approved.
+- **Scope:** Validate route-q 7 to source-q 6 and 5 coarsening, expected retained-count reduction, unchanged parent/support/ownership/cores/slabs/route metadata, orthonormal contraction columns, omitted/empty parity, finite symmetric full construction, and rejection of malformed, below-3, Boolean, equal-route, asymmetric, and unmatched requests. Preserve existing refinement, residual, packet-capture, \`J0/E0\`, correction, dimension, and due-diligence gates. No new accessor, dense baseline-to-variant overlap API, source-pass HF, endpoint energy assertion, or production claim is approved.
 
 ### HP-R1-ART-01 - public base producer artifact provenance
 
