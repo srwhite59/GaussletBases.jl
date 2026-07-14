@@ -1132,3 +1132,36 @@ Goal advancement / guardrail:
 - **MT6 carrying-cost control - active.** This pass deletes obsolete aliases;
   subsequent reconciliation should continue removing stale paths rather than
   adding adapters or compatibility vocabulary.
+
+## Cartesian Hamiltonian Producer Pass 406 - Reconcile Due-Diligence Warning Shapes
+
+Commit(s):
+- `9faece815` - make row-level warning fields match the canonical reporting
+  contract.
+
+Summary:
+- Terminal due-diligence rows now carry `warning_flags` as the ordered tuple of
+  active stable symbols, using `(:none,)` when clean, and `warning_summary` as
+  concise comma-joined text. Boolean warning predicates remain local to row
+  construction. The canonical driver consumes the text directly and deletes
+  its redundant tuple formatter.
+- The report-level `due.warnings` boolean `NamedTuple` remains a separate
+  unchanged contract. No warning predicate, vocabulary, threshold, row order,
+  shellification fact, retained count, source shape, matrix, artifact, or
+  numerical construction behavior changed.
+
+Validation / evidence:
+- The doer package load passed. A `/tmp` row-contract smoke exercised one clean
+  row and two warned rows in `18.34 s`; all flags were symbols and every summary
+  exactly matched its ordered flags. The canonical H2 driver completed in
+  `22.11 s`, wrote and read its artifact, and printed concise warning text.
+  Due diligence retained bounds `x/y = +/-4.87075`, `z = +/-6.10974`, axes
+  `9x9x15`, dimension `487`, rows `[275,114,98]`, direct atom-contact core plus
+  two complete shells, and unchanged report warnings. Manager package load and
+  `git diff --check` passed. The pass is `+8/-6`, net `+2` lines.
+
+Goal advancement / guardrail:
+- MT1 closes the Pass 398 due-diligence consumer-shape discrepancy. The fix
+  removes one duplicate formatter and adds no compatibility representation.
+  Future COMX nuclear-resolution diagnostics, warning vocabulary, and all
+  basis or screening policy remain separate authority questions.
