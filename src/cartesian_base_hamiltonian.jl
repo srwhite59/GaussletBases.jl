@@ -601,11 +601,12 @@ function _cartesian_expected_source_shape(row, source_shape)
 end
 _cartesian_source_mode_count(shape) = isnothing(shape) ? 0 : prod(Int.(shape))
 _cartesian_owner_class(role, kind) = kind === :direct_atom_contact_core ? :atom_contact_core : kind === :complete_shell ? :shared_molecular : kind === :angular_z_extension_slab ? :shared_angular_z_extension_slab : role
-function _cartesian_due_warning_summary(flags)
+function _cartesian_due_warning_flags(predicates)
     active = Symbol[]
-    for key in keys(flags); getproperty(flags, key) && push!(active, key); end
+    for key in keys(predicates); getproperty(predicates, key) && push!(active, key); end
     return isempty(active) ? (:none,) : Tuple(active)
 end
+_cartesian_due_warning_summary(flags) = flags == (:none,) ? "none" : join(String.(flags), ",")
 function _cartesian_terminal_due_rows(transforms, bundles)
     low = get(transforms, :low_order_transforms, nothing)
     basis = get(transforms, :terminal_basis_realization, nothing)
@@ -639,7 +640,7 @@ function _cartesian_terminal_due_rows(transforms, bundles)
         expected = _cartesian_expected_source_shape(row0, support.source_mode_shape)
         expected_retained = isnothing(expected) ? 0 :
             prod(Int.(expected)) - prod(max(dim - 2, 0) for dim in Int.(expected))
-        flags = (;
+        warning_predicates = (;
             rectangular_physical_shell_cubic_source_modes =
                 invrow.region_kind === :complete_shell && !isnothing(support.source_mode_shape) && length(unique(support.source_mode_shape)) == 1 && row0.max_physical_aspect >= 1.25,
             expected_source_shape_larger_than_actual =
@@ -654,10 +655,12 @@ function _cartesian_terminal_due_rows(transforms, bundles)
             slab_without_native_metadata =
                 occursin("slab", String(invrow.region_kind)) && (invrow.slab_axis === :unavailable || invrow.slab_stack_count == 0),
             unavailable_expected_shape = invrow.region_kind === :complete_shell && isnothing(expected))
+        warning_flags = _cartesian_due_warning_flags(warning_predicates)
         push!(rows, merge(row0, (;
             expected_aspect_balanced_source_mode_shape = expected,
             expected_aspect_retained_count = expected_retained,
-            warning_flags = flags, warning_summary = _cartesian_due_warning_summary(flags))))
+            warning_flags,
+            warning_summary = _cartesian_due_warning_summary(warning_flags))))
     end
     return rows
 end

@@ -76,7 +76,6 @@ function print_terminal_due_diligence(base)
         string("x=", fmt_range(box[1]), " y=", fmt_range(box[2]), " z=", fmt_range(box[3]))
     fmt_shape(shape) = isnothing(shape) ? "nothing" : string(shape)
     fmt_preview(values) = "[" * join((fmt(value) for value in values), ", ") * "]"
-    fmt_flags(flags) = flags == (:none,) ? "none" : join(String.(flags), ",")
     g = report.geometry
     println("terminal due diligence:")
     println("  normalized system: kind=$(g.kind) nesting=$(g.nesting) source_span=$(g.source_span) atoms=$(g.atom_symbols) charges=$(g.nuclear_charges) nup=$(g.nup) ndn=$(g.ndn)")
@@ -101,7 +100,7 @@ function print_terminal_due_diligence(base)
         println("    $(row.terminal_order) $(row.region_key) role=$(row.role) kind=$(row.region_kind) shell=$(row.shell_index) owner=$(row.owner_contact_shared)")
         println("      idx outer=$(fmt_box(row.outer_box)) shape=$(row.outer_shape) inner=$(fmt_box(row.inner_box)) shape=$(row.inner_shape) phys=$(row.physical_ranges) phys_len=($(fmt(row.physical_x_length)),$(fmt(row.physical_y_length)),$(fmt(row.physical_z_length))) aspect[z/trans,max/min]=$(fmt(row.bond_axis_transverse_aspect))/$(fmt(row.max_physical_aspect))")
         println("      source=$(fmt_shape(row.source_mode_shape)) expected=$(fmt_shape(row.expected_aspect_balanced_source_mode_shape)) source_count=$(row.source_mode_count) support=$(row.support_rows) retained=$(row.retained_count) expected_retained=$(row.expected_aspect_retained_count) final=$(fmt_range(row.final_column_range))")
-        println("      lowering=$(row.lowering_kind) retained_rule=$(row.retained_rule) realization=$(row.realization_status)$(slab) warnings=$(fmt_flags(row.warning_summary))")
+        println("      lowering=$(row.lowering_kind) retained_rule=$(row.retained_rule) realization=$(row.realization_status)$(slab) warnings=$(row.warning_summary)")
     end
     println("  report warnings: ", report.warnings)
     return nothing
