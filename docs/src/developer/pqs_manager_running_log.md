@@ -70,7 +70,10 @@ The retained-GTO EGOI helper remains pending and must not absorb the unrelated
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
-injection/localization policy remain separate future decisions.
+injection/localization policy remain separate future decisions. Shell-local
+parent-completion residuals are also measurement-only: their near-zero IDA
+weights are expected, and any distributed parent-charge interaction must be
+judged against MWG and a bounded exact oracle rather than against terminal IDA.
 
 **MT5 - Documentation and authority maintenance (maintenance).** The broad
 reorganization and cutover are complete. Update machine authority atomically,
@@ -1377,3 +1380,25 @@ force a replacement or retirement decision before current physics work makes
 the ownership clear. The completed dead midpoint cleanup stands; shared
 `_qwrg_*` kernels remain protected, and no broader ordinary-QW source or API
 retirement should start without a new user-directed decision.
+
+### Strategic Clarification After Pass 412 - Parent-Supported Residual Pieces
+
+Shell-local parent-completion functions should not be treated as new terminal
+IDA sites. They are intended to split broad residual content into more local
+pieces that lie in omitted parent-shell spans. Their one-body matrices can use
+the exact parent transform, while their near-zero linear IDA weights are normal
+for residual-like functions. The proposed `abs2` parent-coefficient charge
+model is therefore a candidate replacement for MWG only on interaction rows
+involving these additions; it must be compared with current MWG and a bounded
+exact Coulomb oracle. Existing base-base interaction entries remain unchanged.
+
+This is a partial Cr2 basis/interaction improvement, not a substitute for
+screened Hartree or later correction physics. A central efficiency target is
+to lower selected shell-local source order from the current `q=7` level toward
+`q=5` or `q=6` on the same adequate parent lattice, then add fewer localized
+parent-completion modes than the ordinary contraction columns removed. Use
+`source_q` or retained-order language for that shell-local experiment; public
+global `ns` and parent resolution are separate unless explicitly varied. No
+producer or interaction authority follows from this clarification; fixed-
+density, dimension, locality, MWG-versus-parent-charge, and exact-oracle
+evidence comes first.
