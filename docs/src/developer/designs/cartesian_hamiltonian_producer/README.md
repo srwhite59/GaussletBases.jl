@@ -160,6 +160,9 @@ ID or subsystem.
 - [Completed route-driver materialization retirement record](route_driver_materialization_retirement.md)
   records deletion of the old route-driver materialization/report/save wrapper
   workflow and stale tool/test pressure
+- [Approved QW/high-order experimental cluster retirement](qw_high_order_experimental_retirement.md)
+  authorizes deletion of the obsolete four-file receipt/chain/high-order
+  implementation while preserving current WL and adjacent geometry kernels
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 ## Contracts, Amendments, And Completed Records

@@ -1198,3 +1198,36 @@ Goal advancement / guardrail:
   due-diligence remains empty even though native terminal inventory is
   complete; treat that as a separate reporting gap, not permission to reopen
   realization, shellification, or numerical policy.
+
+## Cartesian Hamiltonian Producer Pass 408 - Authorize QW/High-Order Cluster Retirement
+
+Commit(s):
+- this commit - approve deletion of the obsolete four-file QW receipt,
+  chain/square consumer, and high-order doside/IDA cluster.
+
+Summary:
+- Caller review confirmed that the eight top-level experimental exports have
+  no committed source or test consumers, and that the 24-name carried-space
+  receipt submodule is consumed only by the retiring chain/square file. The
+  current `nesting=:wl` producer uses preserved adjacent kernels.
+- Added `HP-RETIRE-QW-DONOR-FN-01` and `HP-RETIRE-QW-DONOR-TEST-01` with
+  retirement-only authority for the four `6,008`-line files, their
+  `GaussletBases.jl` includes/exports/generics, and bounded existing validation
+  files. No compatibility stubs, aliases, moved implementations, or new tests
+  are authorized.
+- Compressed the active receipt and high-order plans into historical evidence.
+  The doside/tensor-shell, FSB/FBU, He controls, distorted-parent uncertainty,
+  Cr capture, and migrated endcap/panel lessons remain recorded. Atomic chains
+  remain a future scientific target requiring a new design.
+
+Validation / evidence:
+- Focused committed-caller and preserved-owner scans, authority render/check
+  and self-test, generated registry/AGENTS parity, local Documenter,
+  manager-log bound, docs-only staged scope, and `git diff --check` form the
+  gate. No source or test file changes in this pass.
+
+Goal advancement / guardrail:
+- MT6 now has a deletion-ready, fail-closed boundary for approximately `6,000`
+  obsolete source lines. Pass 409 must delete the complete cluster together,
+  preserve chain/square basis constructors and current WL behavior, inspect
+  WL terminal due diligence, and stop if any live caller appears.

@@ -70,6 +70,9 @@ sha256 = "0973af1403fd62b4501d315e0bc13da7b0bdf98c6b5247afd966f6371700cfa9"
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/public_ns_core_side_parity.md"
 sha256 = "142b1126ee3026b86298881855be33cc49b039b9f2b5eabca7feb2cdf5d37b3a"
 [[documents]]
+path = "docs/src/developer/designs/cartesian_hamiltonian_producer/qw_high_order_experimental_retirement.md"
+sha256 = "e09d9723e9071c095240003b549674958bf85861e32b6f77e2e868056d45054d"
+[[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_one_center_base_atoms.md"
 sha256 = "71c6e8b9dd6766fd1b8a84ebfe53a9ec85dbe28c8fa5ab012f228558f0f93469"
 [[documents]]
@@ -3460,6 +3463,64 @@ title = "ladder runner deletion validation"
     heading = "Route-Driver Materialization Workflow Retirement"
     kind = "evidence"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/route_driver_materialization_retirement.md"
+[[records]]
+dependency_ids = []
+evidence_refs = []
+grant = "retirement"
+id = "HP-RETIRE-QW-DONOR-FN-01"
+lifecycle = "approved"
+scope = "Delete the obsolete four-file QW/high-order experimental cluster and its GaussletBases includes, exports, generics, and carried-space submodule surface without compatibility glue."
+surfaces = ["source"]
+title = "retire obsolete QW and high-order experimental source cluster"
+
+    [[records.document_refs]]
+    heading = "QW And High-Order Experimental Cluster Retirement"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/qw_high_order_experimental_retirement.md"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_qw_operator_carried_spaces.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_qw_experimental_paths.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_high_order_doside_experimental.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_high_order_doside_ida_experimental.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-RETIRE-QW-DONOR-FN-01"]
+evidence_refs = []
+grant = "retirement"
+id = "HP-RETIRE-QW-DONOR-TEST-01"
+lifecycle = "approved"
+scope = "Remove only stale cluster expectations if encountered and validate surviving chain/square constructors plus the current WL producer; add no replacement tests."
+surfaces = ["tests"]
+title = "validate obsolete QW and high-order cluster retirement"
+
+    [[records.document_refs]]
+    heading = "QW And High-Order Experimental Cluster Retirement"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/qw_high_order_experimental_retirement.md"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/core/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 evidence_refs = []

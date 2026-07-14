@@ -1,158 +1,44 @@
-# Cartesian QW Receipt Wrapper Status
+# Historical Cartesian QW Receipt Wrapper Status
 
-## Purpose
+Status: historical evidence. The receipt implementation in
+`src/cartesian_qw_operator_carried_spaces.jl` is approved for deletion under
+`HP-RETIRE-QW-DONOR-*` and grants no current source authority.
 
-Record the current internal status of the Cartesian QW construction receipt
-line.
+## What The Wrapper Was
 
-The receipt layer is now coherent enough to be treated as the internal unified
-wrapper for the route families it explicitly covers. It is still not a new
-Hamiltonian implementation.
+The receipt line wrapped existing QW builders without owning Hamiltonian
+kernels. It normalized a carried space, recorded route/backend/storage facts,
+delegated to `ordinary_cartesian_qiu_white_operators(...)`, and returned an
+audit record around the unchanged operator payload.
 
-## Bottom line
+Its main public/internal objects were:
 
-`cartesian_qw_operator_construction_receipt(...)` is a safe outer wrapper
-around existing QW builders.
+- `CartesianOperatorBuildSource3D`;
+- `CartesianQWOperatorConstructionRecord3D`;
+- `CartesianQWOperatorConstructionReceipt3D`;
+- carried-space sidecars and diagnostics.
 
-For covered routes it does exactly this:
+The only committed consumer was the experimental chain/square implementation
+in `ordinary_qw_experimental_paths.jl`. Current PQS/WL producer composition,
+artifacts, and consumers do not use the receipt layer.
 
-1. builds a `CartesianOperatorBuildSource3D`
-2. calls the existing matching `ordinary_cartesian_qiu_white_operators(...)`
-   builder
-3. derives a `CartesianQWOperatorConstructionRecord3D`
-4. returns a `CartesianQWOperatorConstructionReceipt3D`
+## Retirement Interpretation
 
-The existing builder remains the authority for all numerical Hamiltonian
-construction.
+The wrapper proved that pre-build request facts could be compared with an
+existing QW operator payload, but its 24-name submodule surface never became a
+needed producer or consumer contract. Keeping it solely because it was exported
+would preserve an untested experimental API with no caller.
 
-## Covered route families
+Delete the receipt module together with its sole consumer. Do not create
+stubs, deprecation wrappers, aliases, or a smaller compatibility receipt.
 
-The source of truth in code is
-`cartesian_qw_operator_receipt_coverage()` in
-`src/cartesian_qw_operator_carried_spaces.jl`.
+This decision does not delete or prejudge:
 
-As of this note, the receipt layer covers:
+- `cartesian_qw_hybrid_representation.jl`;
+- `cartesian_carried_spaces.jl`, which requires a separate caller/API audit;
+- active QW builders and residual/raw/operator kernels;
+- chain/square basis types and geometry diagnostics.
 
-- bond-aligned direct-product routes without a Gaussian supplement
-- bond-aligned nested fixed-block routes without a Gaussian supplement
-- one-center atomic direct-product routes with `LegacyAtomicGaussianSupplement`
-- one-center atomic nested fixed-block routes with
-  `LegacyAtomicGaussianSupplement`
-- bond-aligned diatomic direct-product routes with molecular legacy Gaussian
-  supplements, including homonuclear and heteronuclear supplement objects
-- bond-aligned diatomic nested fixed-block routes with molecular legacy
-  Gaussian supplements, including homonuclear and heteronuclear supplement
-  objects
-
-These are receipt-covered because the repo already has matching authoritative
-builders for them. The receipt layer only delegates and audits.
-
-## Intentionally uncovered route families
-
-The receipt layer deliberately does not accept:
-
-- alias/frontend function objects such as `ordinary_cartesian_product_operators`
-  or `nested_cartesian_operators`
-- already-built `OrdinaryCartesianOperators3D` payloads
-- non-diatomic molecular supplement inputs, such as chain or square routes with
-  molecular legacy Gaussian supplements
-- mapped one-center atomic routes without a Gaussian supplement
-
-Alias/front-door APIs remain direct-builder-only for now. If a caller wants a
-receipt, it should call the receipt helper with the underlying canonical basis,
-fixed block, and optional supplement inputs.
-
-Already-built operator payloads should use the post-build audit helpers:
-
-- `cartesian_qw_operator_construction_record(...)`
-- `cartesian_qw_operator_carried_space_sidecar(...)`
-
-Uncovered scientific route families should stay uncovered until a matching
-authoritative builder exists and the route is deliberately added to the
-receipt coverage table.
-
-## Consumer adoption map
-
-Receipt coverage is broader than receipt adoption. A route family can be
-receipt-covered without every internal caller needing to use the wrapper.
-
-The first internal consumer migration is the experimental nested source-backed
-chain/square QW path in `src/ordinary_qw_experimental_paths.jl`. It now uses the
-receipt wrapper as a construction guard for the nested fixed-block build, then
-returns the same operator payload as before. This is the model for safe
-consumer adoption: unchanged return shape, exact equality with the direct
-builder, and clean receipt diagnostics.
-
-The following paths should stay direct-builder-only:
-
-- the authoritative `ordinary_cartesian_qiu_white_operators(...)` builder
-  overloads and their internal forwarding methods
-- public alias/front-door wrappers such as `ordinary_cartesian_product_operators`
-  and `nested_cartesian_operators`
-- tests, scratch scripts, and benchmark artifacts whose purpose is direct
-  builder validation or route-specific diagnosis
-- already-built operator audit paths, which should use construction records or
-  carried-space sidecars instead of pre-build receipts
-
-After the chain/square consumer migration, there is no remaining general
-low-risk internal consumer that should be migrated automatically. The next
-plausible candidate is the high-order Cr count-7 smoke QW diagnostic, because
-receipt provenance could help audit backend and carried-space agreement there.
-That path is high-order/CR2-adjacent and must not be migrated opportunistically:
-it needs explicit manager scope and focused validation before receipt adoption.
-
-## Why this is safe
-
-The receipt layer does not:
-
-- implement Hamiltonian kernels
-- choose a new backend
-- alter geometry policy
-- build metric packets
-- materialize dense parent matrices
-- change residual or supplement semantics
-- change numerical-reference fallback behavior
-
-Tests assert that receipt-built operators match direct-builder operators for
-representative covered routes. Receipt diagnostics also record that the wrapper
-delegated to an existing builder and did not use a new Hamiltonian kernel.
-
-## PGDG and numerical-reference boundary
-
-PGDG analytic routing remains the production contract where a route supports
-it. Numerical quadrature remains an explicit `:numerical_reference` or
-diagnostic route, not something the receipt wrapper silently selects.
-
-The receipt layer preserves whatever backend semantics the existing builder
-already enforces. It does not widen or reinterpret backend support.
-
-## Relation to Cartesian/Hamiltonian unification
-
-The receipt line is the current bridge between the normalized Cartesian build
-metadata and the existing Hamiltonian builders.
-
-It proves that a single internal shape can:
-
-- record a request before construction
-- run the current route-specific builder
-- audit the produced operator payload against the request
-
-This is the appropriate seam for later consumer migration or a future facade.
-That later work should still call proven builders until a generic Hamiltonian
-builder exists and is validated.
-
-## Next engineering step
-
-The next step is not to add more science routes opportunistically.
-
-The useful next step is selective consumer migration: use receipt wrappers in
-internal callers that benefit from source/record/provenance diagnostics, while
-continuing to treat existing builders as authoritative.
-
-New route coverage should be added only when:
-
-- the underlying direct builder already exists
-- the route has a clear coverage-table entry
-- receipt output is tested for exact numerical equality against the direct
-  builder
-- unsupported aliases or ambiguous inputs still fail clearly
+See
+[QW and high-order experimental cluster retirement](designs/cartesian_hamiltonian_producer/qw_high_order_experimental_retirement.md)
+for the complete deletion and validation contract.

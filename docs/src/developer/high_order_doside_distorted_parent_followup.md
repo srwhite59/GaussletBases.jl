@@ -2,7 +2,9 @@
 
 Date: 2026-04-25
 
-Status: active experimental follow-up note, not a production merge plan
+Status: historical evidence for the retired QW/high-order experimental cluster.
+The distorted-parent benefit remained unresolved; future atomic-chain work
+requires a new design.
 
 ## Purpose
 

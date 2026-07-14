@@ -491,18 +491,21 @@ Key docs:
 - `docs/src/developer/high_order_doside_experimental_plan.md`
 - `docs/src/developer/high_order_doside_physical_block_speed_plan.md`
 
-Source anchors:
+Source anchors after the approved retirement:
 - **active donor pattern**: `src/cartesian_nested_owned_units.jl`,
   `_nested_endcap_panel_owned_units`,
   `_nested_endcap_panel_shell_layer`
-- **oracle/reference only**: `src/cartesian_high_order_doside_experimental.jl`
-- **oracle/reference only**:
-  `src/cartesian_high_order_doside_ida_experimental.jl`
 - **active donor pattern**: `src/cartesian_nested_faces.jl`, `_nested_doside_1d`
+- **retirement pending**: `src/cartesian_high_order_doside_experimental.jl`,
+  `src/cartesian_high_order_doside_ida_experimental.jl`,
+  `src/ordinary_qw_experimental_paths.jl`, and
+  `src/cartesian_qw_operator_carried_spaces.jl`; see
+  `qw_high_order_experimental_retirement.md`
 
 Do-not-forget rule:
-Treat high-order doside/endcap/panel code as opt-in, experimental, or donor
-material unless a current design explicitly promotes it.
+Do not use the retiring cluster for new work. Preserve the active adjacent
+endcap/panel geometry helpers and treat any future atomic-chain implementation
+as a new design.
 
 ## Migration And Oracle Paths
 

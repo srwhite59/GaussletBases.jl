@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `9e36c82d198dfbfcdbcf9dae01003ae1279fc7470a48202a49dfebbf74a6b5d3`.
+> [authority.toml](authority.toml), SHA-256 `899d53f64461890013e004921b08665fbc7725b5ecf71b0b27a46773bee4372c`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2237,6 +2237,39 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** ladder runner deletion validation.
+
+### HP-RETIRE-QW-DONOR-FN-01 - retire obsolete QW and high-order experimental source cluster
+
+- **Lifecycle:** `approved`
+- **Grant:** `retirement`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [qw\_high\_order\_experimental\_retirement.md](qw_high_order_experimental_retirement.md); heading `QW And High-Order Experimental Cluster Retirement`
+- **Owned paths:**
+  - `source` / `existing`: `src/GaussletBases.jl`
+  - `source` / `existing`: `src/cartesian_qw_operator_carried_spaces.jl`
+  - `source` / `existing`: `src/ordinary_qw_experimental_paths.jl`
+  - `source` / `existing`: `src/cartesian_high_order_doside_experimental.jl`
+  - `source` / `existing`: `src/cartesian_high_order_doside_ida_experimental.jl`
+- **Evidence:** none
+- **Dependencies:** none
+- **Scope:** Delete the obsolete four-file QW/high-order experimental cluster and its GaussletBases includes, exports, generics, and carried-space submodule surface without compatibility glue.
+
+### HP-RETIRE-QW-DONOR-TEST-01 - validate obsolete QW and high-order cluster retirement
+
+- **Lifecycle:** `approved`
+- **Grant:** `retirement`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [qw\_high\_order\_experimental\_retirement.md](qw_high_order_experimental_retirement.md); heading `QW And High-Order Experimental Cluster Retirement`
+- **Owned paths:**
+  - `test` / `existing`: `test/core/runtests.jl`
+  - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
+- **Evidence:** none
+- **Dependencies:** `HP-RETIRE-QW-DONOR-FN-01`
+- **Scope:** Remove only stale cluster expectations if encountered and validate surviving chain/square constructors plus the current WL producer; add no replacement tests.
 
 ### HP-RG-CUTOFF-FN-01 - residual occupation cutoff and identity tolerance defaults
 

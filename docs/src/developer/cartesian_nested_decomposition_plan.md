@@ -1,5 +1,9 @@
 # Cartesian Nested Decomposition Plan
 
+Status: historical decomposition plan. References to the experimental
+chain/square implementation describe retired source history, not current
+authority; preserved chain/square basis types remain live elsewhere.
+
 ## Purpose
 
 This note records the first structural decomposition plan for the two largest

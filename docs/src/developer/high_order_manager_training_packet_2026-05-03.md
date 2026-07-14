@@ -2,15 +2,15 @@
 
 Date: 2026-05-03
 
-Status: active training and takeover-readiness note for the experimental
-high-order nesting lane
+Status: historical training record for the retired QW/high-order experimental
+cluster. It grants no current source authority.
 
-This note is for a new specialized `high-order-manager` who will take over
+This note originally prepared a specialized `high-order-manager` to take over
 technical direction of the experimental high-order nesting lane.
 
-It is not a generic repo handoff. Its purpose is to transfer the mathematical
-and algorithmic understanding needed to steer this lane without conceptual
-drift.
+It is retained as mathematical and algorithmic evidence, not as a current
+handoff or implementation plan. Any future atomic-chain lane requires a new
+design rather than restoration of the retired source cluster.
 
 This note should be read together with:
 

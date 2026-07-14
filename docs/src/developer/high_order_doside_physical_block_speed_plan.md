@@ -1,8 +1,9 @@
 # High-Order Doside Physical-Block Speed Plan
 
-Date: 2026-05-01
+Status: historical performance plan for the retired QW/high-order experimental
+cluster. It grants no current source authority.
 
-Status: active experimental design note, not a production merge plan
+Date: 2026-05-01
 
 ## Purpose
 
