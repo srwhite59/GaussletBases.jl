@@ -1349,3 +1349,12 @@ Goal advancement / guardrail:
   ordinary-QW, WL, and PQS ownership remains unchanged. The next carrying-cost
   decision is the separate ordinary-QW endpoint/correction capability audit;
   it must begin from live shared-kernel callers rather than file-level labels.
+
+## Cartesian Hamiltonian Producer Pass 412 - Remove Dead QW Midpoint Blocks
+
+No strategic change. Deleted the caller-free midpoint cross-block route and
+its four now-orphaned sampling/support helpers from
+`ordinary_qw_raw_blocks.jl`, reducing source by `132` lines while preserving
+all live `_qwrg_*` kernels and current PQS/WL callers. Package load, the core
+group (`432/432`), deleted-symbol scans, and `git diff --check` passed; MT6 now
+returns to the separate public endpoint and correction-capability decisions.
