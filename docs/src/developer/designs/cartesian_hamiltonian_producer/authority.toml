@@ -71,7 +71,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/public_ns_core
 sha256 = "142b1126ee3026b86298881855be33cc49b039b9f2b5eabca7feb2cdf5d37b3a"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/qw_high_order_experimental_retirement.md"
-sha256 = "80f515efd0b9a5f593390bfb1eabd8170dc02eaf1c80f2be10a141553f78aa74"
+sha256 = "242ea0057fc0769635be67a8571714789d53eaff144c08db942fa1812b8b6c1c"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_one_center_base_atoms.md"
 sha256 = "71c6e8b9dd6766fd1b8a84ebfe53a9ec85dbe28c8fa5ab012f228558f0f93469"
@@ -3343,6 +3343,48 @@ title = "terminal basis build result — rejected"
     heading = "Terminal Basis And Base Assembly"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
+[[records]]
+dependency_ids = []
+evidence_refs = []
+grant = "retirement"
+id = "HP-RETIRE-CARRIED-SPACE-FN-01"
+lifecycle = "approved"
+scope = "Delete the orphaned internal CartesianCarriedSpaces adapter and its sole GaussletBases include without aliases, stubs, deprecations, or replacement machinery."
+surfaces = ["source"]
+title = "retire orphaned Cartesian carried-space adapter"
+
+    [[records.document_refs]]
+    heading = "Cartesian Carried-Space Adapter Retirement"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/qw_high_order_experimental_retirement.md"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_carried_spaces.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-RETIRE-CARRIED-SPACE-FN-01"]
+evidence_refs = []
+grant = "retirement"
+id = "HP-RETIRE-CARRIED-SPACE-TEST-01"
+lifecycle = "approved"
+scope = "Use the unchanged core geometry gate plus package-load and deleted-symbol scans to validate adapter retirement; add no replacement tests."
+surfaces = ["tests"]
+title = "validate Cartesian carried-space adapter retirement"
+
+    [[records.document_refs]]
+    heading = "Cartesian Carried-Space Adapter Retirement"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/qw_high_order_experimental_retirement.md"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/core/runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 evidence_refs = []

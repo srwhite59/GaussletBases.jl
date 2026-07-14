@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `37c25e9201932c1a1ed37f4808f64c307f32f237b9da1652474859094e223a56`.
+> [authority.toml](authority.toml), SHA-256 `11a0f2c01ea6d3960bc0c289632325529ffad9633fbe94582bcfada48c3c705d`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2133,6 +2133,35 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** terminal basis build result — rejected.
+
+### HP-RETIRE-CARRIED-SPACE-FN-01 - retire orphaned Cartesian carried-space adapter
+
+- **Lifecycle:** `approved`
+- **Grant:** `retirement`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [qw\_high\_order\_experimental\_retirement.md](qw_high_order_experimental_retirement.md); heading `Cartesian Carried-Space Adapter Retirement`
+- **Owned paths:**
+  - `source` / `existing`: `src/cartesian_carried_spaces.jl`
+  - `source` / `existing`: `src/GaussletBases.jl`
+- **Evidence:** none
+- **Dependencies:** none
+- **Scope:** Delete the orphaned internal CartesianCarriedSpaces adapter and its sole GaussletBases include without aliases, stubs, deprecations, or replacement machinery.
+
+### HP-RETIRE-CARRIED-SPACE-TEST-01 - validate Cartesian carried-space adapter retirement
+
+- **Lifecycle:** `approved`
+- **Grant:** `retirement`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [qw\_high\_order\_experimental\_retirement.md](qw_high_order_experimental_retirement.md); heading `Cartesian Carried-Space Adapter Retirement`
+- **Owned paths:**
+  - `test` / `existing`: `test/core/runtests.jl`
+- **Evidence:** none
+- **Dependencies:** `HP-RETIRE-CARRIED-SPACE-FN-01`
+- **Scope:** Use the unchanged core geometry gate plus package-load and deleted-symbol scans to validate adapter retirement; add no replacement tests.
 
 ### HP-RETIRE-CCS-RHF-FN-01 - remove stale RHF payload stack
 

@@ -6,9 +6,13 @@ This page owns the retirement contract for:
 
 - `HP-RETIRE-QW-DONOR-FN-01`
 - `HP-RETIRE-QW-DONOR-TEST-01`
+- `HP-RETIRE-CARRIED-SPACE-FN-01`
+- `HP-RETIRE-CARRIED-SPACE-TEST-01`
 
 Status: source retirement completed and validated in Pass 409. The function ID
 is retired, and the validation ID is completed; neither grants further work.
+Retirement of the now-orphaned `CartesianCarriedSpaces` adapter is approved;
+its deletion and validation remain a separate implementation pass.
 
 This authority removes an unsuccessful experimental implementation. It does
 not abandon homonuclear linear atomic chains as a future scientific target and
@@ -70,12 +74,55 @@ The retirement must not delete or reinterpret:
   `src/cartesian_nested_diatomic.jl`;
 - `src/ordinary_qw_residuals.jl`, `src/ordinary_qw_raw_blocks.jl`, and
   `src/ordinary_qw_operator_assembly.jl`;
-- `src/cartesian_qw_hybrid_representation.jl`;
-- `src/cartesian_carried_spaces.jl`, whose API and callers require a separate
-  audit.
+- `src/cartesian_qw_hybrid_representation.jl`.
 
 The current WL, PQS, shellification, residual-GTO, MWG, Hamiltonian, artifact,
 and driver behavior must remain unchanged.
+
+## Cartesian Carried-Space Adapter Retirement
+
+At baseline `839395f63`, `src/cartesian_carried_spaces.jl` is a `266`-line
+internal adapter with one root include and no committed source or test caller.
+Its sole production consumer was removed with the four-file cluster in Pass
+409.
+
+The historical chain is explicit:
+
+- `e0ca22c2d` introduced the adapter;
+- `231331ff8` introduced its only production consumer;
+- `bc425ce67` removed its standalone committed tests;
+- Pass 409 retired the sole consumer;
+- the only remaining caller is a stale ignored Dropbox conflicted test copy,
+  which is not a compatibility obligation.
+
+The follow-on source pass must:
+
+1. delete `src/cartesian_carried_spaces.jl` in full;
+2. remove only `include("cartesian_carried_spaces.jl")` from
+   `src/GaussletBases.jl`;
+3. retire `CartesianCarriedSpace3D`, `cartesian_carried_space`, and the five
+   `carried_space_*` accessors;
+4. add no aliases, stubs, deprecations, compatibility module, replacement
+   adapter, or tests.
+
+Qualified external access does not create a compatibility obligation. The
+submodule was internal, unadvertised, untested, and never root-exported.
+
+Preserve these current owners unchanged:
+
+- `src/cartesian_basis_representation.jl`;
+- `src/cartesian_cross_overlap.jl`;
+- `src/cartesian_representation_transfer.jl`;
+- `src/CartesianParentGaussletBases.jl`;
+- `src/CartesianContractedParents.jl`;
+- `src/cartesian_qw_hybrid_representation.jl`;
+- chain/square basis types and geometry;
+- current WL/PQS construction.
+
+Validation is package load, deleted-symbol/include scans, the unchanged core
+gate for surviving geometry, and `git diff --check`. The expected source
+deletion is exactly `267` lines. No new test is justified for an adapter being
+removed.
 
 ## Historical Scientific Evidence
 
@@ -117,7 +164,6 @@ This retirement does not authorize:
 
 - redesigning atomic chains or square lattices;
 - changing active high-order adjacent geometry helpers;
-- deciding the fate of `cartesian_carried_spaces.jl`;
 - modifying WL/PQS numerical behavior, source modes, shellification, residuals,
   MWG, IDA, artifacts, drivers, or solvers;
 - touching `src/hamiltonian_corrections.jl` or successor handoffs.

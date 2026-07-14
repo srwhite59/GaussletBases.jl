@@ -43,7 +43,7 @@ claim.
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |
-| `HP-RETIRE-QW-DONOR-*` | Retirement approved, deletion pending | Remove the four-file obsolete QW/high-order experimental cluster without stubs; preserve current WL and adjacent geometry kernels |
+| `HP-RETIRE-CARRIED-SPACE-*` | Retirement approved, deletion pending | Pass 409 removed the QW/high-order cluster; now delete its orphaned 266-line internal carried-space adapter and sole include without replacement |
 | Existing execution IDs | Post-cutover conformance remediation | Reconcile the bounded discrepancies recorded in the [2026-07-12 execution audit](reviews/execution_conformance_audit_2026-07-12.md), beginning with fail-fast correctness and misleading completed-test claims |
 
 Other approved IDs may remain actionable even when not listed here. Read the

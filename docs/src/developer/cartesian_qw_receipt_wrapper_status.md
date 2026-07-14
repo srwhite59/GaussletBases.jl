@@ -32,12 +32,15 @@ would preserve an untested experimental API with no caller.
 Delete the receipt module together with its sole consumer. Do not create
 stubs, deprecation wrappers, aliases, or a smaller compatibility receipt.
 
-This decision does not delete or prejudge:
+This decision preserves:
 
 - `cartesian_qw_hybrid_representation.jl`;
-- `cartesian_carried_spaces.jl`, which requires a separate caller/API audit;
 - active QW builders and residual/raw/operator kernels;
 - chain/square basis types and geometry diagnostics.
+
+The separate caller/API audit of `cartesian_carried_spaces.jl` is complete.
+Its sole production consumer was retired in Pass 409, and its deletion is now
+approved under `HP-RETIRE-CARRIED-SPACE-*`; no replacement adapter is planned.
 
 See
 [QW and high-order experimental cluster retirement](designs/cartesian_hamiltonian_producer/qw_high_order_experimental_retirement.md)

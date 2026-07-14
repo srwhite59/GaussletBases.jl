@@ -1270,3 +1270,50 @@ Goal advancement / guardrail:
   target, not a preserved experimental API. Active WL, adjacent geometry,
   ordinary-QW kernels, and `cartesian_carried_spaces.jl` remain separately
   owned; the empty WL due-diligence row table is still a reporting gap.
+
+## Cartesian Hamiltonian Producer Pass 410 - Authorize Carried-Space Adapter Retirement
+
+Commit(s):
+- `839395f63` - completed the Pass 409 QW/high-order cluster retirement.
+- this commit - approve deletion of the orphaned internal carried-space
+  adapter and its sole root include.
+
+Summary:
+- Caller and history review found that `src/cartesian_carried_spaces.jl` has no
+  committed source or test consumer. It was introduced by `e0ca22c2d`, gained
+  its sole production consumer in `231331ff8`, lost standalone tests in
+  `bc425ce67`, and became orphaned when Pass 409 removed that consumer. The only
+  remaining caller is an ignored stale Dropbox conflicted test copy.
+- Added `HP-RETIRE-CARRIED-SPACE-FN-01` and
+  `HP-RETIRE-CARRIED-SPACE-TEST-01`. The follow-on pass must delete the complete
+  `266`-line adapter and one include, add no compatibility surface or tests,
+  and preserve current representation, overlap, transfer, parent, hybrid,
+  chain/square, and WL/PQS owners.
+
+Validation / evidence:
+- Focused caller/history/path scans, authority render/check and self-test,
+  generated registry/AGENTS parity, docs tests, local Documenter, manager-log
+  bound, docs-only staged review, and `git diff --check` form this pass's gate.
+  No source or test file changes are authorized here.
+
+Goal advancement / guardrail:
+- MT6 remains active for one final `267`-line deletion. Qualified access to the
+  internal unadvertised submodule is not a compatibility obligation. Current
+  physics, WL/PQS behavior, ordinary-QW capability review, and EGOI work are
+  unaffected.
+
+### Medium-Term Goal Checkpoint After Pass 410
+
+- **MT1 conformance remediation - active.** This retirement does not alter
+  correctness findings, warning contracts, or endpoint interpretation.
+- **MT2 controlled Cr2 measurement - active.** Current Hamiltonians, imported
+  states, screening convention, and physics targets are unchanged.
+- **MT3 pending producer facilities - active.** Standard60, canonical-driver
+  Coulomb exposure, and retained-GTO EGOI remain independent lanes.
+- **MT4 residual/protected evidence - active.** No residual, injection,
+  protected-basis, or interaction policy changes.
+- **MT5 documentation/authority maintenance - maintenance.** The amendment is
+  bounded to exact retirement authority and generated views.
+- **MT6 carrying-cost control - active.** Pass 409 is complete; delete the
+  final orphaned adapter next, then close this retirement sublane. Ordinary-QW
+  capability review remains separate and must begin from surviving callers.
