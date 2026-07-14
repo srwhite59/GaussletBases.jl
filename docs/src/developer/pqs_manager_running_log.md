@@ -80,7 +80,11 @@ contract or source findings rather than beginning another migration campaign.
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
 metadata, and development-era tests as conformance work identifies them. New
 scaffolding must advance a live physics or module contract and account for what
-it replaces.
+it replaces. Keep the ordinary-QW endpoint/correction audit as a deferred
+retirement map rather than an immediate deletion program. Current capability
+work should determine whether its unmatched correction, branch/fragment,
+counterpoise, chain/square, and oracle concepts are reusable, superseded, or
+obsolete.
 
 ## Manager Guardrails
 
@@ -1358,3 +1362,18 @@ its four now-orphaned sampling/support helpers from
 all live `_qwrg_*` kernels and current PQS/WL callers. Package load, the core
 group (`432/432`), deleted-symbol scans, and `git diff --check` passed; MT6 now
 returns to the separate public endpoint and correction-capability decisions.
+
+### Strategic Direction After Pass 412 - Defer Broader Ordinary-QW Retirement
+
+The ordinary-QW capability audit is retained as an ownership and carrying-cost
+map, not as an instruction to begin broad deletion. Near-term work should
+enhance the capabilities wanted in the current PQS/WL line. That evidence will
+show which old correction, hydrogenic-core/ESOI, branch/fragment,
+counterpoise, chain/square, residual-oracle, and public-endpoint ideas should be
+reused, independently reimplemented, historically preserved, or retired.
+
+Do not keep old code merely because a concept may matter later, but do not
+force a replacement or retirement decision before current physics work makes
+the ownership clear. The completed dead midpoint cleanup stands; shared
+`_qwrg_*` kernels remain protected, and no broader ordinary-QW source or API
+retirement should start without a new user-directed decision.
