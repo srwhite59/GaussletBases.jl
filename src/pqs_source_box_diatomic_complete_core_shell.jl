@@ -124,8 +124,6 @@ function _pqs_source_box_route_driver_terminal_topology_support_region_plan(
         return blocked(:missing_terminal_lowering_contract_inventory)
     supported_lowering_kinds = (
         :direct_core_identity_cpb,
-        :direct_slab_identity_cpb,
-        :direct_boundary_slab_identity_cpb,
         :compact_thin_slab_product_cpb,
         :pqs_filled_source_cpb,
         :distorted_product_box_comx,
@@ -221,11 +219,7 @@ function _pqs_source_box_route_driver_terminal_retained_rule_record(
         realization_status = :blocked_terminal_retained_rule,
         blocker,
     )
-    if kind in (
-        :direct_core_identity_cpb,
-        :direct_slab_identity_cpb,
-        :direct_boundary_slab_identity_cpb,
-    )
+    if kind === :direct_core_identity_cpb
         return (;
             order_index,
             support_record,

@@ -79,7 +79,7 @@ function _white_lindsey_complete_shell_contract(region)
         lowering_kind = :white_lindsey_boundary_strata,
         source_cpbs = strata.all_strata,
         retained_rule = :white_lindsey_boundary_stratum_product,
-        realization_rule = :direct_or_trivial_embedding,
+        realization_rule = :white_lindsey_boundary_stratum_product,
         final_unit_granularity = :boundary_stratum_children,
         metadata = (;
             facet_count = length(strata.facets),

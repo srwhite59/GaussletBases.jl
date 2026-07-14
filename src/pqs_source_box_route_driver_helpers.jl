@@ -1370,53 +1370,6 @@ function _pqs_source_box_route_driver_terminal_lowering_plan(
         parent, shellification_plan, plan, normalized_overrides)
 end
 
-function _pqs_source_box_route_driver_terminal_lowering_kind_counts(contracts)
-    return (;
-        direct_core_identity_cpb_count =
-            count(
-                contract ->
-                    CartesianTerminalLowering.lowering_kind(contract) ==
-                    :direct_core_identity_cpb,
-                contracts,
-            ),
-        direct_slab_identity_cpb_count =
-            count(
-                contract ->
-                    CartesianTerminalLowering.lowering_kind(contract) ==
-                    :direct_slab_identity_cpb,
-                contracts,
-            ),
-        direct_boundary_slab_identity_cpb_count =
-            count(
-                contract ->
-                    CartesianTerminalLowering.lowering_kind(contract) ==
-                    :direct_boundary_slab_identity_cpb,
-                contracts,
-            ),
-        white_lindsey_boundary_strata_count =
-            count(
-                contract ->
-                    CartesianTerminalLowering.lowering_kind(contract) ==
-                    :white_lindsey_boundary_strata,
-                contracts,
-            ),
-        pqs_filled_source_cpb_count =
-            count(
-                contract ->
-                    CartesianTerminalLowering.lowering_kind(contract) ==
-                    :pqs_filled_source_cpb,
-                contracts,
-            ),
-        distorted_product_box_comx_count =
-            count(
-                contract ->
-                    CartesianTerminalLowering.lowering_kind(contract) ==
-                    :distorted_product_box_comx,
-                contracts,
-            ),
-    )
-end
-
 function _pqs_source_box_route_driver_terminal_lowering_metadata(
     contract,
     field::Symbol,
@@ -1456,11 +1409,7 @@ function _pqs_source_box_route_driver_terminal_lowering_source_cpb_plan_kind(
     contract,
 )
     kind = CartesianTerminalLowering.lowering_kind(contract)
-    kind in (
-        :direct_core_identity_cpb,
-        :direct_slab_identity_cpb,
-        :direct_boundary_slab_identity_cpb,
-    ) && return :direct_coordinate_product_source
+    kind === :direct_core_identity_cpb && return :direct_coordinate_product_source
     kind == :white_lindsey_boundary_strata &&
         return :complete_shell_boundary_strata
     kind == :pqs_filled_source_cpb && return :filled_source_cpb

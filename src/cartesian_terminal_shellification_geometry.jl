@@ -407,19 +407,6 @@ function _cartesian_terminal_region_lowering_contract_kind_counts(contracts)
                     contract.lowering_contract_kind == :direct_core_identity_cpb,
                 contracts,
             ),
-        direct_slab_identity_cpb_count =
-            count(
-                contract ->
-                    contract.lowering_contract_kind == :direct_slab_identity_cpb,
-                contracts,
-            ),
-        direct_boundary_slab_identity_cpb_count =
-            count(
-                contract ->
-                    contract.lowering_contract_kind ==
-                    :direct_boundary_slab_identity_cpb,
-                contracts,
-            ),
         compact_thin_slab_product_cpb_count =
             count(
                 contract ->

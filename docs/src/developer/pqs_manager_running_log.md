@@ -1165,3 +1165,36 @@ Goal advancement / guardrail:
   removes one duplicate formatter and adds no compatibility representation.
   Future COMX nuclear-resolution diagnostics, warning vocabulary, and all
   basis or screening policy remain separate authority questions.
+
+## Cartesian Hamiltonian Producer Pass 407 - Reconcile Compact WL And Thin-Slab Semantics
+
+Commit(s):
+- this commit - remove stale identity metadata from compact White-Lindsey and
+  thin-slab records.
+
+Summary:
+- White-Lindsey boundary contracts, retained units, and transform contracts
+  now consistently use the existing
+  `:white_lindsey_boundary_stratum_product` vocabulary. Identity embedding is
+  reserved for true direct/core units. Obsolete direct-identity slab kinds,
+  compatibility branches, and counters were removed, together with one
+  caller-free lowering-count helper.
+- This is a semantic and carrying-cost correction, not a basis change. The
+  active terminal realizer already built compact products; the repaired
+  records now tell the same story as its coefficients.
+
+Validation / evidence:
+- The doer public base gate passed `134/134`. Manager reran the source-backed
+  H2/WL parity check: dimension `471`, one direct block, `52` WL boundary
+  blocks, two compact slabs, exact pre/post `H1` and `Vee`, identical ordered
+  supports and column ranges, and maximum compact Gram error `4.77e-15`.
+  Bounds were `x/y = +/-4.87075`, `z = +/-6.77742` on axes `9x9x15`; native
+  inventory confirmed the direct core, two shells, and two angular-extension
+  slabs. Focused stale-symbol scans and `git diff --check` passed.
+
+Goal advancement / guardrail:
+- MT1 closes the WL/thin-slab stale-path discrepancy and MT6 gains `+5/-75`
+  source lines, net `-70`, without compatibility glue. WL row-level
+  due-diligence remains empty even though native terminal inventory is
+  complete; treat that as a separate reporting gap, not permission to reopen
+  realization, shellification, or numerical policy.

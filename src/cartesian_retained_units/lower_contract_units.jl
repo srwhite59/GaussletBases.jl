@@ -117,7 +117,7 @@ function _white_lindsey_boundary_stratum_unit(
             ),
         ),
         retained_rule = :white_lindsey_boundary_stratum_product,
-        realization_rule = :direct_or_trivial_embedding,
+        realization_rule = :white_lindsey_boundary_stratum_product,
         dimension_status = :not_materialized,
         metadata = (;
             parent_contract_key = contract.contract_key,

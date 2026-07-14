@@ -178,7 +178,7 @@ function _retained_unit_transform_paths(unit_kind::Symbol)
     )
     unit_kind === :white_lindsey_boundary_stratum_retained_unit && return (
         :white_lindsey_boundary_stratum_product_contract,
-        :identity_or_trivial_embedding,
+        :white_lindsey_boundary_stratum_product,
         nothing,
     )
     unit_kind === :pqs_shell_retained_unit && return (
