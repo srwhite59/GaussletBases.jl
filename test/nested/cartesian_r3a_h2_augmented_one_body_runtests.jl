@@ -71,6 +71,37 @@ function check_override_geometry_parity(ordinary, refined, role, shell_index)
     return matched
 end
 
+function contraction_gram_error(working, row)
+    C = GaussletBases.CartesianFinalBasisRealization
+    block = only(filter(block -> block.column_range == row.final_column_range,
+        working.terminal_basis.blocks))
+    @test !isnothing(block.coefficients)
+    overlaps = Tuple(GaussletBases._nested_axis_pgdg(
+        working.parent.parent_axis_bundle_object, axis).overlap for axis in (:x, :y, :z))
+    gram = transpose(block.coefficients) * C._support_action(
+        block.support_states, block.support_states, block.coefficients, overlaps)
+    return norm(gram - I, Inf)
+end
+
+function residual_metric_facts(working, locations)
+    C = GaussletBases.CartesianFinalBasisRealization
+    raw = legacy_bond_aligned_diatomic_gaussian_supplement(
+        "H", "cc-pVTZ", locations; lmax = 1, uncontracted = false, max_width = nothing)
+    supplement = basis_representation(raw)
+    basis, parent = working.terminal_basis, working.parent
+    X = C._terminal_residual_mixed_overlap(
+        basis, parent.parent_axis_bundle_object, supplement)
+    S_AA = GaussletBases._cartesian_supplement_cross_overlap(supplement, supplement)
+    residual = C.pqs_terminal_residual_gto_augmentation(
+        basis, parent.parent_axis_bundle_object, supplement, locations)
+    RSR = CRG.residual_gaussian_overlap(
+        residual.T_G, residual.T_A, X, S_AA)
+    return (; retained = residual.residual_dimension,
+        minimum_metric = minimum(residual.residual_occupations),
+        G_R_error = norm(residual.T_G + X * residual.T_A, Inf),
+        R_R_error = norm(RSR - I, Inf))
+end
+
 function due_summary(due)
     return (;
         bounds = due.geometry.parent_physical_bounds,
@@ -382,6 +413,94 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     normalize = GaussletBases._pqs_source_box_route_driver_source_mode_overrides
     ordered = normalize(vcat(atom_override, shared_override), 5)
     @test ordered == normalize(vcat(shared_override, atom_override), 5)
+
+    q7_shared_basis = merge(FACADE_BASIS, (; q = 7))
+    q7_shared = GaussletBases.cartesian_base_working_basis(
+        FACADE_SYSTEM; basis = q7_shared_basis, supplemented = true)
+    q7_shared_working = Dict{Int,Any}()
+    q7_shared_rows = Dict{Int,Int}()
+    q7_shared_base_rows = findall(row -> row.role === :shared_molecular_shell &&
+        row.shell_index == 1, q7_shared.terminal_due_diligence.terminal_rows)
+    @test length(q7_shared_base_rows) == 1
+    q7_shared_base_row = q7_shared.terminal_due_diligence.terminal_rows[
+        only(q7_shared_base_rows)]
+    @test q7_shared_base_row.retained_count == 218
+    for source_q in (6, 5)
+        override = [(; role = :shared_molecular_shell,
+            shell_index = 1, owner = :all, source_q)]
+        working = GaussletBases.cartesian_base_working_basis(
+            FACADE_SYSTEM; basis = q7_shared_basis, supplemented = true,
+            source_mode_overrides = override)
+        matched = check_override_geometry_parity(
+            q7_shared, working, :shared_molecular_shell, 1)
+        @test length(matched) == 1
+        row = working.terminal_due_diligence.terminal_rows[only(matched)]
+        @test row.source_mode_shape[1] == source_q
+        @test row.source_mode_shape[2] == source_q
+        @test row.retained_count == boundary_count(row.source_mode_shape)
+        @test contraction_gram_error(working, row) <= 1.0e-10
+        q7_shared_working[source_q] = working
+        q7_shared_rows[source_q] = row.retained_count
+    end
+    @test q7_shared.terminal_basis.final_dimension -
+        q7_shared_working[6].terminal_basis.final_dimension == 218 - q7_shared_rows[6]
+    @test q7_shared.terminal_basis.final_dimension -
+        q7_shared_working[5].terminal_basis.final_dimension == 218 - q7_shared_rows[5]
+    shared_coarse_ham = GaussletBases.cartesian_base_hamiltonian_assembly(q7_shared_working[5])
+    @test symmetry_error(one_body_hamiltonian(shared_coarse_ham)) <= 1.0e-10
+    @test symmetry_error(shared_coarse_ham.electron_electron_ida) <= 1.0e-10
+    shared_residual = residual_metric_facts(q7_shared_working[5], NUCLEI)
+    @test shared_residual.minimum_metric > 1.0e-6
+    @test shared_residual.G_R_error <= 1.0e-10
+    @test shared_residual.R_R_error <= 1.0e-7
+
+    q7_atom_locations = NTuple{3,Float64}[(0.0, 0.0, -6.0), (0.0, 0.0, 6.0)]
+    q7_atom_system = merge(FACADE_SYSTEM, (; atom_locations = q7_atom_locations))
+    q7_atom_basis = (; q = 7, core_spacing = 0.3,
+        xmax_parallel = 14.0, xmax_transverse = 2.0)
+    q7_atom = GaussletBases.cartesian_base_working_basis(
+        q7_atom_system; basis = q7_atom_basis, supplemented = true)
+    q7_atom_working = Dict{Int,Any}()
+    q7_atom_base_rows = findall(row -> row.role === :atom_local_shell &&
+        row.shell_index == 1, q7_atom.terminal_due_diligence.terminal_rows)
+    @test length(q7_atom_base_rows) == 2
+    @test all(index -> q7_atom.terminal_due_diligence.terminal_rows[index].retained_count == 218,
+        q7_atom_base_rows)
+    for source_q in (6, 5)
+        override = [(; role = :atom_local_shell,
+            shell_index = 1, owner = :all, source_q)]
+        working = GaussletBases.cartesian_base_working_basis(
+            q7_atom_system; basis = q7_atom_basis, supplemented = true,
+            source_mode_overrides = override)
+        matched = check_override_geometry_parity(
+            q7_atom, working, :atom_local_shell, 1)
+        @test length(matched) == 2
+        @test all(index -> begin
+            row = working.terminal_due_diligence.terminal_rows[index]
+            row.source_mode_shape == (source_q, source_q, source_q) &&
+                row.retained_count == boundary_count(row.source_mode_shape) &&
+                contraction_gram_error(working, row) <= 1.0e-10
+        end, matched)
+        q7_atom_working[source_q] = working
+    end
+    @test q7_atom.terminal_basis.final_dimension -
+        q7_atom_working[6].terminal_basis.final_dimension == 2 * (218 - 152)
+    @test q7_atom.terminal_basis.final_dimension -
+        q7_atom_working[5].terminal_basis.final_dimension == 2 * (218 - 98)
+    atom_coarse_ham = GaussletBases.cartesian_base_hamiltonian_assembly(q7_atom_working[5])
+    @test symmetry_error(one_body_hamiltonian(atom_coarse_ham)) <= 1.0e-10
+    @test symmetry_error(atom_coarse_ham.electron_electron_ida) <= 1.0e-10
+    atom_residual = residual_metric_facts(q7_atom_working[5], q7_atom_locations)
+    @test atom_residual.minimum_metric > 1.0e-6
+    @test atom_residual.G_R_error <= 1.0e-10
+    @test atom_residual.R_R_error <= 1.0e-7
+
+    q7_ordered = normalize([
+        (; role = :shared_molecular_shell, shell_index = 1, owner = :all, source_q = 5),
+        (; role = :atom_local_shell, shell_index = 1, owner = :all, source_q = 6)], 7)
+    @test q7_ordered == normalize(reverse(q7_ordered), 7)
+    @test only(normalize([(; role = :shared_molecular_shell,
+        shell_index = 1, owner = :all, source_q = 3)], 7)).source_q == 3
     invalid_overrides = Any[
         [(; role = :atom_local_shell, shell_index = 0, owner = :all, source_q = 6)],
         [(; role = :atom_local_shell, shell_index = true, owner = :all, source_q = 6)],
@@ -405,6 +524,20 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     for overrides in invalid_overrides
         @test_throws ArgumentError normalize(overrides, 5)
     end
+    for overrides in Any[
+            [(; role = :atom_local_shell, shell_index = 1, owner = :all, source_q = 2)],
+            [(; role = :atom_local_shell, shell_index = 1, owner = :all, source_q = 7)],
+            [(; role = :atom_local_shell, shell_index = 1, owner = :all, source_q = true)],
+            [(; role = :atom_local_shell, shell_index = 1, owner = :all, source_q = 5.5)],
+            [(; role = :atom_local_shell, shell_index = 1, owner = :left, source_q = 6)],
+            [q7_ordered[1], q7_ordered[1]],
+        ]
+        @test_throws ArgumentError normalize(overrides, 7)
+    end
+    @test_throws ArgumentError GaussletBases.cartesian_base_working_basis(
+        FACADE_SYSTEM; basis = q7_shared_basis, supplemented = true,
+        source_mode_overrides = [(; role = :atom_local_shell,
+            shell_index = 1, owner = :all, source_q = 6)])
     @test_throws ArgumentError GaussletBases.cartesian_base_working_basis(
         FACADE_SYSTEM; basis = FACADE_BASIS, supplemented = true,
         source_mode_overrides = [(; role = :shared_molecular_shell,
@@ -430,7 +563,10 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
 
     println("source_q_override_h2_due_diligence=", (;
         shared = due_summary(shared_working.terminal_due_diligence),
-        atom_local = due_summary(separated_refined.terminal_due_diligence)))
+        atom_local = due_summary(separated_refined.terminal_due_diligence),
+        q7_shared_q5 = due_summary(q7_shared_working[5].terminal_due_diligence),
+        q7_atom_q5 = due_summary(q7_atom_working[5].terminal_due_diligence),
+        q7_shared_residual = shared_residual, q7_atom_residual = atom_residual))
 end
 
 println("cartesian_r3a_h2_augmented_one_body_elapsed_s=", elapsed)

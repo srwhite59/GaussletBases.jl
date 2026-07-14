@@ -1242,8 +1242,8 @@ function _pqs_source_box_route_driver_source_mode_overrides(overrides, route_q)
         record.owner === :all ||
             throw(ArgumentError("source_mode_overrides owner must be :all"))
         record.source_q isa Integer && !(record.source_q isa Bool) &&
-            record.source_q > q ||
-            throw(ArgumentError("source_mode_overrides source_q must be a non-Boolean integer greater than route q"))
+            record.source_q >= 3 && record.source_q != q ||
+            throw(ArgumentError("source_mode_overrides source_q must be a non-Boolean integer at least 3 and different from route q"))
         selector = (role, Int(record.shell_index), :all)
         selector in selectors &&
             throw(ArgumentError("duplicate source_mode_overrides selector $(selector)"))

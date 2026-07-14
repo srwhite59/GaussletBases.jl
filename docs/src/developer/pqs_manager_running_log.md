@@ -1436,3 +1436,35 @@ Goal advancement / guardrail:
   parent-completion design. MT2 may consume reviewed static CR2 measurements,
   but parent completion, interaction changes, HF claims, public controls, and
   durable accessors remain separate authority.
+
+## Cartesian Hamiltonian Producer Pass 414 - Implement Shell-q Coarsening
+
+Commit(s):
+- this commit - allow fixed-parent semantic shell source order below route q.
+
+Summary:
+- The existing override normalizer now accepts non-Boolean integer
+  `source_q >= 3` with `source_q != route_q`; the complete post-shellification
+  shape-rewrite path required no accessor or downstream repair. Route-q `7`
+  H2 shared-shell dimensions changed `855 -> 789 -> 735` for source q
+  `7 -> 6 -> 5`, while the atom-local pair changed
+  `1759 -> 1627 -> 1519`.
+- A padded Be2 route-q `7`, source-q `6` gate changed two shell rows from
+  `218` to `152`, saving `132` base functions and producing dimensions
+  `4335 + 42 = 4377`. Parent geometry, support, ownership, unmatched regions,
+  packet traces/capture, screened-Hartree anchors, and due-diligence warning
+  classes remained valid.
+- Manager review replaced two brittle fixed `1e-10` residual-identity test
+  assertions with the established scale-aware `1e-7` ceiling. The measured H2
+  errors remained near `1e-11`; the Be2 error was `1.63e-9`.
+
+Validation / evidence:
+- The doer package load and padded Be2 gate passed. The focused H2 test passed
+  `288/288` and the facade regression passed `69/69`; manager reran both after
+  the test-bound correction. `git diff --check` and manager-log bounds passed.
+
+Goal advancement / guardrail:
+- MT4 now has the fixed-parent coarsening control needed for CR2 occupancy/H1
+  and later parent-completion measurements. Source change is only `+2/-2`;
+  focused tests add `137` net lines. This pass does not authorize completion
+  modes, parent-charge interactions, HF, public controls, or Cr2 claims.
