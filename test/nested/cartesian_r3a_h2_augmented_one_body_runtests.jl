@@ -11,6 +11,68 @@ const EXPECTED_LABELS = [
 ]
 const R3B_OWNER_LOCAL_SELF_COULOMB = 0.4574161883692301
 
+struct SyntheticPRFBundles
+    axes::NamedTuple
+end
+import GaussletBases: _nested_axis_lengths, _nested_axis_pgdg
+_nested_axis_pgdg(bundle::SyntheticPRFBundles, axis::Symbol) = bundle.axes[axis]
+_nested_axis_lengths(bundle::SyntheticPRFBundles) = (
+    size(bundle.axes.x.overlap, 1), size(bundle.axes.y.overlap, 1),
+    size(bundle.axes.z.overlap, 1))
+
+function synthetic_prf_bundles(Sx)
+    axis(overlap, centers) = (; overlap, position = Diagonal(centers) |> Matrix,
+        x2 = Diagonal(abs2.(centers)) |> Matrix)
+    return SyntheticPRFBundles((;
+        x = axis(Matrix{Float64}(Sx), collect(range(-1.0, 1.0; length = size(Sx, 1)))),
+        y = axis(ones(1, 1), [0.0]), z = axis(ones(1, 1), [0.0])))
+end
+
+function parent_coefficient_matrix(basis, nparent)
+    coefficients = zeros(Float64, nparent, basis.final_dimension)
+    for block in basis.blocks
+        if isnothing(block.coefficients)
+            for (column, parent_index) in zip(block.column_range, block.support_indices)
+                coefficients[parent_index, column] = 1.0
+            end
+        else
+            coefficients[block.support_indices, block.column_range] .= block.coefficients
+        end
+    end
+    return coefficients
+end
+
+function dense_parent_product_oracle(C, basis, bundles, prf, axes; scale = 1.0)
+    dims = GaussletBases._nested_axis_lengths(bundles)
+    states = [GaussletBases._cartesian_unflat_index(index, dims) for index in 1:prod(dims)]
+    action = C._support_action(states, prf.support_states, prf.coefficients, axes)
+    parent_G = parent_coefficient_matrix(basis, prod(dims))
+    return (; G_R = Float64(scale) .* (transpose(parent_G) * action),
+        R_R = Float64(scale) .* (transpose(prf.coefficients) * action[prf.support_indices, :]))
+end
+
+function dense_parent_gaussian_oracle(C, basis, bundles, prf, coefficients, factors;
+    scale = -1.0)
+    dims = GaussletBases._nested_axis_lengths(bundles)
+    states = [GaussletBases._cartesian_unflat_index(index, dims) for index in 1:prod(dims)]
+    left = (; support_states = states, coefficients = nothing)
+    right = (; support_states = prf.support_states, coefficients = prf.coefficients)
+    terms = Tuple(C._terminal_factor_terms(factor) for factor in factors)
+    action = C._terminal_gaussian_sum_action(left, right, Float64.(coefficients), terms)
+    parent_G = parent_coefficient_matrix(basis, prod(dims))
+    return (; G_R = Float64(scale) .* (transpose(parent_G) * action),
+        R_R = Float64(scale) .* (transpose(prf.coefficients) * action[prf.support_indices, :]))
+end
+
+function explicit_parent_direct(left_indices, left_coefficients,
+    right_indices, right_coefficients, kernel)
+    left_charges = isnothing(left_coefficients) ?
+        Matrix{Float64}(I, length(left_indices), length(left_indices)) : abs2.(left_coefficients)
+    right_charges = abs2.(right_coefficients)
+    K = [kernel(i, j) for i in left_indices, j in right_indices]
+    return transpose(left_charges) * K * right_charges
+end
+
 function product_matrix(C, basis, ax, ay, az)
     matrix = zeros(Float64, basis.final_dimension, basis.final_dimension)
     C.assemble_terminal_product_operator!(matrix, basis, ax, ay, az)
@@ -194,6 +256,7 @@ const FACADE_SUPPLEMENT = (;
 )
 
 elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
+    C = GaussletBases.CartesianFinalBasisRealization
     S_bad = [1.0 2.0; 2.0 1.0]
     bad_modes = [reshape([1.0, 0.0], 2, 1), reshape([0.0, 1.0], 2, 1)]
     @test eigvals(Symmetric(S_bad)) == [-1.0, 3.0]
@@ -223,6 +286,52 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     @test maximum(abs, FSR_injected) <= 1.0e-12
     @test maximum(abs, RSR_injected - I) <= 1.0e-12
 
+    synthetic_shell = C.CartesianTerminalBasisBlock(
+        :synthetic_shell, [1, 2], [(1, 1, 1), (2, 1, 1)],
+        reshape([inv(sqrt(2.0)), inv(sqrt(2.0))], 2, 1), 1:1)
+    synthetic_direct = C.CartesianTerminalBasisBlock(
+        :synthetic_direct, [3], [(3, 1, 1)], nothing, 2:2)
+    synthetic_basis = C.CartesianTerminalBasisRealization(
+        [synthetic_shell, synthetic_direct], 2, 0.0)
+    synthetic_bundles = synthetic_prf_bundles(Matrix{Float64}(I, 3, 3))
+    synthetic_target = reshape([inv(sqrt(2.0)), -inv(sqrt(2.0))], 2, 1)
+    synthetic_prf = C.build_parent_residual_function_block(
+        synthetic_basis, synthetic_shell, synthetic_bundles, [1, 2], synthetic_target)
+    @test synthetic_prf.support_indices == [1, 2]
+    @test synthetic_prf.coefficients[:, 1] ≈ synthetic_target[:, 1] atol = 1.0e-14
+    @test synthetic_prf.diagnostics.validation.terminal_orthogonality_error <= 1.0e-14
+    @test synthetic_prf.diagnostics.validation.parent_metric_identity_error <= 1.0e-14
+    @test synthetic_prf.diagnostics.phase_pivots == [1]
+    accumulated_shell = C.CartesianTerminalBasisBlock(
+        :accumulated_shell, [1, 2, 3], [(1, 1, 1), (2, 1, 1), (3, 1, 1)],
+        reshape([1.0, 0.0, 0.0], 3, 1), 1:1)
+    accumulated_basis = C.CartesianTerminalBasisRealization([accumulated_shell], 1, 0.0)
+    accumulated_bundles = synthetic_prf_bundles(Matrix{Float64}(I, 3, 3))
+    delta = 1.0e-6
+    accumulated_prfs = [C.CartesianParentResidualFunctionBlock(
+        :accumulated_shell, copy(accumulated_shell.support_indices),
+        copy(accumulated_shell.support_states),
+        reshape(column, 3, 1), (;)) for column in
+        ([delta, 1.0, 0.0], [delta, 0.0, 1.0])]
+    @test_throws ArgumentError C._validate_parent_residual_collection(
+        accumulated_basis, accumulated_bundles, accumulated_prfs, 1.5e-6, 1.0e-8)
+    @test_throws ArgumentError C.build_parent_residual_function_block(
+        synthetic_basis, synthetic_shell, synthetic_bundles, [1, 2], [NaN; 0.0;;])
+    @test_throws ArgumentError C.build_parent_residual_function_block(
+        synthetic_basis, synthetic_shell, synthetic_bundles, [1, 3], [1.0; 1.0;;])
+    @test_throws ArgumentError C.build_parent_residual_function_block(
+        synthetic_basis, synthetic_shell, synthetic_bundles, [1, 2],
+        synthetic_shell.coefficients)
+    indefinite_shell = C.CartesianTerminalBasisBlock(
+        :indefinite_shell, [1, 2], [(1, 1, 1), (2, 1, 1)],
+        reshape([1.0, 0.0], 2, 1), 1:1)
+    indefinite_basis = C.CartesianTerminalBasisRealization(
+        [indefinite_shell, synthetic_direct], 2, 0.0)
+    @test_throws ArgumentError C.build_parent_residual_function_block(
+        indefinite_basis, indefinite_shell, synthetic_prf_bundles(
+            [1.0 2.0 0.0; 2.0 1.0 0.0; 0.0 0.0 1.0]),
+        [1, 2], [0.0; 1.0;;])
+
     raw_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
         "H", "cc-pVTZ", NUCLEI; lmax = 1, uncontracted = false, max_width = nothing)
     supplement = basis_representation(raw_supplement)
@@ -230,7 +339,6 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
         FACADE_SYSTEM; basis = FACADE_BASIS, supplemented = true)
     parent, basis = base_working.parent, base_working.terminal_basis
     expansion = base_working.coulomb_expansion
-    C = GaussletBases.CartesianFinalBasisRealization
     residual = C.pqs_terminal_residual_gto_augmentation(
         basis, parent.parent_axis_bundle_object, supplement, NUCLEI)
     operators = C.pqs_terminal_residual_gto_augmented_operators(
@@ -314,6 +422,183 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     @test E_aug <= E_base + 1.0e-10
 
     base_ham = GaussletBases.cartesian_base_hamiltonian_assembly(base_working)
+    base_H1_before_prf = copy(one_body_hamiltonian(base_ham))
+    base_vee_before_prf = copy(base_ham.electron_electron_ida)
+    pgdg = Tuple(GaussletBases._nested_axis_pgdg(
+        parent.parent_axis_bundle_object, axis) for axis in (:x, :y, :z))
+    overlaps = Tuple(axis.overlap for axis in pgdg)
+    source_block = first(block for block in basis.blocks if
+        !isnothing(block.coefficients) &&
+        length(block.support_indices) > size(block.coefficients, 2))
+    support_metric = zeros(Float64,
+        length(source_block.support_states), length(source_block.support_states))
+    C._support_cross!(support_metric, source_block.support_states,
+        source_block.support_states, overlaps)
+    omitted = nullspace(transpose(source_block.coefficients) * support_metric)
+    @test size(omitted, 2) >= 2
+    selected_targets = omitted[:, 1:2]
+    prf = C.build_parent_residual_function_block(
+        basis, source_block, parent.parent_axis_bundle_object,
+        source_block.support_indices, selected_targets)
+    prf_parts = [C.build_parent_residual_function_block(
+        basis, source_block, parent.parent_axis_bundle_object,
+        source_block.support_indices, @view(selected_targets[:, column:column]))
+        for column in axes(selected_targets, 2)]
+    @test size(prf.coefficients) == (length(source_block.support_indices), 2)
+    @test prf.diagnostics.validation.terminal_orthogonality_error <= 1.0e-10
+    @test prf.diagnostics.validation.parent_metric_identity_error <= 1.0e-8
+    @test minimum(prf.diagnostics.projection.selected_target_metric_eigenvalues) > 1.0e-10
+    @test all(isfinite, prf.diagnostics.parent_charge_sums)
+    @test all(isfinite, prf.diagnostics.moments.total_spreads)
+    @test all(column -> begin
+        pivot = findfirst(==(prf.diagnostics.phase_pivots[column]), prf.support_indices)
+        prf.coefficients[pivot, column] >= 0.0
+    end, axes(prf.coefficients, 2))
+
+    prf_one_body_time = @elapsed prf_one_body = C.parent_residual_one_body_blocks(
+        basis, parent.parent_axis_bundle_object, [prf], NUCLEI, [1.0, 1.0]; expansion)
+    S_parent = Tuple(axis.overlap for axis in pgdg)
+    kinetic_oracle = dense_parent_product_oracle(C, basis,
+        parent.parent_axis_bundle_object, prf, (pgdg[1].kinetic, S_parent[2], S_parent[3]))
+    for axes in ((S_parent[1], pgdg[2].kinetic, S_parent[3]),
+                 (S_parent[1], S_parent[2], pgdg[3].kinetic))
+        block = dense_parent_product_oracle(
+            C, basis, parent.parent_axis_bundle_object, prf, axes)
+        kinetic_oracle.G_R .+= block.G_R
+        kinetic_oracle.R_R .+= block.R_R
+    end
+    @test norm(prf_one_body.kinetic.G_R - kinetic_oracle.G_R, Inf) <= 1.0e-10
+    @test norm(prf_one_body.kinetic.R_R - kinetic_oracle.R_R, Inf) <= 1.0e-10
+    unit_oracles = NamedTuple[]
+    for location in NUCLEI
+        factors = ntuple(axis -> C._r3a_centered_factor_terms(
+            pgdg[axis], expansion, location[axis]), 3)
+        push!(unit_oracles, dense_parent_gaussian_oracle(
+            C, basis, parent.parent_axis_bundle_object, prf,
+            expansion.coefficients, factors))
+    end
+    unit_G_R_error = maximum(norm(actual.G_R - oracle.G_R, Inf) for
+        (actual, oracle) in zip(prf_one_body.nuclear_attraction_unit_by_center, unit_oracles))
+    unit_R_R_error = maximum(norm(actual.R_R - oracle.R_R, Inf) for
+        (actual, oracle) in zip(prf_one_body.nuclear_attraction_unit_by_center, unit_oracles))
+    @test unit_G_R_error <= 1.0e-10
+    @test unit_R_R_error <= 1.0e-10
+    @test symmetry_error(prf_one_body.kinetic.R_R) <= 1.0e-10
+    @test all(unit -> symmetry_error(unit.R_R) <= 1.0e-10,
+        prf_one_body.nuclear_attraction_unit_by_center)
+    H1_G_R_oracle = kinetic_oracle.G_R + sum(oracle.G_R for oracle in unit_oracles)
+    H1_R_R_oracle = kinetic_oracle.R_R + sum(oracle.R_R for oracle in unit_oracles)
+    @test norm(prf_one_body.H1.G_R - H1_G_R_oracle, Inf) <= 1.0e-10
+    @test norm(prf_one_body.H1.R_R - H1_R_R_oracle, Inf) <= 1.0e-10
+    split_one_body = C.parent_residual_one_body_blocks(
+        basis, parent.parent_axis_bundle_object, prf_parts,
+        NUCLEI, [1.0, 1.0]; expansion)
+    @test split_one_body.prf_column_ranges == [1:1, 2:2]
+    @test norm(split_one_body.kinetic.G_R - prf_one_body.kinetic.G_R, Inf) <= 1.0e-10
+    @test norm(split_one_body.kinetic.R_R - prf_one_body.kinetic.R_R, Inf) <= 1.0e-10
+    @test norm(split_one_body.H1.G_R - prf_one_body.H1.G_R, Inf) <= 1.0e-10
+    @test norm(split_one_body.H1.R_R - prf_one_body.H1.R_R, Inf) <= 1.0e-10
+    for (name, axis_index) in zip((:x, :y, :z), 1:3)
+        position_axes = ntuple(axis -> axis == axis_index ?
+            pgdg[axis].position : S_parent[axis], 3)
+        x2_axes = ntuple(axis -> axis == axis_index ? pgdg[axis].x2 : S_parent[axis], 3)
+        position_oracle = dense_parent_product_oracle(
+            C, basis, parent.parent_axis_bundle_object, prf, position_axes)
+        x2_oracle = dense_parent_product_oracle(
+            C, basis, parent.parent_axis_bundle_object, prf, x2_axes)
+        @test norm(prf_one_body.position[name].G_R - position_oracle.G_R, Inf) <= 1.0e-10
+        @test norm(prf_one_body.position[name].R_R - position_oracle.R_R, Inf) <= 1.0e-10
+        @test norm(prf_one_body.x2[name].G_R - x2_oracle.G_R, Inf) <= 1.0e-10
+        @test norm(prf_one_body.x2[name].R_R - x2_oracle.R_R, Inf) <= 1.0e-10
+    end
+
+    direct_resource_time = @elapsed direct_resource = C.parent_gaussian_direct_resource(
+        parent.parent_axis_bundle_object, expansion)
+    gaussian_direct_time = @elapsed gaussian_direct = C.parent_gaussian_direct_blocks(
+        basis, [prf], parent.parent_axis_bundle_object, direct_resource, expansion)
+    split_gaussian_direct = C.parent_gaussian_direct_blocks(
+        basis, prf_parts, parent.parent_axis_bundle_object, direct_resource, expansion)
+    parent_ida_direct_time = @elapsed parent_ida_direct = C.parent_ida_direct_blocks(
+        basis, [prf], parent.parent_axis_bundle_object, expansion)
+    @test split_gaussian_direct.prf_column_ranges == [1:1, 2:2]
+    @test norm(split_gaussian_direct.G_R - gaussian_direct.G_R, Inf) <= 1.0e-10
+    @test norm(split_gaussian_direct.R_R - gaussian_direct.R_R, Inf) <= 1.0e-10
+    @test symmetry_error(gaussian_direct.R_R) <= 1.0e-10
+    @test symmetry_error(parent_ida_direct.R_R) <= 1.0e-10
+    @test maximum(abs.(gaussian_direct.prf_charge_sums[1] .- 1.0)) <= 5.0e-8
+    @test maximum(abs.(gaussian_direct.terminal_charge_sums .- 1.0)) <= 5.0e-8
+    gaussian_kernel = (left, right) ->
+        GaussletBases._parent_gaussian_direct_value(direct_resource, left, right)
+    explicit_R_R = explicit_parent_direct(
+        prf.support_indices, prf.coefficients,
+        prf.support_indices, prf.coefficients, gaussian_kernel)
+    @test norm(gaussian_direct.R_R - explicit_R_R, Inf) <= 1.0e-12
+    identity_block = first(block for block in basis.blocks if isnothing(block.coefficients))
+    for block in (identity_block, source_block)
+        explicit = explicit_parent_direct(
+            block.support_indices, block.coefficients,
+            prf.support_indices, prf.coefficients, gaussian_kernel)
+        @test norm(gaussian_direct.G_R[block.column_range, :] - explicit, Inf) <= 1.0e-12
+    end
+    parent_states = [GaussletBases._cartesian_unflat_index(index,
+        GaussletBases._nested_axis_lengths(parent.parent_axis_bundle_object))
+        for index in eachindex(direct_resource.centers)]
+    ida_kernel = function(left, right)
+        a, b = parent_states[left], parent_states[right]
+        return sum(expansion.coefficients[term] * prod(
+            pgdg[axis].pair_factor_terms[term, a[axis], b[axis]] for axis in 1:3)
+            for term in eachindex(expansion.coefficients))
+    end
+    ida_explicit_R_R = explicit_parent_direct(
+        prf.support_indices, prf.coefficients,
+        prf.support_indices, prf.coefficients, ida_kernel)
+    @test norm(parent_ida_direct.R_R - ida_explicit_R_R, Inf) <= 1.0e-12
+    for block in (identity_block, source_block)
+        explicit = explicit_parent_direct(
+            block.support_indices, block.coefficients,
+            prf.support_indices, prf.coefficients, ida_kernel)
+        @test norm(parent_ida_direct.G_R[block.column_range, :] - explicit, Inf) <= 1.0e-12
+    end
+    malformed_prf = C.CartesianParentResidualFunctionBlock(
+        prf.source_unit_key, prf.support_indices, prf.support_states,
+        2.0 .* prf.coefficients, prf.diagnostics)
+    @test_throws ArgumentError C._parent_backed_charge_matrix(
+        malformed_prf.coefficients, 5.0e-8, "malformed PRF")
+    @test_throws ArgumentError C.parent_gaussian_direct_blocks(
+        basis, [malformed_prf], parent.parent_axis_bundle_object,
+        direct_resource, expansion)
+    altered_coefficients = copy(expansion.coefficients)
+    altered_coefficients[1] = nextfloat(altered_coefficients[1])
+    altered_expansion = CoulombGaussianExpansion(
+        altered_coefficients, expansion.exponents;
+        del = expansion.del, s = expansion.s, c = expansion.c, maxu = expansion.maxu)
+    @test_throws ArgumentError C.parent_gaussian_direct_blocks(
+        basis, [prf], parent.parent_axis_bundle_object,
+        direct_resource, altered_expansion)
+    onsite_error = 0.0
+    for block in basis.blocks
+        isnothing(block.coefficients) || continue
+        onsite_error = max(onsite_error, maximum(abs.(
+            diag(base_ham.electron_electron_ida[block.column_range, block.column_range]) .-
+            direct_resource.onsite_values[block.support_indices])))
+    end
+    @test onsite_error <= 1.0e-12
+    @test gaussian_direct.coulomb_expansion_fingerprint ==
+        GaussletBases._coulomb_expansion_fingerprint(expansion)
+    @test one_body_hamiltonian(base_ham) == base_H1_before_prf
+    @test base_ham.electron_electron_ida == base_vee_before_prf
+
+    g_index = first(identity_block.column_range)
+    g_parent_index = first(identity_block.support_indices)
+    density_occupations = abs2.([sqrt(0.7), sqrt(0.3)])
+    gaussian_density_direct = dot(density_occupations,
+        [direct_resource.onsite_values[g_parent_index] gaussian_direct.G_R[g_index, 1];
+         gaussian_direct.G_R[g_index, 1] gaussian_direct.R_R[1, 1]] * density_occupations)
+    ida_density_direct = dot(density_occupations,
+        [base_ham.electron_electron_ida[g_index, g_index] parent_ida_direct.G_R[g_index, 1];
+         parent_ida_direct.G_R[g_index, 1] parent_ida_direct.R_R[1, 1]] * density_occupations)
+    @test isfinite(gaussian_density_direct)
+    @test isfinite(ida_density_direct)
     ham = C.pqs_terminal_residual_gto_augmented_hamiltonian(
         base_ham, basis, parent.parent_axis_bundle_object, residual, operators;
         expansion)
@@ -350,6 +635,23 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     println("r3b_h2_self_coulomb=", r3b_self_coulomb,
         " delta=", r3b_self_coulomb - R3B_OWNER_LOCAL_SELF_COULOMB)
     println("r3b_h2_vgm_errors direct=", direct_vgm_error, " pqs=", pqs_vgm_error)
+    println("prf_h2_diagnostics=", (;
+        source_unit = prf.source_unit_key, support_count = length(prf.support_indices),
+        prf_count = size(prf.coefficients, 2),
+        metric_spectrum = prf.diagnostics.projection.selected_target_metric_eigenvalues,
+        terminal_error = prf.diagnostics.validation.terminal_orthogonality_error,
+        identity_error = prf.diagnostics.validation.parent_metric_identity_error,
+        kinetic_G_R_error = norm(prf_one_body.kinetic.G_R - kinetic_oracle.G_R, Inf),
+        kinetic_R_R_error = norm(prf_one_body.kinetic.R_R - kinetic_oracle.R_R, Inf),
+        unit_G_R_error, unit_R_R_error, onsite_error,
+        prf_one_body_time, direct_resource_time, gaussian_direct_time,
+        parent_ida_direct_time,
+        gaussian_density_direct, ida_density_direct,
+        direct_model_difference = gaussian_density_direct - ida_density_direct,
+        G_R_model_max_difference = maximum(abs,
+            gaussian_direct.G_R - parent_ida_direct.G_R),
+        R_R_model_max_difference = maximum(abs,
+            gaussian_direct.R_R - parent_ida_direct.R_R)))
     due = base_working.terminal_due_diligence
     println("r3a_h2_due_diligence=", (;
         bounds = due.geometry.parent_physical_bounds,

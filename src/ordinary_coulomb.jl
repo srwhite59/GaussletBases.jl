@@ -186,6 +186,68 @@ function coulomb_gaussian_expansion(;
     )
 end
 
+struct _ParentGaussianDirectResource
+    centers::Vector{NTuple{3,Float64}}
+    onsite_values::Vector{Float64}
+    gaussian_exponents::Vector{Float64}
+    coulomb_expansion_fingerprint::String
+    validation::NamedTuple
+end
+
+function _coulomb_expansion_fingerprint(expansion::CoulombGaussianExpansion)
+    values = vcat(
+        Float64(length(expansion)), expansion.del, expansion.s, expansion.c, expansion.maxu,
+        expansion.coefficients, expansion.exponents)
+    return bytes2hex(sha256(reinterpret(UInt8, values)))
+end
+
+function _parent_gaussian_direct_resource(centers, onsite_values,
+    expansion::CoulombGaussianExpansion)
+    center_values = NTuple{3,Float64}[Tuple(Float64.(center)) for center in centers]
+    onsite = Float64.(onsite_values)
+    length(center_values) == length(onsite) || throw(DimensionMismatch(
+        "parent Gaussian-direct centers and onsite values must match"))
+    !isempty(onsite) || throw(ArgumentError(
+        "parent Gaussian-direct resource requires at least one parent site"))
+    all(center -> all(isfinite, center), center_values) || throw(ArgumentError(
+        "parent Gaussian-direct centers must be finite"))
+    all(value -> isfinite(value) && value > 0.0, onsite) || throw(ArgumentError(
+        "parent Gaussian-direct onsite values must be finite and positive"))
+    exponents = (pi / 2) .* abs2.(onsite)
+    all(value -> isfinite(value) && value > 0.0, exponents) || throw(ArgumentError(
+        "parent Gaussian-direct exponents must be finite and positive"))
+    return _ParentGaussianDirectResource(
+        center_values,
+        onsite,
+        exponents,
+        _coulomb_expansion_fingerprint(expansion),
+        (; parent_site_count = length(onsite), term_count = length(expansion),
+            onsite_minimum = minimum(onsite), onsite_maximum = maximum(onsite)),
+    )
+end
+
+function _parent_gaussian_direct_value(
+    center_a, alpha_a::Real, center_b, alpha_b::Real)
+    aa, ab = Float64(alpha_a), Float64(alpha_b)
+    isfinite(aa) && aa > 0.0 && isfinite(ab) && ab > 0.0 || throw(ArgumentError(
+        "parent Gaussian-direct exponents must be finite and positive"))
+    ca, cb = NTuple{3,Float64}(Tuple(Float64.(center_a))),
+             NTuple{3,Float64}(Tuple(Float64.(center_b)))
+    all(isfinite, ca) && all(isfinite, cb) || throw(ArgumentError(
+        "parent Gaussian-direct centers must be finite"))
+    beta = aa * ab / (aa + ab)
+    distance = sqrt(sum(abs2(ca[axis] - cb[axis]) for axis in 1:3))
+    return iszero(distance) ? 2 * sqrt(beta / pi) : erf(sqrt(beta) * distance) / distance
+end
+
+function _parent_gaussian_direct_value(resource::_ParentGaussianDirectResource, p::Int, q::Int)
+    checkbounds(resource.centers, p)
+    checkbounds(resource.centers, q)
+    return _parent_gaussian_direct_value(
+        resource.centers[p], resource.gaussian_exponents[p],
+        resource.centers[q], resource.gaussian_exponents[q])
+end
+
 function _gaussian_factor(a::Gaussian, b::Gaussian, exponent::Float64, center_value::Float64)
     exponent >= 0.0 || throw(ArgumentError("gaussian_factor_matrix requires exponent >= 0"))
     return GaussianAnalyticIntegrals.gaussian_factor(a, b, exponent, center_value)

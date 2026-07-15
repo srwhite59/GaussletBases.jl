@@ -542,6 +542,25 @@ end
 
     compact = coulomb_gaussian_expansion(doacc = false)
     high = coulomb_gaussian_expansion(doacc = true)
+    direct_resource = GaussletBases._parent_gaussian_direct_resource(
+        [(-1.0, 0.0, 0.0), (0.25, 0.0, 0.0), (2.0, 0.0, 0.0)],
+        [0.8, 1.1, 1.4], compact)
+    direct_kernel = [GaussletBases._parent_gaussian_direct_value(
+        direct_resource, i, j) for i in 1:3, j in 1:3]
+    @test diag(direct_kernel) ≈ direct_resource.onsite_values atol = 2.0e-15 rtol = 0.0
+    @test direct_kernel == transpose(direct_kernel)
+    @test all(isfinite, direct_kernel)
+    @test minimum(eigvals(Symmetric(direct_kernel))) >= -1.0e-13
+    far_value = GaussletBases._parent_gaussian_direct_value(
+        (0.0, 0.0, 0.0), direct_resource.gaussian_exponents[1],
+        (1.0e6, 0.0, 0.0), direct_resource.gaussian_exponents[2])
+    @test far_value * 1.0e6 ≈ 1.0 atol = 1.0e-14 rtol = 0.0
+    @test direct_resource.coulomb_expansion_fingerprint ==
+        GaussletBases._coulomb_expansion_fingerprint(compact)
+    @test_throws ArgumentError GaussletBases._parent_gaussian_direct_resource(
+        [(0.0, 0.0, 0.0)], [0.0], compact)
+    @test_throws ArgumentError GaussletBases._parent_gaussian_direct_resource(
+        [(0.0, 0.0, 0.0)], [NaN], compact)
     oracle_errors = Float64[]
     for offset in (0.0, 1.0e6), exponent in
             (0.0, 0.7, compact.exponents[end], high.exponents[end])

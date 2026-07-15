@@ -25,7 +25,10 @@ import ..GaussletBases: _cartesian_flat_index, _cartesian_unflat_index, _nested_
        _nested_axis_pgdg, _nested_box_support_indices, _nested_doside_1d,
        _nested_face_product, _nested_product_coefficients,
        _nested_projected_q_shell_boundary_comx_product_modes,
-       _nested_projected_q_shell_full_sides, gto_overlap_matrix
+       _nested_projected_q_shell_full_sides, gto_overlap_matrix,
+       CoulombGaussianExpansion, _ParentGaussianDirectResource,
+       _coulomb_expansion_fingerprint, _parent_gaussian_direct_resource,
+       _parent_gaussian_direct_value
 
 const CRPS = CartesianRawProductSources
 const CRG = CartesianResidualGaussians

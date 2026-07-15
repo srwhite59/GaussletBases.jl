@@ -10,6 +10,13 @@ struct CartesianTerminalBasisRealization
     final_dimension::Int
     max_cross_overlap::Float64
 end
+struct CartesianParentResidualFunctionBlock
+    source_unit_key::Symbol
+    support_indices::Vector{Int}
+    support_states::Vector{NTuple{3,Int}}
+    coefficients::Matrix{Float64}
+    diagnostics::NamedTuple
+end
 const _TERMINAL_WORKSPACE_BYTES = 64 * 1024^2
 function _support_cross!(matrix, left, right, overlaps)
     sx, sy, sz = overlaps
@@ -71,6 +78,225 @@ function _support_weights(states, bundles)
     wy = _nested_axis_pgdg(bundles, :y).weights
     wz = _nested_axis_pgdg(bundles, :z).weights
     return [wx[s[1]] * wy[s[2]] * wz[s[3]] for s in states]
+end
+
+function _prf_terminal_overlap(basis, states, coefficients, overlaps)
+    result = zeros(Float64, basis.final_dimension, size(coefficients, 2))
+    for block in basis.blocks
+        action = _support_action(
+            block.support_states, states, coefficients, overlaps)
+        result[block.column_range, :] .= isnothing(block.coefficients) ?
+            action : transpose(block.coefficients) * action
+    end
+    return result
+end
+
+function _prf_moment_summary(states, coefficients, pgdg)
+    S = Tuple(axis.overlap for axis in pgdg)
+    position = Tuple(axis.position for axis in pgdg)
+    x2 = Tuple(axis.x2 for axis in pgdg)
+    function expectation(axis, factors)
+        matrix = zeros(Float64, length(states), length(states))
+        _support_cross!(matrix, states, states, ntuple(
+            index -> index == axis ? factors[index] : S[index], 3))
+        return transpose(coefficients) * matrix * coefficients
+    end
+    position_matrices = ntuple(axis -> expectation(axis, position), 3)
+    x2_matrices = ntuple(axis -> expectation(axis, x2), 3)
+    centers = NTuple{3,Float64}[
+        ntuple(axis -> position_matrices[axis][column, column], 3)
+        for column in axes(coefficients, 2)
+    ]
+    spreads = NTuple{3,Float64}[
+        ntuple(axis -> sqrt(max(0.0,
+            x2_matrices[axis][column, column] - centers[column][axis]^2)), 3)
+        for column in axes(coefficients, 2)
+    ]
+    return (; centers, spreads,
+        total_spreads = Float64[sqrt(sum(abs2, spread)) for spread in spreads])
+end
+
+function build_parent_residual_function_block(
+    basis::CartesianTerminalBasisRealization,
+    source_block::CartesianTerminalBasisBlock,
+    bundles,
+    target_parent_indices,
+    target_columns;
+    support_atol::Real = 1.0e-12,
+    orthogonality_atol::Real = 1.0e-10,
+    identity_atol::Real = 1.0e-8,
+)
+    any(block -> block === source_block, basis.blocks) || throw(ArgumentError(
+        "parent residual source block must be an exact block of the terminal basis"))
+    support_tolerance = Float64(support_atol)
+    orthogonality_tolerance = Float64(orthogonality_atol)
+    identity_tolerance = Float64(identity_atol)
+    all(value -> isfinite(value) && value >= 0.0,
+        (support_tolerance, orthogonality_tolerance, identity_tolerance)) ||
+        throw(ArgumentError("parent residual tolerances must be finite and nonnegative"))
+    indices = Int.(target_parent_indices)
+    length(unique(indices)) == length(indices) || throw(ArgumentError(
+        "parent residual target support contains duplicate parent rows"))
+    targets = Matrix{Float64}(target_columns)
+    size(targets, 1) == length(indices) || throw(DimensionMismatch(
+        "parent residual target rows must match target parent indices"))
+    size(targets, 2) > 0 || throw(ArgumentError(
+        "parent residual construction requires at least one selected target"))
+    all(isfinite, targets) || throw(ArgumentError(
+        "parent residual target columns must be finite"))
+
+    dims = _nested_axis_lengths(bundles)
+    all(index -> 1 <= index <= prod(dims), indices) || throw(ArgumentError(
+        "parent residual target support lies outside the resolved parent"))
+    support_rows = Dict(index => row for (row, index) in pairs(source_block.support_indices))
+    local_targets = zeros(Float64, length(source_block.support_indices), size(targets, 2))
+    leakage = 0.0
+    for (row, index) in pairs(indices)
+        local_row = get(support_rows, index, 0)
+        if iszero(local_row)
+            leakage = max(leakage, maximum(abs, @view targets[row, :]))
+        else
+            local_targets[local_row, :] .= @view targets[row, :]
+        end
+    end
+    leakage <= support_tolerance || throw(ArgumentError(
+        "parent residual target columns leak outside the exact source support"))
+
+    pgdg = Tuple(_nested_axis_pgdg(bundles, axis) for axis in (:x, :y, :z))
+    overlaps = Tuple(axis.overlap for axis in pgdg)
+    selected_overlap = _prf_terminal_overlap(
+        basis, source_block.support_states, local_targets, overlaps)
+    source_overlap = @view selected_overlap[source_block.column_range, :]
+    cross_contamination = 0.0
+    for block in basis.blocks
+        block === source_block && continue
+        cross_contamination = max(cross_contamination,
+            isempty(block.column_range) ? 0.0 : maximum(abs, @view selected_overlap[block.column_range, :]))
+    end
+    cross_contamination <= orthogonality_tolerance || throw(ArgumentError(
+        "support-local targets have material overlap with another terminal block"))
+
+    projected = local_targets - (isnothing(source_block.coefficients) ?
+        Matrix(source_overlap) : source_block.coefficients * source_overlap)
+    support_metric = zeros(Float64,
+        length(source_block.support_states), length(source_block.support_states))
+    _support_cross!(support_metric, source_block.support_states,
+        source_block.support_states, overlaps)
+    raw_metric = transpose(projected) * support_metric * projected
+    metric = Symmetric((raw_metric + transpose(raw_metric)) ./ 2)
+    eigenvalues = eigvals(metric)
+    all(isfinite, eigenvalues) || throw(ArgumentError(
+        "parent residual selected-target metric is not finite"))
+    metric_scale = max(maximum(abs, eigenvalues), 1.0)
+    metric_tolerance = max(1.0e-12, eps(Float64) * metric_scale * size(metric, 1))
+    minimum(eigenvalues) >= -metric_tolerance || throw(ArgumentError(
+        "parent residual selected-target metric is materially indefinite"))
+    minimum(eigenvalues) > metric_tolerance || throw(ArgumentError(
+        "parent residual selected targets lose numerical rank after terminal projection"))
+    coefficients = projected * inv(sqrt(metric))
+    pivots = Int[]
+    for column in axes(coefficients, 2)
+        pivot = argmax(abs.(@view coefficients[:, column]))
+        coefficients[pivot, column] < 0.0 && (coefficients[:, column] .*= -1)
+        push!(pivots, source_block.support_indices[pivot])
+    end
+
+    terminal_overlap = _prf_terminal_overlap(
+        basis, source_block.support_states, coefficients, overlaps)
+    prf_metric = transpose(coefficients) * support_metric * coefficients
+    terminal_error = norm(terminal_overlap, Inf)
+    identity_error = norm(prf_metric - I, Inf)
+    terminal_error <= orthogonality_tolerance || throw(ArgumentError(
+        "parent residual block is not orthogonal to the complete terminal basis"))
+    identity_error <= identity_tolerance || throw(ArgumentError(
+        "parent residual block is not parent-metric orthonormal"))
+    charge_sums = vec(sum(abs2, coefficients; dims = 1))
+    moments = _prf_moment_summary(source_block.support_states, coefficients, pgdg)
+    support_bounds = ntuple(axis -> extrema(state[axis] for state in source_block.support_states), 3)
+    diagnostics = (;
+        support = (; unit_key = source_block.unit_key, support_bounds,
+            support_count = length(source_block.support_indices), maximum_leakage = leakage),
+        dimensions = (; parent_count = prod(dims), terminal_count = basis.final_dimension,
+            target_count = size(targets, 2), prf_count = size(coefficients, 2)),
+        projection = (; selected_target_metric_eigenvalues = eigenvalues,
+            projection_loss = norm(local_targets - projected),
+            cross_block_contamination = cross_contamination,
+            metric_tolerance),
+        validation = (; terminal_orthogonality_error = terminal_error,
+            parent_metric_identity_error = identity_error),
+        phase_pivots = pivots,
+        parent_charge_sums = charge_sums,
+        moments,
+    )
+    return CartesianParentResidualFunctionBlock(
+        source_block.unit_key, copy(source_block.support_indices),
+        copy(source_block.support_states), coefficients, diagnostics)
+end
+
+function _validate_parent_residual_collection(
+    basis::CartesianTerminalBasisRealization,
+    bundles,
+    prfs::AbstractVector{<:CartesianParentResidualFunctionBlock},
+    orthogonality_atol::Real,
+    identity_atol::Real,
+)
+    !isempty(prfs) || throw(ArgumentError(
+        "parent residual collection requires at least one block"))
+    orthogonality_tolerance = Float64(orthogonality_atol)
+    identity_tolerance = Float64(identity_atol)
+    all(value -> isfinite(value) && value >= 0.0,
+        (orthogonality_tolerance, identity_tolerance)) || throw(ArgumentError(
+        "parent residual collection tolerances must be finite and nonnegative"))
+
+    dims = _nested_axis_lengths(bundles)
+    overlaps = Tuple(_nested_axis_pgdg(bundles, axis).overlap for axis in (:x, :y, :z))
+    ranges = UnitRange{Int}[]
+    next_column = 1
+    terminal_row_sums = zeros(Float64, basis.final_dimension)
+    for prf in prfs
+        length(prf.support_indices) == length(prf.support_states) ==
+            size(prf.coefficients, 1) || throw(DimensionMismatch(
+            "parent residual support and coefficient rows must match"))
+        size(prf.coefficients, 2) > 0 || throw(ArgumentError(
+            "parent residual block must contain at least one column"))
+        all(isfinite, prf.coefficients) || throw(ArgumentError(
+            "parent residual coefficients must be finite"))
+        matches = findall(block -> block.unit_key === prf.source_unit_key, basis.blocks)
+        length(matches) == 1 || throw(ArgumentError(
+            "parent residual source block identity is not unique in the terminal basis"))
+        source = basis.blocks[only(matches)]
+        prf.support_indices == source.support_indices &&
+            prf.support_states == source.support_states || throw(ArgumentError(
+            "parent residual support no longer matches its source terminal block"))
+        for (index, state) in zip(prf.support_indices, prf.support_states)
+            _cartesian_unflat_index(index, dims) == state || throw(ArgumentError(
+                "parent residual index/state mapping is inconsistent"))
+        end
+        count = size(prf.coefficients, 2)
+        push!(ranges, next_column:(next_column + count - 1))
+        next_column += count
+        terminal_row_sums .+= vec(sum(abs, _prf_terminal_overlap(
+            basis, prf.support_states, prf.coefficients, overlaps); dims = 2))
+    end
+
+    terminal_error = maximum(terminal_row_sums)
+    gram = zeros(Float64, next_column - 1, next_column - 1)
+    for right in eachindex(prfs), left in 1:right
+        support_action = _support_action(
+            prfs[left].support_states, prfs[right].support_states,
+            prfs[right].coefficients, overlaps)
+        block = transpose(prfs[left].coefficients) * support_action
+        gram[ranges[left], ranges[right]] .= block
+        left != right && (gram[ranges[right], ranges[left]] .= transpose(block))
+    end
+    identity_error = norm(gram - I, Inf)
+    terminal_error <= orthogonality_tolerance || throw(ArgumentError(
+        "combined parent residual blocks are not terminal-orthogonal"))
+    identity_error <= identity_tolerance || throw(ArgumentError(
+        "combined parent residual blocks are not parent-metric orthonormal"))
+    return ranges, (; terminal_orthogonality_error = terminal_error,
+        parent_metric_identity_error = identity_error,
+        block_count = length(prfs), prf_count = next_column - 1)
 end
 function _push_block!(blocks, key, indices, states, coefficients, nextcol)
     count = isnothing(coefficients) ? length(indices) : size(coefficients, 2)
