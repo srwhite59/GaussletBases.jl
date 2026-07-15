@@ -1528,3 +1528,35 @@ Goal advancement / guardrail:
 - **MT6 carrying-cost control - active.** Implementation must reuse existing
   terminal/Coulomb owners, add no file or module, and report any helper or test
   pressure it cannot avoid.
+
+## Cartesian Hamiltonian Producer Pass 416 - Implement Parent Residual Functions And Direct Blocks
+
+Commit(s):
+- `5b46ae073` - add internal PRF mechanics, exact one-body blocks, and
+  parent-backed Gaussian/direct-oracle infrastructure.
+
+Summary:
+- Consumer-supplied support-local parent targets now produce explicit PRF
+  blocks without dropping columns or changing the terminal `G` basis. Exact
+  kinetic, per-center unit-nuclear, assembled `H1`, position, and second-moment
+  `G-R`/`R-R` blocks support multiple owner/shell PRF blocks.
+- Added the in-memory onsite-calibrated Gaussian resource and tiled PRF-G/
+  PRF-PRF direct blocks, plus the bounded full-parent IDA comparator. Manager
+  review added collection-wide terminal/metric validation, cross-block
+  one-body terms, exact Coulomb-expansion identity checking, and direct-block
+  symmetry guards.
+
+Validation / evidence:
+- Package load passed. Core tests passed `440/440`; the final focused H2 gate
+  passed `358/358` and the supplemented facade passed `69/69`. Exact one-body
+  oracle errors remained at roughly `1e-15`, existing `H1`/`Vee` stayed
+  unchanged, authority check and `git diff --check` passed, and terminal due
+  diligence was inspected. No Cr2 fixture, HF, or endpoint claim was added.
+
+Goal advancement / guardrail:
+- MT4 now has source-backed PRF mechanics and direct-only interaction
+  resources. Selection policy, transition exchange, PRF-GTO interactions,
+  Hamiltonian integration, artifacts, and public controls remain outside the
+  lane. The change is `+976/-2` across seven source/test files; no new file or
+  module was introduced. Machine lifecycle/current-status reconciliation is
+  the remaining documentation closure step.
