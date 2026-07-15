@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `7fbdb4070996ac9276fa1334b3b7eca05e18b4276cefeb42ddba9c08d4ed51bc`.
+> [authority.toml](authority.toml), SHA-256 `ab5620c1bcd20e78375d98cabde830aa243012f11b649e9d40c96cc1922fcb43`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1458,8 +1458,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-PARENT-GDIRECT-FN-01 - parent-backed Gaussian direct interaction
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1471,14 +1471,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_prf_final_g_interaction_audit_2026-07-14.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_prf_gaussian_distance_interaction_audit_2026-07-14.md`
+  - `git_commit`: `5b46ae073`
   - `manager_pass`: `415`
+  - `manager_pass`: `416`
 - **Dependencies:** `HP-OBJ-02`, `HP-PQS-COULOMB-ACCURACY-FN-01`, `HP-PQS-PRF-FN-01`
-- **Scope:** Implement only the internal onsite-calibrated Gaussian direct resource for explicit current-parent coefficients. Use mapped PGDG centers and same-expansion positive parent-IDA onsite values, validate unrenormalized \`abs2\` parent charges, and return tiled PRF-PRF/PRF-G direct blocks plus an optional bounded full-parent-IDA direct comparison. Existing G-G \`Vee\`, Hamiltonians, exchange, GTO residuals, public inputs, artifacts, and solvers remain unchanged.
+- **Scope:** Maintain only the implemented internal onsite-calibrated Gaussian direct resource for explicit current-parent coefficients, including mapped centers, same-expansion positive parent-IDA onsite values, unrenormalized parent charges, tiled PRF-PRF/PRF-G direct blocks, and the bounded parent-IDA direct comparator. Existing G-G Vee, exchange, GTO residuals, public inputs, artifacts, and solvers remain unchanged.
 
 ### HP-PQS-PARENT-GDIRECT-TEST-01 - parent-backed Gaussian direct validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1489,14 +1491,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_prf_final_g_interaction_audit_2026-07-14.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_prf_gaussian_distance_interaction_audit_2026-07-14.md`
+  - `git_commit`: `5b46ae073`
   - `manager_pass`: `415`
+  - `manager_pass`: `416`
 - **Dependencies:** `HP-PQS-PARENT-GDIRECT-FN-01`
-- **Scope:** Validate the analytic onsite limit, symmetry, finiteness, positive semidefiniteness, far tail, same-expansion onsite provenance, nonunit-charge rejection, tiled/direct parity, bounded parent-IDA direct comparison, exact-zero G-G change, and strict non-claims for transition exchange and PRF-to-GTO residuals. No Cr2 fixture, HF, endpoint energy, or complete-Hamiltonian assertion is approved.
+- **Scope:** Maintain only the committed analytic onsite, symmetry, finiteness, positive-semidefinite, far-tail, expansion-identity, charge, tiled-parity, bounded parent-IDA, and unchanged-G-G checks. No transition-exchange, PRF-GTO-residual, Cr2, HF, endpoint, or complete-Hamiltonian assertion.
 
 ### HP-PQS-PRF-FN-01 - parent residual function mechanics
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1508,14 +1512,96 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_fixed_parent_shell_q5_q9_completion_ladder_2026-07-14.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_shell_local_parent_completion_occupancy_audit_2026-07-14.md`
+  - `git_commit`: `5b46ae073`
   - `manager_pass`: `415`
+  - `manager_pass`: `416`
 - **Dependencies:** `HP-FN-03`, `HP-OBJ-02`
-- **Scope:** Implement only internal support-local parent residual function mechanics for consumer-selected parent target columns: project against the complete terminal basis, fail on support/rank/metric defects without dropping columns, apply one symmetric Lowdin normalization, validate terminal orthogonality and parent-metric identity, and build exact native PRF-G/PRF-PRF one-body blocks. Add at most one compact vector-backed PRF block type and no selection, RDM, shell-q, artifact, Hamiltonian, or solver policy.
+- **Scope:** Maintain only the implemented internal support-local PRF mechanics for consumer-selected parent target columns, including strict support/rank/metric failures and exact native PRF-G/PRF-PRF one-body blocks. No selection, RDM, shell-q, artifact, Hamiltonian, or solver policy.
 
-### HP-PQS-PRF-TEST-01 - parent residual function validation
+### HP-PQS-PRF-INJECT-COMP-FN-01 - parent-backed injected basis composition
 
 - **Lifecycle:** `approved`
 - **Grant:** `implementation`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Fixed-Span Injection`
+- **Owned paths:**
+  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
+  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
+  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_q7_injected_numcomplete_screened_uhf_2026-07-15.md`
+  - `manager_pass`: `418`
+- **Dependencies:** `HP-PQS-PRF-FN-01`, `HP-RG-NUMCOMP-FN-01`
+- **Scope:** Implement only private fixed-span angular-style injection from consumer-supplied orthonormal targets: project every old localized terminal seed before symmetric Lowdin, retain the exact parent-backed complement, preserve the old combined span and dimension, and residualize the explicit GTO supplement against the complete parent-backed basis through the existing numerical-complete builder. No selection, RDM, cutoff, localization, public, artifact, or solver policy.
+
+### HP-PQS-PRF-INJECT-COMP-TEST-01 - parent-backed injected basis validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Fixed-Span Injection`
+- **Owned paths:**
+  - `test` / `existing`: `test/misc/runtests.jl`
+  - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
+  - `test` / `existing`: `test/nested/cartesian_screened_hartree_correction_runtests.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_q7_injected_numcomplete_screened_uhf_2026-07-15.md`
+  - `manager_pass`: `418`
+- **Dependencies:** `HP-PQS-PRF-INJECT-COMP-FN-01`
+- **Scope:** Validate complete old-seed projection versus a span-only basis, strict malformed/rank/support/weight/span failures, exact omitted-path parity, fixed-span identities, exact one-body oracle parity, numerical-complete external residual construction, packet capture, native ordering, and due diligence on synthetic, H2, and padded Be2 gates. No committed Cr2, HF, endpoint, selection, or localization assertion.
+
+### HP-PQS-PRF-INJECT-INTERACT-FN-01 - parent-backed injected mixed interaction
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Interaction Block Contract`
+- **Owned paths:**
+  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
+  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
+  - `source` / `existing`: `src/cartesian_residual_gaussians/mwg_interaction.jl`
+  - `source` / `existing`: `src/ordinary_coulomb.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_q7_injected_numcomplete_screened_uhf_2026-07-15.md`
+  - `manager_pass`: `418`
+- **Dependencies:** `HP-PQS-PARENT-GDIRECT-FN-01`, `HP-PQS-PRF-INJECT-COMP-FN-01`, `HP-PQS-SCREEN-HARTREE-CORR-FN-01`
+- **Scope:** Implement only separated native \[Ginj,Rnew,RGexternal\] exact one-body and density-interaction assembly: rebuilt terminal IDA, existing parent-Gaussian direct blocks, terminal-to-residual MWG, moment-derived Rnew-to-residual MWG, residual MWG, then delegate to the unchanged additive screened-Hartree API after B, H1, and Vee are fixed. No C'VC, exact PRF-GTO, transition exchange, public, artifact, solver, or Cr2 policy.
+
+### HP-PQS-PRF-INJECT-INTERACT-TEST-01 - parent-backed injected interaction validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Interaction Block Contract`
+- **Owned paths:**
+  - `test` / `existing`: `test/misc/runtests.jl`
+  - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
+  - `test` / `existing`: `test/nested/cartesian_screened_hartree_correction_runtests.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_q7_injected_numcomplete_screened_uhf_2026-07-15.md`
+  - `manager_pass`: `418`
+- **Dependencies:** `HP-PQS-PRF-INJECT-INTERACT-FN-01`
+- **Scope:** Validate positive injected terminal weights, exact one-body blocks, finite symmetric separated IDA/Gaussian/MWG blocks, finite positive moment-derived centers and widths, correction recomputation after complete interaction assembly, unchanged screening-off H1/Vee, strict failures, and omitted-path parity on synthetic, H2, and padded Be2 gates. No committed Cr2, HF, endpoint, exact-exchange, or exact PRF-GTO assertion.
+
+### HP-PQS-PRF-TEST-01 - parent residual function validation
+
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1525,9 +1611,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_fixed_parent_shell_q5_q9_completion_ladder_2026-07-14.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_shell_local_parent_completion_occupancy_audit_2026-07-14.md`
+  - `git_commit`: `5b46ae073`
   - `manager_pass`: `415`
+  - `manager_pass`: `416`
 - **Dependencies:** `HP-PQS-PRF-FN-01`
-- **Scope:** Validate synthetic and bounded H2 consumer-selected targets, support/rank/nonfinite failures without automatic truncation, deterministic phases, global terminal/PRF metric identities, exact one-body parity against a bounded parent oracle, identity and contracted terminal columns, unchanged G construction, and no Cr2/HF/selection-policy assertions.
+- **Scope:** Maintain only the committed synthetic and bounded H2 checks for consumer-selected targets, strict malformed-input failures, deterministic phases, terminal/PRF metric identities, exact one-body oracle parity, and unchanged G construction. No Cr2, HF, or selection-policy assertion.
 
 ### HP-PQS-SCREEN-HARTREE-AUDIT-01 - protected-GTO screened Hartree residual-density audit
 

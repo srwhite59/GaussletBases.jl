@@ -1590,3 +1590,38 @@ Goal advancement / guardrail:
   not wire occupied-first injection, add a new injection policy, or authorize
   Hamiltonian, artifact, solver, or Cr2-specific behavior. Net carrying cost
   is limited to the operational refresher and focused canonical clarifications.
+
+## Cartesian Hamiltonian Producer Pass 418 - Authorize Parent-Backed Injected Composition
+
+Commit(s):
+- this commit - approve private fixed-span injection, mixed interaction
+  assembly, and screened-Hartree delegation.
+
+Summary:
+- Added independent implementation/test authority for composing
+  consumer-selected parent targets into angular-style injected terminal rows,
+  retaining the exact parent-backed complement, and residualizing the explicit
+  GTO supplement against that complete span. The old localized terminal seeds
+  must be projected before symmetric Lowdin; dimension and span are invariant.
+- The interaction contract keeps categories explicit: rebuilt terminal IDA,
+  parent-Gaussian direct blocks, terminal/residual MWG, and moment-derived
+  parent-residual/external-residual MWG. Screening is rebuilt only after the
+  complete native `B`, `H1`, and `Vee` are fixed.
+- Reconciled the four PRF/direct IDs as implemented/completed under
+  `5b46ae073` and Pass 416.
+
+Validation / evidence:
+- Reviewed committed PRF/direct APIs and bounded tests plus the July 15 q7 Cr2
+  report. That report supports the mechanics but remains consumer measurement:
+  q7 fixed-span interaction error improved while q6 remained unsuitable, so no
+  shell, source-q, cutoff, PRF count, localization, or Cr2 default is promoted.
+- Authority render/check/self-test, generated-view parity, docs tests, local
+  Documenter, manager-log bounds, staged docs-only review, and
+  `git diff --check` form the amendment gate.
+
+Goal advancement / guardrail:
+- MT4 advances to a reusable composition seam. Selection policy, exact
+  PRF-GTO interactions, transition exchange, public workflow, artifacts,
+  solvers, and production endpoints remain outside authority. No source or
+  numerical test changes occur in this pass; one compact internal result object
+  is the maximum newly approved persistent shape.

@@ -1,7 +1,6 @@
 # Parent Residual Functions And Parent-Backed Gaussian Direct Interaction
 
-Status: approved internal implementation and validation authority, pending
-source work.
+Status: implemented internal facility under the four authority IDs below.
 
 Authority IDs:
 
@@ -18,7 +17,7 @@ This page is the canonical contract for two adjacent facilities:
 2. an onsite-calibrated Gaussian direct-Coulomb resource for functions with
    explicit coefficients in that same parent basis.
 
-The first source pass is internal and opt-in. It does not choose shell source
+The implemented facility is internal and opt-in. It does not choose shell source
 orders, targets, mode counts, cutoffs, or physical states, and it does not
 assemble a complete Hamiltonian.
 
@@ -254,7 +253,7 @@ PRF-to-true-GTO-residual interactions are also unresolved. GTO residuals are
 not parent-backed, so parent centers and onsite values do not define that
 block.
 
-## Approved Source Boundary
+## Implemented Source Boundary
 
 Implementation is limited to existing owners:
 
@@ -272,6 +271,20 @@ Implementation is limited to existing owners:
 No root export is approved. A narrow export from the existing internal
 `CartesianFinalBasisRealization` module is allowed only if the qualified
 consumer/test surface requires it. No new file or module is approved.
+
+Commit `5b46ae073` implemented:
+
+```text
+CartesianParentResidualFunctionBlock
+build_parent_residual_function_block(...)
+parent_residual_one_body_blocks(...)
+parent_gaussian_direct_resource(...)
+parent_gaussian_direct_blocks(...)
+parent_ida_direct_blocks(...)
+```
+
+The implementation added no source file or module and leaves ordinary `G-G`
+one-body and interaction matrices unchanged.
 
 ## Validation Contract
 
@@ -305,6 +318,10 @@ Required gates:
 No Cr2 fixture, endpoint energy, HF convergence, or exchange assertion belongs
 in committed tests.
 
+Accepted validation for `5b46ae073` passed package load, core `440/440`, the
+focused H2 gate `358/358`, and the supplemented facade `69/69`. Exact one-body
+oracle errors remained near `1e-15`; ordinary `H1` and `Vee` were unchanged.
+
 ## Failure And Stop Rules
 
 Stop and report if:
@@ -318,8 +335,8 @@ Stop and report if:
 - parent-backed charge sums are materially nonunit;
 - tiled and explicit bounded direct contractions disagree;
 - G-G construction or ordinary omitted-PRF behavior changes; or
-- meaningful use requires interaction assembly, GTO residual blocks,
-  artifacts, solver wiring, or exchange support.
+- use under these IDs alone requires interaction assembly, GTO residual
+  blocks, artifacts, solver wiring, or exchange support.
 
 Do not repair a failure by selecting fewer modes, changing a consumer target,
 renormalizing charges, flooring metrics, switching Coulomb policy, or adding a
@@ -339,3 +356,8 @@ These IDs do not approve:
 - dense parent-by-parent, parent-by-terminal, or final-by-final matrices;
 - Cr2-specific source behavior, relaxed-HF interpretation, production energy,
   or paper claims.
+
+The separately approved
+[parent-backed injected composition](parent_backed_injected_composition.md)
+may consume these implemented objects under its own IDs. It does not broaden
+the PRF/direct IDs themselves.
