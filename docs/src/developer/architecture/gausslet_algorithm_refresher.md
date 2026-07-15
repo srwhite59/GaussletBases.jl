@@ -178,6 +178,59 @@ If a path uses Gaussian primitives, do not immediately call it a supplement.
 Ask whether those Gaussians represent the parent gausslet-like basis itself or
 extra functions added around that basis.
 
+## Angular-Style Injection
+
+Angular-style injection is a same-dimension replacement followed by
+relocalization. It is not appending protected functions to the old basis, and
+it is not complete when only the replacement span has been constructed.
+
+Let `G` be the old orthonormal localized basis and `Y` the smaller orthonormal
+subspace that must be represented exactly. In a physical overlap metric `S`,
+the operational sequence is:
+
+```text
+C       = G' S Y
+Q_perp  = orthonormal basis for null(C')
+Q       = G Q_perp
+F       = [Y, Q]
+
+A_seed  = [C'; Q_perp']
+Gbar    = F A_seed = P_F G
+G_inj   = Gbar (Gbar' S Gbar)^(-1/2)
+```
+
+This same-dimension construction requires `C` to have full target rank. If it
+does not, `null(C')` has the wrong dimension and injection must stop rather
+than discard a target direction.
+
+The first block constructs
+
+```text
+span(F) = span(Y) + (span(G) intersect Y_perp).
+```
+
+The second block projects every old localized seed into the injected span and
+then symmetrically Lowdin-orthogonalizes those projected seeds. That projection
+is what recovers a final basis associated with the old localized sites. The
+orthonormal span basis `[Y, Q]` is generally delocalized and is not itself the
+final angular-style injected basis.
+
+Required interpretation:
+
+- `Y` must be recoverable from the final span to the stated tolerance.
+- Individual final vectors do not have to equal individual protected vectors.
+- Appending `Y` to all of `G` changes dimension and is not this construction.
+- Constructing `[Y, Q]` without `Gbar = P_F G` proves a replacement span, not
+  recovery of localized representatives.
+- Additive shell completion is a different, dimension-increasing construction;
+  do not call it injection.
+- Ordinary IDA semantics do not follow merely from protected-span recovery.
+
+For the derivation, see the angular Gausslet injection manuscript sections
+"The clean geometric idea" and "Practical construction." Repo-specific
+protected-original variants may use a compact main basis `M` in place of `G`,
+but they must state explicitly which stages they implement.
+
 ## IDA, MWG, And GTO Supplements
 
 IDA is a two-electron approximation tied to a localized gausslet-style basis.

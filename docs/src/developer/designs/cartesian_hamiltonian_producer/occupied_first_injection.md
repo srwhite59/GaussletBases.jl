@@ -118,6 +118,13 @@ Pre-inclusion capture and post-inclusion recovery are different objects. Do
 not restore the deleted `weakest_occupied_capture` alias, which hid that
 distinction by reporting a quantity near one by construction.
 
+This helper owns occupied-first replacement geometry, not the final localized
+angular-style basis. If a consumer claims full angular-style injection, it must
+project the old localized `G` seeds into `F_occ` and symmetrically
+Lowdin-orthogonalize those projected seeds. Stopping at a convenient orthonormal
+basis for `F_occ` proves protected-span recovery but not localized-representative
+recovery.
+
 ## Optional Supplement Capture
 
 Rank-clean and orthonormalize the full supplement metric, remove the mandatory

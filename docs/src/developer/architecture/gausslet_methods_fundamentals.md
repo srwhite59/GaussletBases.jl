@@ -156,11 +156,50 @@ nested/local contraction issues are separate.
 The angular Gausslet paper is the main reference for the protected-span
 injection idea.
 
-The key transfer principle is:
+Injection is a same-dimension replacement and relocalization construction, not
+an append operation. Let `G` be an orthonormal old localized basis and let `Y`
+be the smaller orthonormal subspace to protect exactly. The complete angular
+construction has three stages:
 
-- The injected/protected subspace must be recoverable.
-- The final localized basis vectors do not have to be literally the injected
-  functions.
+1. Form the part of the old span exactly orthogonal to `Y`. With
+   `C = G' * Y`, choose orthonormal columns `B` spanning `null(C')`, and set
+   `Q = G * B`. The injected span is
+
+   ```text
+   F = span(Y) + span(Q) = Y + (span(G) intersect Y_perp).
+   ```
+
+   This requires `C` to have full target rank, so `B` has exactly
+   `dim(G) - dim(Y)` columns and `F` has the original dimension. Rank failure
+   is a stop condition, not permission to drop a protected direction.
+
+   This replaces the approximate `Y` content of `G`; it does not append `Y` to
+   all of `G`. In a nonorthogonal coefficient representation, use the stated
+   physical overlap metric in every overlap and projector.
+
+2. Recover localized representatives by projecting every old localized seed
+   into the new span:
+
+   ```text
+   Gbar = P_F * G = [Y, Q] * [C'; B'].
+   ```
+
+   The columns `[Y, Q]` are a convenient orthonormal basis for the span, but
+   they are not the final localized basis. This old-seed projection is an
+   essential part of angular-style injection.
+
+3. Symmetrically Lowdin-orthogonalize the projected seeds:
+
+   ```text
+   G_inj = Gbar * (Gbar' * Gbar)^(-1/2).
+   ```
+
+The final localized vectors need not be literal members of `Y`, but their span
+must recover `Y` to the stated tolerance. Do not abbreviate the construction as
+only "protect `Y`" or only `F = [Y, Q]`: those statements specify the span but
+omit localization recovery. Also do not casually replace the old-span
+nullspace construction by `(I - P_Y)G`; the latter need not lie in the old span
+unless an equivalence has been established for the active geometry and metric.
 
 The angular setting is special because the sphere has more uniform scale and
 some exact angular structure, including special constant-function/Y00 behavior.
@@ -266,6 +305,8 @@ These are the mistakes this packet is meant to prevent:
   representation of distorted gausslet-like functions cleaned with COMX.
 - Treating GTO supplement functions as if they automatically preserve IDA.
 - Treating angular injection as literal survival of injected basis vectors.
+- Calling `[Y, Q]` the final localized injected basis, or omitting projection
+  of the old localized seeds into the injected span before final Lowdin.
 - Treating a shell/support-row oracle as the PQS source-box algorithm.
 - Treating FSB/FBU agreement on reduced transformed blocks as proof of true
   distorted-cube completeness.
@@ -311,8 +352,11 @@ or papers when possible.
 5. A retained PQS vector has a stored weight-like diagnostic. What additional
    contract would be needed before using that value for IDA division?
 
-6. In angular-style injection, what must be exactly recoverable? What does not
-   need to survive literally as a final basis vector?
+6. Starting from an old localized orthonormal basis `G` and a protected
+   orthonormal subspace `Y`, give all three stages of angular-style injection.
+   How is the old-space complement formed, how are localized representatives
+   recovered, and what is finally Lowdin-orthogonalized? What must be exactly
+   recoverable, and what need not survive literally?
 
 7. List three distinct roles GTOs can play in gausslet work. Why do those roles
    not imply the same operator semantics?
@@ -362,9 +406,14 @@ or papers when possible.
    behavior; otherwise weights are only metadata/diagnostics. Catches PQS
    retained-weight misuse.
 
-6. Expected: protected/injected subspace recoverability. The final basis need
-   not contain the injected functions literally. Catches over-literal injection
-   readings.
+6. Expected: require full target rank in `C = G'Y`, form an orthonormal
+   `B = null(C')`, and
+   `Q = G B`; define the same-dimension injected span
+   `F = span(Y) + span(Q)`; project every old localized seed into that span,
+   `Gbar = P_F G = [Y,Q][C';B']`; then symmetrically Lowdin-orthogonalize
+   `Gbar`. The final span must recover `Y` exactly to tolerance, but individual
+   final vectors need not equal the injected functions. Catches append-only,
+   span-only, and over-literal injection readings.
 
 7. Expected examples: cusp/core repair, reference GTO basis, supplement,
    protected/injected subspace, dense Gaussian validation. These do not share

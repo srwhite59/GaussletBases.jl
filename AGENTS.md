@@ -427,7 +427,8 @@ checked before interpreting numerical results.
 Agents touching Gausslet semantics should use
 `docs/src/developer/architecture/gausslet_algorithm_refresher.md` as the
 short operational memory refresh for Qiu-White, White-Lindsey, PQS, COMX,
-PGDG, IDA/MWG, identity sectors, and common category mistakes. Use
+PGDG, angular-style injection, IDA/MWG, identity sectors, and common category
+mistakes. Use
 `docs/src/developer/architecture/gausslet_methods_fundamentals.md` as a
 fresh-start conceptual reference when deeper paper-centered context is needed.
 It is a paper-centered onboarding packet for
@@ -520,7 +521,7 @@ execution whitelist even when their historical ID stays in the registry.
 <!-- BEGIN CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST -->
 > **Generated authority view. Do not edit this block.**
 > Source: `docs/src/developer/designs/cartesian_hamiltonian_producer/authority.toml`.
-> Authority SHA-256: `08915423168b2390f679cb3b3a49246c0f1e0baca5e23f5a326924e6ac7ae73b`.
+> Authority SHA-256: `7fbdb4070996ac9276fa1334b3b7eca05e18b4276cefeb42ddba9c08d4ed51bc`.
 
 Cartesian Hamiltonian producer source work is currently authorized only for
 these approved design IDs:

@@ -173,11 +173,18 @@ itself the site ordering required by the two-index IDA/MWG interaction. Let
 `C = B` and use the same `Q_perp` to build the overlap/reconstruction matrix:
 
 ```text
-A_loc = [C'; Q_perp']
-Sbar  = A_loc' A_loc
+A_loc = [C'; Q_perp'] = F' S M
+Mbar  = F A_loc = P_F M
+Sbar  = Mbar' S Mbar = A_loc' A_loc
 W     = A_loc Sbar^(-1/2)
-L     = F W
+L     = Mbar Sbar^(-1/2) = F W
 ```
+
+This is the relocalization step from the angular Gausslet injection
+construction: project every old compact-main site seed in `M` into the injected
+span `F`, then symmetrically Lowdin-orthogonalize those projected seeds. Merely
+using the columns of `F = [Z, M Q_perp]` would preserve the replacement span but
+would omit recovery of the old localized site representatives.
 
 `Sbar` must be positive definite. `W'W` must be identity to tolerance, and
 

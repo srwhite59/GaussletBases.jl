@@ -44,7 +44,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/numerical_comp
 sha256 = "27698e5a507e627f11ec354d95bf01e6df80755e482594b9833ba0db46e73be6"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/occupied_first_injection.md"
-sha256 = "632910f251754447bf34c1e40a16d508a11869936f699d74070b1e851406edb9"
+sha256 = "7f5d9d262246fb486c438db3a0a23450dd3e944ec303548429c21d6ec3a0d7ff"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_residual_functions.md"
 sha256 = "8d30d11945f58f141d62a41d3b9efaee21500a05ed6da5a9262707b6da118610"
@@ -65,7 +65,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_loca
 sha256 = "528be81754bd17bfb6b616eb82c5f5727fb80bf7e48512157f2dee6df1501bb4"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_basis.md"
-sha256 = "b2dc93aa48d8356e3e9221d789bd5a4d4699a92344ca596180b9e3e12aad9c46"
+sha256 = "e88a821c98adcdcb07746d288ccbe26d6755bf0d5e1d976b1e1e29b430bb1490"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_ladder.md"
 sha256 = "0973af1403fd62b4501d315e0bc13da7b0bdf98c6b5247afd966f6371700cfa9"
@@ -110,7 +110,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gauss
 sha256 = "61408d71a27d419606f13716cd2c1b88035b7449263f2747e1b720b1c32698a3"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_injection_hybrid.md"
-sha256 = "367d923ef129e1aec77c0d853f99bcaf0b4c8fc69e9d888124ae2972ef985a2e"
+sha256 = "4321605fcbcff263574fd44d586706d6f0d955f5cf0e440c44b3b9cbe04291c4"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
 sha256 = "49d096a4b849b34b048b01c40d182c4f7718d0a97b9a866ca85e7582aeca4466"

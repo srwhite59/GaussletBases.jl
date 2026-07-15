@@ -1560,3 +1560,33 @@ Goal advancement / guardrail:
   lane. The change is `+976/-2` across seven source/test files; no new file or
   module was introduced. Machine lifecycle/current-status reconciliation is
   the remaining documentation closure step.
+
+## Cartesian Hamiltonian Producer Pass 417 - Correct Angular-Style Injection Interpretation
+
+Commit(s):
+- this commit - reconcile the repo injection descriptions with the primary
+  angular-injection construction.
+
+Summary:
+- Clarified that angular-style injection is not complete after constructing
+  the replacement span `F = Y + (G intersect Y_perp)`. Every old localized
+  `G` seed is projected into `F`, and the projected seeds are symmetrically
+  Lowdin-orthogonalized to obtain the final injected localized basis.
+- Distinguished span-only occupied/direct-G helpers from the complete
+  relocalization already used by protected-localized construction. No source
+  lifecycle, numerical threshold, or execution grant changes in this pass.
+
+Validation / evidence:
+- Compared the formulas with the local primary `Injection.tex`, including its
+  clean geometric definition and practical project-then-Lowdin construction.
+  The coefficient-space nullspace form implements the stated
+  `G intersect Y_perp` exactly and preserves the full-target-rank stop rule.
+- Authority document hashes, generated-view parity, local Documenter, docs
+  tests, manager-log bound, and `git diff --check` form the acceptance gate.
+
+Goal advancement / guardrail:
+- MT4 gains an explicit construction invariant before parent-backed injected
+  composition is authorized. This is a documentation correction only: it does
+  not wire occupied-first injection, add a new injection policy, or authorize
+  Hamiltonian, artifact, solver, or Cr2-specific behavior. Net carrying cost
+  is limited to the operational refresher and focused canonical clarifications.

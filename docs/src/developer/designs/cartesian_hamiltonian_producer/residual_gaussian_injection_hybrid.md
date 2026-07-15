@@ -122,13 +122,21 @@ Required guards are:
 - `dim(Y) < dim(G)`;
 - `B` has full injected rank and acceptable conditioning;
 - `F' S F` is identity to tolerance;
-- true residuals are orthogonal to `F), not merely to the old `G`;
+- true residuals are orthogonal to `F`, not merely to the old `G`;
 - duplicate cross-owner injected modes are removed explicitly;
 - final `F-R` and `R-R` metric checks pass.
 
 If the injected target is too large, rank deficient, or unstable under global
 cleanup, stop. Do not silently discard target directions, append them, or turn
 them into MWG residuals.
+
+This compatibility helper constructs the replacement span. That is only the
+first part of the full angular-style localized injection construction. A caller
+claiming angular-style localization must additionally project the old localized
+`G` seeds into `F` and symmetrically Lowdin-orthogonalize those projected seeds.
+Do not treat `[Y, G Q_perp]` itself as evidence that localized representatives
+were recovered. The current protected-localized architecture owns that complete
+relocalization step.
 
 ## Operators And Interaction
 
