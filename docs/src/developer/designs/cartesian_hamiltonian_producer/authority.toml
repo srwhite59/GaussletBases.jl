@@ -46,6 +46,9 @@ sha256 = "27698e5a507e627f11ec354d95bf01e6df80755e482594b9833ba0db46e73be6"
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/occupied_first_injection.md"
 sha256 = "632910f251754447bf34c1e40a16d508a11869936f699d74070b1e851406edb9"
 [[documents]]
+path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_residual_functions.md"
+sha256 = "8d30d11945f58f141d62a41d3b9efaee21500a05ed6da5a9262707b6da118610"
+[[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_complete_shell_aspect_source_modes.md"
 sha256 = "786845cb431670c867ed504996e3534de2d4b5b17fd03f85227e8d1423c9b102"
 [[documents]]
@@ -53,7 +56,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
-sha256 = "8864b88e41bd7fb783f5d2c013618acb75eb73dd4a0098c2ab0773b890a55f61"
+sha256 = "17ccbf335f3a5821670be578c9694317efcab143d3107394fa1e0596871788ab"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_additive_reference_correction.md"
 sha256 = "28f8ba776ea9f21a75b3e5d06368ec7368d82987b1cb126610d9150a1bd36885"
@@ -2349,6 +2352,138 @@ title = "mapping `s_factor` validation"
     path = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"
     state = "existing"
 [[records]]
+dependency_ids = ["HP-OBJ-02", "HP-PQS-COULOMB-ACCURACY-FN-01", "HP-PQS-PRF-FN-01"]
+grant = "implementation"
+id = "HP-PQS-PARENT-GDIRECT-FN-01"
+lifecycle = "approved"
+scope = "Implement only the internal onsite-calibrated Gaussian direct resource for explicit current-parent coefficients. Use mapped PGDG centers and same-expansion positive parent-IDA onsite values, validate unrenormalized `abs2` parent charges, and return tiled PRF-PRF/PRF-G direct blocks plus an optional bounded full-parent-IDA direct comparison. Existing G-G `Vee`, Hamiltonians, exchange, GTO residuals, public inputs, artifacts, and solvers remain unchanged."
+surfaces = ["source"]
+title = "parent-backed Gaussian direct interaction"
+
+    [[records.document_refs]]
+    heading = "Parent-Backed Gaussian Direct Interaction"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_residual_functions.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_prf_final_g_interaction_audit_2026-07-14.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_prf_gaussian_distance_interaction_audit_2026-07-14.md"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "415"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/pqs_terminal_ida.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_coulomb.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-PARENT-GDIRECT-FN-01"]
+grant = "implementation"
+id = "HP-PQS-PARENT-GDIRECT-TEST-01"
+lifecycle = "approved"
+scope = "Validate the analytic onsite limit, symmetry, finiteness, positive semidefiniteness, far tail, same-expansion onsite provenance, nonunit-charge rejection, tiled/direct parity, bounded parent-IDA direct comparison, exact-zero G-G change, and strict non-claims for transition exchange and PRF-to-GTO residuals. No Cr2 fixture, HF, endpoint energy, or complete-Hamiltonian assertion is approved."
+surfaces = ["tests"]
+title = "parent-backed Gaussian direct validation"
+
+    [[records.document_refs]]
+    heading = "Parent-Backed Gaussian Direct Interaction"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_residual_functions.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_prf_final_g_interaction_audit_2026-07-14.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_prf_gaussian_distance_interaction_audit_2026-07-14.md"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "415"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/core/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-FN-03", "HP-OBJ-02"]
+grant = "implementation"
+id = "HP-PQS-PRF-FN-01"
+lifecycle = "approved"
+scope = "Implement only internal support-local parent residual function mechanics for consumer-selected parent target columns: project against the complete terminal basis, fail on support/rank/metric defects without dropping columns, apply one symmetric Lowdin normalization, validate terminal orthogonality and parent-metric identity, and build exact native PRF-G/PRF-PRF one-body blocks. Add at most one compact vector-backed PRF block type and no selection, RDM, shell-q, artifact, Hamiltonian, or solver policy."
+surfaces = ["source"]
+title = "parent residual function mechanics"
+
+    [[records.document_refs]]
+    heading = "Parent Residual Function Construction"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_residual_functions.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_fixed_parent_shell_q5_q9_completion_ladder_2026-07-14.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_shell_local_parent_completion_occupancy_audit_2026-07-14.md"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "415"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/pqs_terminal_one_body.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-PRF-FN-01"]
+grant = "implementation"
+id = "HP-PQS-PRF-TEST-01"
+lifecycle = "approved"
+scope = "Validate synthetic and bounded H2 consumer-selected targets, support/rank/nonfinite failures without automatic truncation, deterministic phases, global terminal/PRF metric identities, exact one-body parity against a bounded parent oracle, identity and contracted terminal columns, unchanged G construction, and no Cr2/HF/selection-policy assertions."
+surfaces = ["tests"]
+title = "parent residual function validation"
+
+    [[records.document_refs]]
+    heading = "Parent Residual Function Construction"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_residual_functions.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_fixed_parent_shell_q5_q9_completion_ladder_2026-07-14.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_shell_local_parent_completion_occupancy_audit_2026-07-14.md"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "415"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
+    state = "existing"
+[[records]]
 dependency_ids = []
 evidence_refs = []
 grant = "none"
@@ -2464,7 +2599,6 @@ title = "fitted-potential measurement"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartree_residual_density.md"
 [[records]]
 dependency_ids = ["HP-PQS-ASPECTSHELL-FN-01", "HP-RG-NUMCOMP-FN-01"]
-evidence_refs = []
 grant = "maintenance"
 id = "HP-PQS-SHELLQ-OVERRIDE-FN-01"
 lifecycle = "implemented"
@@ -2476,6 +2610,13 @@ title = "semantic per-shell PQS source-q overrides"
     heading = "Semantic Per-Shell PQS Source-q Overrides"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "4de885c90"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "414"
 
     [[records.paths]]
     kind = "source"
@@ -2490,11 +2631,10 @@ title = "semantic per-shell PQS source-q overrides"
     path = "src/pqs_source_box_route_driver_helpers.jl"
     state = "existing"
 [[records]]
-dependency_ids = []
-evidence_refs = []
-grant = "implementation"
+dependency_ids = ["HP-PQS-SHELLQ-OVERRIDE-FN-01"]
+grant = "maintenance"
 id = "HP-PQS-SHELLQ-OVERRIDE-TEST-01"
-lifecycle = "approved"
+lifecycle = "completed"
 scope = "Validate route-q 7 to source-q 6 and 5 coarsening, expected retained-count reduction, unchanged parent/support/ownership/cores/slabs/route metadata, orthonormal contraction columns, omitted/empty parity, finite symmetric full construction, and rejection of malformed, below-3, Boolean, equal-route, asymmetric, and unmatched requests. Preserve existing refinement, residual, packet-capture, `J0/E0`, correction, dimension, and due-diligence gates. No new accessor, dense baseline-to-variant overlap API, source-pass HF, endpoint energy assertion, or production claim is approved."
 surfaces = ["tests"]
 title = "semantic source-q override validation"
@@ -2503,6 +2643,13 @@ title = "semantic source-q override validation"
     heading = "Semantic Per-Shell PQS Source-q Overrides"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "4de885c90"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "414"
 
     [[records.paths]]
     kind = "test"

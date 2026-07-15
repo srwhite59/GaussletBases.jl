@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `13e7ec2bc3ce4e6909bcc8798c725a8d38d6377ed9663727295e1e16f76d34f9`.
+> [authority.toml](authority.toml), SHA-256 `08915423168b2390f679cb3b3a49246c0f1e0baca5e23f5a326924e6ac7ae73b`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1456,6 +1456,79 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Dependencies:** none
 - **Scope:** maintain only the existing committed \`s\_factor\` assertions in that file. New fixtures or endpoint policy require separate authority.
 
+### HP-PQS-PARENT-GDIRECT-FN-01 - parent-backed Gaussian direct interaction
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [parent\_residual\_functions.md](parent_residual_functions.md); heading `Parent-Backed Gaussian Direct Interaction`
+- **Owned paths:**
+  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`
+  - `source` / `existing`: `src/ordinary_coulomb.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_prf_final_g_interaction_audit_2026-07-14.md`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_prf_gaussian_distance_interaction_audit_2026-07-14.md`
+  - `manager_pass`: `415`
+- **Dependencies:** `HP-OBJ-02`, `HP-PQS-COULOMB-ACCURACY-FN-01`, `HP-PQS-PRF-FN-01`
+- **Scope:** Implement only the internal onsite-calibrated Gaussian direct resource for explicit current-parent coefficients. Use mapped PGDG centers and same-expansion positive parent-IDA onsite values, validate unrenormalized \`abs2\` parent charges, and return tiled PRF-PRF/PRF-G direct blocks plus an optional bounded full-parent-IDA direct comparison. Existing G-G \`Vee\`, Hamiltonians, exchange, GTO residuals, public inputs, artifacts, and solvers remain unchanged.
+
+### HP-PQS-PARENT-GDIRECT-TEST-01 - parent-backed Gaussian direct validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [parent\_residual\_functions.md](parent_residual_functions.md); heading `Parent-Backed Gaussian Direct Interaction`
+- **Owned paths:**
+  - `test` / `existing`: `test/core/runtests.jl`
+  - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_prf_final_g_interaction_audit_2026-07-14.md`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_prf_gaussian_distance_interaction_audit_2026-07-14.md`
+  - `manager_pass`: `415`
+- **Dependencies:** `HP-PQS-PARENT-GDIRECT-FN-01`
+- **Scope:** Validate the analytic onsite limit, symmetry, finiteness, positive semidefiniteness, far tail, same-expansion onsite provenance, nonunit-charge rejection, tiled/direct parity, bounded parent-IDA direct comparison, exact-zero G-G change, and strict non-claims for transition exchange and PRF-to-GTO residuals. No Cr2 fixture, HF, endpoint energy, or complete-Hamiltonian assertion is approved.
+
+### HP-PQS-PRF-FN-01 - parent residual function mechanics
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [parent\_residual\_functions.md](parent_residual_functions.md); heading `Parent Residual Function Construction`
+- **Owned paths:**
+  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_fixed_parent_shell_q5_q9_completion_ladder_2026-07-14.md`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_shell_local_parent_completion_occupancy_audit_2026-07-14.md`
+  - `manager_pass`: `415`
+- **Dependencies:** `HP-FN-03`, `HP-OBJ-02`
+- **Scope:** Implement only internal support-local parent residual function mechanics for consumer-selected parent target columns: project against the complete terminal basis, fail on support/rank/metric defects without dropping columns, apply one symmetric Lowdin normalization, validate terminal orthogonality and parent-metric identity, and build exact native PRF-G/PRF-PRF one-body blocks. Add at most one compact vector-backed PRF block type and no selection, RDM, shell-q, artifact, Hamiltonian, or solver policy.
+
+### HP-PQS-PRF-TEST-01 - parent residual function validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [parent\_residual\_functions.md](parent_residual_functions.md); heading `Parent Residual Function Construction`
+- **Owned paths:**
+  - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_fixed_parent_shell_q5_q9_completion_ladder_2026-07-14.md`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_shell_local_parent_completion_occupancy_audit_2026-07-14.md`
+  - `manager_pass`: `415`
+- **Dependencies:** `HP-PQS-PRF-FN-01`
+- **Scope:** Validate synthetic and bounded H2 consumer-selected targets, support/rank/nonfinite failures without automatic truncation, deterministic phases, global terminal/PRF metric identities, exact one-body parity against a bounded parent oracle, identity and contracted terminal columns, unchanged G construction, and no Cr2/HF/selection-policy assertions.
+
 ### HP-PQS-SCREEN-HARTREE-AUDIT-01 - protected-GTO screened Hartree residual-density audit
 
 - **Lifecycle:** `completed`
@@ -1552,22 +1625,26 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
   - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
   - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
-- **Evidence:** none
+- **Evidence:**
+  - `git_commit`: `4de885c90`
+  - `manager_pass`: `414`
 - **Dependencies:** `HP-PQS-ASPECTSHELL-FN-01`, `HP-RG-NUMCOMP-FN-01`
 - **Scope:** Maintain \`owner = :all\` overrides for positive semantic \`:atom\_local\_shell\` or \`:shared\_molecular\_shell\` indices with non-Boolean integer \`source\_q \>= 3\` and \`source\_q \!= route\_q\`. Values above route q refine the shell contraction; values below route q coarsen it while parent axes, support, ownership, cores, slabs, and route metadata remain unchanged. Atom-local shells use \`(source\_q,source\_q,source\_q)\`; shared shells rerun the existing angular-band selector for \`(source\_q,source\_q,L)\`. Selector retention, \`nside\`, and \`selected\_q\` use \`source\_q\`. One authoritative shape must reach existing retained/support/transform/realization/due-diligence consumers unchanged.
 
 ### HP-PQS-SHELLQ-OVERRIDE-TEST-01 - semantic source-q override validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [pqs\_semantic\_shell\_q\_overrides.md](pqs_semantic_shell_q_overrides.md); heading `Semantic Per-Shell PQS Source-q Overrides`
 - **Owned paths:**
   - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
-- **Evidence:** none
-- **Dependencies:** none
+- **Evidence:**
+  - `git_commit`: `4de885c90`
+  - `manager_pass`: `414`
+- **Dependencies:** `HP-PQS-SHELLQ-OVERRIDE-FN-01`
 - **Scope:** Validate route-q 7 to source-q 6 and 5 coarsening, expected retained-count reduction, unchanged parent/support/ownership/cores/slabs/route metadata, orthonormal contraction columns, omitted/empty parity, finite symmetric full construction, and rejection of malformed, below-3, Boolean, equal-route, asymmetric, and unmatched requests. Preserve existing refinement, residual, packet-capture, \`J0/E0\`, correction, dimension, and due-diligence gates. No new accessor, dense baseline-to-variant overlap API, source-pass HF, endpoint energy assertion, or production claim is approved.
 
 ### HP-R1-ART-01 - public base producer artifact provenance

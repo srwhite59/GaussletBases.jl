@@ -1,15 +1,15 @@
 # Semantic Per-Shell PQS Source-q Overrides
 
-Status: implemented internal opt-in refinement facility with completed bounded
-H2 and padded Be2 validation. Source-order coarsening is approved by the same
-IDs but remains pending implementation and validation.
+Status: implemented internal opt-in refinement and coarsening facility with
+completed bounded H2 and padded Be2 validation.
 Authority is recorded under `HP-PQS-SHELLQ-OVERRIDE-FN-01` and
 `HP-PQS-SHELLQ-OVERRIDE-TEST-01`.
 
 This page is the canonical contract for bounded source-mode variation of
 selected complete shells in bond-aligned homonuclear diatomic PQS
-construction. The registry owns lifecycle, permission, and exact source/test
-ceilings. This page owns input semantics, construction order, failure
+construction. `authority.toml` owns lifecycle, permission, and exact
+source/test ceilings; the registry is its generated view. This page owns input
+semantics, construction order, failure
 behavior, validation, and exclusions.
 
 ## Purpose
@@ -228,8 +228,8 @@ Existing multilayer realization files are intentionally outside the source
 ceiling. Their current authoritative-shape path must work unchanged or the
 implementation stops.
 
-The coarsening amendment must reuse the existing post-shellification override
-machinery. It does not approve a new lowering-plan accessor. If a consumer
+The implemented coarsening path reuses the existing post-shellification
+override machinery. It adds no lowering-plan accessor. If a consumer
 later proves that it cannot inspect the staged plan without constructing the
 full Hamiltonian, report that exact seam for separate authority rather than
 adding it here.

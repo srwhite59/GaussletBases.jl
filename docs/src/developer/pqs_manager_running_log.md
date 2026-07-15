@@ -31,6 +31,10 @@ archaeology and are not normal startup reading.
 - The current consumer target remains a controlled Cr2 screened-Hartree off/on
   fixed-density comparison in one high-accuracy numerical-complete basis, with
   the same imported occupied state and consumer-owned solver interpretation.
+- Fixed-parent shell-q/PRF measurements now also support an internal
+  parent-residual basis facility and direct-only parent-backed Gaussian
+  interaction resource. Physical target selection, transition-density
+  exchange, and PRF-to-GTO-residual interactions remain consumer questions.
 - Production defaults, public workflows, corrected artifacts, and Cr2 endpoint
   claims remain unchanged unless separately authorized.
 
@@ -59,9 +63,10 @@ warning shape, stale-path removal, and missing validation gates. Keep each
 repair lane narrow.
 
 **MT2 - Controlled Cr2 measurement (active).** Complete the authorized
-numerical-complete screened-Hartree fixed-density comparison without changing
-the basis, Coulomb policy, imported state, solver interpretation, or reference
-convention mid-comparison.
+numerical-complete screened-Hartree fixed-density comparison and the separate
+fixed-parent PRF contraction study without changing each comparison's parent,
+Coulomb policy, imported state, solver interpretation, or reference convention
+mid-comparison.
 
 **MT3 - Approved pending producer facilities (active).** Implement Standard60
 and canonical-driver Coulomb exposure separately from the controlled Cr2 run.
@@ -70,10 +75,11 @@ The retained-GTO EGOI helper remains pending and must not absorb the unrelated
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
-injection/localization policy remain separate future decisions. Shell-local
-parent-completion residuals are also measurement-only: their near-zero IDA
-weights are expected, and any distributed parent-charge interaction must be
-judged against MWG and a bounded exact oracle rather than against terminal IDA.
+injection/localization policy remain separate future decisions. Parent residual
+function mechanics and the onsite-calibrated Gaussian direct resource are
+approved pending implementation after comparison with MWG, full parent IDA,
+and bounded continuum direct oracles. Transition-density exchange and
+PRF-to-GTO-residual interactions remain measurement-only questions.
 
 **MT5 - Documentation and authority maintenance (maintenance).** The broad
 reorganization and cutover are complete. Update machine authority atomically,
@@ -1468,3 +1474,57 @@ Goal advancement / guardrail:
   and later parent-completion measurements. Source change is only `+2/-2`;
   focused tests add `137` net lines. This pass does not authorize completion
   modes, parent-charge interactions, HF, public controls, or Cr2 claims.
+
+## Cartesian Hamiltonian Producer Pass 415 - Authorize Parent Residual Functions And Gaussian Direct Blocks
+
+Commit(s):
+- this commit - approve internal PRF mechanics and direct-only parent-backed
+  Gaussian interaction blocks.
+
+Summary:
+- Added one canonical contract and four execution IDs. Consumers retain shell,
+  target, orientation, mode-count, and physical-state policy; repo source may
+  project and validate supplied parent targets, build exact PRF one-body blocks,
+  and evaluate tiled PRF-PRF/PRF-G direct blocks without changing existing G-G
+  operators or interactions.
+- The Gaussian resource uses mapped parent centers and same-expansion positive
+  parent-IDA onsite values. It is explicitly direct-only. Transition-density
+  exchange, PRF-to-GTO-residual interactions, Hamiltonian integration,
+  artifacts, public controls, and Cr2-specific behavior remain unapproved.
+- Reconciled semantic shell-q coarsening as implemented and completed its test
+  lifecycle after Pass 414.
+
+Validation / evidence:
+- Reviewed the live terminal realization, factorized one-body/IDA owners, the
+  accepted shell-q implementation, and the CR2 occupancy, q-ladder, full-parent
+  IDA, continuum, Gaussian-distance, and complete 16-by-6783 PRF-G reports.
+  Authority render/check and self-test, generated registry/AGENTS parity, docs
+  tests, local Documenter, manager-log bound, staged docs-only scope, and
+  `git diff --check` form the amendment gate. No producer source or numerical
+  test changes occur in this pass.
+
+Goal advancement / guardrail:
+- MT4 advances from measurement-only PRFs to a bounded implementation seam
+  because direct evidence is now sufficient. The ongoing orbital-contracted
+  exchange audit may quantify a later need but cannot broaden this direct
+  authority. The two compact internal objects are the only new persistent
+  source shapes approved; no file/module or metadata cloud is authorized.
+
+### Medium-Term Goal Checkpoint After Pass 415
+
+- **MT1 conformance remediation - active.** PRF authority does not reinterpret
+  or close any remaining Pass 398 discrepancy.
+- **MT2 controlled Cr2 measurement - active.** Screened-Hartree and fixed-parent
+  PRF studies remain separate controlled comparisons with consumer-owned state
+  selection and interpretation.
+- **MT3 pending producer facilities - active.** PRF mechanics/Gaussian direct,
+  Standard60/driver exposure, and retained-GTO EGOI are independent pending
+  source lanes.
+- **MT4 residual/protected evidence - active with refinement.** PRF exact
+  one-body and direct blocks are approved; orbital-contracted exchange and
+  PRF-to-GTO-residual interactions remain measurement-only.
+- **MT5 documentation/authority maintenance - maintenance.** This is a bounded
+  atomic machine-authority amendment, not a documentation migration.
+- **MT6 carrying-cost control - active.** Implementation must reuse existing
+  terminal/Coulomb owners, add no file or module, and report any helper or test
+  pressure it cannot avoid.

@@ -90,8 +90,11 @@ ID or subsystem.
 - [PQS complete-shell aspect source modes](pqs_complete_shell_aspect_source_modes.md)
   for the separate `(q,q,L)` source-policy lane
 - [Semantic per-shell PQS source-q overrides](pqs_semantic_shell_q_overrides.md)
-  for the private owner-balanced source-order diagnostic; refinement is
-  implemented and coarsening is approved pending
+  for implemented private owner-balanced source-order refinement and
+  coarsening on a fixed parent lattice
+- [Parent residual functions and Gaussian direct interaction](parent_residual_functions.md)
+  for approved-pending consumer-selected parent residual mechanics, exact
+  one-body blocks, and direct-only parent-backed Gaussian Coulomb blocks
 - [Cartesian Gaussian raw blocks - nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
   for the neutral uncharged nuclear raw-block owner
 - [Cartesian Gaussian raw blocks - non-nuclear slice](cartesian_gaussian_raw_blocks_non_nuclear.md)

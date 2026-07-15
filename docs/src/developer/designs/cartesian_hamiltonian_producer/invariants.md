@@ -86,6 +86,32 @@ The detailed object, realization, one-body, IDA, and Hamiltonian boundary is
 - Do not floor small eigenvalues to preserve directions that the approved
   residual or merge policy rejects.
 
+## Parent Residual Functions And Direct Blocks
+
+- A parent residual function (PRF) is an explicit function in the current
+  mapped parent basis that is support-local, terminal-orthogonal, and
+  parent-metric orthonormal. It is not a terminal IDA site, Residual Gaussian,
+  GTO residual, protected replacement, or fitted reference field.
+- Consumers select the shell, targets, orientation, and mode count. Repo PRF
+  mechanics may project, normalize, validate, and transform supplied columns,
+  but must not own an RDM, occupation cutoff, top-`k` rule, source-order policy,
+  or automatic selection.
+- PRF one-body blocks use exact parent operators and native terminal parent
+  coefficients. Existing terminal `G-G` one-body blocks remain unchanged.
+- The onsite-calibrated parent Gaussian resource is direct-only. It uses
+  mapped PGDG centers, positive parent-IDA onsite values, and the same resolved
+  Coulomb expansion as the parent construction. Parent-backed function charges
+  are `abs2` of explicit parent coefficients and must be validated rather than
+  silently renormalized.
+- Initial composition may return PRF-PRF and PRF-G direct blocks only. It must
+  not replace existing G-G `Vee`, assemble a Hamiltonian, rotate an interaction,
+  or claim continuum transition-density exchange.
+- PRF-to-GTO-residual interactions remain undefined because those residuals
+  are not parent-backed. Transition/exchange correction requires separate
+  occupied-state evidence and authority.
+- Stream or tile parent kernels and terminal blocks. Do not materialize dense
+  parent-by-parent or parent-by-terminal matrices.
+
 ## One-Body And IDA Assembly
 
 - Final-basis one-body operators are assembled from terminal block pairs using
