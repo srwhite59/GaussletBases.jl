@@ -722,6 +722,69 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     @test symmetry_error(parent_operators.one_body_hamiltonian) <= 1.0e-10
     @test norm(parent_operators.kinetic[1:nB, 1:nB] -
         new_parent_one_body.kinetic, Inf) <= 1.0e-10
+    parent_interaction = C.parent_backed_injected_residual_gto_interaction(
+        composition, parent.parent_axis_bundle_object, parent_augmentation,
+        parent_operators; expansion)
+    nGinj = composition.terminal_basis.final_dimension
+    nRnew = composition.parent_backed_dimension - nGinj
+    nExternal = parent_residual.residual_dimension
+    Ginj = 1:nGinj
+    Rnew = (nGinj + 1):(nGinj + nRnew)
+    RGexternal = (nGinj + nRnew + 1):(nGinj + nRnew + nExternal)
+    @test size(parent_interaction.electron_electron_ida) ==
+        (nGinj + nRnew + nExternal, nGinj + nRnew + nExternal)
+    @test symmetry_error(parent_interaction.electron_electron_ida) <= 1.0e-10
+    fresh_terminal = zeros(Float64, nGinj, nGinj)
+    C.assemble_terminal_ida_interaction!(fresh_terminal, composition.terminal_basis,
+        expansion.coefficients, pgdg[1].pair_factor_terms_raw,
+        pgdg[2].pair_factor_terms_raw, pgdg[3].pair_factor_terms_raw,
+        pgdg[1].weights, pgdg[2].weights, pgdg[3].weights)
+    injected_direct_resource = C.parent_gaussian_direct_resource(
+        parent.parent_axis_bundle_object, expansion)
+    injected_direct = C.parent_gaussian_direct_blocks(composition.terminal_basis,
+        composition.parent_residual_blocks, parent.parent_axis_bundle_object,
+        injected_direct_resource, expansion)
+    injected_mwg = CRG.parent_backed_injected_mwg_blocks(
+        composition.terminal_basis, parent.parent_axis_bundle_object,
+        parent_residual, parent_operators; expansion)
+    @test norm(fresh_terminal - base_vee_before_prf, Inf) > 1.0e-12
+    @test parent_interaction.electron_electron_ida[Ginj, Ginj] == fresh_terminal
+    @test parent_interaction.electron_electron_ida[Ginj, Rnew] == injected_direct.G_R
+    @test parent_interaction.electron_electron_ida[Rnew, Rnew] == injected_direct.R_R
+    @test parent_interaction.electron_electron_ida[Ginj, RGexternal] ==
+        injected_mwg.terminal_external
+    @test parent_interaction.electron_electron_ida[Rnew, RGexternal] ==
+        injected_mwg.parent_residual_external
+    @test parent_interaction.electron_electron_ida[RGexternal, RGexternal] ==
+        injected_mwg.external_external
+    @test all(isfinite, parent_interaction.diagnostics.parent_residual_centers)
+    @test all(>(0.0), parent_interaction.diagnostics.parent_residual_widths)
+    @test all(isfinite, parent_interaction.diagnostics.external_centers)
+    @test all(>(0.0), parent_interaction.diagnostics.external_widths)
+    stale_position_x = copy(parent_operators.position.x)
+    stale_position_x[last(RGexternal), last(RGexternal)] += 1.0e-4
+    stale_operators = merge(parent_operators,
+        (; position = merge(parent_operators.position, (; x = stale_position_x))))
+    @test_throws ArgumentError C.parent_backed_injected_residual_gto_interaction(
+        composition, parent.parent_axis_bundle_object, parent_augmentation,
+        stale_operators; expansion)
+    bad_parent_x2_x = copy(parent_operators.parent_one_body.x2.x)
+    parent_row = nGinj + 1
+    bad_variance_value = parent_operators.position.x[parent_row, parent_row]^2
+    bad_parent_x2_x[parent_row, parent_row] = bad_variance_value
+    bad_parent_x2 = merge(parent_operators.parent_one_body.x2,
+        (; x = bad_parent_x2_x))
+    bad_parent_one_body = merge(parent_operators.parent_one_body,
+        (; x2 = bad_parent_x2))
+    bad_x2_x = CRG.transform_augmented_operator(bad_parent_x2_x,
+        parent_augmentation.supplement_blocks.mixed.x2.x,
+        parent_augmentation.supplement_blocks.self.x2.x, parent_residual)
+    bad_operators = merge(parent_operators,
+        (; x2 = merge(parent_operators.x2, (; x = bad_x2_x)),
+            parent_one_body = bad_parent_one_body))
+    @test_throws ArgumentError C.parent_backed_injected_residual_gto_interaction(
+        composition, parent.parent_axis_bundle_object, parent_augmentation,
+        bad_operators; expansion)
     println("prf_injected_h2_diagnostics=", (;
         terminal_dimension = basis.final_dimension,
         parent_backed_dimension = composition.parent_backed_dimension,
@@ -736,6 +799,13 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
         cross_error = request_diagnostics.terminal_complement_cross_error,
         minimum_final_ida_weight = request_diagnostics.minimum_final_ida_weight,
         parent_one_body_oracle_error,
+        fresh_terminal_difference = norm(fresh_terminal - base_vee_before_prf, Inf),
+        interaction_symmetry_error = symmetry_error(
+            parent_interaction.electron_electron_ida),
+        parent_width_minimum = minimum(
+            parent_interaction.diagnostics.parent_residual_widths),
+        external_width_minimum = minimum(
+            parent_interaction.diagnostics.external_widths),
         G_R_error = norm(parent_residual.T_G + parent_augmentation.mixed_overlap *
             parent_residual.T_A, Inf),
         R_R_error = norm(CRG.residual_gaussian_overlap(parent_residual.T_G,

@@ -343,9 +343,16 @@ function _plb_parent_backed_injected_numerical_complete(
             inputs.supplement, augmentation, inputs.base.input.locations,
             inputs.base.input.charges;
             expansion = inputs.base.coulomb_expansion))
+    interaction = _plb_stage!(stages,
+        "ns$(recipe.ns) parent-backed separated interaction", () ->
+        CartesianFinalBasisRealization.parent_backed_injected_residual_gto_interaction(
+            composition, inputs.base.parent.parent_axis_bundle_object,
+            augmentation, operators;
+            expansion = inputs.base.coulomb_expansion))
     return (; recipe, inputs, composition, augmentation,
         residual = augmentation.residual, operators,
-        H = operators.one_body_hamiltonian)
+        interaction, H = operators.one_body_hamiltonian,
+        V = interaction.electron_electron_ida)
 end
 _plb_reference_embeddings(inputs, placements, stages) = [_plb_stage!(stages,
         "ns$(inputs.recipe.ns) embed reference owner $(placement.owner_index)", () ->
@@ -374,6 +381,71 @@ function _plb_additive_reference_raw_blocks(inputs, embeddings, stages)
         AA .+= raw.AA
     end
     return (; summed = (; GG, GA, AA), component_field_expectations)
+end
+
+function _plb_parent_backed_reference_raw_blocks(member, embeddings, stages)
+    inputs = member.inputs
+    raw_blocks = [_plb_stage!(stages,
+            "ns$(inputs.recipe.ns) parent-backed fitted field owner $(embedding.owner_index)",
+            () -> CartesianFinalBasisRealization.
+                parent_backed_injected_gaussian_potential_raw_blocks(
+                    member.composition, inputs.base.parent.parent_axis_bundle_object,
+                    inputs.supplement, member.augmentation,
+                    getfield(CartesianReferenceDensity, :_packet_potential_expansion)(
+                        embedding.packet), embedding.center)) for embedding in embeddings]
+    densities = [CartesianReferenceDensity.atomic_reference_packet_p0_q0(
+        embedding.packet).P_AA for embedding in embeddings]
+    component_field_expectations = [sum(densities[a] .*
+        raw_blocks[b].AA[embeddings[a].supplement_indices,
+            embeddings[a].supplement_indices])
+        for a in eachindex(embeddings), b in eachindex(embeddings)]
+    GG, GA, AA = copy(first(raw_blocks).GG), copy(first(raw_blocks).GA),
+        copy(first(raw_blocks).AA)
+    for raw in raw_blocks[2:end]
+        GG .+= raw.GG
+        GA .+= raw.GA
+        AA .+= raw.AA
+    end
+    return (; summed = (; GG, GA, AA), component_field_expectations)
+end
+
+function _plb_parent_backed_injected_additive_reference(
+    inputs, requests, placements, stages;
+    correction_options = (;),
+)
+    member = _plb_parent_backed_injected_numerical_complete(inputs, requests, stages)
+    isempty(placements) && return (; member, correction = nothing, reference = nothing)
+    embeddings = _plb_reference_embeddings(inputs, placements, stages)
+    occupations = [entry.occupations for entry in embeddings]
+    represented = _plb_stage!(stages,
+        "ns$(inputs.recipe.ns) represented reference in parent-backed B", () ->
+        CartesianResidualGaussians.numerical_complete_reference_blocks_in_augmented_basis(
+            member.residual, member.augmentation.mixed_overlap,
+            member.augmentation.supplement_overlap,
+            [entry.Y for entry in embeddings], occupations))
+    raw = _plb_parent_backed_reference_raw_blocks(member, embeddings, stages)
+    J0_B = _plb_stage!(stages,
+        "ns$(inputs.recipe.ns) parent-backed additive reference J0", () ->
+        CartesianResidualGaussians.transform_augmented_operator(
+            raw.summed.GG, raw.summed.GA, raw.summed.AA, member.residual))
+    energy = _plb_stage!(stages,
+        "ns$(inputs.recipe.ns) parent-backed additive reference density energy", () ->
+        CartesianReferenceDensity.atomic_reference_packet_additive_density_energy(embeddings))
+    correction = _plb_stage!(stages,
+        "ns$(inputs.recipe.ns) parent-backed screened-Hartree correction", () ->
+        CartesianReferenceDensity.build_additive_screened_hartree_correction(
+            member.V, J0_B, energy.total, represented.coefficient_blocks, occupations;
+            packets = [entry.packet for entry in embeddings],
+            component_field_expectations = raw.component_field_expectations,
+            density_pair_energies = energy.pair_energies,
+            correction_options...))
+    mapping = [(; owner_index = entry.owner_index, center = entry.center,
+        overlap_mapping = entry.overlap_mapping) for entry in embeddings]
+    reference = (; represented = represented.diagnostics, mapping, energy,
+        hartree = (; symmetry_error = norm(J0_B - transpose(J0_B), Inf),
+            finite = all(isfinite, J0_B)),
+        component_field_expectations = raw.component_field_expectations)
+    return (; member, correction, reference)
 end
 function _plb_build_additive_reference_member(
     recipe, stages, placements; correction_options = (;))

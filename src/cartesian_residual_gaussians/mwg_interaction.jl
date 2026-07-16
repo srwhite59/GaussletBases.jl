@@ -1,21 +1,35 @@
 const _RG_PARENT = parentmodule(@__MODULE__)
-function moment_matched_gaussians(operators, residual)
-    nG, nR = residual.base_dimension, residual.residual_dimension
-    centers, widths = zeros(Float64, nR, 3), zeros(Float64, nR, 3)
+
+function _moment_matched_gaussian_rows(operators, rows, label)
+    indices = collect(rows)
+    centers, widths = zeros(Float64, length(indices), 3), zeros(Float64, length(indices), 3)
     for (axis_index, axis) in pairs((:x, :y, :z))
         position, second = operators.position[axis], operators.x2[axis]
-        for residual_index in 1:nR
-            row = nG + residual_index
+        size(position) == size(second) && size(position, 1) == size(position, 2) ||
+            throw(DimensionMismatch("$label moment operator dimensions differ"))
+        isempty(indices) || maximum(indices) <= size(position, 1) ||
+            throw(DimensionMismatch("$label moment rows exceed the operator dimension"))
+        all(isfinite, position) && all(isfinite, second) ||
+            throw(ArgumentError("$label moment operators must be finite"))
+        for (result_index, row) in pairs(indices)
             center = Float64(position[row, row])
             variance = Float64(second[row, row]) - center^2
             isfinite(center) && isfinite(variance) && variance > 0.0 || throw(
-                ArgumentError("residual MWG moment variance must be finite positive"))
+                ArgumentError("$label MWG moment variance must be finite positive"))
             width = sqrt(2.0 * variance)
-            isfinite(width) && width > 0.0 || throw(ArgumentError("residual MWG width must be finite positive"))
-            centers[residual_index, axis_index] = center; widths[residual_index, axis_index] = width
+            isfinite(width) && width > 0.0 || throw(
+                ArgumentError("$label MWG width must be finite positive"))
+            centers[result_index, axis_index] = center
+            widths[result_index, axis_index] = width
         end
     end
     return centers, widths
+end
+
+function moment_matched_gaussians(operators, residual)
+    nG, nR = residual.base_dimension, residual.residual_dimension
+    return _moment_matched_gaussian_rows(
+        operators, (nG + 1):(nG + nR), "residual")
 end
 function _mwg_axis_pairs(bundles, expansion, residual_centers, residual_widths)
     bundle(axis) = axis == 1 ? bundles.bundle_x : axis == 2 ? bundles.bundle_y : bundles.bundle_z
@@ -83,6 +97,57 @@ function _mwg_residual_residual(pair_terms, coefficients)
     end
     return V_MM
 end
+
+function parent_backed_injected_mwg_blocks(
+    basis,
+    bundles,
+    residual,
+    augmented_operators;
+    expansion,
+)
+    nG = basis.final_dimension
+    nB = residual.base_dimension
+    nP = nB - nG
+    nE = residual.residual_dimension
+    nP >= 0 || throw(DimensionMismatch(
+        "parent-backed MWG base is smaller than its terminal sector"))
+    parent_centers, parent_widths = _moment_matched_gaussian_rows(
+        augmented_operators, (nG + 1):nB, "parent residual")
+    external_centers, external_widths = moment_matched_gaussians(
+        augmented_operators, residual)
+    if nE == 0
+        return (; terminal_external = zeros(Float64, nG, 0),
+            parent_residual_external = zeros(Float64, nP, 0),
+            external_external = zeros(Float64, 0, 0),
+            parent_residual_centers = parent_centers,
+            parent_residual_widths = parent_widths,
+            external_centers, external_widths)
+    end
+
+    centers = vcat(parent_centers, external_centers)
+    widths = vcat(parent_widths, external_widths)
+    pair_terms = _mwg_axis_pairs(bundles, expansion, centers, widths)
+    terminal_moment = _terminal_mwg_fixed_residual(
+        basis, bundles, pair_terms, expansion.coefficients)
+    moment_moment = _mwg_residual_residual(pair_terms, expansion.coefficients)
+    parent_range = 1:nP
+    external_range = (nP + 1):(nP + nE)
+    terminal_external = Matrix{Float64}(terminal_moment[:, external_range])
+    parent_residual_external = Matrix{Float64}(
+        moment_moment[parent_range, external_range])
+    external_external = Matrix{Float64}(
+        moment_moment[external_range, external_range])
+    all(isfinite, terminal_external) && all(isfinite, parent_residual_external) &&
+        all(isfinite, external_external) || throw(ArgumentError(
+        "parent-backed separated MWG blocks must be finite"))
+    norm(external_external - transpose(external_external), Inf) <= 1.0e-10 ||
+        throw(ArgumentError("parent-backed external MWG block must be symmetric"))
+    return (; terminal_external, parent_residual_external, external_external,
+        parent_residual_centers = parent_centers,
+        parent_residual_widths = parent_widths,
+        external_centers, external_widths)
+end
+
 function assemble_residual_ida_interaction(base_V_GG, basis, bundles, residual, augmented_operators; expansion)
     nG, nR = residual.base_dimension, residual.residual_dimension
     size(base_V_GG) == (nG, nG) || throw(DimensionMismatch("residual MWG base V_GG dimension mismatch"))

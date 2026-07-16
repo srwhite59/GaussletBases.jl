@@ -247,6 +247,42 @@ function parent_gaussian_direct_blocks(
         coulomb_expansion_fingerprint = resource.coulomb_expansion_fingerprint))
 end
 
+function parent_backed_injected_interaction_base_blocks(
+    composition::CartesianParentBackedInjectedComposition,
+    bundles;
+    expansion,
+)
+    validation = _validate_parent_backed_injected_composition(composition, bundles)
+    _r3_validate_pgdg_expansion(bundles, expansion)
+    basis = composition.terminal_basis
+    pgdg = Tuple(_nested_axis_pgdg(bundles, axis) for axis in (:x, :y, :z))
+    terminal = zeros(Float64, basis.final_dimension, basis.final_dimension)
+    assemble_terminal_ida_interaction!(terminal, basis, expansion.coefficients,
+        pgdg[1].pair_factor_terms_raw, pgdg[2].pair_factor_terms_raw,
+        pgdg[3].pair_factor_terms_raw,
+        pgdg[1].weights, pgdg[2].weights, pgdg[3].weights)
+
+    resource = parent_gaussian_direct_resource(bundles, expansion)
+    direct = parent_gaussian_direct_blocks(basis,
+        composition.parent_residual_blocks, bundles, resource, expansion)
+    direct.prf_column_ranges == composition.parent_residual_column_ranges ||
+        throw(ArgumentError("parent-backed direct PRF ranges differ from the composition"))
+    nG = basis.final_dimension
+    nR = composition.parent_backed_dimension - nG
+    size(direct.G_R) == (nG, nR) && size(direct.R_R) == (nR, nR) ||
+        throw(DimensionMismatch("parent-backed direct interaction block dimensions differ"))
+    all(isfinite, terminal) && all(isfinite, direct.G_R) && all(isfinite, direct.R_R) ||
+        throw(ArgumentError("parent-backed base interaction blocks must be finite"))
+    norm(terminal - transpose(terminal), Inf) <= 1.0e-10 &&
+        norm(direct.R_R - transpose(direct.R_R), Inf) <= 1.0e-10 ||
+        throw(ArgumentError("parent-backed base interaction diagonal blocks must be symmetric"))
+    return (; terminal, terminal_parent_residual = direct.G_R,
+        parent_residual = direct.R_R,
+        diagnostics = (; validation, direct = direct.diagnostics,
+            direct_resource = resource.validation,
+            coulomb_expansion_fingerprint = direct.coulomb_expansion_fingerprint))
+end
+
 function parent_ida_direct_blocks(
     basis::CartesianTerminalBasisRealization,
     prfs::AbstractVector{<:CartesianParentResidualFunctionBlock},

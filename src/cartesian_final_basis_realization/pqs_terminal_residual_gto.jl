@@ -458,6 +458,120 @@ function parent_backed_injected_residual_gto_augmented_operators(
         parent_one_body = one_body, supplement_blocks = blocks)
 end
 
+function _validate_parent_backed_interaction_operators(
+    composition::CartesianParentBackedInjectedComposition,
+    bundles,
+    augmentation,
+    operators,
+)
+    residual, blocks = _validate_parent_backed_residual_augmentation(
+        composition, bundles, augmentation)
+    hasproperty(operators, :position) && hasproperty(operators, :x2) &&
+        hasproperty(operators, :parent_one_body) || throw(ArgumentError(
+        "parent-backed interaction operators are structurally incomplete"))
+    nB = composition.parent_backed_dimension
+    n = nB + residual.residual_dimension
+    for family in (:position, :x2), axis in (:x, :y, :z)
+        supplied = getproperty(getproperty(operators, family), axis)
+        parent = getproperty(getproperty(operators.parent_one_body, family), axis)
+        size(parent) == (nB, nB) || throw(DimensionMismatch(
+            "parent-backed interaction parent moment dimensions differ"))
+        size(supplied) == (n, n) || throw(DimensionMismatch(
+            "parent-backed interaction moment dimensions differ"))
+        all(isfinite, parent) && all(isfinite, supplied) || throw(ArgumentError(
+            "parent-backed interaction moments must be finite"))
+        expected = CRG.transform_augmented_operator(parent,
+            getproperty(getproperty(blocks.mixed, family), axis),
+            getproperty(getproperty(blocks.self, family), axis), residual)
+        expected .-= supplied
+        norm(expected, Inf) <= 1.0e-10 ||
+            throw(ArgumentError(
+                "parent-backed interaction moments do not match their augmentation"))
+    end
+    return residual, blocks
+end
+
+function parent_backed_injected_residual_gto_interaction(
+    composition::CartesianParentBackedInjectedComposition,
+    bundles,
+    augmentation,
+    operators;
+    expansion,
+)
+    residual, _ = _validate_parent_backed_interaction_operators(
+        composition, bundles, augmentation, operators)
+    _r3_validate_pgdg_expansion(bundles, expansion)
+    base = parent_backed_injected_interaction_base_blocks(
+        composition, bundles; expansion)
+    mwg = CRG.parent_backed_injected_mwg_blocks(
+        composition.terminal_basis, bundles, residual, operators; expansion)
+    nG = composition.terminal_basis.final_dimension
+    nB = composition.parent_backed_dimension
+    nR = nB - nG
+    nE = residual.residual_dimension
+    size(mwg.terminal_external) == (nG, nE) &&
+        size(mwg.parent_residual_external) == (nR, nE) &&
+        size(mwg.external_external) == (nE, nE) || throw(DimensionMismatch(
+        "parent-backed separated MWG block dimensions differ"))
+    g_range = 1:nG
+    r_range = (nG + 1):nB
+    e_range = (nB + 1):(nB + nE)
+    V = zeros(Float64, nB + nE, nB + nE)
+    V[g_range, g_range] .= base.terminal
+    V[g_range, r_range] .= base.terminal_parent_residual
+    V[r_range, g_range] .= transpose(base.terminal_parent_residual)
+    V[r_range, r_range] .= base.parent_residual
+    V[g_range, e_range] .= mwg.terminal_external
+    V[e_range, g_range] .= transpose(mwg.terminal_external)
+    V[r_range, e_range] .= mwg.parent_residual_external
+    V[e_range, r_range] .= transpose(mwg.parent_residual_external)
+    V[e_range, e_range] .= mwg.external_external
+    all(isfinite, V) && norm(V - transpose(V), Inf) <= 1.0e-10 ||
+        throw(ArgumentError(
+            "parent-backed injected interaction must be finite and symmetric"))
+    diagnostics = (; base = base.diagnostics,
+        parent_residual_centers = mwg.parent_residual_centers,
+        parent_residual_widths = mwg.parent_residual_widths,
+        external_centers = mwg.external_centers,
+        external_widths = mwg.external_widths)
+    return (; electron_electron_ida = V, diagnostics)
+end
+
+function parent_backed_injected_gaussian_potential_raw_blocks(
+    composition::CartesianParentBackedInjectedComposition,
+    bundles,
+    supplement,
+    augmentation,
+    potential_expansion,
+    center,
+)
+    _validate_parent_backed_residual_augmentation(composition, bundles, augmentation)
+    placement = Tuple(Float64.(center))
+    length(placement) == 3 && all(isfinite, placement) || throw(ArgumentError(
+        "parent-backed fitted-potential center must be a finite 3-vector"))
+    proxy = _r3a_qw_proxy_layers(bundles)
+    raw = CGRB.placed_spherical_gaussian_potential_raw_blocks(
+        composition.terminal_basis, bundles, proxy, _r3a_qw_supplement(supplement),
+        potential_expansion, placement)
+    pgdg = Tuple(_nested_axis_pgdg(bundles, axis) for axis in (:x, :y, :z))
+    factors = ntuple(axis -> _r3a_centered_factor_terms(
+        pgdg[axis], potential_expansion, placement[axis]), 3)
+    ranges = composition.parent_residual_column_ranges
+    prf = _parent_residual_gaussian_sum_blocks(composition.terminal_basis,
+        composition.parent_residual_blocks, ranges, potential_expansion.coefficients,
+        factors...; scale = 1.0)
+    GG = _parent_backed_operator_matrix(raw.GG, prf, composition)
+    GA = _r3a_project_parent_ga(composition, raw.GA)
+    nB = composition.parent_backed_dimension
+    nA = augmentation.residual.candidate_count
+    size(GG) == (nB, nB) && size(GA) == (nB, nA) && size(raw.AA) == (nA, nA) ||
+        throw(DimensionMismatch(
+            "parent-backed fitted-potential raw block dimensions differ"))
+    all(isfinite, GG) && all(isfinite, GA) && all(isfinite, raw.AA) ||
+        throw(ArgumentError("parent-backed fitted-potential raw blocks must be finite"))
+    return (; GG, GA, AA = raw.AA)
+end
+
 function pqs_terminal_residual_gto_augmentation(
     basis::CartesianTerminalBasisRealization,
     bundles,
