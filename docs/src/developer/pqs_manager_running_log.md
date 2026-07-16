@@ -1658,3 +1658,63 @@ Goal advancement / guardrail:
   file, module, export, artifact, solver, interaction, screening, or Cr2
   policy. The next bounded lane is separated native interaction assembly and
   screened-Hartree delegation under the existing interaction IDs.
+
+## Cartesian Hamiltonian Producer Pass 420 - Implement Parent-Backed Injected Interaction
+
+Commit(s):
+- `006432e9d` - assemble the private category-owned interaction and delegate
+  additive screened Hartree.
+
+Summary:
+- The native `[Ginj,Rnew,RGexternal]` basis now receives a freshly rebuilt
+  interaction: terminal IDA for `Ginj-Ginj`, the onsite-calibrated parent
+  Gaussian model for blocks involving `Rnew`, and the established moment-
+  matched Gaussian convention for blocks involving external residuals. No old
+  interaction is copied or rotated.
+- Packet-backed construction represents each atomic occupied block in the
+  complete basis, evaluates the ordinary fitted atomic fields there, and calls
+  the existing additive screened-Hartree API only after `H` and `V` are fixed.
+  The correction remains separate and leaves both matrices unchanged.
+- Manager review bound all six moment matrices to the actual residual/raw-block
+  construction and removed retained category matrices that would have
+  duplicated roughly one full terminal interaction at Cr2 scale.
+
+Validation / evidence:
+- Manager reran the focused H2 gate (`434/434`) and supplemented facade
+  (`69/69`). Every native interaction slice matched its lower-level owner,
+  stale external moments failed, fresh terminal rebuilding differed from the
+  old matrix as expected, and legacy facade matrices/readback remained exact.
+- The doer reran the padded Be2 gate at dimensions `1729 + 2 + 42 = 1773`.
+  Packet traces/capture, fitted-potential diagnostics, additive decomposition,
+  derivative anchor, correction recomputation, and unchanged `H/V` passed.
+  Terminal due diligence showed only the established shell/slab warnings.
+  Machine authority and `git diff --check` passed.
+
+Goal advancement / guardrail:
+- MT4 now has the complete private source mechanics needed for controlled CR2
+  consumer validation. The change is `+366/-9`; it adds no type, export, file,
+  artifact, solver, exchange correction, or physical selection policy. PRF
+  targets, shell/source order, RDM, cutoffs, orientations, and interpretation
+  remain consumer-owned.
+
+### Medium-Term Goal Checkpoint After Pass 420
+
+- **MT1 conformance remediation - active.** This physics facility does not
+  close or reinterpret remaining Pass 398 discrepancies.
+- **MT2 controlled Cr2 measurement - active.** The next step is a consumer-side
+  fixed-state validation using the source-backed basis, interaction, and newly
+  rebuilt correction before any relaxed HF interpretation.
+- **MT3 pending producer facilities - active.** Standard60/driver exposure and
+  retained-GTO EGOI remain independent work.
+- **MT4 residual/protected evidence - source milestone complete, validation
+  active.** PRF construction, fixed-span injection, exact one-body assembly,
+  category-owned density interaction, and correction delegation are now
+  implemented. Automatic selection, transition-density exchange, exact
+  PRF-GTO interactions, and production defaults remain out of scope.
+- **MT5 documentation/authority maintenance - maintenance.** Reconcile the four
+  composition/interaction IDs to their source-backed lifecycle in one bounded
+  docs pass after this implementation commit.
+- **MT6 carrying-cost control - active.** Review removed duplicate Cr-scale
+  component matrices and added no compatibility carrier. The net source/test
+  increase is justified by the current controlled physics target; broader API
+  or artifact growth remains forbidden.
