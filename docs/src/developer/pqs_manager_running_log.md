@@ -1625,3 +1625,36 @@ Goal advancement / guardrail:
   solvers, and production endpoints remain outside authority. No source or
   numerical test changes occur in this pass; one compact internal result object
   is the maximum newly approved persistent shape.
+
+## Cartesian Hamiltonian Producer Pass 419 - Implement Parent-Backed Injected Basis Composition
+
+Commit(s):
+- `cdd2c27af` - compose the private fixed-span parent-backed injected basis.
+
+Summary:
+- Implemented native `B = [Ginj,Rnew,RGexternal]` composition without changing
+  the parent-backed span or dimension. Every old terminal seed is projected
+  into the injected span before symmetric Lowdin, the exact parent complement
+  is retained, and the explicit Gaussian supplement is residualized against
+  the complete parent-backed basis through the existing numerical-complete
+  builder.
+- Exact parent-backed kinetic, nuclear, physical one-body, position, and
+  second-moment blocks now feed the existing augmented-operator path. Manager
+  review removed an independently supplied one-body bypass, tied augmentation
+  overlaps to their raw blocks, rejected center/block truncation, and required
+  all consumers to revalidate actual terminal and PRF geometry.
+
+Validation / evidence:
+- Manager reran the focused H2 gate (`417/417`) and supplemented facade
+  (`69/69`). Target recovery, old/new span singular values, metric identities,
+  exact one-body oracle parity, and omitted-path parity passed. The doer also
+  completed the padded Be2 gate at dimensions `1729 + 2 + 42 = 1773`; packet
+  recovery and native ordering passed, with only the established shell/slab
+  due-diligence warnings. Machine authority and `git diff --check` passed.
+
+Goal advancement / guardrail:
+- MT4 now has the reusable fixed-span basis composition required by the
+  successful consumer recipe. The source/test change is `+791/-22`; it adds no
+  file, module, export, artifact, solver, interaction, screening, or Cr2
+  policy. The next bounded lane is separated native interaction assembly and
+  screened-Hartree delegation under the existing interaction IDs.
