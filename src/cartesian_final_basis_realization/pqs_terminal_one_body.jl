@@ -392,9 +392,11 @@ function parent_residual_one_body_blocks(
             basis, prfs, ranges, expansion.coefficients, factors...)
     end for location in locations]
     H1 = (; G_R = copy(kinetic.G_R), R_R = copy(kinetic.R_R))
-    for (charge, unit) in zip(charges, unit_nuclear)
-        H1.G_R .+= charge .* unit.G_R
-        H1.R_R .+= charge .* unit.R_R
+    length(unit_nuclear) == length(charges) || throw(DimensionMismatch(
+        "parent residual unit-nuclear center count differs from charges"))
+    for index in eachindex(charges)
+        H1.G_R .+= charges[index] .* unit_nuclear[index].G_R
+        H1.R_R .+= charges[index] .* unit_nuclear[index].R_R
     end
     position = (;
         x = _parent_residual_product_blocks(basis, prfs, ranges, pgdg[1].position, S[2], S[3]),
@@ -412,4 +414,100 @@ function parent_residual_one_body_blocks(
         position, x2, prf_column_ranges = ranges,
         diagnostics = (; terminal_dimension = basis.final_dimension,
             prf_dimension = last(ranges[end]), center_count = length(locations), geometry))
+end
+
+function _parent_backed_operator_matrix(GG, blocks, composition)
+    nG = composition.terminal_basis.final_dimension
+    nB = composition.parent_backed_dimension
+    size(GG) == (nG, nG) || throw(DimensionMismatch(
+        "parent-backed terminal operator dimension mismatch"))
+    size(blocks.G_R) == (nG, nB - nG) &&
+        size(blocks.R_R) == (nB - nG, nB - nG) || throw(DimensionMismatch(
+        "parent-backed residual operator dimensions mismatch"))
+    matrix = zeros(Float64, nB, nB)
+    residual_range = (nG + 1):nB
+    matrix[1:nG, 1:nG] .= GG
+    matrix[1:nG, residual_range] .= blocks.G_R
+    matrix[residual_range, 1:nG] .= transpose(blocks.G_R)
+    matrix[residual_range, residual_range] .= blocks.R_R
+    all(isfinite, matrix) || throw(ArgumentError(
+        "parent-backed operator matrix must be finite"))
+    norm(matrix - transpose(matrix), Inf) <= 1.0e-10 || throw(ArgumentError(
+        "parent-backed operator matrix must be symmetric"))
+    return Matrix{Float64}((matrix + transpose(matrix)) ./ 2)
+end
+
+function parent_backed_injected_one_body_operators(
+    composition::CartesianParentBackedInjectedComposition,
+    bundles,
+    atom_locations,
+    nuclear_charges;
+    expansion,
+)
+    _validate_parent_backed_injected_composition(composition, bundles)
+    basis = composition.terminal_basis
+    charges = Float64.(nuclear_charges)
+    length(atom_locations) == length(charges) || throw(DimensionMismatch(
+        "parent-backed atom location and nuclear charge counts differ"))
+    all(isfinite, charges) || throw(ArgumentError(
+        "parent-backed nuclear charges must be finite"))
+    pgdg = _r3_validate_pgdg_expansion(bundles, expansion)
+    S = Tuple(axis.overlap for axis in pgdg)
+    function terminal_product(axes...)
+        matrix = zeros(Float64, basis.final_dimension, basis.final_dimension)
+        assemble_terminal_product_operator!(matrix, basis, axes...)
+        return matrix
+    end
+    terminal_kinetic = terminal_product(pgdg[1].kinetic, S[2], S[3])
+    terminal_kinetic .+= terminal_product(S[1], pgdg[2].kinetic, S[3])
+    terminal_kinetic .+= terminal_product(S[1], S[2], pgdg[3].kinetic)
+    terminal_position = (;
+        x = terminal_product(pgdg[1].position, S[2], S[3]),
+        y = terminal_product(S[1], pgdg[2].position, S[3]),
+        z = terminal_product(S[1], S[2], pgdg[3].position))
+    terminal_x2 = (;
+        x = terminal_product(pgdg[1].x2, S[2], S[3]),
+        y = terminal_product(S[1], pgdg[2].x2, S[3]),
+        z = terminal_product(S[1], S[2], pgdg[3].x2))
+    locations = NTuple{3,Float64}[Tuple(Float64.(location)) for location in atom_locations]
+    all(location -> all(isfinite, location), locations) || throw(ArgumentError(
+        "parent-backed nuclear locations must be finite"))
+    terminal_units = [begin
+        factors = ntuple(axis -> _r3a_centered_factor_terms(
+            pgdg[axis], expansion, location[axis]), 3)
+        matrix = zeros(Float64, basis.final_dimension, basis.final_dimension)
+        _accumulate_terminal_gaussian_sum!(matrix, basis,
+            expansion.coefficients, factors...)
+    end for location in locations]
+    residual = parent_residual_one_body_blocks(basis, bundles,
+        composition.parent_residual_blocks, locations, charges; expansion)
+    length(terminal_units) == length(residual.nuclear_attraction_unit_by_center) ==
+        length(locations) || throw(DimensionMismatch(
+        "parent-backed terminal and PRF unit-nuclear center counts differ"))
+    kinetic = _parent_backed_operator_matrix(
+        terminal_kinetic, residual.kinetic, composition)
+    unit_nuclear = Matrix{Float64}[_parent_backed_operator_matrix(
+        terminal_units[index], residual.nuclear_attraction_unit_by_center[index],
+        composition) for index in eachindex(locations)]
+    position = (;
+        x = _parent_backed_operator_matrix(terminal_position.x, residual.position.x, composition),
+        y = _parent_backed_operator_matrix(terminal_position.y, residual.position.y, composition),
+        z = _parent_backed_operator_matrix(terminal_position.z, residual.position.z, composition))
+    x2 = (;
+        x = _parent_backed_operator_matrix(terminal_x2.x, residual.x2.x, composition),
+        y = _parent_backed_operator_matrix(terminal_x2.y, residual.x2.y, composition),
+        z = _parent_backed_operator_matrix(terminal_x2.z, residual.x2.z, composition))
+    H1 = copy(kinetic)
+    for index in eachindex(charges)
+        H1 .+= charges[index] .* unit_nuclear[index]
+    end
+    all(isfinite, H1) && norm(H1 - transpose(H1), Inf) <= 1.0e-10 ||
+        throw(ArgumentError("parent-backed physical H1 must be finite and symmetric"))
+    return (; kinetic, nuclear_attraction_unit_by_center = unit_nuclear,
+        one_body_hamiltonian = H1, position, x2,
+        diagnostics = (; terminal_dimension = basis.final_dimension,
+            parent_residual_dimension = composition.parent_backed_dimension -
+                basis.final_dimension,
+            parent_backed_dimension = composition.parent_backed_dimension,
+            center_count = length(locations)))
 end

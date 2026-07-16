@@ -320,6 +320,33 @@ function _plb_build_numerical_complete_member(recipe, stages)
     residual = _plb_numerical_complete_residual(inputs, stages)
     return _plb_finish_numerical_complete_member(recipe, inputs, residual, stages)
 end
+
+function _plb_parent_backed_injected_numerical_complete(
+    inputs, requests, stages)
+    recipe = inputs.recipe
+    composition = _plb_stage!(stages,
+        "ns$(recipe.ns) parent-backed fixed-span injection", () ->
+        CartesianFinalBasisRealization.build_parent_backed_injected_composition(
+            inputs.base.terminal_basis,
+            inputs.base.parent.parent_axis_bundle_object,
+            requests))
+    augmentation = _plb_stage!(stages,
+        "ns$(recipe.ns) parent-backed numerical-complete residual", () ->
+        CartesianFinalBasisRealization.parent_backed_injected_residual_gto_augmentation(
+            composition, inputs.base.parent.parent_axis_bundle_object,
+            inputs.supplement, inputs.base.input.locations;
+            expansion = inputs.base.coulomb_expansion))
+    operators = _plb_stage!(stages,
+        "ns$(recipe.ns) parent-backed exact augmented one-body", () ->
+        CartesianFinalBasisRealization.parent_backed_injected_residual_gto_augmented_operators(
+            composition, inputs.base.parent.parent_axis_bundle_object,
+            inputs.supplement, augmentation, inputs.base.input.locations,
+            inputs.base.input.charges;
+            expansion = inputs.base.coulomb_expansion))
+    return (; recipe, inputs, composition, augmentation,
+        residual = augmentation.residual, operators,
+        H = operators.one_body_hamiltonian)
+end
 _plb_reference_embeddings(inputs, placements, stages) = [_plb_stage!(stages,
         "ns$(inputs.recipe.ns) embed reference owner $(placement.owner_index)", () ->
         CartesianReferenceDensity.atomic_reference_packet_occupied_embedding(

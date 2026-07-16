@@ -20,12 +20,15 @@ _nested_axis_lengths(bundle::SyntheticPRFBundles) = (
     size(bundle.axes.x.overlap, 1), size(bundle.axes.y.overlap, 1),
     size(bundle.axes.z.overlap, 1))
 
-function synthetic_prf_bundles(Sx)
-    axis(overlap, centers) = (; overlap, position = Diagonal(centers) |> Matrix,
-        x2 = Diagonal(abs2.(centers)) |> Matrix)
+function synthetic_prf_bundles(Sx; weights = ones(size(Sx, 1)))
+    axis(overlap, centers, weights) = (; overlap,
+        position = Diagonal(centers) |> Matrix,
+        x2 = Diagonal(abs2.(centers)) |> Matrix, weights)
     return SyntheticPRFBundles((;
-        x = axis(Matrix{Float64}(Sx), collect(range(-1.0, 1.0; length = size(Sx, 1)))),
-        y = axis(ones(1, 1), [0.0]), z = axis(ones(1, 1), [0.0])))
+        x = axis(Matrix{Float64}(Sx),
+            collect(range(-1.0, 1.0; length = size(Sx, 1))), Float64.(weights)),
+        y = axis(ones(1, 1), [0.0], [1.0]),
+        z = axis(ones(1, 1), [0.0], [1.0])))
 end
 
 function parent_coefficient_matrix(basis, nparent)
@@ -332,6 +335,101 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
             [1.0 2.0 0.0; 2.0 1.0 0.0; 0.0 0.0 1.0]),
         [1, 2], [0.0; 1.0;;])
 
+    injection_shell = C.CartesianTerminalBasisBlock(
+        :injection_shell, [1, 2, 3],
+        [(1, 1, 1), (2, 1, 1), (3, 1, 1)],
+        [1.0 0.0; 0.0 1.0; 0.0 0.0], 1:2)
+    injection_direct = C.CartesianTerminalBasisBlock(
+        :injection_direct, [4], [(4, 1, 1)], nothing, 3:3)
+    injection_basis = C.CartesianTerminalBasisRealization(
+        [injection_shell, injection_direct], 3, 0.0)
+    injection_bundles = synthetic_prf_bundles(Matrix{Float64}(I, 4, 4))
+    injection_prf = C.build_parent_residual_function_block(
+        injection_basis, injection_shell, injection_bundles,
+        injection_shell.support_indices, [0.0; 0.0; 1.0;;])
+    target_coordinates = reshape([0.5, 0.5, inv(sqrt(2.0))], 3, 1)
+    request = (; source_block = injection_shell, prfs = [injection_prf],
+        target_coordinates)
+    composition = C.build_parent_backed_injected_composition(
+        injection_basis, injection_bundles, [request])
+    injected_shell = composition.terminal_basis.blocks[1]
+    Y = hcat(injection_shell.coefficients, injection_prf.coefficients) *
+        target_coordinates
+    Ctarget = transpose(injection_shell.coefficients) * Y
+    Qperp = nullspace(transpose(Ctarget))
+    span_only = hcat(Y, injection_shell.coefficients * Qperp)
+    @test norm(injected_shell.coefficients - span_only, Inf) > 0.1
+    @test composition.terminal_basis.blocks[2] === injection_direct
+    @test composition.parent_backed_dimension == 4
+    @test composition.parent_residual_column_ranges == [1:1]
+    @test composition.diagnostics.requests[1].target_recovery_singular_values ≈ [1.0]
+    @test maximum(abs.(1.0 .-
+        composition.diagnostics.requests[1].old_new_span_singular_values)) <= 1.0e-12
+    @test composition.diagnostics.requests[1].terminal_identity_error <= 1.0e-12
+    @test composition.diagnostics.requests[1].complement_identity_error <= 1.0e-12
+    @test composition.diagnostics.requests[1].terminal_complement_cross_error <= 1.0e-12
+    @test composition.diagnostics.requests[1].minimum_final_ida_weight > 0.0
+    @test_throws ArgumentError C.build_parent_backed_injected_composition(
+        injection_basis, injection_bundles, [(; source_block = injection_shell,
+            prfs = [injection_prf], target_coordinates = [0.0; 0.0; 1.0;;])])
+    @test_throws ArgumentError C.build_parent_backed_injected_composition(
+        injection_basis, injection_bundles, [(; source_block = injection_shell,
+            prfs = [injection_prf], target_coordinates = 2.0 .* target_coordinates)])
+    wrong_source_prf = C.CartesianParentResidualFunctionBlock(
+        :injection_direct, injection_prf.support_indices,
+        injection_prf.support_states, injection_prf.coefficients,
+        injection_prf.diagnostics)
+    @test_throws ArgumentError C.build_parent_backed_injected_composition(
+        injection_basis, injection_bundles, [(; source_block = injection_shell,
+            prfs = [wrong_source_prf], target_coordinates)])
+    wrong_support_prf = C.CartesianParentResidualFunctionBlock(
+        injection_prf.source_unit_key, [1, 2, 4],
+        [(1, 1, 1), (2, 1, 1), (4, 1, 1)],
+        injection_prf.coefficients, injection_prf.diagnostics)
+    @test_throws ArgumentError C.build_parent_backed_injected_composition(
+        injection_basis, injection_bundles, [(; source_block = injection_shell,
+            prfs = [wrong_support_prf], target_coordinates)])
+    malformed_span_prf = C.CartesianParentResidualFunctionBlock(
+        injection_prf.source_unit_key, injection_prf.support_indices,
+        injection_prf.support_states, 2.0 .* injection_prf.coefficients,
+        injection_prf.diagnostics)
+    @test_throws ArgumentError C.build_parent_backed_injected_composition(
+        injection_basis, injection_bundles, [(; source_block = injection_shell,
+            prfs = [malformed_span_prf], target_coordinates)])
+    nonpositive_weight_bundles = synthetic_prf_bundles(
+        Matrix{Float64}(I, 4, 4); weights = [1.0, 10.0, 1.0, 1.0])
+    @test_throws ArgumentError C.build_parent_backed_injected_composition(
+        injection_basis, nonpositive_weight_bundles, [request])
+
+    second_shell = C.CartesianTerminalBasisBlock(
+        :second_injection_shell, [5, 6, 7],
+        [(5, 1, 1), (6, 1, 1), (7, 1, 1)],
+        copy(injection_shell.coefficients), 4:5)
+    second_direct = C.CartesianTerminalBasisBlock(
+        :second_injection_direct, [8], [(8, 1, 1)], nothing, 6:6)
+    two_request_basis = C.CartesianTerminalBasisRealization(
+        [injection_shell, injection_direct, second_shell, second_direct], 6, 0.0)
+    two_request_bundles = synthetic_prf_bundles(Matrix{Float64}(I, 8, 8))
+    first_prf = C.build_parent_residual_function_block(
+        two_request_basis, injection_shell, two_request_bundles,
+        injection_shell.support_indices, [0.0; 0.0; 1.0;;])
+    second_prf = C.build_parent_residual_function_block(
+        two_request_basis, second_shell, two_request_bundles,
+        second_shell.support_indices, [0.0; 0.0; 1.0;;])
+    two_request = C.build_parent_backed_injected_composition(
+        two_request_basis, two_request_bundles,
+        [(; source_block = injection_shell, prfs = [first_prf], target_coordinates),
+         (; source_block = second_shell, prfs = [second_prf], target_coordinates)])
+    @test two_request.parent_residual_column_ranges == [1:1, 2:2]
+    @test two_request.parent_backed_dimension == 8
+    @test C._validate_parent_backed_injected_composition(
+        two_request, two_request_bundles).prf_column_ranges == [1:1, 2:2]
+    stale_ranges = C.CartesianParentBackedInjectedComposition(
+        two_request.terminal_basis, two_request.parent_residual_blocks,
+        [2:2, 1:1], two_request.parent_backed_dimension, two_request.diagnostics)
+    @test_throws ArgumentError C._validate_parent_backed_injected_composition(
+        stale_ranges, two_request_bundles)
+
     raw_supplement = legacy_bond_aligned_diatomic_gaussian_supplement(
         "H", "cc-pVTZ", NUCLEI; lmax = 1, uncontracted = false, max_width = nothing)
     supplement = basis_representation(raw_supplement)
@@ -511,6 +609,138 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
         @test norm(prf_one_body.x2[name].G_R - x2_oracle.G_R, Inf) <= 1.0e-10
         @test norm(prf_one_body.x2[name].R_R - x2_oracle.R_R, Inf) <= 1.0e-10
     end
+
+    target_coordinates = zeros(Float64,
+        length(source_block.column_range) + size(prf.coefficients, 2), 1)
+    target_coordinates[1] = cos(0.05)
+    target_coordinates[length(source_block.column_range) + 1] = sin(0.05)
+    injection_request = (; source_block, prfs = [prf], target_coordinates)
+    composition = C.build_parent_backed_injected_composition(
+        basis, parent.parent_axis_bundle_object, [injection_request])
+    @test composition.terminal_basis.final_dimension == basis.final_dimension
+    @test composition.parent_backed_dimension == basis.final_dimension + 2
+    @test size(composition.parent_residual_blocks[1].coefficients, 2) == 2
+    @test composition.parent_residual_column_ranges == [1:2]
+    source_index = findfirst(block -> block === source_block, basis.blocks)
+    @test composition.terminal_basis.blocks[source_index].unit_key == source_block.unit_key
+    @test composition.terminal_basis.blocks[source_index].support_indices ==
+        source_block.support_indices
+    @test composition.terminal_basis.blocks[source_index].column_range ==
+        source_block.column_range
+    @test all(index -> index == source_index ||
+        composition.terminal_basis.blocks[index] === basis.blocks[index],
+        eachindex(basis.blocks))
+    request_diagnostics = only(composition.diagnostics.requests)
+    @test minimum(request_diagnostics.target_recovery_singular_values) >= 1.0 - 1.0e-10
+    @test minimum(request_diagnostics.old_new_span_singular_values) >= 1.0 - 1.0e-10
+    @test request_diagnostics.terminal_identity_error <= 1.0e-10
+    @test request_diagnostics.complement_identity_error <= 1.0e-10
+    @test request_diagnostics.terminal_complement_cross_error <= 1.0e-10
+    @test request_diagnostics.minimum_final_ida_weight > 1.0e-12
+
+    old_composition = C.CartesianParentBackedInjectedComposition(
+        basis, [prf], [1:2], basis.final_dimension + 2, (;))
+    old_parent_one_body = C.parent_backed_injected_one_body_operators(
+        old_composition, parent.parent_axis_bundle_object,
+        NUCLEI, [1.0, 1.0]; expansion)
+    old_local = hcat(source_block.coefficients, prf.coefficients)
+    new_local = hcat(composition.terminal_basis.blocks[source_index].coefficients,
+        composition.parent_residual_blocks[1].coefficients)
+    old_new_local = transpose(old_local) * support_metric * new_local
+    nB = composition.parent_backed_dimension
+    old_new = Matrix{Float64}(I, nB, nB)
+    local_indices = vcat(collect(source_block.column_range),
+        collect((basis.final_dimension + 1):nB))
+    old_new[local_indices, local_indices] .= old_new_local
+    parent_augmentation = C.parent_backed_injected_residual_gto_augmentation(
+        composition, parent.parent_axis_bundle_object, supplement, NUCLEI;
+        expansion)
+    parent_residual = parent_augmentation.residual
+    parent_operators = C.parent_backed_injected_residual_gto_augmented_operators(
+        composition, parent.parent_axis_bundle_object, supplement,
+        parent_augmentation, NUCLEI, [1.0, 1.0]; expansion)
+    new_parent_one_body = parent_operators.parent_one_body
+    parent_one_body_oracle_error = 0.0
+    for (old, new) in ((old_parent_one_body.kinetic, new_parent_one_body.kinetic),
+            (old_parent_one_body.one_body_hamiltonian,
+                new_parent_one_body.one_body_hamiltonian),
+            (old_parent_one_body.position.x, new_parent_one_body.position.x),
+            (old_parent_one_body.position.y, new_parent_one_body.position.y),
+            (old_parent_one_body.position.z, new_parent_one_body.position.z),
+            (old_parent_one_body.x2.x, new_parent_one_body.x2.x),
+            (old_parent_one_body.x2.y, new_parent_one_body.x2.y),
+            (old_parent_one_body.x2.z, new_parent_one_body.x2.z))
+        error = norm(new - transpose(old_new) * old * old_new, Inf)
+        parent_one_body_oracle_error = max(parent_one_body_oracle_error, error)
+        @test error <= 2.0e-9
+    end
+    unit_oracle_error = maximum(norm(new - transpose(old_new) * old * old_new, Inf)
+        for (old, new) in zip(old_parent_one_body.nuclear_attraction_unit_by_center,
+            new_parent_one_body.nuclear_attraction_unit_by_center))
+    parent_one_body_oracle_error = max(parent_one_body_oracle_error, unit_oracle_error)
+    @test unit_oracle_error <= 2.0e-9
+
+    stale_mixed = copy(parent_augmentation.supplement_blocks.mixed.overlap)
+    stale_mixed[1, :] .+= 1.0e-4 .* parent_residual.T_A[:, 1]
+    stale_blocks = merge(parent_augmentation.supplement_blocks, (;
+        mixed = merge(parent_augmentation.supplement_blocks.mixed,
+            (; overlap = stale_mixed))))
+    stale_augmentation = merge(parent_augmentation, (; supplement_blocks = stale_blocks))
+    @test_throws ArgumentError C.parent_backed_injected_residual_gto_augmented_operators(
+        composition, parent.parent_axis_bundle_object, supplement,
+        stale_augmentation, NUCLEI, [1.0, 1.0]; expansion)
+    stale_pairing = merge(parent_augmentation,
+        (; mixed_overlap = stale_mixed, supplement_blocks = stale_blocks))
+    @test_throws ArgumentError C.parent_backed_injected_residual_gto_augmented_operators(
+        composition, parent.parent_axis_bundle_object, supplement,
+        stale_pairing, NUCLEI, [1.0, 1.0]; expansion)
+    short_nuclear_blocks = merge(parent_augmentation.supplement_blocks, (;
+        mixed = merge(parent_augmentation.supplement_blocks.mixed,
+            (; nuclear = parent_augmentation.supplement_blocks.mixed.nuclear[1:1]))))
+    short_nuclear_augmentation = merge(parent_augmentation,
+        (; supplement_blocks = short_nuclear_blocks))
+    @test_throws DimensionMismatch C.parent_backed_injected_residual_gto_augmented_operators(
+        composition, parent.parent_axis_bundle_object, supplement,
+        short_nuclear_augmentation, NUCLEI, [1.0, 1.0]; expansion)
+    @test_throws DimensionMismatch C.parent_backed_injected_residual_gto_augmented_operators(
+        composition, parent.parent_axis_bundle_object, supplement,
+        parent_augmentation, NUCLEI, [1.0]; expansion)
+    @test parent_residual.base_dimension == composition.parent_backed_dimension
+    @test parent_residual.occupation_cutoff == 1.0e-10
+    @test parent_residual.residual_injection_cutoff == 0.0
+    @test isnothing(parent_residual.injected_G)
+    @test parent_residual.owner_retained_counts == [9, 9]
+    @test parent_residual.residual_dimension == 18
+    @test norm(parent_residual.T_G + parent_augmentation.mixed_overlap *
+        parent_residual.T_A, Inf) <= 1.0e-10
+    @test norm(CRG.residual_gaussian_overlap(parent_residual.T_G,
+        parent_residual.T_A, parent_augmentation.mixed_overlap,
+        parent_augmentation.supplement_overlap) - I, Inf) <= 5.0e-8
+    @test size(parent_operators.one_body_hamiltonian) ==
+        (composition.parent_backed_dimension + parent_residual.residual_dimension,
+         composition.parent_backed_dimension + parent_residual.residual_dimension)
+    @test symmetry_error(parent_operators.one_body_hamiltonian) <= 1.0e-10
+    @test norm(parent_operators.kinetic[1:nB, 1:nB] -
+        new_parent_one_body.kinetic, Inf) <= 1.0e-10
+    println("prf_injected_h2_diagnostics=", (;
+        terminal_dimension = basis.final_dimension,
+        parent_backed_dimension = composition.parent_backed_dimension,
+        external_candidate_count = parent_residual.candidate_count,
+        external_retained_count = parent_residual.residual_dimension,
+        external_retained_by_owner = parent_residual.owner_retained_counts,
+        target_projection_min = minimum(request_diagnostics.target_projection_singular_values),
+        target_recovery_min = minimum(request_diagnostics.target_recovery_singular_values),
+        old_new_span_min = minimum(request_diagnostics.old_new_span_singular_values),
+        terminal_identity_error = request_diagnostics.terminal_identity_error,
+        complement_identity_error = request_diagnostics.complement_identity_error,
+        cross_error = request_diagnostics.terminal_complement_cross_error,
+        minimum_final_ida_weight = request_diagnostics.minimum_final_ida_weight,
+        parent_one_body_oracle_error,
+        G_R_error = norm(parent_residual.T_G + parent_augmentation.mixed_overlap *
+            parent_residual.T_A, Inf),
+        R_R_error = norm(CRG.residual_gaussian_overlap(parent_residual.T_G,
+            parent_residual.T_A, parent_augmentation.mixed_overlap,
+            parent_augmentation.supplement_overlap) - I, Inf)))
 
     direct_resource_time = @elapsed direct_resource = C.parent_gaussian_direct_resource(
         parent.parent_axis_bundle_object, expansion)

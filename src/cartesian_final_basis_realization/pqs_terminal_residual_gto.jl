@@ -17,14 +17,14 @@ function _r3_validate_pgdg_expansion(bundles, expansion)
     return pgdg
 end
 function _r3_validate_residual_contract(
-    basis,
+    base_dimension::Integer,
     supplement,
     residual::CartesianTerminalResidualGTOAugmentation,
     atom_locations,
 )
-    nG, nR = basis.final_dimension, residual.residual_dimension
-    residual.base_dimension == basis.final_dimension ||
-        throw(DimensionMismatch("R3 residual base dimension must match terminal basis"))
+    nG, nR = Int(base_dimension), residual.residual_dimension
+    residual.base_dimension == nG ||
+        throw(DimensionMismatch("R3 residual base dimension mismatch"))
     length(residual.candidate_labels) == residual.candidate_count &&
         length(residual.candidate_owner_indices) == residual.candidate_count &&
         length(residual.candidate_centers) == residual.candidate_count ||
@@ -60,6 +60,9 @@ function _r3_validate_residual_contract(
     end
     return nothing
 end
+_r3_validate_residual_contract(basis::CartesianTerminalBasisRealization,
+    supplement, residual, atom_locations) = _r3_validate_residual_contract(
+        basis.final_dimension, supplement, residual, atom_locations)
 function _r3_validate_augmented_operator_dimensions(operators, base_hamiltonian, residual, center_count)
     nG, n = residual.base_dimension, residual.base_dimension + residual.residual_dimension
     length(operators.nuclear_attraction_unit_by_center) == center_count || throw(DimensionMismatch("R3 augmented unit nuclear center count mismatch"))
@@ -273,7 +276,26 @@ function _r3a_project_parent_ga(basis, parent_ga)
     return out
 end
 
-function _r3a_qw_blocks(basis, bundles, supplement, atom_locations, expansion)
+function _r3a_project_parent_ga(composition::CartesianParentBackedInjectedComposition,
+    parent_ga)
+    terminal = _r3a_project_parent_ga(composition.terminal_basis, parent_ga)
+    residual = zeros(Float64,
+        composition.parent_backed_dimension - size(terminal, 1), size(parent_ga, 2))
+    for (prf, range) in zip(composition.parent_residual_blocks,
+            composition.parent_residual_column_ranges)
+        residual[range, :] .= transpose(prf.coefficients) *
+            @view(parent_ga[prf.support_indices, :])
+    end
+    return vcat(terminal, residual)
+end
+
+_r3a_validate_representation(::CartesianTerminalBasisRealization, bundles) = nothing
+_r3a_validate_representation(
+    composition::CartesianParentBackedInjectedComposition, bundles) =
+    _validate_parent_backed_injected_composition(composition, bundles)
+
+function _r3a_qw_blocks(representation, bundles, supplement, atom_locations, expansion)
+    _r3a_validate_representation(representation, bundles)
     donor = _r3a_qw_supplement(supplement)
     proxy = _r3a_qw_proxy_layers(bundles)
     non_nuclear = CGRB.gaussian_non_nuclear_raw_blocks(proxy, donor, expansion)
@@ -281,15 +303,15 @@ function _r3a_qw_blocks(basis, bundles, supplement, atom_locations, expansion)
         CRG.residual_gaussian_float_centers(atom_locations))
     return (;
         mixed = (;
-            overlap = _r3a_project_parent_ga(basis, non_nuclear.ga.overlap),
-            kinetic = _r3a_project_parent_ga(basis, non_nuclear.ga.kinetic),
-            position = (x = _r3a_project_parent_ga(basis, non_nuclear.ga.position.x),
-                y = _r3a_project_parent_ga(basis, non_nuclear.ga.position.y),
-                z = _r3a_project_parent_ga(basis, non_nuclear.ga.position.z)),
-            x2 = (x = _r3a_project_parent_ga(basis, non_nuclear.ga.x2.x),
-                y = _r3a_project_parent_ga(basis, non_nuclear.ga.x2.y),
-                z = _r3a_project_parent_ga(basis, non_nuclear.ga.x2.z)),
-            nuclear = [_r3a_project_parent_ga(basis, matrix) for matrix in nuclear.ga],
+            overlap = _r3a_project_parent_ga(representation, non_nuclear.ga.overlap),
+            kinetic = _r3a_project_parent_ga(representation, non_nuclear.ga.kinetic),
+            position = (x = _r3a_project_parent_ga(representation, non_nuclear.ga.position.x),
+                y = _r3a_project_parent_ga(representation, non_nuclear.ga.position.y),
+                z = _r3a_project_parent_ga(representation, non_nuclear.ga.position.z)),
+            x2 = (x = _r3a_project_parent_ga(representation, non_nuclear.ga.x2.x),
+                y = _r3a_project_parent_ga(representation, non_nuclear.ga.x2.y),
+                z = _r3a_project_parent_ga(representation, non_nuclear.ga.x2.z)),
+            nuclear = [_r3a_project_parent_ga(representation, matrix) for matrix in nuclear.ga],
         ),
         self = (;
             overlap = non_nuclear.aa.overlap,
@@ -310,6 +332,130 @@ function _terminal_residual_mixed_overlap(
     proxy = _r3a_qw_proxy_layers(bundles)
     blocks = CGRB.gaussian_non_nuclear_overlap_blocks(proxy, donor)
     return _r3a_project_parent_ga(basis, blocks.ga.overlap)
+end
+
+
+function parent_backed_injected_residual_gto_augmentation(
+    composition::CartesianParentBackedInjectedComposition,
+    bundles,
+    supplement,
+    nuclei;
+    expansion,
+)
+    _validate_parent_backed_injected_composition(composition, bundles)
+    nuclei_value = CRG.residual_gaussian_float_centers(nuclei)
+    labels = CRG.residual_gaussian_candidate_labels(supplement)
+    centers = CRG.residual_gaussian_candidate_centers(supplement)
+    owners = Int[CRG.residual_candidate_owner(center, nuclei_value) for center in centers]
+    blocks = _r3a_qw_blocks(composition, bundles, supplement, nuclei, expansion)
+    X = blocks.mixed.overlap
+    S_AA = blocks.self.overlap
+    residual = CRG.build_residual_gaussian_basis(
+        composition.parent_backed_dimension, X, S_AA, labels, centers, owners;
+        residual_occupation_cutoff = 1.0e-10,
+        residual_injection_cutoff = 0.0,
+        residual_compactness = nothing)
+    return (; residual, mixed_overlap = X, supplement_overlap = S_AA,
+        supplement_blocks = blocks)
+end
+
+
+function _validate_parent_backed_residual_augmentation(
+    composition::CartesianParentBackedInjectedComposition,
+    bundles,
+    augmentation,
+)
+    _validate_parent_backed_injected_composition(composition, bundles)
+    hasproperty(augmentation, :residual) &&
+        hasproperty(augmentation, :mixed_overlap) &&
+        hasproperty(augmentation, :supplement_overlap) &&
+        hasproperty(augmentation, :supplement_blocks) || throw(ArgumentError(
+        "parent-backed augmentation is structurally incomplete"))
+    blocks = augmentation.supplement_blocks
+    augmentation.mixed_overlap == blocks.mixed.overlap || throw(ArgumentError(
+        "parent-backed augmentation mixed overlap does not match its raw blocks"))
+    augmentation.supplement_overlap == blocks.self.overlap || throw(ArgumentError(
+        "parent-backed augmentation supplement overlap does not match its raw blocks"))
+    residual = augmentation.residual
+    size(augmentation.mixed_overlap) ==
+        (composition.parent_backed_dimension, residual.candidate_count) ||
+        throw(DimensionMismatch("parent-backed augmentation mixed-overlap dimensions differ"))
+    size(augmentation.supplement_overlap) ==
+        (residual.candidate_count, residual.candidate_count) ||
+        throw(DimensionMismatch(
+            "parent-backed augmentation supplement-overlap dimensions differ"))
+    norm(residual.T_G + augmentation.mixed_overlap * residual.T_A, Inf) <= 1.0e-10 ||
+        throw(ArgumentError("parent-backed augmentation residual projection is stale"))
+    residual_metric = CRG.residual_gaussian_overlap(residual.T_G, residual.T_A,
+        augmentation.mixed_overlap, augmentation.supplement_overlap)
+    norm(residual_metric - I, Inf) <= 5.0e-8 || throw(ArgumentError(
+        "parent-backed augmentation residual metric is not identity"))
+    return residual, blocks
+end
+
+function parent_backed_injected_residual_gto_augmented_operators(
+    composition::CartesianParentBackedInjectedComposition,
+    bundles,
+    supplement,
+    augmentation,
+    atom_locations,
+    nuclear_charges;
+    expansion,
+)
+    residual, blocks = _validate_parent_backed_residual_augmentation(
+        composition, bundles, augmentation)
+    locations = CRG.residual_gaussian_float_centers(atom_locations)
+    charges = Float64.(nuclear_charges)
+    length(locations) == length(charges) || throw(DimensionMismatch(
+        "parent-backed atom location and nuclear charge counts differ"))
+    all(isfinite, charges) || throw(ArgumentError(
+        "parent-backed nuclear charges must be finite"))
+    center_count = length(locations)
+    length(blocks.mixed.nuclear) == center_count || throw(DimensionMismatch(
+        "parent-backed mixed nuclear-block count differs from atom count"))
+    length(blocks.self.nuclear) == center_count || throw(DimensionMismatch(
+        "parent-backed self nuclear-block count differs from atom count"))
+    _r3_validate_residual_contract(composition.parent_backed_dimension,
+        supplement, residual, locations)
+    _r3_validate_pgdg_expansion(bundles, expansion)
+    one_body = parent_backed_injected_one_body_operators(composition, bundles,
+        locations, charges; expansion)
+    length(one_body.nuclear_attraction_unit_by_center) == center_count ||
+        throw(DimensionMismatch(
+            "parent-backed one-body unit-nuclear count differs from atom count"))
+    kinetic = CRG.transform_augmented_operator(one_body.kinetic,
+        blocks.mixed.kinetic, blocks.self.kinetic, residual)
+    unit_nuclear = Matrix{Float64}[CRG.transform_augmented_operator(
+        one_body.nuclear_attraction_unit_by_center[index],
+        blocks.mixed.nuclear[index], blocks.self.nuclear[index], residual)
+        for index in 1:center_count]
+    position = (;
+        x = CRG.transform_augmented_operator(one_body.position.x,
+            blocks.mixed.position.x, blocks.self.position.x, residual),
+        y = CRG.transform_augmented_operator(one_body.position.y,
+            blocks.mixed.position.y, blocks.self.position.y, residual),
+        z = CRG.transform_augmented_operator(one_body.position.z,
+            blocks.mixed.position.z, blocks.self.position.z, residual))
+    x2 = (;
+        x = CRG.transform_augmented_operator(one_body.x2.x,
+            blocks.mixed.x2.x, blocks.self.x2.x, residual),
+        y = CRG.transform_augmented_operator(one_body.x2.y,
+            blocks.mixed.x2.y, blocks.self.x2.y, residual),
+        z = CRG.transform_augmented_operator(one_body.x2.z,
+            blocks.mixed.x2.z, blocks.self.x2.z, residual))
+    H1 = copy(kinetic)
+    for index in eachindex(charges)
+        H1 .+= charges[index] .* unit_nuclear[index]
+    end
+    matrices = Any[kinetic, unit_nuclear..., H1,
+        position.x, position.y, position.z, x2.x, x2.y, x2.z]
+    all(matrix -> all(isfinite, matrix) &&
+        norm(matrix - transpose(matrix), Inf) <= 1.0e-10, matrices) ||
+        throw(ArgumentError(
+            "parent-backed augmented one-body matrices must be finite and symmetric"))
+    return (; kinetic, nuclear_attraction_unit_by_center = unit_nuclear,
+        one_body_hamiltonian = H1, position, x2,
+        parent_one_body = one_body, supplement_blocks = blocks)
 end
 
 function pqs_terminal_residual_gto_augmentation(
