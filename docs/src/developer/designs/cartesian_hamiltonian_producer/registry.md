@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `ab5620c1bcd20e78375d98cabde830aa243012f11b649e9d40c96cc1922fcb43`.
+> [authority.toml](authority.toml), SHA-256 `3206229afb2d505441b5118f28866672faee0fda0db39a13b1347fab6e53b7a4`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1520,83 +1520,81 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-PRF-INJECT-COMP-FN-01 - parent-backed injected basis composition
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Fixed-Span Injection`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
   - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
   - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
   - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
   - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_q7_injected_numcomplete_screened_uhf_2026-07-15.md`
+  - `git_commit`: `cdd2c27af`
   - `manager_pass`: `418`
+  - `manager_pass`: `419`
 - **Dependencies:** `HP-PQS-PRF-FN-01`, `HP-RG-NUMCOMP-FN-01`
-- **Scope:** Implement only private fixed-span angular-style injection from consumer-supplied orthonormal targets: project every old localized terminal seed before symmetric Lowdin, retain the exact parent-backed complement, preserve the old combined span and dimension, and residualize the explicit GTO supplement against the complete parent-backed basis through the existing numerical-complete builder. No selection, RDM, cutoff, localization, public, artifact, or solver policy.
+- **Scope:** Maintain only the implemented private fixed-span angular-style composition: project every old localized terminal seed before symmetric Lowdin, retain the exact parent-backed complement, preserve native B = \[Ginj,Rnew,RGexternal\] span/dimension, residualize the supplement at the numerical-complete 1e-10 policy, and rebuild exact native one-body operators. No consumer selection, RDM, shell, q, cutoff, count, orientation, public, artifact, solver, or Cr2 policy.
 
 ### HP-PQS-PRF-INJECT-COMP-TEST-01 - parent-backed injected basis validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Fixed-Span Injection`
 - **Owned paths:**
-  - `test` / `existing`: `test/misc/runtests.jl`
   - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
-  - `test` / `existing`: `test/nested/cartesian_screened_hartree_correction_runtests.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_q7_injected_numcomplete_screened_uhf_2026-07-15.md`
+  - `git_commit`: `cdd2c27af`
   - `manager_pass`: `418`
+  - `manager_pass`: `419`
 - **Dependencies:** `HP-PQS-PRF-INJECT-COMP-FN-01`
-- **Scope:** Validate complete old-seed projection versus a span-only basis, strict malformed/rank/support/weight/span failures, exact omitted-path parity, fixed-span identities, exact one-body oracle parity, numerical-complete external residual construction, packet capture, native ordering, and due diligence on synthetic, H2, and padded Be2 gates. No committed Cr2, HF, endpoint, selection, or localization assertion.
+- **Scope:** Maintain only the committed bounded H2 construction, complete old-seed projection, malformed/rank/support/weight/span failure, stale augmentation, exact one-body oracle, numerical-complete residual, native-order, and omitted-path parity checks. Padded Be2 packet/correction validation is external manager-reviewed evidence, not a committed fixture or owned test surface. No Cr2, HF, endpoint, selection, or localization assertion.
 
 ### HP-PQS-PRF-INJECT-INTERACT-FN-01 - parent-backed injected mixed interaction
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Interaction Block Contract`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
   - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`
   - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
   - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
   - `source` / `existing`: `src/cartesian_residual_gaussians/mwg_interaction.jl`
-  - `source` / `existing`: `src/ordinary_coulomb.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_q7_injected_numcomplete_screened_uhf_2026-07-15.md`
+  - `git_commit`: `006432e9d`
   - `manager_pass`: `418`
+  - `manager_pass`: `420`
 - **Dependencies:** `HP-PQS-PARENT-GDIRECT-FN-01`, `HP-PQS-PRF-INJECT-COMP-FN-01`, `HP-PQS-SCREEN-HARTREE-CORR-FN-01`
-- **Scope:** Implement only separated native \[Ginj,Rnew,RGexternal\] exact one-body and density-interaction assembly: rebuilt terminal IDA, existing parent-Gaussian direct blocks, terminal-to-residual MWG, moment-derived Rnew-to-residual MWG, residual MWG, then delegate to the unchanged additive screened-Hartree API after B, H1, and Vee are fixed. No C'VC, exact PRF-GTO, transition exchange, public, artifact, solver, or Cr2 policy.
+- **Scope:** Maintain only the implemented native \[Ginj,Rnew,RGexternal\] assembly: freshly rebuilt terminal IDA, onsite-calibrated parent-Gaussian direct blocks involving Rnew, established MWG blocks involving RGexternal, fitted atomic fields represented in the complete basis, and unchanged screened-Hartree delegation after H and V are fixed. No C'VC, old-interaction reuse, exact PRF-GTO, transition exchange, public, artifact, sidecar, solver, HF, or Cr2 policy.
 
 ### HP-PQS-PRF-INJECT-INTERACT-TEST-01 - parent-backed injected interaction validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Interaction Block Contract`
 - **Owned paths:**
-  - `test` / `existing`: `test/misc/runtests.jl`
   - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
-  - `test` / `existing`: `test/nested/cartesian_screened_hartree_correction_runtests.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_q7_injected_numcomplete_screened_uhf_2026-07-15.md`
+  - `git_commit`: `006432e9d`
   - `manager_pass`: `418`
+  - `manager_pass`: `420`
 - **Dependencies:** `HP-PQS-PRF-INJECT-INTERACT-FN-01`
-- **Scope:** Validate positive injected terminal weights, exact one-body blocks, finite symmetric separated IDA/Gaussian/MWG blocks, finite positive moment-derived centers and widths, correction recomputation after complete interaction assembly, unchanged screening-off H1/Vee, strict failures, and omitted-path parity on synthetic, H2, and padded Be2 gates. No committed Cr2, HF, endpoint, exact-exchange, or exact PRF-GTO assertion.
+- **Scope:** Maintain only the committed bounded H2 freshly rebuilt terminal, separated IDA/Gaussian/MWG block, finite positive moment, stale-input, correction-input, unchanged-path, and parity checks. Padded Be2 packet accounting, correction recomputation, derivative anchor, and unchanged H/V are external manager-reviewed evidence, not a committed fixture or owned test surface. No Cr2, HF, endpoint, exact-exchange, or exact PRF-GTO assertion.
 
 ### HP-PQS-PRF-TEST-01 - parent residual function validation
 

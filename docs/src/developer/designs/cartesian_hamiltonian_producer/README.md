@@ -96,9 +96,9 @@ ID or subsystem.
   for implemented consumer-selected parent residual mechanics, exact one-body
   blocks, and direct-only parent-backed Gaussian Coulomb blocks
 - [Parent-backed injected composition](parent_backed_injected_composition.md)
-  for approved-pending fixed-span angular-style injection, numerical-complete
-  external residuals, separated IDA/Gaussian/MWG blocks, and unchanged
-  screened-Hartree delegation
+  for implemented fixed-span angular-style injection, numerical-complete
+  external residuals, separated IDA/Gaussian/MWG blocks, and screened-Hartree
+  delegation after the native Hamiltonian is fixed
 - [Cartesian Gaussian raw blocks - nuclear slice](cartesian_gaussian_raw_blocks_nuclear.md)
   for the neutral uncharged nuclear raw-block owner
 - [Cartesian Gaussian raw blocks - non-nuclear slice](cartesian_gaussian_raw_blocks_non_nuclear.md)

@@ -1718,3 +1718,36 @@ Goal advancement / guardrail:
   component matrices and added no compatibility carrier. The net source/test
   increase is justified by the current controlled physics target; broader API
   or artifact growth remains forbidden.
+
+## Cartesian Hamiltonian Producer Pass 421 - Reconcile Parent-Backed Composition Lifecycle
+
+Commit(s):
+- `cdd2c27af` - implemented fixed-span parent-backed basis composition.
+- `006432e9d` - implemented separated interaction and screened-Hartree
+  delegation.
+- this commit - reconcile machine authority and current status.
+
+Summary:
+- Marked both source IDs implemented with maintenance permission and both test
+  IDs completed with maintenance permission. Maintenance ownership is narrowed
+  to the six source files actually carrying the facility and the single
+  committed H2 test; unused prospective owners were removed.
+- The canonical contract now records native `[Ginj,Rnew,RGexternal]` order,
+  projected old seeds, fixed parent span/dimension, numerical-complete external
+  residuals, exact one-body reconstruction, category-owned interaction blocks,
+  represented packet fields, and correction delegation after `H`/`V` are fixed.
+
+Validation / evidence:
+- Passes 419-420 and the implementation diffs support every lifecycle claim.
+  Manager rerun evidence is H2 `434/434` plus facade `69/69`. Padded Be2 at
+  `1729 + 2 + 42 = 1773` passed packet/correction accounting and unchanged
+  `H`/`V`, but remains external evidence rather than a committed slow fixture.
+- Authority check/self-test, generated-view parity, docs tests, local
+  Documenter, manager-log bound, staged docs-only review, and
+  `git diff --check` form this pass's gate.
+
+Goal advancement / guardrail:
+- MT4 source work is complete; MT2 now owns consumer-side CR2 fixed-state
+  validation. Selection, transition exchange, exact PRF-GTO interaction,
+  public workflow, artifacts, solvers, and endpoint acceptance remain outside
+  authority. This pass changes no source, test, numerical, or workflow behavior.

@@ -1,7 +1,6 @@
 # Parent-Backed Injected Composition
 
-Status: approved internal implementation and validation authority, pending
-source work.
+Status: implemented internal facility with completed bounded validation.
 
 Authority IDs:
 
@@ -17,9 +16,9 @@ shell, source order, injection target, residual orientation, or solver method.
 
 ## Purpose And Evidence
 
-The repo already owns support-local parent residual functions (PRFs), exact
-parent-backed one-body blocks, and onsite-calibrated Gaussian direct blocks.
-The missing facility is a category-correct composition in which:
+The repo owns support-local parent residual functions (PRFs), exact
+parent-backed one-body blocks, onsite-calibrated Gaussian direct blocks, and
+the category-correct composition in which:
 
 - injected localized rows with positive linear IDA weights remain terminal
   gausslet-like sites;
@@ -65,10 +64,11 @@ B = [G_inj, R_new, RG_external].
 `G_inj` and `R_new` remain distinct categories even though both have explicit
 parent coefficients. PRFs must not be appended to
 `CartesianTerminalBasisRealization` and then passed through terminal IDA merely
-to reuse terminal operator code. A compact internal composition object may
-hold the existing terminal realization, PRF blocks, column ranges, and compact
-validation summary. At most one new internal result object is approved; no new
-module, source file, public type, or persistent metadata cloud is allowed.
+to reuse terminal operator code. The implemented internal
+`CartesianParentBackedInjectedComposition` holds the terminal realization,
+PRF blocks, column ranges, dimension, and compact validation summary. It is the
+sole composition object added by this lane; no public type, module, source
+file, or persistent metadata cloud was added.
 
 ## Fixed-Span Injection
 
@@ -205,44 +205,38 @@ uses identical `H1_B` and `Vee_B`. Any basis, PRF orientation, residual
 rotation, interaction, packet placement, or Coulomb-policy change invalidates
 the old correction and requires rebuilding it.
 
-## Approved Source Boundary
+## Implemented Source Boundary
 
-Implementation may edit only these existing owners:
+Commits `cdd2c27af` and `006432e9d` implemented the facility in these existing
+owners:
 
-- `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
-  for narrow internal wiring;
 - `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
-  for fixed-span terminal replacement and compact composition validation;
-- `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` for exact
-  parent-backed one-body reuse;
-- `src/cartesian_final_basis_realization/pqs_terminal_ida.jl` for terminal IDA
-  and parent-Gaussian block composition;
-- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` for
-  exact parent-backed-to-GTO overlap and augmented composition;
-- `src/cartesian_residual_gaussians/residual_basis.jl` for narrow reuse of the
-  existing numerical-complete builder;
-- `src/cartesian_residual_gaussians/augmented_operators.jl` for native-order
-  exact operator/reference transforms;
-- `src/cartesian_residual_gaussians/mwg_interaction.jl` for separated
-  `G_inj`, `R_new`, and external-residual MWG blocks;
-- `src/ordinary_coulomb.jl` only if a narrow wrapper around the existing
-  Gaussian direct resource is required; and
-- `src/cartesian_protected_ladder_bundle.jl` for one private in-memory
-  numerical-complete/additive composition seam.
+  owns the composition object, fixed-span terminal replacement, exact
+  complement, and compact validation;
+- `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` owns exact
+  native parent-backed one-body operators;
+- `src/cartesian_final_basis_realization/pqs_terminal_ida.jl` owns rebuilt
+  terminal IDA and parent-Gaussian base interaction blocks;
+- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` owns
+  parent-backed-to-GTO overlap, numerical-complete augmentation, native exact
+  operators, separated interaction composition, and fitted-field
+  representation;
+- `src/cartesian_residual_gaussians/mwg_interaction.jl` owns the separated
+  terminal, parent-residual, and external-residual MWG blocks; and
+- `src/cartesian_protected_ladder_bundle.jl` owns the private in-memory
+  composition and additive screened-Hartree delegation seam.
 
-The screened-Hartree source owner is unchanged and is consumed through its
-existing API. No root export, public facade, driver input, artifact field,
-restart format, or new module/file is approved.
+The implementation consumes the existing numerical-complete residual builder,
+parent-Gaussian direct resource, augmented transforms, and screened-Hartree API
+without moving their ownership into these IDs. No root export, public facade,
+driver input, artifact field, restart format, module, or source file was added.
 
 ## Validation Contract
 
-Use only existing bounded test owners:
-
-- `test/misc/runtests.jl` for compact metric/rank failures;
-- `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` for synthetic
-  and real H2 injection, exact operators, and interaction blocks; and
-- `test/nested/cartesian_screened_hartree_correction_runtests.jl` for a
-  physically padded Be2 composition and correction delegation.
+Committed validation ownership is limited to
+`test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`. Its bounded H2
+gate owns construction, malformed and stale-input failures, exact one-body
+oracles, all separated interaction blocks, and omitted-path parity.
 
 Required gates are:
 
@@ -263,7 +257,15 @@ Required gates are:
    orientation, dimensions, symmetry, and finiteness agree with a bounded
    explicit existing-MWG construction.
 
-No committed Cr2 fixture, HF convergence, endpoint energy, or exchange
+Manager rerun passed the committed H2 gate `434/434` and the unchanged facade
+regression `69/69`. The padded Be2 construction is external manager-reviewed
+evidence rather than a committed slow fixture. It used native dimensions
+`1729 + 2 + 42 = 1773`; packet capture/accounting, additive decomposition,
+correction recomputation, derivative anchor, unchanged `H`/`V`, and terminal
+due diligence passed. The facade regression and external Be2 gate do not
+expand these IDs' test ownership.
+
+No committed Be2 or Cr2 fixture, HF convergence, endpoint energy, or exchange
 assertion is approved.
 
 ## Failure And Stop Rules
