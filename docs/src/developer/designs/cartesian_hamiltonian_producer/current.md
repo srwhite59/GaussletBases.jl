@@ -25,7 +25,7 @@ source/contract findings, not another migration campaign.
 | Mapping and source span | Expert `s_factor` and opt-in mapped-COMX source spans with provenance; defaults remain unchanged | [Mapping s_factor](pqs_mapping_s_factor.md), [mapped COMX](mapped_comx_source_span.md) |
 | Coulomb policy | One producer-wide expansion reaches parent/PGDG, base IDA, residual-GTO, and MWG. Compact45 and high135 are implemented | [Coulomb accuracy](coulomb_accuracy_policy.md) |
 | Residual Gaussians | Owner-local residual selection, one final merge, exact augmented one-body operators, final-basis MWG/IDA, current `1e-6` production cutoff, and opt-in numerical-complete `[G,R_num]` additive composition | [Residual Gaussian domain](residual_gaussian_domain_module.md), [numerical-complete basis](numerical_complete_residual_basis.md), [orthogonality/cutoff](residual_gaussian_orthogonality_robustness.md) |
-| Parent-backed functions | Consumer-supplied support-local PRFs, fixed-span injected terminal composition, exact native one-body operators, numerical-complete external residuals, separated IDA/Gaussian/MWG interaction blocks, screened-Hartree delegation, and a bounded parent-IDA direct comparator | [Parent residual functions](parent_residual_functions.md), [parent-backed injected composition](parent_backed_injected_composition.md) |
+| Parent-backed functions | Consumer-supplied support-local PRFs, fixed-span injected terminal composition, exact native one-body operators, numerical-complete external residuals, separated IDA/Gaussian/MWG interaction blocks, screened-Hartree delegation, a bounded parent-IDA comparator, and completed fixed-state/eight-sweep consumer replay | [Parent residual functions](parent_residual_functions.md), [parent-backed injected composition](parent_backed_injected_composition.md) |
 | Direct-G injection | Default-off in-memory compatibility path; ordinary behavior is invariant and enabled artifacts remain unsupported | [Direct-G injection](residual_gaussian_injection_hybrid.md) |
 | Protected-localized basis | Compact-main protected replacement, exact localized one-body matrices, inherited-site `Vee_L`; direct `C' V C` is rejected | [Protected-localized basis](protected_localized_basis.md) |
 | Protected persistence | Opt-in protected Hamiltonian artifacts with native locality metadata, plus same-parent ladder bundles and exact cross-overlap transfer | [Protected artifact](protected_localized_artifact.md), [protected ladder](protected_localized_ladder.md) |
@@ -41,7 +41,6 @@ claim.
 | Lane | State | Exact next boundary |
 | --- | --- | --- |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
-| Controlled CR2 parent-backed validation | Consumer-side fixed-state measurement next; no producer source work remains in this lane | Rebuild the fixed imported state through the source-backed basis, interaction, and correction; compare capture and energy components before any relaxed-HF interpretation or endpoint acceptance |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |
@@ -53,38 +52,30 @@ historical audit IDs are not active work.
 
 ## Current Physics Target
 
-The parent-backed injected producer mechanics are implemented. The immediate
-next step is consumer-side CR2 fixed-state validation using the source-backed
-basis, freshly rebuilt category-owned interaction, and separately rebuilt
-screened-Hartree correction. This validates the reusable repo composition
-without turning the consumer's target, shell, source order, cutoff, PRF count,
-orientation, or solver choice into producer policy. The controlled Cr2
-screened-Hartree comparison remains under the current fitted-cloud reference
-convention. Its bounded source and validation gates have passed:
+The parent-backed source migration is complete. At native dimension
+`6915 + 16 + 138 = 7069`, the source-backed fixed state reproduced the accepted
+screened error `+1.576416 mHa`; the bounded eight-sweep replay reached
+`-2086.524053675786 Ha`, only `-1.09e-11 Ha` from the former CR2-local path,
+without collapse or spin-basin change. Strict solver convergence was not
+declared.
 
-- one high-accuracy `M=[G,R_num]` Hamiltonian basis that preserves `G`;
-- one imported external-GTO occupied start represented by the source-backed
-  cross-overlap infrastructure;
-- identical starting state for screened and unscreened runs;
-- consumer-owned solver continuation, spin/occupation diagnostics, and
-  interpretation.
-
-Both are bounded internal/consumer efforts, not permission for a Cr2-specific
-producer branch, committed Cr2 endpoint, solver API, corrected artifact, or
-production energy claim. PRF transition-density exchange is still being
-measured at the occupied-orbital level and is not part of the approved direct
-resource.
+This validates the intended consumer path, not a q7/Cr2 default, production
+endpoint, solver API, artifact schema, exchange correction, or generic matrix
+tolerance. The next action is to pause for an explicit scientific choice
+rather than automatically opening q6 or another source lane. PRF selection,
+target RDM, cutoff, residual orientation, and interpretation remain
+consumer-owned.
 
 ## Current Blockers And Follow-Ups
 
 1. **Standard Coulomb implementation.** The analytic K60 preset and artifact
    fingerprint are approved but not source-backed. The controlled Cr2
    screened comparison stays `:high` and must not be changed mid-comparison.
-2. **Parent-backed interaction interpretation.** Basis composition, separated
-   density interaction, and correction delegation are implemented. The next
-   evidence is consumer fixed-state validation. Transition-density exchange,
-   exact PRF-GTO interactions, automatic selection, artifacts, and endpoint
-   acceptance remain unapproved.
+2. **Parent-backed interaction interpretation.** Source composition,
+   interaction, fitted-field representation, correction delegation, and the
+   intended bounded CR2 replay are validated. Transition-density exchange,
+   exact PRF-GTO interactions, automatic selection, generic parity tolerance,
+   artifacts, and endpoint acceptance remain unapproved.
 3. **Retained-GTO EGOI helper.** The protected target/mask convention is
    accepted, but committed source does not yet implement the helper.
 4. **Residual spectral interpretation.** Tightening the RG cutoff removed

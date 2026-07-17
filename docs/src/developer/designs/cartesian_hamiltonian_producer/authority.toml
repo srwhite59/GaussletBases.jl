@@ -47,7 +47,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/occupied_first
 sha256 = "7f5d9d262246fb486c438db3a0a23450dd3e944ec303548429c21d6ec3a0d7ff"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_backed_injected_composition.md"
-sha256 = "e5e99b64aad87aba63807623111dc029054a398d6ad82b58ede23cb5b72e70c1"
+sha256 = "01cd994c6676ba5dba2af639511f57cabab715149f211185adc4b514a0d078bd"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_residual_functions.md"
 sha256 = "a402920b2d7291ff5f8b53acc4a4436d4240377263faced204b319f4479325c7"

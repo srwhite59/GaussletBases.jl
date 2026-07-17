@@ -39,6 +39,51 @@ This is evidence for reusable mechanics, not a q7, shell-9, eight-mode,
 `1e-5`, Cr2, or energy policy. The corresponding q6 interaction error remained
 large, so no automatic contraction or injection choice is approved.
 
+## Source-Backed Consumer Validation
+
+The July 16, 2026 source-backed CR2 validation closes the mechanical migration
+from the old consumer-local construction. At GaussletBases commit `da607b855`,
+the repo path rebuilt native dimensions
+
+```text
+6915 + 16 + 138 = 7069
+```
+
+and reproduced the imported fixed state with screened error
+`+1.576415984 mHa` relative to matched PySCF. An eight-sweep bounded replay
+then reached
+
+```text
+-2086.524053675786 Ha,
+```
+
+only `-1.09e-11 Ha` from the prior CR2-local result. The largest sweep-energy
+difference was `6.224e-9 Ha`. No collapse or spin-basin change occurred; final
+PRF and external-residual occupations were `2.377826e-6 e` and
+`1.841130e-3 e`. The solver did not declare strict convergence, so this is a
+successful bounded replay rather than a converged production endpoint.
+
+The accepted restart SHA-256 is
+
+```text
+5e85af3caffe129a00593221233d70cf414bce9a09e3ac931dff0625d1b989f3.
+```
+
+The parity decision is task-local. The largest raw external-sector `H1`
+difference was `3.2783e-7 Ha` on a roughly `57336 Ha` diagonal, or
+`5.72e-12` relative, with fixed-state expectation `2.39e-13 Ha`. The complete
+fixed-state energy and eight-sweep trajectory reproduced despite that raw
+difference. This accepts the specific consumer replay; it does not amend a
+generic source tolerance or authorize state-dependent validation policy.
+
+The continuing construction path is the repo source facility. The former
+CR2-local composition, interaction, fitted-field, and correction mechanics are
+historical evidence only. Consumer ownership of target construction, `q`, RDM,
+cutoff, orientation, and interpretation is unchanged. A moment-only
+localization input helper could avoid about 17 minutes when rebuilding from a
+fresh residual basis, but that friction is deferred: the accepted restart
+removes it from the immediate physics path and no helper is authorized here.
+
 ## Basis Objects And Native Order
 
 Let `G` be the current orthonormal localized terminal basis and let `R` be one

@@ -1751,3 +1751,37 @@ Goal advancement / guardrail:
   validation. Selection, transition exchange, exact PRF-GTO interaction,
   public workflow, artifacts, solvers, and endpoint acceptance remain outside
   authority. This pass changes no source, test, numerical, or workflow behavior.
+
+## Cartesian Hamiltonian Producer Pass 422 - Close Source-Backed CR2 Validation
+
+Commit(s):
+- `da607b855` - source-backed lifecycle baseline.
+- this commit - record fixed-state and bounded replay evidence.
+
+Summary:
+- The repo construction reproduced the former CR2-local native basis and
+  Hamiltonian path at dimension `6915 + 16 + 138 = 7069`. Fixed screened error
+  remained `+1.576416 mHa` versus matched PySCF.
+- Eight source-backed sweeps reached `-2086.524053675786 Ha`, differing from
+  the prior result by `-1.09e-11 Ha`; the maximum sweep-energy difference was
+  `6.22e-9 Ha`. No collapse or spin-basin change occurred. Final PRF/external
+  occupations were `2.377826e-6 / 1.841130e-3 e`. Strict convergence was not
+  declared, so this closes a bounded replay rather than a production endpoint.
+
+Validation / evidence:
+- Reviewed both July 16 reports and independently verified restart SHA-256
+  `5e85af3caffe129a00593221233d70cf414bce9a09e3ac931dff0625d1b989f3`.
+  The largest raw external `H1` delta was `3.28e-7 Ha` on a roughly `57336 Ha`
+  diagonal, `5.72e-12` relative, with fixed-state expectation below
+  `2.4e-13 Ha`. Full trajectory parity accepts this replay only; it creates no
+  generic or state-dependent tolerance policy.
+- Authority checks, docs tests, Documenter, manager-log bound, and
+  `git diff --check` form the docs-only gate.
+
+Goal advancement / guardrail:
+- MT2 source-migration validation is complete; old CR2-local mechanics are
+  historical. Selection and interpretation remain consumer-owned. The
+  approximately 17-minute moment-only localization rebuild friction is
+  deferred because the accepted restart removes it from the immediate path.
+  Pause for the next scientific choice; do not automatically open q6, helper,
+  solver, artifact, exchange, or production-endpoint work.
