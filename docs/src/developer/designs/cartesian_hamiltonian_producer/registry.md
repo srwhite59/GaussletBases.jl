@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `f181cc7c3f1a7da3e86e50fb93d02d8d83516c4f09c5650e6512d335aa72cb4c`.
+> [authority.toml](authority.toml), SHA-256 `82fd33e22f453c66a712f13c48a908027d95e2ddcf83ebf3a0c512d335a80b68`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1455,6 +1455,21 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** maintain only the existing committed \`s\_factor\` assertions in that file. New fixtures or endpoint policy require separate authority.
+
+### HP-PQS-PAPER-H2-DRV-FN-01 - private matched PQS/WL H2 paper driver
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `driver`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [cartesian\_driver\_usability\_workflow.md](cartesian_driver_usability_workflow.md); heading `Private PQS/WL Paper H2 Driver`
+- **Owned paths:**
+  - `driver` / `planned`: `bin/pqs_paper_h2_driver.jl`
+- **Evidence:**
+  - `manager_pass`: `423`
+- **Dependencies:** none
+- **Scope:** Implement only the private matched PQS/WL H2+/H2 paper-validation command in \`bin/pqs\_paper\_h2\_driver.jl\`: frozen representative one-center parent, current staged terminal realizations, arbitrary-center physical nuclei, H2+ lowest-state gate first, and later ordinary high-accuracy H2 fixed-state/RHF. No public/canonical driver, source, test, tool, schema, default, scanner, scratch oracle, generalized-overlap, AddNest, enrichment, correction, or correlated-solver work.
 
 ### HP-PQS-PARENT-GDIRECT-FN-01 - parent-backed Gaussian direct interaction
 

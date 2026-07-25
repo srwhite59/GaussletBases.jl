@@ -321,7 +321,8 @@ function _path_errors(item, id, index, tracked)
     state == "existing" && (!isfile(absolute) || !(path in tracked)) &&
         push!(errors, "$id.paths[$index] existing path must be a tracked file: $path")
     state == "planned" && path in tracked && push!(errors, "$id.paths[$index] planned path is tracked: $path")
-    state == "planned" && kind != "test" && push!(errors, "$id.paths[$index] planned state is test-only")
+    state == "planned" && !(kind in ("test", "driver")) &&
+        push!(errors, "$id.paths[$index] planned state is test/driver-only")
     state == "optional_local" && kind != "measurement" &&
         push!(errors, "$id.paths[$index] optional_local state is measurement-only")
     state == "optional_local" && path in tracked &&
@@ -480,6 +481,9 @@ function validation_errors(data; tracked = _tracked_paths())
             item isa AbstractDict || continue
             append!(errors, _path_errors(item, id, path_index, tracked))
         end
+        any(item -> item isa AbstractDict && get(item, "state", nothing) == "planned", paths) &&
+            !(lifecycle == "approved" && grant == "implementation") &&
+            push!(errors, "$id planned paths require approved implementation authority")
         path_kinds = Set(String(item["kind"]) for item in paths if item isa AbstractDict && haskey(item, "kind"))
 
         evidence = get(record, "evidence_refs", nothing)
@@ -960,6 +964,14 @@ function self_test()
     planned_path = first(item for item in planned_record["paths"] if item["state"] == "planned")
     planned_path["path"] = "test/nested"
     _expect_failure(broken, "must be a file")
+
+    broken = deepcopy(snapshot.data)
+    planned_record = first(record for record in broken["records"] if any(
+        item -> item["state"] == "planned",
+        record["paths"],
+    ))
+    planned_record["lifecycle"] = "implemented"
+    _expect_failure(broken, "planned paths require approved implementation authority")
 
     broken = deepcopy(snapshot.data)
     evidence_record = first(record for record in broken["records"] if !isempty(record["evidence_refs"]))

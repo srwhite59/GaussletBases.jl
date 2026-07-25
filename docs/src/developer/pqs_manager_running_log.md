@@ -28,9 +28,9 @@ archaeology and are not normal startup reading.
   `P0/q0`, the density fit for `E0`, and the fitted potential as an approximate
   `J0` evaluator with reported consistency error. A determinant-exact `J0/E0`
   convention requires a separate scientific amendment.
-- The current consumer target remains a controlled Cr2 screened-Hartree off/on
-  fixed-density comparison in one high-accuracy numerical-complete basis, with
-  the same imported occupied state and consumer-owned solver interpretation.
+- The source-backed Cr2 composition/replay migration is closed. The next
+  bounded scientific target is one matched White-Lindsey/PQS H2+ paper point
+  at `R=2`, before any H2 curve or RHF campaign.
 - Fixed-parent shell-q/PRF measurements now also support an internal
   parent-residual basis facility and direct-only parent-backed Gaussian
   interaction resource. Physical target selection, transition-density
@@ -62,15 +62,15 @@ closed; continue with remaining consumer/readback correctness, due-diligence
 warning shape, stale-path removal, and missing validation gates. Keep each
 repair lane narrow.
 
-**MT2 - Controlled Cr2 measurement (active).** Complete the authorized
-numerical-complete screened-Hartree fixed-density comparison and the separate
-fixed-parent PRF contraction study without changing each comparison's parent,
-Coulomb policy, imported state, solver interpretation, or reference convention
-mid-comparison.
+**MT2 - Controlled Cr2 source migration (completed).** The source-backed
+fixed-state and bounded replay reproduced the former consumer-local path. Any
+new Cr2 endpoint, contraction, exchange, or solver interpretation is a
+separate scientific choice.
 
-**MT3 - Approved pending producer facilities (active).** Implement Standard60
-and canonical-driver Coulomb exposure separately from the controlled Cr2 run.
-The retained-GTO EGOI helper remains pending and must not absorb the unrelated
+**MT3 - Approved pending producer facilities (active).** Implement the private
+matched PQS/WL H2+ paper driver as one bounded validation surface. Standard60
+and canonical-driver Coulomb exposure remain separate. The retained-GTO EGOI
+helper remains pending and must not absorb the unrelated
 `hamiltonian_corrections.jl` WIP without review.
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
@@ -1785,3 +1785,48 @@ Goal advancement / guardrail:
   deferred because the accepted restart removes it from the immediate path.
   Pause for the next scientific choice; do not automatically open q6, helper,
   solver, artifact, exchange, or production-endpoint work.
+
+## Cartesian Hamiltonian Producer Pass 423 - Authorize Private PQS/WL Paper Driver
+
+Commit(s):
+- this commit - approve one private matched H2+/H2 paper-validation command.
+
+Summary:
+- Added `HP-PQS-PAPER-H2-DRV-FN-01` for exactly
+  `bin/pqs_paper_h2_driver.jl`. The script must use the current one-center
+  staged working-basis route, genuine PQS and White-Lindsey terminal
+  realizations, arbitrary-center nuclear attraction, and the frozen
+  high-accuracy paper setup. It does not replace the canonical driver.
+- The first gate is only the `R=2` H2+ lowest terminal `H1` state for both
+  methods, with no `Vee` or RHF. H2 fixed-state/closed-shell work remains
+  ordered after that acceptance.
+
+Validation / evidence:
+- Read the July 24 route-readiness audit and reconciled the live staged
+  constructors, terminal realizers, arbitrary-center nuclear helper,
+  high-accuracy IDA owner, matrix contractions, canonical-driver boundary, and
+  machine authority. Authority checks, generated-view parity, focused conflict
+  scans, docs links, manager-log bound, and `git diff --check` form the gate.
+
+Goal advancement / guardrail:
+- MT3 gains one bounded paper-validation driver. Preferred/hard size limits are
+  `125/150` added `bin` lines, with zero `src` lines and no committed test.
+  Scratch parent/density oracles, generalized-overlap machinery, AddNest,
+  public APIs, schemas, broad driver infrastructure, and physics-default
+  changes remain forbidden. The single scientific command is the acceptance
+  test; failure within the one-file budget means no implementation commit.
+
+Carrying-cost accounting:
+- deleted: none; this pass grants authority only.
+- simplified: none; the canonical driver remains unchanged.
+- quarantined: scratch parent/density oracles and AddNest reporting remain
+  ignored evidence, not implementation inputs.
+- not deleted because: the new driver does not exist yet.
+- exact remaining caller/blocker: no stable repo command joins the existing
+  staged kernels for the paper endpoint.
+- added/deleted `src` lines: `0/0`.
+- new tests: none.
+- new metadata/status fields: none; one machine authority record and exact
+  planned driver path were added.
+- validation: authority check/self-test, docs tests, Documenter, focused
+  path/conflict scans, manager-log bound, and `git diff --check`.

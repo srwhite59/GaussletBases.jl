@@ -1,8 +1,9 @@
 # Cartesian Driver Usability Workflow
 
 Status: implemented canonical contract for the human-facing Cartesian
-Hamiltonian driver and its non-exported staged producer calls. Registry entries
-own the lifecycle and source permissions for the `HP-DRV-*` IDs. Driver
+Hamiltonian driver and its non-exported staged producer calls, plus one
+approved-pending private PQS/WL paper-validation driver. Registry entries own
+the lifecycle and source permissions for the corresponding IDs. Driver
 validation IDs without committed fixtures are completed evidence or explicitly
 named probe records, not continuing test authority.
 
@@ -192,3 +193,125 @@ switches, diagnostic dumps, allocation probes, custom Coulomb parameters,
 solver/RHF/ECP/EGOI behavior, Cr2-specific branches, public exports, result
 wrappers, artifact schemas, committed input fixtures, or a safe untrusted-code
 parser. Route and ladder diagnostics remain outside the canonical driver.
+
+## Private PQS/WL Paper H2 Driver
+
+`HP-PQS-PAPER-H2-DRV-FN-01` approves one tracked, non-exported scientific
+validation script:
+
+```text
+bin/pqs_paper_h2_driver.jl
+```
+
+This script is private to the matched White-Lindsey/PQS H2+/H2 paper campaign.
+It is not a public API, a general paper-driver framework, a replacement for
+`cartesian_ham_builder.jl`, or a source of producer defaults. It may be removed
+after the campaign if no durable use remains.
+
+### Required Construction
+
+For each requested method, the script builds the same frozen one-center
+neutral-H representative-parent construction as the contraction template.
+Independently built PQS and White-Lindsey parent instances must agree in
+centers, weights, mapped axis operators, bounds, and fingerprints. The PQS
+path must be the current source-box-first chain:
+
+```text
+cartesian_base_working_basis
+-> cartesian_transforms
+-> pqs_terminal_basis_realization
+```
+
+The White-Lindsey case must use the corresponding current terminal realizer
+through the same staged working-basis boundary. The driver may call these and
+the required operator/interaction routines by qualified non-exported names.
+It must validate the resulting method, route-local `q`, parent, shell ledger,
+and terminal realization rather than infer route identity from labels.
+
+The representative parent is common to the two physical centers. Physical
+nuclei are placed at `(0,0,-R/2)` and `(0,0,R/2)` only through the existing
+arbitrary-center terminal unit-nuclear kernel. The script must not use the
+public multicenter diatomic facade,
+`pqs_source_shell_realization_final_basis`, CPBM source-shell
+bridge/readiness paths, or shell/support-row compatibility materialization.
+
+The frozen paper defaults are:
+
+```text
+core_spacing = 0.15
+parent mapping d = core_spacing
+s_factor = 1.0
+s = sqrt(core_spacing)
+tail_spacing = 2.8
+ns = 5
+source_span = :ordinary
+coulomb_accuracy = :high
+Coulomb expansion terms = 135
+```
+
+The first `R=2` gate uses representative-parent radius `6.0`; a later curve
+may use one explicitly recorded campaign-fixed extent. The allowed controls
+are only:
+
+```text
+system = :h2plus | :h2
+method = :pqs | :wl | :both
+R
+output_dir
+parent_radius (campaign-fixed for a curve)
+optional trusted config include
+name=value overrides for these approved inputs
+```
+
+The driver records every resolved input. It is not a mapping, `q`,
+source-span, supplement, Coulomb-policy, or parameter scanner.
+
+### Endpoints And Output
+
+The first endpoint is the lowest terminal `H1` eigenpair for H2+. It builds no
+`Vee` and runs no RHF. Only after that endpoint is accepted may the same script
+build ordinary 135-term terminal IDA for H2, evaluate the fixed state formed
+from the H2+ orbital, and run closed-shell density-density RHF through the
+existing matrix contractions.
+
+Each method writes one compact TSV row and a readable text report containing
+the resolved configuration, git commit and dirty state, dimensions, shell
+ledger, energy decomposition, convergence result, phase timings and
+allocations, process peak RSS with units, and output paths. H2 may optionally
+write and read the existing minimal Hamiltonian artifact. The one-center
+template provenance must not be attached as if it described the physical
+two-center geometry. No new JLD2 schema, result wrapper, payload, metadata
+family, or report-carried basis is approved.
+
+### Implementation And Acceptance Limits
+
+- Preferred implementation size is at most `125` added `bin` lines; the hard
+  limit is `150`.
+- Added `src` lines, committed tests, probes, fixtures, modules, helper files,
+  exports, status vocabularies, and adapters are all zero.
+- Do not copy the scratch parent oracle, sampled-density oracle,
+  generalized-overlap solver, AddNest include chain, or scratch reporting
+  framework.
+- The implementation pass must change the exact authority path state from
+  `planned` to `existing` and regenerate the checked views in the same commit.
+- If the endpoint cannot be implemented in the one approved file and hard
+  budget using existing kernels, make no implementation commit and report the
+  missing operation.
+
+The sole initial scientific acceptance command is:
+
+```text
+julia --project=. bin/pqs_paper_h2_driver.jl \
+    system=:h2plus method=:both R=2.0 \
+    output_dir='"/tmp/pqs_paper_h2plus_R2"'
+```
+
+It must report a `25 x 25 x 25` parent (`15625` functions), PQS `q=5`, WL
+`q=3`, ten `98`-column shells, a `125`-column core, final dimension `1105`
+for both methods, a 135-term expansion, finite symmetric `H1`, a converged
+lowest state, complete due-diligence/output records, and lower PQS than WL
+variational error. A material mismatch stops the pass before any H2 endpoint.
+
+This authority changes no public input, canonical-driver behavior, numerical
+default, artifact schema, AddNest/exact-W/injection/PRF/external-RG/MWG/
+screening/EGOI behavior, or correlated-solver surface.

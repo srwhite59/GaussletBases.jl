@@ -40,6 +40,7 @@ claim.
 
 | Lane | State | Exact next boundary |
 | --- | --- | --- |
+| `HP-PQS-PAPER-H2-DRV-FN-01` | Private matched PQS/WL paper driver approved pending | Implement only `bin/pqs_paper_h2_driver.jl`; first accept one `R=2` H2+ lowest-state command with no `Vee` or RHF |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
@@ -52,19 +53,16 @@ historical audit IDs are not active work.
 
 ## Current Physics Target
 
-The parent-backed source migration is complete. At native dimension
-`6915 + 16 + 138 = 7069`, the source-backed fixed state reproduced the accepted
-screened error `+1.576416 mHa`; the bounded eight-sweep replay reached
-`-2086.524053675786 Ha`, only `-1.09e-11 Ha` from the former CR2-local path,
-without collapse or spin-basin change. Strict solver convergence was not
-declared.
+The next bounded physics target is the matched White-Lindsey/PQS paper H2+
+point at `R=2`. Existing staged kernels already own the common representative
+parent, both terminal realizations, arbitrary-center nuclear attraction, and
+high-accuracy one-body construction. One private repo driver is approved
+pending to join those pieces reproducibly.
 
-This validates the intended consumer path, not a q7/Cr2 default, production
-endpoint, solver API, artifact schema, exchange correction, or generic matrix
-tolerance. The next action is to pause for an explicit scientific choice
-rather than automatically opening q6 or another source lane. PRF selection,
-target RDM, cutoff, residual orientation, and interpretation remain
-consumer-owned.
+The first gate is only the lowest terminal `H1` state for both methods. It
+builds no `Vee` and runs no RHF. H2 fixed-state and density-density RHF work
+may begin only after that gate passes. This does not change the canonical
+driver, public facade, producer defaults, artifact schemas, or solver APIs.
 
 ## Current Blockers And Follow-Ups
 
