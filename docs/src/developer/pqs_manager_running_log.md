@@ -77,9 +77,8 @@ helper remains pending and must not absorb the unrelated
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
 injection/localization policy remain separate future decisions. Parent residual
 function mechanics and the onsite-calibrated Gaussian direct resource are
-approved pending implementation after comparison with MWG, full parent IDA,
-and bounded continuum direct oracles. Transition-density exchange and
-PRF-to-GTO-residual interactions remain measurement-only questions.
+implemented and source-backed. Selection, transition-density exchange, and
+PRF-to-GTO-residual interactions remain consumer or measurement questions.
 
 **MT5 - Documentation and authority maintenance (maintenance).** The broad
 reorganization and cutover are complete. Update machine authority atomically,
@@ -1883,3 +1882,51 @@ Carrying-cost accounting:
 - validation: authority check/self-test, generated-view parity, docs tests,
   Documenter, manager-log bound, scoped docs-only review, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 425 - Complete White-Lindsey Due Diligence
+
+Commit(s):
+- this commit - repair the existing terminal-report join under
+  `HP-DRV-SHELLDD-FN-01`.
+
+Summary:
+- White-Lindsey reporting now follows its native retained-unit order instead
+  of the PQS-only support-rule records. The corrected two-center `R=2` route
+  exposes `211` realized rows in `11` physical regions; each of its eight
+  complete shells sums to `98` columns and all rows close the `1109`-column
+  terminal dimension.
+- PQS keeps its support-record join unchanged. No basis, coefficient, H1,
+  interaction, artifact, or public-driver behavior changed.
+
+Validation / evidence:
+- Package load and the public Cartesian base regression passed. The corrected
+  private H2+ command completed both high135 H1 solves with shared parent
+  fingerprint, finite symmetric matrices, and eigen-residuals below `7e-14`.
+  The source patch is `60/25` added/deleted lines and passes
+  `git diff --check`.
+
+Carrying-cost accounting:
+- deleted: WL dependence on unavailable PQS support-rule records.
+- simplified: native retained-unit order now owns WL report/block alignment.
+- quarantined: key probe and paper-gate outputs remain under `/tmp`.
+- not deleted because: the PQS support-record path remains its live owner.
+- exact remaining caller/blocker: implement and lifecycle-close the separately
+  authorized private paper driver.
+- added/deleted `src` lines: `60/25`.
+- new tests: none.
+- new metadata/status fields: none.
+- validation: package load, focused public-base regression, corrected H2+
+  endpoint, scoped diff review, and `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 425
+
+- **MT1 conformance remediation - active.** The WL report gap is closed; other
+  Pass 398 discrepancies remain separate.
+- **MT2 controlled Cr2 source migration - completed.** Unchanged.
+- **MT3 approved pending facilities - active.** The paper-driver source blocker
+  is cleared; its own implementation/lifecycle commit is next.
+- **MT4 residual/protected evidence - active.** Parent-backed mechanics are
+  implemented; selection and transition/exchange questions remain scientific.
+- **MT5 authority maintenance - maintenance.** No new authority was needed.
+- **MT6 carrying-cost control - active.** This pass adds only the bounded
+  report join and no test, payload, metadata, or compatibility layer.

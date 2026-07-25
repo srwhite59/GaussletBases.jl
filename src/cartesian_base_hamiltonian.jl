@@ -511,7 +511,8 @@ function _cartesian_terminal_inventory_rows(transforms, bundles)
     centers = _cartesian_manifest_axis_centers(bundles)
     for unit in units
         contract = get(contracts, unit.unit_key, nothing)
-        block = get(blocks, get(block_key_by_retained, unit.unit_key, unit.unit_key), nothing)
+        block = get(blocks, transforms.route_family === :white_lindsey_low_order ? unit.unit_key :
+            get(block_key_by_retained, unit.unit_key, unit.unit_key), nothing)
         (isnothing(contract) || isnothing(block)) && continue
         meta = contract.metadata
         geometry = _cartesian_inventory_geometry(block, centers)
@@ -610,51 +611,82 @@ _cartesian_due_warning_summary(flags) = flags == (:none,) ? "none" : join(String
 function _cartesian_terminal_due_rows(transforms, bundles)
     low = get(transforms, :low_order_transforms, nothing)
     basis = get(transforms, :terminal_basis_realization, nothing)
-    (isnothing(low) || isnothing(basis) || isnothing(low.terminal_retained_rule_plan)) &&
-        return NamedTuple[]
-    inventory = Dict(row.region_key => row for row in _cartesian_terminal_inventory_rows(transforms, bundles))
+    is_wl = transforms.route_family === :white_lindsey_low_order
+    missing = isnothing(low) || isnothing(basis) || isnothing(low.terminal_retained_rule_plan) ||
+        (is_wl && isnothing(low.retained_unit_transform_contract_plan))
+    is_wl && missing && throw(ArgumentError("White-Lindsey due diligence is missing required route objects"))
+    missing && return NamedTuple[]
+    inventory_rows = _cartesian_terminal_inventory_rows(transforms, bundles)
+    inventory = Dict(row.region_key => row for row in inventory_rows)
     blocks = Dict(block.unit_key => block for block in basis.blocks)
+    wl_units = is_wl ? CartesianRetainedUnits.units(low.retained_unit_transform_contract_plan.retained_unit_plan) : nothing
+    isnothing(wl_units) || length(wl_units) == length(inventory_rows) ||
+        throw(ArgumentError("White-Lindsey due-diligence inventory does not match retained units"))
     rows = NamedTuple[]
-    for record in low.terminal_retained_rule_plan.records
-        support = record.support_record
-        invrow = get(inventory, support.terminal_region_key, nothing)
-        block = get(blocks, support.unit_key, nothing)
-        (isnothing(invrow) || isnothing(block)) && continue
+    records = isnothing(wl_units) ? low.terminal_retained_rule_plan.records : wl_units
+    for (order_index, record) in pairs(records)
+        support = is_wl ? nothing : record.support_record
+        invrow = is_wl ? inventory_rows[order_index] :
+            get(inventory, support.terminal_region_key, nothing)
+        is_wl && invrow.region_key !== record.terminal_region_key &&
+            throw(ArgumentError("White-Lindsey due-diligence inventory order mismatch"))
+        block_key = is_wl ? record.unit_key : support.unit_key
+        block = get(blocks, block_key, nothing)
+        if isnothing(invrow) || isnothing(block)
+            is_wl && throw(ArgumentError("White-Lindsey due diligence is missing a native terminal row"))
+            continue
+        end
+        box = invrow.index_ranges
+        terminal_order, retained_count, realization_status = is_wl ?
+            (record.unit_index, invrow.final_cols, record.realization_rule) :
+            (record.order_index, record.retained_count, record.realization_status)
+        role, outer_box, inner_box = is_wl ?
+            (record.terminal_region_role, (box.x, box.y, box.z), nothing) :
+            (support.terminal_region_role, support.outer_box, support.inner_exclusion_box)
+        source_mode_shape, retained_rule, bond_axis = is_wl ?
+            (nothing, record.retained_rule,
+                invrow.slab_axis === :unavailable ? nothing : invrow.slab_axis) :
+            (support.source_mode_shape, support.retained_rule, support.bond_axis)
         physical = invrow.physical_ranges; lengths = (physical.x[2] - physical.x[1],
             physical.y[2] - physical.y[1], physical.z[2] - physical.z[1])
         row0 = merge(invrow, (;
-            terminal_order = record.order_index, role = support.terminal_region_role,
-            owner_contact_shared = _cartesian_owner_class(support.terminal_region_role, invrow.region_kind),
-            outer_box = support.outer_box, outer_shape = _cartesian_range_shape(support.outer_box),
-            inner_box = support.inner_exclusion_box, inner_shape = _cartesian_range_shape(support.inner_exclusion_box),
+            terminal_order, role,
+            owner_contact_shared = _cartesian_owner_class(role, invrow.region_kind),
+            outer_box, outer_shape = _cartesian_range_shape(outer_box),
+            inner_box, inner_shape = _cartesian_range_shape(inner_box),
             physical_x_length = Float64(lengths[1]), physical_y_length = Float64(lengths[2]),
             physical_z_length = Float64(lengths[3]),
             bond_axis_transverse_aspect = lengths[3] / max((lengths[1] + lengths[2]) / 2, eps(Float64)),
             max_physical_aspect = maximum(lengths) / max(minimum(lengths), eps(Float64)),
-            source_mode_shape = support.source_mode_shape,
-            source_mode_count = _cartesian_source_mode_count(support.source_mode_shape),
-            retained_count = record.retained_count, final_column_range = block.column_range,
-            retained_rule = support.retained_rule, realization_status = record.realization_status,
-            bond_axis = support.bond_axis,
+            source_mode_shape,
+            source_mode_count = _cartesian_source_mode_count(source_mode_shape),
+            retained_count, final_column_range = block.column_range,
+            retained_rule, realization_status, bond_axis,
         ))
-        expected = _cartesian_expected_source_shape(row0, support.source_mode_shape)
+        expected = _cartesian_expected_source_shape(row0, source_mode_shape)
         expected_retained = isnothing(expected) ? 0 :
             prod(Int.(expected)) - prod(max(dim - 2, 0) for dim in Int.(expected))
         warning_predicates = (;
             rectangular_physical_shell_cubic_source_modes =
-                invrow.region_kind === :complete_shell && !isnothing(support.source_mode_shape) && length(unique(support.source_mode_shape)) == 1 && row0.max_physical_aspect >= 1.25,
+                invrow.region_kind === :complete_shell && !isnothing(source_mode_shape) && length(unique(source_mode_shape)) == 1 && row0.max_physical_aspect >= 1.25,
             expected_source_shape_larger_than_actual =
                 !isnothing(expected) && _cartesian_source_mode_count(expected) > row0.source_mode_count,
             retained_count_below_aspect_balanced_scale =
-                expected_retained > 0 && record.retained_count < expected_retained,
-            missing_shell_index =
-                invrow.region_kind === :complete_shell && invrow.shell_index === :unavailable,
+                expected_retained > 0 && retained_count < expected_retained,
+            missing_shell_index = (invrow.region_kind === :complete_shell || occursin("slab", String(invrow.region_kind))) &&
+                !(invrow.shell_index isa Integer && invrow.shell_index > 0),
             missing_physical_bounds = any(!isfinite, lengths),
             missing_source_mode_shape =
-                invrow.region_kind === :complete_shell && isnothing(support.source_mode_shape),
+                invrow.region_kind === :complete_shell && isnothing(source_mode_shape),
             slab_without_native_metadata =
-                occursin("slab", String(invrow.region_kind)) && (invrow.slab_axis === :unavailable || invrow.slab_stack_count == 0),
+                occursin("slab", String(invrow.region_kind)) &&
+                (invrow.slab_axis === :unavailable || invrow.slab_side === :unavailable ||
+                    invrow.slab_thickness <= 0 || invrow.slab_stack_index <= 0 ||
+                    invrow.slab_stack_index > invrow.slab_stack_count),
             unavailable_expected_shape = invrow.region_kind === :complete_shell && isnothing(expected))
+        is_wl && any((warning_predicates.missing_shell_index, warning_predicates.missing_physical_bounds,
+            warning_predicates.slab_without_native_metadata)) &&
+            throw(ArgumentError("White-Lindsey due diligence is missing structural row facts"))
         warning_flags = _cartesian_due_warning_flags(warning_predicates)
         push!(rows, merge(row0, (;
             expected_aspect_balanced_source_mode_shape = expected,
@@ -662,6 +694,9 @@ function _cartesian_terminal_due_rows(transforms, bundles)
             warning_flags,
             warning_summary = _cartesian_due_warning_summary(warning_flags))))
     end
+    is_wl && collect(Iterators.flatten(row.final_column_range for row in rows)) !=
+        collect(1:basis.final_dimension) &&
+        throw(ArgumentError("White-Lindsey due-diligence rows do not partition final columns"))
     return rows
 end
 function _cartesian_due_dimensions(parent, basis, rows)
