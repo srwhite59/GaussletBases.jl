@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `0526b632712c7beb8324600c1c49dbc8e7c22b8e3c6269ddf8bbfefe30897400`.
+> [authority.toml](authority.toml), SHA-256 `c1402e6cc65bc576d8662192f6d1c62c387afd4753590d031d296977e932a8cf`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1465,10 +1465,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [cartesian\_driver\_usability\_workflow.md](cartesian_driver_usability_workflow.md); heading `Private PQS/WL Paper H2 Driver`
 - **Owned paths:**
-  - `driver` / `planned`: `bin/pqs_paper_h2_driver.jl`
+  - `driver` / `existing`: `bin/pqs_paper_h2_driver.jl`
 - **Evidence:**
   - `manager_pass`: `423`
   - `manager_pass`: `424`
+  - `manager_pass`: `426`
 - **Dependencies:** none
 - **Scope:** Implement only the private matched PQS/WL H2+/H2 paper-validation command in \`bin/pqs\_paper\_h2\_driver.jl\`: actual two-center H2+ through the existing staged multicenter route, one common ns=5-derived combined-inverse-sqrt parent with PQS/WL route q=5/3, high135 arbitrary-center H1, complete existing due diligence, H2+ lowest-state gate first, and later ordinary H2 fixed-state/RHF. No neutral-facade workaround, public/canonical driver, source, test, tool, schema, default, scanner, scratch oracle, generalized-overlap, AddNest, enrichment, correction, or correlated-solver work.
 

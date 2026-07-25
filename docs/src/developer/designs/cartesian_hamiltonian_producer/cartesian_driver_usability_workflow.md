@@ -2,7 +2,8 @@
 
 Status: implemented canonical contract for the human-facing Cartesian
 Hamiltonian driver and its non-exported staged producer calls, plus one
-approved-pending private PQS/WL paper-validation driver. Registry entries own
+approved private PQS/WL paper-validation driver with an implemented H2+
+endpoint. Registry entries own
 the lifecycle and source permissions for the corresponding IDs. Driver
 validation IDs without committed fixtures are completed evidence or explicitly
 named probe records, not continuing test authority.
@@ -314,8 +315,8 @@ basis is approved.
 - Do not copy the scratch parent oracle, sampled-density oracle,
   generalized-overlap solver, AddNest include chain, or scratch reporting
   framework.
-- The implementation pass must change the exact authority path state from
-  `planned` to `existing` and regenerate the checked views in the same commit.
+- The H2+ implementation pass changed the exact authority path state from
+  `planned` to `existing` and regenerated the checked views in the same commit.
 - If the endpoint cannot be implemented in the one approved file and hard
   budget using existing kernels, make no implementation commit and report the
   missing operation.

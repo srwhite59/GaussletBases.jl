@@ -67,10 +67,11 @@ fixed-state and bounded replay reproduced the former consumer-local path. Any
 new Cr2 endpoint, contraction, exchange, or solver interpretation is a
 separate scientific choice.
 
-**MT3 - Approved pending producer facilities (active).** Implement the private
-matched PQS/WL H2+ paper driver as one bounded validation surface. Standard60
-and canonical-driver Coulomb exposure remain separate. The retained-GTO EGOI
-helper remains pending and must not absorb the unrelated
+**MT3 - Approved pending producer facilities (active).** The private matched
+PQS/WL H2+ paper endpoint is implemented as one bounded validation surface.
+H2 fixed-state/RHF remains a separate pass. Standard60 and canonical-driver
+Coulomb exposure remain separate. The retained-GTO EGOI helper remains pending
+and must not absorb the unrelated
 `hamiltonian_corrections.jl` WIP without review.
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
@@ -1930,3 +1931,46 @@ Carrying-cost accounting:
 - **MT5 authority maintenance - maintenance.** No new authority was needed.
 - **MT6 carrying-cost control - active.** This pass adds only the bounded
   report join and no test, payload, metadata, or compatibility layer.
+
+## Cartesian Hamiltonian Producer Pass 426 - Implement Private H2+ Paper Driver
+
+Commit(s):
+- `3267d0b80` - complete native White-Lindsey due diligence.
+- this commit - add the private H2+ command and move its path to existing.
+
+Summary:
+- Added the `150`-line `bin/pqs_paper_h2_driver.jl`. It constructs actual
+  two-center H2+ independently through source-box-first PQS and current
+  White-Lindsey stages, using one `ns=5`, `core_spacing=0.30`, high135 parent.
+  It builds only terminal H1, solves the lowest state, and writes TSV/text
+  evidence; H2, Vee, RHF, and artifacts remain disabled.
+- At `R=2`, PQS/WL dimensions are `1285/1109` and electronic energies are
+  `-1.1019722712680262/-1.0990733343694545 Ha`. Both use the same
+  `21x21x29`, dimension-`12789` parent and fingerprint. Live dimensions are
+  evidence, not an equality or ordering policy.
+
+Validation / evidence:
+- The sole acceptance command passed with high135, H1 symmetry errors
+  `7.11e-15 Ha`, eigen-residuals below `7e-14`, and diagnostic combined-process
+  peak RSS about `2.21 GB`.
+  Full due diligence records bounds near `+/-11.10` transverse and
+  `+/-11.96` longitudinal, more than `10.95` bohr beyond each nucleus,
+  direct-core/eight-shell/two-slab topology, and all warning rows.
+- No test edit was accepted: the existing public test still masks empty due rows
+  through its inventory fallback. Durable WL-row assertions require a separate
+  docs-only test-authority amendment.
+- The anti-bloat scan flags only fixed two-nucleus and fixed three-axis
+  `Tuple` conversions; neither is a basis-size or runtime route inventory.
+
+Carrying-cost accounting:
+- deleted: no numerical owner; the driver joins existing stages only.
+- simplified: no scratch parent, density oracle, or reporting framework copied.
+- quarantined: H2/Vee/RHF and optional artifact behavior remain unimplemented.
+- not deleted because: the private command is the reproducible paper endpoint.
+- exact remaining caller/blocker: paper-manager review before the separate H2
+  endpoint pass.
+- added/deleted `src` lines: `0/0`; added `bin` lines: `150`.
+- new tests: none.
+- new metadata/status fields: none.
+- validation: package load, authority checks, public-base regression, sole
+  H2+ command, TSV/report readback, scope/line review, and `git diff --check`.

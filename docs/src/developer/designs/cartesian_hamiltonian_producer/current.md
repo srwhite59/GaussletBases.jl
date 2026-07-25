@@ -40,7 +40,7 @@ claim.
 
 | Lane | State | Exact next boundary |
 | --- | --- | --- |
-| `HP-PQS-PAPER-H2-DRV-FN-01` | Private matched PQS/WL paper driver approved pending | Use the existing two-center staged route in `bin/pqs_paper_h2_driver.jl`; first accept one padded `R=2` H2+ lowest-state command with complete PQS/WL due diligence and no `Vee`, RHF, or artifact |
+| `HP-PQS-PAPER-H2-DRV-FN-01` | Private matched PQS/WL H2+ paper driver implemented | The padded `R=2` H2+ gate is accepted; review its live dimension/energy evidence before a separate H2 fixed-state/RHF pass |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
@@ -53,21 +53,15 @@ historical audit IDs are not active work.
 
 ## Current Physics Target
 
-The next bounded physics target is the matched White-Lindsey/PQS paper H2+
-point at `R=2`. Existing staged kernels already own the actual two-center
-combined-inverse-sqrt parent, both terminal realizations, arbitrary-center
-nuclear attraction, and high-accuracy one-body construction. One private repo
-driver is approved pending to join those pieces reproducibly with the same
-`ns=5` physical parent, route-local PQS/WL `q=5/3`, and at least `10` bohr
-padding.
+The matched White-Lindsey/PQS paper H2+ point at `R=2` is now accepted through
+the private repo driver. Both methods use one `ns=5` combined-inverse-sqrt
+parent with route-local PQS/WL `q=5/3`, high135 one-body construction, at least
+`10` bohr padding, and complete structured terminal due diligence.
 
-The first gate is only the lowest terminal `H1` state for both methods. It
-builds no `Vee`, runs no RHF, and writes no artifact. It must carry the complete
-existing structured terminal due-diligence object for each method; missing
-White-Lindsey shell/slab rows block implementation rather than permitting a
-driver-local reconstruction. H2 fixed-state and density-density RHF work may
-begin only after that gate passes. This does not change the canonical driver,
-public facade, producer defaults, artifact schemas, or solver APIs.
+The implemented endpoint builds no `Vee`, runs no RHF, and writes no artifact.
+H2 fixed-state and density-density RHF remain disabled pending a separate
+implementation pass and paper-manager review. This changes no canonical
+driver, public facade, producer default, artifact schema, or solver API.
 
 ## Current Blockers And Follow-Ups
 

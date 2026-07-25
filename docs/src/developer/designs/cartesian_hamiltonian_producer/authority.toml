@@ -11,7 +11,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driv
 sha256 = "92b4bd4d84f9b551cff8b5b718383185cbfc7712f524a3ef1f8a3dc965ae5626"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driver_usability_workflow.md"
-sha256 = "6695b22d8275243744eee794879afc7b6396d987da247ac8b3725eebc0e6a1f5"
+sha256 = "9502950cc4ef0c29342601f9ae667875f820cedb43aedf615ea90837d7fbb51d"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md"
 sha256 = "2d8737bf799822f293243d99a0d02cf17e92d9e958685c362f84870f2a89f7c1"
@@ -2374,11 +2374,14 @@ title = "private matched PQS/WL H2 paper driver"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "424"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "426"
 
     [[records.paths]]
     kind = "driver"
     path = "bin/pqs_paper_h2_driver.jl"
-    state = "planned"
+    state = "existing"
 [[records]]
 dependency_ids = ["HP-OBJ-02", "HP-PQS-COULOMB-ACCURACY-FN-01", "HP-PQS-PRF-FN-01"]
 grant = "maintenance"
