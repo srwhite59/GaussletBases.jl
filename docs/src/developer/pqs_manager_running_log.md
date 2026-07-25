@@ -1830,3 +1830,56 @@ Carrying-cost accounting:
   planned driver path were added.
 - validation: authority check/self-test, docs tests, Documenter, focused
   path/conflict scans, manager-log bound, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 424 - Correct Private PQS/WL Paper Route
+
+Commit(s):
+- this commit - replace the false one-center paper-driver premise with the
+  existing two-center staged H2+ construction.
+
+Summary:
+- `HP-PQS-PAPER-H2-DRV-FN-01` remains approved for exactly
+  `bin/pqs_paper_h2_driver.jl`, but the public neutral facade is no longer part
+  of its contract. The driver must carry the actual `nup=1`, `ndn=0`,
+  two-center system through `cartesian_system` to `cartesian_transforms`.
+- Both methods use one `ns=5`-derived positive combined-inverse-sqrt parent
+  with `core_spacing=0.30`, `s_factor=1`, `tail_spacing=2.8`, at least `10`
+  bohr padding at `R=2`, and high135 Coulomb data. PQS/WL route-local orders
+  are `q=5/3`; dimensions and topology are live outputs, not fixed assertions.
+- The first gate remains H2+ `H1` only. Its readable report must carry the
+  complete existing structured due-diligence object for both methods. Missing
+  White-Lindsey shell/slab rows are a source-backed blocker, not permission
+  for a driver-local reconstruction.
+
+Validation / evidence:
+- Reconciled the neutral facade rejection, multicenter combined-inverse-sqrt
+  parent owner, staged PQS/WL realizers, arbitrary-center nuclear owner,
+  terminal inventory, and due-diligence implementation against committed
+  source. Authority check/self-test, generated-view parity, docs tests,
+  Documenter, manager-log bound, scoped diff review, and
+  `git diff --check` form the gate.
+
+Goal advancement / guardrail:
+- MT3 remains active with corrected implementation authority. Historical
+  fixed dimensions, `core_spacing=0.15`, radius `6`, midpoint-parent language,
+  old energies, and a required PQS/WL energy ordering are removed. The
+  `125/150` line budget, zero-source/test rule, and no-framework/public/schema
+  boundaries remain unchanged.
+
+Carrying-cost accounting:
+- deleted: false numerical assumptions and historical acceptance values from
+  the live driver contract.
+- simplified: one physical parent and one padding convention now govern both
+  terminal methods.
+- quarantined: the current untracked driver draft is neither read nor accepted
+  as implementation evidence.
+- not deleted because: the approved driver path remains planned until the
+  corrected endpoint and full due diligence fit the hard budget.
+- exact remaining caller/blocker: implementation must prove that the existing
+  White-Lindsey route returns complete shell/slab due-diligence rows.
+- added/deleted `src` lines: `0/0`.
+- new tests: none.
+- new metadata/status fields: none.
+- validation: authority check/self-test, generated-view parity, docs tests,
+  Documenter, manager-log bound, scoped docs-only review, and
+  `git diff --check`.

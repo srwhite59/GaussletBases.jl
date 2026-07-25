@@ -11,7 +11,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driv
 sha256 = "92b4bd4d84f9b551cff8b5b718383185cbfc7712f524a3ef1f8a3dc965ae5626"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driver_usability_workflow.md"
-sha256 = "b9780cd5123f6c21b3365785a9e86b2a73a6ea98d8539e9071c86945e20ab36f"
+sha256 = "6695b22d8275243744eee794879afc7b6396d987da247ac8b3725eebc0e6a1f5"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md"
 sha256 = "2d8737bf799822f293243d99a0d02cf17e92d9e958685c362f84870f2a89f7c1"
@@ -2359,7 +2359,7 @@ dependency_ids = []
 grant = "implementation"
 id = "HP-PQS-PAPER-H2-DRV-FN-01"
 lifecycle = "approved"
-scope = "Implement only the private matched PQS/WL H2+/H2 paper-validation command in `bin/pqs_paper_h2_driver.jl`: frozen representative one-center parent, current staged terminal realizations, arbitrary-center physical nuclei, H2+ lowest-state gate first, and later ordinary high-accuracy H2 fixed-state/RHF. No public/canonical driver, source, test, tool, schema, default, scanner, scratch oracle, generalized-overlap, AddNest, enrichment, correction, or correlated-solver work."
+scope = "Implement only the private matched PQS/WL H2+/H2 paper-validation command in `bin/pqs_paper_h2_driver.jl`: actual two-center H2+ through the existing staged multicenter route, one common ns=5-derived combined-inverse-sqrt parent with PQS/WL route q=5/3, high135 arbitrary-center H1, complete existing due diligence, H2+ lowest-state gate first, and later ordinary H2 fixed-state/RHF. No neutral-facade workaround, public/canonical driver, source, test, tool, schema, default, scanner, scratch oracle, generalized-overlap, AddNest, enrichment, correction, or correlated-solver work."
 surfaces = ["driver"]
 title = "private matched PQS/WL H2 paper driver"
 
@@ -2371,6 +2371,9 @@ title = "private matched PQS/WL H2 paper driver"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "423"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "424"
 
     [[records.paths]]
     kind = "driver"

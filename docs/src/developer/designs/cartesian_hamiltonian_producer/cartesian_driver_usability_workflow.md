@@ -210,55 +210,71 @@ after the campaign if no durable use remains.
 
 ### Required Construction
 
-For each requested method, the script builds the same frozen one-center
-neutral-H representative-parent construction as the contraction template.
-Independently built PQS and White-Lindsey parent instances must agree in
-centers, weights, mapped axis operators, bounds, and fingerprints. The PQS
-path must be the current source-box-first chain:
+The public base facade requires neutral H2 and therefore is not the H2+
+construction boundary. For each requested method, the script must carry the
+actual two-center system, with `nup=1`, `ndn=0`, and nuclei at
+`(0,0,-R/2)` and `(0,0,R/2)`, through the existing staged multicenter route:
 
 ```text
-cartesian_base_working_basis
+cartesian_system
+-> cartesian_recipe
+-> cartesian_parent
+-> cartesian_shells
+-> cartesian_units
 -> cartesian_transforms
--> pqs_terminal_basis_realization
 ```
 
-The White-Lindsey case must use the corresponding current terminal realizer
-through the same staged working-basis boundary. The driver may call these and
-the required operator/interaction routines by qualified non-exported names.
-It must validate the resulting method, route-local `q`, parent, shell ledger,
-and terminal realization rather than infer route identity from labels.
+This route must use the existing positive combined inverse-sqrt parent mapping.
+The PQS case uses the current source-box-first terminal realization and the
+White-Lindsey case uses the corresponding current terminal realizer. The
+driver may call these staged owners, terminal products, arbitrary-center
+nuclear attraction, terminal inventory, and
+`_cartesian_terminal_due_diligence_report` by qualified private names. It must
+not add a source helper or work around the neutral facade.
 
-The representative parent is common to the two physical centers. Physical
-nuclei are placed at `(0,0,-R/2)` and `(0,0,R/2)` only through the existing
-arbitrary-center terminal unit-nuclear kernel. The script must not use the
-public multicenter diatomic facade,
-`pqs_source_shell_realization_final_basis`, CPBM source-shell
+Both methods use the same `ns=5`-derived physical parent. PQS uses route-local
+`q=5`; White-Lindsey uses route-local `q=3`. The White-Lindsey `q` must not
+define a different parent scale. Independently constructed method instances
+must agree in parent centers, weights, mapped axis operators, physical bounds,
+and fingerprints. The script must validate route identity and live objects
+rather than infer them from labels.
+
+Physical nuclear attraction must use the actual two centers through the
+existing arbitrary-center kernel. The script must not use the public neutral
+diatomic facade, `pqs_source_shell_realization_final_basis`, CPBM source-shell
 bridge/readiness paths, or shell/support-row compatibility materialization.
 
 The frozen paper defaults are:
 
 ```text
-core_spacing = 0.15
-parent mapping d = core_spacing
+public ns = 5
+core_spacing = 1.2 / (Z * (ns - 1)) = 0.30
+mapping_s_standard = sqrt(Z * core_spacing) = sqrt(0.30)
+mapping_s_effective = mapping_s_standard
 s_factor = 1.0
-s = sqrt(core_spacing)
 tail_spacing = 2.8
-ns = 5
 source_span = :ordinary
 coulomb_accuracy = :high
 Coulomb expansion terms = 135
+PQS route-local q = 5
+White-Lindsey route-local q = 3
 ```
 
-The first `R=2` gate uses representative-parent radius `6.0`; a later curve
-may use one explicitly recorded campaign-fixed extent. The allowed controls
-are only:
+Parent extents follow the physical two-center padding convention:
+
+```text
+xmax_parallel = R/2 + padding
+xmax_transverse = padding
+```
+
+The `R=2` gate requires `padding >= 10` bohr. The allowed controls are only:
 
 ```text
 system = :h2plus | :h2
 method = :pqs | :wl | :both
 R
 output_dir
-parent_radius (campaign-fixed for a curve)
+padding
 optional trusted config include
 name=value overrides for these approved inputs
 ```
@@ -269,19 +285,25 @@ source-span, supplement, Coulomb-policy, or parameter scanner.
 ### Endpoints And Output
 
 The first endpoint is the lowest terminal `H1` eigenpair for H2+. It builds no
-`Vee` and runs no RHF. Only after that endpoint is accepted may the same script
-build ordinary 135-term terminal IDA for H2, evaluate the fixed state formed
-from the H2+ orbital, and run closed-shell density-density RHF through the
-existing matrix contractions.
+`Vee`, runs no RHF, and writes no Hamiltonian artifact. Only after that endpoint
+is accepted may the same script build ordinary 135-term terminal IDA for H2,
+evaluate the fixed state formed from the H2+ orbital, and run closed-shell
+density-density RHF through the existing matrix contractions.
 
 Each method writes one compact TSV row and a readable text report containing
 the resolved configuration, git commit and dirty state, dimensions, shell
 ledger, energy decomposition, convergence result, phase timings and
-allocations, process peak RSS with units, and output paths. H2 may optionally
-write and read the existing minimal Hamiltonian artifact. The one-center
-template provenance must not be attached as if it described the physical
-two-center geometry. No new JLD2 schema, result wrapper, payload, metadata
-family, or report-carried basis is approved.
+allocations, process peak RSS with units, and output paths. The readable report
+must include the complete existing structured terminal due-diligence object
+for both methods, including full parent-axis, dimension, shell/slab-row, and
+warning content. A summary or driver reconstruction is not a substitute. If
+the White-Lindsey route cannot supply complete shell/slab rows through the
+existing owner, implementation must stop and report that exact source-backed
+gap.
+
+H2 may optionally write and read the existing minimal Hamiltonian artifact.
+No new JLD2 schema, result wrapper, payload, metadata family, or report-carried
+basis is approved.
 
 ### Implementation And Acceptance Limits
 
@@ -302,15 +324,18 @@ The sole initial scientific acceptance command is:
 
 ```text
 julia --project=. bin/pqs_paper_h2_driver.jl \
-    system=:h2plus method=:both R=2.0 \
+    system=:h2plus method=:both R=2.0 padding=10.0 \
     output_dir='"/tmp/pqs_paper_h2plus_R2"'
 ```
 
-It must report a `25 x 25 x 25` parent (`15625` functions), PQS `q=5`, WL
-`q=3`, ten `98`-column shells, a `125`-column core, final dimension `1105`
-for both methods, a 135-term expansion, finite symmetric `H1`, a converged
-lowest state, complete due-diligence/output records, and lower PQS than WL
-variational error. A material mismatch stops the pass before any H2 endpoint.
+It derives dimensions and topology from the live staged objects rather than
+asserting historical counts. It must report identical PQS/White-Lindsey parent
+centers, weights, mapped axis operators, bounds, and fingerprints; route-local
+`q=5` and `q=3`; a 135-term expansion; finite symmetric `H1`; converged lowest
+eigenpairs; and complete due-diligence/output records. No historical energy
+value or PQS-versus-White-Lindsey ordering is an acceptance criterion. A
+material parent mismatch, incomplete due diligence, or failed numerical gate
+stops the pass before any H2 endpoint.
 
 This authority changes no public input, canonical-driver behavior, numerical
 default, artifact schema, AddNest/exact-W/injection/PRF/external-RG/MWG/
