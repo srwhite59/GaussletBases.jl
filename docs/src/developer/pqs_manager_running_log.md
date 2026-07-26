@@ -34,7 +34,8 @@ archaeology and are not normal startup reading.
 - The source-backed Cr2 composition/replay migration is closed. The matched
   full-parent/PQS/White-Lindsey H2+ paper point at `R=2` is box-converged under
   the accepted padding-10/20 control; padding `10` remains the campaign value.
-  One finer tail-spacing control is the next bounded paper target.
+  The finer `tail_spacing=2.0` control is complete and favors retaining `2.8`;
+  paper-manager acceptance is the next bounded decision.
 - Fixed-parent shell-q/PRF measurements now also support an internal
   parent-residual basis facility and direct-only parent-backed Gaussian
   interaction resource. Physical target selection, transition-density
@@ -73,12 +74,12 @@ separate scientific choice.
 
 **MT3 - Approved pending producer facilities (active).** The private matched
 matrix-free parent/PQS/WL H2+ point and padding-10/20 control are complete;
-padding `10` is retained. Implement only the approved `tail_spacing=2.8/2.0`
-control at `R=2`, padding `10`, followed by physical-target capture and a
-fixed-parent accuracy/dimension ladder. H2/Vee/RHF and general scans remain
-forbidden. Standard60 and canonical-driver Coulomb exposure remain separate.
-The retained-GTO EGOI helper remains pending and must not absorb the unrelated
-`hamiltonian_corrections.jl` WIP without review.
+padding `10` is retained. The approved `tail_spacing=2.8/2.0` control is also
+complete and favors `2.8`; await paper-manager acceptance before physical-target
+capture and a fixed-parent accuracy/dimension ladder. H2/Vee/RHF and general
+scans remain forbidden. Standard60 and canonical-driver Coulomb exposure
+remain separate. The retained-GTO EGOI helper remains pending and must not
+absorb the unrelated `hamiltonian_corrections.jl` WIP without review.
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
@@ -1155,4 +1156,49 @@ Carrying-cost accounting:
 - added/deleted `src` lines: `0/0`; new tests: none.
 - new metadata/status fields: none; the existing TSV/report column is reused.
 - validation: authority/docs checks, scoped review, manager-log bound, and
+  `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 432 - Close H2+ Tail Control
+
+Commit(s):
+- `33357da4f` - add the exact private tail-spacing input and combination gate.
+
+Summary:
+- A tracked-clean worktree completed the `R=2`, padding-10,
+  `tail_spacing=2.0` parent/PQS/White-Lindsey comparison. Axes changed from
+  `21x21x29` to `23x23x31`; parent/PQS/WL dimensions changed from
+  `12789/1285/1109` to `16399/1431/1207`.
+- Relative to `2.8`, the full-parent total improves by `0.007154 mHa`, but PQS
+  and White-Lindsey totals worsen by `0.044124` and `0.341989 mHa`.
+  Contraction errors increase by `0.051278` and `0.349143 mHa`. The evidence
+  therefore favors retaining `tail_spacing=2.8`; paper-manager acceptance is
+  still required before calling it frozen.
+
+Validation / evidence:
+- Independent TSV/full-report readback verified three clean rows, one live
+  parent fingerprint, exact contraction identities, contiguous terminal
+  columns, high135, and residuals `9.81e-11`, `8.37e-14`, and `8.08e-14`.
+- Both values retain direct-core/complete-shell/two-z-slab topology. The finer
+  tail adds one shell (`8 -> 9`), with no weight, padding, or large-identity
+  warning. Diagnostic row times are `15.3/40.0/19.1 s`, and peak RSS is
+  `2.45 GB`.
+
+Goal advancement / guardrail:
+- MT3 closes the bounded tail control without H2, Vee, SCF, capture, or a
+  general scan. The nonmonotonic terminal result is retained as scientific
+  evidence, not converted into a new default or source policy.
+
+Carrying-cost accounting:
+- deleted: the hard-coded `tail_spacing=2.8` route value and broad positive-R
+  padding gate.
+- simplified: one exact three-combination input gate owns the accepted controls.
+- quarantined: comparison code and tail-2.0 outputs remain under `/tmp`.
+- not deleted because: the private driver remains the reproducible paper route.
+- exact remaining caller/blocker: paper-manager tail-spacing acceptance, then
+  separate authority for physical-target capture.
+- added/deleted `src` lines: `0/0`; added/deleted `bin` lines: `6/6`.
+- new tests: none.
+- new metadata/status fields: none; the existing tail-spacing column is reused.
+- validation: package load/parse, forbidden-combination rejection, authority
+  check/self-test, clean endpoint, due-diligence comparison, staged scope, and
   `git diff --check`.
