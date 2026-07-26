@@ -156,7 +156,7 @@ if length(results) == 2
 end
 function run_parent(template)
     pgdg = template.pgdg; dimensions = ntuple(axis -> length(pgdg[axis].centers), 3)
-    dimensions == (21, 21, 29) || error("full-parent axes are not 21x21x29")
+    all(d -> d > 0 && isodd(d), dimensions) && prod(dimensions) == template.due.dimensions.parent_grid_size || error("invalid full-parent dimensions")
     all(axis -> all(isfinite, axis.weights) && all(>(0), axis.weights), pgdg) || error("parent weights must be finite and strictly positive")
     prepared = @timed begin
         overlaps = ntuple(axis -> pgdg[axis].overlap, 3); kinetic = ntuple(axis -> pgdg[axis].kinetic, 3)
