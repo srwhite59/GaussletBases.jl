@@ -204,7 +204,8 @@ validation script:
 bin/pqs_paper_h2_driver.jl
 ```
 
-This script is private to the matched White-Lindsey/PQS H2+/H2 paper campaign.
+This script is private to the matched full-parent/White-Lindsey/PQS H2+ paper
+campaign. H2 remains outside the current implementation authority.
 It is not a public API, a general paper-driver framework, a replacement for
 `cartesian_ham_builder.jl`, or a source of producer defaults. It may be removed
 after the campaign if no durable use remains.
@@ -271,7 +272,7 @@ xmax_transverse = padding
 The `R=2` gate requires `padding >= 10` bohr. The allowed controls are only:
 
 ```text
-system = :h2plus | :h2
+system = :h2plus
 method = :pqs | :wl | :both
 R
 output_dir
@@ -283,13 +284,46 @@ name=value overrides for these approved inputs
 The driver records every resolved input. It is not a mapping, `q`,
 source-span, supplement, Coulomb-policy, or parameter scanner.
 
+### Mandatory Full-Parent Reference Row
+
+At `R=2`, `method=:both` must emit three rows from the same live construction:
+
+```text
+method = parent
+method = pqs
+method = wl
+```
+
+`parent` is an internal output-row identity, not a new public input mode. The
+full-parent row uses the existing `21 x 21 x 29` (`12789`-function) PGDG
+parent. It must not form a dense `12789 x 12789` matrix.
+
+The driver may consume the live PGDG axis overlap and kinetic matrices,
+analytic high135 nuclear Gaussian factors at the two physical centers, and
+the existing apply-based `_lanczos_ground_state_apply` routine. It must apply
+the separable three-dimensional parent `H1` after axis-wise symmetric overlap
+orthogonalization. Only small file-local mode-product functions needed for
+that application are approved. No source helper, reusable parent-oracle
+framework, generalized eigensolver, quadrature path, or new dependency is
+allowed.
+
+After the lowest state is returned, the driver must independently apply the
+complete parent `H1` again and report the recomputed residual. It must also
+apply and contract the kinetic, left-nuclear, and right-nuclear terms
+separately, with
+
+```text
+H1_expectation = T_expectation + U_left_expectation + U_right_expectation
+```
+
+closing at the existing numerical tolerance. The second parent eigenvalue and
+gap may be unavailable because the current apply-based solver returns only the
+lowest state.
+
 ### Endpoints And Output
 
-The first endpoint is the lowest terminal `H1` eigenpair for H2+. It builds no
-`Vee`, runs no RHF, and writes no Hamiltonian artifact. Only after that endpoint
-is accepted may the same script build ordinary 135-term terminal IDA for H2,
-evaluate the fixed state formed from the H2+ orbital, and run closed-shell
-density-density RHF through the existing matrix contractions.
+The endpoint is the three-row lowest-`H1` H2+ comparison. It builds no `Vee`,
+IDA, H2, RHF/SCF object, or Hamiltonian artifact.
 
 Each method writes one compact TSV row and a readable text report containing
 the resolved configuration, git commit and dirty state, dimensions, shell
@@ -302,14 +336,36 @@ the White-Lindsey route cannot supply complete shell/slab rows through the
 existing owner, implementation must stop and report that exact source-backed
 gap.
 
-H2 may optionally write and read the existing minimal Hamiltonian artifact.
-No new JLD2 schema, result wrapper, payload, metadata family, or report-carried
-basis is approved.
+The parent row has no terminal ledger or terminal due-diligence rows; those
+fields are explicitly not applicable. PQS and White-Lindsey retain complete
+terminal due diligence and exact column accounting. All three rows must carry
+one clean Git commit and the same live parent fingerprint.
+
+The existing private TSV/report may add:
+
+```text
+independent_reference_error
+parent_resolution_error
+contraction_error
+```
+
+using the frozen `R=2` H2+ total-energy reference
+`-0.6026342144949465 Ha`. Define
+
+```text
+independent_reference_error(row) = E_total(row) - E_reference
+parent_resolution_error = E_total(parent) - E_reference
+contraction_error(method) = E_total(method) - E_total(parent)
+```
+
+The parent contraction error and parent terminal-ledger fields may be marked
+not applicable. This is an extension of the existing private report, not a new
+schema, payload, metadata family, or report-carried basis.
 
 ### Implementation And Acceptance Limits
 
-- Preferred implementation size is at most `125` added `bin` lines; the hard
-  limit is `150`.
+- The accepted terminal driver is `150` lines. Preferred final size after the
+  parent row is at most `225` lines; the hard limit is `250`.
 - Added `src` lines, committed tests, probes, fixtures, modules, helper files,
   exports, status vocabularies, and adapters are all zero.
 - Do not copy the scratch parent oracle, sampled-density oracle,
@@ -329,15 +385,15 @@ julia --project=. bin/pqs_paper_h2_driver.jl \
     output_dir='"/tmp/pqs_paper_h2plus_R2"'
 ```
 
-It derives dimensions and topology from the live staged objects rather than
-asserting historical counts. It must report identical PQS/White-Lindsey parent
-centers, weights, mapped axis operators, bounds, and fingerprints; route-local
-`q=5` and `q=3`; a 135-term expansion; finite symmetric `H1`; converged lowest
-eigenpairs; and complete due-diligence/output records. No historical energy
-value or PQS-versus-White-Lindsey ordering is an acceptance criterion. A
-material parent mismatch, incomplete due diligence, or failed numerical gate
-stops the pass before any H2 endpoint.
+It must report the parent/PQS/White-Lindsey rows from one clean commit and
+shared live parent fingerprint. PQS and White-Lindsey retain their route-local
+`q=5` and `q=3`, finite symmetric `H1`, converged lowest eigenpairs, and
+complete due-diligence/output records. The parent row must pass the matrix-free
+Lanczos, independent residual, decomposition, and frozen-reference gates. No
+PQS-versus-White-Lindsey energy ordering is an acceptance criterion.
 
 This authority changes no public input, canonical-driver behavior, numerical
 default, artifact schema, AddNest/exact-W/injection/PRF/external-RG/MWG/
-screening/EGOI behavior, or correlated-solver surface.
+screening/EGOI behavior, or correlated-solver surface. H2, `Vee`, IDA,
+RHF/SCF, scans, supplements, PRFs, test changes, and new artifacts remain
+forbidden.

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `c1402e6cc65bc576d8662192f6d1c62c387afd4753590d031d296977e932a8cf`.
+> [authority.toml](authority.toml), SHA-256 `96884ade89d496bac1a559ba55cd09f764f351eabd8784726a4f2f6db1be67a8`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1470,8 +1470,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `423`
   - `manager_pass`: `424`
   - `manager_pass`: `426`
+  - `manager_pass`: `427`
 - **Dependencies:** none
-- **Scope:** Implement only the private matched PQS/WL H2+/H2 paper-validation command in \`bin/pqs\_paper\_h2\_driver.jl\`: actual two-center H2+ through the existing staged multicenter route, one common ns=5-derived combined-inverse-sqrt parent with PQS/WL route q=5/3, high135 arbitrary-center H1, complete existing due diligence, H2+ lowest-state gate first, and later ordinary H2 fixed-state/RHF. No neutral-facade workaround, public/canonical driver, source, test, tool, schema, default, scanner, scratch oracle, generalized-overlap, AddNest, enrichment, correction, or correlated-solver work.
+- **Scope:** Extend only the existing private \`bin/pqs\_paper\_h2\_driver.jl\` H2+ gate so \`method=:both\` emits one shared-parent three-row comparison: matrix-free full \`21x21x29\` PGDG parent, PQS q=5, and White-Lindsey q=3. The parent row may use live axis overlap/kinetic data, analytic centered high135 factors, axis-wise symmetric overlap orthogonalization, small file-local mode-product applies, and the existing apply-based Lanczos routine; it must independently recompute the residual and T/U decomposition and report reference/resolution/contraction errors against -0.6026342144949465 Ha. Final driver size is preferred \<=225 and hard \<=250 lines. No H2, Vee, IDA, RHF/SCF, scan, source/test/tool/helper-file change, dependency, dense parent matrix, generalized eigensolver, quadrature, framework, public API, artifact, supplement, PRF, screening, EGOI, or schema work.
 
 ### HP-PQS-PARENT-GDIRECT-FN-01 - parent-backed Gaussian direct interaction
 
