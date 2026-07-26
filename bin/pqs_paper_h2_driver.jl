@@ -7,7 +7,9 @@ system method R_bohr padding_bohr output_dir git_head git_dirty route route_q ns
 coulomb_accuracy coulomb_terms coulomb_fingerprint parent_axes parent_bounds_bohr actual_transverse_padding_bohr actual_parallel_padding_bohr parent_dimension parent_fingerprint_sha256
 terminal_row_count topology direct_core_columns complete_shell_columns slab_columns compact_product_columns identity_columns final_dimension T_expectation_Ha U_left_expectation_Ha U_right_expectation_Ha H1_expectation_Ha
 electronic_energy_Ha second_eigenvalue_Ha eigen_gap_Ha nuclear_repulsion_Ha total_energy_Ha eigen_residual_Ha H1_symmetry_error_Ha construction_elapsed_s construction_allocated_bytes kinetic_elapsed_s kinetic_allocated_bytes nuclear_elapsed_s nuclear_allocated_bytes solve_elapsed_s solve_allocated_bytes total_elapsed_s total_allocated_bytes peak_rss peak_rss_units tsv_path report_path overlap_identity_error independent_reference_total_Ha independent_reference_error_Ha parent_resolution_error_Ha contraction_error_Ha
-parent_ground_state_norm terminal_capture_fraction terminal_lost_norm capture_closure_error""")
+parent_ground_state_norm terminal_capture_fraction terminal_lost_norm capture_closure_error
+supplement_fingerprint_sha256 supplement_candidate_count supplement_parent_capture_min_sv supplement_terminal_capture_min_sv residual_occupation_cutoff
+residual_dimension residual_min_retained_occupation residual_max_discarded_occupation terminal_residual_orthogonality_error bare_terminal_energy_change_Ha""")
 const REFERENCE_TOTAL = -0.6026342144949465
 values = Dict{Symbol,Any}(:system => :h2plus, :method => :both, :R => 2.0, :output_dir => "/tmp/pqs_paper_h2plus_R2", :padding => 10.0, :tail_spacing => 2.8)
 function apply_inputs!(input)
@@ -22,14 +24,14 @@ end
 for arg in args
     parts = split(arg, "="; limit = 2); length(parts) == 2 || throw(ArgumentError("expected name=value input"))
     apply_inputs!(Dict(Symbol(parts[1]) => Core.eval(Main, Meta.parse(parts[2])))); end
-system = Symbol(values[:system]); system === :h2 && throw(ArgumentError("system=:h2 is not enabled in this H2+ gate"))
-system === :h2plus || throw(ArgumentError("system must be :h2plus or :h2"))
+system = Symbol(values[:system]); system in (:h2plus, :h2) || throw(ArgumentError("system must be :h2plus or :h2"))
 method = Symbol(values[:method]); method in (:pqs, :wl, :both) || throw(ArgumentError("method must be :pqs, :wl, or :both"))
 R, padding, tail_spacing = (Float64(values[key]) for key in (:R, :padding, :tail_spacing))
 R == 2.0 && (padding, tail_spacing) in ((10.0, 2.8), (20.0, 2.8), (10.0, 2.0)) || throw(ArgumentError("unsupported R, padding, and tail_spacing combination"))
-capture_enabled = method === :both && padding == 10.0 && tail_spacing == 2.8
+system === :h2 && (method, padding, tail_spacing) != (:both, 10.0, 2.8) && throw(ArgumentError("system=:h2 requires the frozen supplemented preflight"))
+capture_enabled = system === :h2plus && method === :both && padding == 10.0 && tail_spacing == 2.8
 output_dir = abspath(String(values[:output_dir])); isempty(output_dir) && throw(ArgumentError("output_dir must not be empty")); mkpath(output_dir)
-tsv_path, report_path = joinpath(output_dir, "h2plus.tsv"), joinpath(output_dir, "report.txt")
+tsv_path, report_path = joinpath(output_dir, system === :h2 ? "h2.tsv" : "h2plus.tsv"), joinpath(output_dir, "report.txt")
 git_head, git_dirty = readchomp(`git rev-parse HEAD`), !isempty(readchomp(`git status --porcelain`))
 nuclei = NTuple{3,Float64}[(0.0, 0.0, -R / 2), (0.0, 0.0, R / 2)]
 expansion = GB._cartesian_base_resolve_coulomb_expansion(:high); coulomb = GB._cartesian_coulomb_expansion_summary(:high, expansion)
@@ -59,7 +61,7 @@ function run_method(nesting)
     q = nesting === :pqs ? 5 : 3
     built = @timed begin
         system_stage = GB.cartesian_system((; atom_symbols = (:H, :H), nuclear_charges = (1.0, 1.0),
-            atom_locations = Tuple(nuclei), nup = 1, ndn = 0, bond_axis = :z, bond_length = R,
+            atom_locations = Tuple(nuclei), nup = 1, ndn = system === :h2 ? 1 : 0, bond_axis = :z, bond_length = R,
             radius = R / 2 + padding, parent_axis_counts = nothing, map_backend = :pgdg_localized_experimental))
         recipe = GB.cartesian_recipe(GB._cartesian_base_route(:h2, nesting, :ordinary))
         spacing = (; q, n_s = 5, reference_spacing = 1.0, tail_spacing,
@@ -71,7 +73,7 @@ function run_method(nesting)
         transforms = GB.cartesian_transforms(units, recipe)
         setup = parent.standard_setup
         due_input = (; kind = :h2, nesting, source_span = :ordinary, symbols = ["H", "H"],
-            charges = [1.0, 1.0], nup = 1, ndn = 0, locations = nuclei, radius = nothing,
+            charges = [1.0, 1.0], nup = 1, ndn = system === :h2 ? 1 : 0, locations = nuclei, radius = nothing,
             xmax_parallel = setup.xmax_parallel, xmax_transverse = setup.xmax_transverse,
             core_spacing = setup.core_spacing, reference_spacing = setup.reference_spacing, tail_spacing = setup.tail_spacing,
             q = setup.q, ns = setup.n_s)
@@ -118,7 +120,7 @@ function run_method(nesting)
     parallel_padding = (nuclei[1][3] - bounds.z[1], bounds.z[2] - nuclei[2][3])
     elapsed = built.time + kinetic.time + nuclear.time + solved.time; allocated = built.bytes + kinetic.bytes + nuclear.bytes + solved.bytes
     row = Dict{String,String}(
-        "system" => "h2plus", "method" => String(nesting), "R_bohr" => repr(R), "padding_bohr" => repr(padding),
+        "system" => String(system), "method" => String(nesting), "R_bohr" => repr(R), "padding_bohr" => repr(padding),
         "output_dir" => output_dir, "git_head" => git_head, "git_dirty" => string(git_dirty),
         "route" => String(route), "route_q" => string(setup.q),
         "ns" => string(setup.n_s), "core_spacing" => repr(setup.core_spacing), "s_factor" => repr(setup.s_factor),
@@ -149,7 +151,9 @@ function run_method(nesting)
         "parent_resolution_error_Ha" => "unavailable", "contraction_error_Ha" => "unavailable",
         "parent_ground_state_norm" => "not_applicable", "terminal_capture_fraction" => "not_applicable",
         "terminal_lost_norm" => "not_applicable", "capture_closure_error" => "not_applicable")
-    return (; row, due, pgdg, mappings, basis, capture_regions = String[])
+    foreach(field -> row[field] = "not_applicable", FIELDS[(end - 9):end])
+    return (; row, due, pgdg, mappings, basis, kinetic = kinetic.value.kinetic,
+        unit_nuclear = nuclear.value, capture_regions = String[], supplement_details = String[])
 end
 requested = method === :both ? (:pqs, :wl) : (method,); results = [run_method(nesting) for nesting in requested]
 if length(results) == 2
@@ -221,7 +225,7 @@ function run_parent(template)
         "total_elapsed_s" => repr(prepared.time + solved.time + kinetic_result.time + nuclear_results.time),
         "total_allocated_bytes" => string(prepared.bytes + solved.bytes + kinetic_result.bytes + nuclear_results.bytes),
         "peak_rss" => string(Sys.maxrss()), "overlap_identity_error" => repr(prepared.value.overlap_error)))
-    capture_enabled && (row["parent_ground_state_norm"] = repr(dot(orbital, orbital))); return (; row, due = nothing, pgdg, mappings = template.mappings, orbital, overlaps, roots, capture_regions = String[])
+    capture_enabled && (row["parent_ground_state_norm"] = repr(dot(orbital, orbital))); return (; row, due = nothing, pgdg, mappings = template.mappings, orbital, overlaps, roots, capture_regions = String[], supplement_details = String[])
 end
 if method === :both
     parent = run_parent(results[1]); results = vcat([parent], results)
@@ -278,12 +282,123 @@ if method === :both
             end
         end
     end
+    if system === :h2
+        h2_system = (; atom_symbols = ["H", "H"], nuclear_charges = [1.0, 1.0], atom_locations = nuclei, nup = 1, ndn = 1)
+        basis_input(nesting) = (; ns = 5, nesting, core_spacing = 0.30,
+            xmax_parallel = R / 2 + padding, xmax_transverse = padding, s_factor = 1.0, tail_spacing,
+            source_span = :ordinary, coulomb_accuracy = :high)
+        workings = [@timed GB.cartesian_base_working_basis(h2_system;
+            basis = basis_input(nesting), supplemented = true) for nesting in (:pqs, :wl)]
+        supplement_spec = (; basis_by_center = ["cc-pVTZ", "cc-pVTZ"], lmax = 1, uncontracted = false, width_filtering = nothing)
+        loaded = @timed GB.cartesian_residual_gto_supplement_basis(workings[1].value, supplement_spec)
+        supplement, raw = loaded.value, loaded.value.basis; orbitals = raw.orbitals; candidate_count = length(orbitals)
+        S_AA = Matrix{Float64}(GB._cartesian_supplement_cross_overlap(raw, raw))
+        size(S_AA) == (candidate_count, candidate_count) && all(isfinite, S_AA) &&
+            norm(S_AA - transpose(S_AA), Inf) <= 1.0e-10 || error("supplement metric is malformed")
+        metric = eigen(Symmetric(S_AA)); minimum(metric.values) > 0 || error("supplement metric is not positive definite")
+        Aroot = metric.vectors * Diagonal(inv.(sqrt.(metric.values))) * transpose(metric.vectors)
+        ordering = GB.external_gto_ordering_fingerprint(raw); overlap_fingerprint = GB.external_gto_overlap_fingerprint(S_AA)
+        fingerprint = bytes2hex(sha256(codeunits(ordering * overlap_fingerprint)))
+        labels = String[orbital.label for orbital in orbitals]; centers = NTuple{3,Float64}[Tuple(Float64.(orbital.center)) for orbital in orbitals]
+        powers = NTuple{3,Int}[Tuple(Int.(orbital.angular_powers)) for orbital in orbitals]; owners = [only(findall(==(center), nuclei)) for center in centers]
+        all(i -> length(orbitals[i].exponents) == length(orbitals[i].coefficients) > 0 && all(isfinite, orbitals[i].exponents) &&
+            all(isfinite, orbitals[i].coefficients), eachindex(orbitals)) || error("supplement primitive data are malformed")
+        owner_counts = [count(==(owner), owners) for owner in 1:2]
+        all(>(0), owner_counts) && sum(owner_counts) == candidate_count || error("supplement ownership does not close")
+        C = GB.CartesianFinalBasisRealization; proxy = C._r3a_qw_proxy_layers(workings[1].value.parent.parent_axis_bundle_object)
+        parent_cross = GB.CartesianGaussianRawBlocks.gaussian_non_nuclear_overlap_blocks(proxy, C._r3a_qw_supplement(raw)).ga.overlap
+        parent_dimensions = ntuple(axis -> length(results[1].pgdg[axis].centers), 3)
+        parent_solved = hcat((product_apply(parent.roots,
+            product_apply(parent.roots, parent_cross[:, column], parent_dimensions), parent_dimensions) for column in axes(parent_cross, 2))...)
+        function capture_singulars(K)
+            values = eigvals(Symmetric(0.5 .* (K .+ transpose(K)))); minimum(values) >= -1.0e-10 &&
+                maximum(values) <= 1.0 + 1.0e-10 || error("supplement capture spectrum is outside [0,1]"); return sqrt.(max.(values, 0.0))
+        end
+        parent_capture = capture_singulars(Aroot * transpose(parent_cross) * parent_solved * Aroot); supplemented = Any[]
+        for (bare, working_timed) in zip(results[2:3], workings)
+            base = working_timed.value; base.terminal_basis.final_dimension == bare.basis.final_dimension ||
+                error("supplemented working basis differs from the bare terminal basis")
+            due = base.terminal_due_diligence
+            !isnothing(due) && !isempty(due.terminal_rows) &&
+                collect(Iterators.flatten(row.final_column_range for row in due.terminal_rows)) == collect(1:base.terminal_basis.final_dimension) ||
+                error("supplemented terminal due diligence is incomplete")
+            base_pgdg = Tuple(GB._nested_axis_pgdg(base.parent.parent_axis_bundle_object, axis) for axis in (:x, :y, :z))
+            parent_fingerprint(base_pgdg) == bare.row["parent_fingerprint_sha256"] || error("supplemented and bare parents differ")
+            augmentation = @timed GB.cartesian_residual_gto_augmentation(base, supplement); residual = augmentation.value
+            residual.candidate_count == candidate_count && residual.candidate_labels == labels &&
+                residual.candidate_centers == centers && residual.candidate_owner_indices == owners &&
+                [count(==(owner), residual.candidate_owner_indices) for owner in 1:2] == owner_counts ||
+                error("residual candidate identity differs from the loaded supplement")
+            products = @timed GB.cartesian_residual_gto_augmented_products(base, supplement, residual; base_kinetic = bare.kinetic)
+            unit_nuclear = @timed GB.cartesian_residual_gto_augmented_unit_nuclear(base, residual, products.value; base_unit_nuclear = bare.unit_nuclear)
+            X = products.value.supplement_blocks.mixed.overlap
+            products.value.supplement_blocks.self.overlap == S_AA &&
+                norm(C._r3a_project_parent_ga(base.terminal_basis, parent_cross) - X, Inf) <= 1.0e-10 || error("route supplement overlap differs")
+            terminal_capture = capture_singulars(Aroot * transpose(X) * X * Aroot)
+            owner_spectra = [eigvals(Symmetric(S_AA[owners .== owner, owners .== owner] -
+                transpose(X[:, owners .== owner]) * X[:, owners .== owner])) for owner in 1:2]
+            cutoff = residual.occupation_cutoff; cutoff == 1.0e-6 || error("residual occupation cutoff differs from production policy")
+            ranks = count.(Ref(>(cutoff)), owner_spectra)
+            ranks == residual.owner_retained_counts || error("owner-local residual ranks differ")
+            retained = vcat(([value for value in spectrum if value > cutoff] for spectrum in owner_spectra)...); discarded = vcat(([value for value in spectrum if value <= cutoff] for spectrum in owner_spectra)...)
+            isapprox(sort(retained), sort(residual.residual_occupations); atol = 1.0e-10, rtol = 1.0e-8) || error("owner-local retained occupations differ")
+            minimum(abs.(vcat(owner_spectra...) .- cutoff)) > 1.0e-10 || error("residual occupation is numerically marginal at the production cutoff")
+            orthogonality = norm(residual.T_G + X * residual.T_A, Inf)
+            RSR = GB.CartesianResidualGaussians.residual_gaussian_overlap(residual.T_G, residual.T_A, X, S_AA); identity_error = norm(RSR - I, Inf)
+            orthogonality <= 1.0e-10 && identity_error <= 5.0e-8 || error("augmented residual metric gate failed")
+            nG = residual.base_dimension
+            norm(products.value.kinetic[1:nG, 1:nG] - bare.kinetic, Inf) <= 1.0e-10 || error("augmented kinetic G-G block differs")
+            maximum(norm(unit_nuclear.value[i][1:nG, 1:nG] - bare.unit_nuclear[i], Inf) for i in 1:2) <= 1.0e-10 ||
+                error("augmented nuclear G-G block differs")
+            H1 = products.value.kinetic + unit_nuclear.value[1] + unit_nuclear.value[2]; matrices = (products.value.kinetic, unit_nuclear.value..., H1)
+            all(matrix -> all(isfinite, matrix) && norm(matrix - transpose(matrix), Inf) <= 1.0e-10, matrices) || error("augmented one-body matrix is nonfinite or asymmetric")
+            solved = @timed eigen(Symmetric(H1)); electronic, second = solved.value.values[1:2]
+            orbital = solved.value.vectors[:, 1]; eigen_residual = norm(H1 * orbital - electronic * orbital)
+            eigen_residual <= 1.0e-9 || error("supplemented lowest-state residual gate failed")
+            electronic <= parse(Float64, bare.row["electronic_energy_Ha"]) + 1.0e-10 || error("supplemented energy is not variational")
+            expectation(matrix) = dot(orbital, matrix, orbital); T = expectation(products.value.kinetic); U = expectation.(unit_nuclear.value)
+            isapprox(electronic, T + sum(U); atol = 1.0e-10, rtol = 0) || error("supplemented one-body decomposition does not close")
+            row = copy(bare.row); row["method"] *= "_supplemented"; row["final_dimension"] = string(size(H1, 1))
+            row["T_expectation_Ha"], row["U_left_expectation_Ha"], row["U_right_expectation_Ha"] = repr(T), repr(U[1]), repr(U[2])
+            row["H1_expectation_Ha"] = repr(electronic); row["electronic_energy_Ha"] = repr(electronic)
+            row["second_eigenvalue_Ha"] = repr(second); row["eigen_gap_Ha"] = repr(second - electronic)
+            row["total_energy_Ha"] = repr(electronic + inv(R)); row["eigen_residual_Ha"] = repr(eigen_residual)
+            row["H1_symmetry_error_Ha"] = repr(norm(H1 - transpose(H1), Inf)); row["overlap_identity_error"] = repr(max(orthogonality, identity_error))
+            row["construction_elapsed_s"] = repr(working_timed.time + augmentation.time + loaded.time / 2); row["construction_allocated_bytes"] = string(working_timed.bytes + augmentation.bytes + loaded.bytes ÷ 2)
+            row["kinetic_elapsed_s"], row["kinetic_allocated_bytes"] = repr(products.time), string(products.bytes)
+            row["nuclear_elapsed_s"], row["nuclear_allocated_bytes"] = repr(unit_nuclear.time), string(unit_nuclear.bytes)
+            row["solve_elapsed_s"], row["solve_allocated_bytes"] = repr(solved.time), string(solved.bytes)
+            row["total_elapsed_s"] = repr(working_timed.time + augmentation.time + loaded.time / 2 + products.time + unit_nuclear.time + solved.time); row["total_allocated_bytes"] = string(working_timed.bytes + augmentation.bytes + loaded.bytes ÷ 2 + products.bytes + unit_nuclear.bytes + solved.bytes)
+            row["peak_rss"] = string(Sys.maxrss()); row["independent_reference_error_Ha"] = repr(electronic + inv(R) - REFERENCE_TOTAL)
+            row["contraction_error_Ha"] = "not_applicable"; row["supplement_fingerprint_sha256"] = fingerprint
+            row["supplement_candidate_count"] = string(candidate_count); row["supplement_parent_capture_min_sv"] = repr(minimum(parent_capture))
+            row["supplement_terminal_capture_min_sv"] = repr(minimum(terminal_capture)); row["residual_occupation_cutoff"] = repr(cutoff)
+            row["residual_dimension"] = string(residual.residual_dimension); row["residual_min_retained_occupation"] = repr(minimum(retained))
+            row["residual_max_discarded_occupation"] = isempty(discarded) ? "not_applicable" : repr(maximum(discarded))
+            row["terminal_residual_orthogonality_error"] = repr(orthogonality)
+            row["bare_terminal_energy_change_Ha"] = repr(electronic - parse(Float64, bare.row["electronic_energy_Ha"]))
+            operator_fingerprints = GB.external_gto_overlap_fingerprint.(matrices)
+            details = ["supplement_identity = $((; input = supplement.input, kind = raw.supplement_kind, source_metadata = raw.metadata, labels, powers, centers, owners, owner_counts, exponents = [o.exponents for o in orbitals], coefficients = [o.coefficients for o in orbitals], normalizations = [o.primitive_normalization for o in orbitals]))",
+                "supplement_metric = $((; eigenvalues = metric.values, condition = maximum(metric.values) / minimum(metric.values), fingerprint = overlap_fingerprint))",
+                "parent_capture_singular_values = $(parent_capture)", "terminal_capture_singular_values = $(terminal_capture)",
+                "owner_residual_spectra = $(owner_spectra)", "owner_retained_ranks = $(ranks)",
+                "owner_cutoff_margins = $([minimum(abs.(spectrum .- cutoff)) for spectrum in owner_spectra])",
+                "dimensions = $((; bare = nG, residual = residual.residual_dimension, augmented = size(H1, 1)))",
+                "operators = $((; dimensions = size.(matrices), fingerprints = operator_fingerprints, gg_kinetic_error = norm(products.value.kinetic[1:nG, 1:nG] - bare.kinetic, Inf), gg_nuclear_error = maximum(norm(unit_nuclear.value[i][1:nG, 1:nG] - bare.unit_nuclear[i], Inf) for i in 1:2)))"]
+            push!(supplemented, (; row, due, pgdg = base_pgdg,
+                mappings = bare.mappings, capture_regions = String[], supplement_details = details))
+        end
+        results = vcat(results, supplemented)
+        length(results) == 5 && [result.row["method"] for result in results] ==
+            ["parent", "pqs", "wl", "pqs_supplemented", "wl_supplemented"] || error("H2 preflight row contract failed")
+    end
 end
 open(tsv_path, "w") do io
     println(io, join(FIELDS, '\t')); foreach(result -> println(io, join((result.row[field] for field in FIELDS), '\t')), results)
 end
 open(report_path, "w") do io
-    println(io, "Matched source-box-first PQS / White-Lindsey two-center H2+ one-body gate")
+    println(io, system === :h2 ? "Neutral-metadata supplemented H2 one-body preflight" :
+        "Matched source-box-first PQS / White-Lindsey two-center H2+ one-body gate")
     for result in results
         println(io, "\n[", result.row["method"], "]")
         foreach(field -> println(io, field, " = ", result.row[field]), FIELDS)
@@ -294,6 +409,8 @@ open(report_path, "w") do io
         end
         if !isempty(result.capture_regions); println(io, "capture_regions_by_lost_norm =")
             foreach(line -> println(io, line), result.capture_regions); end
+        if !isempty(result.supplement_details); println(io, "supplement_diagnostics =")
+            foreach(line -> println(io, line), result.supplement_details); end
     end
 end
 println("TSV: ", tsv_path, "\nreport: ", report_path)
