@@ -40,7 +40,7 @@ claim.
 
 | Lane | State | Exact next boundary |
 | --- | --- | --- |
-| `HP-PQS-PAPER-H2-DRV-FN-01` | Full-parent/PQS/WL H2+ gate and padding control accepted; one finer-tail control approved pending | Add private `tail_spacing` input and compare `2.8/2.0` only at `R=2`, `padding=10.0`, using the unchanged three-row construction |
+| `HP-PQS-PAPER-H2-DRV-FN-01` | Full-parent/PQS/WL H2+ gate, padding control, and finer-tail control accepted; one fixed parent-state capture diagnostic approved pending | At `R=2`, `padding=10.0`, `tail_spacing=2.8`, project the shared full-parent ground state into both terminal spans and report global/regional capture closure |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
@@ -53,18 +53,19 @@ historical audit IDs are not active work.
 
 ## Current Physics Target
 
-The full-parent/PQS/White-Lindsey H2+ rows at `R=2` are box-converged under the
-accepted `padding=10.0/20.0`, `tail_spacing=2.8` control; padding `10.0`
-remains the campaign setting. The next bounded target compares
-`tail_spacing=2.8/2.0` at `R=2`, `padding=10.0` using the unchanged matrix-free
-parent and PQS/WL `q=5/q=3` construction. Report all three shifts without an
-energy ordering or convergence threshold.
+The full-parent/PQS/White-Lindsey H2+ rows at `R=2` completed the bounded
+padding and tail controls; `padding=10.0` and `tail_spacing=2.8` remain the
+campaign settings. The next target measures how much of the shared normalized
+matrix-free parent ground state is retained by the PQS `q=5` and
+White-Lindsey `q=3` terminal spans at that one accepted point. It reports four
+fixed global fields and a readable physical shell/slab breakdown, without a
+PQS-versus-White-Lindsey ordering gate.
 
 This endpoint builds no `Vee` or IDA, runs no RHF/SCF, and writes no artifact.
 The `padding=20.0`, `tail_spacing=2.0` combination, H2, general padding/
-tail-spacing scans, capture studies, `q` ladders, and geometry curves remain
-forbidden. This changes no canonical driver, public facade, producer default,
-artifact schema, output columns, or solver API.
+tail-spacing scans, capture at other campaign points, `q` ladders, and
+geometry curves remain forbidden. This changes no canonical driver, public
+facade, producer default, artifact schema family, or solver API.
 
 ## Current Blockers And Follow-Ups
 

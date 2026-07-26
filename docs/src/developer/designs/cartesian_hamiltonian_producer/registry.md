@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `f377b606dddf69af79e39db22b7eaec35e0e8ae23036198e674e4adb878566e7`.
+> [authority.toml](authority.toml), SHA-256 `25ae9c0f6bbdbe098ffe7205e3df9a02582d96b7c359b11e1c9f5b4fa5e384d0`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1479,8 +1479,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `430`
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/provenance/h2plus_R2_padding20_clean_2026-07-25/`
   - `manager_pass`: `431`
+  - `git_commit`: `33357da4f`
+  - `manager_pass`: `432`
+  - `external_path`: `/Users/srw/Dropbox/Papers/PQS/provenance/h2plus_R2_tail2_clean_2026-07-26/`
+  - `manager_pass`: `433`
 - **Dependencies:** none
-- **Scope:** Extend only the existing private \`bin/pqs\_paper\_h2\_driver.jl\` H2+ gate with a \`tail\_spacing\` input defaulting to 2.8 and exact R=2 \`(padding,tail\_spacing)\` combinations \`(10.0,2.8)\`, \`(20.0,2.8)\`, and \`(10.0,2.0)\`; reject all other combinations, including \`(20.0,2.0)\`. Pass the resolved value through the existing spacing object and validate it against the live parent setup and mappings; retain the matrix-free parent, PQS q=5, White-Lindsey q=3, high135, frozen-reference, positive odd axes, dimension/product/weight/parity checks, residual, T/U decomposition, due diligence, and existing output columns. Use replacement edits where readable and keep the driver \<=250 lines. No H2, Vee, IDA, RHF/SCF, capture study, q ladder, general padding or tail-spacing scan, geometry curve, source/test/tool/helper-file change, dependency, dense parent matrix, generalized eigensolver, quadrature, framework, public API, artifact, output-column change, enrichment, supplement, PRF, screening, EGOI, or schema work.
+- **Scope:** Extend only the existing private \`bin/pqs\_paper\_h2\_driver.jl\` H2+ gate with one full-parent-state capture diagnostic at R=2, padding=10.0, tail\_spacing=2.8, and method=:both. Reuse the normalized matrix-free parent eigenvector, axis overlap inverse roots, and actual support-local terminal blocks; apply \`S^(1/2)\` through the existing one-dimensional \`S\_axis\*X\_axis\` products and never form a dense parent-by-terminal matrix. Add exactly \`parent\_ground\_state\_norm\`, \`terminal\_capture\_fraction\`, \`terminal\_lost\_norm\`, and \`capture\_closure\_error\` to the existing TSV/report; keep variable regional capture/loss only in the readable report, keyed by physical shell/region and full slab identity. Validate one shared parent state, exact support partition, due-row/block native-order and column-range parity, capture bounds, terminal-orthogonal residual, global norm closure, and regional capture/loss closure. Retain the exact existing R=2 \`(padding,tail\_spacing)\` combinations, matrix-free parent, PQS q=5, White-Lindsey q=3, high135, frozen-reference, residual, T/U decomposition, and complete due diligence. Prefer \<=300 and require \<=315 driver lines, with 35-45 added bin lines expected and zero added src/test lines. No new ID, input mode, output file, payload, artifact, schema family, helper, dependency, numerical-construction or terminal-coefficient change, H2, Vee, IDA, RHF/SCF, capture at another campaign point, q ladder, general scan, geometry curve, enrichment, supplement, PRF, screening, EGOI, public API, or framework.
 
 ### HP-PQS-PARENT-GDIRECT-FN-01 - parent-backed Gaussian direct interaction
 

@@ -35,7 +35,7 @@ archaeology and are not normal startup reading.
   full-parent/PQS/White-Lindsey H2+ paper point at `R=2` is box-converged under
   the accepted padding-10/20 control; padding `10` remains the campaign value.
   The finer `tail_spacing=2.0` control is complete and favors retaining `2.8`;
-  paper-manager acceptance is the next bounded decision.
+  one fixed parent-state terminal-capture diagnostic is the next bounded step.
 - Fixed-parent shell-q/PRF measurements now also support an internal
   parent-residual basis facility and direct-only parent-backed Gaussian
   interaction resource. Physical target selection, transition-density
@@ -75,11 +75,12 @@ separate scientific choice.
 **MT3 - Approved pending producer facilities (active).** The private matched
 matrix-free parent/PQS/WL H2+ point and padding-10/20 control are complete;
 padding `10` is retained. The approved `tail_spacing=2.8/2.0` control is also
-complete and favors `2.8`; await paper-manager acceptance before physical-target
-capture and a fixed-parent accuracy/dimension ladder. H2/Vee/RHF and general
-scans remain forbidden. Standard60 and canonical-driver Coulomb exposure
-remain separate. The retained-GTO EGOI helper remains pending and must not
-absorb the unrelated `hamiltonian_corrections.jl` WIP without review.
+complete and favors `2.8`. One parent-ground-state capture diagnostic at the
+accepted `R=2`, padding-10, tail-2.8 point is approved next; a fixed-parent
+accuracy/dimension ladder remains separate. H2/Vee/RHF and general scans
+remain forbidden. Standard60 and canonical-driver Coulomb exposure remain
+separate. The retained-GTO EGOI helper remains pending and must not absorb the
+unrelated `hamiltonian_corrections.jl` WIP without review.
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
@@ -1202,3 +1203,42 @@ Carrying-cost accounting:
 - validation: package load/parse, forbidden-combination rejection, authority
   check/self-test, clean endpoint, due-diligence comparison, staged scope, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 433 - Authorize Parent-State Capture
+
+Commit(s):
+- this commit - amend the existing private H2+ driver authority for one
+  full-parent-state capture diagnostic.
+
+Summary:
+- The accepted tail-2.0 outputs were preserved under
+  `/Users/srw/Dropbox/Papers/PQS/provenance/h2plus_R2_tail2_clean_2026-07-26/`
+  with matching hashes and no repository edit. The bounded tail decision
+  retains `tail_spacing=2.8`.
+- `HP-PQS-PAPER-H2-DRV-FN-01` now permits capture only at `R=2`,
+  `padding=10.0`, `tail_spacing=2.8`, and `method=:both`. The driver projects
+  the one normalized matrix-free parent ground state into the frozen PQS
+  `q=5` and White-Lindsey `q=3` terminal spans using existing axis overlap
+  factors and support-local terminal blocks.
+
+Goal advancement / guardrail:
+- MT3 advances from box/tail controls to physical-target retention. Exact
+  support partition, native due-row/block order, terminal orthogonality,
+  global norm closure, and physical shell/slab regional closure are mandatory.
+  No capture ordering, terminal reconstruction change, enrichment, H2, Vee,
+  SCF, or broader scan is authorized.
+
+Carrying-cost accounting:
+- deleted: none in this docs-only authority pass.
+- simplified: one blockwise factorized projection reuses the existing parent
+  state and terminal realization; no dense parent-by-terminal object is added.
+- quarantined: variable regional details stay in the readable report; capture
+  at every other campaign point remains outside authority.
+- not deleted because: the private driver remains the reproducible paper route.
+- exact remaining caller/blocker: implement the diagnostic within the
+  preferred `300`/hard `315` line limit and run the clean baseline command.
+- added/deleted `src` lines: `0/0`; new tests: none.
+- new metadata/status fields: none; exactly four private TSV/report columns are
+  approved.
+- validation: authority check/self-test, generated-view parity, docs tests,
+  Documenter, manager-log bound, staged scope, and `git diff --check`.

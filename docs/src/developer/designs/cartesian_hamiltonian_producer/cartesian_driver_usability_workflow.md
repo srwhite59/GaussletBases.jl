@@ -274,8 +274,9 @@ control used `padding=20.0` bohr. These are the only campaign-authorized
 padding values; accepting a numeric `padding` input does not authorize a
 general padding scan.
 
-One finer-tail control is authorized at `tail_spacing=2.0`, only with
-`R=2.0` and `padding=10.0`. The exact campaign combinations are:
+The completed finer-tail control used `tail_spacing=2.0`, only with `R=2.0`
+and `padding=10.0`, and favored retaining `2.8`. The exact
+campaign-authorized combinations remain:
 
 ```text
 (padding=10.0, tail_spacing=2.8)
@@ -353,6 +354,70 @@ closing at the existing numerical tolerance. The second parent eigenvalue and
 gap may be unavailable because the current apply-based solver returns only the
 lowest state.
 
+### Full-Parent State Capture
+
+One capture diagnostic is approved only for `R=2`, `padding=10.0`,
+`tail_spacing=2.8`, and `method=:both`. It measures how much of the normalized
+full-parent ground state is retained by the frozen PQS `q=5` and
+White-Lindsey `q=3` terminal spans. It changes neither terminal construction
+nor terminal coefficients and introduces no new input mode.
+
+Let `y` be the Euclidean-normalized eigenvector of the overlap-orthogonalized
+parent problem, let `S` be the separable parent overlap, let
+`X=S^(-1/2)`, and let `C` denote a terminal realization's support-local parent
+coefficients. The diagnostic is
+
+```text
+c = X y
+a = C' S c = C' S^(1/2) y
+capture = a'a
+r = y - S^(1/2) C a
+lost_norm = r'r
+```
+
+The driver must evaluate `S^(1/2)` through the existing one-dimensional
+factors `S_axis * X_axis`. It must apply `C` blockwise from each
+`CartesianTerminalBasisBlock`'s support indices, coefficients, and native
+column range. A dense parent-by-terminal coefficient, overlap, or projection
+matrix is forbidden.
+
+Before interpreting capture, the driver must establish that terminal block
+supports form a disjoint exact partition of `1:parent_dimension`, that
+due-diligence rows match blocks in native order and exact column ranges, and
+that both methods use the same parent fingerprint and the same parent
+eigenvector. It must then require:
+
+- finite capture fraction within `[0,1]` up to numerical tolerance;
+- the parent-space residual to be orthogonal to the terminal span;
+- captured norm plus lost norm to equal the parent-state norm;
+- nonnegative regional lost norms that sum to the global lost norm; and
+- regional captured contributions that sum to the global captured norm.
+
+For a block, regional loss is `sum(abs2, r[block.support_indices])`, and
+regional capture is the squared norm of `a` over the block's column range.
+The readable report aggregates these values by physical `region_key`,
+`region_kind`, and `shell_index`; slab entries additionally retain axis, side,
+stack index, and stack count. It must not define local loss as source norm
+minus captured norm, because symmetric parent orthogonalization does not make
+that a unique local decomposition.
+
+The existing TSV and readable report may add exactly:
+
+```text
+parent_ground_state_norm
+terminal_capture_fraction
+terminal_lost_norm
+capture_closure_error
+```
+
+`parent_ground_state_norm` is reported for all three rows. The terminal-only
+fields are not applicable on the parent row. Variable-length regional
+breakdowns belong only in the readable report; no additional output file,
+payload, or schema family is approved. PQS and White-Lindsey capture are
+reported without an ordering gate. The White-Lindsey
+`source_mode_shape`-unavailable advisory remains truthful and must not be
+replaced with a fabricated PQS-only field.
+
 ### Endpoints And Output
 
 The endpoint is the three-row lowest-`H1` H2+ comparison. It builds no `Vee`,
@@ -397,9 +462,9 @@ schema, payload, metadata family, or report-carried basis.
 
 ### Implementation And Acceptance Limits
 
-- The accepted full-parent driver is `248` lines. Tail-spacing input plumbing
-  should use replacement edits with no net line increase when readable; the
-  hard limit remains `250` lines.
+- The accepted full-parent driver is `248` lines. The capture extension is
+  expected to add `35-45` `bin` lines; the preferred final size is at most
+  `300` lines and the hard limit is `315` lines.
 - Added `src` lines, committed tests, probes, fixtures, modules, helper files,
   exports, status vocabularies, and adapters are all zero.
 - Do not copy the scratch parent oracle, sampled-density oracle,
@@ -454,9 +519,22 @@ topology, warnings, residuals, timing, allocations, and peak RSS against the
 preserved `tail_spacing=2.8`, padding-10 rows. Report the shifts without
 imposing an energy ordering or convergence threshold.
 
+The authorized capture diagnostic uses the accepted baseline command:
+
+```text
+julia --project=. bin/pqs_paper_h2_driver.jl \
+    system=:h2plus method=:both R=2.0 padding=10.0 tail_spacing=2.8 \
+    output_dir='"/tmp/pqs_paper_h2plus_R2_capture_clean"'
+```
+
+It must preserve the complete PQS/White-Lindsey due-diligence records and
+report the four fixed capture fields plus the readable regional breakdown.
+The capture implementation is accepted only if all support, native-order,
+orthogonality, global-closure, and regional-closure gates above pass.
+
 This authority changes no public input, canonical-driver behavior, numerical
 default, artifact schema, AddNest/exact-W/injection/PRF/external-RG/MWG/
 screening/EGOI behavior, or correlated-solver surface. H2, `Vee`, IDA,
-RHF/SCF, capture studies, `q` ladders, general padding or tail-spacing scans,
-geometry curves, enrichment, supplements, PRFs, test changes, output-column
-changes, and new artifacts remain forbidden.
+RHF/SCF, capture at any other campaign point, `q` ladders, general padding or
+tail-spacing scans, geometry curves, enrichment, supplements, PRFs, test
+changes, additional output columns, and new artifacts remain forbidden.
