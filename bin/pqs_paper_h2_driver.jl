@@ -1,14 +1,14 @@
 #!/usr/bin/env julia
 using GaussletBases, LinearAlgebra, SHA
 const GB = GaussletBases
-const INPUTS = (:system, :method, :R, :output_dir, :padding)
+const INPUTS = (:system, :method, :R, :output_dir, :padding, :tail_spacing)
 const FIELDS = split("""
 system method R_bohr padding_bohr output_dir git_head git_dirty route route_q ns core_spacing s_factor mapping_s_standard mapping_s_effective mapping_types tail_spacing source_span
 coulomb_accuracy coulomb_terms coulomb_fingerprint parent_axes parent_bounds_bohr actual_transverse_padding_bohr actual_parallel_padding_bohr parent_dimension parent_fingerprint_sha256
 terminal_row_count topology direct_core_columns complete_shell_columns slab_columns compact_product_columns identity_columns final_dimension T_expectation_Ha U_left_expectation_Ha U_right_expectation_Ha H1_expectation_Ha
 electronic_energy_Ha second_eigenvalue_Ha eigen_gap_Ha nuclear_repulsion_Ha total_energy_Ha eigen_residual_Ha H1_symmetry_error_Ha construction_elapsed_s construction_allocated_bytes kinetic_elapsed_s kinetic_allocated_bytes nuclear_elapsed_s nuclear_allocated_bytes solve_elapsed_s solve_allocated_bytes total_elapsed_s total_allocated_bytes peak_rss peak_rss_units tsv_path report_path overlap_identity_error independent_reference_total_Ha independent_reference_error_Ha parent_resolution_error_Ha contraction_error_Ha""")
 const REFERENCE_TOTAL = -0.6026342144949465
-values = Dict{Symbol,Any}(:system => :h2plus, :method => :both, :R => 2.0, :output_dir => "/tmp/pqs_paper_h2plus_R2", :padding => 10.0)
+values = Dict{Symbol,Any}(:system => :h2plus, :method => :both, :R => 2.0, :output_dir => "/tmp/pqs_paper_h2plus_R2", :padding => 10.0, :tail_spacing => 2.8)
 function apply_inputs!(input)
     for (key, value) in pairs(input); name = Symbol(key)
         name in INPUTS || throw(ArgumentError("unknown driver input: $name")); values[name] = value; end
@@ -24,8 +24,8 @@ for arg in args
 system = Symbol(values[:system]); system === :h2 && throw(ArgumentError("system=:h2 is not enabled in this H2+ gate"))
 system === :h2plus || throw(ArgumentError("system must be :h2plus or :h2"))
 method = Symbol(values[:method]); method in (:pqs, :wl, :both) || throw(ArgumentError("method must be :pqs, :wl, or :both"))
-R, padding = Float64(values[:R]), Float64(values[:padding])
-isfinite(R) && R > 0 && isfinite(padding) && padding >= 10 || throw(ArgumentError("R must be positive and padding at least 10 bohr"))
+R, padding, tail_spacing = (Float64(values[key]) for key in (:R, :padding, :tail_spacing))
+R == 2.0 && (padding, tail_spacing) in ((10.0, 2.8), (20.0, 2.8), (10.0, 2.0)) || throw(ArgumentError("unsupported R, padding, and tail_spacing combination"))
 output_dir = abspath(String(values[:output_dir])); isempty(output_dir) && throw(ArgumentError("output_dir must not be empty")); mkpath(output_dir)
 tsv_path, report_path = joinpath(output_dir, "h2plus.tsv"), joinpath(output_dir, "report.txt")
 git_head, git_dirty = readchomp(`git rev-parse HEAD`), !isempty(readchomp(`git status --porcelain`))
@@ -60,7 +60,7 @@ function run_method(nesting)
             atom_locations = Tuple(nuclei), nup = 1, ndn = 0, bond_axis = :z, bond_length = R,
             radius = R / 2 + padding, parent_axis_counts = nothing, map_backend = :pgdg_localized_experimental))
         recipe = GB.cartesian_recipe(GB._cartesian_base_route(:h2, nesting, :ordinary))
-        spacing = (; q, n_s = 5, reference_spacing = 1.0, tail_spacing = 2.8,
+        spacing = (; q, n_s = 5, reference_spacing = 1.0, tail_spacing,
             q_to_core_spacing_rule = :standard_pqs_ns_equals_q, core_spacing = 0.30, s_factor = 1.0,
             xmax_parallel = R / 2 + padding, xmax_transverse = padding)
         parent_inputs = (; parent_axis_bundle_backend = :pgdg_localized_experimental, parent_axis_family = :G10, coulomb_expansion = expansion)
@@ -92,7 +92,7 @@ function run_method(nesting)
     all(row -> row.region_kind !== :complete_shell || row.realization_kind === expected_realization, rows) || error("complete-shell realization differs from route")
     route = nesting === :pqs ? :pqs_source_box_first : :white_lindsey_product; setup.q == q || error("route-local q gate failed")
     expected_s = (sqrt(0.30), sqrt(0.30))
-    (setup.n_s, setup.core_spacing, setup.s_factor, setup.tail_spacing, setup.mapping_s_standard, setup.mapping_s_effective) == (5, 0.30, 1.0, 2.8, expected_s, expected_s) || error("resolved parent setup differs")
+    (setup.n_s, setup.core_spacing, setup.s_factor, setup.tail_spacing, setup.mapping_s_standard, setup.mapping_s_effective) == (5, 0.30, 1.0, tail_spacing, expected_s, expected_s) || error("resolved parent setup differs")
     parent_basis = parent.parent_basis_object; axes = GB.CartesianParentGaussletBases.parent_axes(parent_basis)
     axis_counts = GB.CartesianParentGaussletBases.parent_axis_counts(parent_basis); parent_dimension = GB.CartesianParentGaussletBases.parent_dimension(parent_basis)
     pgdg = Tuple(GB._nested_axis_pgdg(parent.parent_axis_bundle_object, axis) for axis in (:x, :y, :z))
