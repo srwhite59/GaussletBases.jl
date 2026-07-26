@@ -6,7 +6,8 @@ const FIELDS = split("""
 system method R_bohr padding_bohr output_dir git_head git_dirty route route_q ns core_spacing s_factor mapping_s_standard mapping_s_effective mapping_types tail_spacing source_span
 coulomb_accuracy coulomb_terms coulomb_fingerprint parent_axes parent_bounds_bohr actual_transverse_padding_bohr actual_parallel_padding_bohr parent_dimension parent_fingerprint_sha256
 terminal_row_count topology direct_core_columns complete_shell_columns slab_columns compact_product_columns identity_columns final_dimension T_expectation_Ha U_left_expectation_Ha U_right_expectation_Ha H1_expectation_Ha
-electronic_energy_Ha second_eigenvalue_Ha eigen_gap_Ha nuclear_repulsion_Ha total_energy_Ha eigen_residual_Ha H1_symmetry_error_Ha construction_elapsed_s construction_allocated_bytes kinetic_elapsed_s kinetic_allocated_bytes nuclear_elapsed_s nuclear_allocated_bytes solve_elapsed_s solve_allocated_bytes total_elapsed_s total_allocated_bytes peak_rss peak_rss_units tsv_path report_path overlap_identity_error independent_reference_total_Ha independent_reference_error_Ha parent_resolution_error_Ha contraction_error_Ha""")
+electronic_energy_Ha second_eigenvalue_Ha eigen_gap_Ha nuclear_repulsion_Ha total_energy_Ha eigen_residual_Ha H1_symmetry_error_Ha construction_elapsed_s construction_allocated_bytes kinetic_elapsed_s kinetic_allocated_bytes nuclear_elapsed_s nuclear_allocated_bytes solve_elapsed_s solve_allocated_bytes total_elapsed_s total_allocated_bytes peak_rss peak_rss_units tsv_path report_path overlap_identity_error independent_reference_total_Ha independent_reference_error_Ha parent_resolution_error_Ha contraction_error_Ha
+parent_ground_state_norm terminal_capture_fraction terminal_lost_norm capture_closure_error""")
 const REFERENCE_TOTAL = -0.6026342144949465
 values = Dict{Symbol,Any}(:system => :h2plus, :method => :both, :R => 2.0, :output_dir => "/tmp/pqs_paper_h2plus_R2", :padding => 10.0, :tail_spacing => 2.8)
 function apply_inputs!(input)
@@ -26,6 +27,7 @@ system === :h2plus || throw(ArgumentError("system must be :h2plus or :h2"))
 method = Symbol(values[:method]); method in (:pqs, :wl, :both) || throw(ArgumentError("method must be :pqs, :wl, or :both"))
 R, padding, tail_spacing = (Float64(values[key]) for key in (:R, :padding, :tail_spacing))
 R == 2.0 && (padding, tail_spacing) in ((10.0, 2.8), (20.0, 2.8), (10.0, 2.0)) || throw(ArgumentError("unsupported R, padding, and tail_spacing combination"))
+capture_enabled = method === :both && padding == 10.0 && tail_spacing == 2.8
 output_dir = abspath(String(values[:output_dir])); isempty(output_dir) && throw(ArgumentError("output_dir must not be empty")); mkpath(output_dir)
 tsv_path, report_path = joinpath(output_dir, "h2plus.tsv"), joinpath(output_dir, "report.txt")
 git_head, git_dirty = readchomp(`git rev-parse HEAD`), !isempty(readchomp(`git status --porcelain`))
@@ -43,7 +45,7 @@ function mode_product(matrix, tensor, axis)
     return permutedims(reshape(product, size(matrix, 1), size(tensor, order[2]), size(tensor, order[3])), invperm(order))
 end
 function product_apply(matrices, vector, dimensions)
-    tensor = reshape(vector, dimensions); for axis in 1:3; tensor = mode_product(matrices[axis], tensor, axis); end
+    tensor = reshape(vector, reverse(dimensions)); for axis in 1:3; tensor = mode_product(matrices[4 - axis], tensor, axis); end
     return vec(tensor)
 end
 function inverse_sqrt(overlap)
@@ -144,8 +146,10 @@ function run_method(nesting)
         "peak_rss_units" => "diagnostic bytes (combined process; Julia Sys.maxrss; $(Sys.KERNEL))",
         "tsv_path" => tsv_path, "report_path" => report_path, "overlap_identity_error" => "not_applicable",
         "independent_reference_total_Ha" => repr(REFERENCE_TOTAL), "independent_reference_error_Ha" => repr(electronic + inv(R) - REFERENCE_TOTAL),
-        "parent_resolution_error_Ha" => "unavailable", "contraction_error_Ha" => "unavailable")
-    return (; row, due, pgdg, mappings)
+        "parent_resolution_error_Ha" => "unavailable", "contraction_error_Ha" => "unavailable",
+        "parent_ground_state_norm" => "not_applicable", "terminal_capture_fraction" => "not_applicable",
+        "terminal_lost_norm" => "not_applicable", "capture_closure_error" => "not_applicable")
+    return (; row, due, pgdg, mappings, basis, capture_regions = String[])
 end
 requested = method === :both ? (:pqs, :wl) : (method,); results = [run_method(nesting) for nesting in requested]
 if length(results) == 2
@@ -217,7 +221,7 @@ function run_parent(template)
         "total_elapsed_s" => repr(prepared.time + solved.time + kinetic_result.time + nuclear_results.time),
         "total_allocated_bytes" => string(prepared.bytes + solved.bytes + kinetic_result.bytes + nuclear_results.bytes),
         "peak_rss" => string(Sys.maxrss()), "overlap_identity_error" => repr(prepared.value.overlap_error)))
-    return (; row, due = nothing, pgdg, mappings = template.mappings)
+    capture_enabled && (row["parent_ground_state_norm"] = repr(dot(orbital, orbital))); return (; row, due = nothing, pgdg, mappings = template.mappings, orbital, overlaps, roots, capture_regions = String[])
 end
 if method === :both
     parent = run_parent(results[1]); results = vcat([parent], results)
@@ -228,6 +232,51 @@ if method === :both
         result.row["parent_resolution_error_Ha"] = repr(parent_total - REFERENCE_TOTAL)
         result.row["contraction_error_Ha"] = result === parent ? "not_applicable" : repr(total - parent_total)
         total + 1.0e-10 >= parent_total || error("terminal energy is below the full-parent energy")
+    end
+    if capture_enabled
+        parent_norm = dot(parent.orbital, parent.orbital); dimensions = ntuple(axis -> length(parent.pgdg[axis].centers), 3)
+        sqrt_factors = ntuple(axis -> parent.overlaps[axis] * parent.roots[axis], 3); metric_orbital = product_apply(sqrt_factors, parent.orbital, dimensions)
+        block_amplitudes(block, vector, indices) = isnothing(block.coefficients) ? vector[indices] : transpose(block.coefficients) * vector[indices]
+        region_key(row) = (row.region_key, row.region_kind, row.shell_index, row.slab_axis, row.slab_side, row.slab_stack_index, row.slab_stack_count)
+        for result in results[2:3]
+            blocks, rows = result.basis.blocks, result.due.terminal_rows
+            length(blocks) == length(rows) || error("terminal blocks and due-diligence rows differ")
+            sort(reduce(vcat, (block.support_indices for block in blocks))) == collect(1:prod(dimensions)) || error("terminal block supports do not partition the parent")
+            all(i -> rows[i].terminal_order == i && rows[i].support_rows == length(blocks[i].support_indices) && rows[i].final_column_range == blocks[i].column_range, eachindex(blocks)) || error("terminal blocks and due-diligence native ranges differ")
+            result.row["parent_fingerprint_sha256"] == parent.row["parent_fingerprint_sha256"] || error("terminal capture does not use the solved parent")
+            parent_coefficients = zeros(Float64, prod(dimensions))
+            regional = Dict{Tuple,Tuple{Float64,Float64,Int,Int,Set{String}}}()
+            for (block, row) in zip(blocks, rows)
+                indices = block.support_indices; amplitudes = block_amplitudes(block, metric_orbital, indices)
+                parent_coefficients[indices] .= isnothing(block.coefficients) ? amplitudes : block.coefficients * amplitudes
+                key = region_key(row); old = get(regional, key, (0.0, 0.0, 0, 0, Set{String}()))
+                push!(old[5], row.warning_summary)
+                regional[key] = (old[1] + sum(abs2, amplitudes), old[2],
+                    old[3] + length(block.support_indices), old[4] + length(block.column_range), old[5])
+            end
+            residual = parent.orbital - product_apply(sqrt_factors, parent_coefficients, dimensions)
+            residual_metric = product_apply(sqrt_factors, residual, dimensions)
+            orthogonality = 0.0
+            for (block, row) in zip(blocks, rows)
+                indices = block.support_indices; amplitudes = block_amplitudes(block, residual_metric, indices)
+                orthogonality += sum(abs2, amplitudes)
+                key = region_key(row); old = regional[key]
+                regional[key] = (old[1], old[2] + sum(abs2, residual[indices]), old[3], old[4], old[5])
+            end
+            capture = sum(value[1] for value in Base.values(regional)); lost = sum(abs2, residual); closure = abs(capture + lost - parent_norm)
+            -1.0e-10 <= capture <= parent_norm + 1.0e-10 || error("terminal capture is outside the parent norm")
+            sqrt(orthogonality) <= 1.0e-9 || error("capture residual is not terminal-orthogonal")
+            closure <= 1.0e-9 || error("terminal capture norm does not close")
+            abs(sum(value[2] for value in Base.values(regional)) - lost) <= 1.0e-12 || error("regional loss does not close")
+            result.row["parent_ground_state_norm"] = repr(parent_norm); result.row["terminal_capture_fraction"] = repr(capture / parent_norm)
+            result.row["terminal_lost_norm"] = repr(lost); result.row["capture_closure_error"] = repr(closure)
+            for key in sort!(collect(keys(regional)); by = key -> -regional[key][2])
+                value = regional[key]
+                push!(result.capture_regions, "region=$(key) support_rows=$(value[3]) retained_cols=$(value[4]) " *
+                    "captured_norm=$(value[1]) lost_norm=$(value[2]) lost_fraction=$(iszero(lost) ? 0.0 : value[2] / lost) " *
+                    "warnings=$(join(sort!(collect(value[5])), ','))")
+            end
+        end
     end
 end
 open(tsv_path, "w") do io
@@ -243,6 +292,8 @@ open(report_path, "w") do io
             show(IOContext(io, :limit => false,
                 :compact => false, :displaysize => (10000, 120)), MIME"text/plain"(), result.due); println(io)
         end
+        if !isempty(result.capture_regions); println(io, "capture_regions_by_lost_norm =")
+            foreach(line -> println(io, line), result.capture_regions); end
     end
 end
 println("TSV: ", tsv_path, "\nreport: ", report_path)
