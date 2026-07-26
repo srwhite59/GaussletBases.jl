@@ -32,8 +32,9 @@ archaeology and are not normal startup reading.
   `J0` evaluator with reported consistency error. A determinant-exact `J0/E0`
   convention requires a separate scientific amendment.
 - The source-backed Cr2 composition/replay migration is closed. The matched
-  full-parent/PQS/White-Lindsey H2+ paper point at `R=2`, `padding=10` is
-  accepted; one padding-20 convergence control is the next bounded target.
+  full-parent/PQS/White-Lindsey H2+ paper point at `R=2` is box-converged under
+  the accepted padding-10/20 control; padding `10` remains the campaign value.
+  One finer tail-spacing control is the next bounded paper target.
 - Fixed-parent shell-q/PRF measurements now also support an internal
   parent-residual basis facility and direct-only parent-backed Gaussian
   interaction resource. Physical target selection, transition-density
@@ -71,11 +72,13 @@ new Cr2 endpoint, contraction, exchange, or solver interpretation is a
 separate scientific choice.
 
 **MT3 - Approved pending producer facilities (active).** The private matched
-matrix-free parent/PQS/WL H2+ point is implemented. Complete only the
-padding-10/20 convergence control in the same bounded driver; H2/Vee/RHF and
-general scans remain forbidden. Standard60 and canonical-driver Coulomb
-exposure remain separate. The retained-GTO EGOI helper remains pending and
-must not absorb the unrelated `hamiltonian_corrections.jl` WIP without review.
+matrix-free parent/PQS/WL H2+ point and padding-10/20 control are complete;
+padding `10` is retained. The next paper step is one separately authorized
+finer tail-spacing control, followed by physical-target capture and a
+fixed-parent accuracy/dimension ladder. H2/Vee/RHF and general scans remain
+forbidden. Standard60 and canonical-driver Coulomb exposure remain separate.
+The retained-GTO EGOI helper remains pending and must not absorb the unrelated
+`hamiltonian_corrections.jl` WIP without review.
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
@@ -1056,3 +1059,63 @@ Carrying-cost accounting:
 - new metadata/status fields: none; output columns remain unchanged.
 - validation: authority/docs checks, scoped review, manager-log bound, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 430 - Close H2+ Padding Control
+
+Commit(s):
+- `67351aca6` - replace the padding-10 axis equality with live parent-dimension
+  validation.
+
+Summary:
+- A tracked-clean worktree at the implementation commit completed the exact
+  `R=2`, padding-20 parent/PQS/White-Lindsey command. Padding-20 axes are
+  `31x31x39`; parent/PQS/WL dimensions are `37479/1969/1599`, compared with
+  padding-10 dimensions `12789/1285/1109`.
+- Padding-20 total-energy shifts are `-1.55e-9`, `-5.25e-7`, and
+  `-7.50e-6 mHa` for parent, PQS, and White-Lindsey. All are far below the
+  provisional `0.01 mHa` threshold, so padding `10` remains the campaign
+  value. The `0.393642 mHa` parent-resolution conclusion is not a finite-box
+  effect at this scale.
+
+Validation / evidence:
+- Independent TSV/full-report readback verified three clean rows, one
+  per-padding parent fingerprint, exact contraction-error identities,
+  contiguous final-column accounting, finite symmetric operators, and
+  residuals `8.91e-11`, `9.77e-14`, and `1.14e-13`.
+- Both paddings retain direct-core/complete-shell/two-z-slab topology. The
+  larger box adds five outer shells (`8 -> 13`) with no new warning class and
+  no weight, padding, or large-identity warning. Diagnostic peak RSS rises
+  from `2.32` to `3.59 GB`; row times rise to `54.7/116.1/108.4 s`.
+
+Goal advancement / guardrail:
+- LT3 and MT3 gain a bounded factorized parent convergence result without a
+  dense parent matrix. One finer tail-spacing control is next, but requires
+  separate authority; H2, Vee/IDA, RHF/SCF, geometry curves, and broad scans
+  remain closed.
+
+Carrying-cost accounting:
+- deleted: the fixed `21x21x29` padding-10 assumption.
+- simplified: one live odd-axis/product check now covers both authorized boxes.
+- quarantined: comparison code and padding-20 evidence remain under `/tmp`.
+- not deleted because: the private driver remains the reproducible paper route.
+- exact remaining caller/blocker: docs-only authority for one finer
+  tail-spacing control.
+- added/deleted `src` lines: `0/0`; added/deleted `bin` lines: `1/1`.
+- new tests: none.
+- new metadata/status fields: none.
+- validation: package load/parse, authority check/self-test, clean endpoint,
+  due-diligence comparison, anti-bloat/scope review, and `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 430
+
+- **MT1 conformance remediation - active.** Unchanged; this scientific control
+  does not consume another Pass 398 discrepancy.
+- **MT2 controlled Cr2 source migration - completed.** Unchanged.
+- **MT3 approved pending facilities - active.** The H2+ box control is complete
+  and retains padding `10`; authorize only one finer tail-spacing control next.
+- **MT4 residual/protected evidence - active.** Unchanged; no residual,
+  protected, injection, or interaction policy entered this pass.
+- **MT5 authority maintenance - maintenance.** Pass 429 kept the control
+  record-local; lifecycle closure should remain compact.
+- **MT6 carrying-cost control - active.** The implementation is one replacement
+  line, adds no test or schema, and removes one stale fixed-size assumption.
