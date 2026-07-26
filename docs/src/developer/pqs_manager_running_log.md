@@ -1343,3 +1343,54 @@ Carrying-cost accounting:
 - **MT6 carrying-cost control - active.** Zero source/test/helper files are
   approved; implementation must reuse current numerical owners and remain
   within the private-driver line ceiling.
+
+## Cartesian Hamiltonian Producer Pass 436 - Implement Supplemented H2 One-Body Preflight
+
+Commit(s):
+- `119bc17c7` - implement the bounded five-row neutral-metadata supplemented
+  one-body endpoint.
+- this commit - reconcile the existing ID to implemented maintenance.
+
+Summary:
+- A detached clean replay at `R=2`, padding `10`, and tail spacing `2.8`
+  reproduced the accepted parent/PQS/WL dimensions and energies exactly, then
+  appended PQS/WL supplemented dimensions `1303/1127`. Their total one-body
+  energies are `-0.6024777336542515` and `-0.6024638359415411 Ha`,
+  improvements of `0.505462` and `3.390502 mHa` over the matching bare rows.
+- Both routes used the same 18-function contracted H/cc-pVTZ supplement and
+  parent fingerprint. Parent capture has minimum singular value
+  `0.9991415015`; terminal minima are `0.9781753530/0.7793743583`. Each owner
+  retained all nine residual directions at the production `1e-6` cutoff.
+- Full augmented-overlap errors are `3.64e-11/2.05e-12`; H1 symmetry errors
+  are zero and lowest-state residuals remain below `9.4e-14`. Complete PQS/WL
+  due diligence retained the `21x21x29` parent, `11.10/10.96` bohr transverse/
+  longitudinal padding, exact column accounting, and only existing advisory
+  shell/source-shape warnings.
+- The final driver is `416` lines, nine below the hard cap. Its `+128/-11`
+  delta exceeds the initial expected addition band by 18 lines, but adds no
+  source, test, helper, payload, artifact, or persistent metadata surface.
+
+Goal advancement / guardrail:
+- LT3/MT3 now have a source-backed supplemented one-body preflight. This is
+  repository acceptance, not independent paper acceptance. Vee, IDA/MWG
+  interpretation, same-state interaction, RHF/SCF, artifacts, and scans remain
+  outside authority.
+
+Carrying-cost accounting:
+- deleted: the old H2 rejection and H2+-only output literals; total driver
+  deletion was 11 lines.
+- simplified: one supplement load and identity record serve both routes, while
+  existing residual and exact augmented-operator owners remain authoritative.
+- quarantined: variable spectra, primitive identity, and operator fingerprints
+  remain readable-report-only.
+- not deleted because: the accepted bare and parent-state controls remain the
+  comparison baseline in the same private driver.
+- exact remaining caller/blocker: independent clean scientific replay; any H2
+  interaction endpoint requires a separate authority decision.
+- added/deleted `src` lines: `0/0`; added/deleted `bin` lines: `128/11`.
+- new tests: none.
+- new metadata/status fields: none; exactly ten approved private report fields.
+- validation: package load, authority check/self-test, exact clean-worktree
+  endpoint, independent TSV/report and archived-bare-row comparison, staged
+  scope/anti-bloat review, docs tests `56/56` and `10/10`, manager-log bound,
+  local Documenter, and `git diff --check`.

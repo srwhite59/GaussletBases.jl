@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `37a3925765a8a95827f5dfa3f2e7e001fa41594dff5aeaf0ab5334ebc460d4e6`.
+> [authority.toml](authority.toml), SHA-256 `cdae4af695949cabb7707797166a2ebbb170d4aa70fa35e59e214ed2d5aaf875`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1458,8 +1458,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-PAPER-H2-DRV-FN-01 - private matched PQS/WL H2 paper driver
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `driver`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1487,8 +1487,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `434`
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/validation/h2_supplemented_one_body_preflight_contract_2026-07-26.md`
   - `manager_pass`: `435`
+  - `git_commit`: `119bc17c7`
+  - `manager_pass`: `436`
 - **Dependencies:** `HP-CGRB-NN-FN-01`, `HP-COMP-SUPPWL-FN-01`, `HP-PQS-COULOMB-ACCURACY-FN-01`, `HP-R3-FN-01`, `HP-R3-FN-02`, `HP-R3U-ZDI-FN-01`, `HP-RG-CUTOFF-FN-02`
-- **Scope:** Extend only the existing private \`bin/pqs\_paper\_h2\_driver.jl\` from its implemented H2+ parent/PQS/WL and capture gates to one neutral-metadata supplemented one-body preflight at R=2, padding=10.0, tail\_spacing=2.8, and method=:both. Preserve the accepted bare rows and append exactly \`pqs\_supplemented\` and \`wl\_supplemented\` using nup=1, ndn=1, the same physical parent, contracted bundled H/cc-pVTZ on both centers, lmax=1, uncontracted=false, no width filter, and the production residual cutoff 1.0e-6. Reuse the existing neutral supplemented working-basis, supplement loader, owner-local residual builder, and exact augmented kinetic/by-center nuclear owners; assemble and solve only the two-proton H1. Validate exact ordered supplement identity, metric conditioning, parent and bare-terminal capture, owner residual spectra/rank/cutoff margins, G-R and augmented identity, bare G-G parity, finite symmetric exact matrices, eigen-residual, variational energy, complete due diligence, and one shared parent/supplement across routes. Parent capture may use a bounded parent-by-supplement cross overlap and separable parent inverse; no generalized parent augmentation is allowed. Add exactly the ten fixed supplement/residual fields named by the canonical contract and keep variable details readable-report-only. Prefer \<=400 and require \<=425 driver lines, with 75-110 added bin lines expected and zero added src/test/tool/helper-file lines. No new ID, general input, output file, payload, artifact, schema family, source helper, committed test/probe/fixture, Vee, IDA/MWG interpretation, RHF/SCF, same-state interaction, cutoff or supplement scan, other H2 endpoint, q ladder, geometry curve, enrichment, PRF, screening, EGOI, public API, canonical-driver change, or framework.
+- **Scope:** Maintain only the existing private \`bin/pqs\_paper\_h2\_driver.jl\` H2+ parent/PQS/WL controls and the frozen five-row neutral-metadata supplemented one-body preflight at R=2, padding=10.0, tail\_spacing=2.8, and method=:both. Preserve the shared parent and ordered bundled contracted H/cc-pVTZ supplement, production 1.0e-6 owner-local residual selection, exact augmented kinetic/by-center nuclear construction, complete due diligence, ten fixed supplement/residual fields, and all metric, identity, operator, variational, and row-order gates. The driver remains \<=425 lines with zero source/test/tool/helper additions. No new input, output family, artifact, Vee, IDA/MWG interpretation, RHF/SCF, same-state interaction, cutoff or supplement scan, other H2 endpoint, q ladder, geometry curve, enrichment, PRF, screening, EGOI, public API, canonical-driver change, or framework is maintenance-authorized.
 
 ### HP-PQS-PARENT-GDIRECT-FN-01 - parent-backed Gaussian direct interaction
 

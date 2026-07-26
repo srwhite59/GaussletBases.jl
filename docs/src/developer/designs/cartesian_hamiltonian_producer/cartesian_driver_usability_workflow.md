@@ -3,7 +3,7 @@
 Status: implemented canonical contract for the human-facing Cartesian
 Hamiltonian driver and its non-exported staged producer calls, plus one
 approved private PQS/WL paper-validation driver with an implemented H2+
-endpoint and one approved neutral-H2 supplemented one-body preflight.
+endpoint and implemented neutral-H2 supplemented one-body preflight.
 Registry entries own
 the lifecycle and source permissions for the corresponding IDs. Driver
 validation IDs without committed fixtures are completed evidence or explicitly
@@ -198,7 +198,7 @@ parser. Route and ladder diagnostics remain outside the canonical driver.
 
 ## Private PQS/WL Paper H2 Driver
 
-`HP-PQS-PAPER-H2-DRV-FN-01` approves one tracked, non-exported scientific
+`HP-PQS-PAPER-H2-DRV-FN-01` owns one tracked, non-exported scientific
 validation script:
 
 ```text
@@ -427,7 +427,7 @@ replaced with a fabricated PQS-only field.
 
 ### Supplemented H2 One-Body Preflight
 
-One private supplemented endpoint is approved only for:
+One private supplemented endpoint is implemented only for:
 
 ```text
 system = :h2
@@ -552,10 +552,9 @@ authority.
 
 ### Endpoints And Output
 
-The implemented endpoint is the three-row lowest-`H1` H2+ comparison. The
-approved next endpoint is the five-row bare-plus-supplemented one-body
-preflight above. Neither builds `Vee`, IDA/MWG, RHF/SCF, or a Hamiltonian
-artifact.
+The implemented endpoints are the three-row lowest-`H1` H2+ comparison and
+the five-row bare-plus-supplemented one-body preflight above. Neither builds
+`Vee`, IDA/MWG, RHF/SCF, or a Hamiltonian artifact.
 
 Each method writes one compact TSV row and a readable text report containing
 the resolved configuration, git commit and dirty state, dimensions, shell
@@ -596,9 +595,8 @@ schema, payload, metadata family, or report-carried basis.
 
 ### Implementation And Acceptance Limits
 
-- The accepted capture-enabled driver is `299` lines. The supplemented
-  preflight is expected to add `75-110` `bin` lines; the preferred final size
-  is at most `400` lines and the hard limit is `425` lines.
+- The accepted capture-enabled driver was `299` lines. The implemented
+  supplemented preflight is `416` lines; the hard limit remains `425` lines.
 - Added `src` lines, committed tests, probes, fixtures, modules, helper files,
   exports, status vocabularies, and adapters are all zero.
 - Do not copy the scratch parent oracle, sampled-density oracle,
@@ -666,7 +664,7 @@ report the four fixed capture fields plus the readable regional breakdown.
 The capture implementation is accepted only if all support, native-order,
 orthogonality, global-closure, and regional-closure gates above pass.
 
-The authorized supplemented preflight command is:
+The implemented supplemented preflight command is:
 
 ```text
 julia --project=. bin/pqs_paper_h2_driver.jl \
@@ -678,6 +676,15 @@ Run it from a clean worktree. It must preserve the accepted bare rows, append
 the two supplemented rows, include complete terminal due diligence for both
 routes, and satisfy every supplement, capture, residual-rank, exact one-body,
 and variational gate above.
+
+Repo acceptance at `119bc17c7` retained the exact bare dimensions
+`12789/1285/1109`, added `18` residual directions to each terminal route, and
+produced supplemented dimensions `1303/1127`. The minimum parent supplement
+capture singular value was `0.9991415015`; terminal minima were
+`0.9781753530/0.7793743583` for PQS/WL. Both owner-local residual ranks were
+`9+9`, with no discarded direction at the production cutoff. This is
+repository acceptance of the bounded endpoint, not independent paper
+acceptance or authority for the interaction stage.
 
 This authority changes no public input, canonical-driver behavior, numerical
 default, artifact schema, AddNest/exact-W/injection/PRF/external-RG/MWG/
