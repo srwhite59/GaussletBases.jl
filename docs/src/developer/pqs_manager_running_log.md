@@ -1242,3 +1242,42 @@ Carrying-cost accounting:
   approved.
 - validation: authority check/self-test, generated-view parity, docs tests,
   Documenter, manager-log bound, staged scope, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 434 - Implement H2+ Parent-State Capture
+
+Commit(s):
+- `1e373d0c1` - add the bounded blockwise parent-state capture diagnostic.
+
+Summary:
+- A clean detached replay at the frozen `R=2`, padding-10, tail-2.8 point
+  retained `0.9999709356338488` of the normalized parent ground state in PQS
+  and `0.9991007020512097` in White-Lindsey. Lost norms are
+  `2.9064366e-5` and `8.9929795e-4`; WL therefore loses `30.94` times more.
+- PQS loss is dominated by shell 1, while WL loss is dominated by shells 2
+  and 3. Direct-core loss is below `5e-28` for both. Regional support and
+  column totals close exactly at `12789` and `1285/1109`.
+- Review caught and removed an x-fast local index reconstruction. The
+  matrix-free parent apply now uses canonical z-fast ordering and consumes
+  each terminal block's actual support indices. Energies changed by at most
+  `5.1e-14 Ha`; accepted parent/PQS/WL totals remain
+  `-0.6022405729510050/-0.6019722712680262/-0.5990733343694545 Ha`.
+
+Goal advancement / guardrail:
+- MT3 now has physical-target retention evidence after box and tail controls.
+  Capture is diagnostic, with no ordering gate, enrichment decision, H2,
+  interaction, or SCF authority.
+
+Carrying-cost accounting:
+- deleted: the redundant and incorrectly ordered local flat-index helper.
+- simplified: one canonical parent ordering lets projection use live support
+  indices directly.
+- quarantined: variable regional rows remain readable-report-only.
+- not deleted because: the 299-line private driver remains the paper route.
+- exact remaining caller/blocker: paper-manager interpretation before any
+  fixed-parent dimension ladder; H2 remains deferred.
+- added/deleted `src` lines: `0/0`; added/deleted `bin` lines: `56/5`.
+- new tests: none.
+- new metadata/status fields: none; four approved private report columns.
+- validation: package load, authority check/self-test, endpoint gates,
+  independent TSV/regional closure, clean-worktree replay, scoped diff, and
+  `git diff --check`.
