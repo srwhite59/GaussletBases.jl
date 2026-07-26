@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `f76481e7614b970521a8300aa6a6100e6cf221b89b1562649687aac6669c6e26`.
+> [authority.toml](authority.toml), SHA-256 `f377b606dddf69af79e39db22b7eaec35e0e8ae23036198e674e4adb878566e7`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1475,8 +1475,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `428`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/provenance/h2plus_R2_full_parent_clean_2026-07-25/`
   - `manager_pass`: `429`
+  - `git_commit`: `67351aca6`
+  - `manager_pass`: `430`
+  - `external_path`: `/Users/srw/Dropbox/Papers/PQS/provenance/h2plus_R2_padding20_clean_2026-07-25/`
+  - `manager_pass`: `431`
 - **Dependencies:** none
-- **Scope:** Extend only the existing private \`bin/pqs\_paper\_h2\_driver.jl\` H2+ gate for the exact R=2 padding=10.0/20.0 convergence pair. Replace the padding-10 \`21x21x29\` equality with validation of live positive odd axis counts, dimension-product consistency, finite positive parent weights, and identical PQS/White-Lindsey parent objects and fingerprints; retain the matrix-free parent, PQS q=5, White-Lindsey q=3, high135, frozen-reference, residual, T/U decomposition, due-diligence, and existing-output contracts. Final driver size remains hard \<=250 lines, with no added source lines preferred. No H2, Vee, IDA, RHF/SCF, general padding or tail-spacing scan, geometry curve, source/test/tool/helper-file change, dependency, dense parent matrix, generalized eigensolver, quadrature, framework, public API, artifact, output-column change, supplement, PRF, screening, EGOI, or schema work.
+- **Scope:** Extend only the existing private \`bin/pqs\_paper\_h2\_driver.jl\` H2+ gate with a \`tail\_spacing\` input defaulting to 2.8 and exact R=2 \`(padding,tail\_spacing)\` combinations \`(10.0,2.8)\`, \`(20.0,2.8)\`, and \`(10.0,2.0)\`; reject all other combinations, including \`(20.0,2.0)\`. Pass the resolved value through the existing spacing object and validate it against the live parent setup and mappings; retain the matrix-free parent, PQS q=5, White-Lindsey q=3, high135, frozen-reference, positive odd axes, dimension/product/weight/parity checks, residual, T/U decomposition, due diligence, and existing output columns. Use replacement edits where readable and keep the driver \<=250 lines. No H2, Vee, IDA, RHF/SCF, capture study, q ladder, general padding or tail-spacing scan, geometry curve, source/test/tool/helper-file change, dependency, dense parent matrix, generalized eigensolver, quadrature, framework, public API, artifact, output-column change, enrichment, supplement, PRF, screening, EGOI, or schema work.
 
 ### HP-PQS-PARENT-GDIRECT-FN-01 - parent-backed Gaussian direct interaction
 

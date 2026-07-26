@@ -73,8 +73,8 @@ separate scientific choice.
 
 **MT3 - Approved pending producer facilities (active).** The private matched
 matrix-free parent/PQS/WL H2+ point and padding-10/20 control are complete;
-padding `10` is retained. The next paper step is one separately authorized
-finer tail-spacing control, followed by physical-target capture and a
+padding `10` is retained. Implement only the approved `tail_spacing=2.8/2.0`
+control at `R=2`, padding `10`, followed by physical-target capture and a
 fixed-parent accuracy/dimension ladder. H2/Vee/RHF and general scans remain
 forbidden. Standard60 and canonical-driver Coulomb exposure remain separate.
 The retained-GTO EGOI helper remains pending and must not absorb the unrelated
@@ -1119,3 +1119,40 @@ Carrying-cost accounting:
   record-local; lifecycle closure should remain compact.
 - **MT6 carrying-cost control - active.** The implementation is one replacement
   line, adds no test or schema, and removes one stale fixed-size assumption.
+
+## Cartesian Hamiltonian Producer Pass 431 - Authorize H2+ Tail Control
+
+Commit(s):
+- this commit - amend the existing private-driver authority for one finer
+  tail-spacing control.
+
+Summary:
+- Padding-20 raw evidence was preserved with hashes matching the accepted
+  temporary outputs; repository files were unchanged. The box control remains
+  evidence at `tail_spacing=2.8`, and padding `10` remains the paper setting.
+- `HP-PQS-PAPER-H2-DRV-FN-01` now permits exactly three `R=2` combinations:
+  `(10.0,2.8)`, `(20.0,2.8)`, and `(10.0,2.0)` for
+  `(padding,tail_spacing)`. The follow-on adds one private input, defaults it to
+  `2.8`, and rejects `padding=20.0`, `tail_spacing=2.0`.
+
+Goal advancement / guardrail:
+- MT3 advances to one finer-tail parent/PQS/White-Lindsey comparison while
+  preserving `ns=5`, `core_spacing=0.30`, `s_factor=1`, high135, ordinary
+  source span, route-local `q=5/q=3`, matrix-free parent application, complete
+  due diligence, and existing report columns. The three energy shifts are
+  reported without an ordering or convergence threshold.
+
+Carrying-cost accounting:
+- deleted: none in this docs-only authority pass.
+- simplified: the existing recorded tail-spacing value becomes one bounded
+  resolved input rather than a new result surface.
+- quarantined: other padding/tail combinations, capture, `q` ladders, geometry
+  curves, H2/Vee/IDA/RHF, and enrichment remain outside authority.
+- not deleted because: the accepted 248-line private driver owns the paper
+  comparison.
+- exact remaining caller/blocker: implement the bounded input/combination gate
+  within the 250-line limit and run the clean `tail_spacing=2.0` command.
+- added/deleted `src` lines: `0/0`; new tests: none.
+- new metadata/status fields: none; the existing TSV/report column is reused.
+- validation: authority/docs checks, scoped review, manager-log bound, and
+  `git diff --check`.

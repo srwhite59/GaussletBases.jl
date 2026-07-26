@@ -254,7 +254,7 @@ core_spacing = 1.2 / (Z * (ns - 1)) = 0.30
 mapping_s_standard = sqrt(Z * core_spacing) = sqrt(0.30)
 mapping_s_effective = mapping_s_standard
 s_factor = 1.0
-tail_spacing = 2.8
+tail_spacing = 2.8 (default)
 source_span = :ordinary
 coulomb_accuracy = :high
 Coulomb expansion terms = 135
@@ -269,10 +269,27 @@ xmax_parallel = R/2 + padding
 xmax_transverse = padding
 ```
 
-The accepted `R=2` baseline uses `padding=10.0` bohr. One bounded convergence
-control is also authorized at `padding=20.0` bohr. These are the only
-campaign-authorized padding values; accepting a numeric `padding` input does
-not authorize a general padding scan. The allowed controls remain only:
+The accepted `R=2` baseline uses `padding=10.0` bohr. The completed bounded box
+control used `padding=20.0` bohr. These are the only campaign-authorized
+padding values; accepting a numeric `padding` input does not authorize a
+general padding scan.
+
+One finer-tail control is authorized at `tail_spacing=2.0`, only with
+`R=2.0` and `padding=10.0`. The exact campaign combinations are:
+
+```text
+(padding=10.0, tail_spacing=2.8)
+(padding=20.0, tail_spacing=2.8)
+(padding=10.0, tail_spacing=2.0)
+```
+
+The driver must reject other combinations. Equivalently, both inputs must
+belong to their listed two-value sets and
+`tail_spacing == 2.8 || padding == 10.0`. In particular, the accepted
+padding-20 control is evidence only at `tail_spacing=2.8`; the
+`padding=20.0`, `tail_spacing=2.0` combination is not authorized.
+
+The allowed controls remain only:
 
 ```text
 system = :h2plus
@@ -280,12 +297,14 @@ method = :pqs | :wl | :both
 R
 output_dir
 padding
+tail_spacing
 optional trusted config include
 name=value overrides for these approved inputs
 ```
 
 The driver records every resolved input. It is not a mapping, `q`,
-source-span, supplement, Coulomb-policy, or parameter scanner.
+source-span, supplement, Coulomb-policy, padding, tail-spacing, or general
+parameter scanner.
 
 ### Mandatory Full-Parent Reference Row
 
@@ -305,10 +324,12 @@ three-dimensional matrix.
 
 The live parent axis counts must be positive odd integers, their product must
 equal the reported parent dimension, and every parent weight must be finite
-and strictly positive. For each padding, the independently constructed PQS and
-White-Lindsey routes must retain identical live parent objects, physical
-bounds, and fingerprints. Dimensions and bounds must be reported from those
-live objects rather than inferred from the padding-10 evidence.
+and strictly positive. For each authorized padding/tail-spacing combination,
+the independently constructed PQS and White-Lindsey routes must retain
+identical live parent objects, physical bounds, and fingerprints. The resolved
+tail spacing must agree with the live parent setup and every live mapping.
+Dimensions and bounds must be reported from those live objects rather than
+inferred from the padding-10 evidence.
 
 The driver may consume the live PGDG axis overlap and kinetic matrices,
 analytic high135 nuclear Gaussian factors at the two physical centers, and
@@ -376,8 +397,9 @@ schema, payload, metadata family, or report-carried basis.
 
 ### Implementation And Acceptance Limits
 
-- The accepted terminal driver is `150` lines. Preferred final size after the
-  parent row is at most `225` lines; the hard limit is `250`.
+- The accepted full-parent driver is `248` lines. Tail-spacing input plumbing
+  should use replacement edits with no net line increase when readable; the
+  hard limit remains `250` lines.
 - Added `src` lines, committed tests, probes, fixtures, modules, helper files,
   exports, status vocabularies, and adapters are all zero.
 - Do not copy the scratch parent oracle, sampled-density oracle,
@@ -397,7 +419,7 @@ julia --project=. bin/pqs_paper_h2_driver.jl \
     output_dir='"/tmp/pqs_paper_h2plus_R2"'
 ```
 
-The one authorized convergence control is:
+The accepted padding convergence control was:
 
 ```text
 julia --project=. bin/pqs_paper_h2_driver.jl \
@@ -416,8 +438,25 @@ dimensions, topology, bounds, actual padding, residuals, timing, allocations,
 and peak RSS for the control. No PQS-versus-White-Lindsey energy ordering is an
 acceptance criterion.
 
+The one authorized finer-tail control is:
+
+```text
+julia --project=. bin/pqs_paper_h2_driver.jl \
+    system=:h2plus method=:both R=2.0 padding=10.0 tail_spacing=2.0 \
+    output_dir='"/tmp/pqs_paper_h2plus_R2_tail2_clean"'
+```
+
+It must build the same matrix-free parent/PQS/White-Lindsey object with
+`ns=5`, `core_spacing=0.30`, `s_factor=1`, `source_span=:ordinary`, high135,
+and route-local `q=5/q=3`. Compare its three energies, reference and
+contraction errors, axes, dimensions, bounds, actual padding, shell/slab
+topology, warnings, residuals, timing, allocations, and peak RSS against the
+preserved `tail_spacing=2.8`, padding-10 rows. Report the shifts without
+imposing an energy ordering or convergence threshold.
+
 This authority changes no public input, canonical-driver behavior, numerical
 default, artifact schema, AddNest/exact-W/injection/PRF/external-RG/MWG/
 screening/EGOI behavior, or correlated-solver surface. H2, `Vee`, IDA,
-RHF/SCF, general padding or tail-spacing scans, geometry curves, supplements,
-PRFs, test changes, output-column changes, and new artifacts remain forbidden.
+RHF/SCF, capture studies, `q` ladders, general padding or tail-spacing scans,
+geometry curves, enrichment, supplements, PRFs, test changes, output-column
+changes, and new artifacts remain forbidden.
