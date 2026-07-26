@@ -6,7 +6,8 @@ const FIELDS = split("""
 system method R_bohr padding_bohr output_dir git_head git_dirty route route_q ns core_spacing s_factor mapping_s_standard mapping_s_effective mapping_types tail_spacing source_span
 coulomb_accuracy coulomb_terms coulomb_fingerprint parent_axes parent_bounds_bohr actual_transverse_padding_bohr actual_parallel_padding_bohr parent_dimension parent_fingerprint_sha256
 terminal_row_count topology direct_core_columns complete_shell_columns slab_columns compact_product_columns identity_columns final_dimension T_expectation_Ha U_left_expectation_Ha U_right_expectation_Ha H1_expectation_Ha
-electronic_energy_Ha second_eigenvalue_Ha eigen_gap_Ha nuclear_repulsion_Ha total_energy_Ha eigen_residual_Ha H1_symmetry_error_Ha construction_elapsed_s construction_allocated_bytes kinetic_elapsed_s kinetic_allocated_bytes nuclear_elapsed_s nuclear_allocated_bytes solve_elapsed_s solve_allocated_bytes total_elapsed_s total_allocated_bytes peak_rss peak_rss_units tsv_path report_path""")
+electronic_energy_Ha second_eigenvalue_Ha eigen_gap_Ha nuclear_repulsion_Ha total_energy_Ha eigen_residual_Ha H1_symmetry_error_Ha construction_elapsed_s construction_allocated_bytes kinetic_elapsed_s kinetic_allocated_bytes nuclear_elapsed_s nuclear_allocated_bytes solve_elapsed_s solve_allocated_bytes total_elapsed_s total_allocated_bytes peak_rss peak_rss_units tsv_path report_path overlap_identity_error independent_reference_total_Ha independent_reference_error_Ha parent_resolution_error_Ha contraction_error_Ha""")
+const REFERENCE_TOTAL = -0.6026342144949465
 values = Dict{Symbol,Any}(:system => :h2plus, :method => :both, :R => 2.0, :output_dir => "/tmp/pqs_paper_h2plus_R2", :padding => 10.0)
 function apply_inputs!(input)
     for (key, value) in pairs(input); name = Symbol(key)
@@ -32,9 +33,25 @@ nuclei = NTuple{3,Float64}[(0.0, 0.0, -R / 2), (0.0, 0.0, R / 2)]
 expansion = GB._cartesian_base_resolve_coulomb_expansion(:high); coulomb = GB._cartesian_coulomb_expansion_summary(:high, expansion)
 axis_data(axis) = (axis.basis.reference_center_data, axis.basis.center_data, axis.basis.integral_weight_data,
     axis.basis.coefficient_matrix, axis.centers, axis.weights, axis.overlap, axis.kinetic, axis.position, axis.x2)
-function parent_fingerprint(pgdg)
-    bytes = vcat((reinterpret(UInt8, vec(array)) for axis in pgdg for array in axis_data(axis))...)
-    return bytes2hex(sha256(bytes))
+parent_fingerprint(pgdg) = bytes2hex(sha256(vcat((reinterpret(UInt8, vec(array)) for axis in pgdg for array in axis_data(axis))...)))
+factor_term(factors, term) = factors isa AbstractArray{<:Real,3} ? @view(factors[term, :, :]) : factors[term]
+valid_parent_matrix(matrix) = all(isfinite, matrix) && norm(matrix - transpose(matrix), Inf) <= 1.0e-10
+function mode_product(matrix, tensor, axis)
+    order = axis == 1 ? (1, 2, 3) : axis == 2 ? (2, 1, 3) : (3, 1, 2)
+    moved = PermutedDimsArray(tensor, order)
+    product = matrix * reshape(moved, size(tensor, axis), :)
+    return permutedims(reshape(product, size(matrix, 1), size(tensor, order[2]), size(tensor, order[3])), invperm(order))
+end
+function product_apply(matrices, vector, dimensions)
+    tensor = reshape(vector, dimensions); for axis in 1:3; tensor = mode_product(matrices[axis], tensor, axis); end
+    return vec(tensor)
+end
+function inverse_sqrt(overlap)
+    decomposition = eigen(Symmetric(overlap))
+    minimum(decomposition.values) > 0 || error("parent overlap is not positive definite")
+    root = decomposition.vectors * Diagonal(inv.(sqrt.(decomposition.values))) * transpose(decomposition.vectors)
+    identity_error = norm(root * overlap * root - I, Inf); identity_error <= 1.0e-10 || error("parent overlap orthogonalization failed")
+    return root, identity_error
 end
 function run_method(nesting)
     q = nesting === :pqs ? 5 : 3
@@ -125,26 +142,107 @@ function run_method(nesting)
         "solve_allocated_bytes" => string(solved.bytes), "total_elapsed_s" => repr(elapsed),
         "total_allocated_bytes" => string(allocated), "peak_rss" => string(Sys.maxrss()),
         "peak_rss_units" => "diagnostic bytes (combined process; Julia Sys.maxrss; $(Sys.KERNEL))",
-        "tsv_path" => tsv_path, "report_path" => report_path)
+        "tsv_path" => tsv_path, "report_path" => report_path, "overlap_identity_error" => "not_applicable",
+        "independent_reference_total_Ha" => repr(REFERENCE_TOTAL), "independent_reference_error_Ha" => repr(electronic + inv(R) - REFERENCE_TOTAL),
+        "parent_resolution_error_Ha" => "unavailable", "contraction_error_Ha" => "unavailable")
     return (; row, due, pgdg, mappings)
 end
 requested = method === :both ? (:pqs, :wl) : (method,); results = [run_method(nesting) for nesting in requested]
 if length(results) == 2
-    results[1].row["parent_bounds_bohr"] == results[2].row["parent_bounds_bohr"] || error("independent parent bounds differ")
-    results[1].row["parent_fingerprint_sha256"] == results[2].row["parent_fingerprint_sha256"] || error("parent fingerprints differ")
-    all(axis_data(a) == axis_data(b) for (a, b) in zip(results[1].pgdg, results[2].pgdg)) || error("parent numerical objects differ")
+    pqs, wl = results
+    pqs.row["parent_bounds_bohr"] == wl.row["parent_bounds_bohr"] || error("independent parent bounds differ")
+    pqs.row["parent_fingerprint_sha256"] == wl.row["parent_fingerprint_sha256"] || error("parent fingerprints differ")
+    all(axis_data(a) == axis_data(b) for (a, b) in zip(pqs.pgdg, wl.pgdg)) || error("parent numerical objects differ")
+end
+function run_parent(template)
+    pgdg = template.pgdg; dimensions = ntuple(axis -> length(pgdg[axis].centers), 3)
+    dimensions == (21, 21, 29) || error("full-parent axes are not 21x21x29")
+    all(axis -> all(isfinite, axis.weights) && all(>(0), axis.weights), pgdg) || error("parent weights must be finite and strictly positive")
+    prepared = @timed begin
+        overlaps = ntuple(axis -> pgdg[axis].overlap, 3); kinetic = ntuple(axis -> pgdg[axis].kinetic, 3)
+        roots_and_errors = ntuple(axis -> inverse_sqrt(overlaps[axis]), 3); roots = ntuple(axis -> roots_and_errors[axis][1], 3)
+        factors = ntuple(center -> ntuple(axis -> GB._pqs_source_box_route_driver_centered_factor_terms(
+            pgdg[axis], expansion, nuclei[center][axis]), 3), 2)
+        for triple in (overlaps, kinetic, roots), matrix in triple
+            valid_parent_matrix(matrix) || error("parent axis operator is nonfinite or asymmetric")
+        end
+        for center in factors, axis in center, term in eachindex(expansion.coefficients)
+            valid_parent_matrix(factor_term(axis, term)) || error("parent nuclear factor is nonfinite or asymmetric")
+        end
+        (; overlaps, kinetic, roots, overlap_error = maximum(last.(roots_and_errors)), factors)
+    end
+    overlaps, kinetic = prepared.value.overlaps, prepared.value.kinetic
+    roots, factors = prepared.value.roots, prepared.value.factors
+    orthogonalize(vector) = product_apply(roots, vector, dimensions)
+    raw_kinetic(vector) = product_apply((kinetic[1], overlaps[2], overlaps[3]), vector, dimensions) +
+        product_apply((overlaps[1], kinetic[2], overlaps[3]), vector, dimensions) +
+        product_apply((overlaps[1], overlaps[2], kinetic[3]), vector, dimensions)
+    function raw_nuclear(vector, center)
+        out = zeros(Float64, prod(dimensions)); for term in eachindex(expansion.coefficients)
+            out .-= expansion.coefficients[term] .* product_apply(
+                ntuple(axis -> factor_term(factors[center][axis], term), 3), vector, dimensions)
+        end
+        return out
+    end
+    orthogonal_component(raw, vector) = orthogonalize(raw(orthogonalize(vector)))
+    raw_h(vector) = raw_kinetic(vector) + raw_nuclear(vector, 1) + raw_nuclear(vector, 2)
+    apply_h!(out, vector) = copyto!(out, orthogonal_component(raw_h, vector))
+    solved = @timed GB._lanczos_ground_state_apply(apply_h!, prod(dimensions); tol = 1.0e-10)
+    orbital, electronic = solved.value.vector, solved.value.value; reapplied = similar(orbital); apply_h!(reapplied, orbital)
+    residual = norm(reapplied - electronic .* orbital); residual <= 1.0e-9 || error("recomputed full-parent residual gate failed: $residual")
+    kinetic_result = @timed orthogonal_component(raw_kinetic, orbital)
+    nuclear_results = @timed ntuple(center -> orthogonal_component(v -> raw_nuclear(v, center), orbital), 2)
+    T_expectation = dot(orbital, kinetic_result.value); U_left, U_right = ntuple(center -> dot(orbital, nuclear_results.value[center]), 2)
+    H1_expectation = dot(orbital, reapplied)
+    isapprox(H1_expectation, T_expectation + U_left + U_right; atol = 1.0e-10, rtol = 0) || error("parent one-body decomposition does not close")
+    isapprox(U_left, U_right; atol = 1.0e-10, rtol = 0) || error("parent nuclear expectations break inversion symmetry")
+    probe_a = normalize!(sin.(0.017 .* (1:prod(dimensions))) .+ 0.31 .* cos.(0.029 .* (1:prod(dimensions))))
+    probe_b = normalize!(cos.(0.023 .* (1:prod(dimensions))) .- 0.27 .* sin.(0.037 .* (1:prod(dimensions))))
+    h_a, h_b = similar(probe_a), similar(probe_b); apply_h!(h_a, probe_a); apply_h!(h_b, probe_b)
+    symmetry = abs(dot(probe_a, h_b) - dot(h_a, probe_b)); symmetry <= 1.0e-10 || error("full-parent matrix-free H1 symmetry gate failed")
+    row = copy(template.row)
+    foreach(field -> row[field] = "not_applicable", ("terminal_row_count", "direct_core_columns", "complete_shell_columns", "slab_columns", "compact_product_columns", "identity_columns"))
+    merge!(row, Dict(
+        "method" => "parent", "route" => "full_pgdg_parent", "route_q" => "not_applicable",
+        "topology" => "full_parent", "final_dimension" => string(prod(dimensions)),
+        "T_expectation_Ha" => repr(T_expectation), "U_left_expectation_Ha" => repr(U_left),
+        "U_right_expectation_Ha" => repr(U_right), "H1_expectation_Ha" => repr(H1_expectation),
+        "electronic_energy_Ha" => repr(electronic), "second_eigenvalue_Ha" => "unavailable",
+        "eigen_gap_Ha" => "unavailable", "total_energy_Ha" => repr(electronic + inv(R)),
+        "eigen_residual_Ha" => repr(residual), "H1_symmetry_error_Ha" => repr(symmetry),
+        "construction_elapsed_s" => repr(prepared.time), "construction_allocated_bytes" => string(prepared.bytes),
+        "kinetic_elapsed_s" => repr(kinetic_result.time), "kinetic_allocated_bytes" => string(kinetic_result.bytes),
+        "nuclear_elapsed_s" => repr(nuclear_results.time), "nuclear_allocated_bytes" => string(nuclear_results.bytes),
+        "solve_elapsed_s" => repr(solved.time), "solve_allocated_bytes" => string(solved.bytes),
+        "total_elapsed_s" => repr(prepared.time + solved.time + kinetic_result.time + nuclear_results.time),
+        "total_allocated_bytes" => string(prepared.bytes + solved.bytes + kinetic_result.bytes + nuclear_results.bytes),
+        "peak_rss" => string(Sys.maxrss()), "overlap_identity_error" => repr(prepared.value.overlap_error)))
+    return (; row, due = nothing, pgdg, mappings = template.mappings)
+end
+if method === :both
+    parent = run_parent(results[1]); results = vcat([parent], results)
+    parent_total = parse(Float64, parent.row["total_energy_Ha"])
+    for result in results
+        total = parse(Float64, result.row["total_energy_Ha"])
+        result.row["independent_reference_error_Ha"] = repr(total - REFERENCE_TOTAL)
+        result.row["parent_resolution_error_Ha"] = repr(parent_total - REFERENCE_TOTAL)
+        result.row["contraction_error_Ha"] = result === parent ? "not_applicable" : repr(total - parent_total)
+        total + 1.0e-10 >= parent_total || error("terminal energy is below the full-parent energy")
+    end
 end
 open(tsv_path, "w") do io
-    println(io, join(FIELDS, '\t'))
-    foreach(result -> println(io, join((result.row[field] for field in FIELDS), '\t')), results)
+    println(io, join(FIELDS, '\t')); foreach(result -> println(io, join((result.row[field] for field in FIELDS), '\t')), results)
 end
 open(report_path, "w") do io
     println(io, "Matched source-box-first PQS / White-Lindsey two-center H2+ one-body gate")
     for result in results
         println(io, "\n[", result.row["method"], "]")
         foreach(field -> println(io, field, " = ", result.row[field]), FIELDS)
-        println(io, "parent_mappings = ", result.mappings, "\nterminal_due_diligence =")
-        show(IOContext(io, :limit => false, :compact => false, :displaysize => (10000, 120)), MIME"text/plain"(), result.due); println(io)
+        println(io, "parent_mappings = ", result.mappings)
+        if !isnothing(result.due); println(io, "terminal_due_diligence =")
+            show(IOContext(io, :limit => false,
+                :compact => false, :displaysize => (10000, 120)), MIME"text/plain"(), result.due); println(io)
+        end
     end
 end
 println("TSV: ", tsv_path, "\nreport: ", report_path)
