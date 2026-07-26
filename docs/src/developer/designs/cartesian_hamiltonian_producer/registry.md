@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `25ae9c0f6bbdbe098ffe7205e3df9a02582d96b7c359b11e1c9f5b4fa5e384d0`.
+> [authority.toml](authority.toml), SHA-256 `37a3925765a8a95827f5dfa3f2e7e001fa41594dff5aeaf0ab5334ebc460d4e6`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1483,8 +1483,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `432`
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/provenance/h2plus_R2_tail2_clean_2026-07-26/`
   - `manager_pass`: `433`
-- **Dependencies:** none
-- **Scope:** Extend only the existing private \`bin/pqs\_paper\_h2\_driver.jl\` H2+ gate with one full-parent-state capture diagnostic at R=2, padding=10.0, tail\_spacing=2.8, and method=:both. Reuse the normalized matrix-free parent eigenvector, axis overlap inverse roots, and actual support-local terminal blocks; apply \`S^(1/2)\` through the existing one-dimensional \`S\_axis\*X\_axis\` products and never form a dense parent-by-terminal matrix. Add exactly \`parent\_ground\_state\_norm\`, \`terminal\_capture\_fraction\`, \`terminal\_lost\_norm\`, and \`capture\_closure\_error\` to the existing TSV/report; keep variable regional capture/loss only in the readable report, keyed by physical shell/region and full slab identity. Validate one shared parent state, exact support partition, due-row/block native-order and column-range parity, capture bounds, terminal-orthogonal residual, global norm closure, and regional capture/loss closure. Retain the exact existing R=2 \`(padding,tail\_spacing)\` combinations, matrix-free parent, PQS q=5, White-Lindsey q=3, high135, frozen-reference, residual, T/U decomposition, and complete due diligence. Prefer \<=300 and require \<=315 driver lines, with 35-45 added bin lines expected and zero added src/test lines. No new ID, input mode, output file, payload, artifact, schema family, helper, dependency, numerical-construction or terminal-coefficient change, H2, Vee, IDA, RHF/SCF, capture at another campaign point, q ladder, general scan, geometry curve, enrichment, supplement, PRF, screening, EGOI, public API, or framework.
+  - `git_commit`: `1e373d0c1`
+  - `manager_pass`: `434`
+  - `external_path`: `/Users/srw/Dropbox/Papers/PQS/validation/h2_supplemented_one_body_preflight_contract_2026-07-26.md`
+  - `manager_pass`: `435`
+- **Dependencies:** `HP-CGRB-NN-FN-01`, `HP-COMP-SUPPWL-FN-01`, `HP-PQS-COULOMB-ACCURACY-FN-01`, `HP-R3-FN-01`, `HP-R3-FN-02`, `HP-R3U-ZDI-FN-01`, `HP-RG-CUTOFF-FN-02`
+- **Scope:** Extend only the existing private \`bin/pqs\_paper\_h2\_driver.jl\` from its implemented H2+ parent/PQS/WL and capture gates to one neutral-metadata supplemented one-body preflight at R=2, padding=10.0, tail\_spacing=2.8, and method=:both. Preserve the accepted bare rows and append exactly \`pqs\_supplemented\` and \`wl\_supplemented\` using nup=1, ndn=1, the same physical parent, contracted bundled H/cc-pVTZ on both centers, lmax=1, uncontracted=false, no width filter, and the production residual cutoff 1.0e-6. Reuse the existing neutral supplemented working-basis, supplement loader, owner-local residual builder, and exact augmented kinetic/by-center nuclear owners; assemble and solve only the two-proton H1. Validate exact ordered supplement identity, metric conditioning, parent and bare-terminal capture, owner residual spectra/rank/cutoff margins, G-R and augmented identity, bare G-G parity, finite symmetric exact matrices, eigen-residual, variational energy, complete due diligence, and one shared parent/supplement across routes. Parent capture may use a bounded parent-by-supplement cross overlap and separable parent inverse; no generalized parent augmentation is allowed. Add exactly the ten fixed supplement/residual fields named by the canonical contract and keep variable details readable-report-only. Prefer \<=400 and require \<=425 driver lines, with 75-110 added bin lines expected and zero added src/test/tool/helper-file lines. No new ID, general input, output file, payload, artifact, schema family, source helper, committed test/probe/fixture, Vee, IDA/MWG interpretation, RHF/SCF, same-state interaction, cutoff or supplement scan, other H2 endpoint, q ladder, geometry curve, enrichment, PRF, screening, EGOI, public API, canonical-driver change, or framework.
 
 ### HP-PQS-PARENT-GDIRECT-FN-01 - parent-backed Gaussian direct interaction
 

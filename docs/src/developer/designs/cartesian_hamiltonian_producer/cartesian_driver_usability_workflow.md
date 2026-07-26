@@ -3,7 +3,8 @@
 Status: implemented canonical contract for the human-facing Cartesian
 Hamiltonian driver and its non-exported staged producer calls, plus one
 approved private PQS/WL paper-validation driver with an implemented H2+
-endpoint. Registry entries own
+endpoint and one approved neutral-H2 supplemented one-body preflight.
+Registry entries own
 the lifecycle and source permissions for the corresponding IDs. Driver
 validation IDs without committed fixtures are completed evidence or explicitly
 named probe records, not continuing test authority.
@@ -205,7 +206,8 @@ bin/pqs_paper_h2_driver.jl
 ```
 
 This script is private to the matched full-parent/White-Lindsey/PQS H2+ paper
-campaign. H2 remains outside the current implementation authority.
+campaign and the one frozen neutral-H2 supplemented one-body preflight below.
+All other H2 endpoints remain outside the current implementation authority.
 It is not a public API, a general paper-driver framework, a replacement for
 `cartesian_ham_builder.jl`, or a source of producer defaults. It may be removed
 after the campaign if no durable use remains.
@@ -213,7 +215,7 @@ after the campaign if no durable use remains.
 ### Required Construction
 
 The public base facade requires neutral H2 and therefore is not the H2+
-construction boundary. For each requested method, the script must carry the
+construction boundary. For each bare H2+ method, the script must carry the
 actual two-center system, with `nup=1`, `ndn=0`, and nuclei at
 `(0,0,-R/2)` and `(0,0,R/2)`, through the existing staged multicenter route:
 
@@ -242,9 +244,12 @@ and fingerprints. The script must validate route identity and live objects
 rather than infer them from labels.
 
 Physical nuclear attraction must use the actual two centers through the
-existing arbitrary-center kernel. The script must not use the public neutral
-diatomic facade, `pqs_source_shell_realization_final_basis`, CPBM source-shell
-bridge/readiness paths, or shell/support-row compatibility materialization.
+existing arbitrary-center kernel. The bare H2+ route must not use the public
+neutral diatomic facade. No route may use
+`pqs_source_shell_realization_final_basis`, CPBM source-shell bridge/readiness
+paths, or shell/support-row compatibility materialization. The supplemented
+preflight instead uses the existing neutral supplemented working-basis seam
+exactly as specified below; this is not a neutral-facade workaround for H2+.
 
 The frozen paper defaults are:
 
@@ -293,7 +298,7 @@ padding-20 control is evidence only at `tail_spacing=2.8`; the
 The allowed controls remain only:
 
 ```text
-system = :h2plus
+system = :h2plus | :h2
 method = :pqs | :wl | :both
 R
 output_dir
@@ -303,9 +308,11 @@ optional trusted config include
 name=value overrides for these approved inputs
 ```
 
-The driver records every resolved input. It is not a mapping, `q`,
-source-span, supplement, Coulomb-policy, padding, tail-spacing, or general
-parameter scanner.
+`system=:h2` is valid only for the frozen supplemented preflight with
+`method=:both`, `R=2`, `padding=10.0`, and `tail_spacing=2.8`. The driver
+records every resolved input. It is not a mapping, `q`, source-span,
+supplement, Coulomb-policy, padding, tail-spacing, or general parameter
+scanner.
 
 ### Mandatory Full-Parent Reference Row
 
@@ -356,7 +363,7 @@ lowest state.
 
 ### Full-Parent State Capture
 
-One capture diagnostic is approved only for `R=2`, `padding=10.0`,
+The implemented capture diagnostic is limited to `R=2`, `padding=10.0`,
 `tail_spacing=2.8`, and `method=:both`. It measures how much of the normalized
 full-parent ground state is retained by the frozen PQS `q=5` and
 White-Lindsey `q=3` terminal spans. It changes neither terminal construction
@@ -418,10 +425,137 @@ reported without an ordering gate. The White-Lindsey
 `source_mode_shape`-unavailable advisory remains truthful and must not be
 replaced with a fabricated PQS-only field.
 
+### Supplemented H2 One-Body Preflight
+
+One private supplemented endpoint is approved only for:
+
+```text
+system = :h2
+method = :both
+R = 2.0
+padding = 10.0
+tail_spacing = 2.8
+nup = 1
+ndn = 1
+```
+
+The neutral electron metadata is required by the existing supplemented
+producer. The endpoint stops after exact one-body assembly, so its operator is
+the same two-proton operator as the accepted H2+ rows. It must be described as
+a neutral-metadata supplemented one-body preflight, not as a charged
+supplemented H2+ production calculation.
+
+The run preserves the accepted bare `parent`, `pqs`, and `wl` rows and adds
+exactly `pqs_supplemented` and `wl_supplemented` rows. Bare and supplemented
+rows must use the same physical parent settings and live parent fingerprint.
+The supplemented rows must use the existing neutral
+`cartesian_base_working_basis(...; supplemented=true)` path and existing
+residual/augmented-operator owners. They must not reconstruct the terminal
+basis, residual algorithm, or exact operators in the driver.
+
+The supplement is frozen and has no new user controls:
+
+```text
+basis_by_center = ["cc-pVTZ", "cc-pVTZ"]
+lmax = 1
+uncontracted = false
+width_filtering = nothing
+basisfile = nothing
+residual_occupation_cutoff = 1.0e-6
+```
+
+Omitting `basisfile` means the bundled trusted legacy `BasisSets` data. The
+same ordered raw supplement must be used for both routes. Validate and report
+its labels, Cartesian angular powers, centers, owner assignment, primitive
+exponents and contraction coefficients, exact self-overlap, conditioning, and
+one deterministic fingerprint. Historical candidate or retained counts are
+not acceptance constants.
+
+Let `A` be the ordered raw supplement, `S_AA=<A|A>`,
+`B=<parent|A>`, and `X=<G|A>` for the bare terminal basis. After validating
+positive supplement rank without eigenvalue flooring, report the metric-aware
+capture operators
+
+```text
+K_parent = S_AA^(-1/2) B' S_parent^(-1) B S_AA^(-1/2)
+K_terminal = S_AA^(-1/2) X' X S_AA^(-1/2)
+```
+
+and their singular/capture spectra. Apply `S_parent^(-1)` through the existing
+separable axis factors. A bounded parent-by-supplement cross overlap from the
+existing non-nuclear raw-block owner is allowed; a dense parent overlap,
+generalized parent-plus-supplement solve, or new parent augmentation is not.
+
+For each physical owner, independently inspect
+
+```text
+M_a = S_AA[a,a] - X[:,a]' X[:,a]
+```
+
+and require its retained rank and occupations to match the existing
+owner-local residual builder at the production cutoff `1.0e-6`. Report the
+complete owner spectra, minimum retained occupation, maximum discarded
+occupation, and cutoff margins. A numerically marginal direction is a stop
+condition; it is not permission to switch to the numerical-complete
+`1.0e-10` policy, floor an eigenvalue, or inject a direction.
+
+Build the exact augmented kinetic and by-center unit-nuclear matrices only
+through:
+
+```text
+cartesian_residual_gto_supplement_basis
+cartesian_residual_gto_augmentation
+cartesian_residual_gto_augmented_products
+cartesian_residual_gto_augmented_unit_nuclear
+```
+
+The trusted bare kinetic and unit-nuclear blocks may be passed through their
+existing keywords. Assemble the two-proton `H1` directly from those exact
+matrices. Do not call `cartesian_base_vee`,
+`cartesian_residual_gto_augmented_vee`, or a Hamiltonian assembly owner.
+Require finite symmetric kinetic, both nuclear matrices, and `H1`; bare
+`G-G` block parity; terminal-residual orthogonality; augmented-overlap
+identity; lowest-state residual; and a variational augmented one-body energy
+relative to the corresponding bare terminal row.
+
+The existing private TSV/report may add exactly:
+
+```text
+supplement_fingerprint_sha256
+supplement_candidate_count
+supplement_parent_capture_min_sv
+supplement_terminal_capture_min_sv
+residual_occupation_cutoff
+residual_dimension
+residual_min_retained_occupation
+residual_max_discarded_occupation
+terminal_residual_orthogonality_error
+bare_terminal_energy_change_Ha
+```
+
+Use the existing `final_dimension`, `overlap_identity_error`, one-body
+decomposition, symmetry, residual, timing, allocation, RSS, and path fields.
+Nonapplicable rows must say so explicitly. Complete raw-supplement identity,
+capture spectra, owner spectra/ranks/margins, base/residual/augmented
+dimensions, operator dimensions/fingerprints, and due diligence belong in the
+readable report only. Do not dump full matrices or add an output file, payload,
+artifact, or schema family.
+
+The preflight passes only if both routes use the same parent and exact raw
+supplement; loading and ownership close; capture spectra are finite and
+physical; production residual selection is reproduced; all metric, symmetry,
+identity, residual, and variational gates pass; and the report cleanly
+separates parent capture, terminal contraction, and external residual content.
+Stop after this one-body comparison. Any `Vee`, IDA/MWG, same-state
+interaction, RHF/SCF, cutoff control, or supplement variation requires later
+authority.
+
 ### Endpoints And Output
 
-The endpoint is the three-row lowest-`H1` H2+ comparison. It builds no `Vee`,
-IDA, H2, RHF/SCF object, or Hamiltonian artifact.
+The implemented endpoint is the three-row lowest-`H1` H2+ comparison. The
+approved next endpoint is the five-row bare-plus-supplemented one-body
+preflight above. Neither builds `Vee`, IDA/MWG, RHF/SCF, or a Hamiltonian
+artifact.
 
 Each method writes one compact TSV row and a readable text report containing
 the resolved configuration, git commit and dirty state, dimensions, shell
@@ -462,9 +596,9 @@ schema, payload, metadata family, or report-carried basis.
 
 ### Implementation And Acceptance Limits
 
-- The accepted full-parent driver is `248` lines. The capture extension is
-  expected to add `35-45` `bin` lines; the preferred final size is at most
-  `300` lines and the hard limit is `315` lines.
+- The accepted capture-enabled driver is `299` lines. The supplemented
+  preflight is expected to add `75-110` `bin` lines; the preferred final size
+  is at most `400` lines and the hard limit is `425` lines.
 - Added `src` lines, committed tests, probes, fixtures, modules, helper files,
   exports, status vocabularies, and adapters are all zero.
 - Do not copy the scratch parent oracle, sampled-density oracle,
@@ -532,9 +666,24 @@ report the four fixed capture fields plus the readable regional breakdown.
 The capture implementation is accepted only if all support, native-order,
 orthogonality, global-closure, and regional-closure gates above pass.
 
+The authorized supplemented preflight command is:
+
+```text
+julia --project=. bin/pqs_paper_h2_driver.jl \
+    system=:h2 method=:both R=2.0 padding=10.0 tail_spacing=2.8 \
+    output_dir='"/tmp/pqs_paper_h2_supplemented_one_body_clean"'
+```
+
+Run it from a clean worktree. It must preserve the accepted bare rows, append
+the two supplemented rows, include complete terminal due diligence for both
+routes, and satisfy every supplement, capture, residual-rank, exact one-body,
+and variational gate above.
+
 This authority changes no public input, canonical-driver behavior, numerical
 default, artifact schema, AddNest/exact-W/injection/PRF/external-RG/MWG/
-screening/EGOI behavior, or correlated-solver surface. H2, `Vee`, IDA,
-RHF/SCF, capture at any other campaign point, `q` ladders, general padding or
-tail-spacing scans, geometry curves, enrichment, supplements, PRFs, test
-changes, additional output columns, and new artifacts remain forbidden.
+screening/EGOI behavior, or correlated-solver surface. H2 beyond this exact
+neutral-metadata one-body preflight, `Vee`, IDA/MWG interpretation, RHF/SCF,
+capture at any other campaign point, `q` ladders, general padding or
+tail-spacing scans, geometry curves, enrichment, supplement variation, PRFs,
+test changes, additional output columns beyond the exact list above, and new
+artifacts remain forbidden.

@@ -40,7 +40,7 @@ claim.
 
 | Lane | State | Exact next boundary |
 | --- | --- | --- |
-| `HP-PQS-PAPER-H2-DRV-FN-01` | Full-parent/PQS/WL H2+ gate, padding control, and finer-tail control accepted; one fixed parent-state capture diagnostic approved pending | At `R=2`, `padding=10.0`, `tail_spacing=2.8`, project the shared full-parent ground state into both terminal spans and report global/regional capture closure |
+| `HP-PQS-PAPER-H2-DRV-FN-01` | Full-parent/PQS/WL H2+ gate, box/tail controls, and parent-state capture implemented; one frozen neutral-H2 supplemented one-body preflight approved pending | At `R=2`, `padding=10.0`, `tail_spacing=2.8`, add the contracted H/cc-pVTZ `s,p` supplement at the production `1e-6` residual cutoff and compare exact augmented PQS/WL one-body states |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
@@ -53,19 +53,20 @@ historical audit IDs are not active work.
 
 ## Current Physics Target
 
-The full-parent/PQS/White-Lindsey H2+ rows at `R=2` completed the bounded
-padding and tail controls; `padding=10.0` and `tail_spacing=2.8` remain the
-campaign settings. The next target measures how much of the shared normalized
-matrix-free parent ground state is retained by the PQS `q=5` and
-White-Lindsey `q=3` terminal spans at that one accepted point. It reports four
-fixed global fields and a readable physical shell/slab breakdown, without a
-PQS-versus-White-Lindsey ordering gate.
+The full-parent/PQS/White-Lindsey H2+ rows at `R=2` completed the bounded box,
+tail, and parent-state capture controls; `padding=10.0` and
+`tail_spacing=2.8` remain the campaign settings. The next target uses neutral
+H2 metadata only to enter the existing supplemented producer, then adds the
+same contracted H/cc-pVTZ `s,p` supplement to the matched PQS `q=5` and
+White-Lindsey `q=3` terminal bases. It uses no width filter, retains residual
+directions only above the production `1e-6` cutoff, and stops after exact
+augmented one-body assembly and the lowest-state solve.
 
-This endpoint builds no `Vee` or IDA, runs no RHF/SCF, and writes no artifact.
-The `padding=20.0`, `tail_spacing=2.0` combination, H2, general padding/
-tail-spacing scans, capture at other campaign points, `q` ladders, and
-geometry curves remain forbidden. This changes no canonical driver, public
-facade, producer default, artifact schema family, or solver API.
+This preflight builds no `Vee` or IDA/MWG object, runs no RHF/SCF, and writes
+no artifact. The `padding=20.0`, `tail_spacing=2.0` combination, other H2
+endpoints, supplement or cutoff scans, capture at other campaign points, `q`
+ladders, and geometry curves remain forbidden. This changes no canonical
+driver, public facade, producer default, artifact schema family, or solver API.
 
 ## Current Blockers And Follow-Ups
 

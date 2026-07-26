@@ -35,7 +35,9 @@ archaeology and are not normal startup reading.
   full-parent/PQS/White-Lindsey H2+ paper point at `R=2` is box-converged under
   the accepted padding-10/20 control; padding `10` remains the campaign value.
   The finer `tail_spacing=2.0` control is complete and favors retaining `2.8`;
-  one fixed parent-state terminal-capture diagnostic is the next bounded step.
+  the fixed parent-state capture diagnostic is complete. The next bounded step
+  is a neutral-metadata H2 one-body preflight with the frozen contracted
+  H/cc-pVTZ `s,p` supplement and production residual cutoff.
 - Fixed-parent shell-q/PRF measurements now also support an internal
   parent-residual basis facility and direct-only parent-backed Gaussian
   interaction resource. Physical target selection, transition-density
@@ -75,12 +77,14 @@ separate scientific choice.
 **MT3 - Approved pending producer facilities (active).** The private matched
 matrix-free parent/PQS/WL H2+ point and padding-10/20 control are complete;
 padding `10` is retained. The approved `tail_spacing=2.8/2.0` control is also
-complete and favors `2.8`. One parent-ground-state capture diagnostic at the
-accepted `R=2`, padding-10, tail-2.8 point is approved next; a fixed-parent
-accuracy/dimension ladder remains separate. H2/Vee/RHF and general scans
-remain forbidden. Standard60 and canonical-driver Coulomb exposure remain
-separate. The retained-GTO EGOI helper remains pending and must not absorb the
-unrelated `hamiltonian_corrections.jl` WIP without review.
+complete and favors `2.8`; the parent-ground-state capture diagnostic at the
+accepted point is complete. One frozen neutral-H2 supplemented one-body
+preflight is approved next, using contracted H/cc-pVTZ `s,p`, no width filter,
+and the production `1e-6` residual cutoff. H2 interaction/RHF, supplement and
+cutoff scans, and fixed-parent ladders remain separate. Standard60 and
+canonical-driver Coulomb exposure remain separate. The retained-GTO EGOI
+helper remains pending and must not absorb the unrelated
+`hamiltonian_corrections.jl` WIP without review.
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
@@ -1281,3 +1285,61 @@ Carrying-cost accounting:
 - validation: package load, authority check/self-test, endpoint gates,
   independent TSV/regional closure, clean-worktree replay, scoped diff, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 435 - Authorize Supplemented H2 One-Body Preflight
+
+Commit(s):
+- this commit - amend the existing private paper-driver authority for one
+  frozen neutral-H2 supplemented one-body endpoint.
+
+Summary:
+- Pass 434 closed the parent-state diagnostic at the accepted H2+ point:
+  PQS/WL capture fractions are `0.9999709356338488` and
+  `0.9991007020512097`, with exact regional/support closure and no enrichment
+  decision. The next gate therefore adds the established Gaussian supplement
+  while preserving one-body isolation.
+- `HP-PQS-PAPER-H2-DRV-FN-01` now permits exactly neutral H2 metadata at
+  `R=2`, padding `10`, tail spacing `2.8`, matched PQS `q=5`/WL `q=3`, and the
+  bundled contracted H/cc-pVTZ `s,p` supplement with no width filter.
+  Residual selection remains owner-local at the production `1e-6` cutoff.
+
+Goal advancement / guardrail:
+- LT3 and MT3 advance from terminal capture to exact augmented one-body
+  behavior. Parent/terminal supplement capture, owner residual spectra, exact
+  augmented kinetic/by-center nuclear matrices, overlap identity, and lowest
+  one-body states are required. The full parent remains capture-only; no
+  generalized parent augmentation, `Vee`, IDA/MWG interpretation, RHF/SCF,
+  artifact, public input, or supplement/cutoff scan is authorized.
+
+Carrying-cost accounting:
+- deleted: none in this docs-only authority pass.
+- simplified: the private driver reuses the existing supplemented facade,
+  residual builder, and exact augmented operators rather than adding a source
+  helper or second composition path.
+- quarantined: variable supplement/capture/rank detail remains readable-report
+  only.
+- not deleted because: the 299-line driver remains the bounded reproducible
+  paper route.
+- exact remaining caller/blocker: implement the five-row preflight within the
+  preferred `400`/hard `425` line limit and run its clean `R=2` gate.
+- added/deleted `src` lines: `0/0`; new tests: none.
+- new metadata/status fields: none; ten private TSV/report fields are approved.
+- validation: authority check/self-test, generated-view parity, docs tests,
+  Documenter, manager-log bound, staged scope, and `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 435
+
+- **MT1 conformance remediation - active.** Unchanged; this paper endpoint does
+  not close a Pass 398 discrepancy.
+- **MT2 controlled Cr2 source migration - completed.** Unchanged.
+- **MT3 approved pending facilities - active.** Box, tail, and capture controls
+  are complete. The next gate is only the frozen supplemented H2 one-body
+  preflight; interaction and orbital relaxation remain closed.
+- **MT4 residual/protected evidence - active.** The endpoint consumes the
+  production residual policy without changing cutoff, injection, protection,
+  or interpretation.
+- **MT5 authority maintenance - maintenance.** The new scope stays on one
+  existing ID, canonical page, and driver path.
+- **MT6 carrying-cost control - active.** Zero source/test/helper files are
+  approved; implementation must reuse current numerical owners and remain
+  within the private-driver line ceiling.
