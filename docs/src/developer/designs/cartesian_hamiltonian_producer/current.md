@@ -40,7 +40,7 @@ claim.
 
 | Lane | State | Exact next boundary |
 | --- | --- | --- |
-| `HP-PQS-PAPER-H2-DRV-FN-01` | PQS/WL terminal rows implemented; mandatory full-parent H2+ row approved pending | Extend only `bin/pqs_paper_h2_driver.jl` so `method=:both` reports matrix-free full parent, PQS `q=5`, and WL `q=3` against the frozen `R=2` reference |
+| `HP-PQS-PAPER-H2-DRV-FN-01` | Full-parent/PQS/WL H2+ gate implemented and accepted; one padding control approved pending | Replace only the padding-10 fixed-axis assertion, then compare the same three `R=2` rows at `padding=10.0/20.0` with live parent validation |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
@@ -53,15 +53,17 @@ historical audit IDs are not active work.
 
 ## Current Physics Target
 
-The terminal White-Lindsey/PQS H2+ rows at `R=2` are implemented. The next
-bounded target is the mandatory full `21 x 21 x 29` PGDG parent row from that
-same live parent, applied separably without a dense `12789 x 12789` matrix.
-The three-row result must report independent-reference, parent-resolution, and
-terminal-contraction errors against `-0.6026342144949465 Ha`.
+The full-parent/PQS/White-Lindsey H2+ rows at `R=2`, `padding=10.0` are
+implemented and accepted. The next bounded target is one padding-only
+convergence control at `padding=20.0`. The parent remains matrix-free, PQS/WL
+remain `q=5/q=3`, and all dimensions and bounds come from the live construction
+rather than the accepted padding-10 `21 x 21 x 29` evidence. Each of the three
+energy shifts has a provisional `0.01 mHa` tolerance.
 
 This endpoint builds no `Vee` or IDA, runs no RHF/SCF, and writes no artifact.
-H2 remains forbidden in the current pass. This changes no canonical driver,
-public facade, producer default, artifact schema, or solver API.
+H2, general padding/tail-spacing scans, and geometry curves remain forbidden in
+the current pass. This changes no canonical driver, public facade, producer
+default, artifact schema, output columns, or solver API.
 
 ## Current Blockers And Follow-Ups
 

@@ -11,7 +11,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driv
 sha256 = "92b4bd4d84f9b551cff8b5b718383185cbfc7712f524a3ef1f8a3dc965ae5626"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driver_usability_workflow.md"
-sha256 = "e39643ebe0f11efb0f8778926e73071359e68e0d9999b30b264283d534f8922f"
+sha256 = "e420e68a151357d37fe53c091f84cad5807542658f6bf67d29f8528ff8ef3ddf"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md"
 sha256 = "2d8737bf799822f293243d99a0d02cf17e92d9e958685c362f84870f2a89f7c1"
@@ -2359,7 +2359,7 @@ dependency_ids = []
 grant = "implementation"
 id = "HP-PQS-PAPER-H2-DRV-FN-01"
 lifecycle = "approved"
-scope = "Extend only the existing private `bin/pqs_paper_h2_driver.jl` H2+ gate so `method=:both` emits one shared-parent three-row comparison: matrix-free full `21x21x29` PGDG parent, PQS q=5, and White-Lindsey q=3. The parent row may use live axis overlap/kinetic data, analytic centered high135 factors, axis-wise symmetric overlap orthogonalization, small file-local mode-product applies, and the existing apply-based Lanczos routine; it must independently recompute the residual and T/U decomposition and report reference/resolution/contraction errors against -0.6026342144949465 Ha. Final driver size is preferred <=225 and hard <=250 lines. No H2, Vee, IDA, RHF/SCF, scan, source/test/tool/helper-file change, dependency, dense parent matrix, generalized eigensolver, quadrature, framework, public API, artifact, supplement, PRF, screening, EGOI, or schema work."
+scope = "Extend only the existing private `bin/pqs_paper_h2_driver.jl` H2+ gate for the exact R=2 padding=10.0/20.0 convergence pair. Replace the padding-10 `21x21x29` equality with validation of live positive odd axis counts, dimension-product consistency, finite positive parent weights, and identical PQS/White-Lindsey parent objects and fingerprints; retain the matrix-free parent, PQS q=5, White-Lindsey q=3, high135, frozen-reference, residual, T/U decomposition, due-diligence, and existing-output contracts. Final driver size remains hard <=250 lines, with no added source lines preferred. No H2, Vee, IDA, RHF/SCF, general padding or tail-spacing scan, geometry curve, source/test/tool/helper-file change, dependency, dense parent matrix, generalized eigensolver, quadrature, framework, public API, artifact, output-column change, supplement, PRF, screening, EGOI, or schema work."
 surfaces = ["driver"]
 title = "private matched PQS/WL H2 paper driver"
 
@@ -2380,6 +2380,18 @@ title = "private matched PQS/WL H2 paper driver"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "427"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "171e2f368"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "428"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/provenance/h2plus_R2_full_parent_clean_2026-07-25/"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "429"
 
     [[records.paths]]
     kind = "driver"

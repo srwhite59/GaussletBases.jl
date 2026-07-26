@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `96884ade89d496bac1a559ba55cd09f764f351eabd8784726a4f2f6db1be67a8`.
+> [authority.toml](authority.toml), SHA-256 `f76481e7614b970521a8300aa6a6100e6cf221b89b1562649687aac6669c6e26`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1471,8 +1471,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `424`
   - `manager_pass`: `426`
   - `manager_pass`: `427`
+  - `git_commit`: `171e2f368`
+  - `manager_pass`: `428`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/provenance/h2plus_R2_full_parent_clean_2026-07-25/`
+  - `manager_pass`: `429`
 - **Dependencies:** none
-- **Scope:** Extend only the existing private \`bin/pqs\_paper\_h2\_driver.jl\` H2+ gate so \`method=:both\` emits one shared-parent three-row comparison: matrix-free full \`21x21x29\` PGDG parent, PQS q=5, and White-Lindsey q=3. The parent row may use live axis overlap/kinetic data, analytic centered high135 factors, axis-wise symmetric overlap orthogonalization, small file-local mode-product applies, and the existing apply-based Lanczos routine; it must independently recompute the residual and T/U decomposition and report reference/resolution/contraction errors against -0.6026342144949465 Ha. Final driver size is preferred \<=225 and hard \<=250 lines. No H2, Vee, IDA, RHF/SCF, scan, source/test/tool/helper-file change, dependency, dense parent matrix, generalized eigensolver, quadrature, framework, public API, artifact, supplement, PRF, screening, EGOI, or schema work.
+- **Scope:** Extend only the existing private \`bin/pqs\_paper\_h2\_driver.jl\` H2+ gate for the exact R=2 padding=10.0/20.0 convergence pair. Replace the padding-10 \`21x21x29\` equality with validation of live positive odd axis counts, dimension-product consistency, finite positive parent weights, and identical PQS/White-Lindsey parent objects and fingerprints; retain the matrix-free parent, PQS q=5, White-Lindsey q=3, high135, frozen-reference, residual, T/U decomposition, due-diligence, and existing-output contracts. Final driver size remains hard \<=250 lines, with no added source lines preferred. No H2, Vee, IDA, RHF/SCF, general padding or tail-spacing scan, geometry curve, source/test/tool/helper-file change, dependency, dense parent matrix, generalized eigensolver, quadrature, framework, public API, artifact, output-column change, supplement, PRF, screening, EGOI, or schema work.
 
 ### HP-PQS-PARENT-GDIRECT-FN-01 - parent-backed Gaussian direct interaction
 

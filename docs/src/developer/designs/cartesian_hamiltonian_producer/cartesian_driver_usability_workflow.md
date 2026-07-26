@@ -269,7 +269,10 @@ xmax_parallel = R/2 + padding
 xmax_transverse = padding
 ```
 
-The `R=2` gate requires `padding >= 10` bohr. The allowed controls are only:
+The accepted `R=2` baseline uses `padding=10.0` bohr. One bounded convergence
+control is also authorized at `padding=20.0` bohr. These are the only
+campaign-authorized padding values; accepting a numeric `padding` input does
+not authorize a general padding scan. The allowed controls remain only:
 
 ```text
 system = :h2plus
@@ -295,8 +298,17 @@ method = wl
 ```
 
 `parent` is an internal output-row identity, not a new public input mode. The
-full-parent row uses the existing `21 x 21 x 29` (`12789`-function) PGDG
-parent. It must not form a dense `12789 x 12789` matrix.
+accepted padding-10 row used a `21 x 21 x 29` (`12789`-function) PGDG parent;
+that dimension is evidence, not a fixed parent-shape contract. Each authorized
+padding must use the live constructed parent without forming its dense
+three-dimensional matrix.
+
+The live parent axis counts must be positive odd integers, their product must
+equal the reported parent dimension, and every parent weight must be finite
+and strictly positive. For each padding, the independently constructed PQS and
+White-Lindsey routes must retain identical live parent objects, physical
+bounds, and fingerprints. Dimensions and bounds must be reported from those
+live objects rather than inferred from the padding-10 evidence.
 
 The driver may consume the live PGDG axis overlap and kinetic matrices,
 analytic high135 nuclear Gaussian factors at the two physical centers, and
@@ -377,7 +389,7 @@ schema, payload, metadata family, or report-carried basis.
   budget using existing kernels, make no implementation commit and report the
   missing operation.
 
-The sole initial scientific acceptance command is:
+The initial three-row scientific gate was accepted with:
 
 ```text
 julia --project=. bin/pqs_paper_h2_driver.jl \
@@ -385,15 +397,27 @@ julia --project=. bin/pqs_paper_h2_driver.jl \
     output_dir='"/tmp/pqs_paper_h2plus_R2"'
 ```
 
+The one authorized convergence control is:
+
+```text
+julia --project=. bin/pqs_paper_h2_driver.jl \
+    system=:h2plus method=:both R=2.0 padding=20.0 \
+    output_dir='"/tmp/pqs_paper_h2plus_R2_full_parent_padding20_clean"'
+```
+
 It must report the parent/PQS/White-Lindsey rows from one clean commit and
 shared live parent fingerprint. PQS and White-Lindsey retain their route-local
 `q=5` and `q=3`, finite symmetric `H1`, converged lowest eigenpairs, and
 complete due-diligence/output records. The parent row must pass the matrix-free
-Lanczos, independent residual, decomposition, and frozen-reference gates. No
-PQS-versus-White-Lindsey energy ordering is an acceptance criterion.
+Lanczos, independent residual, decomposition, and frozen-reference gates.
+Compare each padding-20 energy with its preserved padding-10 counterpart using
+a provisional absolute shift tolerance of `0.01 mHa`. Report the live
+dimensions, topology, bounds, actual padding, residuals, timing, allocations,
+and peak RSS for the control. No PQS-versus-White-Lindsey energy ordering is an
+acceptance criterion.
 
 This authority changes no public input, canonical-driver behavior, numerical
 default, artifact schema, AddNest/exact-W/injection/PRF/external-RG/MWG/
 screening/EGOI behavior, or correlated-solver surface. H2, `Vee`, IDA,
-RHF/SCF, scans, supplements, PRFs, test changes, and new artifacts remain
-forbidden.
+RHF/SCF, general padding or tail-spacing scans, geometry curves, supplements,
+PRFs, test changes, output-column changes, and new artifacts remain forbidden.

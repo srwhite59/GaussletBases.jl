@@ -31,9 +31,9 @@ archaeology and are not normal startup reading.
   `P0/q0`, the density fit for `E0`, and the fitted potential as an approximate
   `J0` evaluator with reported consistency error. A determinant-exact `J0/E0`
   convention requires a separate scientific amendment.
-- The source-backed Cr2 composition/replay migration is closed. The next
-  bounded scientific target is the full-parent row completing the matched
-  parent/PQS/White-Lindsey H2+ paper point at `R=2`.
+- The source-backed Cr2 composition/replay migration is closed. The matched
+  full-parent/PQS/White-Lindsey H2+ paper point at `R=2`, `padding=10` is
+  accepted; one padding-20 convergence control is the next bounded target.
 - Fixed-parent shell-q/PRF measurements now also support an internal
   parent-residual basis facility and direct-only parent-backed Gaussian
   interaction resource. Physical target selection, transition-density
@@ -71,11 +71,11 @@ new Cr2 endpoint, contraction, exchange, or solver interpretation is a
 separate scientific choice.
 
 **MT3 - Approved pending producer facilities (active).** The private matched
-PQS/WL H2+ terminal rows are implemented; complete the mandatory matrix-free
-full-parent row in the same bounded driver. H2/Vee/RHF remain forbidden.
-Standard60 and canonical-driver Coulomb exposure remain separate. The
-retained-GTO EGOI helper remains pending and must not absorb the unrelated
-`hamiltonian_corrections.jl` WIP without review.
+matrix-free parent/PQS/WL H2+ point is implemented. Complete only the
+padding-10/20 convergence control in the same bounded driver; H2/Vee/RHF and
+general scans remain forbidden. Standard60 and canonical-driver Coulomb
+exposure remain separate. The retained-GTO EGOI helper remains pending and
+must not absorb the unrelated `hamiltonian_corrections.jl` WIP without review.
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
@@ -1019,3 +1019,40 @@ Carrying-cost accounting:
 - new tests: none.
 - new metadata/status fields: none; only approved private report columns.
 - validation: the clean scientific gate and mechanical checks listed above.
+
+## Cartesian Hamiltonian Producer Pass 429 - Authorize H2+ Padding Control
+
+Commit(s):
+- this commit - amend the private paper-driver authority for one padding-only
+  convergence control.
+
+Summary:
+- The accepted padding-10 parent/PQS/White-Lindsey outputs were preserved with
+  matching hashes. A clean padding-20 attempt stopped before solving because
+  the driver still required the padding-10 `21x21x29` axes.
+- `HP-PQS-PAPER-H2-DRV-FN-01` now authorizes only the `R=2`,
+  `padding=10.0/20.0` pair. The follow-on replaces that one fixed-shape
+  assertion with live positive odd axis counts, dimension-product consistency,
+  finite positive weights, and PQS/WL parent-object and fingerprint parity.
+
+Goal advancement / guardrail:
+- MT3 advances to a bounded box-convergence check without changing the parent
+  mapping, high135 interaction, route-local `q=5/q=3`, matrix-free solve,
+  decomposition, report columns, or endpoint physics. Each of the three energy
+  shifts has a provisional `0.01 mHa` tolerance. This is not a general padding
+  or tail-spacing scan and does not authorize H2, Vee/IDA, RHF/SCF, artifacts,
+  tests, helpers, or source outside the existing driver.
+
+Carrying-cost accounting:
+- deleted: none in this docs-only authority pass.
+- simplified: fixed-axis policy becomes one live parent-validity contract.
+- quarantined: wider padding, tail-spacing, and geometry scans remain outside
+  authority.
+- not deleted because: the accepted 248-line private driver owns the paper
+  comparison.
+- exact remaining caller/blocker: replace one driver assertion and run the
+  clean padding-20 command.
+- added/deleted `src` lines: `0/0`; new tests: none.
+- new metadata/status fields: none; output columns remain unchanged.
+- validation: authority/docs checks, scoped review, manager-log bound, and
+  `git diff --check`.
