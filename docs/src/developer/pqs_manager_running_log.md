@@ -974,3 +974,48 @@ Carrying-cost accounting:
   authorized later.
 - validation: authority/docs checks, manager-log bound, scoped review, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 428 - Close Full-Parent H2+ Gate
+
+Commit(s):
+- `171e2f368` - add the matrix-free full-parent row to the private paper
+  driver.
+
+Summary:
+- The `248`-line driver now reports the shared `12789`-function parent, PQS
+  `q=5` (`1285` functions), and White-Lindsey `q=3` (`1109` functions).
+  Their total energies are `-0.602240572951`, `-0.601972271268`, and
+  `-0.599073334369 Ha`.
+- Against the frozen reference, parent resolution contributes
+  `+0.393642 mHa`; PQS adds `+0.268302 mHa` contraction error and
+  White-Lindsey adds `+3.167239 mHa`. The archived PQS/WL dimensions,
+  decompositions, and energies reproduce to numerical precision.
+
+Validation / evidence:
+- A detached clean worktree at `171e2f368` emitted three `git_dirty=false`
+  rows with one parent fingerprint. Parent residual, matrix-free symmetry, and
+  overlap-identity errors were `9.57e-11`, `5.69e-16`, and `2.78e-14`;
+  left/right nuclear expectations agreed to `4.4e-16 Ha`.
+- Package load, authority check/self-test, manager-log bound, an independent
+  rectangular tensor-index oracle, archived-row comparison, due-diligence and
+  TSV/report readback, anti-bloat scan, staged scope review, and
+  `git diff --check` passed.
+
+Goal advancement / guardrail:
+- MT3 closes the first parent-versus-contraction `R=2` H2+ gate. Padding,
+  tail-spacing, geometry, H2, Vee/IDA, RHF/SCF, artifacts, and publication
+  timing remain separate later decisions.
+
+Carrying-cost accounting:
+- deleted: the review rejected a runtime-sized operator-validation tuple.
+- simplified: overlap whitening is shared around the summed parent action.
+- quarantined: the parent oracle remains private to the removable paper
+  driver.
+- not deleted because: the terminal rows and complete due diligence remain
+  the active paper comparison.
+- exact remaining caller/blocker: paper-manager review before separately
+  authorized convergence controls or H2 work.
+- added/deleted `src` lines: `0/0`; added/deleted `bin` lines: `110/12`.
+- new tests: none.
+- new metadata/status fields: none; only approved private report columns.
+- validation: the clean scientific gate and mechanical checks listed above.
