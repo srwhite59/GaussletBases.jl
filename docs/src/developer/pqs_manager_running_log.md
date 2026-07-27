@@ -1439,3 +1439,52 @@ Carrying-cost accounting:
 - validation: source/authority seam audit, external contract reconciliation,
   authority check/self-test, generated-view parity, docs tests, Documenter,
   manager-log bound, docs-only staged scope, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 438 - Implement Fixed-State H2 Interaction Gate
+
+Commit(s):
+- `7d2b6dc61` - implement the bounded five-row fixed-state interaction
+  measurement.
+- this commit - reconcile the existing ID to implemented maintenance.
+
+Summary:
+- The clean `R=2` replay retained dimensions
+  `12789/1285/1109/1303/1127` and projected the same full-parent H2+ orbital
+  into the parent, bare PQS/WL, and supplemented PQS/WL spaces. Captures are
+  `1.0/0.9999709356/0.9991007021/0.9999972239/0.9999933045`.
+- Matrix-free parent high135 IDA, fresh terminal IDA, and augmented
+  terminal-IDA/residual-MWG produced `J =
+  0.6613194326/0.6614182833/0.6632012296/0.6614042003/0.6625621285 Ha`.
+  Native coordinate identity and augmented G-G parity are exact; maximum
+  state-norm and interaction-symmetry errors are `1.04e-14` and `4.89e-15`.
+- Independent review caught a missing identity gate between the separately
+  staged bare and supplemented working terminal coordinates. The accepted
+  patch now compares block order, support indices, column ranges, and
+  coefficient matrices before combining projected states, H1, and Vee.
+
+Goal advancement / guardrail:
+- LT3/MT3 now have the repo-owned same-state density-density measurement.
+  These values establish production construction and accounting only. Method
+  accuracy remains uninterpreted until the external replay matches captures,
+  state fingerprints, H1, and an independently converged direct-Coulomb
+  oracle; RHF/SCF remains closed.
+
+Carrying-cost accounting:
+- deleted: seven superseded driver lines while extending the existing route.
+- simplified: one common target projection and the existing category owners
+  serve all five rows; no companion path or interaction adapter was added.
+- quarantined: variable matrix/resource diagnostics remain report-only and
+  the direct-Coulomb oracle remains external.
+- not deleted because: the private driver remains the reproducible owner of
+  the accepted H2+ controls and five-row H2 construction.
+- exact remaining caller/blocker: external clean same-density oracle replay
+  before any PQS/White-Lindsey interaction-accuracy interpretation.
+- added/deleted `src` lines: `0/0`; added/deleted `bin` lines: `109/7`.
+- new tests: none.
+- new metadata/status fields: none; exactly thirteen approved private report
+  columns.
+- validation: package load, doer endpoint replay, independent code review,
+  exact clean-worktree endpoint at `git_dirty=false`, deterministic
+  pre-existing/new-field parity, due-diligence inspection, staged scope,
+  authority check/self-test, docs tests, Documenter, manager-log bound, and
+  `git diff --check`.

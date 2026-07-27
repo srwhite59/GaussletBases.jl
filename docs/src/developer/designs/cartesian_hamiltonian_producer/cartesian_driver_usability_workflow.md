@@ -2,9 +2,10 @@
 
 Status: implemented canonical contract for the human-facing Cartesian
 Hamiltonian driver and its non-exported staged producer calls, plus one
-approved private PQS/WL paper-validation driver with an implemented H2+
-endpoint and implemented neutral-H2 supplemented one-body preflight. One
-fixed-state density-density interaction extension is approved pending.
+implemented private PQS/WL paper-validation driver with an implemented H2+
+endpoint, implemented neutral-H2 supplemented one-body preflight, and
+implemented five-row fixed-state density-density measurement awaiting its
+external same-density oracle.
 Registry entries own
 the lifecycle and source permissions for the corresponding IDs. Driver
 validation IDs without committed fixtures are completed evidence or explicitly
@@ -547,13 +548,13 @@ supplement; loading and ownership close; capture spectra are finite and
 physical; production residual selection is reproduced; all metric, symmetry,
 identity, residual, and variational gates pass; and the report cleanly
 separates parent capture, terminal contraction, and external residual content.
-The accepted one-body rows and diagnostics remain frozen while the bounded
-interaction extension below is implemented. Any other `Vee`, IDA/MWG,
+The accepted one-body rows and diagnostics remain frozen under the bounded
+interaction extension below. Any other `Vee`, IDA/MWG,
 RHF/SCF, cutoff control, or supplement variation requires later authority.
 
 ### Fixed-State H2 Density-Density Interaction
 
-The next private endpoint is approved only for the same neutral-metadata
+The implemented private endpoint is limited to the same neutral-metadata
 five-row construction:
 
 ```text
@@ -680,10 +681,10 @@ unchanged-one-body gate fails.
 
 ### Endpoints And Output
 
-The implemented endpoints are the three-row lowest-`H1` H2+ comparison and
-the five-row bare-plus-supplemented one-body preflight above. The approved next
-endpoint adds the fixed-state density-density fields to those same five rows.
-It builds no RHF/SCF state or Hamiltonian artifact.
+The implemented endpoints are the three-row lowest-`H1` H2+ comparison, the
+five-row bare-plus-supplemented one-body preflight, and the five-row
+fixed-state density-density measurement above. They build no RHF/SCF state or
+Hamiltonian artifact.
 
 Each method writes one compact TSV row and a readable text report containing
 the resolved configuration, git commit and dirty state, dimensions, shell
@@ -815,10 +816,10 @@ produced supplemented dimensions `1303/1127`. The minimum parent supplement
 capture singular value was `0.9991415015`; terminal minima were
 `0.9781753530/0.7793743583` for PQS/WL. Both owner-local residual ranks were
 `9+9`, with no discarded direction at the production cutoff. This is
-repository acceptance of the bounded endpoint, not independent paper
-acceptance or authority for the interaction stage.
+repository acceptance of the bounded one-body endpoint, not independent paper
+acceptance; that commit alone did not establish the interaction stage below.
 
-The authorized fixed-state interaction command is the same frozen H2 command:
+The implemented fixed-state interaction command is the same frozen H2 command:
 
 ```text
 julia --project=. bin/pqs_paper_h2_driver.jl \
@@ -831,6 +832,14 @@ accepted replay before the new interaction fields are considered. The repo
 gate establishes construction, projection, category ownership, and internal
 energy accounting only. Independent same-density oracle convergence is a
 separate paper-validation acceptance gate.
+
+Repository acceptance at `7d2b6dc61` retained dimensions
+`12789/1285/1109/1303/1127` and target captures
+`1.0/0.9999709356/0.9991007021/0.9999972239/0.9999933045`. The corresponding
+production density-density `J` values are
+`0.6613194326/0.6614182833/0.6632012296/0.6614042003/0.6625621285 Ha`.
+These are construction-backed measurements, not an interaction-accuracy
+ordering; the external same-density oracle remains the scientific gate.
 
 This authority changes no public input, canonical-driver behavior, numerical
 default, artifact schema, AddNest/exact-W/injection/PRF/external-RG/MWG/

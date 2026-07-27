@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `722cb7e24f4c7140c28866752b3b02f25c3a96ce5b4a0f64f4cf4dfa889ca68e`.
+> [authority.toml](authority.toml), SHA-256 `4128d96b4fa4fbb2c33823e2bd0526b2196554dfa9271bafa3d5258357ca05f6`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1458,8 +1458,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-PAPER-H2-DRV-FN-01 - private matched PQS/WL H2 paper driver
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `driver`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1492,8 +1492,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/h2_supplemented_one_body_2026-07-26.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/h2plus_h2_acceptance_contract.md`
   - `manager_pass`: `437`
+  - `git_commit`: `7d2b6dc61`
+  - `manager_pass`: `438`
 - **Dependencies:** `HP-CGRB-NN-FN-01`, `HP-COMP-SUPPWL-FN-01`, `HP-FN-04`, `HP-FN-05`, `HP-PQS-COULOMB-ACCURACY-FN-01`, `HP-R3-FN-01`, `HP-R3-FN-02`, `HP-R3-FN-03`, `HP-R3U-ZDI-FN-01`, `HP-RG-CUTOFF-FN-02`
-- **Scope:** Extend only the existing private \`bin/pqs\_paper\_h2\_driver.jl\` frozen neutral-H2 five-row run at R=2, padding=10.0, tail\_spacing=2.8, and method=:both with one fixed-state density-density comparison. Preserve every accepted one-body field. Reuse the normalized full-parent H2+ ground orbital as the common physical target; project and normalize it independently in the parent, bare PQS/WL, and supplemented PQS/WL spaces using the existing parent overlap factors, terminal blocks, parent-supplement overlap, and residual \`T\_G/T\_A\`. Evaluate exact row-owned H1, matrix-free high135 parent ordinary IDA, bare terminal/site IDA, and augmented terminal-IDA plus residual-MWG, with fresh G-G parity and no \`C' V C\`. Report the exact thirteen canonical fixed fields and readable category/fingerprint/charge/symmetry/timing diagnostics; add no input, output file, artifact, payload, state carrier, source helper, test, or companion driver. Prefer \<=500 and require \<=525 total driver lines with zero added src/test/tool/helper-file lines. The repo gate owns projection and density-density accounting only; independent same-density direct-Coulomb validation remains external. No RHF/SCF, orbital relaxation, numerical integration or density oracle in the repo, continuum-exact or transition-exchange claim, scan, other H2 endpoint, supplement/cutoff change, enrichment, PRF, screening, EGOI, public API, canonical-driver change, or framework is authorized. Stop without committing if existing live objects cannot reproduce the exact projected states and category interactions or if any unchanged-row, capture, normalization, charge, block-parity, symmetry, finiteness, fingerprint, or energy-closure gate fails.
+- **Scope:** Maintain only the existing private \`bin/pqs\_paper\_h2\_driver.jl\` H2+ controls, neutral-H2 supplemented one-body preflight, and frozen five-row fixed-state density-density measurement at R=2, padding=10.0, tail\_spacing=2.8, and method=:both. Preserve every accepted one-body field, the common normalized full-parent H2+ target, exact parent-metric and native terminal/residual projections, blockwise terminal-coordinate identity, sign-canonical state fingerprints, matrix-free high135 parent ordinary IDA, bare terminal/site IDA, augmented terminal-IDA plus residual-MWG, fresh G-G parity, thirteen fixed interaction fields, and readable category/fingerprint/charge/symmetry/timing diagnostics. Keep the driver \<=525 lines with zero source/test/tool/helper additions. Independent same-density direct-Coulomb validation remains external. No new input, output file, artifact, payload, state carrier, source helper, test, companion driver, RHF/SCF, orbital relaxation, numerical integration or density oracle in the repo, continuum-exact or transition-exchange claim, scan, other H2 endpoint, supplement/cutoff change, enrichment, PRF, screening, EGOI, public API, canonical-driver change, or framework is maintenance-authorized.
 
 ### HP-PQS-PARENT-GDIRECT-FN-01 - parent-backed Gaussian direct interaction
 
