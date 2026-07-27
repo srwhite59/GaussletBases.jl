@@ -11,7 +11,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driv
 sha256 = "92b4bd4d84f9b551cff8b5b718383185cbfc7712f524a3ef1f8a3dc965ae5626"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driver_usability_workflow.md"
-sha256 = "b6c76a86de1267db69c5b85e06824d2a045d8ba44c4970ab5d3e887f76e52503"
+sha256 = "dfedb3f3d7910d27fccc366919fb8e4723ed4b320abedf5babbaca24e0b9c74d"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md"
 sha256 = "2d8737bf799822f293243d99a0d02cf17e92d9e958685c362f84870f2a89f7c1"
@@ -2355,11 +2355,11 @@ title = "mapping `s_factor` validation"
     path = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"
     state = "existing"
 [[records]]
-dependency_ids = ["HP-CGRB-NN-FN-01", "HP-COMP-SUPPWL-FN-01", "HP-PQS-COULOMB-ACCURACY-FN-01", "HP-R3-FN-01", "HP-R3-FN-02", "HP-R3U-ZDI-FN-01", "HP-RG-CUTOFF-FN-02"]
-grant = "maintenance"
+dependency_ids = ["HP-CGRB-NN-FN-01", "HP-COMP-SUPPWL-FN-01", "HP-FN-04", "HP-FN-05", "HP-PQS-COULOMB-ACCURACY-FN-01", "HP-R3-FN-01", "HP-R3-FN-02", "HP-R3-FN-03", "HP-R3U-ZDI-FN-01", "HP-RG-CUTOFF-FN-02"]
+grant = "implementation"
 id = "HP-PQS-PAPER-H2-DRV-FN-01"
-lifecycle = "implemented"
-scope = "Maintain only the existing private `bin/pqs_paper_h2_driver.jl` H2+ parent/PQS/WL controls and the frozen five-row neutral-metadata supplemented one-body preflight at R=2, padding=10.0, tail_spacing=2.8, and method=:both. Preserve the shared parent and ordered bundled contracted H/cc-pVTZ supplement, production 1.0e-6 owner-local residual selection, exact augmented kinetic/by-center nuclear construction, complete due diligence, ten fixed supplement/residual fields, and all metric, identity, operator, variational, and row-order gates. The driver remains <=425 lines with zero source/test/tool/helper additions. No new input, output family, artifact, Vee, IDA/MWG interpretation, RHF/SCF, same-state interaction, cutoff or supplement scan, other H2 endpoint, q ladder, geometry curve, enrichment, PRF, screening, EGOI, public API, canonical-driver change, or framework is maintenance-authorized."
+lifecycle = "approved"
+scope = "Extend only the existing private `bin/pqs_paper_h2_driver.jl` frozen neutral-H2 five-row run at R=2, padding=10.0, tail_spacing=2.8, and method=:both with one fixed-state density-density comparison. Preserve every accepted one-body field. Reuse the normalized full-parent H2+ ground orbital as the common physical target; project and normalize it independently in the parent, bare PQS/WL, and supplemented PQS/WL spaces using the existing parent overlap factors, terminal blocks, parent-supplement overlap, and residual `T_G/T_A`. Evaluate exact row-owned H1, matrix-free high135 parent ordinary IDA, bare terminal/site IDA, and augmented terminal-IDA plus residual-MWG, with fresh G-G parity and no `C' V C`. Report the exact thirteen canonical fixed fields and readable category/fingerprint/charge/symmetry/timing diagnostics; add no input, output file, artifact, payload, state carrier, source helper, test, or companion driver. Prefer <=500 and require <=525 total driver lines with zero added src/test/tool/helper-file lines. The repo gate owns projection and density-density accounting only; independent same-density direct-Coulomb validation remains external. No RHF/SCF, orbital relaxation, numerical integration or density oracle in the repo, continuum-exact or transition-exchange claim, scan, other H2 endpoint, supplement/cutoff change, enrichment, PRF, screening, EGOI, public API, canonical-driver change, or framework is authorized. Stop without committing if existing live objects cannot reproduce the exact projected states and category interactions or if any unchanged-row, capture, normalization, charge, block-parity, symmetry, finiteness, fingerprint, or energy-closure gate fails."
 surfaces = ["driver"]
 title = "private matched PQS/WL H2 paper driver"
 
@@ -2434,6 +2434,15 @@ title = "private matched PQS/WL H2 paper driver"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "436"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/h2_supplemented_one_body_2026-07-26.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/h2plus_h2_acceptance_contract.md"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "437"
 
     [[records.paths]]
     kind = "driver"

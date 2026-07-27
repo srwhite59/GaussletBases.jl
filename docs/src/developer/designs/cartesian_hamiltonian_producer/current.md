@@ -40,7 +40,7 @@ claim.
 
 | Lane | State | Exact next boundary |
 | --- | --- | --- |
-| `HP-PQS-PAPER-H2-DRV-FN-01` | Full-parent/PQS/WL H2+ controls and the frozen neutral-H2 supplemented one-body preflight implemented | Independently replay the accepted five-row result for paper validation; any same-state interaction endpoint requires separate authority |
+| `HP-PQS-PAPER-H2-DRV-FN-01` | Full-parent/PQS/WL H2+ controls and the independently replayed neutral-H2 supplemented one-body preflight implemented; fixed-state density-density extension approved pending | Project the common parent H2+ orbital into all five spaces, evaluate category-owned high135 IDA/MWG without relaxation, then hand the exact reconstructed densities to the external Coulomb oracle |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
@@ -54,19 +54,25 @@ historical audit IDs are not active work.
 ## Current Physics Target
 
 The full-parent/PQS/White-Lindsey H2+ controls and the frozen supplemented
-one-body preflight at `R=2` are repository-accepted. With
+one-body preflight at `R=2` are repository-accepted and independently replayed.
+With
 `padding=10.0`, `tail_spacing=2.8`, and the contracted H/cc-pVTZ `s,p`
 supplement, PQS and White-Lindsey retain all `9+9` owner-local residual
 directions at the production `1e-6` cutoff. Their bare/supplemented dimensions
 are `1285/1303` and `1109/1127`; the exact augmented one-body energies are
 variational relative to the matching bare rows.
 
-Independent clean scientific replay is the next paper step. This endpoint
-builds no `Vee` or IDA/MWG object, runs no RHF/SCF, and writes no artifact.
-The `padding=20.0`, `tail_spacing=2.0` combination, other H2 endpoints,
-supplement or cutoff scans, capture at other campaign points, `q` ladders, and
-geometry curves remain forbidden. This changes no canonical driver, public
-facade, producer default, artifact schema family, or solver API.
+The next paper step is the approved fixed-state interaction extension. It
+holds the common parent H2+ orbital fixed after separate projection into the
+parent, bare, and supplemented spaces; uses matrix-free parent high135 IDA,
+terminal/site IDA, and the established residual MWG blocks; and reports the
+density-density energy decomposition. It runs no RHF/SCF and writes no
+artifact. The production values remain uninterpreted until an external
+independently converged Coulomb oracle reconstructs and validates the exact same
+densities. The `padding=20.0`, `tail_spacing=2.0` combination, other H2
+endpoints, supplement or cutoff scans, capture at other campaign points, `q`
+ladders, and geometry curves remain forbidden. This changes no canonical
+driver, public facade, producer default, artifact schema family, or solver API.
 
 ## Current Blockers And Follow-Ups
 

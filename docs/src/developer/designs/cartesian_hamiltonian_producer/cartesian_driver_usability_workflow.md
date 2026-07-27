@@ -3,7 +3,8 @@
 Status: implemented canonical contract for the human-facing Cartesian
 Hamiltonian driver and its non-exported staged producer calls, plus one
 approved private PQS/WL paper-validation driver with an implemented H2+
-endpoint and implemented neutral-H2 supplemented one-body preflight.
+endpoint and implemented neutral-H2 supplemented one-body preflight. One
+fixed-state density-density interaction extension is approved pending.
 Registry entries own
 the lifecycle and source permissions for the corresponding IDs. Driver
 validation IDs without committed fixtures are completed evidence or explicitly
@@ -546,15 +547,143 @@ supplement; loading and ownership close; capture spectra are finite and
 physical; production residual selection is reproduced; all metric, symmetry,
 identity, residual, and variational gates pass; and the report cleanly
 separates parent capture, terminal contraction, and external residual content.
-Stop after this one-body comparison. Any `Vee`, IDA/MWG, same-state
-interaction, RHF/SCF, cutoff control, or supplement variation requires later
-authority.
+The accepted one-body rows and diagnostics remain frozen while the bounded
+interaction extension below is implemented. Any other `Vee`, IDA/MWG,
+RHF/SCF, cutoff control, or supplement variation requires later authority.
+
+### Fixed-State H2 Density-Density Interaction
+
+The next private endpoint is approved only for the same neutral-metadata
+five-row construction:
+
+```text
+system = :h2
+method = :both
+R = 2.0
+padding = 10.0
+tail_spacing = 2.8
+```
+
+It introduces no new input. The common physical target is the already accepted
+full-parent H2+ ground-state spatial orbital. The driver must project that
+single target independently into the full parent, bare PQS, bare
+White-Lindsey, supplemented PQS, and supplemented White-Lindsey spaces,
+normalize each projection, and hold every orbital fixed. It must not use the
+lowest neutral-H2 orbital already reported by the one-body preflight and must
+not perform an SCF, orbital update, or variational interaction solve.
+
+Let `y` be the normalized overlap-orthogonalized parent state,
+`c_P=S_parent^(-1/2)y` its physical parent coefficients, `C_G` the terminal
+coefficient map, `B=<parent|A>`, and `(T_G,T_A)` the existing residual
+transform. The unnormalized projection coefficients are:
+
+```text
+g = C_G' S_parent^(1/2) y
+a = B' c_P
+r = T_G' g + T_A' a
+
+u_parent = c_P
+u_bare = g / sqrt(g'g)
+u_supplemented = [g; r] / sqrt(g'g + r'r)
+```
+
+The driver must report `g'g` and `g'g+r'r` as target captures and validate
+normalization, finite values, dimensions, native ordering, and nondecreasing
+capture under augmentation. It must use the actual accepted `B`, `T_G`, and
+`T_A`; reconstructing a second residual basis or appending target directions
+is forbidden. Parent normalization uses the physical `S_parent` metric;
+terminal and supplemented normalization uses the Euclidean metric of their
+orthonormal native bases.
+
+Each normalized state is evaluated with the exact one-body matrix already
+owned by its row and the category-appropriate production density-density
+interaction:
+
+| Row | Interaction owner |
+| --- | --- |
+| full parent | Matrix-free ordinary parent IDA using the live high135 separable PGDG pair factors |
+| bare PQS / White-Lindsey | `cartesian_base_vee` terminal/site IDA |
+| supplemented PQS / White-Lindsey | `cartesian_residual_gto_augmented_vee`, retaining terminal IDA in `G-G` and existing MWG in `G-R` and `R-R` |
+
+The parent contraction must use
+`q_P=abs2(c_P)/sum(abs2(c_P))` and apply the existing high135 separable pair
+factors term by term. It must not form a dense
+`parent_dimension x parent_dimension` matrix. Bare and augmented matrices must
+come from the existing base/Hamiltonian and residual-MWG owners. The augmented
+`G-G` block must equal the matching freshly built bare terminal IDA block; no
+`C' V C`, interaction rotation, fitted-density substitute, or reused
+interaction from another basis is allowed.
+
+For a normalized real spatial orbital `u` occupied once in each spin channel,
+let `q=abs2(u)` and `J=q'Vq`. Report the current density-density accounting
+explicitly:
+
+```text
+direct term = 2J
+same-spin exchange/self-cancellation contribution = -J
+Vee expectation = J
+fixed electronic energy = 2<u|H1|u> + J
+fixed total energy = fixed electronic energy + 1/R
+```
+
+The direct and same-spin terms are an accounting decomposition of the current
+density-density Hamiltonian. This endpoint does not claim continuum-exact
+exchange or add a transition-density interaction.
+
+The original five one-body rows and every pre-existing field must remain
+numerically unchanged. The same private TSV/report may add exactly:
+
+```text
+fixed_target_capture
+fixed_target_norm_error
+fixed_target_fingerprint_sha256
+fixed_H1_expectation_Ha
+fixed_density_density_direct_Ha
+fixed_density_density_exchange_Ha
+fixed_density_density_Vee_Ha
+fixed_electronic_energy_Ha
+fixed_total_energy_Ha
+interaction_convention
+interaction_symmetry_error_Ha
+interaction_elapsed_s
+interaction_allocated_bytes
+```
+
+The state fingerprint is over the sign-canonicalized normalized coefficient
+vector in that row's native basis and binds the later independent replay. Fix
+the sign by making the first largest-magnitude coefficient positive before
+hashing the native `Float64` bytes.
+Complete interaction dimensions, base/augmented block parity, matrix or
+factor-resource fingerprints, charge closure, finite/symmetry checks, and
+phase timing belong in the readable report. Matrix rows use the matrix
+infinity-norm symmetry error; the matrix-free parent uses a deterministic
+bilinear apply-symmetry check. No coefficient dump, additional output file,
+artifact, payload, or schema family is approved.
+
+The production result is a measurement awaiting independent validation. A
+paper-validation script outside this repository must reconstruct each state
+from the exact clean commit, match parent/basis/supplement fingerprints,
+captures, normalized-state fingerprints, and fixed one-body expectations, and
+then converge a direct-density Coulomb oracle on that same reconstructed
+density. Compare that oracle scalar with
+`fixed_density_density_Vee_Ha=J`, not with the intermediate `2J` direct term.
+Numerical integration, density fitting, and the oracle implementation must not
+enter `GaussletBases`. No production interaction error or method ordering may
+be interpreted until this same-density replay passes.
+
+Implementation must stop without a commit if the exact projected states cannot
+be reconstructed from the existing parent/supplement/residual objects, if the
+augmented interaction requires a new source seam or state carrier, if a
+category block differs from its existing owner, or if any capture,
+normalization, charge, symmetry, finiteness, decomposition, fingerprint, or
+unchanged-one-body gate fails.
 
 ### Endpoints And Output
 
 The implemented endpoints are the three-row lowest-`H1` H2+ comparison and
-the five-row bare-plus-supplemented one-body preflight above. Neither builds
-`Vee`, IDA/MWG, RHF/SCF, or a Hamiltonian artifact.
+the five-row bare-plus-supplemented one-body preflight above. The approved next
+endpoint adds the fixed-state density-density fields to those same five rows.
+It builds no RHF/SCF state or Hamiltonian artifact.
 
 Each method writes one compact TSV row and a readable text report containing
 the resolved configuration, git commit and dirty state, dimensions, shell
@@ -596,9 +725,12 @@ schema, payload, metadata family, or report-carried basis.
 ### Implementation And Acceptance Limits
 
 - The accepted capture-enabled driver was `299` lines. The implemented
-  supplemented preflight is `416` lines; the hard limit remains `425` lines.
+  supplemented preflight is `416` lines. Reusing its live construction for the
+  fixed-state interaction is preferred over a companion that would duplicate
+  parent, supplement, and residual assembly. Prefer a final size at or below
+  `500` lines and require at most `525` lines.
 - Added `src` lines, committed tests, probes, fixtures, modules, helper files,
-  exports, status vocabularies, and adapters are all zero.
+  exports, status vocabularies, adapters, and companion drivers are all zero.
 - Do not copy the scratch parent oracle, sampled-density oracle,
   generalized-overlap solver, AddNest include chain, or scratch reporting
   framework.
@@ -686,11 +818,26 @@ capture singular value was `0.9991415015`; terminal minima were
 repository acceptance of the bounded endpoint, not independent paper
 acceptance or authority for the interaction stage.
 
+The authorized fixed-state interaction command is the same frozen H2 command:
+
+```text
+julia --project=. bin/pqs_paper_h2_driver.jl \
+    system=:h2 method=:both R=2.0 padding=10.0 tail_spacing=2.8 \
+    output_dir='"/tmp/pqs_paper_h2_fixed_interaction_clean"'
+```
+
+Run it from a clean worktree. The five original one-body rows must match the
+accepted replay before the new interaction fields are considered. The repo
+gate establishes construction, projection, category ownership, and internal
+energy accounting only. Independent same-density oracle convergence is a
+separate paper-validation acceptance gate.
+
 This authority changes no public input, canonical-driver behavior, numerical
 default, artifact schema, AddNest/exact-W/injection/PRF/external-RG/MWG/
 screening/EGOI behavior, or correlated-solver surface. H2 beyond this exact
-neutral-metadata one-body preflight, `Vee`, IDA/MWG interpretation, RHF/SCF,
+fixed-state gate, RHF/SCF, orbital relaxation, continuum-exact interaction
+claims, transition-density exchange, numerical integration in the repo,
 capture at any other campaign point, `q` ladders, general padding or
 tail-spacing scans, geometry curves, enrichment, supplement variation, PRFs,
-test changes, additional output columns beyond the exact list above, and new
+test changes, additional output columns beyond the exact lists above, and new
 artifacts remain forbidden.

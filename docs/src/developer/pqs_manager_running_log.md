@@ -1394,3 +1394,48 @@ Carrying-cost accounting:
   endpoint, independent TSV/report and archived-bare-row comparison, staged
   scope/anti-bloat review, docs tests `56/56` and `10/10`, manager-log bound,
   local Documenter, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 437 - Authorize Fixed-State H2 Interaction Gate
+
+Commit(s):
+- this commit - amend the existing private paper-driver authority for one
+  five-row fixed-state density-density interaction comparison.
+
+Summary:
+- The independent supplemented one-body replay accepted dimensions
+  `12789/1285/1109/1303/1127` and PQS/WL augmented one-body errors
+  `0.156/0.170 mHa`. The next gate now holds the accepted full-parent H2+
+  orbital fixed after separate projection into the parent, bare, and
+  supplemented spaces.
+- Existing numerical owners suffice: the parent uses a matrix-free high135
+  ordinary-IDA contraction, bare rows use terminal/site IDA, and supplemented
+  rows retain terminal IDA in `G-G` plus existing MWG in `G-R/R-R`. No
+  interaction rotation or new source seam is authorized.
+- Repo output owns projection, category, symmetry, and energy-accounting
+  checks. An external paper-validation script must reconstruct the exact same
+  densities and converge the direct Coulomb oracle before any production
+  interaction error is interpreted.
+
+Goal advancement / guardrail:
+- LT3/MT3 advance from one-body readiness to the bounded same-state
+  interaction question without allowing relaxation. RHF/SCF, continuum-exact
+  exchange, scans, artifacts, public controls, and an in-repo numerical oracle
+  remain closed.
+
+Carrying-cost accounting:
+- deleted: none in this docs-only authority pass.
+- simplified: the existing live five-row construction is reused rather than
+  adding a companion driver or script-to-script state carrier.
+- quarantined: variable block, factor-resource, and matrix diagnostics remain
+  readable-report-only; the independent oracle remains external scratch work.
+- not deleted because: the 416-line driver is the accepted reproducible state
+  owner and already retains every object required by this endpoint.
+- exact remaining caller/blocker: implement within preferred `500`/hard `525`
+  lines, preserve all existing one-body fields, pass the clean repo gate, then
+  complete the external same-density oracle replay.
+- added/deleted `src` lines: `0/0`; new tests: none.
+- new metadata/status fields: none; thirteen private TSV/report fields are
+  approved.
+- validation: source/authority seam audit, external contract reconciliation,
+  authority check/self-test, generated-view parity, docs tests, Documenter,
+  manager-log bound, docs-only staged scope, and `git diff --check`.
