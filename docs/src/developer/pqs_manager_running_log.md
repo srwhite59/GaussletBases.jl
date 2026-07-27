@@ -1488,3 +1488,42 @@ Carrying-cost accounting:
   pre-existing/new-field parity, due-diligence inspection, staged scope,
   authority check/self-test, docs tests, Documenter, manager-log bound, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 439 - Repair Native Midpoint-Slab Stack Metadata
+
+Commit(s):
+- `d116320f2` - populate the existing native stack ordinal and count for
+  central-gap midpoint slabs.
+
+Summary:
+- `HP-COMP-THINSLAB-FN-01` already owned conditionally required slab metadata
+  in `terminal_geometry.jl`. Each one-layer central-gap slice now reports its
+  existing `central_gap_slice_index` as `slab_stack_index` and the existing
+  `central_gap_width` as `slab_stack_count`; no warning, lowering, coefficient,
+  operator, or shell-policy path changed.
+- The clean `R=5` H2+ gate uses one shared `21x21x33` parent of dimension
+  `14553`. PQS/WL midpoint rows now report stack `1/1`, support
+  `7:15 x 7:15 x 17:17`, `81` parent rows, and final columns `643:667`.
+  Their final dimensions are `1449/1305`, with complete column accounting and
+  no structural due-diligence warning.
+
+Goal advancement / guardrail:
+- MT3's dynamic-padding geometry ladder is unblocked at the repository
+  boundary, but no `R=5` curve point or method-accuracy claim is accepted here.
+  REQ-006 must be replayed unchanged by the paper-validation owner.
+
+Carrying-cost accounting:
+- deleted: none; the repair populates required existing fields.
+- simplified: native central-gap facts now flow directly into native slab
+  facts without a downstream fallback or inference.
+- quarantined: temporary `R=5`/`R=2` probes and raw reports remain outside the
+  repository.
+- not deleted because: central-gap ordinal and width remain the geometry
+  owner's canonical inputs to the stack description.
+- exact remaining caller/blocker: independent unchanged REQ-006 replay; no
+  repository implementation blocker remains.
+- added/deleted `src` lines: `2/0`; new tests: none.
+- new metadata/status fields: none; two existing slab keys are now populated.
+- validation: package load, public Cartesian base `134/134`, clean `R=5`
+  parent/PQS/WL endpoint, exact `R=2` basis fingerprints and deterministic
+  endpoint parity, isolated scope review, and `git diff --check`.
