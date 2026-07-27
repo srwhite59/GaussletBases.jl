@@ -288,6 +288,8 @@ function raw_terminal_geometry(
                         slab_normal_axis = axis_symbol(axis),
                         slab_side = :midpoint,
                         slab_thickness = 1,
+                        slab_stack_index = slice_index,
+                        slab_stack_count = gap_width,
                         thin_slab_retained_count_1d = shell_side,
                     ),
                 )
