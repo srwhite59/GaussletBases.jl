@@ -9,7 +9,9 @@ terminal_row_count topology direct_core_columns complete_shell_columns slab_colu
 electronic_energy_Ha second_eigenvalue_Ha eigen_gap_Ha nuclear_repulsion_Ha total_energy_Ha eigen_residual_Ha H1_symmetry_error_Ha construction_elapsed_s construction_allocated_bytes kinetic_elapsed_s kinetic_allocated_bytes nuclear_elapsed_s nuclear_allocated_bytes solve_elapsed_s solve_allocated_bytes total_elapsed_s total_allocated_bytes peak_rss peak_rss_units tsv_path report_path overlap_identity_error independent_reference_total_Ha independent_reference_error_Ha parent_resolution_error_Ha contraction_error_Ha
 parent_ground_state_norm terminal_capture_fraction terminal_lost_norm capture_closure_error
 supplement_fingerprint_sha256 supplement_candidate_count supplement_parent_capture_min_sv supplement_terminal_capture_min_sv residual_occupation_cutoff
-residual_dimension residual_min_retained_occupation residual_max_discarded_occupation terminal_residual_orthogonality_error bare_terminal_energy_change_Ha""")
+residual_dimension residual_min_retained_occupation residual_max_discarded_occupation terminal_residual_orthogonality_error bare_terminal_energy_change_Ha
+fixed_target_capture fixed_target_norm_error fixed_target_fingerprint_sha256 fixed_H1_expectation_Ha fixed_density_density_direct_Ha fixed_density_density_exchange_Ha
+fixed_density_density_Vee_Ha fixed_electronic_energy_Ha fixed_total_energy_Ha interaction_convention interaction_symmetry_error_Ha interaction_elapsed_s interaction_allocated_bytes""")
 const REFERENCE_TOTAL = -0.6026342144949465
 values = Dict{Symbol,Any}(:system => :h2plus, :method => :both, :R => 2.0, :output_dir => "/tmp/pqs_paper_h2plus_R2", :padding => 10.0, :tail_spacing => 2.8)
 function apply_inputs!(input)
@@ -56,6 +58,66 @@ function inverse_sqrt(overlap)
     root = decomposition.vectors * Diagonal(inv.(sqrt.(decomposition.values))) * transpose(decomposition.vectors)
     identity_error = norm(root * overlap * root - I, Inf); identity_error <= 1.0e-10 || error("parent overlap orthogonalization failed")
     return root, identity_error
+end
+function fixed_charge(state)
+    all(isfinite, state) && !isempty(state) || error("fixed target state is empty or nonfinite")
+    q = abs2.(state); total = sum(q); isfinite(total) && total > 0 || error("fixed target charge is invalid")
+    q ./= total; abs(sum(q) - 1.0) <= 1.0e-12 || error("fixed target charge does not close"); return q
+end
+function fixed_fingerprint(state)
+    canonical = Float64.(state); pivot = argmax(abs.(canonical))
+    canonical[pivot] < 0 && (canonical .*= -1)
+    return bytes2hex(sha256(reinterpret(UInt8, canonical)))
+end
+function terminal_projection(basis, metric_parent)
+    coefficients = zeros(Float64, basis.final_dimension)
+    for block in basis.blocks
+        source = @view metric_parent[block.support_indices]
+        coefficients[block.column_range] .= isnothing(block.coefficients) ? source : transpose(block.coefficients) * source
+    end
+    return coefficients
+end
+function matrix_interaction(V, state, owner)
+    size(V) == (length(state), length(state)) && all(isfinite, V) || error("$owner interaction is malformed")
+    symmetry = norm(V - transpose(V), Inf); q = fixed_charge(state); J = dot(q, V, q)
+    detail = "$owner dimensions=$(size(V)) fingerprint=$(GB.external_gto_overlap_fingerprint(V)) charge=$(sum(q))"
+    return (; J, symmetry, detail)
+end
+function parent_interaction(parent, state, dimensions)
+    terms = ntuple(axis -> parent.pgdg[axis].pair_factor_terms, 3); nterms = length(expansion.coefficients)
+    all(axis -> size(terms[axis], 1) == nterms && all(isfinite, terms[axis]), 1:3) ||
+        error("parent IDA factor resource is malformed")
+    function apply_vee(vector)
+        out = zeros(Float64, length(vector))
+        for term in 1:nterms
+            out .+= expansion.coefficients[term] .* product_apply(
+                ntuple(axis -> factor_term(terms[axis], term), 3), vector, dimensions)
+        end
+        return out
+    end
+    q = fixed_charge(state); Vq = apply_vee(q)
+    probe = normalize!(sin.(0.013 .* (1:length(q))) .+ 0.19 .* cos.(0.031 .* (1:length(q))))
+    symmetry = abs(dot(probe, Vq) - dot(apply_vee(probe), q))
+    fingerprint = bytes2hex(sha256(vcat((reinterpret(UInt8, vec(term)) for term in terms)...)))
+    return (; J = dot(q, Vq), symmetry,
+        detail = "parent_high135 dimensions=$(dimensions) factor_fingerprint=$fingerprint charge=$(sum(q))")
+end
+function record_fixed!(result, state, capture, norm_error, h1, interaction;
+    elapsed = interaction.time, allocated = interaction.bytes)
+    J, symmetry = interaction.value.J, interaction.value.symmetry
+    all(isfinite, (capture, norm_error, h1, J, symmetry)) && -1.0e-10 <= capture <= 1.0 + 1.0e-8 &&
+        norm_error <= 1.0e-10 && J >= 0 && symmetry <= 1.0e-10 || error("fixed-state numerical gate failed")
+    direct, exchange = 2J, -J; vee = direct + exchange; electronic = 2h1 + vee; total = electronic + inv(R)
+    isapprox(vee, J; atol = 1.0e-12, rtol = 0) &&
+        isapprox(total, 2h1 + J + inv(R); atol = 1.0e-12, rtol = 0) || error("fixed-state energy accounting does not close")
+    merge!(result.row, Dict("fixed_target_capture" => repr(capture), "fixed_target_norm_error" => repr(norm_error),
+        "fixed_target_fingerprint_sha256" => fixed_fingerprint(state), "fixed_H1_expectation_Ha" => repr(h1),
+        "fixed_density_density_direct_Ha" => repr(direct), "fixed_density_density_exchange_Ha" => repr(exchange),
+        "fixed_density_density_Vee_Ha" => repr(vee), "fixed_electronic_energy_Ha" => repr(electronic),
+        "fixed_total_energy_Ha" => repr(total), "interaction_convention" => "closed_shell_density_density_2J_minus_J",
+        "interaction_symmetry_error_Ha" => repr(symmetry), "interaction_elapsed_s" => repr(elapsed),
+        "interaction_allocated_bytes" => string(allocated)))
+    push!(result.interaction_details, interaction.value.detail)
 end
 function run_method(nesting)
     q = nesting === :pqs ? 5 : 3
@@ -151,9 +213,9 @@ function run_method(nesting)
         "parent_resolution_error_Ha" => "unavailable", "contraction_error_Ha" => "unavailable",
         "parent_ground_state_norm" => "not_applicable", "terminal_capture_fraction" => "not_applicable",
         "terminal_lost_norm" => "not_applicable", "capture_closure_error" => "not_applicable")
-    foreach(field -> row[field] = "not_applicable", FIELDS[(end - 9):end])
+    foreach(field -> row[field] = "not_applicable", FIELDS[(end - 22):end])
     return (; row, due, pgdg, mappings, basis, kinetic = kinetic.value.kinetic,
-        unit_nuclear = nuclear.value, capture_regions = String[], supplement_details = String[])
+        unit_nuclear = nuclear.value, H1, capture_regions = String[], supplement_details = String[], interaction_details = String[])
 end
 requested = method === :both ? (:pqs, :wl) : (method,); results = [run_method(nesting) for nesting in requested]
 if length(results) == 2
@@ -225,7 +287,7 @@ function run_parent(template)
         "total_elapsed_s" => repr(prepared.time + solved.time + kinetic_result.time + nuclear_results.time),
         "total_allocated_bytes" => string(prepared.bytes + solved.bytes + kinetic_result.bytes + nuclear_results.bytes),
         "peak_rss" => string(Sys.maxrss()), "overlap_identity_error" => repr(prepared.value.overlap_error)))
-    capture_enabled && (row["parent_ground_state_norm"] = repr(dot(orbital, orbital))); return (; row, due = nothing, pgdg, mappings = template.mappings, orbital, overlaps, roots, capture_regions = String[], supplement_details = String[])
+    capture_enabled && (row["parent_ground_state_norm"] = repr(dot(orbital, orbital))); return (; row, due = nothing, pgdg, mappings = template.mappings, orbital, overlaps, roots, capture_regions = String[], supplement_details = String[], interaction_details = String[])
 end
 if method === :both
     parent = run_parent(results[1]); results = vcat([parent], results)
@@ -315,15 +377,37 @@ if method === :both
                 maximum(values) <= 1.0 + 1.0e-10 || error("supplement capture spectrum is outside [0,1]"); return sqrt.(max.(values, 0.0))
         end
         parent_capture = capture_singulars(Aroot * transpose(parent_cross) * parent_solved * Aroot); supplemented = Any[]
+        parent = results[1]; target_dimensions = ntuple(axis -> length(parent.pgdg[axis].centers), 3)
+        parent_state = product_apply(parent.roots, parent.orbital, target_dimensions)
+        parent_norm_error = abs(dot(parent_state, product_apply(parent.overlaps, parent_state, target_dimensions)) - 1)
+        metric_target = product_apply(ntuple(axis -> parent.overlaps[axis] * parent.roots[axis], 3),
+            parent.orbital, target_dimensions)
+        parent_vee = @timed parent_interaction(parent, parent_state, target_dimensions)
+        record_fixed!(parent, parent_state, 1.0, parent_norm_error,
+            parse(Float64, parent.row["H1_expectation_Ha"]), parent_vee)
         for (bare, working_timed) in zip(results[2:3], workings)
             base = working_timed.value; base.terminal_basis.final_dimension == bare.basis.final_dimension ||
                 error("supplemented working basis differs from the bare terminal basis")
+            same_blocks = length(base.terminal_basis.blocks) == length(bare.basis.blocks) &&
+                all(zip(base.terminal_basis.blocks, bare.basis.blocks)) do (live, staged)
+                    live.support_indices == staged.support_indices && live.column_range == staged.column_range &&
+                        isequal(live.coefficients, staged.coefficients)
+                end
+            same_blocks || error("supplemented and staged bare terminal coordinates differ")
             due = base.terminal_due_diligence
             !isnothing(due) && !isempty(due.terminal_rows) &&
                 collect(Iterators.flatten(row.final_column_range for row in due.terminal_rows)) == collect(1:base.terminal_basis.final_dimension) ||
                 error("supplemented terminal due diligence is incomplete")
             base_pgdg = Tuple(GB._nested_axis_pgdg(base.parent.parent_axis_bundle_object, axis) for axis in (:x, :y, :z))
             parent_fingerprint(base_pgdg) == bare.row["parent_fingerprint_sha256"] || error("supplemented and bare parents differ")
+            g = terminal_projection(base.terminal_basis, metric_target); bare_capture = dot(g, g)
+            bare_state = g ./ sqrt(bare_capture); base_vee = @timed GB.cartesian_base_vee(base)
+            bare_ham = GB.cartesian_base_hamiltonian_assembly(
+                base, (; kinetic = bare.kinetic), bare.unit_nuclear, base_vee.value)
+            bare_interaction = @timed matrix_interaction(base_vee.value, bare_state, "bare_$(bare.row["method"])")
+            record_fixed!(bare, bare_state, bare_capture, abs(dot(bare_state, bare_state) - 1),
+                dot(bare_state, bare.H1, bare_state), bare_interaction;
+                elapsed = base_vee.time + bare_interaction.time, allocated = base_vee.bytes + bare_interaction.bytes)
             augmentation = @timed GB.cartesian_residual_gto_augmentation(base, supplement); residual = augmentation.value
             residual.candidate_count == candidate_count && residual.candidate_labels == labels &&
                 residual.candidate_centers == centers && residual.candidate_owner_indices == owners &&
@@ -385,8 +469,24 @@ if method === :both
                 "owner_cutoff_margins = $([minimum(abs.(spectrum .- cutoff)) for spectrum in owner_spectra])",
                 "dimensions = $((; bare = nG, residual = residual.residual_dimension, augmented = size(H1, 1)))",
                 "operators = $((; dimensions = size.(matrices), fingerprints = operator_fingerprints, gg_kinetic_error = norm(products.value.kinetic[1:nG, 1:nG] - bare.kinetic, Inf), gg_nuclear_error = maximum(norm(unit_nuclear.value[i][1:nG, 1:nG] - bare.unit_nuclear[i], Inf) for i in 1:2)))"]
-            push!(supplemented, (; row, due, pgdg = base_pgdg,
-                mappings = bare.mappings, capture_regions = String[], supplement_details = details))
+            a = transpose(parent_cross) * parent_state; r = transpose(residual.T_G) * g + transpose(residual.T_A) * a
+            augmented_capture = bare_capture + dot(r, r); augmented_capture + 1.0e-12 >= bare_capture ||
+                error("supplemented target capture decreased")
+            augmented_state = vcat(g, r) ./ sqrt(augmented_capture)
+            augmented_vee = @timed GB.cartesian_residual_gto_augmented_vee(
+                base, bare_ham, residual, products.value, unit_nuclear.value)
+            gg_error = norm(augmented_vee.value[1:nG, 1:nG] - base_vee.value, Inf)
+            gg_error <= 1.0e-10 || error("augmented G-G interaction differs from fresh bare IDA")
+            augmented_interaction = @timed matrix_interaction(
+                augmented_vee.value, augmented_state, "augmented_$(bare.row["method"])")
+            result = (; row, due, pgdg = base_pgdg, mappings = bare.mappings, capture_regions = String[],
+                supplement_details = details, interaction_details = String[])
+            record_fixed!(result, augmented_state, augmented_capture,
+                abs(dot(augmented_state, augmented_state) - 1), dot(augmented_state, H1, augmented_state),
+                augmented_interaction; elapsed = augmented_vee.time + augmented_interaction.time,
+                allocated = augmented_vee.bytes + augmented_interaction.bytes)
+            push!(result.interaction_details, "augmented_block_parity gg_error=$gg_error categories=$((; GG = (nG, nG), GR = (nG, residual.residual_dimension), RR = (residual.residual_dimension, residual.residual_dimension)))")
+            push!(supplemented, result)
         end
         results = vcat(results, supplemented)
         length(results) == 5 && [result.row["method"] for result in results] ==
@@ -397,7 +497,7 @@ open(tsv_path, "w") do io
     println(io, join(FIELDS, '\t')); foreach(result -> println(io, join((result.row[field] for field in FIELDS), '\t')), results)
 end
 open(report_path, "w") do io
-    println(io, system === :h2 ? "Neutral-metadata supplemented H2 one-body preflight" :
+    println(io, system === :h2 ? "Fixed-state supplemented H2 density-density interaction gate" :
         "Matched source-box-first PQS / White-Lindsey two-center H2+ one-body gate")
     for result in results
         println(io, "\n[", result.row["method"], "]")
@@ -411,6 +511,8 @@ open(report_path, "w") do io
             foreach(line -> println(io, line), result.capture_regions); end
         if !isempty(result.supplement_details); println(io, "supplement_diagnostics =")
             foreach(line -> println(io, line), result.supplement_details); end
+        if !isempty(result.interaction_details); println(io, "interaction_diagnostics =")
+            foreach(line -> println(io, line), result.interaction_details); end
     end
 end
 println("TSV: ", tsv_path, "\nreport: ", report_path)
