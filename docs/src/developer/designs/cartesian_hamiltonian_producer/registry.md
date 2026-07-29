@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `412746dcfc478cee7e1fec03ecca489af48e2eb744d12550fdee3f21751681df`.
+> [authority.toml](authority.toml), SHA-256 `ebd94f9d130e97c1cbc38c3241df740d9f1f49fa53706171cc09d7fa96d905cb`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1290,8 +1290,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-ASPECTSHELL-FN-01 - matched PQS/WL aspect-aware shell modes
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1304,13 +1304,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/pqs_wl_shared_shell_policy_audit_2026-07-29.md`
+  - `git_commit`: `6e2c97704`
+  - `manager_pass`: `441`
 - **Dependencies:** `HP-COMP-SHELLGEOM-DIAT-FN-01`, `HP-WLDIAT-COMPACT-FN-01`, `HP-WLDIAT-PARITY-FN-01`, `HP-WLTERM-FN-01`
 - **Scope:** Correct only eligible shared complete shells so PQS and White-Lindsey consume one post-shellification outer shape \`D=(ns,ns,L)\`: preserve PQS's boundary quotient, make WL derive axis-specific inner counts \`D.-2\`, and require equal aggregate shell and bare terminal dimensions without changing the parent, common shell supports, public \`ns\`, route-local \`q\`, direct cores, slabs, PQS numerics, or ineligible one-center/nonshared WL behavior. Reuse the existing \`source\_mode\_shape\`; the sole anti-bloat exception is one WL-realizer read of that existing metadata key. Add no shape field, route object, generalized metadata algorithm, driver branch, artifact, or interaction change. Limit the correction to 60 added source lines in the approved existing files. Stop without committing if the current strata cannot consume noncubic counts through existing products.
 
 ### HP-PQS-ASPECTSHELL-TEST-01 - matched aspect-source validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1320,6 +1322,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `manager_pass`: `247`
   - `manager_pass`: `248`
+  - `git_commit`: `6e2c97704`
+  - `manager_pass`: `441`
 - **Dependencies:** `HP-PQS-ASPECTSHELL-FN-01`
 - **Scope:** Add at most 30 lines for one bounded matched-H2 regression in the existing public Cartesian base test. Require common parent/shell/support parity, one outer shape per eligible shell, equal PQS boundary and aggregated WL stratum counts, equal bare terminal dimensions, exact PQS parity, WL Gram/column checks, and finite symmetric operators. Complete acceptance with the unchanged clean private paper-driver replay; add no test file, fixture, probe, or committed paper output.
 

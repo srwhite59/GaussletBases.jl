@@ -1,8 +1,7 @@
 # Matched PQS/White-Lindsey Complete-Shell Aspect Source Modes
 
-Status: the PQS aspect selector is implemented. Matched White-Lindsey
-consumption is approved pending under `HP-PQS-ASPECTSHELL-FN-01`; its paired
-committed validation is also approved pending.
+Status: implemented under `HP-PQS-ASPECTSHELL-FN-01`; committed validation is
+completed under `HP-PQS-ASPECTSHELL-TEST-01`. Both records are in maintenance.
 
 This page is the canonical contract for selecting one aspect-aware outer
 source shape for a shared complete shell and consuming it in matched
@@ -168,7 +167,7 @@ full-shell boundary count.
 
 ## Source Ownership
 
-Current and approved implementation ownership is limited to:
+Current maintenance ownership is limited to:
 
 - `src/pqs_source_box_route_driver_helpers.jl` for angular-dimension
   selection and matched lowering-contract enrichment;
@@ -211,6 +210,16 @@ point, common core/slab counts were `275/50`, while complete-shell totals were
 `960` for PQS and `784` for WL, producing bare dimensions `1285/1109`. Those
 values remain valid for the two implemented bases but are provisional evidence
 for a matched-method comparison.
+
+Commit `6e2c97704` implemented matched consumption. Its clean unchanged-driver
+replay preserved the parent and both PQS rows exactly, changed WL shared-shell
+columns from `784` to `960`, and produced matched bare/supplemented dimensions
+`1285/1303` for both families. The rebuilt WL fixed-target fingerprints are
+`80b446467a5d0529d6e428e7fa54b134ed172f638cfb07bb7098efd71a0cb5d9`
+and
+`0d749a687a87f7b8beb8453095ae6301d8f3c74ea958aaac8db0ee9f89744898`.
+These are production measurements; external paper-oracle interpretation
+remains a consumer validation step.
 
 The correction acceptance checks include:
 

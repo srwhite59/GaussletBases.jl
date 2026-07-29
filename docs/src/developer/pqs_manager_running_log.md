@@ -32,12 +32,10 @@ archaeology and are not normal startup reading.
   `J0` evaluator with reported consistency error. A determinant-exact `J0/E0`
   convention requires a separate scientific amendment.
 - The source-backed Cr2 composition/replay migration is closed. The matched
-  full-parent/PQS/White-Lindsey H2+ and fixed-state H2 paper mechanics are
-  implemented, but their standard method comparison is provisional. A
-  2026-07-29 audit found common physical shells but unequal complete-shell
-  counts because only PQS consumed the aspect-aware longitudinal shape. The
-  next source gate is the approved matched `(ns,ns,L)` PQS/WL correction and
-  complete replay before external interaction interpretation.
+  full-parent/PQS/White-Lindsey H2+ and fixed-state H2 paper mechanics now use
+  common aspect-aware shared-shell dimensions. Parent and PQS rows are
+  unchanged; rebuilt WL rows await external same-density oracle
+  interpretation before a method-accuracy claim.
 - Fixed-parent shell-q/PRF measurements now also support an internal
   parent-residual basis facility and direct-only parent-backed Gaussian
   interaction resource. Physical target selection, transition-density
@@ -1582,3 +1580,44 @@ Carrying-cost accounting:
 - **MT6 carrying-cost control - active.** Future source work is capped at the
   existing helper/realizer/report seams, reuses one shape field, and may add no
   source file, route carrier, driver branch, or test file.
+
+## Cartesian Hamiltonian Producer Pass 441 - Implement Matched Shared-Shell Aspect Modes
+
+Commit(s):
+- `6e2c97704` - make eligible White-Lindsey strata consume the common
+  `(ns,ns,L)` shell shape and complete the existing public regression.
+- this commit - reconcile both aspect-shell IDs to maintenance.
+
+Summary:
+- White-Lindsey now derives each free-axis count from `D.-2`, while PQS,
+  parent geometry, supports, cores, slabs, and route-local `q` remain
+  unchanged. Eligible shared shells reject missing shapes; due diligence
+  derives the realized shape without another metadata read and fails on
+  aggregate column mismatch.
+- A clean five-row `R=2` replay retained the `12789` parent and exact PQS rows.
+  WL complete-shell columns changed from `784` to `960`; bare and supplemented
+  PQS/WL dimensions now match at `1285/1303`. Rebuilt WL fixed-target captures
+  are `0.9999562102/0.9999958485`.
+
+Goal advancement / guardrail:
+- MT3 closes the repository-side matched-retention blocker. External
+  same-density oracle replay must use the new WL fingerprints before paper
+  accuracy is interpreted. No supplement, interaction, driver, artifact, or
+  public policy changed.
+
+Carrying-cost accounting:
+- deleted: the unmatched scalar-count realization for eligible shared WL
+  shells.
+- simplified: one existing outer shape drives PQS boundary and WL product
+  counts; scalar fallback remains only for ineligible one-center/nonshared WL.
+- quarantined: old WL rows and fingerprints remain historical evidence.
+- not deleted because: scalar WL fallback still owns ineligible constructions.
+- exact remaining caller/blocker: external paper-oracle replay; no repository
+  source blocker remains.
+- added/deleted `src` lines: `60/22`; new tests: none, with `30/2` lines in the
+  existing public endpoint test.
+- new metadata/status fields: none.
+- validation: package load, public Cartesian base `202/202`, independent
+  review, exact parent/PQS clean-replay parity, matched WL
+  `960`-column/`1285`-dimension ledger, finite symmetric H1/Vee, block Gram and
+  column accounting, staged anti-bloat review, and `git diff --check`.

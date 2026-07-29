@@ -18,7 +18,7 @@ source/contract findings, not another migration campaign.
 | Area | Current implemented state | Canonical contract |
 | --- | --- | --- |
 | Terminal basis | Disjoint owned terminal supports, support-local realization, structural cross-block overlap, blockwise exact operators | [Terminal basis and base assembly](terminal_basis_and_base_assembly.md), [common shell decomposition](common_terminal_shell_decomposition.md) |
-| Diatomic shell corrections | Common physical shells, angular-z extension, neutral face products, compact PQS/WL thin slabs, implemented PQS aspect-aware shared-shell source modes, and private semantic per-shell source-q refinement/coarsening | [Common shell decomposition](common_terminal_shell_decomposition.md), [matched aspect source modes](pqs_complete_shell_aspect_source_modes.md), [semantic source-q overrides](pqs_semantic_shell_q_overrides.md) |
+| Diatomic shell corrections | Common physical shells, angular-z extension, neutral face products, compact PQS/WL thin slabs, matched aspect-aware PQS/WL shared-shell source modes, and private semantic per-shell source-q refinement/coarsening | [Common shell decomposition](common_terminal_shell_decomposition.md), [matched aspect source modes](pqs_complete_shell_aspect_source_modes.md), [semantic source-q overrides](pqs_semantic_shell_q_overrides.md) |
 | Base producer | Exported facade plus blockwise exact H1, localized IDA, and direct `CartesianIDAHamiltonian` construction for the implemented atom/diatomic scope | [Terminal basis and base assembly](terminal_basis_and_base_assembly.md), [R1 base producer](r1_public_base_producer.md), [one-center atoms](r1_one_center_base_atoms.md) |
 | Ordinary artifacts | Unchanged matrix payload and reader, plus facade-written native-order labels, recipe truth, and the implemented subset of construction-native source provenance | [Artifact manifest](cartesian_hamiltonian_artifact_manifest.md) |
 | Composition and driver | PQS/WL, base/supplemented composition through shared producer boundaries; canonical artifact-producing driver; terminal inventory and due-diligence reporting | [Composition contract](nesting_supplement_composition_plan.md), [driver workflow](cartesian_driver_usability_workflow.md), [due diligence](terminal_shellification_due_diligence.md) |
@@ -40,8 +40,8 @@ claim.
 
 | Lane | State | Exact next boundary |
 | --- | --- | --- |
-| `HP-PQS-ASPECTSHELL-*` | PQS aspect selection implemented; matched WL use of the same `(ns,ns,L)` outer shape approved pending | Carry the common shape into eligible WL strata, use per-axis inner counts `shape.-2`, prove equal shell/base dimensions without changing PQS or common geometry, and replay the paper endpoint |
-| `HP-PQS-PAPER-H2-DRV-FN-01` | Five-row fixed-state measurement implemented, but its PQS/WL comparison used unequal shared-shell dimensions and is provisional | After the matched-shell correction lands, replay all five rows, preserve parent/PQS parity, rebuild both WL rows, then rerun the external same-density Coulomb oracle |
+| `HP-PQS-ASPECTSHELL-*` | Implemented/completed maintenance; eligible PQS/WL shells share `(ns,ns,L)` and equal aggregate dimensions | Preserve parent/PQS parity and fail on missing shape, axis-count, aggregate-column, or Gram inconsistencies |
+| `HP-PQS-PAPER-H2-DRV-FN-01` | Five-row fixed-state measurement replayed with matched bare/supplemented dimensions | Rerun the external same-density Coulomb oracle against the new WL fingerprints before interpreting method accuracy |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
@@ -54,35 +54,31 @@ historical audit IDs are not active work.
 
 ## Current Physics Target
 
-The full-parent/PQS/White-Lindsey H2+ controls and frozen supplemented
-one-body/fixed-state measurements at `R=2` remain valid results for the two
-implemented bases. They are not yet a matched retained-dimension comparison.
-The 2026-07-29 audit found identical parent, physical shells, `275` core
-functions, and `50` slab functions, but PQS used aspect-aware shell shapes
-with `960` complete-shell functions while White-Lindsey retained `784`
-cubic-policy shell functions. The resulting bare dimensions `1285/1109` mix
-the construction-family comparison with extra PQS longitudinal resolution.
+The clean `R=2` full-parent/PQS/White-Lindsey replay now uses one parent,
+common physical shells, `275` core functions, `50` slab functions, and `960`
+complete-shell functions in each terminal family. Bare and supplemented
+dimensions are matched at `1285/1303`. The parent and both PQS rows are
+exactly unchanged from the pre-correction evidence; WL rows were rebuilt from
+the corrected per-axis inner counts.
 
 The fixed-state interaction extension remains implemented at clean commit
 `7d2b6dc61`. It holds the common parent H2+ orbital fixed after separate
 projection into the parent, bare, and supplemented spaces; uses matrix-free
 parent high135 IDA, terminal/site IDA, and the established residual MWG
 blocks; and reports the density-density energy decomposition without RHF/SCF
-or artifacts. Its current numerical rows and the earlier H2+ comparison are
-provisional paper evidence until the matched shell policy is implemented and
-replayed. External oracle interpretation must wait for the corrected WL state
-fingerprints. The `padding=20.0`, `tail_spacing=2.0` combination, other H2
+or artifacts. The matched repo replay is complete, but external oracle
+interpretation must use the corrected WL state fingerprints before a method
+accuracy claim. The `padding=20.0`, `tail_spacing=2.0` combination, other H2
 endpoints, supplement or cutoff scans, capture at other campaign points, `q`
 ladders, and geometry curves remain forbidden. This changes no canonical
 driver, public facade, producer default, artifact schema family, or solver API.
 
 ## Current Blockers And Follow-Ups
 
-1. **Matched PQS/WL shared-shell retention.** Current standard H2+/H2 rows use
-   a common physical shell decomposition but unequal complete-shell retained
-   counts. Implement the approved common `(ns,ns,L)` outer shape with WL
-   per-axis inner counts `(ns-2,ns-2,L-2)`, then replay before interpreting
-   method accuracy.
+1. **Matched paper-oracle interpretation.** Repository construction and the
+   clean five-row replay are complete. The external same-density Coulomb
+   oracle must be rerun against the corrected WL fingerprints before method
+   accuracy or curve evidence is interpreted.
 2. **Standard Coulomb implementation.** The analytic K60 preset and artifact
    fingerprint are approved but not source-backed. The controlled Cr2
    screened comparison stays `:high` and must not be changed mid-comparison.
