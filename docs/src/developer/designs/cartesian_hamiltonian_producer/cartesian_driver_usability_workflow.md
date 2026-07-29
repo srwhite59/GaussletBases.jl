@@ -4,7 +4,9 @@ Status: implemented canonical contract for the human-facing Cartesian
 Hamiltonian driver and its non-exported staged producer calls, plus one
 implemented private PQS/WL paper-validation driver with an implemented H2+
 endpoint, implemented neutral-H2 supplemented one-body preflight, and
-implemented five-row fixed-state density-density measurement awaiting its
+implemented five-row fixed-state density-density measurement. The current
+PQS/WL paper rows are provisional because they predate the approved matched
+shared-shell aspect correction; replay under that correction precedes the
 external same-density oracle.
 Registry entries own
 the lifecycle and source permissions for the corresponding IDs. Driver
@@ -244,6 +246,13 @@ define a different parent scale. Independently constructed method instances
 must agree in parent centers, weights, mapped axis operators, physical bounds,
 and fingerprints. The script must validate route identity and live objects
 rather than infer them from labels.
+
+For every eligible shared complete shell, both methods must also consume the
+same aspect-selected outer source shape `(ns,ns,L)`. PQS retains its boundary
+quotient; White-Lindsey uses axis-specific inner counts
+`(ns-2,ns-2,L-2)`. Direct-core, aggregate complete-shell, slab, and bare final
+dimensions must match. The driver does not choose this policy or patch a
+shape; it reports and validates the source-backed construction.
 
 Physical nuclear attraction must use the actual two centers through the
 existing arbitrary-center kernel. The bare H2+ route must not use the public
@@ -818,6 +827,10 @@ capture singular value was `0.9991415015`; terminal minima were
 `9+9`, with no discarded direction at the production cutoff. This is
 repository acceptance of the bounded one-body endpoint, not independent paper
 acceptance; that commit alone did not establish the interaction stage below.
+The `1285/1109` terminal difference was subsequently traced to the old
+PQS-only aspect policy: common physical shells retained `960/784` PQS/WL
+complete-shell functions. These rows remain valid old-policy measurements but
+are provisional for the matched paper comparison.
 
 The implemented fixed-state interaction command is the same frozen H2 command:
 
@@ -839,7 +852,9 @@ Repository acceptance at `7d2b6dc61` retained dimensions
 production density-density `J` values are
 `0.6613194326/0.6614182833/0.6632012296/0.6614042003/0.6625621285 Ha`.
 These are construction-backed measurements, not an interaction-accuracy
-ordering; the external same-density oracle remains the scientific gate.
+ordering. They must be replayed after the matched shared-shell correction;
+the external same-density oracle then uses the corrected WL state
+fingerprints. Old WL values are evidence, not parity targets.
 
 This authority changes no public input, canonical-driver behavior, numerical
 default, artifact schema, AddNest/exact-W/injection/PRF/external-RG/MWG/

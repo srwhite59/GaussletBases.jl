@@ -1,11 +1,13 @@
 # White-Lindsey Terminal Basis Realization
 
-Status: the four White-Lindsey source families are implemented. Only
-`HP-WLTERM-TEST-01` retains narrow inherited committed-test maintenance; the
-diatomic, compact, and parity test IDs are probe-only completed evidence. The
-registry owns exact ID lifecycle and file permission. This page owns the
-current numerical boundary for realizing native White-Lindsey retained units
-as the terminal basis used by the shared Hamiltonian producer.
+Status: the four White-Lindsey source families are implemented. Matched
+aspect-aware shared-shell counts are approved pending under
+`HP-PQS-ASPECTSHELL-FN-01`; current source still uses one scalar contraction
+count for those shells. `HP-WLTERM-TEST-01` retains narrow inherited committed
+test maintenance, and the aspect test ID separately owns the approved matched
+H2 regression. Machine authority owns exact lifecycle and file permission.
+This page owns the numerical boundary for realizing native White-Lindsey
+retained units as the terminal basis used by the shared producer.
 
 ## Input And Output Boundary
 
@@ -77,6 +79,25 @@ must not be inherited by boundary strata or their one-dimensional
 contractions. Boundary products use the requested WL retained count with
 `enforce_symmetric_odd = false`.
 
+For an eligible shared z-axis complete shell, the matched aspect policy in
+`pqs_complete_shell_aspect_source_modes.md` supplies one common outer shape:
+
+```text
+D = (ns, ns, L)
+```
+
+PQS consumes the outer boundary quotient. White-Lindsey uses the
+axis-specific inner one-dimensional counts:
+
+```text
+K = D .- 2 = (ns - 2, ns - 2, L - 2)
+```
+
+Each facet or edge chooses the component of `K` for its free axis. Summed over
+all native facets, edges, and corners, the shell count must be
+`prod(D)-prod(K)`, equal to the matched PQS shell count. This requirement is
+dimension parity, not coefficient or subspace identity.
+
 For the canonical one-layer WL boundary examples:
 
 ```text
@@ -84,14 +105,18 @@ ns = 4, q = 2:  4^3 - 2^3 = 56 boundary columns
 ns = 5, q = 3:  5^3 - 3^3 = 98 boundary columns
 ```
 
-The old `26`-column result for `ns = 4` is not valid retained-count policy.
-Full-support identity retention for WL boundary strata is likewise invalid.
+These examples are cubic outer shapes. The old `26`-column result for
+`ns = 4` is not valid retained-count policy. Full-support identity retention
+for WL boundary strata is likewise invalid. Nonshared and one-center shells
+outside the matched aspect policy continue to use the existing scalar
+route-local count.
 
 White-Lindsey z-axis diatomics reject normalized `ns < 4` before route
-construction. At supported sizes, physical parent extent and contact geometry
-may saturate retained support or produce a final dimension different from
-PQS. That is not permission to alter common shell ownership, fake compactness,
-or promise equal PQS/WL dimensions.
+construction. Eligible standard matched shared-shell constructions require
+equal PQS/WL direct-core, complete-shell, slab, and bare final dimensions.
+Other supported constructions may still differ when their region eligibility
+or retention policy differs. Neither case permits altered shell ownership or
+fake compactness.
 
 ## Downstream Seam
 
@@ -126,10 +151,10 @@ authoritative for exact source surfaces.
 ## Guardrails
 
 This contract does not change route skeletons, shellification ownership,
-public `ns` normalization, direct-core centering, PQS source dimensions,
-complete-shell or slab retained policies, mapped-COMX defaults, artifacts,
-public APIs, reports, raw blocks, RG/MWG/IDA semantics, solvers, ECP, or Cr2
-workflow. It does not choose a longitudinal `L` or an angular-resolution
+public `ns` normalization, direct-core centering, PQS source dimensions, slab
+retention, mapped-COMX defaults, artifacts, public APIs, raw blocks,
+RG/MWG/IDA semantics, solvers, ECP, or Cr2 workflow. White-Lindsey consumes
+the matched longitudinal `L`; it does not choose `L` or an angular-resolution
 scale.
 
 If a WL unit cannot be realized from its native support and transform facts,

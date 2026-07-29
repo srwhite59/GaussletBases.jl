@@ -18,7 +18,7 @@ source/contract findings, not another migration campaign.
 | Area | Current implemented state | Canonical contract |
 | --- | --- | --- |
 | Terminal basis | Disjoint owned terminal supports, support-local realization, structural cross-block overlap, blockwise exact operators | [Terminal basis and base assembly](terminal_basis_and_base_assembly.md), [common shell decomposition](common_terminal_shell_decomposition.md) |
-| Diatomic shell corrections | Angular-z extension, neutral face products, compact PQS/WL thin slabs, aspect-aware PQS shared complete-shell `(q,q,L)` source modes, and implemented private semantic per-shell source-q refinement/coarsening | [Common shell decomposition](common_terminal_shell_decomposition.md), [aspect-aware source modes](pqs_complete_shell_aspect_source_modes.md), [semantic source-q overrides](pqs_semantic_shell_q_overrides.md) |
+| Diatomic shell corrections | Common physical shells, angular-z extension, neutral face products, compact PQS/WL thin slabs, implemented PQS aspect-aware shared-shell source modes, and private semantic per-shell source-q refinement/coarsening | [Common shell decomposition](common_terminal_shell_decomposition.md), [matched aspect source modes](pqs_complete_shell_aspect_source_modes.md), [semantic source-q overrides](pqs_semantic_shell_q_overrides.md) |
 | Base producer | Exported facade plus blockwise exact H1, localized IDA, and direct `CartesianIDAHamiltonian` construction for the implemented atom/diatomic scope | [Terminal basis and base assembly](terminal_basis_and_base_assembly.md), [R1 base producer](r1_public_base_producer.md), [one-center atoms](r1_one_center_base_atoms.md) |
 | Ordinary artifacts | Unchanged matrix payload and reader, plus facade-written native-order labels, recipe truth, and the implemented subset of construction-native source provenance | [Artifact manifest](cartesian_hamiltonian_artifact_manifest.md) |
 | Composition and driver | PQS/WL, base/supplemented composition through shared producer boundaries; canonical artifact-producing driver; terminal inventory and due-diligence reporting | [Composition contract](nesting_supplement_composition_plan.md), [driver workflow](cartesian_driver_usability_workflow.md), [due diligence](terminal_shellification_due_diligence.md) |
@@ -40,7 +40,8 @@ claim.
 
 | Lane | State | Exact next boundary |
 | --- | --- | --- |
-| `HP-PQS-PAPER-H2-DRV-FN-01` | Full-parent/PQS/WL H2+ controls, neutral-H2 supplemented one-body preflight, and five-row fixed-state density-density measurement implemented | Reconstruct the exact five clean-commit states externally, match captures/fingerprints/H1, and converge the same-density Coulomb oracle before interpreting interaction accuracy |
+| `HP-PQS-ASPECTSHELL-*` | PQS aspect selection implemented; matched WL use of the same `(ns,ns,L)` outer shape approved pending | Carry the common shape into eligible WL strata, use per-axis inner counts `shape.-2`, prove equal shell/base dimensions without changing PQS or common geometry, and replay the paper endpoint |
+| `HP-PQS-PAPER-H2-DRV-FN-01` | Five-row fixed-state measurement implemented, but its PQS/WL comparison used unequal shared-shell dimensions and is provisional | After the matched-shell correction lands, replay all five rows, preserve parent/PQS parity, rebuild both WL rows, then rerun the external same-density Coulomb oracle |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
@@ -53,48 +54,53 @@ historical audit IDs are not active work.
 
 ## Current Physics Target
 
-The full-parent/PQS/White-Lindsey H2+ controls and the frozen supplemented
-one-body preflight at `R=2` are repository-accepted and independently replayed.
-With
-`padding=10.0`, `tail_spacing=2.8`, and the contracted H/cc-pVTZ `s,p`
-supplement, PQS and White-Lindsey retain all `9+9` owner-local residual
-directions at the production `1e-6` cutoff. Their bare/supplemented dimensions
-are `1285/1303` and `1109/1127`; the exact augmented one-body energies are
-variational relative to the matching bare rows.
+The full-parent/PQS/White-Lindsey H2+ controls and frozen supplemented
+one-body/fixed-state measurements at `R=2` remain valid results for the two
+implemented bases. They are not yet a matched retained-dimension comparison.
+The 2026-07-29 audit found identical parent, physical shells, `275` core
+functions, and `50` slab functions, but PQS used aspect-aware shell shapes
+with `960` complete-shell functions while White-Lindsey retained `784`
+cubic-policy shell functions. The resulting bare dimensions `1285/1109` mix
+the construction-family comparison with extra PQS longitudinal resolution.
 
-The fixed-state interaction extension is implemented at clean commit
+The fixed-state interaction extension remains implemented at clean commit
 `7d2b6dc61`. It holds the common parent H2+ orbital fixed after separate
 projection into the parent, bare, and supplemented spaces; uses matrix-free
 parent high135 IDA, terminal/site IDA, and the established residual MWG
 blocks; and reports the density-density energy decomposition without RHF/SCF
-or artifacts. The next paper step is the external independently converged
-same-density Coulomb oracle, which must reconstruct and validate the exact
-captures, state fingerprints, and H1 expectations before the production
-values are interpreted. The `padding=20.0`, `tail_spacing=2.0` combination, other H2
+or artifacts. Its current numerical rows and the earlier H2+ comparison are
+provisional paper evidence until the matched shell policy is implemented and
+replayed. External oracle interpretation must wait for the corrected WL state
+fingerprints. The `padding=20.0`, `tail_spacing=2.0` combination, other H2
 endpoints, supplement or cutoff scans, capture at other campaign points, `q`
 ladders, and geometry curves remain forbidden. This changes no canonical
 driver, public facade, producer default, artifact schema family, or solver API.
 
 ## Current Blockers And Follow-Ups
 
-1. **Standard Coulomb implementation.** The analytic K60 preset and artifact
+1. **Matched PQS/WL shared-shell retention.** Current standard H2+/H2 rows use
+   a common physical shell decomposition but unequal complete-shell retained
+   counts. Implement the approved common `(ns,ns,L)` outer shape with WL
+   per-axis inner counts `(ns-2,ns-2,L-2)`, then replay before interpreting
+   method accuracy.
+2. **Standard Coulomb implementation.** The analytic K60 preset and artifact
    fingerprint are approved but not source-backed. The controlled Cr2
    screened comparison stays `:high` and must not be changed mid-comparison.
-2. **Parent-backed interaction interpretation.** Source composition,
+3. **Parent-backed interaction interpretation.** Source composition,
    interaction, fitted-field representation, correction delegation, and the
    intended bounded CR2 replay are validated. Transition-density exchange,
    exact PRF-GTO interactions, automatic selection, generic parity tolerance,
    artifacts, and endpoint acceptance remain unapproved.
-3. **Retained-GTO EGOI helper.** The protected target/mask convention is
+4. **Retained-GTO EGOI helper.** The protected target/mask convention is
    accepted, but committed source does not yet implement the helper.
-4. **Residual spectral interpretation.** Tightening the RG cutoff removed
+5. **Residual spectral interpretation.** Tightening the RG cutoff removed
    marginal residuals but did not remove the measured low two-owner mode.
    Injection and cutoff changes are not substitutes for a separately approved
    safety policy.
-5. **Protected atoms and counterpoise.** One-center protected compactness,
+6. **Protected atoms and counterpoise.** One-center protected compactness,
    separated kinetic/unit-nuclear persistence, and counterpoise sidecars remain
    separate future designs.
-6. **Screened-reference exactness policy.** Current source uses determinant
+7. **Screened-reference exactness policy.** Current source uses determinant
    orbitals for `P0/q0`, the density fit for `E0`, and the fitted potential for
    approximate `J0`, with consistency error reported. Determinant-exact
    `J0/E0` would be a new scientific amendment, not a conformance repair; do

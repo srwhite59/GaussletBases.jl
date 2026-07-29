@@ -87,8 +87,9 @@ ID or subsystem.
   for superseded fixed-`P0` experiments and the deferred XPAIR question
 - [Terminal shellification due diligence](terminal_shellification_due_diligence.md)
   for the derived basis review report and advisory warning contract
-- [PQS complete-shell aspect source modes](pqs_complete_shell_aspect_source_modes.md)
-  for the separate `(q,q,L)` source-policy lane
+- [Matched PQS/White-Lindsey complete-shell aspect source modes](pqs_complete_shell_aspect_source_modes.md)
+  for one shared `(ns,ns,L)` outer shape and equal-dimensional
+  family-specific retained constructions
 - [Semantic per-shell PQS source-q overrides](pqs_semantic_shell_q_overrides.md)
   for implemented private owner-balanced source-order refinement and
   coarsening on a fixed parent lattice

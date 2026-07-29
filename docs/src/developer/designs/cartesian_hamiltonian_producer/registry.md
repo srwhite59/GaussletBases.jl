@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `4128d96b4fa4fbb2c33823e2bd0526b2196554dfa9271bafa3d5258357ca05f6`.
+> [authority.toml](authority.toml), SHA-256 `412746dcfc478cee7e1fec03ecca489af48e2eb744d12550fdee3f21751681df`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1288,39 +1288,40 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Dependencies:** none
 - **Scope:** generic build-result wrapper — rejected.
 
-### HP-PQS-ASPECTSHELL-FN-01 - PQS aspect-aware source modes
+### HP-PQS-ASPECTSHELL-FN-01 - matched PQS/WL aspect-aware shell modes
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [pqs\_complete\_shell\_aspect\_source\_modes.md](pqs_complete_shell_aspect_source_modes.md); heading `PQS Complete-Shell Aspect-Aware Source Modes`
+  - `canonical` [pqs\_complete\_shell\_aspect\_source\_modes.md](pqs_complete_shell_aspect_source_modes.md); heading `Matched PQS/White-Lindsey Complete-Shell Aspect Source Modes`
 - **Owned paths:**
   - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
   - `source` / `existing`: `src/pqs_multilayer_shell_region_plan.jl`
   - `source` / `existing`: `src/pqs_multilayer_shell_source_plan.jl`
   - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
-- **Evidence:** none
-- **Dependencies:** none
-- **Scope:** preserve the existing post-shellification angular-band \`L\` selection and one authoritative \`(q,q,L)\` shape through lowering, retention, realization, and reporting.
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/pqs_wl_shared_shell_policy_audit_2026-07-29.md`
+- **Dependencies:** `HP-COMP-SHELLGEOM-DIAT-FN-01`, `HP-WLDIAT-COMPACT-FN-01`, `HP-WLDIAT-PARITY-FN-01`, `HP-WLTERM-FN-01`
+- **Scope:** Correct only eligible shared complete shells so PQS and White-Lindsey consume one post-shellification outer shape \`D=(ns,ns,L)\`: preserve PQS's boundary quotient, make WL derive axis-specific inner counts \`D.-2\`, and require equal aggregate shell and bare terminal dimensions without changing the parent, common shell supports, public \`ns\`, route-local \`q\`, direct cores, slabs, PQS numerics, or ineligible one-center/nonshared WL behavior. Reuse the existing \`source\_mode\_shape\`; the sole anti-bloat exception is one WL-realizer read of that existing metadata key. Add no shape field, route object, generalized metadata algorithm, driver branch, artifact, or interaction change. Limit the correction to 60 added source lines in the approved existing files. Stop without committing if the current strata cannot consume noncubic counts through existing products.
 
-### HP-PQS-ASPECTSHELL-TEST-01 - aspect-source validation
+### HP-PQS-ASPECTSHELL-TEST-01 - matched aspect-source validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `measurement`
-- **Surfaces:** `measurement`
-- **Execution whitelist:** `false`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
 - **Documents:**
-  - `evidence` [pqs\_complete\_shell\_aspect\_source\_modes.md](pqs_complete_shell_aspect_source_modes.md); heading `PQS Complete-Shell Aspect-Aware Source Modes`
+  - `canonical` [pqs\_complete\_shell\_aspect\_source\_modes.md](pqs_complete_shell_aspect_source_modes.md); heading `Matched PQS/White-Lindsey Complete-Shell Aspect Source Modes`
 - **Owned paths:**
-  - `measurement` / `optional_local`: `tmp/work/h2plus_aspect_shell_completeness_replay.jl`
-  - `measurement` / `optional_local`: `tmp/work/pqs_aspect_shell_validation.jl`
+  - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
 - **Evidence:**
   - `manager_pass`: `247`
   - `manager_pass`: `248`
-- **Dependencies:** none
-- **Scope:** maintain only the two exact optional aspect-source probes as completed evidence for \`HP-PQS-ASPECTSHELL-FN-01\`; no committed test authority.
+- **Dependencies:** `HP-PQS-ASPECTSHELL-FN-01`
+- **Scope:** Add at most 30 lines for one bounded matched-H2 regression in the existing public Cartesian base test. Require common parent/shell/support parity, one outer shape per eligible shell, equal PQS boundary and aggregated WL stratum counts, equal bare terminal dimensions, exact PQS parity, WL Gram/column checks, and finite symmetric operators. Complete acceptance with the unchanged clean private paper-driver replay; add no test file, fixture, probe, or committed paper output.
 
 ### HP-PQS-ATOMREF-PACKET-FN-01 - reusable atomic HF reference packets
 
@@ -3595,7 +3596,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
 - **Evidence:** none
 - **Dependencies:** none
-- **Scope:** keep odd-side enforcement only for direct nucleus-centered cores; WL boundary products retain the requested count. Canonical examples remain \`ns=4 -\> 56\` and \`ns=5 -\> 98\` boundary columns.
+- **Scope:** Keep odd-side enforcement only for direct nucleus-centered cores. Cubic WL boundary products retain the requested route-local count, with canonical examples \`ns=4 -\> 56\` and \`ns=5 -\> 98\`; eligible matched aspect shells are separately governed by \`HP-PQS-ASPECTSHELL-FN-01\` and use axis-specific inner counts from the shared outer shape.
 
 ### HP-WLDIAT-PARITY-TEST-01 - WL parity validation
 

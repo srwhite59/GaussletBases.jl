@@ -298,6 +298,15 @@ The canonical RG algorithm contract is
   realization; White-Lindsey may then split shell boundaries into faces, edges,
   corners, and strata for product-of-1D contractions. Those are
   retained-construction geometries, not separate first-step shellifiers.
+- Eligible shared complete shells use one aspect-aware outer source shape
+  `D = (ns,ns,L)` for the matched PQS/White-Lindsey comparison. PQS retains
+  the boundary quotient of `D`; White-Lindsey uses axis-specific inner
+  one-dimensional counts `D.-2` across its native facets, edges, and corners.
+  Their complete-shell retained counts and bare terminal dimensions must
+  match, while their coefficient subspaces remain intentionally different.
+  Do not let route-local WL `q=ns-2` silently replace the longitudinal
+  `L-2`, and do not apply this rule to ineligible one-center or nonshared
+  shells.
 - A private semantic shell `source_q` is a source-span refinement, not a second
   public/route `q`. It may be applied only after common shellification and must
   not change public `ns`, PQS route `q`, direct-core side, parent axes, shell

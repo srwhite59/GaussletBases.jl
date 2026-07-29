@@ -48,8 +48,11 @@ All eight bounded cells use the shared producer:
 | z-axis diatomic | on | shared residual-GTO/MWG augmentation | shared residual-GTO/MWG augmentation |
 
 The WL diatomic path remains subject to its compact retained-basis and boundary
-count contracts. Composition does not imply equal PQS/WL dimensions or general
-molecular support.
+count contracts. Eligible matched shared complete shells now require equal
+PQS/WL base terminal dimensions under the separate aspect-source contract.
+Composition alone does not imply equal dimensions for ineligible geometries,
+different retained policies, or supplemented spaces, and it does not imply
+general molecular support.
 
 ## Public Size Rules
 
@@ -70,7 +73,10 @@ construction because the complete-shell inner box requires the stricter floor;
 the generic WL floor remains `ns >= 3`. WL retained support may saturate across
 working `ns` values when physical parent extent dominates. Changing `ns` can
 still change route-local `q`, decomposition, and row order without changing
-final support. Equal `ns` does not promise equal PQS/WL dimensions.
+final support. Equal `ns` promises equal base dimensions only for the eligible
+matched shared-shell construction governed by
+`pqs_complete_shell_aspect_source_modes.md`; it is not a general composition
+promise.
 
 Direct nucleus-centered core side is independent of route-local `q`:
 

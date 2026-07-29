@@ -32,12 +32,12 @@ archaeology and are not normal startup reading.
   `J0` evaluator with reported consistency error. A determinant-exact `J0/E0`
   convention requires a separate scientific amendment.
 - The source-backed Cr2 composition/replay migration is closed. The matched
-  full-parent/PQS/White-Lindsey H2+ paper point at `R=2` is box-converged under
-  the accepted padding-10/20 control; padding `10` remains the campaign value.
-  The finer `tail_spacing=2.0` control is complete and favors retaining `2.8`;
-  the fixed parent-state capture diagnostic is complete. The next bounded step
-  is a neutral-metadata H2 one-body preflight with the frozen contracted
-  H/cc-pVTZ `s,p` supplement and production residual cutoff.
+  full-parent/PQS/White-Lindsey H2+ and fixed-state H2 paper mechanics are
+  implemented, but their standard method comparison is provisional. A
+  2026-07-29 audit found common physical shells but unequal complete-shell
+  counts because only PQS consumed the aspect-aware longitudinal shape. The
+  next source gate is the approved matched `(ns,ns,L)` PQS/WL correction and
+  complete replay before external interaction interpretation.
 - Fixed-parent shell-q/PRF measurements now also support an internal
   parent-residual basis facility and direct-only parent-backed Gaussian
   interaction resource. Physical target selection, transition-density
@@ -74,17 +74,16 @@ fixed-state and bounded replay reproduced the former consumer-local path. Any
 new Cr2 endpoint, contraction, exchange, or solver interpretation is a
 separate scientific choice.
 
-**MT3 - Approved pending producer facilities (active).** The private matched
-matrix-free parent/PQS/WL H2+ point and padding-10/20 control are complete;
-padding `10` is retained. The approved `tail_spacing=2.8/2.0` control is also
-complete and favors `2.8`; the parent-ground-state capture diagnostic at the
-accepted point is complete. One frozen neutral-H2 supplemented one-body
-preflight is approved next, using contracted H/cc-pVTZ `s,p`, no width filter,
-and the production `1e-6` residual cutoff. H2 interaction/RHF, supplement and
-cutoff scans, and fixed-parent ladders remain separate. Standard60 and
-canonical-driver Coulomb exposure remain separate. The retained-GTO EGOI
-helper remains pending and must not absorb the unrelated
-`hamiltonian_corrections.jl` WIP without review.
+**MT3 - Approved pending producer facilities (active).** The private
+matrix-free parent/PQS/WL H2+ controls, parent capture, supplemented H2
+one-body preflight, and fixed-state density-density gate are implemented.
+Their standard PQS/WL comparison is provisional because shared complete-shell
+counts are unequal. Implement the approved common `(ns,ns,L)` outer shape with
+WL inner counts `(ns-2,ns-2,L-2)`, replay all rows, and only then resume the
+external same-density oracle. RHF, scans, and ladders remain separate.
+Standard60/canonical-driver exposure and the retained-GTO EGOI helper remain
+separate pending facilities; neither may absorb the unrelated
+`hamiltonian_corrections.jl` WIP.
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
@@ -1527,3 +1526,59 @@ Carrying-cost accounting:
 - validation: package load, public Cartesian base `134/134`, clean `R=5`
   parent/PQS/WL endpoint, exact `R=2` basis fingerprints and deterministic
   endpoint parity, isolated scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 440 - Authorize Matched Shared-Shell Aspect Modes
+
+Commit(s):
+- this commit - replace the PQS-only comparison policy with one matched
+  PQS/White-Lindsey shared-shell contract.
+
+Summary:
+- The paper audit found identical `21x21x29` parents, shell supports, `275`
+  core functions, and `50` slab functions at the standard `R=2` point, but
+  complete-shell totals `960/784` and bare dimensions `1285/1109`. PQS alone
+  consumed aspect-selected longitudinal `L=6/7`; WL used scalar count `3` on
+  every free axis.
+- Existing `HP-PQS-ASPECTSHELL-FN-01/TEST-01` now approve one common outer
+  shape `D=(ns,ns,L)`. PQS keeps `prod(D)-prod(D.-2)` boundary modes; eligible
+  WL strata use axis-specific inner counts `D.-2`, so their aggregated shell
+  dimensions match while coefficient subspaces remain different.
+
+Goal advancement / guardrail:
+- MT3 corrects the scientific comparison before interpreting the implemented
+  H2+/H2 rows. Parent geometry, support ownership, public `ns`, route `q`,
+  direct cores, slabs, PQS matrices, supplements, interactions, and driver
+  controls remain unchanged. Old rows remain valid old-policy evidence but are
+  provisional for matched-method claims.
+
+Carrying-cost accounting:
+- deleted: probe-only test authority and the PQS-only policy claim.
+- simplified: one existing `source_mode_shape` serves both families; no second
+  selector, shape field, route object, or driver branch is approved.
+- quarantined: old WL dimensions, energies, captures, and fingerprints remain
+  historical evidence rather than parity targets.
+- not deleted because: the scalar WL count remains a live fallback for
+  ineligible one-center and nonshared shells.
+- exact remaining caller/blocker: implement within existing route helper,
+  WL realizer, and due-diligence seams, then run the bounded committed H2 gate
+  and complete private paper-driver replay.
+- added/deleted `src` lines: `0/0`; new tests: one existing-file regression
+  approved, no new file; new metadata/status fields: none, with one explicitly
+  bounded WL read of the existing `source_mode_shape`.
+- validation: authority/generated-view checks, docs tests, Documenter,
+  manager-log bound, docs-only scope review, and `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 440
+
+- **MT1 conformance remediation - active.** Unchanged; this is a scientific
+  policy correction discovered by paper validation, not Pass 398 cleanup.
+- **MT2 controlled Cr2 source migration - completed.** Unchanged.
+- **MT3 approved pending facilities - active/refined.** Matched shared-shell
+  implementation and replay now precede the external H2 Coulomb oracle.
+- **MT4 residual/protected evidence - active.** Unchanged; supplement and
+  residual policies are deliberately outside this correction.
+- **MT5 authority maintenance - maintenance.** Existing IDs and canonical
+  pages were amended atomically; no parallel lane was created.
+- **MT6 carrying-cost control - active.** Future source work is capped at the
+  existing helper/realizer/report seams, reuses one shape field, and may add no
+  source file, route carrier, driver branch, or test file.
