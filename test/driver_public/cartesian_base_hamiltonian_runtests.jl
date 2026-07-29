@@ -26,7 +26,7 @@ const H_BASIS = (;
 )
 
 const H2_BASIS = (;
-    q = 5,
+    ns = 5,
     core_spacing = 0.5,
     xmax_parallel = 6.0,
     xmax_transverse = 4.0,
@@ -185,7 +185,8 @@ end
     check_finite_symmetric(h.electron_electron_ida)
     foreach(check_finite_symmetric, h.nuclear_attraction_unit_by_center)
 
-    h2 = cartesian_base_hamiltonian(h2_system(); basis = H2_BASIS)
+    h2_base = GaussletBases.cartesian_base_working_basis(h2_system(); basis = H2_BASIS)
+    h2 = GaussletBases.cartesian_base_hamiltonian_assembly(h2_base)
     h2_lowest, orbital, h2_one_body = lowest_one_body(h2)
     @test h2 isa CartesianIDAHamiltonian{Float64}
     @test size(h2.kinetic) == (487, 487)
@@ -194,6 +195,33 @@ end
     check_finite_symmetric(h2.kinetic)
     check_finite_symmetric(h2.electron_electron_ida)
     foreach(check_finite_symmetric, h2.nuclear_attraction_unit_by_center)
+
+    wl_h2_base = GaussletBases.cartesian_base_working_basis(h2_system(); basis = merge(H2_BASIS, (; nesting = :wl)))
+    wl_h2 = GaussletBases.cartesian_base_hamiltonian_assembly(wl_h2_base)
+    @test all(axis -> let p = GaussletBases._nested_axis_pgdg(h2_base.parent.parent_axis_bundle_object, axis),
+            w = GaussletBases._nested_axis_pgdg(wl_h2_base.parent.parent_axis_bundle_object, axis)
+        p.centers == w.centers && p.weights == w.weights end, (:x, :y, :z))
+    pqs_shells = filter(row -> row.region_kind === :complete_shell, h2_base.terminal_due_diligence.terminal_rows)
+    wl_shells = filter(row -> row.region_kind === :complete_shell, wl_h2_base.terminal_due_diligence.terminal_rows)
+    for shell in pqs_shells
+        children = filter(row -> row.region_key === shell.region_key, wl_shells)
+        @test sum(row.retained_count for row in children) == shell.retained_count ==
+            prod(shell.source_mode_shape) - prod(dim - 2 for dim in shell.source_mode_shape)
+        @test sum(row.support_rows for row in children) == shell.support_rows
+        for child in children
+            free_axes = findall(>(1), child.outer_shape)
+            @test child.retained_count == prod((shell.source_mode_shape[axis] - 2 for axis in free_axes); init = 1)
+        end
+    end
+    @test wl_h2_base.terminal_basis.final_dimension == h2_base.terminal_basis.final_dimension
+    @test collect(Iterators.flatten(block.column_range for block in wl_h2_base.terminal_basis.blocks)) == collect(1:wl_h2_base.terminal_basis.final_dimension)
+    overlaps = Tuple(GaussletBases._nested_axis_pgdg(wl_h2_base.parent.parent_axis_bundle_object, axis).overlap for axis in (:x, :y, :z))
+    wl_gram_error = maximum(block -> isnothing(block.coefficients) ? 0.0 :
+        norm(transpose(block.coefficients) * GaussletBases.CartesianFinalBasisRealization._support_action(
+            block.support_states, block.support_states, block.coefficients, overlaps) - I, Inf),
+        wl_h2_base.terminal_basis.blocks)
+    @test wl_gram_error <= ATOL
+    foreach(check_finite_symmetric, (wl_h2.kinetic, wl_h2.electron_electron_ida, wl_h2.nuclear_attraction_unit_by_center...))
 
     mktempdir() do dir
         h_path = joinpath(dir, "h_cartesian_ida.jld2")

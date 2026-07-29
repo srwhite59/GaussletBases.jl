@@ -643,10 +643,29 @@ function _cartesian_terminal_due_rows(transforms, bundles)
         role, outer_box, inner_box = is_wl ?
             (record.terminal_region_role, (box.x, box.y, box.z), nothing) :
             (support.terminal_region_role, support.outer_box, support.inner_exclusion_box)
-        source_mode_shape, retained_rule, bond_axis = is_wl ?
-            (nothing, record.retained_rule,
-                invrow.slab_axis === :unavailable ? nothing : invrow.slab_axis) :
-            (support.source_mode_shape, support.retained_rule, support.bond_axis)
+        wl_shell = is_wl && role === :shared_molecular_shell &&
+            invrow.region_kind === :complete_shell
+        source_mode_shape = if wl_shell
+            shell_rows = filter(row -> row.region_key === invrow.region_key, inventory_rows)
+            inner = ntuple(axis -> begin
+                counts = unique(row.final_cols for row in shell_rows
+                    if count(range -> length(range) > 1, row.index_ranges) == 1 &&
+                        length(row.index_ranges[axis]) > 1)
+                length(counts) == 1 ||
+                    throw(ArgumentError("White-Lindsey shell edge counts are inconsistent"))
+                only(counts)
+            end, 3)
+            shape = ntuple(axis -> inner[axis] + 2, 3)
+            sum(row.final_cols for row in shell_rows) == prod(shape) - prod(inner) ||
+                throw(ArgumentError("White-Lindsey shell columns do not match the common outer shape"))
+            shape
+        else
+            is_wl ? nothing : support.source_mode_shape
+        end
+        retained_rule = is_wl ? record.retained_rule : support.retained_rule
+        bond_axis = is_wl ?
+            (invrow.slab_axis === :unavailable ? nothing : invrow.slab_axis) :
+            support.bond_axis
         physical = invrow.physical_ranges; lengths = (physical.x[2] - physical.x[1],
             physical.y[2] - physical.y[1], physical.z[2] - physical.z[1])
         row0 = merge(invrow, (;
@@ -663,16 +682,17 @@ function _cartesian_terminal_due_rows(transforms, bundles)
             retained_count, final_column_range = block.column_range,
             retained_rule, realization_status, bond_axis,
         ))
-        expected = _cartesian_expected_source_shape(row0, source_mode_shape)
+        expected = wl_shell ? source_mode_shape :
+            _cartesian_expected_source_shape(row0, source_mode_shape)
         expected_retained = isnothing(expected) ? 0 :
             prod(Int.(expected)) - prod(max(dim - 2, 0) for dim in Int.(expected))
         warning_predicates = (;
             rectangular_physical_shell_cubic_source_modes =
-                invrow.region_kind === :complete_shell && !isnothing(source_mode_shape) && length(unique(source_mode_shape)) == 1 && row0.max_physical_aspect >= 1.25,
+                !wl_shell && invrow.region_kind === :complete_shell && !isnothing(source_mode_shape) && length(unique(source_mode_shape)) == 1 && row0.max_physical_aspect >= 1.25,
             expected_source_shape_larger_than_actual =
                 !isnothing(expected) && _cartesian_source_mode_count(expected) > row0.source_mode_count,
             retained_count_below_aspect_balanced_scale =
-                expected_retained > 0 && retained_count < expected_retained,
+                !wl_shell && expected_retained > 0 && retained_count < expected_retained,
             missing_shell_index = (invrow.region_kind === :complete_shell || occursin("slab", String(invrow.region_kind))) &&
                 !(invrow.shell_index isa Integer && invrow.shell_index > 0),
             missing_physical_bounds = any(!isfinite, lengths),

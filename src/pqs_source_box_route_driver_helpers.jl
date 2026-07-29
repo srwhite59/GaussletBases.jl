@@ -1123,7 +1123,7 @@ end
 function _pqs_source_box_route_driver_complete_shell_source_dimensions(parent, region, q::Int)
     raw = region.raw_region
     isnothing(raw.inner_exclusion_box) &&
-        throw(ArgumentError("PQS complete-shell source dimensions require an inner exclusion box"))
+        throw(ArgumentError("shared complete-shell source dimensions require an inner exclusion box"))
     basis = (; nuclei = parent.standard_setup.atom_locations)
     retention = _nested_resolve_complete_shell_retention(q)
     live_timing = timing_live_enabled()
@@ -1147,6 +1147,12 @@ function _pqs_source_box_route_driver_complete_shell_source_dimensions(parent, r
 end
 
 function _pqs_source_box_route_driver_aspect_shell_contract(contract, dimensions)
+    wl_metadata = contract.lowering_kind === :white_lindsey_boundary_strata ?
+        merge(contract.metadata, (;
+            source_mode_shape = dimensions.source_mode_dims,
+            source_mode_policy =
+                :diatomic_shared_shell_adaptive_angular_source_box,
+        )) : nothing
     return CartesianTerminalLowering.TerminalLoweringContract(
         contract.contract_key,
         contract.terminal_region_key,
@@ -1159,7 +1165,7 @@ function _pqs_source_box_route_driver_aspect_shell_contract(contract, dimensions
         contract.realization_rule,
         contract.final_unit_granularity,
         contract.materialized,
-        merge(contract.metadata, (;
+        isnothing(wl_metadata) ? merge(contract.metadata, (;
             source_mode_shape = dimensions.source_mode_dims,
             raw_source_dims = dimensions.raw_source_dims,
             selected_q = dimensions.selected_q,
@@ -1174,7 +1180,7 @@ function _pqs_source_box_route_driver_aspect_shell_contract(contract, dimensions
                 ),
             source_mode_policy =
                 :diatomic_shared_shell_adaptive_angular_source_box,
-        )),
+        )) : wl_metadata,
     )
 end
 
@@ -1185,18 +1191,25 @@ function _pqs_source_box_route_driver_aspect_shell_lowering_plan(
     retained_q,
 )
     plan isa CartesianTerminalLowering.TerminalLoweringPlan || return plan
-    CartesianTerminalLowering.policy_kind(plan.policy) === :pqs_terminal_lowering ||
+    policy_kind = CartesianTerminalLowering.policy_kind(plan.policy)
+    policy_kind in (:pqs_terminal_lowering, :white_lindsey_terminal_lowering) ||
         return plan
     parent.system_classification === :bond_aligned_diatomic || return plan
     parent.bond_axis === :z || return plan
-    q = _pqs_source_box_route_driver_positive_integer(retained_q, :q)
+    q = _pqs_source_box_route_driver_positive_integer(
+        policy_kind === :pqs_terminal_lowering ?
+        retained_q : parent.standard_setup.n_s,
+        :q,
+    )
     region_by_key = Dict(
         region.key => region for region in
         CartesianShellification.terminal_regions(shellification_plan)
     )
     dimensions_by_region = Dict{Symbol,Any}()
     function enriched(contract)
-        contract.lowering_kind === :pqs_filled_source_cpb || return contract
+        contract.lowering_kind in
+            (:pqs_filled_source_cpb, :white_lindsey_boundary_strata) ||
+            return contract
         contract.terminal_region_kind === :complete_shell || return contract
         region = get(region_by_key, contract.terminal_region_key, nothing)
         isnothing(region) && return contract

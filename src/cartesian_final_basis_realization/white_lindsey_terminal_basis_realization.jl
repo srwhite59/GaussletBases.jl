@@ -27,20 +27,25 @@ function _wl_boundary_stratum_block(unit, bundles)
     intervals = CartesianCPB.intervals(cpb)
     dims = _nested_axis_lengths(bundles)
     q = unit.metadata.white_lindsey_retained_count_1d
+    source_mode_shape = get(unit.metadata, :source_mode_shape, nothing)
+    isnothing(source_mode_shape) && unit.terminal_region_role === :shared_molecular_shell &&
+        throw(ArgumentError("matched White-Lindsey shared shell requires source_mode_shape"))
+    retained_counts = isnothing(source_mode_shape) ? (q, q, q) : ntuple(axis -> Int(source_mode_shape[axis]) - 2, 3)
+    all(>(0), retained_counts) || throw(ArgumentError("White-Lindsey source-mode inner counts must be positive"))
+    retained_count(axis) = retained_counts[_terminal_face_axis_index(axis)]
     side(axis) = ParentGaussletBases._nested_doside_1d(
-        _nested_axis_pgdg(bundles, axis), intervals[_terminal_face_axis_index(axis)], q;
+        _nested_axis_pgdg(bundles, axis), intervals[_terminal_face_axis_index(axis)],
+        retained_count(axis);
         enforce_symmetric_odd = false)
     stratum_kind = cpb.metadata.stratum_kind
     if stratum_kind === :facet_cpb
         fixed_axis = cpb.metadata.axis
-        return _terminal_face_product_block(
-            cpb,
-            bundles;
-            normal_axis = fixed_axis,
-            fixed_indices = (first(intervals[_terminal_face_axis_index(fixed_axis)]),),
-            retained_count = q,
-            fixed_side = cpb.metadata.side,
-        )
+        active_axes = _terminal_face_active_axes(fixed_axis)
+        product = ParentGaussletBases._nested_face_product(
+            _terminal_face_kind(fixed_axis), cpb.metadata.side,
+            side(active_axes[1]), side(active_axes[2]),
+            first(intervals[_terminal_face_axis_index(fixed_axis)]), dims)
+        return _wl_block_from_product(product, bundles)
     elseif stratum_kind === :edge_cpb
         free_axis = cpb.metadata.free_axis
         fixed_axes = _terminal_face_active_axes(free_axis)
