@@ -342,6 +342,8 @@ function raw_terminal_geometry(
                             slab_normal_axis = axis_symbol(axis),
                             slab_side = :low,
                             slab_thickness = length(low_range),
+                            slab_stack_index = 1,
+                            slab_stack_count = 1,
                             thin_slab_retained_count_1d = shell_side,
                         ),
                     ),
@@ -373,6 +375,8 @@ function raw_terminal_geometry(
                             slab_normal_axis = axis_symbol(axis),
                             slab_side = :high,
                             slab_thickness = length(high_range),
+                            slab_stack_index = 1,
+                            slab_stack_count = 1,
                             thin_slab_retained_count_1d = shell_side,
                         ),
                     ),
@@ -382,10 +386,10 @@ function raw_terminal_geometry(
         return Tuple(pieces)
     end
 
-    function push_diatomic_outer_remainder!(current, axis)
+    function push_diatomic_outer_remainder!(current, axis, shell_index)
         for piece in outer_mismatch_pieces(current)
             push_region!(role = piece.role, region_kind = :outer_mismatch_slab,
-                outer_box = piece.box,
+                outer_box = piece.box, shell_index = shell_index,
                 metadata = merge(piece.metadata, (; bond_axis = axis_symbol(axis))))
         end
     end
@@ -421,8 +425,10 @@ function raw_terminal_geometry(
             )
             for a in 1:3 if a != axis
         )
-        lo = max(lo, first(parent_box[axis]) + future_shell_layers)
-        hi = min(hi, last(parent_box[axis]) - future_shell_layers)
+        lo = min(first(ordinary_body[axis]),
+            max(lo, first(parent_box[axis]) + future_shell_layers))
+        hi = max(last(ordinary_body[axis]),
+            min(hi, last(parent_box[axis]) - future_shell_layers))
         return ntuple(a -> a == axis ? (lo:hi) : ordinary_body[a], 3)
     end
 
@@ -487,7 +493,7 @@ function raw_terminal_geometry(
             )
             current = angular_target
         end
-        push_diatomic_outer_remainder!(current, axis)
+        push_diatomic_outer_remainder!(current, axis, shared_shell_index + 1)
         return current
     end
 
@@ -527,6 +533,7 @@ function raw_terminal_geometry(
                 metadata = piece.metadata,
                 atom_index = atom_index,
                 atom_side = :single,
+                shell_index = shell_index + 1,
             )
         end
         return current

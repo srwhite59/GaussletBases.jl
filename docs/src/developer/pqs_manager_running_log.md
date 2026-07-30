@@ -1621,3 +1621,41 @@ Carrying-cost accounting:
   review, exact parent/PQS clean-replay parity, matched WL
   `960`-column/`1285`-dimension ledger, finite symmetric H1/Vee, block Gram and
   column accounting, staged anti-bloat review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 442 - Preserve Terminal Shell Ownership
+
+Commit(s):
+- this commit - prevent angular-target balancing from shrinking an already
+  owned shell body.
+
+Summary:
+- REQ-024 isolated a common PQS/WL failure at `R=0.50`, public `ns=4`: all
+  `19^3=6859` parent sites were covered, but 98 sites belonged to two
+  consecutive shared shells. The number 98 was coincidental; the actual
+  overlap was the pair of `7x7` bond-axis faces removed when the future-shell
+  margin shrank a `7x7x9` body to `7x7x7`.
+- The angular target now preserves containment while still limiting outward
+  extension. The resulting four outer-mismatch slabs populate the existing
+  native stack and next-shell fields required by terminal due diligence.
+  Coverage checking remains strict and unchanged.
+
+Goal advancement / guardrail:
+- MT3 unblocks the frozen H2/H2+ order/geometry ladder at its 21-case
+  checkpoint. This is a common ownership repair, not evidence favoring either
+  terminal method, and it changes no coefficient or operator convention.
+
+Carrying-cost accounting:
+- deleted: the shrink-permitting clamp behavior.
+- simplified: one containment-preserving clamp now owns extension limits.
+- quarantined: diagnostic scripts and fingerprint tables remain ignored or
+  under `/tmp`.
+- not deleted because: outer-mismatch slabs remain required for noncubic
+  parent closure.
+- exact remaining caller/blocker: no repository blocker; REQ-024 may resume.
+- added src lines: `12`; deleted src lines: `5`.
+- new tests: none.
+- new metadata/status fields: none; existing shell/stack fields are populated.
+- validation: isolated exact PQS/WL endpoint, zero duplicate/missing sites,
+  exact neighboring basis-fingerprint parity, one-center fallback probe,
+  package load, public Cartesian base `202/202`, authority/self-test,
+  independent review, scoped diff review, and `git diff --check`.
