@@ -385,6 +385,42 @@ function _parent_backed_injection_lowdin(columns, support_metric, label)
     return columns * inv(sqrt(gram)), values
 end
 
+function _parent_backed_injection_complement(
+    columns, expected_nullity::Integer, label; require_isometry::Bool = false)
+    matrix = Matrix{Float64}(columns)
+    all(isfinite, matrix) || throw(ArgumentError("$label columns must be finite"))
+    ambient, column_count = size(matrix)
+    0 < column_count <= ambient || throw(DimensionMismatch(
+        "$label columns must be a nonempty tall or square matrix"))
+    expected_nullity >= 0 && ambient - column_count == expected_nullity ||
+        throw(ArgumentError("$label has the wrong expected nullity"))
+    if require_isometry
+        norm(transpose(matrix) * matrix - I, Inf) <= 1.0e-8 ||
+            throw(ArgumentError("$label columns are not an orthonormal partial isometry"))
+    end
+
+    factorization = svd(matrix; full = true, alg = LinearAlgebra.QRIteration())
+    singulars = factorization.S
+    all(isfinite, singulars) && minimum(singulars) > 1.0e-10 ||
+        throw(ArgumentError("$label columns do not have full numerical rank"))
+    complement = Matrix(@view factorization.U[:, (column_count + 1):end])
+    size(complement, 2) == expected_nullity ||
+        throw(ArgumentError("$label complement has the wrong dimension"))
+    for column in axes(complement, 2)
+        pivot = argmax(abs.(@view complement[:, column]))
+        complement[pivot, column] < 0.0 && (complement[:, column] .*= -1)
+    end
+    identity_error = isempty(complement) ? 0.0 :
+        norm(transpose(complement) * complement - I, Inf)
+    residual = isempty(complement) ? 0.0 :
+        norm(transpose(matrix) * complement, Inf)
+    identity_error <= 1.0e-10 ||
+        throw(ArgumentError("$label complement is not orthonormal"))
+    residual <= 1.0e-10 ||
+        throw(ArgumentError("$label complement has a material nullspace residual"))
+    return complement, singulars
+end
+
 function build_parent_backed_injected_composition(
     basis::CartesianTerminalBasisRealization,
     bundles,
@@ -457,12 +493,9 @@ function build_parent_backed_injected_composition(
                 "parent-backed injection targets must be orthonormal in [G,R] coordinates"))
         Y = old_span * target_coordinates
         C = transpose(G) * support_metric * Y
-        singulars = svdvals(C)
-        minimum(singulars) > 1.0e-10 || throw(ArgumentError(
-            "parent-backed injection targets do not have full rank in the terminal block"))
-        Qperp = nullspace(transpose(C); atol = 1.0e-12, rtol = 1.0e-10)
-        size(Qperp, 2) == size(G, 2) - size(Y, 2) || throw(ArgumentError(
-            "parent-backed injection terminal complement has the wrong dimension"))
+        Qperp, singulars = _parent_backed_injection_complement(
+            C, size(G, 2) - size(Y, 2),
+            "parent-backed injection terminal")
         F = hcat(Y, G * Qperp)
         norm(transpose(F) * support_metric * F - I, Inf) <= 1.0e-8 ||
             throw(ArgumentError("parent-backed injection scaffold is not orthonormal"))
@@ -471,11 +504,10 @@ function build_parent_backed_injected_composition(
             projected_old, support_metric, "parent-backed projected terminal seeds")
 
         coordinates = transpose(old_span) * support_metric * Ginj
-        complement_coordinates = nullspace(transpose(coordinates);
-            atol = 1.0e-12, rtol = 1.0e-10)
         old_prf_count = size(R, 2)
-        size(complement_coordinates, 2) == old_prf_count || throw(ArgumentError(
-            "parent-backed injection changed the parent residual count"))
+        complement_coordinates, _ = _parent_backed_injection_complement(
+            coordinates, old_prf_count, "parent-backed exact";
+            require_isometry = true)
         raw_complement, _ = _parent_backed_injection_lowdin(
             old_span * complement_coordinates, support_metric,
             "parent-backed exact complement")

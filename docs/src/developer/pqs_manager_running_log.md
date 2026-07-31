@@ -1659,3 +1659,49 @@ Carrying-cost accounting:
   exact neighboring basis-fingerprint parity, one-center fallback probe,
   package load, public Cartesian base `202/202`, authority/self-test,
   independent review, scoped diff review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 443 - Stabilize Parent-Backed Complements
+
+Commit(s):
+- this commit - replace fragile divide-and-conquer nullspace construction in
+  fixed-span parent-backed injection.
+
+Summary:
+- A valid `220x218` Cr2 shell-8 coordinate matrix, with Gram error
+  `1.02e-13` and singular values clustered at one, triggered
+  `LAPACKException(1)` in the default divide-and-conquer SVD. The input was
+  full rank; QR iteration produced the required two-dimensional complement
+  with residual `2.57e-17`.
+- One private helper now owns both injection complements. It uses full
+  QR-iteration SVD, preserves the existing `1e-10` rank cutoff, and validates
+  finiteness, exact expected nullity, partial-isometry Gram where required,
+  complement identity, null residual, and deterministic column phases.
+
+Goal advancement / guardrail:
+- MT4 advances from a shell-9 prototype to mechanically viable global
+  consumer-selected PRFs without assigning a repo cutoff or selection policy.
+  The checksummed external `1e-5` inventory now composes all six requests:
+  `6915 + 27 = 6942`, minimum target recovery
+  `0.9999999999999586`, and full-QR/QR-iteration projector difference
+  `8.88e-16`. This is external Cr2 acceptance, not a committed fixture or
+  Hamiltonian claim.
+
+Carrying-cost accounting:
+- deleted: both direct generic `nullspace` calls and their duplicated
+  dimension/rank checks.
+- simplified: one composition-owned complement contract now serves terminal
+  completion and the exact parent-backed remainder.
+- quarantined: the saved Cr2 modes, manifests, and acceptance runner remain
+  outside GaussletBases.
+- not deleted because: symmetric Lowdin and downstream span/metric validation
+  remain separate live owners.
+- exact remaining caller/blocker: the consumer must replay the saved
+  `1e-5`, `3e-6`, and `1e-6` inventories before any external-RG,
+  interaction, or screening rebuild.
+- added/deleted `src` lines: `42/10`; new tests: nine assertions in the
+  existing H2 owner, no new file.
+- new metadata/status fields: none.
+- validation: package load, focused H2 `443/443`, supplemented facade `69/69`,
+  all six saved Cr2 requests and the combined 27-PRF composition, artifact and
+  manifest checksum parity, QR projector comparison, anti-bloat review, and
+  `git diff --check`.

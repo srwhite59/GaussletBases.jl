@@ -335,6 +335,36 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
             [1.0 2.0 0.0; 2.0 1.0 0.0; 0.0 0.0 1.0]),
         [1, 2], [0.0; 1.0;;])
 
+    seed = reshape(sin.(1.0:64.0), 8, 8)
+    full_orthogonal = qr(seed).Q * Matrix{Float64}(I, 8, 8)
+    clustered = full_orthogonal[:, 1:6] *
+        Diagonal(1.0 .+ 1.0e-13 .* (-2:3))
+    complement, singulars = C._parent_backed_injection_complement(
+        clustered, 2, "synthetic clustered"; require_isometry = true)
+    repeated, _ = C._parent_backed_injection_complement(
+        clustered, 2, "synthetic clustered"; require_isometry = true)
+    @test collect(extrema(singulars)) ≈
+        [1.0 - 2.0e-13, 1.0 + 3.0e-13] atol = 1.0e-15
+    @test norm(transpose(clustered) * complement, Inf) <= 1.0e-12
+    @test norm(transpose(complement) * complement - I, Inf) <= 1.0e-12
+    @test norm(complement * transpose(complement) -
+        repeated * transpose(repeated), Inf) <= 1.0e-14
+    @test all(column ->
+        complement[argmax(abs.(@view complement[:, column])), column] >= 0.0,
+        axes(complement, 2))
+    rank_deficient = copy(clustered)
+    rank_deficient[:, 6] .= rank_deficient[:, 5]
+    @test_throws ArgumentError C._parent_backed_injection_complement(
+        rank_deficient, 2, "synthetic rank deficient"; require_isometry = false)
+    @test_throws ArgumentError C._parent_backed_injection_complement(
+        clustered, 1, "synthetic wrong nullity"; require_isometry = true)
+    nonfinite_clustered = copy(clustered)
+    nonfinite_clustered[1, 1] = NaN
+    @test_throws ArgumentError C._parent_backed_injection_complement(
+        nonfinite_clustered, 2, "synthetic nonfinite"; require_isometry = true)
+    @test_throws ArgumentError C._parent_backed_injection_complement(
+        1.001 .* clustered, 2, "synthetic bad Gram"; require_isometry = true)
+
     injection_shell = C.CartesianTerminalBasisBlock(
         :injection_shell, [1, 2, 3],
         [(1, 1, 1), (2, 1, 1), (3, 1, 1)],
