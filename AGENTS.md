@@ -11,9 +11,9 @@ or manager assignment.
 
 Default repo role signoffs are:
 
-- manager handbacks: `-- repo-manager@<host>`
-- implementation doer handbacks: `-- repo-doer@<host>`
-- bloat cleanup handbacks: `-- bloat-fixer@<host>`
+- manager handbacks: `-- repo-manager@<host> [HH:MM]`
+- implementation doer handbacks: `-- repo-doer@<host> [HH:MM]`
+- bloat cleanup handbacks: `-- bloat-fixer@<host> [HH:MM]`
 
 Use a more specific role name only when the startup prompt, role identity file,
 or user explicitly gives one. For example, an informal "repo-doer2" terminal is
@@ -24,6 +24,7 @@ Sign any message that hands control back to the user: final handoffs,
 close-outs, ready-for-review reports, gate completions, audit results, and
 safe-to-resume judgments. Do not sign progress updates while continuing work
 without waiting on the user. The signoff must be the final line.
+Use the current local time in 24-hour format, for example `[14:13]`.
 
 After compaction, session resume, or any sign that live context has been
 replaced by a summary, treat the next turn as reentry before continuing
