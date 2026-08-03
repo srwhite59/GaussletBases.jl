@@ -75,6 +75,22 @@ function check_finite_symmetric(matrix)
     @test norm(matrix - transpose(matrix), Inf) <= ATOL
 end
 
+function check_sector_parity(left_base, left, right_base, right)
+    for axis in (:x, :y, :z)
+        lhs = GaussletBases._nested_axis_pgdg(left_base.parent.parent_axis_bundle_object, axis)
+        rhs = GaussletBases._nested_axis_pgdg(right_base.parent.parent_axis_bundle_object, axis)
+        @test lhs.centers == rhs.centers
+        @test lhs.weights == rhs.weights
+    end
+    block_signature(base) = [(block.support_indices, block.support_states,
+        block.column_range, block.coefficients) for block in base.terminal_basis.blocks]
+    @test block_signature(left_base) == block_signature(right_base)
+    @test left.kinetic == right.kinetic
+    @test left.nuclear_attraction_unit_by_center == right.nuclear_attraction_unit_by_center
+    @test one_body_hamiltonian(left) == one_body_hamiltonian(right)
+    @test left.electron_electron_ida == right.electron_electron_ida
+    @test left.nuclear_repulsion == right.nuclear_repulsion
+end
 function check_provenance_keys(file)
     for key in PROVENANCE_KEYS
         @test haskey(file, "producer_provenance/$(key)")
@@ -185,6 +201,14 @@ end
     check_finite_symmetric(h.electron_electron_ida)
     foreach(check_finite_symmetric, h.nuclear_attraction_unit_by_center)
 
+    he = merge(h_system(), (;
+        atom_symbols = ["He"], nuclear_charges = [2.0], nup = 1, ndn = 1))
+    he_plus = merge(he, (; nup = 1, ndn = 0))
+    he_base = GaussletBases.cartesian_base_working_basis(he; basis = H_ACCURACY_BASIS)
+    he_plus_base = GaussletBases.cartesian_base_working_basis(he_plus; basis = H_ACCURACY_BASIS)
+    he_ham = GaussletBases.cartesian_base_hamiltonian_assembly(he_base)
+    he_plus_ham = GaussletBases.cartesian_base_hamiltonian_assembly(he_plus_base)
+    check_sector_parity(he_base, he_ham, he_plus_base, he_plus_ham)
     h2_base = GaussletBases.cartesian_base_working_basis(h2_system(); basis = H2_BASIS)
     h2 = GaussletBases.cartesian_base_hamiltonian_assembly(h2_base)
     h2_lowest, orbital, h2_one_body = lowest_one_body(h2)
@@ -196,6 +220,15 @@ end
     check_finite_symmetric(h2.electron_electron_ida)
     foreach(check_finite_symmetric, h2.nuclear_attraction_unit_by_center)
 
+    he2 = merge(h2_system(), (;
+        atom_symbols = ["He", "He"], nuclear_charges = [2.0, 2.0], nup = 2, ndn = 2))
+    he2_2plus = merge(he2, (; nup = 1, ndn = 1))
+    sector_basis = merge(H2_BASIS, (; ns = 3))
+    he2_base = GaussletBases.cartesian_base_working_basis(he2; basis = sector_basis)
+    he2_2plus_base = GaussletBases.cartesian_base_working_basis(he2_2plus; basis = sector_basis)
+    he2_ham = GaussletBases.cartesian_base_hamiltonian_assembly(he2_base)
+    he2_2plus_ham = GaussletBases.cartesian_base_hamiltonian_assembly(he2_2plus_base)
+    check_sector_parity(he2_base, he2_ham, he2_2plus_base, he2_2plus_ham)
     wl_h2_base = GaussletBases.cartesian_base_working_basis(h2_system(); basis = merge(H2_BASIS, (; nesting = :wl)))
     wl_h2 = GaussletBases.cartesian_base_hamiltonian_assembly(wl_h2_base)
     @test all(axis -> let p = GaussletBases._nested_axis_pgdg(h2_base.parent.parent_axis_bundle_object, axis),
@@ -252,6 +285,15 @@ end
             @test file["producer_provenance/mapping_d"] === nothing
             @test file["producer_provenance/route"] === :z_axis_diatomic_pqs_base
         end
+        charged_path = joinpath(dir, "he2_2plus_cartesian_ida.jld2")
+        GaussletBases._cartesian_base_write_hamiltonian(
+            charged_path, he2_2plus_ham, he2_2plus_base)
+        charged_readback = read_cartesian_ida_hamiltonian(charged_path)
+        @test (charged_readback.nup, charged_readback.ndn) == (1, 1)
+        @test charged_readback.kinetic == he2_2plus_ham.kinetic
+        @test charged_readback.nuclear_attraction_unit_by_center ==
+            he2_2plus_ham.nuclear_attraction_unit_by_center
+        @test charged_readback.electron_electron_ida == he2_2plus_ham.electron_electron_ida
     end
 
     @test_throws ArgumentError cartesian_base_hamiltonian(
@@ -288,4 +330,8 @@ end
         basis = H2_BASIS)
     @test_throws ArgumentError cartesian_base_hamiltonian(
         h2_system(); basis = H2_BASIS, hamfile = "")
+    @test_throws ArgumentError cartesian_base_hamiltonian(
+        merge(he, (; nup = 0, ndn = 0)); basis = H_ACCURACY_BASIS)
+    @test_throws ArgumentError cartesian_base_hamiltonian(
+        merge(he, (; nup = -1, ndn = 1)); basis = H_ACCURACY_BASIS)
 end

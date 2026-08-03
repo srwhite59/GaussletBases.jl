@@ -117,13 +117,6 @@ function _cartesian_base_size_parts(basis, nesting)
     return (; ns, q, q_rule, ns_source = :legacy_q_compatibility)
 end
 
-function _cartesian_base_integer_charge(charge, label)
-    electron_count = round(Int, charge)
-    isapprox(charge, electron_count; atol = 1.0e-12, rtol = 0.0) ||
-        throw(ArgumentError("$(label) requires integer-valued nuclear charge"))
-    return electron_count
-end
-
 function _cartesian_base_diatomic_basis_parts(basis)
     _cartesian_base_check_basis_keys(basis, _CARTESIAN_BASE_H2_BASIS_REQUIRED_KEYS)
     nesting = _cartesian_base_nesting(basis)
@@ -172,21 +165,18 @@ function _cartesian_base_system_parts(system::NamedTuple)
     ndn = Int(system.ndn)
     nup >= 0 && ndn >= 0 ||
         throw(ArgumentError("nup and ndn must be nonnegative integers"))
+    nup + ndn > 0 || throw(ArgumentError("nup + ndn must be positive"))
     return (; symbols, charges, locations, nup, ndn)
 end
 
 function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
     base = _cartesian_base_system_parts(system)
-    symbols, charges, locations, nup, ndn =
-        base.symbols, base.charges, base.locations, base.nup, base.ndn
+    symbols, charges, locations = base.symbols, base.charges, base.locations
     if length(symbols) == 1
         _cartesian_base_check_basis_keys(
             basis, _CARTESIAN_BASE_H_BASIS_REQUIRED_KEYS, _CARTESIAN_BASE_H_OPTIONAL_BASIS_KEYS)
         locations[1] == (0.0, 0.0, 0.0) ||
             throw(ArgumentError("one-center atom must be centered at (0,0,0)"))
-        electron_count = _cartesian_base_integer_charge(only(charges), "one-center atom")
-        nup + ndn == electron_count ||
-            throw(ArgumentError("one-center atom requires neutral all-electron count"))
         nesting = _cartesian_base_nesting(basis)
         size_parts = _cartesian_base_size_parts(basis, nesting)
         source_span = _cartesian_base_source_span(basis, nesting)
@@ -207,13 +197,10 @@ function _cartesian_base_inputs(system::NamedTuple, basis::NamedTuple)
             throw(ArgumentError("base diatomic requires equal atom-symbol labels"))
         charges[1] == charges[2] ||
             throw(ArgumentError("homonuclear base diatomic requires equal nuclear charges"))
-        electron_count = 2 * _cartesian_base_integer_charge(charges[1], "base diatomic")
         all(location -> location[1] == 0.0 && location[2] == 0.0, locations) ||
             throw(ArgumentError("base diatomic centers must lie on the Cartesian z axis"))
         locations[1][3] != locations[2][3] ||
             throw(ArgumentError("base diatomic centers must be distinct"))
-        nup + ndn == electron_count ||
-            throw(ArgumentError("base diatomic requires neutral all-electron count"))
         return merge(base, (; kind = :h2), basis_parts)
     end
     throw(ArgumentError("only one-center atoms and z-axis homonuclear diatomics are supported"))
@@ -1062,20 +1049,13 @@ end
 function _cartesian_r3_diatomic_inputs(system::NamedTuple, basis::NamedTuple)
     basis_parts = _cartesian_base_diatomic_basis_parts(basis)
     base = _cartesian_base_system_parts(system)
-    symbols, charges, locations, nup, ndn =
-        base.symbols, base.charges, base.locations, base.nup, base.ndn
+    symbols, charges, locations = base.symbols, base.charges, base.locations
     length(symbols) == length(charges) == length(locations) == 2 ||
         throw(ArgumentError("R3 usability facade supports two-center systems only"))
     symbols[1] == symbols[2] ||
         throw(ArgumentError("heteronuclear supplements are unsupported"))
     charges[1] == charges[2] ||
         throw(ArgumentError("homonuclear supplemented diatomics require equal nuclear charges"))
-    total_charge = sum(charges)
-    electron_count = round(Int, total_charge)
-    isapprox(total_charge, electron_count; atol = 1.0e-12, rtol = 0.0) ||
-        throw(ArgumentError("neutral all-electron count requires integer total nuclear charge"))
-    nup + ndn == electron_count ||
-        throw(ArgumentError("neutral all-electron count requires nup + ndn == total nuclear charge"))
     all(location -> all(isfinite, location) && location[1] == 0.0 && location[2] == 0.0, locations) ||
         throw(ArgumentError("R3 usability facade supports Cartesian z-axis diatomics only"))
     locations[1][3] != locations[2][3] ||

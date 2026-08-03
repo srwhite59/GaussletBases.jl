@@ -1216,6 +1216,20 @@ facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
     facade_self_coulomb = self_coulomb(ham.electron_electron_ida, orbital)
     @test facade_self_coulomb ≈ R3B_OWNER_LOCAL_SELF_COULOMB atol = 1.0e-10
 
+    he2 = merge(FACADE_SYSTEM, (;
+        atom_symbols = ["He", "He"], nuclear_charges = [2.0, 2.0], nup = 2, ndn = 2))
+    he2_2plus = merge(he2, (; nup = 1, ndn = 1))
+    sector_basis = merge(FACADE_BASIS, (; q = 3))
+    he2_ham = GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
+        he2; basis = sector_basis, supplement = FACADE_SUPPLEMENT)
+    he2_2plus_ham = GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
+        he2_2plus; basis = sector_basis, supplement = FACADE_SUPPLEMENT)
+    @test he2_ham.kinetic == he2_2plus_ham.kinetic
+    @test he2_ham.nuclear_attraction_unit_by_center ==
+        he2_2plus_ham.nuclear_attraction_unit_by_center
+    @test he2_ham.electron_electron_ida == he2_2plus_ham.electron_electron_ida
+    @test he2_ham.nuclear_repulsion == he2_2plus_ham.nuclear_repulsion
+
     readback = read_cartesian_ida_hamiltonian(artifact)
     kinetic_delta = norm(readback.kinetic - ham.kinetic, Inf)
     V_delta = norm(readback.electron_electron_ida - ham.electron_electron_ida, Inf)
