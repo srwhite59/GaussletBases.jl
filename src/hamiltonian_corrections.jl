@@ -273,6 +273,507 @@ function egoi_density_density_correction(
     return EGOIDensityDensityCorrectionResult(corrected, delta_v, diagnostics)
 end
 
+function _hc_quantile_sorted(sorted_values, q::Real)
+    isempty(sorted_values) && return 0.0
+    length(sorted_values) == 1 && return Float64(only(sorted_values))
+    pos = 1 + (length(sorted_values) - 1) * Float64(q)
+    lo, hi = floor(Int, pos), ceil(Int, pos)
+    lo == hi && return Float64(sorted_values[lo])
+    return Float64((hi - pos) * sorted_values[lo] + (pos - lo) * sorted_values[hi])
+end
+_hc_median(values) = _hc_quantile_sorted(sort(Float64.(values)), 0.5)
+_hc_p95(values) = _hc_quantile_sorted(sort(Float64.(values)), 0.95)
+_hc_distance(a, b) = sqrt(sum((Float64(a[i]) - Float64(b[i]))^2 for i in 1:3))
+
+function _hc_target_channel(label)
+    text = string(label)
+    endswith(text, "s1") && return :s1
+    endswith(text, "s2") && return :s2
+    return :other
+end
+
+function _hc_project_supplement_to_protected_localized(coeffs, X, S_AA, geometry, loc)
+    crg = CartesianResidualGaussians
+    components = crg.protected_original_fixed_sector_components(geometry)
+    qZ = transpose(components.Z) * S_AA * coeffs
+    qQ = transpose(components.G_perp) * X * coeffs +
+        transpose(components.A_perp) * S_AA * coeffs
+    return transpose(loc.W) * vcat(qZ, qQ)
+end
+
+function _protected_retained_original_gto_egoi_target(
+    supplement,
+    S_AA,
+    X,
+    geometry,
+    candidate_owner_indices;
+    channels = (:s1, :s2),
+    loc = nothing,
+)
+    allowed_channels = Set((:s1, :s2))
+    channel_list = Symbol.(collect(channels))
+    all(channel -> channel in allowed_channels, channel_list) ||
+        throw(ArgumentError("retained-original EGOI currently supports only s1/s2 targets"))
+    source_indices = Int.(collect(geometry.protected_original_source_indices))
+    labels = String[String(supplement.orbitals[index].label) for index in source_indices]
+    source_channels = [_hc_target_channel(label) for label in labels]
+    keep = [i for i in eachindex(source_indices) if source_channels[i] in channel_list]
+    isempty(keep) && throw(ArgumentError("retained-original EGOI target selection is empty"))
+    selected_sources = source_indices[keep]
+    selected_owners = Int.(candidate_owner_indices[selected_sources])
+    owners = sort(unique(selected_owners))
+    owner_counts = [count(==(owner), selected_owners) for owner in owners]
+    length(unique(owner_counts)) == 1 ||
+        throw(ArgumentError("retained-original EGOI targets must be owner-balanced"))
+    for owner in owners
+        found = Set(source_channels[keep[selected_owners .== owner]])
+        Set(channel_list) == found || throw(ArgumentError(
+            "retained-original EGOI target owner $(owner) is missing requested channels"))
+    end
+    nA = length(supplement.orbitals)
+    norms = sqrt.(diag(S_AA))
+    localized = isnothing(loc) ?
+        CartesianResidualGaussians.protected_localized_inherited_site_transform(geometry) : loc
+    Qtarget = zeros(Float64, size(localized.W, 2), length(selected_sources))
+    projection_norms = zeros(Float64, length(selected_sources))
+    for (column, source_index) in pairs(selected_sources)
+        coeffs = zeros(Float64, nA)
+        coeffs[source_index] = inv(norms[source_index])
+        projected = _hc_project_supplement_to_protected_localized(
+            coeffs, X, S_AA, geometry, localized)
+        projection_norms[column] = norm(projected)
+        projection_norms[column] > 1.0e-12 ||
+            throw(ArgumentError("retained-original EGOI target projection is near zero"))
+        Qtarget[:, column] .= projected ./ projection_norms[column]
+    end
+    orbitals = [supplement.orbitals[index] for index in selected_sources]
+    pair_coulomb = gaussian_coulomb_pair_matrix(
+        orbitals; max_orbitals = length(selected_sources))
+    Ctarget = Matrix(Diagonal(1.0 ./ norms[selected_sources]))
+    exact_ordered = egoi_target_coulomb_matrix(pair_coulomb, Ctarget)
+    target_rows = NamedTuple[]
+    for (target_index, source_index) in pairs(selected_sources)
+        push!(target_rows, (;
+            target_index,
+            source_index,
+            label = String(supplement.orbitals[source_index].label),
+            channel = _hc_target_channel(supplement.orbitals[source_index].label),
+            owner = selected_owners[target_index],
+            center = supplement.orbitals[source_index].center,
+            raw_norm = norms[source_index],
+            projected_norm = projection_norms[target_index],
+            projection_loss = max(0.0, 1.0 - projection_norms[target_index]^2)))
+    end
+    return (; Qtarget, exact_target_ordered = exact_ordered, target_rows,
+        owners = selected_owners, labels = labels[keep], source_indices = selected_sources,
+        channels = source_channels[keep], loc = localized)
+end
+
+function _hc_owner_local_pairs(owners)
+    pairs = Tuple{Int,Int}[]
+    for owner in sort(unique(owners))
+        local_indices = findall(==(owner), owners)
+        for j in eachindex(local_indices), i in 1:j
+            push!(pairs, (local_indices[i], local_indices[j]))
+        end
+    end
+    return pairs
+end
+
+function _hc_product_matrix(Qtarget, pairs)
+    product = Matrix{Float64}(undef, size(Qtarget, 1), length(pairs))
+    for (column, (i, j)) in enumerate(pairs)
+        product[:, column] .= Qtarget[:, i] .* Qtarget[:, j]
+    end
+    return product
+end
+
+function _hc_exact_pair_block(exact_ordered, ntarget::Int, pairs)
+    exact = Matrix{Float64}(undef, length(pairs), length(pairs))
+    for b in eachindex(pairs), a in eachindex(pairs)
+        i, j = pairs[a]
+        p, q = pairs[b]
+        exact[a, b] = exact_ordered[(j - 1) * ntarget + i, (q - 1) * ntarget + p]
+    end
+    return _hc_symmetrize(exact)
+end
+
+function _hc_local_scales(row_centers, row_owners, core_spacing::Real; nearest_count::Integer = 6)
+    n = length(row_centers)
+    length(row_owners) == n || throw(DimensionMismatch("row owner count mismatch"))
+    ell = zeros(Float64, n)
+    for owner in unique(row_owners)
+        rows = findall(==(owner), row_owners)
+        fallback_distances = Float64[]
+        for a in rows, b in rows
+            a < b || continue
+            d = _hc_distance(row_centers[a], row_centers[b])
+            d > 1.0e-12 && push!(fallback_distances, d)
+        end
+        fallback = isempty(fallback_distances) ? 1.0 : _hc_median(fallback_distances)
+        for row in rows
+            distances = sort(Float64[_hc_distance(row_centers[row], row_centers[other])
+                for other in rows if other != row &&
+                    _hc_distance(row_centers[row], row_centers[other]) > 1.0e-12])
+            local_scale = isempty(distances) ? fallback :
+                _hc_median(distances[1:min(Int(nearest_count), length(distances))])
+            ell[row] = max(local_scale, Float64(core_spacing))
+        end
+    end
+    return (; centers = row_centers, owners = Int.(row_owners), ell,
+        core_spacing = Float64(core_spacing), nearest_count = Int(nearest_count))
+end
+
+function _hc_m2_variables(scales; factor::Real = 1.75)
+    n = length(scales.ell)
+    left = Int[]; right = Int[]
+    local_ratio = Float64[]; distance = Float64[]; local_scale = Float64[]
+    variable_class = Symbol[]
+    for j in 1:n, i in 1:j
+        scales.owners[i] == scales.owners[j] || continue
+        d = i == j ? 0.0 : _hc_distance(scales.centers[i], scales.centers[j])
+        scale = max(scales.ell[i], scales.ell[j], eps(Float64))
+        d <= Float64(factor) * scale + 1.0e-12 || continue
+        ratio = i == j ? 0.0 : d / scale
+        push!(left, i); push!(right, j); push!(distance, d)
+        push!(local_scale, scale); push!(local_ratio, ratio)
+        push!(variable_class,
+            i == j ? :diag :
+            ratio <= 1.25 + 1.0e-12 ? :nearest_local :
+            :next_local)
+    end
+    return (; left, right, local_ratio, distance, local_scale, variable_class)
+end
+
+function _hc_upper_triangle_vector(matrix)
+    values = Float64[]
+    for j in axes(matrix, 2), i in 1:j
+        push!(values, matrix[i, j])
+    end
+    return values
+end
+
+function _hc_upper_triangle_design(product, variables)
+    np = size(product, 2)
+    design = Matrix{Float64}(undef, div(np * (np + 1), 2), length(variables.left))
+    for variable_index in eachindex(variables.left)
+        i, j = variables.left[variable_index], variables.right[variable_index]
+        row = 1
+        @inbounds for b in 1:np, a in 1:b
+            design[row, variable_index] = i == j ?
+                product[i, a] * product[i, b] :
+                product[i, a] * product[j, b] + product[j, a] * product[i, b]
+            row += 1
+        end
+    end
+    return design
+end
+
+function _hc_relative_denominators(V, variables)
+    diag_scale = _hc_median(abs.(diag(V)))
+    floor_value = max(1.0e-12, 1.0e-8 * diag_scale)
+    return Float64[
+        max(abs(V[variables.left[i], variables.right[i]]), floor_value)
+        for i in eachindex(variables.left)]
+end
+
+function _hc_local_cap_values(V, variables)
+    fractions = Float64[
+        variables.variable_class[i] === :diag ? 0.20 :
+        variables.variable_class[i] === :nearest_local ? 0.20 :
+        variables.variable_class[i] === :next_local ? 0.10 : 0.0
+        for i in eachindex(variables.left)]
+    return fractions .* _hc_relative_denominators(V, variables)
+end
+
+function _hc_delta_from_variables(n::Int, variables, x)
+    delta = zeros(Float64, n, n)
+    for index in eachindex(x)
+        i, j = variables.left[index], variables.right[index]
+        delta[i, j] = x[index]
+        delta[j, i] = x[index]
+    end
+    return delta
+end
+
+function _hc_solve_scaled_ridge(design, target_vector, scales, free, lambda_relative)
+    isempty(free) && return zeros(Float64, 0)
+    D = @view design[:, free]
+    scaled = D .* reshape(scales[free], 1, :)
+    gram = scaled * transpose(scaled)
+    singulars = sqrt.(sort(max.(0.0, eigvals(Symmetric(gram))); rev = true))
+    maxsv = isempty(singulars) ? 1.0 : max(maximum(singulars), eps(Float64))
+    y = transpose(scaled) * ((gram + Float64(lambda_relative * maxsv^2) *
+        Matrix{Float64}(I, size(gram, 1), size(gram, 1))) \ target_vector)
+    return scales[free] .* y
+end
+
+function _hc_active_set_clipped_ridge(design, target_vector, V, variables)
+    scales = _hc_relative_denominators(V, variables)
+    caps = _hc_local_cap_values(V, variables)
+    relative_lambdas = sort(unique(vcat(10.0 .^ collect(-16.0:1.0:8.0),
+        collect(0.01:0.0025:0.10))))
+    scaled = design .* reshape(scales, 1, :)
+    gram = scaled * transpose(scaled)
+    singulars = sqrt.(sort(max.(0.0, eigvals(Symmetric(gram))); rev = true))
+    maxsv = isempty(singulars) ? 1.0 : max(maximum(singulars), eps(Float64))
+    identity_rows = Matrix{Float64}(I, size(gram, 1), size(gram, 1))
+    best = nothing
+    scan_rows = NamedTuple[]
+    for lambda_relative in relative_lambdas
+        lambda = Float64(lambda_relative * maxsv^2)
+        y = transpose(scaled) * ((gram + lambda .* identity_rows) \ target_vector)
+        x = scales .* y
+        residual = design * x - target_vector
+        rel = abs.(x) ./ scales
+        row = (; lambda, lambda_relative, residual_fro_after = norm(residual),
+            residual_reduction_percent = norm(target_vector) == 0.0 ? 0.0 :
+                100.0 * (1.0 - norm(residual) / norm(target_vector)),
+            delta_v_relative_max = isempty(rel) ? 0.0 : maximum(rel),
+            delta_v_relative_p95 = _hc_p95(rel),
+            delta_v_relative_median = _hc_median(rel))
+        push!(scan_rows, row)
+        if row.delta_v_relative_max <= 0.20 && row.delta_v_relative_p95 <= 0.10 &&
+                (isnothing(best) ||
+                    row.residual_reduction_percent > best.row.residual_reduction_percent)
+            best = (; row, x)
+        end
+    end
+    if isnothing(best)
+        order = sortperm(eachindex(scan_rows);
+            by = i -> (scan_rows[i].delta_v_relative_p95,
+                scan_rows[i].delta_v_relative_max,
+                -scan_rows[i].residual_reduction_percent))
+        row = scan_rows[first(order)]
+        y = transpose(scaled) * ((gram + row.lambda .* identity_rows) \ target_vector)
+        best = (; row, x = scales .* y)
+    end
+    x = clamp.(best.x, .-caps, caps)
+    frozen = abs.(best.x) .> caps
+    lambda_relative = max(best.row.lambda_relative, 0.01)
+    for _ in 1:6
+        free = findall(!, frozen)
+        isempty(free) && break
+        residual_target = target_vector - design * x
+        dx = _hc_solve_scaled_ridge(design, residual_target, scales, free, lambda_relative)
+        current = norm(design * x - target_vector)
+        best_x, best_frozen, best_residual = copy(x), copy(frozen), current
+        for step in (1.0, 0.5, 0.25, 0.125)
+            proposal, proposal_frozen = copy(x), copy(frozen)
+            for (local_index, variable_index) in pairs(free)
+                value = proposal[variable_index] + step * dx[local_index]
+                cap = caps[variable_index]
+                if abs(value) > cap
+                    proposal[variable_index] = sign(value) * cap
+                    proposal_frozen[variable_index] = true
+                else
+                    proposal[variable_index] = value
+                end
+            end
+            residual = norm(design * proposal - target_vector)
+            if residual < best_residual
+                best_x, best_frozen, best_residual = proposal, proposal_frozen, residual
+            end
+        end
+        x, frozen = best_x, best_frozen
+        best_residual >= current - 1.0e-14 && break
+    end
+    residual = design * x - target_vector
+    rel = abs.(x) ./ scales
+    fit_row = (; lambda = NaN, lambda_relative,
+        residual_fro_after = norm(residual),
+        residual_reduction_percent = norm(target_vector) == 0.0 ? 0.0 :
+            100.0 * (1.0 - norm(residual) / norm(target_vector)),
+        delta_v_max = _hc_max_abs(x),
+        delta_v_fro = norm(x),
+        delta_v_relative_max = isempty(rel) ? 0.0 : maximum(rel),
+        delta_v_relative_p95 = _hc_p95(rel),
+        delta_v_relative_median = _hc_median(rel))
+    return (; x, caps, scan_rows, singulars, row = fit_row,
+        saturated = abs.(x) .>= 0.999 .* max.(caps, eps(Float64)))
+end
+
+function _hc_delta_class_rows(V, variables, x, caps)
+    denominators = _hc_relative_denominators(V, variables)
+    rel = abs.(x) ./ max.(denominators, eps(Float64))
+    saturated = abs.(x) .>= 0.999 .* max.(caps, eps(Float64))
+    rows = NamedTuple[]
+    for class in (:diag, :nearest_local, :next_local)
+        indices = [i for i in eachindex(x) if variables.variable_class[i] === class]
+        isempty(indices) && continue
+        push!(rows, (; variable_class = class, variable_count = length(indices),
+            saturated_count = count(saturated[indices]),
+            delta_abs_max = maximum(abs.(x[indices])),
+            delta_fro = norm(x[indices]),
+            relative_max = maximum(rel[indices]),
+            relative_p95 = _hc_p95(rel[indices]),
+            relative_median = _hc_median(rel[indices])))
+    end
+    return rows
+end
+
+function _hc_product_class(owners, pair)
+    owners[pair[1]] == owners[pair[2]] || return :AB
+    return owners[pair[1]] == minimum(owners) ? :AA : :BB
+end
+
+function _hc_residual_block_rows(residual_before, residual_after, pairs, owners)
+    classes = [_hc_product_class(owners, pair) for pair in pairs]
+    rows = NamedTuple[]
+    for block in (:AA_AA, :BB_BB, :AA_BB)
+        values_before = Float64[]; values_after = Float64[]
+        for b in eachindex(pairs), a in eachindex(pairs)
+            class_a, class_b = classes[a], classes[b]
+            keep = block === :AA_AA ? class_a === :AA && class_b === :AA :
+                block === :BB_BB ? class_a === :BB && class_b === :BB :
+                class_a != class_b
+            keep || continue
+            push!(values_before, residual_before[a, b])
+            push!(values_after, residual_after[a, b])
+        end
+        push!(rows, (; block, entry_count = length(values_before),
+            residual_fro_before = norm(values_before),
+            residual_fro_after = norm(values_after),
+            residual_max_before = isempty(values_before) ? 0.0 : maximum(abs, values_before),
+            residual_max_after = isempty(values_after) ? 0.0 : maximum(abs, values_after),
+            residual_reduction_percent = norm(values_before) == 0.0 ? 0.0 :
+                100.0 * (1.0 - norm(values_after) / norm(values_before))))
+    end
+    return rows
+end
+
+function _hc_aa_bb_subblock_rows(residual_before, residual_after, pairs, owners)
+    classes = [_hc_product_class(owners, pair) for pair in pairs]
+    diagkind(pair) = pair[1] == pair[2] ? :diag : :offdiag
+    rows = NamedTuple[]
+    for sub in (:diag_diag, :diag_offdiag, :offdiag_offdiag)
+        before = Float64[]; after = Float64[]
+        for b in eachindex(pairs), a in eachindex(pairs)
+            classes[a] != classes[b] || continue
+            kinds = sort((diagkind(pairs[a]), diagkind(pairs[b])))
+            row_sub = kinds == (:diag, :diag) ? :diag_diag :
+                kinds == (:diag, :offdiag) ? :diag_offdiag : :offdiag_offdiag
+            row_sub === sub || continue
+            push!(before, residual_before[a, b])
+            push!(after, residual_after[a, b])
+        end
+        push!(rows, (; aa_bb_subblock = sub, entry_count = length(before),
+            residual_fro_before = norm(before), residual_fro_after = norm(after),
+            residual_max_before = isempty(before) ? 0.0 : maximum(abs, before),
+            residual_max_after = isempty(after) ? 0.0 : maximum(abs, after),
+            residual_reduction_percent = norm(before) == 0.0 ? 0.0 :
+                100.0 * (1.0 - norm(after) / norm(before))))
+    end
+    return rows
+end
+
+function _hc_low_fock_shift(H, V_before, V_after, Qtarget, occupations, dense_limit)
+    isnothing(H) && return (; status = :not_requested, before_min = NaN, after_min = NaN,
+        shift_min = NaN)
+    n = size(V_before, 1)
+    n <= Int(dense_limit) || return (; status = :skipped_dimension,
+        before_min = NaN, after_min = NaN, shift_min = NaN)
+    density = projected_orbital_density(Qtarget, occupations)
+    before = eigvals(Symmetric(density_density_restricted_fock(H, V_before, density)))
+    after = eigvals(Symmetric(density_density_restricted_fock(H, V_after, density)))
+    return (; status = :dense, before_min = before[1], after_min = after[1],
+        shift_min = after[1] - before[1])
+end
+
+function _retained_original_gto_local_product_egoi(
+    V::AbstractMatrix{<:Real},
+    target;
+    row_centers,
+    row_owners,
+    core_spacing::Real,
+    H = nothing,
+    occupations = nothing,
+    low_fock_dense_limit::Integer = 2500,
+)
+    interaction = _hc_symmetrize(V)
+    Qtarget = Matrix{Float64}(target.Qtarget)
+    exact_ordered = _hc_symmetrize(target.exact_target_ordered)
+    size(interaction, 1) == size(Qtarget, 1) ||
+        throw(DimensionMismatch("V dimension must match retained-GTO target rows"))
+    target_owners = Int.(target.owners)
+    pairs = _hc_owner_local_pairs(target_owners)
+    product = _hc_product_matrix(Qtarget, pairs)
+    exact = _hc_exact_pair_block(exact_ordered, size(Qtarget, 2), pairs)
+    residual_before = _hc_symmetrize(transpose(product) * interaction * product) - exact
+    variables = _hc_m2_variables(_hc_local_scales(row_centers, row_owners, core_spacing))
+    design = _hc_upper_triangle_design(product, variables)
+    fit = _hc_active_set_clipped_ridge(
+        design, _hc_upper_triangle_vector(-residual_before), interaction, variables)
+    delta = _hc_delta_from_variables(size(interaction, 1), variables, fit.x)
+    corrected = _hc_symmetrize(interaction + delta)
+    residual_after = _hc_symmetrize(transpose(product) * corrected * product) - exact
+    product_singulars = svdvals(product)
+    rank_cutoff = max(size(product)...) * eps(Float64) * maximum(product_singulars)
+    occ = occupations === nothing ? ones(Float64, size(Qtarget, 2)) : Float64.(occupations)
+    low = _hc_low_fock_shift(H, interaction, corrected, Qtarget, occ, low_fock_dense_limit)
+    diagnostics = (;
+        convention = :retained_original_gto_local_product_m2,
+        target_count = size(Qtarget, 2),
+        product_count = size(product, 2),
+        product_pairs = pairs,
+        product_rank = count(>(rank_cutoff), product_singulars),
+        product_singular_values = product_singulars,
+        product_min_singular_value = minimum(product_singulars),
+        product_median_singular_value = _hc_median(product_singulars),
+        product_max_singular_value = maximum(product_singulars),
+        allowed_variable_count = length(variables.left),
+        design_singular_values = fit.singulars,
+        residual_fro_before = norm(residual_before),
+        residual_fro_after = norm(residual_after),
+        residual_max_before = maximum(abs, residual_before),
+        residual_max_after = maximum(abs, residual_after),
+        residual_reduction_percent = norm(residual_before) == 0.0 ? 0.0 :
+            100.0 * (1.0 - norm(residual_after) / norm(residual_before)),
+        delta_v_matrix_relative_fro = norm(delta) / norm(interaction),
+        delta_v_relative_max = fit.row.delta_v_relative_max,
+        delta_v_relative_p95 = fit.row.delta_v_relative_p95,
+        delta_v_relative_median = fit.row.delta_v_relative_median,
+        saturated_count = count(fit.saturated),
+        max_disallowed_delta_v = 0.0,
+        corrected_v_finite = all(isfinite, corrected),
+        corrected_v_symmetry_error = norm(corrected - transpose(corrected), Inf),
+        target_rows = target.target_rows,
+        residual_block_rows = _hc_residual_block_rows(
+            residual_before, residual_after, pairs, target_owners),
+        aa_bb_subblock_rows = _hc_aa_bb_subblock_rows(
+            residual_before, residual_after, pairs, target_owners),
+        delta_class_rows = _hc_delta_class_rows(interaction, variables, fit.x, fit.caps),
+        low_fock = low)
+    return (; interaction_matrix = corrected, interaction_delta = delta,
+        Qtarget, exact_target = exact, local_product_matrix = product,
+        variables, diagnostics)
+end
+
+function _protected_retained_original_gto_local_product_egoi(
+    V::AbstractMatrix{<:Real},
+    supplement,
+    S_AA,
+    X,
+    geometry,
+    candidate_owner_indices;
+    row_centers,
+    row_owners,
+    core_spacing::Real,
+    H = nothing,
+    channels = (:s1, :s2),
+    loc = nothing,
+    occupations = nothing,
+    low_fock_dense_limit::Integer = 2500,
+)
+    target = _protected_retained_original_gto_egoi_target(
+        supplement, S_AA, X, geometry, candidate_owner_indices; channels, loc)
+    return merge(
+        _retained_original_gto_local_product_egoi(
+            V, target; row_centers, row_owners, core_spacing, H, occupations,
+            low_fock_dense_limit),
+        (; target))
+end
+
 """
     projected_orbital_density(Qtarget, occupations)
 
