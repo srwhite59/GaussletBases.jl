@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `95ec37b0dd7f4a276267d70eef6f29bdb1bfad5aca48a4e8fc92cea19c0f296f`.
+> [authority.toml](authority.toml), SHA-256 `026fc569833458aaf0688ab1def37fae8d733c49057dd986cf2240cdc3e36587`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2935,35 +2935,31 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Dependencies:** none
 - **Scope:** protected-localized EGOI measurement audit.
 
-### HP-RG-PROTECT-EGOI-FN-01 - retained-GTO local-product EGOI helper
+### HP-RG-PROTECT-EGOI-FN-01 - deferred retained-GTO local-product EGOI helper
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `source`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `deferred`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
-  - `canonical` [retained\_gto\_egoi.md](retained_gto_egoi.md); heading `Retained-GTO Local-Product EGOI`
-- **Owned paths:**
-  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
-  - `source` / `existing`: `src/hamiltonian_corrections.jl`
+  - `history` [retained\_gto\_egoi.md](retained_gto_egoi.md); heading `Retained-GTO Local-Product EGOI`
+- **Owned paths:** none
 - **Evidence:** none
 - **Dependencies:** none
-- **Scope:** build the owner-balanced retained-original \`s1+s2\` target, native \`Qtarget\`, local symmetric products, \`AA-AA\` / \`BB-BB\` / \`AA-BB\` acceptance blocks, exactly local \`M2\` \`DeltaV\`, and compact diagnostics in memory.
+- **Scope:** deferred with no source authority. The unaccepted retained-original \`s1+s2\` / local-product / \`M2\` adapter is preserved only on archive branch \`archive/retained-gto-egoi-wip-2026-08-03\`; any implementation requires a new docs-only reactivation tied to a current physics target.
 
-### HP-RG-PROTECT-EGOI-TEST-01 - retained-GTO EGOI validation
+### HP-RG-PROTECT-EGOI-TEST-01 - deferred retained-GTO EGOI validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `deferred`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
-  - `canonical` [retained\_gto\_egoi.md](retained_gto_egoi.md); heading `Retained-GTO Local-Product EGOI`
-- **Owned paths:**
-  - `test` / `planned`: `test/nested/cartesian_retained_gto_egoi_runtests.jl`
+  - `history` [retained\_gto\_egoi.md](retained_gto_egoi.md); heading `Retained-GTO Local-Product EGOI`
+- **Owned paths:** none
 - **Evidence:** none
 - **Dependencies:** none
-- **Scope:** test implementation on one exact planned path.
+- **Scope:** deferred with no test authority. The planned focused test was never created; future validation requires the same docs-only reactivation as the specialized helper.
 
 ### HP-RG-PROTECT-INJECT-DESIGN-01 - protected-original compact-main injection design
 

@@ -79,9 +79,9 @@ shared-shell construction are implemented. The external same-density oracle
 must use the corrected WL fingerprints before a method-accuracy claim. Explicit
 charged electron sectors are approved pending as a deletion-biased facade
 relaxation; they must not change bare basis or operator arrays. RHF, scans, and
-ladders remain separate. Standard60/canonical-driver exposure and the
-retained-GTO EGOI helper remain separate pending facilities; neither may absorb
-the unrelated `hamiltonian_corrections.jl` WIP.
+ladders remain separate. Standard60/canonical-driver exposure remains pending.
+The specialized retained-GTO EGOI helper/test are deferred with no execution
+grant; the archived WIP is not a mainline merge candidate.
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
@@ -1745,3 +1745,72 @@ Carrying-cost accounting:
 - new metadata/status fields: none.
 - validation: authority check/self-test, generated-view parity, docs tests,
   Documenter, manager-log bound, docs-only scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 445 - Defer Specialized Retained-GTO EGOI
+
+Commit(s):
+- `e8dee9ea3` on remote branch
+  `archive/retained-gto-egoi-wip-2026-08-03` - preserve the exact unaccepted
+  `501`-line adapter patch outside `main`.
+- this commit - remove execution grants and reconcile current documentation.
+
+Summary:
+- The specialized retained-original `s1+s2`/local-product/`M2` adapter never
+  gained a committed caller or focused test. Review found missing hard target
+  Gram/rank/projection gates, reporting-only validity checks, a hard-coded
+  disallowed-entry diagnostic, and an underdetermined capped fit whose result
+  depends materially on its regularization and cap policy.
+- `HP-RG-PROTECT-EGOI-FN-01/TEST-01` are now deferred with no paths, surfaces,
+  or execution grant. Generic matrix-level EGOI routines remain committed and
+  available for a future physics-driven external comparison.
+- Removing the last genuine planned path exposed a checker self-test
+  assumption. The self-test now creates its own planned-path mutations instead
+  of requiring live authority to contain deferred work.
+
+Goal advancement / guardrail:
+- MT3 removes a stale approved-pending lane rather than spending current
+  implementation effort polishing an unused adapter. Reactivation requires a
+  new docs-only decision tied to a concrete physics target and current
+  numerical/carrying-cost rules.
+- This disposition changes no Hamiltonian, target policy, artifact, solver,
+  screening convention, PRF path, or accepted numerical result.
+
+Carrying-cost accounting:
+- deleted: the unaccepted `+501` source-line patch from the active `main`
+  worktree; no committed source was deleted.
+- simplified: two approved execution records become explicit deferred
+  historical records with no executable paths; checker self-tests no longer
+  depend on live pending work.
+- quarantined: the exact patch and old ignored measurement scripts remain
+  archival evidence off `main`.
+- not deleted because: generic EGOI matrix routines are a separate committed
+  capability and were not part of this specialized-adapter decision.
+- exact remaining caller/blocker: none; future specialized EGOI work requires
+  a fresh physics target and docs-only reactivation.
+- added/deleted `src` lines on `main`: `0/0`; authority-checker lines:
+  `+11/-9`; new tests: none.
+- active docs/tool delta: `+189/-317`, net `-128`; the deferred contract page
+  alone shrank by `178` net lines.
+- new metadata/status fields: none.
+- validation: package load on the archived patch before quarantine, archive
+  branch scope audit, authority render/check/self-test, generated-view parity,
+  docs tests, Documenter, manager-log bound, docs-only staged review, and
+  `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 445
+
+- **MT1 conformance remediation - active.** Unchanged; EGOI disposition closes
+  no Pass 398 discrepancy.
+- **MT2 controlled Cr2 source migration - completed.** Unchanged; no Cr2
+  Hamiltonian or endpoint was altered.
+- **MT3 approved pending facilities - active/refined.** Standard60 and charged
+  sectors remain pending. Specialized retained-GTO EGOI is no longer an active
+  implementation lane.
+- **MT4 residual/protected evidence - active.** Generic EGOI and historical
+  retained-GTO measurements remain evidence; PRF and interaction boundaries
+  are unchanged.
+- **MT5 authority maintenance - maintenance.** Machine authority, canonical
+  disposition, current status, and generated views are reconciled atomically.
+- **MT6 carrying-cost control - active.** The active worktree sheds `501`
+  unaccepted lines without adding compatibility code, tests, or another
+  framework.

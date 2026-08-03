@@ -44,7 +44,7 @@ claim.
 | `HP-PQS-PAPER-H2-DRV-FN-01` | Five-row fixed-state measurement replayed with matched bare/supplemented dimensions | Rerun the external same-density Coulomb oracle against the new WL fingerprints before interpreting method accuracy |
 | `HP-R1-ESECTOR-*` | Explicit charged sectors approved, pending source implementation | Remove neutrality-derived facade checks without changing basis/operator arrays; prove neutral/charged He and He2 parity, supplemented parity, and charged artifact readback |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
-| `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
+| `HP-RG-PROTECT-EGOI-*` | Measurement completed; specialized retained-GTO helper/test deferred with no execution grant | Preserve the archived experiment only; any new helper requires docs-only reactivation tied to a current physics target |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
 | `HP-RHO0-XPAIR-AUDIT-01` | Deferred measurement question | Exchange/direct pairing may be revisited on H/Be/Be2 only; it is not a current blocker or source lane |
 | Existing execution IDs | Post-cutover conformance remediation | Reconcile the bounded discrepancies recorded in the [2026-07-12 execution audit](reviews/execution_conformance_audit_2026-07-12.md), beginning with fail-fast correctness and misleading completed-test claims |
@@ -88,8 +88,9 @@ driver, public facade, producer default, artifact schema family, or solver API.
    intended bounded CR2 replay are validated. Transition-density exchange,
    exact PRF-GTO interactions, automatic selection, generic parity tolerance,
    artifacts, and endpoint acceptance remain unapproved.
-4. **Retained-GTO EGOI helper.** The protected target/mask convention is
-   accepted, but committed source does not yet implement the helper.
+4. **Deferred retained-GTO EGOI.** Generic matrix-level EGOI remains
+   implemented. The specialized retained-GTO adapter is archived rather than
+   active; there is no source/test blocker or execution lane.
 5. **Residual spectral interpretation.** Tightening the RG cutoff removed
    marginal residuals but did not remove the measured low two-owner mode.
    Injection and cutoff changes are not substitutes for a separately approved

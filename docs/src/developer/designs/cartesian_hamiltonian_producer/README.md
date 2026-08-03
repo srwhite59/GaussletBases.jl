@@ -67,8 +67,8 @@ ID or subsystem.
   for compact-first protected-original replacement, exact localized one-body
   operators, inherited-site `Vee`, and the rejection of direct `C' V C`
 - [Retained-GTO local-product EGOI](retained_gto_egoi.md) for the completed
-  measurement and approved-pending retained-original `s1+s2`, local-product,
-  `M2` correction helper
+  measurement and deferred specialized `s1+s2`/`M2` adapter record; generic
+  matrix-level EGOI remains implemented
 - [Protected-localized ladder bundles](protected_localized_ladder.md) for the
   implemented same-parent member, cross-overlap, native restart, manifest,
   and target-evaluation contract

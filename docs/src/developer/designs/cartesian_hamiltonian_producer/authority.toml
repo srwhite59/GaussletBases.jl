@@ -119,7 +119,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gauss
 sha256 = "49d096a4b849b34b048b01c40d182c4f7718d0a97b9a866ca85e7582aeca4466"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/retained_gto_egoi.md"
-sha256 = "3dce62482757adfc0c09863127dd2399ef7be790a24338d64efca99abdd233f1"
+sha256 = "4702f9b4862175857e40b18d60efb7433cec53da0095b89b8b8f5b723c25fa8d"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/rho0_reference_density_matrix.md"
 sha256 = "d602ec8148cc3476a0f3e1f49d6c5dd206ee5f00b160cfae6969a45f2431feb8"
@@ -4595,49 +4595,33 @@ title = "protected-localized EGOI measurement audit"
 [[records]]
 dependency_ids = []
 evidence_refs = []
-grant = "implementation"
+grant = "none"
 id = "HP-RG-PROTECT-EGOI-FN-01"
-lifecycle = "approved"
-scope = "build the owner-balanced retained-original `s1+s2` target, native `Qtarget`, local symmetric products, `AA-AA` / `BB-BB` / `AA-BB` acceptance blocks, exactly local `M2` `DeltaV`, and compact diagnostics in memory."
-surfaces = ["source"]
-title = "retained-GTO local-product EGOI helper"
+lifecycle = "deferred"
+paths = []
+scope = "deferred with no source authority. The unaccepted retained-original `s1+s2` / local-product / `M2` adapter is preserved only on archive branch `archive/retained-gto-egoi-wip-2026-08-03`; any implementation requires a new docs-only reactivation tied to a current physics target."
+surfaces = []
+title = "deferred retained-GTO local-product EGOI helper"
 
     [[records.document_refs]]
     heading = "Retained-GTO Local-Product EGOI"
-    kind = "canonical"
+    kind = "history"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/retained_gto_egoi.md"
-
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_residual_gaussians/augmented_operators.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_residual_gaussians/residual_basis.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/hamiltonian_corrections.jl"
-    state = "existing"
 [[records]]
 dependency_ids = []
 evidence_refs = []
-grant = "implementation"
+grant = "none"
 id = "HP-RG-PROTECT-EGOI-TEST-01"
-lifecycle = "approved"
-scope = "test implementation on one exact planned path."
-surfaces = ["tests"]
-title = "retained-GTO EGOI validation"
+lifecycle = "deferred"
+paths = []
+scope = "deferred with no test authority. The planned focused test was never created; future validation requires the same docs-only reactivation as the specialized helper."
+surfaces = []
+title = "deferred retained-GTO EGOI validation"
 
     [[records.document_refs]]
     heading = "Retained-GTO Local-Product EGOI"
-    kind = "canonical"
+    kind = "history"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/retained_gto_egoi.md"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/nested/cartesian_retained_gto_egoi_runtests.jl"
-    state = "planned"
 [[records]]
 dependency_ids = []
 evidence_refs = []

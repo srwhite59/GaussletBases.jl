@@ -957,19 +957,21 @@ function self_test()
     _expect_failure(broken, "single-line text")
 
     broken = deepcopy(snapshot.data)
-    planned_record = first(record for record in broken["records"] if any(
-        item -> item["state"] == "planned",
-        record["paths"],
-    ))
-    planned_path = first(item for item in planned_record["paths"] if item["state"] == "planned")
+    planned_record = first(record for record in broken["records"] if
+        record["lifecycle"] == "approved" &&
+        record["grant"] == "implementation" &&
+        "tests" in record["surfaces"] && !isempty(record["paths"]))
+    planned_path = first(planned_record["paths"])
+    planned_path["state"] = "planned"
     planned_path["path"] = "test/nested"
     _expect_failure(broken, "must be a file")
 
     broken = deepcopy(snapshot.data)
-    planned_record = first(record for record in broken["records"] if any(
-        item -> item["state"] == "planned",
-        record["paths"],
-    ))
+    planned_record = first(record for record in broken["records"] if
+        record["lifecycle"] == "approved" &&
+        record["grant"] == "implementation" &&
+        "tests" in record["surfaces"] && !isempty(record["paths"]))
+    first(planned_record["paths"])["state"] = "planned"
     planned_record["lifecycle"] = "implemented"
     _expect_failure(broken, "planned paths require approved implementation authority")
 
