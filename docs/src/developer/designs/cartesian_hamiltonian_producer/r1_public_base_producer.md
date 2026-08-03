@@ -3,8 +3,7 @@
 Status: implemented exported public facade for unsupplemented, uncorrected,
 all-electron Cartesian IDA Hamiltonians. This page is the canonical facade,
 input, composition, and base-producer provenance contract. Explicit charged
-electron sectors are approved under `HP-R1-ESECTOR-*` and remain pending
-source implementation.
+electron sectors are implemented under `HP-R1-ESECTOR-*`.
 
 ## Owned IDs
 
@@ -14,8 +13,8 @@ source implementation.
 - `HP-R1-WIRE-01` - implemented report-free staged composition;
 - `HP-R1-ART-01` - implemented base-producer provenance sidecar;
 - `HP-R1-TEST-01` - implemented standalone public endpoint gate.
-- `HP-R1-ESECTOR-FN-01` - approved explicit charged-sector relaxation;
-- `HP-R1-ESECTOR-TEST-01` - approved sector-independence validation.
+- `HP-R1-ESECTOR-FN-01` - implemented explicit charged-sector relaxation;
+- `HP-R1-ESECTOR-TEST-01` - completed sector-independence validation.
 
 Exact lifecycle, permission, source, test, and dependency metadata is recorded
 in [the registry](registry.md).

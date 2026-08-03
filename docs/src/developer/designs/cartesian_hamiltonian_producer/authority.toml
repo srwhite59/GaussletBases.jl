@@ -83,7 +83,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_one_center_
 sha256 = "15f4ac5db40d40f8ca73876aad4f1efe625fed46086e240a5d6138ede3fef42b"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
-sha256 = "ebc8ff1e8ef207dda08750e8662a63153006407a1e6facf0579fe4acf740b28f"
+sha256 = "0ae0e7d6a17cde85c8a0b438707f4b959a9cae0f502f235a142e53e903fdada0"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_homonuclear_diatomic_supplemented_workflow.md"
 sha256 = "15528a3f6dfa8d0a00aca5e5978e708e3cfccfe7c177c869fe3e438dee81af8e"
@@ -3052,10 +3052,9 @@ title = "unified core-spacing producer contract"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-COMP-BASEDIAT-FN-01", "HP-R1-ATOM-FN-01", "HP-R1-FN-01", "HP-R3U-ZDI-FN-01"]
-evidence_refs = []
-grant = "implementation"
+grant = "maintenance"
 id = "HP-R1-ESECTOR-FN-01"
-lifecycle = "approved"
+lifecycle = "implemented"
 scope = "Remove neutrality-derived and integer-charge validation from the existing base and supplemented atom/homonuclear-z-diatomic normalization in src/cartesian_base_hamiltonian.jl. Preserve explicit required nup/ndn, positive total electron count, orbital-dimension validation, geometry restrictions, neutral-call behavior, and all basis/operator algorithms. At fixed nuclei and basis, changing only nup/ndn must leave parent-axis, terminal-coefficient/support, supplement/residual, kinetic, unit-nuclear, H1, and Vee numerical arrays plus nuclear repulsion exact; containers and provenance may differ only in explicit sector-derived fields. Delete the obsolete integer-charge helper if it has no live caller. Add no API, type, field, artifact key/schema, cache key, correction framework, driver branch, source helper/file, or zero-electron-sector support. Maximum 20 added source lines; net source should decrease."
 surfaces = ["source"]
 title = "explicit charged electron sectors"
@@ -3065,16 +3064,22 @@ title = "explicit charged electron sectors"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
 
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "540cef00b"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "446"
+
     [[records.paths]]
     kind = "source"
     path = "src/cartesian_base_hamiltonian.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-R1-ESECTOR-FN-01"]
-evidence_refs = []
-grant = "implementation"
+grant = "maintenance"
 id = "HP-R1-ESECTOR-TEST-01"
-lifecycle = "approved"
+lifecycle = "completed"
 scope = "In existing test owners only, prove neutral/charged He and He2 basis/operator exact parity, supplemented He2/He2(2+) exact operator parity, charged artifact/readback sector preservation, unchanged neutral endpoints, and rejection of malformed or invalid sectors. Require bitwise equality where arrays share the same deterministic construction; report any non-bitwise difference and stop rather than adding tolerances or sector-dependent branches. Maximum 60 added test lines and no new test/probe/fixture file."
 surfaces = ["tests"]
 title = "charged-sector independence validation"
@@ -3083,6 +3088,13 @@ title = "charged-sector independence validation"
     heading = "Electron-Sector Independence"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "540cef00b"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "446"
 
     [[records.paths]]
     kind = "test"

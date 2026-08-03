@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `026fc569833458aaf0688ab1def37fae8d733c49057dd986cf2240cdc3e36587`.
+> [authority.toml](authority.toml), SHA-256 `c34c9405f66853179d7d6f0d5f7c66542bcba5cce272b08af175a0a0678b3b1b`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1854,22 +1854,24 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-R1-ESECTOR-FN-01 - explicit charged electron sectors
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `Electron-Sector Independence`
 - **Owned paths:**
   - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-- **Evidence:** none
+- **Evidence:**
+  - `git_commit`: `540cef00b`
+  - `manager_pass`: `446`
 - **Dependencies:** `HP-COMP-BASEDIAT-FN-01`, `HP-R1-ATOM-FN-01`, `HP-R1-FN-01`, `HP-R3U-ZDI-FN-01`
 - **Scope:** Remove neutrality-derived and integer-charge validation from the existing base and supplemented atom/homonuclear-z-diatomic normalization in src/cartesian\_base\_hamiltonian.jl. Preserve explicit required nup/ndn, positive total electron count, orbital-dimension validation, geometry restrictions, neutral-call behavior, and all basis/operator algorithms. At fixed nuclei and basis, changing only nup/ndn must leave parent-axis, terminal-coefficient/support, supplement/residual, kinetic, unit-nuclear, H1, and Vee numerical arrays plus nuclear repulsion exact; containers and provenance may differ only in explicit sector-derived fields. Delete the obsolete integer-charge helper if it has no live caller. Add no API, type, field, artifact key/schema, cache key, correction framework, driver branch, source helper/file, or zero-electron-sector support. Maximum 20 added source lines; net source should decrease.
 
 ### HP-R1-ESECTOR-TEST-01 - charged-sector independence validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1877,7 +1879,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
   - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
-- **Evidence:** none
+- **Evidence:**
+  - `git_commit`: `540cef00b`
+  - `manager_pass`: `446`
 - **Dependencies:** `HP-R1-ESECTOR-FN-01`
 - **Scope:** In existing test owners only, prove neutral/charged He and He2 basis/operator exact parity, supplemented He2/He2(2+) exact operator parity, charged artifact/readback sector preservation, unchanged neutral endpoints, and rejection of malformed or invalid sectors. Require bitwise equality where arrays share the same deterministic construction; report any non-bitwise difference and stop rather than adding tolerances or sector-dependent branches. Maximum 60 added test lines and no new test/probe/fixture file.
 

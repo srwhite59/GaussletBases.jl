@@ -1814,3 +1814,45 @@ Carrying-cost accounting:
 - **MT6 carrying-cost control - active.** The active worktree sheds `501`
   unaccepted lines without adding compatibility code, tests, or another
   framework.
+
+## Cartesian Hamiltonian Producer Pass 446 - Decouple Explicit Electron Sectors
+
+Commit(s):
+- `540cef00b` - remove neutrality coupling from the existing base and
+  supplemented compatibility facades.
+
+Summary:
+- Nuclear charges and positions now define the bare external potential without
+  requiring `nup + ndn` to equal total nuclear charge. Explicit sectors remain
+  required, nonnegative, nonzero, and subject to the existing orbital-capacity
+  check. Neutral calls and all numerical construction algorithms are unchanged.
+- Exact He/He+ and He2/He2(2+) comparisons found identical parent axes,
+  terminal supports and coefficients, kinetic, unit-nuclear, H1, IDA Vee, and
+  nuclear repulsion. Supplemented He2/He2(2+) also matched exactly, and charged
+  artifact readback preserved `(nup, ndn) = (1, 1)`.
+
+Goal advancement / guardrail:
+- MT3 completes the bounded charged-sector facility. This does not introduce
+  the deferred operator/problem type split, neutral defaults, `net_charge`,
+  zero-electron sectors, correction policy, or solver behavior.
+
+Carrying-cost accounting:
+- deleted: three neutrality/integer-charge gates and the obsolete integer-charge
+  helper.
+- simplified: one common early nonzero-sector guard now covers base and
+  supplemented normalization.
+- quarantined: the cleaner particle-number-independent operator architecture
+  remains future design work.
+- not deleted because: explicit `nup`/`ndn` remain compatibility-container and
+  artifact fields.
+- exact remaining caller/blocker: none for charged base/supplemented producer
+  construction.
+- added src lines: `3`; deleted src lines: `23`.
+- new tests: `34` assertions in two existing files; no new file (`60` added
+  test lines total).
+- new metadata/status fields: none.
+- validation: package load, public base `232/232`, H2 augmented `443/443`,
+  supplemented facade `73/73`, terminal due-diligence inspection, stale-policy
+  scan, anti-bloat scope review, authority check/self-test, generated-view
+  parity, docs `56/56` and `10/10`, Documenter, manager-log bound, and
+  `git diff --check`.
