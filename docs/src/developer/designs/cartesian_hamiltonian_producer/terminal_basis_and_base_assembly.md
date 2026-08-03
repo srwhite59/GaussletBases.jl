@@ -276,6 +276,14 @@ symmetric, square, and dimensionally identical. Electron counts must be valid
 for the basis. Charges and positions must be finite and center-aligned.
 Nuclear repulsion is derived from the stored charges and positions.
 
+This existing object is a compatibility bundle: `nup` and `ndn` select the
+intended electron sector but do not participate in terminal-basis or operator
+construction. At fixed nuclei, basis input, and numerical policy, changing
+only those counts must leave `kinetic`, every unit-nuclear matrix,
+`electron_electron_ida`, the assembled physical one-body matrix, and nuclear
+repulsion exactly unchanged. A separate operator/problem type split is future
+architecture, not part of this boundary.
+
 The physical one-body matrix is assembled on demand as:
 
 ```text

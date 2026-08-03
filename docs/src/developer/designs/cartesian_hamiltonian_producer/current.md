@@ -42,6 +42,7 @@ claim.
 | --- | --- | --- |
 | `HP-PQS-ASPECTSHELL-*` | Implemented/completed maintenance; eligible PQS/WL shells share `(ns,ns,L)` and equal aggregate dimensions | Preserve parent/PQS parity and fail on missing shape, axis-count, aggregate-column, or Gram inconsistencies |
 | `HP-PQS-PAPER-H2-DRV-FN-01` | Five-row fixed-state measurement replayed with matched bare/supplemented dimensions | Rerun the external same-density Coulomb oracle against the new WL fingerprints before interpreting method accuracy |
+| `HP-R1-ESECTOR-*` | Explicit charged sectors approved, pending source implementation | Remove neutrality-derived facade checks without changing basis/operator arrays; prove neutral/charged He and He2 parity, supplemented parity, and charged artifact readback |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; retained-GTO helper/test approved pending | Implement only retained original `s1+s2`, local symmetric products, `M2`, and exact-zero disallowed `DeltaV`; the uncommitted `hamiltonian_corrections.jl` WIP is not accepted authority |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |

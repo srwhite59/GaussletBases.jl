@@ -8,10 +8,10 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/atomic_hf_refe
 sha256 = "c39308268cc18538ee99db4913f7801af547b1940efe59e6af06bb82271f75d0"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driver_atom_workflow.md"
-sha256 = "92b4bd4d84f9b551cff8b5b718383185cbfc7712f524a3ef1f8a3dc965ae5626"
+sha256 = "7657ace602280e75cc254363dc5e1b86e47076114fb0732713526015647a79f9"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driver_usability_workflow.md"
-sha256 = "c451d06665cd8643545be328d31a8ca010fafc59ab0dddbcc6fa9cb6b297be75"
+sha256 = "98f7d9620fd6a01701976ec7540365b01bb8af25e52381741f768e526c479f1f"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md"
 sha256 = "2d8737bf799822f293243d99a0d02cf17e92d9e958685c362f84870f2a89f7c1"
@@ -38,7 +38,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_so
 sha256 = "e6120d1b42e2e6bc4137cb9d52ba5c25556ad4058f240352d5fd739bed1e57e0"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/nesting_supplement_composition_plan.md"
-sha256 = "75a73c5be33c77ba7a1028d41a23fdb18955cfbaf9714e3dcca9cfd5b5837d55"
+sha256 = "2a5f0d4551f439a2cab5f71f28ce980f1accb48258cdda525e0d95631f66dc61"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/numerical_complete_residual_basis.md"
 sha256 = "27698e5a507e627f11ec354d95bf01e6df80755e482594b9833ba0db46e73be6"
@@ -80,13 +80,13 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/qw_high_order_
 sha256 = "2f3adcff3e012e412803e7324dfbb7b43bdec0adf4e752b34bf491e4aeacc781"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_one_center_base_atoms.md"
-sha256 = "71c6e8b9dd6766fd1b8a84ebfe53a9ec85dbe28c8fa5ab012f228558f0f93469"
+sha256 = "15f4ac5db40d40f8ca73876aad4f1efe625fed46086e240a5d6138ede3fef42b"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
-sha256 = "e2155be7daad9933eb72f13cffe46f833503c43ed88c1ae872adae8a415d35d0"
+sha256 = "ebc8ff1e8ef207dda08750e8662a63153006407a1e6facf0579fe4acf740b28f"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_homonuclear_diatomic_supplemented_workflow.md"
-sha256 = "33038377aff21efbde47567ad902cfccf26b5928c2d733530e6bfeaacae68b78"
+sha256 = "15528a3f6dfa8d0a00aca5e5978e708e3cfccfe7c177c869fe3e438dee81af8e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_remaining_exact_operator_allocation_audit.md"
 sha256 = "66d742f27b13bf5414191c381d25051a5a13f4d4eee79e091b4af21ce5fee037"
@@ -104,7 +104,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_unit_nuclea
 sha256 = "3c17edfb573330be0f7e7a00bc9213fad9de961649dcb999974f50acaa6834ab"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_usability_supplemented_workflow.md"
-sha256 = "53fddd5fef87e3a706eb09350a2161e72fd1e058ac9ab63bb055dd6982d87248"
+sha256 = "364e8803c12548b7e451744deed96b56777c4f023c0bc36b4c67c0891917ddd7"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/reference_hartree_numerics.md"
 sha256 = "eadd500026774e4a1a1a386b4057df8cd2e1be57c0a52c40336f38a7484f55ff"
@@ -137,7 +137,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartr
 sha256 = "a26a5760c108cd8aa97f5a92519741361f6591c4ce90b7251e825b1f64a0f9c5"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
-sha256 = "37db01e33269e66f55884ca175e45f7fbceb3d3fe4bf89841e2218f1efca1e41"
+sha256 = "c996ca54fb0b2ba73f0c21373343fe11f5831a2c577a5fb1783c717915c49eea"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_shellification_due_diligence.md"
 sha256 = "1c43546e75bf25199ba12065a1f6bf34a58f7c02ab4c7116f1b93e9edbda2cd8"
@@ -487,7 +487,7 @@ evidence_refs = []
 grant = "maintenance"
 id = "HP-COMP-BASEDIAT-FN-01"
 lifecycle = "implemented"
-scope = "validate explicit equal-symbol/equal-charge neutral all-electron diatomics at two finite distinct z-axis centers and send them through the existing PQS/WL base path."
+scope = "maintain explicit equal-symbol/equal-charge diatomics at two finite distinct z-axis centers and send them through the existing PQS/WL base path. Electron-sector independence and charged-sector acceptance are owned separately by HP-R1-ESECTOR-FN-01."
 surfaces = ["source"]
 title = "base homonuclear z-axis diatomics"
 
@@ -1145,7 +1145,7 @@ evidence_refs = []
 grant = "maintenance"
 id = "HP-DRV-ATOM-FN-01"
 lifecycle = "implemented"
-scope = "maintain `Natom=1`, `basisname === nothing` base-atom selection; explicit origin, charge, spin-sector, neutral-count, `ns`, `core_spacing`, `s_factor`, source-span/nesting, and radius-from-padding inputs; and clear unsupported-input failures. There is no public `mode=:base` input."
+scope = "maintain `Natom=1`, `basisname === nothing` base-atom selection; explicit origin, nuclear charge, `nup`/`ndn`, `ns`, `core_spacing`, `s_factor`, source-span/nesting, and radius-from-padding inputs; and clear unsupported-input failures. The driver infers neither neutrality nor spin. There is no public `mode=:base` input."
 surfaces = ["driver"]
 title = "explicit base atom driver workflow"
 
@@ -2977,7 +2977,7 @@ evidence_refs = []
 grant = "maintenance"
 id = "HP-R1-ATOM-FN-01"
 lifecycle = "implemented"
-scope = "maintain explicit origin-centered, neutral, all-electron atom validation in the existing `cartesian_base_hamiltonian(system; basis, hamfile)` facade. Charge, electron counts, spin sectors, basis, and ECP behavior must never be inferred from the atom label."
+scope = "maintain explicit origin-centered all-electron atom geometry and input validation in the existing `cartesian_base_hamiltonian(system; basis, hamfile)` facade. Charge, electron counts, spin sectors, basis, and ECP behavior must never be inferred from the atom label. Charged-sector acceptance is owned separately by HP-R1-ESECTOR-FN-01."
 surfaces = ["source"]
 title = "explicit one-center all-electron base atom facade"
 
@@ -3049,6 +3049,48 @@ title = "unified core-spacing producer contract"
     [[records.paths]]
     kind = "source"
     path = "src/cartesian_base_hamiltonian.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-COMP-BASEDIAT-FN-01", "HP-R1-ATOM-FN-01", "HP-R1-FN-01", "HP-R3U-ZDI-FN-01"]
+evidence_refs = []
+grant = "implementation"
+id = "HP-R1-ESECTOR-FN-01"
+lifecycle = "approved"
+scope = "Remove neutrality-derived and integer-charge validation from the existing base and supplemented atom/homonuclear-z-diatomic normalization in src/cartesian_base_hamiltonian.jl. Preserve explicit required nup/ndn, positive total electron count, orbital-dimension validation, geometry restrictions, neutral-call behavior, and all basis/operator algorithms. At fixed nuclei and basis, changing only nup/ndn must leave parent-axis, terminal-coefficient/support, supplement/residual, kinetic, unit-nuclear, H1, and Vee numerical arrays plus nuclear repulsion exact; containers and provenance may differ only in explicit sector-derived fields. Delete the obsolete integer-charge helper if it has no live caller. Add no API, type, field, artifact key/schema, cache key, correction framework, driver branch, source helper/file, or zero-electron-sector support. Maximum 20 added source lines; net source should decrease."
+surfaces = ["source"]
+title = "explicit charged electron sectors"
+
+    [[records.document_refs]]
+    heading = "Electron-Sector Independence"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_base_hamiltonian.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-R1-ESECTOR-FN-01"]
+evidence_refs = []
+grant = "implementation"
+id = "HP-R1-ESECTOR-TEST-01"
+lifecycle = "approved"
+scope = "In existing test owners only, prove neutral/charged He and He2 basis/operator exact parity, supplemented He2/He2(2+) exact operator parity, charged artifact/readback sector preservation, unchanged neutral endpoints, and rejection of malformed or invalid sectors. Require bitwise equality where arrays share the same deterministic construction; report any non-bitwise difference and stop rather than adding tolerances or sector-dependent branches. Maximum 60 added test lines and no new test/probe/fixture file."
+surfaces = ["tests"]
+title = "charged-sector independence validation"
+
+    [[records.document_refs]]
+    heading = "Electron-Sector Independence"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = []
@@ -3532,7 +3574,7 @@ evidence_refs = []
 grant = "maintenance"
 id = "HP-R3U-ZDI-FN-01"
 lifecycle = "implemented"
-scope = "maintain explicit neutral all-electron homonuclear two-center z-axis validation and optional trusted supplement `basisfile`."
+scope = "maintain explicit all-electron homonuclear two-center z-axis geometry, system validation, and optional trusted supplement `basisfile`. Charged-sector acceptance and sector-independent operator parity are owned separately by HP-R1-ESECTOR-FN-01."
 surfaces = ["source"]
 title = "homonuclear z-axis diatomic supplemented facade"
 

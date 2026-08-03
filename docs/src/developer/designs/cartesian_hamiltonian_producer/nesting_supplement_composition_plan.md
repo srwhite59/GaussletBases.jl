@@ -3,7 +3,8 @@
 Status: implemented under `HP-ROUTE-RECIPE-FN-01`, `HP-COMP-BASEDIAT-*`,
 `HP-COMP-SUPPWL-*`, `HP-COMP-SUPPATOM-*`, `HP-COMP-NS-*`, and
 `HP-COMP-WLNS-*`. `HP-ROUTE-RECIPE-TEST-01` is completed evidence with no
-continuing permission.
+continuing permission. Explicit charged sectors are approved under
+`HP-R1-ESECTOR-*` and remain pending source implementation.
 
 This page is the canonical contract for the supported geometry, nesting, and
 supplement composition and for family-selective route recipes. The registry
@@ -91,12 +92,17 @@ This oddization does not apply to boundary retained counts.
 Base diatomics require:
 
 - two equal atom symbols used as provenance labels;
-- two equal, finite, positive, integer-valued nuclear charges;
+- two equal, finite, positive nuclear charges;
 - two finite, distinct centers on the Cartesian z axis;
-- explicit nonnegative `nup` and `ndn` satisfying
-  `nup + ndn == sum(nuclear_charges)`.
+- explicit nonnegative `nup` and `ndn` valid for the realized orbital
+  dimension, with positive total electron count under the current
+  `CartesianIDAHamiltonian` compatibility container.
 
 No element table supplies charge, electron count, spin, basis, or geometry.
+Changing only the explicit sector must not change parent-axis or terminal-basis
+numerical arrays, supplement/residual numerical data, one-body matrices, or
+interaction matrices. Containers and provenance may differ only in their
+explicit sector-derived fields. Net charge is derived from charges and counts.
 
 After either nesting family produces a `CartesianTerminalBasisRealization`,
 supplemented atoms and diatomics share this downstream path:
@@ -129,11 +135,11 @@ augmentation remains in
 `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
 
 Reject heteronuclear, translated, non-z-axis, or general molecular geometry;
-nonneutral or noninteger-charge all-electron systems; inconsistent `ns`/`q`;
-WL diatomic `ns < 4`; and supplement basis-count or owner mismatch before
-expensive construction where practical. Do not add geometry-specific
-Hamiltonian builders when the shared terminal and residual-GTO/MWG boundaries
-express the case.
+invalid charges or electron sectors; inconsistent `ns`/`q`; WL diatomic
+`ns < 4`; and supplement basis-count or owner mismatch before expensive
+construction where practical. Do not add geometry-specific Hamiltonian
+builders when the shared terminal and residual-GTO/MWG boundaries express the
+case.
 
 ## Non-Goals
 

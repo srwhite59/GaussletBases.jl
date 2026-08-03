@@ -2,6 +2,8 @@
 
 Status: implemented internal supported facade for residual-GTO/MWG
 supplemented Hamiltonians. The function is module-qualified and non-exported.
+Explicit charged sectors are approved under `HP-R1-ESECTOR-*` and remain
+pending source implementation.
 
 ## Owned IDs
 
@@ -35,8 +37,8 @@ not a wrapper, report, status object, payload, or `(value, metadata)` pair.
 
 ## Supported Molecular Input
 
-The R3U molecular path accepts explicit neutral all-electron homonuclear
-two-center Cartesian z-axis systems:
+The approved R3U molecular path accepts explicit all-electron homonuclear
+two-center Cartesian z-axis systems in neutral or charged electron sectors:
 
 - `system` has exactly `atom_symbols`, `nuclear_charges`, `atom_locations`,
   `nup`, and `ndn`;
@@ -44,13 +46,15 @@ two-center Cartesian z-axis systems:
 - the two symbols and nuclear charges are equal;
 - both centers have zero `x` and `y`, finite distinct `z`, and positive finite
   charges;
-- `nup` and `ndn` are nonnegative integers whose sum equals the integer total
-  nuclear charge.
+- `nup` and `ndn` are nonnegative integers with positive total count and are
+  valid for the realized orbital dimension.
 
-There is no element-specific H, Be, or Cr branch. Heteronuclear, charged,
-ECP, non-z-axis, translated/rotated general molecular, and solver inputs fail
+There is no element-specific H, Be, or Cr branch. Heteronuclear, ECP,
+non-z-axis, translated/rotated general molecular, and solver inputs fail
 validation. Cr2 may use the generic internal path, but it has no special
-default, fixture, or production claim here.
+default, fixture, or production claim here. Changing only `nup` and `ndn`
+must leave the supplement, residual basis, exact one-body matrices, and MWG
+interaction unchanged.
 
 ## Basis Input
 

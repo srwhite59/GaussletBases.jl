@@ -3,7 +3,9 @@
 Status: implemented public-facade contract for explicit origin-centered
 all-electron one-center base atoms under `HP-R1-ATOM-*`. The general facade
 and base artifact contracts remain canonical in
-[R1 public base producer](r1_public_base_producer.md).
+[R1 public base producer](r1_public_base_producer.md). Explicit charged
+sectors are approved under `HP-R1-ESECTOR-*` and remain pending source
+implementation.
 
 ## Meaning And Interface
 
@@ -34,12 +36,16 @@ For a one-center atom:
 
 - the three center collections are `AbstractVector` values of length one;
 - the location is exactly the finite tuple `(0.0, 0.0, 0.0)`;
-- the explicit nuclear charge is finite, positive, and integer-valued;
-- `nup` and `ndn` are nonnegative integers and are not `Bool`;
-- neutrality requires `nup + ndn == round(Int, nuclear_charge)`.
+- the explicit nuclear charge is finite and positive;
+- `nup` and `ndn` are nonnegative integers, are not `Bool`, and have positive
+  total count under the current `CartesianIDAHamiltonian` compatibility
+  container;
+- no neutrality equality couples the electron count to the nuclear charge.
 
 The atom symbol is converted to a string and persisted as a label. It does not
 infer charge, electron count, spin, basis, mapping policy, or ECP behavior.
+Net charge is derived from the explicit charge and sector; it is not another
+input or stored authority.
 
 ## Basis Contract
 

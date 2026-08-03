@@ -2,7 +2,9 @@
 
 Status: implemented exported public facade for unsupplemented, uncorrected,
 all-electron Cartesian IDA Hamiltonians. This page is the canonical facade,
-input, composition, and base-producer provenance contract.
+input, composition, and base-producer provenance contract. Explicit charged
+electron sectors are approved under `HP-R1-ESECTOR-*` and remain pending
+source implementation.
 
 ## Owned IDs
 
@@ -12,6 +14,8 @@ input, composition, and base-producer provenance contract.
 - `HP-R1-WIRE-01` - implemented report-free staged composition;
 - `HP-R1-ART-01` - implemented base-producer provenance sidecar;
 - `HP-R1-TEST-01` - implemented standalone public endpoint gate.
+- `HP-R1-ESECTOR-FN-01` - approved explicit charged-sector relaxation;
+- `HP-R1-ESECTOR-TEST-01` - approved sector-independence validation.
 
 Exact lifecycle, permission, source, test, and dependency metadata is recorded
 in [the registry](registry.md).
@@ -72,11 +76,13 @@ integers and may not be `Bool`. Unknown or missing keys fail.
 
 ### One-Center Atom
 
-The implemented atom scope is:
+The approved atom scope is:
 
 - exactly one center at `(0.0, 0.0, 0.0)`;
-- integer-valued positive nuclear charge;
-- neutral all-electron count, `nup + ndn == nuclear_charge`;
+- finite positive nuclear charge;
+- explicit nonnegative `nup` and `ndn` valid for the realized orbital
+  dimension, with positive total electron count under the current
+  compatibility container;
 - atom symbol used as an explicit provenance label, not as charge, electron,
   basis, or ECP authority.
 
@@ -85,15 +91,48 @@ The broader atom rationale and exclusions are canonical in
 
 ### Homonuclear Z-Axis Diatomic
 
-The implemented molecular scope is:
+The approved molecular scope is:
 
 - exactly two centers;
-- equal atom-symbol labels and equal integer-valued positive charges;
+- equal atom-symbol labels and equal finite positive charges;
 - both centers on the Cartesian z axis with distinct finite z coordinates;
-- neutral all-electron count equal to twice the per-center charge.
+- explicit nonnegative `nup` and `ndn` valid for the realized orbital
+  dimension, with positive total electron count under the current
+  compatibility container.
 
 There is no translation or rotation step. Heteronuclear, x/y-aligned,
-shifted-parallel, generally oriented, charged, or ECP systems fail validation.
+shifted-parallel, generally oriented, or ECP systems fail validation.
+
+## Electron-Sector Independence
+
+For fixed nuclear charges, nuclear positions, basis input, and numerical
+policy, the bare Cartesian construction is independent of `nup` and `ndn`.
+The terminal basis, kinetic matrix, unit-nuclear matrices, assembled physical
+one-body matrix, IDA interaction, and nuclear repulsion must therefore be
+identical when only the electron sector changes. The net molecular charge is
+derived rather than independently supplied:
+
+```text
+Q_net = sum(nuclear_charges) - (nup + ndn).
+```
+
+The compatibility facade continues to require explicit `nup` and `ndn` and
+continues to return `CartesianIDAHamiltonian`, which stores those counts as
+sector metadata. This pass does not add an optional neutral default,
+`net_charge` input, derived-charge field, public accessor, artifact key, or
+cache-key convention. Existing neutral calls remain unchanged.
+
+The same invariant composes through the already-implemented supplemented
+atom/diatomic path: changing only the sector must not change supplement
+loading, residual selection, augmented one-body matrices, or MWG interaction.
+This authorizes no supplement algorithm change.
+
+A future architecture may separate a particle-number-independent Cartesian
+operator from an electron-sector problem object. That is accepted design
+direction only: `cartesian_operator`, `with_electron_sector`, replacement
+types, artifact migration, and generalized correction/cache machinery require
+separate authority. Sector- or reference-dependent corrections must remain
+explicit objects and must not alter the meaning of the bare producer.
 
 ## Basis Input
 
@@ -272,6 +311,11 @@ Coulomb behavior, atom and molecular geometry rejection, key/type/spacing
 validation, deprecated `d` behavior, artifact write/readback, and base
 producer provenance. The current H2 fixture has final dimension `487`.
 
+`HP-R1-ESECTOR-TEST-01` additionally approves exact neutral/charged He and
+He2 operator parity in this existing file, supplemented He2 parity in
+`test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`, and charged
+artifact/readback sector preservation. It adds no new test or fixture file.
+
 This is a focused public integration gate, not default tiny-unit coverage. It
 must not assert private route-stage inventories or teach the human-facing
 driver as the facade implementation.
@@ -280,7 +324,8 @@ driver as the facade implementation.
 
 This contract does not authorize:
 
-- supplements, numerical-complete/protected bases, or corrections;
+- supplement-algorithm changes, numerical-complete/protected bases, or
+  corrections;
 - solver, RHF/UHF, fragment, counterpoise, ECP, or Cr2 workflow;
 - translated atoms, arbitrary orientation, or heteronuclear molecules;
 - new public symbols, input objects, result wrappers, reports, or status

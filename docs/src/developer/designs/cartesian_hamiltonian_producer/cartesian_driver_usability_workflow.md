@@ -111,8 +111,9 @@ xmax_transverse = padding
 
 `nesting = :pqs` derives `q = ns`; `nesting = :wl` derives `q = ns - 2`.
 Mapped-COMX source spans are PQS-only, and WL diatomics require `ns >= 4`.
-All detailed geometry, neutrality, spacing, and policy checks remain producer
-owned.
+All detailed geometry, electron-sector, spacing, and policy checks remain
+producer owned. The driver supplies explicit `nup` and `ndn`; it does not
+infer a neutral sector or accept a separate `net_charge` authority.
 
 `basisname === nothing` selects the base workflow. Otherwise the driver builds:
 
@@ -186,11 +187,11 @@ committed input-fixture file.
 
 The driver rejects unknown keys, `Natom` outside `1:2`, unsupported `nesting`
 or `source_span`, and an empty `hamfile` before construction where practical.
-The producer then rejects malformed records, nonneutral systems, unsupported
-geometry, invalid sizes/spacings/mapping factors, incompatible source spans,
-and invalid supplement inputs. Input evaluation, numerical construction,
-artifact writing, and readback errors propagate. Failures are not converted
-to status payloads or partial-success objects.
+The producer then rejects malformed records, invalid electron sectors,
+unsupported geometry, invalid sizes/spacings/mapping factors, incompatible
+source spans, and invalid supplement inputs. Input evaluation, numerical
+construction, artifact writing, and readback errors propagate. Failures are
+not converted to status payloads or partial-success objects.
 
 ## Non-Goals
 
@@ -218,9 +219,11 @@ after the campaign if no durable use remains.
 
 ### Required Construction
 
-The public base facade requires neutral H2 and therefore is not the H2+
-construction boundary. For each bare H2+ method, the script must carry the
-actual two-center system, with `nup=1`, `ndn=0`, and nuclei at
+The private driver continues to use the staged route because its full-parent
+reference and terminal diagnostics are not returned by the public base facade;
+charged-sector support does not replace this campaign-specific construction.
+For each bare H2+ method, the script must carry the actual two-center system,
+with `nup=1`, `ndn=0`, and nuclei at
 `(0,0,-R/2)` and `(0,0,R/2)`, through the existing staged multicenter route:
 
 ```text
@@ -238,7 +241,8 @@ White-Lindsey case uses the corresponding current terminal realizer. The
 driver may call these staged owners, terminal products, arbitrary-center
 nuclear attraction, terminal inventory, and
 `_cartesian_terminal_due_diligence_report` by qualified private names. It must
-not add a source helper or work around the neutral facade.
+not add a source helper or route around the public facade for ordinary charged
+Hamiltonian construction.
 
 Both methods use the same `ns=5`-derived physical parent. PQS uses route-local
 `q=5`; White-Lindsey uses route-local `q=3`. The White-Lindsey `q` must not
@@ -255,12 +259,11 @@ dimensions must match. The driver does not choose this policy or patch a
 shape; it reports and validates the source-backed construction.
 
 Physical nuclear attraction must use the actual two centers through the
-existing arbitrary-center kernel. The bare H2+ route must not use the public
-neutral diatomic facade. No route may use
+existing arbitrary-center kernel. No route may use
 `pqs_source_shell_realization_final_basis`, CPBM source-shell bridge/readiness
 paths, or shell/support-row compatibility materialization. The supplemented
-preflight instead uses the existing neutral supplemented working-basis seam
-exactly as specified below; this is not a neutral-facade workaround for H2+.
+preflight instead uses the existing supplemented working-basis seam exactly as
+specified below; it remains the separately frozen neutral-H2 endpoint.
 
 The frozen paper defaults are:
 

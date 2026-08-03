@@ -2,7 +2,9 @@
 
 Status: implemented narrow molecular-scope contract for the supplemented
 facade and canonical driver. This is generic homonuclear z-axis authority, not
-element-specific Cr2 authority or general molecular support.
+element-specific Cr2 authority or general molecular support. Explicit charged
+sectors are approved under `HP-R1-ESECTOR-*` and remain pending source
+implementation.
 
 ## Owned IDs
 
@@ -16,14 +18,13 @@ the same system contract while exposing construction timings.
 
 ## Supported Systems
 
-The molecular supplemented path supports:
+The approved molecular supplemented path supports:
 
 - exactly two centers;
 - equal atom symbols and equal finite positive nuclear charges;
 - centers on the Cartesian z axis with distinct finite z coordinates;
 - explicit nonnegative integer `nup` and `ndn`;
-- neutral all-electron count,
-  `nup + ndn == round(Int, sum(nuclear_charges))`;
+- positive total electron count valid for the realized orbital dimension;
 - explicit base and supplement inputs;
 - no element-specific defaults or element-specific source branches.
 
@@ -31,7 +32,7 @@ Unsupported inputs fail before expensive construction where practical:
 
 - heteronuclear systems;
 - non-z-axis or general translated/rotated molecular geometries;
-- charged or ECP systems;
+- ECP systems;
 - solver/RHF workflow;
 - Cr2-specific defaults, fixtures, or branches.
 
@@ -45,6 +46,9 @@ molecular-scope contract.
 `_cartesian_r3_supplement_inputs(...)`. Required physical inputs remain
 explicit: atom symbols, charges, positions, electron counts, near-core
 spacing, longitudinal/transverse extents, and supplement basis labels.
+The sector selects the eventual many-electron problem but must not change the
+base or supplemented basis and operator arrays. Net charge is derived from the
+explicit charges and counts.
 
 The shared base producer owns `ns` normalization, route-local `q`, nesting,
 source span, mapping strength, Coulomb accuracy, and other already-approved

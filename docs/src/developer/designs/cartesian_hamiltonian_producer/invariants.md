@@ -252,6 +252,18 @@ The canonical RG algorithm contract is
   nuclear charges, centers, and electron counts. Symbols are provenance labels;
   charges and explicit `nup`/`ndn` are authority. Do not add element lookup
   tables or inferred electron counts.
+- Bare Cartesian basis and operator construction is electron-sector
+  independent. At fixed nuclei, basis input, and numerical policy, changing
+  only `nup`/`ndn` must leave parent-axis, terminal-coefficient/support,
+  supplement/residual, kinetic, unit-nuclear, physical one-body, and
+  interaction numerical arrays plus nuclear repulsion unchanged. Containers
+  and provenance may differ only in explicit sector-derived fields. Net charge
+  is derived as
+  `sum(nuclear_charges) - (nup + ndn)`; it is not a second input authority.
+- The current `CartesianIDAHamiltonian` may retain `nup`/`ndn` as compatibility
+  metadata. A particle-number-independent operator type, separate sector
+  wrapper, optional neutral default, or generalized correction/cache API is
+  not implied by this invariant and requires separate authority.
 - One-center atom parent sizing uses physical extent. Public `basis.radius`
   / driver `padding` is the atom box-size authority.
 - Public size input uses `ns` as the requested cube/source/nesting size.

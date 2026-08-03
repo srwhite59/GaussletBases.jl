@@ -4,7 +4,9 @@ Status: implemented canonical-driver source contract for explicit
 origin-centered one-center atoms under `HP-DRV-ATOM-FN-01` and
 `HP-DRV-ATOM-WIRE-01`. The paired test ID is completed evidence with no
 continuing permission. Producer-side atom semantics remain owned by
-[R1 one-center base atoms](r1_one_center_base_atoms.md).
+[R1 one-center base atoms](r1_one_center_base_atoms.md). The driver already
+forwards explicit counts; producer acceptance of charged sectors is approved
+under `HP-R1-ESECTOR-*` and remains pending source implementation.
 
 ## Live Selection
 
@@ -20,9 +22,9 @@ selection used by the script; a non-`nothing` basis label selects the
 separately governed supplemented-atom composition path.
 
 The checked-in defaults describe H2 (`Natom = 2`, `nup = 1`, `ndn = 1`). An
-atom run must supply electron counts consistent with its explicit charge. For
-example, changing only `Natom` to `1` does not produce a valid neutral H input;
-neutral H also requires one total electron.
+atom run must supply its intended electron sector explicitly. For example,
+changing only `Natom` to `1` retains two electrons and therefore describes
+H- rather than neutral H; neutral H also requires one total electron.
 
 ## Atom Contract
 
@@ -38,10 +40,11 @@ system = (
 )
 ```
 
-The producer requires finite positive integer-valued `Z`, nonnegative integer
-spin-sector counts, and `nup + ndn == round(Int, Z)`. The `atom` value is a
-provenance label only; it never supplies charge, electron count, spin, basis,
-or ECP behavior. Translated atoms are rejected.
+The approved producer contract requires finite positive `Z`, nonnegative
+integer spin-sector counts with positive total count, and no neutrality
+equality. The `atom` value is a provenance label only; it never supplies
+charge, electron count, spin, basis, or ECP behavior. Translated atoms are
+rejected. Net charge is derived from `Z`, `nup`, and `ndn`.
 
 The driver constructs the atom basis from:
 
@@ -93,10 +96,10 @@ contract owns no package source, test, tool, or committed input fixture.
 ## Failure Behavior
 
 Unsupported or malformed atom inputs throw, normally with `ArgumentError`.
-This includes nonpositive or noninteger charge, nonneutral electron count,
-invalid `ns`, spacing, nesting, source span, or `s_factor`, an empty artifact
-name, and any translated or multicenter shape presented as an atom. Numerical,
-writer, and readback failures propagate.
+This includes nonpositive charge, invalid electron counts, invalid `ns`,
+spacing, nesting, source span, or `s_factor`, an empty artifact name, and any
+translated or multicenter shape presented as an atom. Numerical, writer, and
+readback failures propagate.
 
 ## Non-Goals
 

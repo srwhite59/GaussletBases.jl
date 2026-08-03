@@ -74,14 +74,14 @@ separate scientific choice.
 
 **MT3 - Approved pending producer facilities (active).** The private
 matrix-free parent/PQS/WL H2+ controls, parent capture, supplemented H2
-one-body preflight, and fixed-state density-density gate are implemented.
-Their standard PQS/WL comparison is provisional because shared complete-shell
-counts are unequal. Implement the approved common `(ns,ns,L)` outer shape with
-WL inner counts `(ns-2,ns-2,L-2)`, replay all rows, and only then resume the
-external same-density oracle. RHF, scans, and ladders remain separate.
-Standard60/canonical-driver exposure and the retained-GTO EGOI helper remain
-separate pending facilities; neither may absorb the unrelated
-`hamiltonian_corrections.jl` WIP.
+one-body preflight, fixed-state density-density gate, and matched PQS/WL
+shared-shell construction are implemented. The external same-density oracle
+must use the corrected WL fingerprints before a method-accuracy claim. Explicit
+charged electron sectors are approved pending as a deletion-biased facade
+relaxation; they must not change bare basis or operator arrays. RHF, scans, and
+ladders remain separate. Standard60/canonical-driver exposure and the
+retained-GTO EGOI helper remain separate pending facilities; neither may absorb
+the unrelated `hamiltonian_corrections.jl` WIP.
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
@@ -1705,3 +1705,43 @@ Carrying-cost accounting:
   all six saved Cr2 requests and the combined 27-PRF composition, artifact and
   manifest checksum parity, QR projector comparison, anti-bloat review, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 444 - Authorize Explicit Charged Electron Sectors
+
+Commit(s):
+- this commit - separate bare operator construction from neutrality policy in
+  the existing compatibility facade.
+
+Summary:
+- `HP-R1-ESECTOR-FN-01/TEST-01` approve explicit nonneutral `nup`/`ndn` for
+  the existing origin-centered atom and homonuclear z-axis base/supplemented
+  paths. Nuclear charges and positions continue to define the external field;
+  the electron sector no longer has to equal total nuclear charge.
+- The implementation remains deliberately narrow: remove the three
+  neutrality-derived checks and obsolete integer-charge helper from
+  `cartesian_base_hamiltonian.jl`, preserve the current
+  `CartesianIDAHamiltonian` compatibility return, and add exact neutral/charged
+  parity checks only in the two existing test owners.
+
+Goal advancement / guardrail:
+- MT3 gains the minimum reusable path needed for He2(2+) without introducing a
+  second operator/problem framework. `Q_net` is derived from explicit charges
+  and counts. Optional neutral defaults, a `net_charge` input, new types,
+  artifact/cache fields, generalized corrections, zero-electron sectors, and
+  solver behavior remain outside authority.
+
+Carrying-cost accounting:
+- deleted: source deletion is required in the follow-on; no source changed in
+  this authority pass.
+- simplified: one sector-independence rule replaces atom, base-diatomic, and
+  supplemented-diatomic neutrality coupling.
+- quarantined: the clean operator/sector type split remains future architecture.
+- not deleted because: explicit `nup`/`ndn` remain required compatibility
+  metadata and existing artifacts/readers depend on them.
+- exact remaining caller/blocker: implement the bounded validation deletion,
+  then prove bitwise He/He+ and He2/He2(2+) base and supplemented operator
+  parity plus charged artifact readback.
+- added/deleted `src` lines: `0/0`; new tests: none in this docs-only pass.
+- new metadata/status fields: none.
+- validation: authority check/self-test, generated-view parity, docs tests,
+  Documenter, manager-log bound, docs-only scope review, and `git diff --check`.

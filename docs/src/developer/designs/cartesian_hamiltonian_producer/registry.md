@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `ebd94f9d130e97c1cbc38c3241df740d9f1f49fa53706171cc09d7fa96d905cb`.
+> [authority.toml](authority.toml), SHA-256 `95ec37b0dd7f4a276267d70eef6f29bdb1bfad5aca48a4e8fc92cea19c0f296f`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -255,7 +255,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
 - **Evidence:** none
 - **Dependencies:** none
-- **Scope:** validate explicit equal-symbol/equal-charge neutral all-electron diatomics at two finite distinct z-axis centers and send them through the existing PQS/WL base path.
+- **Scope:** maintain explicit equal-symbol/equal-charge diatomics at two finite distinct z-axis centers and send them through the existing PQS/WL base path. Electron-sector independence and charged-sector acceptance are owned separately by HP-R1-ESECTOR-FN-01.
 
 ### HP-COMP-BASEDIAT-TEST-01 - base diatomic validation
 
@@ -688,7 +688,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `driver` / `existing`: `bin/cartesian_ham_builder.jl`
 - **Evidence:** none
 - **Dependencies:** none
-- **Scope:** maintain \`Natom=1\`, \`basisname === nothing\` base-atom selection; explicit origin, charge, spin-sector, neutral-count, \`ns\`, \`core\_spacing\`, \`s\_factor\`, source-span/nesting, and radius-from-padding inputs; and clear unsupported-input failures. There is no public \`mode=:base\` input.
+- **Scope:** maintain \`Natom=1\`, \`basisname === nothing\` base-atom selection; explicit origin, nuclear charge, \`nup\`/\`ndn\`, \`ns\`, \`core\_spacing\`, \`s\_factor\`, source-span/nesting, and radius-from-padding inputs; and clear unsupported-input failures. The driver infers neither neutrality nor spin. There is no public \`mode=:base\` input.
 
 ### HP-DRV-ATOM-TEST-01 - base atom driver validation
 
@@ -1807,7 +1807,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
 - **Evidence:** none
 - **Dependencies:** none
-- **Scope:** maintain explicit origin-centered, neutral, all-electron atom validation in the existing \`cartesian\_base\_hamiltonian(system; basis, hamfile)\` facade. Charge, electron counts, spin sectors, basis, and ECP behavior must never be inferred from the atom label.
+- **Scope:** maintain explicit origin-centered all-electron atom geometry and input validation in the existing \`cartesian\_base\_hamiltonian(system; basis, hamfile)\` facade. Charge, electron counts, spin sectors, basis, and ECP behavior must never be inferred from the atom label. Charged-sector acceptance is owned separately by HP-R1-ESECTOR-FN-01.
 
 ### HP-R1-ATOM-TEST-01 - one-center base atom validation
 
@@ -1851,6 +1851,35 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
 - **Dependencies:** none
 - **Scope:** maintain \`core\_spacing\` as the single public near-nucleus physical scale and atom-only compatibility \`d == core\_spacing\`.
+
+### HP-R1-ESECTOR-FN-01 - explicit charged electron sectors
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `Electron-Sector Independence`
+- **Owned paths:**
+  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+- **Evidence:** none
+- **Dependencies:** `HP-COMP-BASEDIAT-FN-01`, `HP-R1-ATOM-FN-01`, `HP-R1-FN-01`, `HP-R3U-ZDI-FN-01`
+- **Scope:** Remove neutrality-derived and integer-charge validation from the existing base and supplemented atom/homonuclear-z-diatomic normalization in src/cartesian\_base\_hamiltonian.jl. Preserve explicit required nup/ndn, positive total electron count, orbital-dimension validation, geometry restrictions, neutral-call behavior, and all basis/operator algorithms. At fixed nuclei and basis, changing only nup/ndn must leave parent-axis, terminal-coefficient/support, supplement/residual, kinetic, unit-nuclear, H1, and Vee numerical arrays plus nuclear repulsion exact; containers and provenance may differ only in explicit sector-derived fields. Delete the obsolete integer-charge helper if it has no live caller. Add no API, type, field, artifact key/schema, cache key, correction framework, driver branch, source helper/file, or zero-electron-sector support. Maximum 20 added source lines; net source should decrease.
+
+### HP-R1-ESECTOR-TEST-01 - charged-sector independence validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `Electron-Sector Independence`
+- **Owned paths:**
+  - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
+  - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
+- **Evidence:** none
+- **Dependencies:** `HP-R1-ESECTOR-FN-01`
+- **Scope:** In existing test owners only, prove neutral/charged He and He2 basis/operator exact parity, supplemented He2/He2(2+) exact operator parity, charged artifact/readback sector preservation, unchanged neutral endpoints, and rejection of malformed or invalid sectors. Require bitwise equality where arrays share the same deterministic construction; report any non-bitwise difference and stop rather than adding tolerances or sector-dependent branches. Maximum 60 added test lines and no new test/probe/fixture file.
 
 ### HP-R1-FILE-01 - public base producer source file
 
@@ -2180,7 +2209,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-R3U-FN-01`
-- **Scope:** maintain explicit neutral all-electron homonuclear two-center z-axis validation and optional trusted supplement \`basisfile\`.
+- **Scope:** maintain explicit all-electron homonuclear two-center z-axis geometry, system validation, and optional trusted supplement \`basisfile\`. Charged-sector acceptance and sector-independent operator parity are owned separately by HP-R1-ESECTOR-FN-01.
 
 ### HP-R3U-ZDI-TEST-01 - homonuclear diatomic validation
 
