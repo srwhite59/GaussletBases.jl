@@ -25,7 +25,7 @@ source/contract findings, not another migration campaign.
 | Mapping and source span | Expert `s_factor` and opt-in mapped-COMX source spans with provenance; defaults remain unchanged | [Mapping s_factor](pqs_mapping_s_factor.md), [mapped COMX](mapped_comx_source_span.md) |
 | Coulomb policy | One producer-wide expansion reaches parent/PGDG, base IDA, residual-GTO, and MWG. Compact45 and high135 are implemented | [Coulomb accuracy](coulomb_accuracy_policy.md) |
 | Residual Gaussians | Owner-local residual selection, one final merge, exact augmented one-body operators, final-basis MWG/IDA, current `1e-6` production cutoff, and opt-in numerical-complete `[G,R_num]` additive composition | [Residual Gaussian domain](residual_gaussian_domain_module.md), [numerical-complete basis](numerical_complete_residual_basis.md), [orthogonality/cutoff](residual_gaussian_orthogonality_robustness.md) |
-| Parent-backed functions | Internal PRF, injection, exact one-body, numerical-complete residual, separated interaction, screened-Hartree delegation, and parent-IDA mechanics are implemented. Root-exported consumer source is present but unaccepted pending exact descriptor-to-PRF binding | [Parent residual functions](parent_residual_functions.md), [parent-backed injected composition](parent_backed_injected_composition.md) |
+| Parent-backed functions | Root-exported expert PRF composition is accepted with exact descriptor-to-PRF source binding. Internal injection, exact one-body, numerical-complete residual, separated interaction, screened-Hartree delegation, and parent-IDA mechanics remain its numerical owners | [Parent residual functions](parent_residual_functions.md), [parent-backed injected composition](parent_backed_injected_composition.md) |
 | Direct-G injection | Default-off in-memory compatibility path; ordinary behavior is invariant and enabled artifacts remain unsupported | [Direct-G injection](residual_gaussian_injection_hybrid.md) |
 | Protected-localized basis | Compact-main protected replacement, exact localized one-body matrices, inherited-site `Vee_L`; direct `C' V C` is rejected | [Protected-localized basis](protected_localized_basis.md) |
 | Protected persistence | Opt-in protected Hamiltonian artifacts with native locality metadata, plus same-parent ladder bundles and exact cross-overlap transfer | [Protected artifact](protected_localized_artifact.md), [protected ladder](protected_localized_ladder.md) |
@@ -43,7 +43,7 @@ claim.
 | `HP-PQS-ASPECTSHELL-*` | Implemented/completed maintenance; eligible PQS/WL shells share `(ns,ns,L)` and equal aggregate dimensions | Preserve parent/PQS parity and fail on missing shape, axis-count, aggregate-column, or Gram inconsistencies |
 | `HP-PQS-PAPER-H2-DRV-FN-01` | Five-row fixed-state measurement replayed with matched bare/supplemented dimensions | Rerun the external same-density Coulomb oracle against the new WL fingerprints before interpreting method accuracy |
 | `HP-R1-ESECTOR-*` | Explicit charged sectors implemented; maintenance | Preserve exact basis/operator independence from `nup`/`ndn`, positive nonzero sectors, neutral compatibility, supplemented parity, and charged artifact readback |
-| `HP-PQS-PRF-CONSUMER-*` | Approved correction; source present but not accepted for consumer use | Bind every descriptor and PRF to the same exact terminal block before additive or injected composition, then rerun the bounded H2 parity and malformed-input gate |
+| `HP-PQS-PRF-CONSUMER-*` | Implemented/completed maintenance | Preserve exact descriptor-to-PRF source binding, explicit consumer targets, additive/fixed-span parity, and category-owned unscreened Hamiltonian assembly |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; specialized retained-GTO helper/test deferred with no execution grant | Preserve the archived experiment only; any new helper requires docs-only reactivation tied to a current physics target |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
@@ -84,12 +84,11 @@ driver, public facade, producer default, artifact schema family, or solver API.
 2. **Standard Coulomb implementation.** The analytic K60 preset and artifact
    fingerprint are approved but not source-backed. The controlled Cr2
    screened comparison stays `:high` and must not be changed mid-comparison.
-3. **Parent-backed consumer ratification.** The compact in-memory PRF source is
-   present, but additive composition does not yet prove that each semantic
-   descriptor and PRF identify the same terminal block. Correct that relation
-   and pass the focused H2 rejection/parity gate before Hooke or another
-   consumer adopts the API. Consumers must still construct and justify their
-   own parent-space targets. Transition-density exchange, exact PRF-GTO
+3. **Parent-backed consumer studies.** The compact in-memory expert PRF API is
+   accepted with exact descriptor-to-PRF source binding. Hooke and other
+   consumers must still construct and justify their own parent-space targets,
+   beginning with the proposed one-center Be `1s/2s` study.
+   Transition-density exchange, exact PRF-GTO
    interactions, automatic selection, artifacts, and endpoint acceptance
    remain unapproved.
 4. **Deferred retained-GTO EGOI.** Generic matrix-level EGOI remains

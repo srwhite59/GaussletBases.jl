@@ -1,8 +1,7 @@
 # Parent-Backed Injected Composition
 
-Status: implemented internal numerical facility. The root-exported in-memory
-consumer source is present but is not accepted for consumer use until the
-descriptor-to-PRF binding correction below passes.
+Status: implemented internal numerical facility and accepted root-exported
+in-memory expert consumer interface.
 
 Authority IDs:
 
@@ -20,12 +19,12 @@ shell, source order, injection target, residual orientation, or solver method.
 
 ## Consumer API Contract
 
-The implemented numerical owners may be promoted through one small,
-root-exported, in-memory expert interface. This interface is deliberately staged
+The implemented numerical owners are exposed through one small, root-exported,
+in-memory expert interface. This interface is deliberately staged
 because the consumer must inspect the parent/terminal basis before it can
 construct physical target columns.
 
-The approved sequence is:
+The accepted sequence is:
 
 1. Build the existing PQS working basis with `cartesian_base_working_basis`.
 2. Obtain compact descriptors for PRF-eligible contracted terminal regions.
@@ -43,7 +42,7 @@ The approved sequence is:
    existing Gaussian supplement and build the complete unscreened native
    Hamiltonian in `[G,R,RG_external]` or `[G_inj,R_new,RG_external]` order.
 
-The source-present calls under ratification are:
+The accepted calls are:
 
 ```julia
 base = cartesian_base_working_basis(system; basis, supplemented = true)
@@ -81,10 +80,8 @@ Every composition request must bind its descriptor and PRF to the same exact
 terminal source block. Before either additive or injected composition proceeds,
 the PRF source key, support indices, and support states must match the block
 recovered from the validated descriptor. A descriptor and PRF that are each
-valid for the same working basis but refer to different regions must fail. The
-source currently enforces this relation only in fixed-span injection; additive
-composition remains unaccepted until the shared check and focused rejection test
-land.
+valid for the same working basis but refer to different regions fail before
+either additive or injected composition.
 
 The final consumer result may carry only the existing Hamiltonian, composition,
 external residual basis, and the fixed three-axis position/second-moment matrices.
