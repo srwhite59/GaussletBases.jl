@@ -1100,6 +1100,12 @@ function cartesian_parent_backed_composition(base, requests; inject::Bool = fals
     all(request -> hasproperty(request, :region) && hasproperty(request, :prf), values) ||
         throw(ArgumentError("parent-backed requests require region and prf"))
     sources = [_cartesian_parent_residual_source(base, request.region) for request in values]
+    for (source, request) in zip(sources, values)
+        (request.prf.source_unit_key === source.unit_key &&
+            request.prf.support_indices == source.support_indices &&
+            request.prf.support_states == source.support_states) || throw(ArgumentError(
+            "parent-backed request PRF must match its exact descriptor source block"))
+    end
     if inject
         all(request -> hasproperty(request, :target_coordinates), values) ||
             throw(ArgumentError("injected composition requires target_coordinates"))

@@ -661,6 +661,9 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     injection_request = (; source_block, prfs = [prf], target_coordinates)
     additive = cartesian_parent_backed_composition(
         base_working, [(; region, prf = consumer_prf)])
+    other_region = only(filter(candidate -> candidate.region_key !== region.region_key, regions))
+    @test_throws ArgumentError cartesian_parent_backed_composition(
+        base_working, [(; region = other_region, prf = consumer_prf)])
     @test_throws ArgumentError cartesian_parent_backed_composition(
         base_working, [(; region)])
     @test additive.terminal_basis === basis
