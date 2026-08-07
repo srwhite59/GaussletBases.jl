@@ -1,6 +1,7 @@
 # Parent-Backed Injected Composition
 
-Status: implemented internal facility with completed bounded validation.
+Status: implemented internal numerical facility and root-exported in-memory
+consumer interface with completed bounded validation.
 
 Authority IDs:
 
@@ -40,6 +41,23 @@ The approved sequence is:
 5. Optionally combine the resulting parent-backed composition with an explicit
    existing Gaussian supplement and build the complete unscreened native
    Hamiltonian in `[G,R,RG_external]` or `[G_inj,R_new,RG_external]` order.
+
+The exported calls implementing that sequence are:
+
+```julia
+base = cartesian_base_working_basis(system; basis, supplemented = true)
+regions = cartesian_parent_residual_regions(base)
+prf = cartesian_parent_residual_block(base, region, parent_indices, target_columns)
+composition = cartesian_parent_backed_composition(base, [(; region, prf)])
+injected = cartesian_parent_backed_composition(
+    base, [(; region, prf, target_coordinates)]; inject = true)
+result = cartesian_parent_backed_hamiltonian(base, supplement, composition)
+```
+
+`target_columns` and `target_coordinates` are consumer-owned numerical inputs;
+the producer neither constructs nor ranks them. Each region descriptor is bound
+to its semantic identity, exact support, terminal columns, and terminal-basis
+fingerprint, and is rejected against a different or stale working basis.
 
 The final consumer result may carry only the existing Hamiltonian, composition,
 external residual basis, and the fixed three-axis position/second-moment matrices.

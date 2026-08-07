@@ -1897,3 +1897,43 @@ Carrying-cost accounting:
 - validation: authority render/check, adversarial self-test, generated-view
   parity, docs `56/56` and `10/10`, local Documenter, manager-log bound,
   scoped diff review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 448 - Expose Consumer-Selected PQS PRFs
+
+Commit(s):
+- `25d670e15` - add the bounded root-exported PRF consumer surface.
+- this commit - reconcile authority, canonical usage, and current status.
+
+Summary:
+- Consumers can now enumerate fingerprint-bound contracted PQS regions, build
+  validated PRFs from explicit parent-space columns, compose them additively or
+  by fixed-span occupied-first injection, and optionally build the complete
+  unscreened `[G or Ginj, R or Rnew, RGexternal]` Hamiltonian. All numerical
+  work delegates to the established exact one-body, terminal IDA,
+  parent-Gaussian direct, and residual MWG owners.
+- The standard one-center Be basis exposes eleven atom-local contracted shells
+  over the unchanged `27^3` parent and `1203`-function terminal basis. The repo
+  does not choose Be `1s/2s` targets, an RDM, cutoff, rank, or orientation.
+
+Goal advancement / guardrail:
+- MT4 completes producer-side PRF exposure needed by Hooke without changing
+  ordinary PQS defaults or omitted-PRF results. Screening, artifacts, solvers,
+  and scientific target policy remain separate.
+
+Carrying-cost accounting:
+- deleted: `17` duplicated injected-composition finalization lines.
+- simplified: one validated finalizer now owns additive and injected
+  composition ranges, dimensions, geometry, and diagnostics.
+- quarantined: Be target selection and energy comparisons remain external
+  consumer studies.
+- not deleted because: low-level PRF, injection, exact operator, Gaussian
+  direct, and MWG owners remain the canonical numerical implementation.
+- exact remaining caller/blocker: Hooke must supply and validate its explicit
+  parent-space `1s/2s` targets before the first Be PRF energy comparison.
+- added/deleted `src` lines: `149/17`; new tests: `20` assertions in the
+  existing H2 owner, no new file.
+- new metadata/status fields: none; two small concrete API records and fixed
+  three-axis matrix fields are the approved consumer result contract.
+- validation: package load, final H2 `463/463`, supplemented facade `73/73`,
+  exact public/lower-level matrix parity, one-center Be eleven-region inventory,
+  terminal due diligence, anti-bloat review, and `git diff --check`.
