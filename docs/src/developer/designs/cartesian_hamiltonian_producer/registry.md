@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `c34c9405f66853179d7d6f0d5f7c66542bcba5cce272b08af175a0a0678b3b1b`.
+> [authority.toml](authority.toml), SHA-256 `b1bcb5893709df23e300159a761bfe2ad4079931045c90b553114776b1e5bb7a`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1542,6 +1542,40 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `416`
 - **Dependencies:** `HP-PQS-PARENT-GDIRECT-FN-01`
 - **Scope:** Maintain only the committed analytic onsite, symmetry, finiteness, positive-semidefinite, far-tail, expansion-identity, charge, tiled-parity, bounded parent-IDA, and unchanged-G-G checks. No transition-exchange, PRF-GTO-residual, Cr2, HF, endpoint, or complete-Hamiltonian assertion.
+
+### HP-PQS-PRF-CONSUMER-FN-01 - consumer-callable PQS parent residual functions
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Consumer API Contract`
+- **Owned paths:**
+  - `source` / `existing`: `src/GaussletBases.jl`
+  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/hooke/reports/hooke_be_ns5_prf_completion_status_2026-08-06.md`
+  - `manager_pass`: `447`
+- **Dependencies:** `HP-PQS-PRF-FN-01`, `HP-PQS-PRF-INJECT-COMP-FN-01`, `HP-PQS-PRF-INJECT-INTERACT-FN-01`, `HP-R3U-FN-01`
+- **Scope:** Add one root-exported, in-memory two-stage consumer surface over the existing PQS working basis. Expose a compact immutable descriptor for contracted semantic terminal regions; construct validated PRF blocks only from explicit consumer parent-space columns; compose either additive PRFs or fixed-span injection for all requested regions; and build the existing numerical-complete \[G or Ginj, R or Rnew, RGexternal\] unscreened Hamiltonian with exact native H1 and the established terminal-IDA, parent-Gaussian-direct, and MWG category owners. Export cartesian\_base\_working\_basis plus the new descriptor/result types and four narrowly named PRF functions. The consumer owns every target, RDM, cutoff, shell choice, count, orientation, and injection coordinate. Add at most two small concrete structs and 150 source lines across existing files; centralize additive/injected composition validation. No default, automatic selection, artifact, sidecar, driver, screening change, solver, HF, public supplement-policy scan, element/molecule special case, or new file/module/helper framework.
+
+### HP-PQS-PRF-CONSUMER-TEST-01 - consumer-callable PQS PRF validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Consumer API Contract`
+- **Owned paths:**
+  - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/hooke/reports/hooke_be_ns5_prf_completion_status_2026-08-06.md`
+  - `manager_pass`: `447`
+- **Dependencies:** `HP-PQS-PRF-CONSUMER-FN-01`, `HP-PQS-PRF-INJECT-COMP-TEST-01`, `HP-PQS-PRF-INJECT-INTERACT-TEST-01`
+- **Scope:** In the existing bounded H2 owner only, verify semantic-region descriptor uniqueness and basis binding, consumer PRF construction, additive and fixed-span composition, malformed/stale descriptor rejection, and exact final Hamiltonian parity with the existing lower-level category owners. Preserve all existing omitted-path and malformed-input gates. Use the standard one-center Be 1203-function contracted-region inventory only as external acceptance; add no committed Be/Cr2 fixture or selector. Maximum 45 added test lines and no new test/probe/fixture file.
 
 ### HP-PQS-PRF-FN-01 - parent residual function mechanics
 

@@ -47,10 +47,10 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/occupied_first
 sha256 = "7f5d9d262246fb486c438db3a0a23450dd3e944ec303548429c21d6ec3a0d7ff"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_backed_injected_composition.md"
-sha256 = "01cd994c6676ba5dba2af639511f57cabab715149f211185adc4b514a0d078bd"
+sha256 = "337f235a7171fc26e9857bf5d9de13261355c161749447a0d965cbd5b67bbb97"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_residual_functions.md"
-sha256 = "a402920b2d7291ff5f8b53acc4a4436d4240377263faced204b319f4479325c7"
+sha256 = "24aea15b22071cf594bd09aff7849c3d04476946562eaae7a89869e74acd6c73"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_complete_shell_aspect_source_modes.md"
 sha256 = "8146c1b1c23911b1ff56d41d35721f747aa35a22e804898474f3292a778cc5c0"
@@ -2545,6 +2545,64 @@ title = "parent-backed Gaussian direct validation"
     kind = "test"
     path = "test/core/runtests.jl"
     state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-PRF-FN-01", "HP-PQS-PRF-INJECT-COMP-FN-01", "HP-PQS-PRF-INJECT-INTERACT-FN-01", "HP-R3U-FN-01"]
+grant = "implementation"
+id = "HP-PQS-PRF-CONSUMER-FN-01"
+lifecycle = "approved"
+scope = "Add one root-exported, in-memory two-stage consumer surface over the existing PQS working basis. Expose a compact immutable descriptor for contracted semantic terminal regions; construct validated PRF blocks only from explicit consumer parent-space columns; compose either additive PRFs or fixed-span injection for all requested regions; and build the existing numerical-complete [G or Ginj, R or Rnew, RGexternal] unscreened Hamiltonian with exact native H1 and the established terminal-IDA, parent-Gaussian-direct, and MWG category owners. Export cartesian_base_working_basis plus the new descriptor/result types and four narrowly named PRF functions. The consumer owns every target, RDM, cutoff, shell choice, count, orientation, and injection coordinate. Add at most two small concrete structs and 150 source lines across existing files; centralize additive/injected composition validation. No default, automatic selection, artifact, sidecar, driver, screening change, solver, HF, public supplement-policy scan, element/molecule special case, or new file/module/helper framework."
+surfaces = ["source"]
+title = "consumer-callable PQS parent residual functions"
+
+    [[records.document_refs]]
+    heading = "Consumer API Contract"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_backed_injected_composition.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/hooke/reports/hooke_be_ns5_prf_completion_status_2026-08-06.md"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "447"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_base_hamiltonian.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-PRF-CONSUMER-FN-01", "HP-PQS-PRF-INJECT-COMP-TEST-01", "HP-PQS-PRF-INJECT-INTERACT-TEST-01"]
+grant = "implementation"
+id = "HP-PQS-PRF-CONSUMER-TEST-01"
+lifecycle = "approved"
+scope = "In the existing bounded H2 owner only, verify semantic-region descriptor uniqueness and basis binding, consumer PRF construction, additive and fixed-span composition, malformed/stale descriptor rejection, and exact final Hamiltonian parity with the existing lower-level category owners. Preserve all existing omitted-path and malformed-input gates. Use the standard one-center Be 1203-function contracted-region inventory only as external acceptance; add no committed Be/Cr2 fixture or selector. Maximum 45 added test lines and no new test/probe/fixture file."
+surfaces = ["tests"]
+title = "consumer-callable PQS PRF validation"
+
+    [[records.document_refs]]
+    heading = "Consumer API Contract"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_backed_injected_composition.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/hooke/reports/hooke_be_ns5_prf_completion_status_2026-08-06.md"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "447"
+
     [[records.paths]]
     kind = "test"
     path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"

@@ -1,6 +1,7 @@
 # Parent Residual Functions And Parent-Backed Gaussian Direct Interaction
 
-Status: implemented internal facility under the four authority IDs below.
+Status: implemented numerical facility; a bounded consumer interface is approved
+separately by the parent-backed composition contract.
 
 Authority IDs:
 
@@ -268,9 +269,10 @@ Implementation is limited to existing owners:
 - `src/ordinary_coulomb.jl` only for the scalar onsite-calibrated Gaussian
   Coulomb formula and its compact resource.
 
-No root export is approved. A narrow export from the existing internal
-`CartesianFinalBasisRealization` module is allowed only if the qualified
-consumer/test surface requires it. No new file or module is approved.
+These mechanics remain owned by `CartesianFinalBasisRealization`. The separate
+consumer API contract may expose semantic region descriptors and validated
+construction calls without exporting these low-level helpers individually. No
+new file or module is approved.
 
 Commit `5b46ae073` implemented:
 
@@ -344,10 +346,10 @@ compatibility representation.
 
 ## Explicit Non-Goals
 
-These IDs do not approve:
+These mechanics IDs do not independently approve:
 
 - shell, `source_q`, RDM, mode-count, cutoff, or automatic selection policy;
-- public API, facade, driver, default, artifact, sidecar, or solver workflow;
+- driver, default, artifact, sidecar, or solver workflow;
 - a combined PRF Hamiltonian or mutation of current `H1`/`Vee`;
 - PRF-to-GTO-residual interactions;
 - transition-density or exact exchange;

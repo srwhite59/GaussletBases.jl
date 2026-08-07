@@ -1856,3 +1856,44 @@ Carrying-cost accounting:
   scan, anti-bloat scope review, authority check/self-test, generated-view
   parity, docs `56/56` and `10/10`, Documenter, manager-log bound, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 447 - Authorize Consumer-Callable PRFs
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- `HP-PQS-PRF-CONSUMER-FN-01/TEST-01` promote the already validated PRF,
+  fixed-span injection, numerical-complete external residual, exact one-body,
+  and category-correct interaction mechanics through one compact in-memory
+  consumer interface. The consumer first builds the ordinary PQS working basis,
+  then chooses semantic contracted regions and supplies parent-space target
+  columns. Additive PRFs and all-request fixed-span injection are both approved.
+- The interface must use semantic descriptors bound to exact support and
+  terminal-coefficient fingerprints. It may not expose raw block ordinals or
+  make GaussletBases choose an RDM, cutoff, shell, rank, or orientation.
+
+Goal advancement / guardrail:
+- MT4 advances PRFs from a successful internal/Cr2 mechanism to reusable
+  producer functionality needed by the Hooke Be program. Ordinary PQS is
+  already a standard exported base producer; this pass does not change that
+  facade or any omitted-PRF result. Artifacts, screening policy, solvers, and
+  scientific selection remain separate.
+
+Carrying-cost accounting:
+- deleted: no source in this docs-only pass; implementation must centralize the
+  additive/injected composition validation now otherwise reconstructed by
+  consumers.
+- simplified: one approved staged interface replaces consumer copying of the
+  private protected-ladder assembly sequence.
+- quarantined: one-center Be target selection and energy comparison remain a
+  Hooke-owned external study.
+- not deleted because: low-level PRF and category interaction owners remain the
+  numerical implementation used by the new facade.
+- exact remaining caller/blocker: implement and validate the approved interface;
+  Hooke must then supply its own 1s/2s parent targets.
+- added/deleted `src` lines: `0/0`; new tests: none in this docs-only pass.
+- new metadata/status fields: none.
+- validation: authority render/check, adversarial self-test, generated-view
+  parity, docs `56/56` and `10/10`, local Documenter, manager-log bound,
+  scoped diff review, and `git diff --check`.

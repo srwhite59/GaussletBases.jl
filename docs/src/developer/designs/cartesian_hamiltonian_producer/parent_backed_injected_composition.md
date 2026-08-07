@@ -4,6 +4,8 @@ Status: implemented internal facility with completed bounded validation.
 
 Authority IDs:
 
+- `HP-PQS-PRF-CONSUMER-FN-01`
+- `HP-PQS-PRF-CONSUMER-TEST-01`
 - `HP-PQS-PRF-INJECT-COMP-FN-01`
 - `HP-PQS-PRF-INJECT-COMP-TEST-01`
 - `HP-PQS-PRF-INJECT-INTERACT-FN-01`
@@ -13,6 +15,43 @@ This page is the canonical contract for composing consumer-selected
 parent-backed injection with the numerical-complete Gaussian supplement and
 the existing screened-Hartree correction. It does not select a physical state,
 shell, source order, injection target, residual orientation, or solver method.
+
+## Consumer API Contract
+
+The implemented numerical owners may be promoted through one small, root-exported,
+in-memory consumer interface. This interface is deliberately staged because the
+consumer must inspect the parent/terminal basis before it can construct physical
+target columns.
+
+The approved sequence is:
+
+1. Build the existing PQS working basis with `cartesian_base_working_basis`.
+2. Obtain compact descriptors for PRF-eligible contracted terminal regions.
+   A descriptor binds the semantic region key, role, kind, native shell index,
+   semantic owner, exact support, terminal columns, and a fingerprint of the
+   support and terminal coefficients. It is not an RDM or selection record.
+3. For each consumer-selected descriptor, supply explicit parent row indices and
+   target columns to construct one validated PRF block. Existing support, rank,
+   terminal-orthogonality, metric, and deterministic-phase checks remain hard
+   failures.
+4. Compose those blocks either additively with unchanged `G`, or through the
+   existing fixed-span injection when every request also supplies consumer-owned
+   orthonormal target coordinates in `[G,R]`.
+5. Optionally combine the resulting parent-backed composition with an explicit
+   existing Gaussian supplement and build the complete unscreened native
+   Hamiltonian in `[G,R,RG_external]` or `[G_inj,R_new,RG_external]` order.
+
+The final consumer result may carry only the existing Hamiltonian, composition,
+external residual basis, and the fixed three-axis position/second-moment matrices.
+It must not retain duplicate interaction category matrices, raw Gaussian blocks,
+prior construction stages, or a new metadata cloud. No artifact identity is
+established for a descriptor, PRF, composition, or result.
+
+This API makes producer mechanics reusable; it does not make selection policy a
+producer responsibility. GaussletBases must not receive or infer an RDM,
+occupation cutoff, shell ranking, top-`k` count, element-specific rule, or target
+orientation. One-center Be, Be2, and Cr2 remain consumer studies. The ordinary
+PQS facade and every omitted-PRF result remain unchanged.
 
 ## Purpose And Evidence
 
@@ -273,8 +312,9 @@ owners:
 
 The implementation consumes the existing numerical-complete residual builder,
 parent-Gaussian direct resource, augmented transforms, and screened-Hartree API
-without moving their ownership into these IDs. No root export, public facade,
-driver input, artifact field, restart format, module, or source file was added.
+without moving their ownership into these IDs. The consumer API IDs separately
+authorize the narrow in-memory root exports above. They do not authorize a driver
+input, artifact field, restart format, module, source file, solver, or default.
 
 ## Validation Contract
 
@@ -333,14 +373,13 @@ reusing a correction from another basis or interaction.
 
 ## Explicit Non-Goals
 
-These IDs do not approve:
+The internal composition/interaction IDs do not independently approve:
 
 - any q7, q6, shell-9, eight-PRF, `1e-5`, element, molecule, or geometry
   default;
 - consumer RDM construction, spin averaging, occupation analysis, automatic
   selection, or localization policy;
-- public API, facade, canonical driver, artifact, sidecar, restart, solver, or
-  HF workflow;
+- canonical driver, artifact, sidecar, restart, solver, or HF workflow;
 - `C' V C`, generalized-overlap interaction, source-Hamiltonian transform, or
   PRF-as-terminal compatibility adapter;
 - exact PRF-GTO direct integrals, transition-density exchange, exact exchange,
