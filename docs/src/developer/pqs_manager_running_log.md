@@ -1116,3 +1116,35 @@ Carrying-cost accounting:
   repo-manager implements and closes only ratified work.
 - **MT6 carrying-cost control - active.** The fix adds nine total lines and no
   helper, type, field, file, metadata, or compatibility path.
+
+## Cartesian Hamiltonian Producer Pass 451 - Correct PRF Maintenance Ownership
+
+Commit(s):
+- `be59362b8` - accepted descriptor-to-PRF binding fix.
+- `0d29afc57` - Pass 450 lifecycle closeout with stale implementation scope.
+- this docs-only authority correction.
+
+Summary:
+- Design-manager accepted the six-line shared binding check and three-line H2
+  rejection gate. Both composition modes now reject cross-region pairing before
+  numerical composition, and the reported bounded validation is sufficient.
+- Pass 450 changed lifecycle/grant correctly but left the temporary Pass 449
+  implementation instructions in the machine scope and retained only the
+  one-file correction surface. The maintenance record now owns the exact seven
+  exports across their three existing source files and states the continuing
+  semantic-binding, delegation, parity, and non-goal contract. The validation
+  record now describes the completed checks rather than future implementation.
+
+Goal advancement / guardrail:
+- MT4 consumer-callable PRFs remain accepted. MT5 restores exact agreement
+  between implemented lifecycle and maintenance ownership; this is no new
+  source grant or API expansion.
+
+Carrying-cost accounting:
+- deleted/simplified: stale temporary implementation and line-budget wording
+  was replaced by compact maintenance contracts.
+- quarantined: all target selection, Be/Cr2 fixtures, artifacts, solvers,
+  screening policy, exchange, and endpoint claims remain outside this API.
+- exact remaining caller/blocker: none in producer plumbing; consumers own
+  physical target construction and validation.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata fields: none.

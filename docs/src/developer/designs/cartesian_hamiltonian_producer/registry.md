@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `bd87ab75ad8d7d13dce57ce1f4c5f96c6c3da27f60d26fa7e9c2c2429901c622`.
+> [authority.toml](authority.toml), SHA-256 `99fab727b3bcde6ac4e23eff61d4acb2867c24f9138c9ff8205179d8b08f5649`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1552,15 +1552,18 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Consumer API Contract`
 - **Owned paths:**
+  - `source` / `existing`: `src/GaussletBases.jl`
   - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/hooke/reports/hooke_be_ns5_prf_completion_status_2026-08-06.md`
   - `manager_pass`: `449`
   - `git_commit`: `25d670e15`
   - `manager_pass`: `450`
   - `git_commit`: `be59362b8`
+  - `manager_pass`: `451`
 - **Dependencies:** `HP-PQS-PRF-FN-01`, `HP-PQS-PRF-INJECT-COMP-FN-01`, `HP-PQS-PRF-INJECT-INTERACT-FN-01`, `HP-R3U-FN-01`
-- **Scope:** Ratify in principle the source-present, root-exported expert interface consisting exactly of cartesian\_base\_working\_basis, CartesianParentResidualRegion, CartesianParentBackedHamiltonianResult, cartesian\_parent\_residual\_regions, cartesian\_parent\_residual\_block, cartesian\_parent\_backed\_composition, and cartesian\_parent\_backed\_hamiltonian. Before consumer acceptance, require every additive or injected request to prove that the PRF source key, support indices, and support states match the exact terminal block recovered from its validated descriptor. Reuse the existing identity comparison; add no helper, export, type, field, signature, metadata, default, automatic selection, artifact, sidecar, driver, screening change, solver, HF, supplement-policy scan, or element/molecule special case. Only src/cartesian\_base\_hamiltonian.jl may change, with at most 12 added source lines. Existing ordinary PQS and omitted-PRF behavior must remain exact.
+- **Scope:** Maintain only the accepted root-exported expert interface consisting of cartesian\_base\_working\_basis, CartesianParentResidualRegion, CartesianParentBackedHamiltonianResult, cartesian\_parent\_residual\_regions, cartesian\_parent\_residual\_block, cartesian\_parent\_backed\_composition, and cartesian\_parent\_backed\_hamiltonian. Preserve exact descriptor-to-PRF source-key/support binding before additive or injected composition, delegation to the existing PRF/injection/operator/interaction owners, and exact ordinary-PQS and omitted-PRF behavior. Add no export, type, field, signature, metadata, default, automatic selection, artifact, sidecar, driver, screening policy, solver, HF, supplement-policy scan, or element/molecule special case under this maintenance grant.
 
 ### HP-PQS-PRF-CONSUMER-TEST-01 - consumer-callable PQS PRF validation
 
@@ -1578,8 +1581,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `25d670e15`
   - `manager_pass`: `450`
   - `git_commit`: `be59362b8`
+  - `manager_pass`: `451`
 - **Dependencies:** `HP-PQS-PRF-CONSUMER-FN-01`, `HP-PQS-PRF-INJECT-COMP-TEST-01`, `HP-PQS-PRF-INJECT-INTERACT-TEST-01`
-- **Scope:** In the existing bounded H2 owner only, add one focused rejection proving that an individually valid descriptor and PRF from different terminal regions cannot be composed additively. Preserve semantic-region uniqueness, stale-basis rejection, additive/fixed-span parity, exact final-Hamiltonian parity, and all existing omitted-path and malformed-input gates. Add at most 10 test lines in the existing file; add no test/probe/fixture file or Be/Cr2 selector. Consumer acceptance requires package load, the complete existing H2 owner, supplemented-facade parity, terminal due diligence, and git diff --check.
+- **Scope:** Maintain only the existing bounded H2 checks for semantic-region uniqueness, stale-basis rejection, exact descriptor-to-PRF cross-region rejection, additive/fixed-span composition parity, exact final-Hamiltonian parity, and existing omitted-path and malformed-input gates. Keep one-center Be inventory as external evidence; add no committed Be/Cr2 fixture, selector, test file, probe, endpoint policy, or broader API assertion under this validation grant.
 
 ### HP-PQS-PRF-FN-01 - parent residual function mechanics
 

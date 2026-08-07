@@ -2554,7 +2554,7 @@ dependency_ids = ["HP-PQS-PRF-FN-01", "HP-PQS-PRF-INJECT-COMP-FN-01", "HP-PQS-PR
 grant = "maintenance"
 id = "HP-PQS-PRF-CONSUMER-FN-01"
 lifecycle = "implemented"
-scope = "Ratify in principle the source-present, root-exported expert interface consisting exactly of cartesian_base_working_basis, CartesianParentResidualRegion, CartesianParentBackedHamiltonianResult, cartesian_parent_residual_regions, cartesian_parent_residual_block, cartesian_parent_backed_composition, and cartesian_parent_backed_hamiltonian. Before consumer acceptance, require every additive or injected request to prove that the PRF source key, support indices, and support states match the exact terminal block recovered from its validated descriptor. Reuse the existing identity comparison; add no helper, export, type, field, signature, metadata, default, automatic selection, artifact, sidecar, driver, screening change, solver, HF, supplement-policy scan, or element/molecule special case. Only src/cartesian_base_hamiltonian.jl may change, with at most 12 added source lines. Existing ordinary PQS and omitted-PRF behavior must remain exact."
+scope = "Maintain only the accepted root-exported expert interface consisting of cartesian_base_working_basis, CartesianParentResidualRegion, CartesianParentBackedHamiltonianResult, cartesian_parent_residual_regions, cartesian_parent_residual_block, cartesian_parent_backed_composition, and cartesian_parent_backed_hamiltonian. Preserve exact descriptor-to-PRF source-key/support binding before additive or injected composition, delegation to the existing PRF/injection/operator/interaction owners, and exact ordinary-PQS and omitted-PRF behavior. Add no export, type, field, signature, metadata, default, automatic selection, artifact, sidecar, driver, screening policy, solver, HF, supplement-policy scan, or element/molecule special case under this maintenance grant."
 surfaces = ["source"]
 title = "consumer-callable PQS parent residual functions"
 
@@ -2578,17 +2578,28 @@ title = "consumer-callable PQS parent residual functions"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "be59362b8"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "451"
 
     [[records.paths]]
     kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
     path = "src/cartesian_base_hamiltonian.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-PRF-CONSUMER-FN-01", "HP-PQS-PRF-INJECT-COMP-TEST-01", "HP-PQS-PRF-INJECT-INTERACT-TEST-01"]
 grant = "maintenance"
 id = "HP-PQS-PRF-CONSUMER-TEST-01"
 lifecycle = "completed"
-scope = "In the existing bounded H2 owner only, add one focused rejection proving that an individually valid descriptor and PRF from different terminal regions cannot be composed additively. Preserve semantic-region uniqueness, stale-basis rejection, additive/fixed-span parity, exact final-Hamiltonian parity, and all existing omitted-path and malformed-input gates. Add at most 10 test lines in the existing file; add no test/probe/fixture file or Be/Cr2 selector. Consumer acceptance requires package load, the complete existing H2 owner, supplemented-facade parity, terminal due diligence, and git diff --check."
+scope = "Maintain only the existing bounded H2 checks for semantic-region uniqueness, stale-basis rejection, exact descriptor-to-PRF cross-region rejection, additive/fixed-span composition parity, exact final-Hamiltonian parity, and existing omitted-path and malformed-input gates. Keep one-center Be inventory as external evidence; add no committed Be/Cr2 fixture, selector, test file, probe, endpoint policy, or broader API assertion under this validation grant."
 surfaces = ["tests"]
 title = "consumer-callable PQS PRF validation"
 
@@ -2612,6 +2623,9 @@ title = "consumer-callable PQS PRF validation"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "be59362b8"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "451"
 
     [[records.paths]]
     kind = "test"
