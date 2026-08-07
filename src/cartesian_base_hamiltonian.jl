@@ -6,6 +6,25 @@ const _CARTESIAN_BASE_OPTIONAL_BASIS_KEYS = Set((:parent_axis_family,
     :reference_spacing, :tail_spacing, :nesting, :source_span, :s_factor,
     :coulomb_accuracy))
 const _CARTESIAN_BASE_H_OPTIONAL_BASIS_KEYS = union(_CARTESIAN_BASE_OPTIONAL_BASIS_KEYS, Set((:d,)))
+
+struct CartesianParentResidualRegion
+    region_key::Symbol
+    role::Symbol
+    region_kind::Symbol
+    shell_index::Union{Nothing,Int}
+    owner::Union{Int,Symbol}
+    support_indices::Vector{Int}
+    terminal_column_range::UnitRange{Int}
+    basis_fingerprint::String
+end
+
+struct CartesianParentBackedHamiltonianResult
+    hamiltonian::CartesianIDAHamiltonian{Float64}
+    composition::CartesianFinalBasisRealization.CartesianParentBackedInjectedComposition
+    external_residual::CartesianResidualGaussians.CartesianResidualGaussianBasis
+    position::NamedTuple{(:x,:y,:z),NTuple{3,Matrix{Float64}}}
+    x2::NamedTuple{(:x,:y,:z),NTuple{3,Matrix{Float64}}}
+end
 _cartesian_base_check_keys(input, expected, label) =
     Set(Symbol.(keys(input))) == expected ||
         throw(ArgumentError("$(label) has unsupported keys"))
@@ -1013,6 +1032,111 @@ function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple,
     return (; input, parent, terminal_basis = transforms.terminal_basis_realization,
         coulomb_expansion, source_mode_provenance, terminal_inventory,
         terminal_due_diligence)
+end
+
+function _cartesian_parent_residual_owner(due, row)
+    row.role === :atom_local_shell && !isnothing(row.outer_box) || return :all
+    owners = Int[owner for owner in eachindex(due.geometry.atom_locations) if begin
+        center = ntuple(axis -> due.parent_axes[axis].nuclei[owner].nearest_index, 3)
+        all(center[axis] in row.outer_box[axis] for axis in 1:3)
+    end]
+    length(owners) == 1 || throw(ArgumentError("atom-local parent residual owner is ambiguous"))
+    return only(owners)
+end
+
+function _cartesian_parent_residual_fingerprint(row, block)
+    facts = (row.region_key, row.role, row.region_kind, row.shell_index,
+        row.final_column_range,
+        bytes2hex(sha256(reinterpret(UInt8, block.support_indices))),
+        bytes2hex(sha256(reinterpret(UInt8, vec(block.coefficients)))))
+    return bytes2hex(sha256(codeunits(repr(facts))))
+end
+
+_cartesian_parent_residual_region(due, row, block) = CartesianParentResidualRegion(
+    row.region_key, row.role, row.region_kind, row.shell_index isa Integer ? Int(row.shell_index) : nothing,
+    _cartesian_parent_residual_owner(due, row), copy(block.support_indices),
+    block.column_range, _cartesian_parent_residual_fingerprint(row, block))
+
+function cartesian_parent_residual_regions(base)
+    base.input.nesting === :pqs || throw(ArgumentError("parent residual regions require a PQS working basis"))
+    due = base.terminal_due_diligence
+    isnothing(due) && throw(ArgumentError("parent residual regions require terminal due diligence"))
+    regions = CartesianParentResidualRegion[]
+    for row in due.terminal_rows
+        block = only(filter(candidate -> candidate.column_range == row.final_column_range,
+            base.terminal_basis.blocks))
+        isnothing(block.coefficients) && continue
+        length(block.support_indices) > size(block.coefficients, 2) || continue
+        push!(regions, _cartesian_parent_residual_region(due, row, block))
+    end
+    return regions
+end
+
+function _cartesian_parent_residual_source(base, region::CartesianParentResidualRegion)
+    base.input.nesting === :pqs || throw(ArgumentError("parent residual operations require a PQS working basis"))
+    due = base.terminal_due_diligence
+    row = only(filter(candidate -> candidate.region_key === region.region_key, due.terminal_rows))
+    block = only(filter(candidate -> candidate.column_range == row.final_column_range, base.terminal_basis.blocks))
+    current = _cartesian_parent_residual_region(due, row, block)
+    (current.role === region.role && current.region_kind === region.region_kind &&
+        current.shell_index == region.shell_index && current.owner == region.owner &&
+        current.support_indices == region.support_indices &&
+        current.terminal_column_range == region.terminal_column_range &&
+        current.basis_fingerprint == region.basis_fingerprint) || throw(ArgumentError(
+        "parent residual region is stale or belongs to another working basis"))
+    return block
+end
+
+function cartesian_parent_residual_block(base, region::CartesianParentResidualRegion,
+    target_parent_indices, target_columns)
+    source = _cartesian_parent_residual_source(base, region)
+    return CartesianFinalBasisRealization.build_parent_residual_function_block(
+        base.terminal_basis, source, base.parent.parent_axis_bundle_object, target_parent_indices, target_columns)
+end
+
+function cartesian_parent_backed_composition(base, requests; inject::Bool = false)
+    values = collect(requests)
+    !isempty(values) || throw(ArgumentError("parent-backed composition requires at least one request"))
+    all(request -> hasproperty(request, :region) && hasproperty(request, :prf), values) ||
+        throw(ArgumentError("parent-backed requests require region and prf"))
+    sources = [_cartesian_parent_residual_source(base, request.region) for request in values]
+    if inject
+        all(request -> hasproperty(request, :target_coordinates), values) ||
+            throw(ArgumentError("injected composition requires target_coordinates"))
+        internal = [(; source_block = source, prfs = [request.prf],
+            target_coordinates = request.target_coordinates)
+            for (source, request) in zip(sources, values)]
+        return CartesianFinalBasisRealization.build_parent_backed_injected_composition(
+            base.terminal_basis, base.parent.parent_axis_bundle_object, internal)
+    end
+    any(request -> hasproperty(request, :target_coordinates), values) &&
+        throw(ArgumentError("additive composition does not consume target_coordinates"))
+    prfs = CartesianFinalBasisRealization.CartesianParentResidualFunctionBlock[
+        request.prf for request in values]
+    return CartesianFinalBasisRealization.build_parent_backed_composition(
+        base.terminal_basis, base.parent.parent_axis_bundle_object, prfs)
+end
+
+function cartesian_parent_backed_hamiltonian(base, supplement::NamedTuple,
+    composition::CartesianFinalBasisRealization.CartesianParentBackedInjectedComposition)
+    C, input = CartesianFinalBasisRealization, base.input
+    input.nesting === :pqs || throw(ArgumentError("parent-backed Hamiltonians require a PQS working basis"))
+    bundles = base.parent.parent_axis_bundle_object
+    supplement_basis = cartesian_residual_gto_supplement_basis(base, supplement).basis
+    augmentation = C.parent_backed_injected_residual_gto_augmentation(
+        composition, bundles, supplement_basis, input.locations;
+        expansion = base.coulomb_expansion)
+    operators = C.parent_backed_injected_residual_gto_augmented_operators(
+        composition, bundles, supplement_basis, augmentation, input.locations,
+        input.charges; expansion = base.coulomb_expansion)
+    interaction = C.parent_backed_injected_residual_gto_interaction(
+        composition, bundles, augmentation, operators;
+        expansion = base.coulomb_expansion)
+    ham = CartesianIDAHamiltonian(operators.kinetic,
+        operators.nuclear_attraction_unit_by_center,
+        interaction.electron_electron_ida, input.nup, input.ndn;
+        nuclear_charges = input.charges, nuclear_positions = input.locations)
+    return CartesianParentBackedHamiltonianResult(ham, composition, augmentation.residual, operators.position, operators.x2)
 end
 
 cartesian_base_products(base) =

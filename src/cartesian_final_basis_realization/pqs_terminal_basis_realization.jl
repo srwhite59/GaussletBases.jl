@@ -363,6 +363,22 @@ function _validate_parent_backed_injected_composition(
         maximum_final_ida_weight = maximum(final_weights))
 end
 
+function build_parent_backed_composition(basis, bundles, prfs; request_diagnostics = NamedTuple[])
+    ranges, _ = _validate_parent_residual_collection(basis, bundles, prfs, 1.0e-10, 1.0e-8)
+    parent_backed_dimension = basis.final_dimension +
+        sum(size(prf.coefficients, 2) for prf in prfs)
+    provisional = CartesianParentBackedInjectedComposition(basis, prfs, ranges, parent_backed_dimension, (;))
+    validation = _validate_parent_backed_injected_composition(provisional, bundles)
+    source_indices = Int[only(findall(block -> block.unit_key === prf.source_unit_key, basis.blocks)) for prf in prfs]
+    diagnostics = (; dimensions = (;
+            terminal_dimension = basis.final_dimension,
+            parent_residual_dimension = parent_backed_dimension - basis.final_dimension,
+            parent_backed_dimension, request_count = length(prfs)),
+        source_block_indices = source_indices, requests = request_diagnostics,
+        geometry = validation.geometry)
+    return CartesianParentBackedInjectedComposition(basis, prfs, ranges, parent_backed_dimension, diagnostics)
+end
+
 function _terminal_block_parent_coefficients(block::CartesianTerminalBasisBlock)
     count = length(block.column_range)
     if isnothing(block.coefficients)
@@ -544,13 +560,6 @@ function build_parent_backed_injected_composition(
     all(index -> blocks[index] === basis.blocks[index],
         setdiff(eachindex(blocks), source_indices)) || throw(ArgumentError(
         "parent-backed injection changed an unaffected terminal block"))
-    parent_backed_dimension = basis.final_dimension + sum(
-        size(prf.coefficients, 2) for prf in new_prfs)
-    ranges, geometry = _validate_parent_residual_collection(
-        injected_basis, bundles, new_prfs, 1.0e-10, 1.0e-8)
-    provisional = CartesianParentBackedInjectedComposition(injected_basis, new_prfs,
-        ranges, parent_backed_dimension, (;))
-    validation = _validate_parent_backed_injected_composition(provisional, bundles)
     request_diagnostics = NamedTuple[]
     for (context, prf) in zip(request_contexts, new_prfs)
         final_complement = prf.coefficients
@@ -587,16 +596,8 @@ function build_parent_backed_injected_composition(
             minimum_final_ida_weight = context.minimum_final_ida_weight,
             maximum_final_ida_weight = context.maximum_final_ida_weight))
     end
-    diagnostics = (; dimensions = (;
-            terminal_dimension = basis.final_dimension,
-            parent_residual_dimension = parent_backed_dimension - basis.final_dimension,
-            parent_backed_dimension,
-            request_count = length(request_values)),
-        source_block_indices = source_indices,
-        requests = request_diagnostics,
-        geometry = validation.geometry)
-    return CartesianParentBackedInjectedComposition(injected_basis, new_prfs,
-        ranges, parent_backed_dimension, diagnostics)
+    return build_parent_backed_composition(
+        injected_basis, bundles, new_prfs; request_diagnostics)
 end
 function _push_block!(blocks, key, indices, states, coefficients, nextcol)
     count = isnothing(coefficients) ? length(indices) : size(coefficients, 2)
