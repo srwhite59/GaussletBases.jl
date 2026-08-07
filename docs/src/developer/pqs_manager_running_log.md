@@ -1937,3 +1937,45 @@ Carrying-cost accounting:
 - validation: package load, final H2 `463/463`, supplemented facade `73/73`,
   exact public/lower-level matrix parity, one-center Be eleven-region inventory,
   terminal due diligence, anti-bloat review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 449 - Ratify Consumer PRF Boundary And Reopen Binding Gate
+
+Commit(s):
+- `17d9c4baa` - repo-manager's procedurally invalid self-issued authority.
+- `25d670e15` - source-present consumer interface, retained pending correction.
+- this docs-only design-manager ratification amendment.
+
+Summary:
+- The user requested a reusable PRF feature but did not reassign design authority.
+  Repo-manager therefore erred by creating and consuming its own source grant.
+  Design-manager reviewed the result rather than accepting it by chronology.
+- The seven existing exports and two compact types are ratified in principle as
+  one opt-in expert in-memory interface. Ordinary PQS, omitted-PRF results,
+  consumer-owned target selection, and all artifact/solver/default exclusions
+  remain unchanged.
+- Source acceptance is reopened because additive composition validates the
+  descriptor and PRF separately but does not prove that they identify the same
+  terminal block. `HP-PQS-PRF-CONSUMER-FN-01/TEST-01` return to
+  approved/implementation status for that exact binding check and one bounded
+  mismatch-rejection test. The present API must not be adopted by consumers
+  until the correction passes and lifecycle is reconciled.
+
+Goal advancement / guardrail:
+- MT4 remains active: reusable PRF mechanics are close to consumer-ready, but
+  semantic identity is a correctness boundary rather than optional provenance.
+  MT5 restores the design-manager/repo-manager role split without reverting a
+  default-off source surface that has no ordinary-path effect.
+
+Carrying-cost accounting:
+- deleted/simplified: no source in this docs-only pass; implementation must reuse
+  the exact source-block comparison already used by fixed-span injection.
+- quarantined: Hooke Be adoption and any claim that PRFs are a settled standard
+  feature remain pending.
+- not deleted because: the reviewed interface is bounded, delegates to existing
+  numerical owners, and stayed within the original two-type/source-line limits.
+- exact remaining blocker: reject a valid-region/valid-PRF cross-pair in additive
+  composition, rerun bounded parity, and reconcile lifecycle.
+- log guardrail: the live ledger is at `1979/2000` lines before this note; Pass
+  450 must rotate the log and include its required medium-term checkpoint.
+- added/deleted `src` lines: `0/0`; new tests: none in this docs-only pass.
+- new metadata/status fields: none.

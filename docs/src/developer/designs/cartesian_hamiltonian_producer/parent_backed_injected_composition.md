@@ -1,7 +1,8 @@
 # Parent-Backed Injected Composition
 
-Status: implemented internal numerical facility and root-exported in-memory
-consumer interface with completed bounded validation.
+Status: implemented internal numerical facility. The root-exported in-memory
+consumer source is present but is not accepted for consumer use until the
+descriptor-to-PRF binding correction below passes.
 
 Authority IDs:
 
@@ -19,10 +20,10 @@ shell, source order, injection target, residual orientation, or solver method.
 
 ## Consumer API Contract
 
-The implemented numerical owners may be promoted through one small, root-exported,
-in-memory consumer interface. This interface is deliberately staged because the
-consumer must inspect the parent/terminal basis before it can construct physical
-target columns.
+The implemented numerical owners may be promoted through one small,
+root-exported, in-memory expert interface. This interface is deliberately staged
+because the consumer must inspect the parent/terminal basis before it can
+construct physical target columns.
 
 The approved sequence is:
 
@@ -42,7 +43,7 @@ The approved sequence is:
    existing Gaussian supplement and build the complete unscreened native
    Hamiltonian in `[G,R,RG_external]` or `[G_inj,R_new,RG_external]` order.
 
-The exported calls implementing that sequence are:
+The source-present calls under ratification are:
 
 ```julia
 base = cartesian_base_working_basis(system; basis, supplemented = true)
@@ -58,6 +59,32 @@ result = cartesian_parent_backed_hamiltonian(base, supplement, composition)
 the producer neither constructs nor ranks them. Each region descriptor is bound
 to its semantic identity, exact support, terminal columns, and terminal-basis
 fingerprint, and is rejected against a different or stale working basis.
+
+The accepted interface boundary is exactly the existing seven root exports:
+
+```text
+cartesian_base_working_basis
+CartesianParentResidualRegion
+CartesianParentBackedHamiltonianResult
+cartesian_parent_residual_regions
+cartesian_parent_residual_block
+cartesian_parent_backed_composition
+cartesian_parent_backed_hamiltonian
+```
+
+No additional export, type, field, signature, artifact identity, or automatic
+selection policy is approved. The working-basis value is an expert in-memory
+construction object used only by this staged sequence; exporting its constructor
+does not make its internal stage fields a separately stable public contract.
+
+Every composition request must bind its descriptor and PRF to the same exact
+terminal source block. Before either additive or injected composition proceeds,
+the PRF source key, support indices, and support states must match the block
+recovered from the validated descriptor. A descriptor and PRF that are each
+valid for the same working basis but refer to different regions must fail. The
+source currently enforces this relation only in fixed-span injection; additive
+composition remains unaccepted until the shared check and focused rejection test
+land.
 
 The final consumer result may carry only the existing Hamiltonian, composition,
 external residual basis, and the fixed three-axis position/second-moment matrices.
