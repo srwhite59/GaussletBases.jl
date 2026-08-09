@@ -1,7 +1,7 @@
 # Sliced Hydrogen-Chain Producer
 
-Status: approved for bounded implementation; the complete numerical prototype
-is validated but unaccepted, and no source is implemented yet.
+Status: implemented and accepted for maintenance in commits `6bbb01ade` and
+`47023f190`.
 
 Authority IDs:
 
@@ -169,7 +169,7 @@ expansion to decay to zero at H10000 distances in either operator is forbidden.
 
 ## Compact Representation And Expert Interface
 
-One exported concrete owner is approved:
+One exported concrete owner is accepted:
 
 ```text
 SlicedHydrogenChain
@@ -233,12 +233,34 @@ validated separation, and requested/achieved tolerances.
 These are fixed object diagnostics, not an artifact schema or a new metadata
 family. The producer writes no files.
 
-## Implementation Ownership And Budget
+### Stable Consumer Fields
 
-Approved source surfaces are exactly:
+The following existing values are the stable read-only consumer contract:
 
-- new `src/sliced_hydrogen_chain.jl`;
-- `src/GaussletBases.jl`, only for one include and the five exported names
+- `nuclei`, `atom_spacing`, `sites_per_atom`, and `mode` describe the physical
+  chain and resolved transverse reuse mode;
+- `longitudinal.centers`, `longitudinal.lattice_indices`,
+  `longitudinal.class_indices`, `longitudinal.spacing`, and
+  `longitudinal.integral_weight` describe the realized longitudinal sites;
+- `nuclear_repulsion`, `one_body_tolerance`, and `interaction_tolerance` carry
+  the bare scalar energy and accepted tolerances; and
+- `diagnostics.basis_fingerprint`, `longitudinal_overlap_error`,
+  `transverse_normalization_error`, `periodic_class_error`,
+  `omitted_projected_norm`, `source_normalization_error`,
+  `actual_left_padding`, `actual_right_padding`, `maximum_separation`, and
+  `retained_bytes` are stable acceptance and provenance facts.
+
+Consumers must not mutate these values. Internal longitudinal coefficients,
+transverse work arrays, Coulomb blocks, and `h1_bands` storage are not stable
+consumer contracts; use `sliced_h1`, `sliced_vee`, and `sliced_row!` for
+operators.
+
+## Maintenance Ownership
+
+Owned source surfaces are exactly:
+
+- `src/sliced_hydrogen_chain.jl`;
+- `src/GaussletBases.jl`, for its include and the five exported names
   listed above.
 
 The implementation may call existing `UniformBasisSpec`, G10 primitive/stencil
@@ -246,25 +268,10 @@ data, `IntegralDiagonal` convention, legacy contracted-basis loading,
 `GaussianAnalyticIntegrals`, and `ordinary_coulomb` kernels. It must not broaden
 their contracts or copy their coefficient tables.
 
-The complete-prototype-adjusted budget is:
-
-- preferred: at most `850` added source lines in total;
-- hard: at most `900` added source lines in total;
-- tests: at most `240` added lines in existing `test/ida/runtests.jl`;
-- no other added source, test, tool, driver, helper, or module file.
-
-The complete producer, both operator views, finite/periodic behavior, and the
-validated long-range interaction policy must land together. Do not split
-incomplete scaffolding to evade the budget. If a readable implementation
-cannot fit the hard limit, make no source commit and report the smallest
-specific reusable-kernel extraction or revised budget required.
-
-Before source acceptance, finite mode must replace any quadratic all-class
-tail-bound scan with a conservative linear-cost bound. Its Vee transition
-diagnostic must evaluate an actual finite-mode near/tail comparison rather than
-remaining zero because only periodic blocks were sampled. These are corrections
-inside the approved implementation, not authority for a new API, helper file,
-or approximation policy.
+Maintenance preserves the accepted five-export interface, compact storage,
+linear-cost finite tail bound, nontrivial finite Vee transition diagnostic, and
+validated long-range policy. It does not authorize another export, field,
+framework, approximation policy, or storage representation.
 
 ## Validation Contract
 

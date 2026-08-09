@@ -47,6 +47,10 @@ archaeology and are not normal startup reading.
 - Explicit charged electron sectors are implemented without changing bare
   basis or operator arrays. Specialized retained-GTO EGOI remains archived
   and deferred with no execution grant.
+- The expert sliced hydrogen-chain producer is accepted with compact finite and
+  periodic-template storage, analytic Galerkin H1, longitudinal
+  IntegralDiagonal Vee, and checked long-range continuations. Solver and MPO
+  policy remain consumer-owned.
 - Production defaults, public workflows, corrected artifacts, and Cr2 endpoint
   claims remain unchanged unless separately authorized.
 
@@ -88,9 +92,10 @@ fingerprints before a method-accuracy claim. RHF, scans, and ladders remain
 separate. Standard60/canonical-driver exposure remains pending.
 The specialized retained-GTO EGOI helper/test are deferred with no execution
 grant; the archived WIP is not a mainline merge candidate.
-The minimal sliced hydrogen-chain producer is approved for bounded
-implementation as a separate G10-plus-transverse operator facility; it is not
-a Cartesian/PQS route or solver lane.
+The minimal sliced hydrogen-chain producer is implemented and in maintenance
+as a separate G10-plus-transverse operator facility; it is not a
+Cartesian/PQS route or solver lane. Its stable consumer fields are fixed in
+the canonical contract; HFDMRG adaptation remains downstream work.
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
@@ -1270,3 +1275,49 @@ Carrying-cost accounting:
 - validation: prototype hash/line and defect review, canonical/authority parity,
   authority check/self-test, generated views, docs tests, Documenter,
   manager-log bound, staged-scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 455 - Accept Sliced Hydrogen Chains
+
+Commit(s):
+- `6bbb01ade` - implement the compact sliced hydrogen-chain producer.
+- `47023f190` - complete malformed-input and rejection-gate coverage.
+- this acceptance and lifecycle closeout commit.
+
+Summary:
+- Accepted the five-export expert producer after the complete IDA owner passed.
+  The finite and periodic-template objects retain compact G10 and transverse
+  resources, expose full analytic Galerkin H1 and longitudinal IntegralDiagonal
+  Vee without dense matrices, and preserve the checked long-range H1/Vee
+  continuations. The canonical contract now names the existing geometry,
+  padding, sites-per-atom, nuclear-repulsion, tolerance, and diagnostics fields
+  that consumers may read without making internal work arrays contractual.
+- Replaced one stale IDA test call to the deleted
+  `_pqs_source_box_ida_axis_factor_provenance` status wrapper with direct checks
+  of the current `_pqs_source_box_ida_axis_factors` numerical arrays. This
+  removed 31 net test lines and did not recreate obsolete vocabulary.
+- GitHub Docs run `31327503100` failed because machine authority still marked
+  the now-existing source path as `planned`; implementation/completed
+  maintenance lifecycle and generated views are reconciled here.
+
+Goal advancement / guardrail:
+- MT3 closes the sliced-chain producer lane. HFDMRG adapters, MPOs, solvers,
+  electron sectors, artifacts, and publication claims remain consumer work.
+  The three-axis contracted-parent factor wrapper remains a documented donor
+  and is not retired incidentally by this test cleanup.
+
+Carrying-cost accounting:
+- deleted: 31 net lines of stale status/provenance test pressure.
+- simplified: the IDA owner now validates the live per-axis factor arrays and
+  their raw-to-density-normalized relation directly.
+- quarantined: H10000 remains transient scaling evidence; solver/MPO work stays
+  outside GaussletBases.
+- not deleted because: the current three-axis factor wrapper remains documented
+  donor code and needs a separate caller/lifecycle audit before retirement.
+- exact remaining caller/blocker: none for the producer; a downstream consumer
+  adapter is outside this contract.
+- added/deleted `src` lines: `0/0`; new tests: none, existing test net `-31`
+  lines; new metadata/status fields: none.
+- validation: complete normal IDA owner, package load, isolated sliced-chain
+  `63/63`, authority check/self-test, generated-view parity, docs tests,
+  Documenter, manager-log bound, anti-bloat diff review, and
+  `git diff --check`.

@@ -1,6 +1,6 @@
 include(joinpath(@__DIR__, "cartesian_ida_hamiltonian_runtests.jl"))
 
-@testset "PQS source-box IDA PGDG factor provenance" begin
+@testset "PQS source-box IDA PGDG factors" begin
     function _tiny_pgdg_source_box_ida_basis(count::Int)
         xmax = 3.0
         tail_spacing = 10.0
@@ -23,29 +23,27 @@ include(joinpath(@__DIR__, "cartesian_ida_hamiltonian_runtests.jl"))
     )
     expected_term_count = length(expansion.coefficients)
     metrics_module = GaussletBases.CartesianContractedParentMetrics
-    axis_provenance =
-        metrics_module._pqs_source_box_ida_axis_factor_provenance(
-            bundle;
-            axis = :x,
-            expected_term_count,
-        )
+    axis_factors = metrics_module._pqs_source_box_ida_axis_factors(
+        bundle;
+        axis = :x,
+        expected_term_count,
+    )
 
     stored_weight_divided_terms =
-        axis_provenance.density_normalized_pair_factor_terms
-    raw_terms = axis_provenance.raw_pair_factor_terms
-    weights = axis_provenance.source_weights
+        axis_factors.density_normalized_pair_factor_terms
+    raw_terms = axis_factors.raw_pair_factor_terms
+    weights = axis_factors.source_weights
     n = length(weights)
 
-    @test axis_provenance.object_kind == :pqs_source_box_ida_axis_factor_provenance
-    @test axis_provenance.interaction_path == :ida_gausslet_source_box
-    @test axis_provenance.term_count == expected_term_count
-    @test axis_provenance.factor_dimensions == (n, n)
+    @test axis_factors.axis == :x
+    @test axis_factors.term_count == expected_term_count
+    @test axis_factors.factor_dimensions == (n, n)
     @test size(stored_weight_divided_terms) == (expected_term_count, n, n)
     @test size(raw_terms) == (expected_term_count, n, n)
     @test stored_weight_divided_terms === bundle.pgdg_intermediate.pair_factor_terms
     @test raw_terms === bundle.pgdg_intermediate.pair_factor_terms_raw
     @test weights == bundle.pgdg_intermediate.weights
-    @test axis_provenance.centers == bundle.pgdg_intermediate.centers
+    @test axis_factors.centers == bundle.pgdg_intermediate.centers
     @test all(isfinite, weights)
     @test all(weight -> abs(weight) > 1.0e-12, weights)
 
@@ -57,44 +55,15 @@ include(joinpath(@__DIR__, "cartesian_ida_hamiltonian_runtests.jl"))
     # This is the historical PGDG storage relation. Retained IDA routes must
     # transform raw numerators and divide only by final retained density weights.
     @test reconstructed ≈ stored_weight_divided_terms atol = 1.0e-12 rtol = 1.0e-12
-    @test axis_provenance.diagnostics.density_normalized_reconstruction_error <
-          1.0e-12
-    @test axis_provenance.diagnostics.interaction_path ==
-          :ida_gausslet_source_box
-    @test !axis_provenance.diagnostics.mwg_supplement_residual_path
-    @test !axis_provenance.diagnostics.retained_pqs_weights_used
-    @test !axis_provenance.diagnostics.retained_weight_division_allowed
-    @test !axis_provenance.diagnostics.packet_adoption
-    @test !axis_provenance.diagnostics.qwhamiltonian_consumes
-    @test !axis_provenance.diagnostics.public_default_consumes
-    @test !axis_provenance.diagnostics.route_adapter_connected
-
-    all_axis_provenance = metrics_module._pqs_source_box_ida_factor_provenance(
-        bundle,
-        bundle,
-        bundle;
-        expected_term_count,
-    )
-    @test all_axis_provenance.object_kind == :pqs_source_box_ida_factor_provenance
-    @test all_axis_provenance.term_count == expected_term_count
-    @test all_axis_provenance.axis_pair_factor_terms.x ===
-          stored_weight_divided_terms
-    @test all_axis_provenance.raw_axis_pair_factor_terms.x === raw_terms
-    @test all_axis_provenance.axis_weights.x == weights
-    @test all_axis_provenance.factor_dimensions.x == (n, n)
-    @test all_axis_provenance.diagnostics.interaction_path ==
-          :ida_gausslet_source_box
-    @test !all_axis_provenance.diagnostics.mwg_supplement_residual_path
-    @test !all_axis_provenance.diagnostics.retained_pqs_weights_used
-    @test !all_axis_provenance.diagnostics.retained_weight_division_allowed
-    @test !all_axis_provenance.diagnostics.packet_adoption
-    @test !all_axis_provenance.diagnostics.qwhamiltonian_consumes
-    @test !all_axis_provenance.diagnostics.public_default_consumes
-    @test !all_axis_provenance.diagnostics.route_adapter_connected
-    @test_throws ArgumentError metrics_module._pqs_source_box_ida_axis_factor_provenance(
+    @test_throws ArgumentError metrics_module._pqs_source_box_ida_axis_factors(
         bundle;
         axis = :bad,
         expected_term_count,
+    )
+    @test_throws DimensionMismatch metrics_module._pqs_source_box_ida_axis_factors(
+        bundle;
+        axis = :x,
+        expected_term_count = expected_term_count + 1,
     )
 end
 

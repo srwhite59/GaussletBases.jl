@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `e826643c8b881b2433525123f11a34558acc5aac8dfd15a12206759360922eb6`.
+> [authority.toml](authority.toml), SHA-256 `88ab2dfbaa0b3d2de2ef966cbd69133cf75c3f1f278347834cb06aa8232c4ca8`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -3585,32 +3585,38 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-SLICE-HCHAIN-FN-01 - minimal sliced hydrogen-chain producer
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [sliced\_hydrogen\_chain.md](sliced_hydrogen_chain.md); heading `Sliced Hydrogen-Chain Producer`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `planned`: `src/sliced_hydrogen_chain.jl`
-- **Evidence:** none
+  - `source` / `existing`: `src/sliced_hydrogen_chain.jl`
+- **Evidence:**
+  - `git_commit`: `47023f190`
+  - `git_commit`: `6bbb01ade`
+  - `manager_pass`: `455`
 - **Dependencies:** none
-- **Scope:** Implement the complete expert sliced hydrogen-chain producer in one source file: validate a bounded UniformBasisSpec(:G10) donor and retain only its compact translated stencil for the full chain; construct one deterministic paper-projected transverse function per site; provide full analytic Galerkin H1, longitudinal IntegralDiagonal Vee, finite and validated periodic-template modes, scalar plus allocation-free caller-buffer row/action access, and checked analytic/asymptotic far continuations for both distant-nucleus H1 and Vee. Finite mode must use a conservative linear-cost tail bound and a nontrivial Vee near/tail transition diagnostic. Preserve bare-operator independence from electron sector. Added source is preferred \<=850 and hard \<=900 lines across the new file and minimal root include/export wiring. No full-chain UniformBasis, partial scaffolding, dense N-by-N storage, finite differences, one-body IDA, framework, driver, artifact, solver, MPO, multi-transverse support, Cartesian/PQS coupling, or publication claim.
+- **Scope:** Maintain the accepted five-export expert interface and compact numerical owner. Preserve bounded G10 donor parity, deterministic H/STO-6G transverse construction, full analytic Galerkin H1, longitudinal IntegralDiagonal Vee, finite and periodic-template modes, allocation-free scalar/row/action calls, common high135 near evaluation with checked long-range continuations, bare-operator sector independence, and only the stable consumer fields named in the canonical contract. Add no field, export, dense matrix, framework, driver, artifact, solver, MPO, multi-transverse support, Cartesian/PQS coupling, or publication policy under this grant.
 
 ### HP-SLICE-HCHAIN-TEST-01 - sliced hydrogen-chain producer validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [sliced\_hydrogen\_chain.md](sliced_hydrogen_chain.md); heading `Sliced Hydrogen-Chain Producer`
 - **Owned paths:**
   - `test` / `existing`: `test/ida/runtests.jl`
-- **Evidence:** none
+- **Evidence:**
+  - `git_commit`: `47023f190`
+  - `git_commit`: `6bbb01ade`
+  - `manager_pass`: `455`
 - **Dependencies:** `HP-SLICE-HCHAIN-FN-01`
-- **Scope:** Add at most 240 lines to the existing IDA test owner for deterministic STO-6G transverse construction, bounded G10 donor/translated-stencil parity and orthogonality, analytic H1 including distant-nucleus transition checks, direct-quadrature Vee oracles, finite/periodic scalar-row-action parity, finite linear-cost tail-bound and nontrivial Vee-transition validation, malformed-input failures, the bounded R=3.6 H10 dense fixture, and H1000 nonquadratic-storage construction without a full-chain UniformBasis. H10000 is transient only; no HF, DMRG, MPO, publication-energy, new fixture file, or new test owner.
+- **Scope:** Maintain only the committed IDA-owner checks for deterministic H/STO-6G transverse construction, bounded G10 donor parity, analytic H1 and direct-quadrature Vee oracles, finite/periodic scalar-row-action parity, finite tail diagnostics, malformed-input rejection, the H10 dense fixture, and H1000 compact construction. H10000 remains transient evidence. Add no HF, DMRG, MPO, publication-energy, fixture file, or test owner under this grant.
 
 ### HP-TEST-01 - new committed terminal smoke — rejected
 
