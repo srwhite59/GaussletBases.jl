@@ -1091,4 +1091,11 @@ end
         basis_name = "STO-3G")
     @test_throws ArgumentError sliced_hydrogen_chain(2; common..., spacing = 0.2,
         one_body_tolerance = 0.0)
+    identity2 = Matrix{Float64}(I, 2, 2)
+    @test_throws ArgumentError GaussletBases._sliced_transverse_vector(0.0, Float64[],
+        [1.0, 2.0], ones(2), ones(2), identity2, identity2, identity2, 1e-8)
+    @test_throws ArgumentError GaussletBases._sliced_longitudinal(0.2,
+        [-0.2, 0.0, 0.2], [-1, 0, 1], [1, 2, 3], 1.0)
+    @test_throws ArgumentError sliced_hydrogen_chain(2; common..., spacing = 0.2,
+        interaction_tolerance = 1e-30)
 end
