@@ -1399,3 +1399,39 @@ Carrying-cost accounting:
 - validation: focused sliced-chain `72/72` in `10.9` seconds, package load,
   authority check/self-test, line-budget and anti-bloat review, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 458 - Accept Sliced H1 Bandwidth Query
+
+Commit(s):
+- `c895e353d` - bounded source and existing-test-owner implementation;
+- this docs-only lifecycle reconciliation.
+
+Summary:
+- Reconciled `HP-SLICE-HCHAIN-FN-01` as implemented maintenance and
+  `HP-SLICE-HCHAIN-TEST-01` as completed validation maintenance. The accepted
+  expert interface now has six exports, including
+  `sliced_h1_bandwidth(chain)::Int`.
+- Replaced temporary implementation instructions with the durable contract:
+  constant-time, zero-allocation access to the represented structural H1
+  half-bandwidth, exact represented zeros outside that band, and correct
+  finite, periodic-template, and singleton behavior.
+
+Goal advancement / guardrail:
+- MT3's producer-owned structural query is complete. PPP/HFDMRG adaptation,
+  MPO construction, solvers, and bandwidth-use policy remain downstream; this
+  closeout creates no further API authority.
+
+Carrying-cost accounting:
+- deleted/simplified: removed pending-implementation wording and one-time line
+  allowances from the active maintenance contract.
+- quarantined: the earlier untrusted worker patch remains outside the repo and
+  was not accepted wholesale.
+- not deleted because: the private retained band remains the canonical compact
+  state shared by scalar, row, action, and query implementations.
+- exact remaining caller/blocker: none in the producer; downstream consumers
+  may now use the accepted query.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none.
+- validation: source/contract and exact-budget review, authority check and
+  adversarial self-test, generated-view parity, docs tests, Documenter,
+  manager-log bound, staged docs-only scope review, and `git diff --check`.

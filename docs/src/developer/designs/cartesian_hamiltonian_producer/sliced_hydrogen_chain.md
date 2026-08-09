@@ -1,8 +1,8 @@
 # Sliced Hydrogen-Chain Producer
 
-Status: implemented and accepted for maintenance in commits `6bbb01ade` and
-`47023f190`. One structural H1-bandwidth query is approved but not yet
-implemented.
+Status: implemented and accepted for maintenance in commits `6bbb01ade`,
+`47023f190`, and `c895e353d`. The accepted expert interface has six exports,
+including the structural H1-bandwidth query.
 
 Authority IDs:
 
@@ -189,7 +189,7 @@ sliced_h1(chain)
 sliced_vee(chain)
 ```
 
-The approved sixth expert query is
+The sixth expert query is
 
 ```text
 sliced_h1_bandwidth(chain::SlicedHydrogenChain)::Int
@@ -277,29 +277,25 @@ The following existing values are the stable read-only consumer contract:
 Consumers must not mutate these values. Internal longitudinal coefficients,
 transverse work arrays, Coulomb blocks, and `h1_bands` storage are not stable
 consumer contracts; use `sliced_h1`, `sliced_h1_bandwidth`, `sliced_vee`, and
-`sliced_row!` for operators after the approved query is implemented.
+`sliced_row!` for operators.
 
 ## Maintenance Ownership
 
 Owned source surfaces are exactly:
 
 - `src/sliced_hydrogen_chain.jl`;
-- `src/GaussletBases.jl`, for its include, the current five exports, and the
-  approved addition of `sliced_h1_bandwidth` as the sixth export.
+- `src/GaussletBases.jl`, for its include and the accepted six exports.
 
 The implementation may call existing `UniformBasisSpec`, G10 primitive/stencil
 data, `IntegralDiagonal` convention, legacy contracted-basis loading,
 `GaussianAnalyticIntegrals`, and `ordinary_coulomb` kernels. It must not broaden
 their contracts or copy their coefficient tables.
 
-Maintenance preserves the accepted five-export interface, compact storage,
-linear-cost finite tail bound, nontrivial finite Vee transition diagnostic, and
-validated long-range policy. This amendment permits exactly one sixth export,
-`sliced_h1_bandwidth`, implemented in at most `12` added source lines including
-root wiring. Its validation may add at most `18` lines to the existing IDA
-testset. No new file is allowed. After that addition, maintenance does not
-authorize another export, field, framework, approximation policy, or storage
-representation.
+Maintenance preserves the accepted six-export interface, compact storage,
+linear-cost finite tail bound, nontrivial finite Vee transition diagnostic,
+validated long-range policy, and structural-bandwidth semantics above. It does
+not authorize another export, field, framework, approximation policy, or
+storage representation.
 
 ## Validation Contract
 
