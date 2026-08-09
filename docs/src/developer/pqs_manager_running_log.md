@@ -1362,3 +1362,40 @@ Carrying-cost accounting:
 - validation: restored-baseline and patch hash/apply checks, source-semantics
   review, authority check/self-test, generated views, docs tests, Documenter,
   manager-log bound, staged-scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 457 - Implement Sliced H1 Bandwidth Query
+
+Commit(s):
+- this bounded source and existing-test-owner implementation.
+
+Summary:
+- Added the sixth expert export, `sliced_h1_bandwidth(chain)::Int`. It clamps
+  the existing retained construction band to the realized matrix dimension,
+  so finite, periodic-template, and singleton chains expose the exact
+  represented H1 structural half-bandwidth without inspecting coefficient
+  storage or scanning a row. The warmed query allocates zero bytes and changes
+  no H1 or Vee value.
+- The existing sliced-chain testset now checks singleton `B=0`, nontrivial
+  finite and periodic bounds, exact zeros for every represented matrix entry
+  outside each returned band, and allocation-free access. It passes `72/72`.
+
+Goal advancement / guardrail:
+- MT3 now supplies the narrow structural query needed by downstream banded
+  consumers. PPP/HFDMRG adaptation, MPO construction, solver behavior, and
+  bandwidth policy remain outside GaussletBases. Canonical/authority status
+  closeout remains a docs-only design-manager action after this source commit.
+
+Carrying-cost accounting:
+- deleted: none; this is the explicitly authorized consumer query.
+- simplified: consumers no longer need private-field access or an `O(N)` H1
+  row scan to discover the represented band.
+- quarantined: the earlier worker patch remains external evidence and was not
+  applied wholesale.
+- not deleted because: the private retained band remains the canonical storage
+  used by scalar, row, action, and query implementations.
+- exact remaining caller/blocker: no producer blocker; PPP owns its adapter.
+- added/deleted `src` lines: `12/0`; existing test lines: `+18/0`; new test
+  files: none; new metadata/status fields: none.
+- validation: focused sliced-chain `72/72` in `10.9` seconds, package load,
+  authority check/self-test, line-budget and anti-bloat review, and
+  `git diff --check`.

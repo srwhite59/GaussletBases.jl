@@ -965,6 +965,10 @@ end
         transverse_mode = :periodic_template)
     periodic_by_count = sliced_hydrogen_chain(2; common..., sites_per_atom = 18,
         transverse_mode = :periodic_template)
+    singleton = sliced_hydrogen_chain(1; R = 3.6, phase = 0.0,
+        left_padding = 0.0, right_padding = 0.0, alignment = :atom_centered,
+        spacing = 0.2, transverse_mode = :finite,
+        one_body_tolerance = 1e-8, interaction_tolerance = 1e-5)
 
     @test finite isa SlicedHydrogenChain
     @test length(finite) == length(periodic) == 39
@@ -974,6 +978,8 @@ end
     @test periodic.longitudinal.centers == periodic_by_count.longitudinal.centers
     @test periodic.transverse.coefficients == periodic_by_count.transverse.coefficients
     @test periodic.h1_bands == periodic_by_count.h1_bands
+    @test sliced_h1_bandwidth(singleton) == 0
+    @test length(singleton) == 1
     @test periodic.longitudinal.prototype_errors[1] < 1e-12
     @test periodic.longitudinal.prototype_errors[2] < 1e-12
     @test periodic.longitudinal.prototype_errors[3] < 1e-12
@@ -994,6 +1000,18 @@ end
     finite_h1 = sliced_h1(finite)
     finite_vee = sliced_vee(finite)
     finite_mid = cld(length(finite), 2)
+    finite_band = sliced_h1_bandwidth(finite)
+    periodic_band = sliced_h1_bandwidth(periodic)
+    @test 0 <= finite_band < length(finite)
+    @test 0 <= periodic_band < length(periodic)
+    @test finite_band < length(finite) - 1
+    @test periodic_band < length(periodic) - 1
+    @test all(finite_h1[i, j] == 0.0 for j in 1:length(finite),
+        i in 1:length(finite) if abs(i - j) > finite_band)
+    @test all(sliced_h1(periodic)[i, j] == 0.0 for j in 1:length(periodic),
+        i in 1:length(periodic) if abs(i - j) > periodic_band)
+    sliced_h1_bandwidth(finite)
+    @test @allocated(sliced_h1_bandwidth(finite)) == 0
     @test finite_h1[finite_mid, finite_mid] ≈ direct_h1(finite, finite_mid, finite_mid) atol = 1e-8
     @test finite_vee[finite_mid, finite_mid] ≈ direct_vee(finite, finite_mid, finite_mid) atol = 1e-8
     @test finite_vee[finite_mid, finite_mid + 1] ≈ direct_vee(finite, finite_mid, finite_mid + 1) atol = 1e-8

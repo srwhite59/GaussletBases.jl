@@ -773,6 +773,17 @@ end
 Base.length(chain::SlicedHydrogenChain) = length(chain.longitudinal.centers)
 sliced_h1(chain::SlicedHydrogenChain) = _SlicedH1View(chain)
 sliced_vee(chain::SlicedHydrogenChain) = _SlicedVeeView(chain)
+
+"""
+    sliced_h1_bandwidth(chain::SlicedHydrogenChain)::Int
+
+Return the structural half-bandwidth of `sliced_h1(chain)`. Entries farther
+than this distance are exactly zero. The query reads compact construction
+state and does not inspect H1 coefficients.
+"""
+@inline sliced_h1_bandwidth(chain::SlicedHydrogenChain)::Int =
+    min(chain.coulomb.h1_band, length(chain) - 1)
+
 Base.size(view::Union{_SlicedH1View,_SlicedVeeView}) = (length(view.chain), length(view.chain))
 Base.eltype(::Type{<:_SlicedH1View}) = Float64
 Base.eltype(::Type{<:_SlicedVeeView}) = Float64
