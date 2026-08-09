@@ -908,3 +908,187 @@ end
     @test norm(problem.overlap - I, Inf) ≤ 1.0e-5
     @test -2.95 < dense < -2.85
 end
+
+@testset "Minimal sliced hydrogen chain" begin
+    function laplace_quadrature(integrand; step = 0.02, limit = 24.0)
+        count = round(Int, 2limit / step)
+        total = 0.0
+        for index in 0:count
+            s = -limit + index * step
+            value = exp(s) * integrand(exp(2s))
+            total += (index == 0 || index == count ? 0.5 : 1.0) * value
+        end
+        return 2step * total / sqrt(pi)
+    end
+
+    function direct_transverse_density_factor(chain, exponent, a, b)
+        transverse = chain.transverse
+        value = 0.0
+        for p in eachindex(transverse.pair_exponents),
+            q in eachindex(transverse.pair_exponents)
+            ep = transverse.pair_exponents[p]
+            eq = transverse.pair_exponents[q]
+            value += transverse.density_coefficients[p, a] *
+                transverse.density_coefficients[q, b] * pi^2 /
+                (ep * eq + exponent * (ep + eq))
+        end
+        return value
+    end
+
+    function direct_vee(chain, i, j)
+        longitudinal = chain.longitudinal
+        a = longitudinal.class_indices[i]
+        b = longitudinal.class_indices[j]
+        delta = longitudinal.centers[i] - longitudinal.centers[j]
+        return laplace_quadrature() do exponent
+            direct_transverse_density_factor(chain, exponent, a, b) *
+                GaussletBases._sliced_longitudinal_pair_factor(
+                    longitudinal, delta, exponent) / longitudinal.integral_weight^2
+        end
+    end
+
+    function direct_transverse_product_factor(chain, exponent, a, b, prefactors)
+        transverse = chain.transverse
+        value = 0.0
+        for p in eachindex(transverse.exponents), q in eachindex(transverse.exponents)
+            value += transverse.coefficients[p, a] * transverse.coefficients[q, b] *
+                (prefactors[p] * prefactors[q])^2 * pi /
+                (transverse.exponents[p] + transverse.exponents[q] + exponent)
+        end
+        return value
+    end
+
+    function direct_h1(chain, i, j)
+        longitudinal = chain.longitudinal
+        transverse = chain.transverse
+        a = longitudinal.class_indices[i]
+        b = longitudinal.class_indices[j]
+        delta = longitudinal.centers[i] - longitudinal.centers[j]
+        distance = abs(longitudinal.lattice_indices[i] - longitudinal.lattice_indices[j])
+        midpoint = (longitudinal.centers[i] + longitudinal.centers[j]) / 2
+        value = GaussletBases._sliced_longitudinal_pair(longitudinal, delta, true) *
+            GaussletBases._sliced_transverse_bilinear(transverse, transverse.overlap, a, b) +
+            GaussletBases._sliced_longitudinal_pair(longitudinal, delta, false) *
+            GaussletBases._sliced_transverse_bilinear(transverse, transverse.kinetic, a, b)
+        prefactors = [GaussletBases.GaussianAnalyticIntegrals.
+            polynomial_gaussian_shell_prefactor(exponent, 0)
+            for exponent in transverse.exponents]
+        for nucleus in chain.nuclei
+            value -= laplace_quadrature() do exponent
+                direct_transverse_product_factor(chain, exponent, a, b, prefactors) *
+                    GaussletBases._sliced_longitudinal_nuclear(
+                        longitudinal, distance, midpoint, exponent, nucleus)
+            end
+        end
+        return value
+    end
+
+    scalar_allocations(operator, row, column) = @allocated operator[row, column]
+    row_allocations(destination, operator, row) = @allocated sliced_row!(destination, operator, row)
+    action_allocations(destination, operator, source) = @allocated mul!(destination, operator, source)
+
+    common = (; R = 3.6, phase = 0.0, left_padding = 2.0,
+        alignment = :atom_centered, one_body_tolerance = 1e-8,
+        interaction_tolerance = 1e-5)
+    finite = sliced_hydrogen_chain(2; common..., spacing = 0.2,
+        transverse_mode = :finite)
+    periodic = sliced_hydrogen_chain(2; common..., spacing = 0.2,
+        transverse_mode = :periodic_template)
+    periodic_by_count = sliced_hydrogen_chain(2; common..., sites_per_atom = 18,
+        transverse_mode = :periodic_template)
+
+    @test finite isa SlicedHydrogenChain
+    @test length(finite) == length(periodic) == 39
+    @test finite.nuclei == periodic.nuclei == [-1.8, 1.8]
+    @test finite.sites_per_atom == periodic.sites_per_atom == 18
+    @test finite.longitudinal.centers == periodic.longitudinal.centers
+    @test periodic.longitudinal.centers == periodic_by_count.longitudinal.centers
+    @test periodic.transverse.coefficients == periodic_by_count.transverse.coefficients
+    @test periodic.h1_bands == periodic_by_count.h1_bands
+    @test periodic.longitudinal.prototype_errors[1] < 1e-12
+    @test periodic.longitudinal.prototype_errors[2] < 1e-12
+    @test periodic.longitudinal.prototype_errors[3] < 1e-12
+    @test periodic.diagnostics.longitudinal_overlap_error < 1e-12
+    @test periodic.diagnostics.transverse_normalization_error < 1e-12
+    @test periodic.diagnostics.periodic_class_error < 1e-12
+    @test periodic.diagnostics.omitted_projected_norm < 1e-7
+    @test all(periodic.transverse.ranks .>= 1)
+    @test all(periodic.transverse.gaps .> periodic.one_body_tolerance)
+    @test all(periodic.transverse.coefficients[
+        periodic.transverse.phase_pivots[class], class] > 0
+        for class in axes(periodic.transverse.coefficients, 2))
+    @test finite.coulomb.vee_tail_bound > 0
+    @test finite.coulomb.vee_transition_error > 0
+    @test finite.coulomb.vee_tail_bound + finite.coulomb.vee_transition_error <
+        finite.interaction_tolerance
+
+    finite_h1 = sliced_h1(finite)
+    finite_vee = sliced_vee(finite)
+    finite_mid = cld(length(finite), 2)
+    @test finite_h1[finite_mid, finite_mid] ≈ direct_h1(finite, finite_mid, finite_mid) atol = 1e-8
+    @test finite_vee[finite_mid, finite_mid] ≈ direct_vee(finite, finite_mid, finite_mid) atol = 1e-8
+    @test finite_vee[finite_mid, finite_mid + 1] ≈ direct_vee(finite, finite_mid, finite_mid + 1) atol = 1e-8
+
+    h10 = sliced_hydrogen_chain(10; common..., spacing = 0.2,
+        transverse_mode = :periodic_template)
+    h1 = sliced_h1(h10)
+    vee = sliced_vee(h10)
+    n = length(h10)
+    mid = cld(n, 2)
+    dense_h1 = Matrix(h1)
+    dense_vee = Matrix(vee)
+    @test n == 183
+    @test all(isfinite, dense_h1)
+    @test all(isfinite, dense_vee)
+    @test dense_h1 ≈ dense_h1' atol = 1e-12 rtol = 0
+    @test dense_vee ≈ dense_vee' atol = 1e-12 rtol = 0
+    @test minimum(diag(dense_vee)) > 0
+    @test h1[1, 1] ≈ direct_h1(h10, 1, 1) atol = 1e-8
+    @test h1[mid, mid] ≈ direct_h1(h10, mid, mid) atol = 1e-8
+    @test vee[mid, mid] ≈ direct_vee(h10, mid, mid) atol = 1e-8
+    @test vee[mid, mid + 1] ≈ direct_vee(h10, mid, mid + 1) atol = 1e-8
+    @test vee[1, n] ≈ direct_vee(h10, 1, n) atol = 1e-8
+    @test vee[mid, mid + 18] == vee[mid + 18, mid + 36]
+    @test h10.coulomb.h1_offband_bound + h10.coulomb.h1_tail_bound +
+        h10.coulomb.h1_transition_error < h10.one_body_tolerance
+
+    row = zeros(n)
+    source = sin.(collect(1:n))
+    destination = zeros(n)
+    sliced_row!(row, h1, mid)
+    @test row == dense_h1[mid, :]
+    sliced_row!(row, vee, mid)
+    @test row == dense_vee[mid, :]
+    mul!(destination, h1, source)
+    @test destination ≈ dense_h1 * source atol = 1e-11 rtol = 1e-12
+    mul!(destination, vee, source)
+    @test destination ≈ dense_vee * source atol = 1e-11 rtol = 1e-12
+    @test scalar_allocations(h1, mid, mid) == 0
+    @test scalar_allocations(vee, mid, mid) == 0
+    @test row_allocations(row, h1, mid) == 0
+    @test row_allocations(row, vee, mid) == 0
+    @test action_allocations(destination, h1, source) == 0
+    @test action_allocations(destination, vee, source) == 0
+
+    h1000 = sliced_hydrogen_chain(1000; common..., spacing = 0.2,
+        transverse_mode = :periodic_template)
+    @test length(h1000) == 18_003
+    @test Base.summarysize(h1000) < 10_000_000
+    @test size(h1000.h1_bands, 2) == length(h1000)
+    @test size(h1000.coulomb.periodic_blocks) == (18, 18, 1003)
+    @test h1000.diagnostics.retained_bytes < Base.summarysize(h1000)
+    @test maximum(h1000.longitudinal.centers) - minimum(h1000.longitudinal.centers) > 3500
+
+    @test_throws ArgumentError sliced_hydrogen_chain(0; common..., spacing = 0.2)
+    @test_throws ArgumentError sliced_hydrogen_chain(2; common..., spacing = 0.2,
+        sites_per_atom = 18)
+    @test_throws ArgumentError sliced_hydrogen_chain(2; common..., spacing = 0.19)
+    @test_throws ArgumentError sliced_hydrogen_chain(2; common..., spacing = 0.2,
+        phase = 0.1)
+    @test_throws ArgumentError sliced_hydrogen_chain(2; common..., spacing = 0.2,
+        boundary = :periodic)
+    @test_throws ArgumentError sliced_hydrogen_chain(2; common..., spacing = 0.2,
+        basis_name = "STO-3G")
+    @test_throws ArgumentError sliced_hydrogen_chain(2; common..., spacing = 0.2,
+        one_body_tolerance = 0.0)
+end

@@ -178,6 +178,11 @@ export AbstractFunction1D,
        contract_primitive_matrix,
        CoulombGaussianExpansion,
        coulomb_gaussian_expansion,
+       SlicedHydrogenChain,
+       sliced_hydrogen_chain,
+       sliced_h1,
+       sliced_vee,
+       sliced_row!,
        mapped_pgdg_prototype,
        mapped_pgdg_localized,
        legacy_atomic_gaussian_supplement,
@@ -669,6 +674,7 @@ include("global_leaf_contraction.jl")
 include("diagnostics.jl")
 include("radial_boundary_prototypes.jl")
 include("operators.jl")
+include("sliced_hydrogen_chain.jl")
 include("atomic_ylm.jl")
 include("radial_ylm_gto_bridge.jl")
 include("gaunt_tables.jl")
