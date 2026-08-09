@@ -1,6 +1,7 @@
 # Sliced Hydrogen-Chain Producer
 
-Status: approved for bounded implementation; no source is implemented yet.
+Status: approved for bounded implementation; implementation preflight is
+complete, but no source is implemented yet.
 
 Authority IDs:
 
@@ -32,8 +33,19 @@ sector, HF, DMRG, and other solver choices remain consumer data.
 
 ### Longitudinal basis
 
-Build the ordered longitudinal basis with the existing `UniformBasisSpec(:G10;
-xmin, xmax, spacing)` and `build_basis` path. The consumer controls:
+Use the existing `UniformBasisSpec(:G10; xmin, xmax, spacing)` and `build_basis`
+path as the authoritative G10 donor. Because the returned `UniformBasis` owns a
+dense primitive-coefficient matrix, build only a bounded prototype sufficient
+to validate its centers, integral weights, overlap, boundary convention, and
+translated local primitive stencil. The full chain retains only that validated
+stencil together with realized centers, weights, and compact boundary data. It
+must not construct or retain a full-chain `UniformBasis`.
+
+This is a compact realization of the existing G10 family, not a new gausslet
+family or an independently fitted stencil. The producer must fail if the donor
+prototype does not exhibit the expected translated interior stencil or if the
+compact realization does not reproduce the bounded donor within the declared
+tolerance. The consumer controls:
 
 - atom count and equal nuclear spacing `R`;
 - gausslet spacing, or a commensurate integer `sites_per_atom`;
@@ -42,11 +54,11 @@ xmin, xmax, spacing)` and `build_basis` path. The consumer controls:
 - numerical one-body and interaction tolerances.
 
 The realized basis must report its centers, spacing, bounds, integral weights,
-overlap error, atom/site commensurability, and boundary facts. The construction
-must reject nonfinite geometry, nonpositive spacing, inconsistent
-`sites_per_atom`, duplicate centers, materially nonorthogonal longitudinal
-functions, and a boundary that does not contain the requested chain and
-padding.
+prototype identity and stencil parity, overlap error, atom/site commensurability,
+and boundary facts. The construction must reject nonfinite geometry,
+nonpositive spacing, inconsistent `sites_per_atom`, duplicate centers,
+materially nonorthogonal longitudinal functions, or a boundary that does not
+contain the requested chain and padding.
 
 `R = 3.6`, spacing `0.2`, `sites_per_atom = 18`, and atom-centered alignment
 belong only to the first paper-validation fixture. They are not defaults.
@@ -110,9 +122,13 @@ transverse kinetic factors, including off-diagonal values, even where exact
 longitudinal orthogonality makes a product numerically small. Every nuclear
 term uses the physical nucleus and the complete three-dimensional product
 functions. Allowed evaluation paths are analytic Gaussian formulas and a
-declared, validated Gaussian representation of `1/r`; finite differences,
-sampled slice energies, point evaluation, diagonal slice-energy reduction, and
-one-body IDA are forbidden.
+declared, validated Gaussian representation of `1/r`. A fixed Gaussian
+expansion may be used only over its validated distance range; distant-nucleus
+contributions require a checked analytic or asymptotic continuation whose
+transition error and bound satisfy the requested one-body tolerance. The fixed
+expansion's eventual false decay must never truncate the nuclear attraction of
+a long chain. Finite differences, sampled slice energies, point evaluation,
+diagonal slice-energy reduction, and one-body IDA are forbidden.
 
 Nuclear repulsion is a separately reported scalar. No neutrality or electron
 sector is required to construct `h`, the interaction resource, or nuclear
@@ -147,8 +163,9 @@ The accuracy contract covers the largest realized site separation. A fixed
 Coulomb Gaussian expansion may be used only over its validated range. At
 larger separation, use a validated analytic evaluation or an asymptotic
 multipole/`1/R` tail with a checked transition and an error bound below the
-requested interaction tolerance. Silently allowing a Gaussian expansion to
-decay to zero at H10000 distances is forbidden.
+requested interaction tolerance. This long-range rule applies independently to
+both Vee and the distant-nucleus H1 terms above. Silently allowing a Gaussian
+expansion to decay to zero at H10000 distances in either operator is forbidden.
 
 ## Compact Representation And Expert Interface
 
@@ -182,12 +199,14 @@ After construction, scalar access must allocate nothing and row/action access
 must allocate nothing beyond caller-supplied output and explicitly documented
 reusable workspace. Neither view may own an `N x N` matrix.
 
-The producer object may own only compact vector-backed numerical state:
-longitudinal basis data, nuclei, normalized transverse primitive data,
-validated periodic-class data when requested, finite-edge data, Coulomb/tail
-resources, tolerances, and a small fixed diagnostics summary. It must not carry
-electron-sector state, a solver, an MPO, dense matrices, all-pairs metadata,
-runtime-keyed `NamedTuple` inventories, or recursive construction stages.
+The producer object may own only compact vector-backed numerical state: the
+validated translated G10 stencil, realized centers and weights, compact
+boundary data, nuclei, normalized transverse primitive data, validated
+periodic-class data when requested, finite-edge data, Coulomb/tail resources,
+tolerances, and a small fixed diagnostics summary. It must not retain the
+full-chain `UniformBasis`, electron-sector state, a solver, an MPO, dense
+matrices, all-pairs metadata, runtime-keyed `NamedTuple` inventories, or
+recursive construction stages.
 
 For a translated periodic transverse template with `b` sites per atom,
 
@@ -227,10 +246,10 @@ data, `IntegralDiagonal` convention, legacy contracted-basis loading,
 `GaussianAnalyticIntegrals`, and `ordinary_coulomb` kernels. It must not broaden
 their contracts or copy their coefficient tables.
 
-The user-approved budget is:
+The implementation-preflight-adjusted budget is:
 
-- preferred: at most `320` added source lines in total;
-- hard: at most `360` added source lines in total;
+- preferred: at most `480` added source lines in total;
+- hard: at most `520` added source lines in total;
 - tests: at most `240` added lines in existing `test/ida/runtests.jl`;
 - no other added source, test, tool, driver, helper, or module file.
 
@@ -246,16 +265,18 @@ The committed bounded validation in `test/ida/runtests.jl` must cover:
 
 1. contracted H/STO-6G transverse functions with deterministic phases,
    normalization, finite spectra, and explicit rank/gap diagnostics;
-2. longitudinal G10 overlap, centers, integral weights, and boundary facts;
+2. bounded donor-prototype parity for the translated G10 stencil, followed by
+   compact full-chain overlap, centers, integral weights, and boundary facts;
 3. finite, Hermitian analytic `h` against an independently assembled bounded
-   dense primitive-contraction oracle;
+   dense primitive-contraction oracle, including selected distant-nucleus
+   transition checks;
 4. selected onsite, near, translated-cell, and far `V_ij` entries against
    direct quadrature at the declared tolerance;
 5. scalar/row/action parity and zero-allocation steady-state calls;
 6. translated periodic rows and finite open-chain behavior;
 7. the `R=3.6`, spacing `0.2`, `b=18`, atom-aligned H10 dense oracle;
-8. H1000 construction with measured subquadratic storage and no `N x N`
-   allocation; and
+8. H1000 construction with measured subquadratic storage, no full-chain
+   `UniformBasis`, and no `N x N` allocation; and
 9. malformed geometry, rank, phase, boundary, weight, tail-range, and
    tolerance rejection.
 

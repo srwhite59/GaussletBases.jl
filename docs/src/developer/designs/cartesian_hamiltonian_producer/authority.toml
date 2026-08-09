@@ -137,7 +137,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartr
 sha256 = "a26a5760c108cd8aa97f5a92519741361f6591c4ce90b7251e825b1f64a0f9c5"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/sliced_hydrogen_chain.md"
-sha256 = "454507727b5fad8006686d2e46512e96bf51dfae2bc6e9319f882eadb75a31b6"
+sha256 = "9130e3577ae00e5f68fd8804196f31b6ca55de2cad8ee225ad34b19409ad81bf"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
 sha256 = "c996ca54fb0b2ba73f0c21373343fe11f5831a2c577a5fb1783c717915c49eea"
@@ -5502,7 +5502,7 @@ evidence_refs = []
 grant = "implementation"
 id = "HP-SLICE-HCHAIN-FN-01"
 lifecycle = "approved"
-scope = "Implement the complete expert sliced hydrogen-chain producer in one source file: uniform G10 longitudinal sites, one deterministic paper-projected transverse function per site, full analytic Galerkin H1, longitudinal IntegralDiagonal Vee, finite and validated periodic-template modes, scalar plus allocation-free caller-buffer row/action access, and a checked analytic/asymptotic far tail. Preserve bare-operator independence from electron sector. Added source is preferred <=320 and hard <=360 lines across the new file and minimal root include/export wiring. No partial scaffolding, dense N-by-N storage, finite differences, one-body IDA, framework, driver, artifact, solver, MPO, multi-transverse support, Cartesian/PQS coupling, or publication claim."
+scope = "Implement the complete expert sliced hydrogen-chain producer in one source file: validate a bounded UniformBasisSpec(:G10) donor and retain only its compact translated stencil for the full chain; construct one deterministic paper-projected transverse function per site; provide full analytic Galerkin H1, longitudinal IntegralDiagonal Vee, finite and validated periodic-template modes, scalar plus allocation-free caller-buffer row/action access, and checked analytic/asymptotic far continuations for both distant-nucleus H1 and Vee. Preserve bare-operator independence from electron sector. Added source is preferred <=480 and hard <=520 lines across the new file and minimal root include/export wiring. No full-chain UniformBasis, partial scaffolding, dense N-by-N storage, finite differences, one-body IDA, framework, driver, artifact, solver, MPO, multi-transverse support, Cartesian/PQS coupling, or publication claim."
 surfaces = ["source"]
 title = "minimal sliced hydrogen-chain producer"
 
@@ -5525,7 +5525,7 @@ evidence_refs = []
 grant = "implementation"
 id = "HP-SLICE-HCHAIN-TEST-01"
 lifecycle = "approved"
-scope = "Add at most 240 lines to the existing IDA test owner for deterministic STO-6G transverse construction, G10 orthogonality, analytic H1 and direct-quadrature Vee oracles, finite/periodic scalar-row-action parity, far-tail validation, malformed-input failures, the bounded R=3.6 H10 dense fixture, and H1000 nonquadratic-storage construction. H10000 is transient only; no HF, DMRG, MPO, publication-energy, new fixture file, or new test owner."
+scope = "Add at most 240 lines to the existing IDA test owner for deterministic STO-6G transverse construction, bounded G10 donor/translated-stencil parity and orthogonality, analytic H1 including distant-nucleus transition checks, direct-quadrature Vee oracles, finite/periodic scalar-row-action parity, far-tail validation, malformed-input failures, the bounded R=3.6 H10 dense fixture, and H1000 nonquadratic-storage construction without a full-chain UniformBasis. H10000 is transient only; no HF, DMRG, MPO, publication-energy, new fixture file, or new test owner."
 surfaces = ["tests"]
 title = "sliced hydrogen-chain producer validation"
 

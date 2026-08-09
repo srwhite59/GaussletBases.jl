@@ -1191,3 +1191,42 @@ Carrying-cost accounting:
 - validation: paper/source reconciliation, authority check and adversarial
   self-test, generated-view parity, docs tests, local Documenter,
   manager-log bound, scoped diff review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 453 - Amend Sliced-Chain Realization Budget
+
+Commit(s):
+- this docs-only design authority amendment.
+
+Summary:
+- Accepted the implementation preflight stop without accepting its draft as
+  source evidence. The preserved 420-line draft
+  (`14a614d67295fec969de0fe7a0b1247f239f6fb621c0b75e270f6dd2a33a6674`)
+  passed bounded package/probe checks but had not completed allocation-free
+  finite access, committed tests, or long-chain validation.
+- Corrected the longitudinal contract: a bounded `UniformBasisSpec(:G10)` build
+  is the authoritative donor, while the full chain retains only its validated
+  translated stencil, centers, weights, and boundary data. Constructing the
+  dense full-chain `UniformBasis` would cost about 7.3 GiB for H1000 and 725 GiB
+  for H10000 and is now explicitly forbidden.
+- Required checked analytic/asymptotic long-range continuation for both
+  longitudinal-ID Vee and distant-nucleus analytic H1. Raised the complete
+  source budget to preferred `480`, hard `520` lines including root wiring;
+  the existing 240-line test budget is unchanged.
+
+Goal advancement / guardrail:
+- MT3 remains pending implementation, now with a physically and computationally
+  viable compact G10 ownership rule. Scientific scope, five exports, one-file
+  ownership, and every solver/framework/artifact exclusion are unchanged.
+
+Carrying-cost accounting:
+- deleted: none; this is a docs-only correction before source acceptance.
+- simplified: full-chain dense donor storage is replaced in the contract by one
+  validated translated-stencil representation.
+- quarantined: the `/tmp` draft remains untracked and unaccepted evidence.
+- exact remaining caller/blocker: complete allocation-free finite access,
+  bounded committed tests, H1000 construction, and transient H10000 scaling.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none.
+- validation: draft hash/shape review, canonical/authority parity, authority
+  check and self-test, docs tests, Documenter, manager-log bound, staged-scope
+  review, and `git diff --check`.
