@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `88ab2dfbaa0b3d2de2ef966cbd69133cf75c3f1f278347834cb06aa8232c4ca8`.
+> [authority.toml](authority.toml), SHA-256 `80e4c49e9e7079252da36a2f315e345bc9d18c69af5d9b6dcc832435b03681a9`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -3599,7 +3599,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `6bbb01ade`
   - `manager_pass`: `455`
 - **Dependencies:** none
-- **Scope:** Maintain the accepted five-export expert interface and compact numerical owner. Preserve bounded G10 donor parity, deterministic H/STO-6G transverse construction, full analytic Galerkin H1, longitudinal IntegralDiagonal Vee, finite and periodic-template modes, allocation-free scalar/row/action calls, common high135 near evaluation with checked long-range continuations, bare-operator sector independence, and only the stable consumer fields named in the canonical contract. Add no field, export, dense matrix, framework, driver, artifact, solver, MPO, multi-transverse support, Cartesian/PQS coupling, or publication policy under this grant.
+- **Scope:** Maintain the accepted five-export expert interface and compact numerical owner, and add exactly sliced\_h1\_bandwidth(chain)::Int as a sixth root export in at most 12 source lines including root wiring. The query must return the represented H1 structural half-bandwidth in O(1) time with zero allocation, use existing construction state only, support finite/periodic-template/singleton chains, and guarantee exact represented-operator zeros outside the reported band without adding a field or threshold. Preserve bounded G10 donor parity, deterministic H/STO-6G transverse construction, full analytic Galerkin H1, longitudinal IntegralDiagonal Vee, common high135 near evaluation with checked long-range continuations, bare-operator sector independence, and the existing stable consumer fields. Add no further export, dense matrix, framework, driver, artifact, solver, MPO, multi-transverse support, Cartesian/PQS coupling, or publication policy under this grant.
 
 ### HP-SLICE-HCHAIN-TEST-01 - sliced hydrogen-chain producer validation
 
@@ -3616,7 +3616,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `6bbb01ade`
   - `manager_pass`: `455`
 - **Dependencies:** `HP-SLICE-HCHAIN-FN-01`
-- **Scope:** Maintain only the committed IDA-owner checks for deterministic H/STO-6G transverse construction, bounded G10 donor parity, analytic H1 and direct-quadrature Vee oracles, finite/periodic scalar-row-action parity, finite tail diagnostics, malformed-input rejection, the H10 dense fixture, and H1000 compact construction. H10000 remains transient evidence. Add no HF, DMRG, MPO, publication-energy, fixture file, or test owner under this grant.
+- **Scope:** Maintain the committed IDA-owner checks and add at most 18 lines there for the structural H1-bandwidth query: finite, periodic-template, and singleton bounds; exact represented-operator zeros outside the reported band; and zero-allocation constant-time access. Preserve deterministic H/STO-6G transverse construction, bounded G10 donor parity, analytic H1 and direct-quadrature Vee oracles, scalar/row/action parity, finite tail diagnostics, malformed-input rejection, the H10 dense fixture, and H1000 compact construction. H10000 remains transient evidence. Add no HF, DMRG, MPO, publication-energy, fixture file, or test owner under this grant.
 
 ### HP-TEST-01 - new committed terminal smoke — rejected
 

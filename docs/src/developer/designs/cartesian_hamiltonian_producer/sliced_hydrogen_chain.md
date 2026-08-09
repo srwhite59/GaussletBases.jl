@@ -1,7 +1,8 @@
 # Sliced Hydrogen-Chain Producer
 
 Status: implemented and accepted for maintenance in commits `6bbb01ade` and
-`47023f190`.
+`47023f190`. One structural H1-bandwidth query is approved but not yet
+implemented.
 
 Authority IDs:
 
@@ -188,6 +189,29 @@ sliced_h1(chain)
 sliced_vee(chain)
 ```
 
+The approved sixth expert query is
+
+```text
+sliced_h1_bandwidth(chain::SlicedHydrogenChain)::Int
+```
+
+It returns the represented H1 operator's structural half-bandwidth `B`, where
+`0 <= B < length(chain)` and
+
+```text
+sliced_h1(chain)[i,j] == 0.0  when abs(i-j) > B.
+```
+
+The query reads the existing retained construction band in `O(1)` time and
+allocates nothing. It works for finite and periodic-template chains, including
+a one-site chain where `B == 0`. It adds no field, coefficient scan, or
+query-time threshold. Clamp the retained construction band by
+`length(chain)-1` so small chains report their realizable band; do not return
+full bandwidth unconditionally. `B` is the band represented by the accepted
+operator storage; it need not be the smallest diagonal containing a numerically
+nonzero entry, and it is not a claim that omitted continuum H1 matrix elements
+vanish physically.
+
 The views support `size`, scalar `getindex`, `mul!`, and the exported
 caller-buffer operation
 
@@ -252,16 +276,16 @@ The following existing values are the stable read-only consumer contract:
 
 Consumers must not mutate these values. Internal longitudinal coefficients,
 transverse work arrays, Coulomb blocks, and `h1_bands` storage are not stable
-consumer contracts; use `sliced_h1`, `sliced_vee`, and `sliced_row!` for
-operators.
+consumer contracts; use `sliced_h1`, `sliced_h1_bandwidth`, `sliced_vee`, and
+`sliced_row!` for operators after the approved query is implemented.
 
 ## Maintenance Ownership
 
 Owned source surfaces are exactly:
 
 - `src/sliced_hydrogen_chain.jl`;
-- `src/GaussletBases.jl`, for its include and the five exported names
-  listed above.
+- `src/GaussletBases.jl`, for its include, the current five exports, and the
+  approved addition of `sliced_h1_bandwidth` as the sixth export.
 
 The implementation may call existing `UniformBasisSpec`, G10 primitive/stencil
 data, `IntegralDiagonal` convention, legacy contracted-basis loading,
@@ -270,8 +294,12 @@ their contracts or copy their coefficient tables.
 
 Maintenance preserves the accepted five-export interface, compact storage,
 linear-cost finite tail bound, nontrivial finite Vee transition diagnostic, and
-validated long-range policy. It does not authorize another export, field,
-framework, approximation policy, or storage representation.
+validated long-range policy. This amendment permits exactly one sixth export,
+`sliced_h1_bandwidth`, implemented in at most `12` added source lines including
+root wiring. Its validation may add at most `18` lines to the existing IDA
+testset. No new file is allowed. After that addition, maintenance does not
+authorize another export, field, framework, approximation policy, or storage
+representation.
 
 ## Validation Contract
 
@@ -286,7 +314,9 @@ The committed bounded validation in `test/ida/runtests.jl` must cover:
    transition checks;
 4. selected onsite, near, translated-cell, and far `V_ij` entries against
    direct quadrature at the declared tolerance;
-5. scalar/row/action parity and zero-allocation steady-state calls;
+5. scalar/row/action parity, exact zeros outside the reported structural H1
+   band, one-site behavior, and zero-allocation steady-state calls and
+   bandwidth queries;
 6. translated periodic rows and finite open-chain behavior;
 7. the `R=3.6`, spacing `0.2`, `b=18`, atom-aligned H10 dense oracle;
 8. H1000 construction with measured subquadratic storage, no full-chain

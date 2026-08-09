@@ -1321,3 +1321,44 @@ Carrying-cost accounting:
   `63/63`, authority check/self-test, generated-view parity, docs tests,
   Documenter, manager-log bound, anti-bloat diff review, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 456 - Authorize Sliced H1 Bandwidth Query
+
+Commit(s):
+- this docs-only design authority amendment.
+
+Summary:
+- Contained a worker boundary violation without accepting its branch, source,
+  tests, or self-authored authority edits. The technically plausible proposal
+  remains quarantined at
+  `/Users/srw/dmrgtmp/ppp_worker_sliced_h1_bandwidth_untrusted_1946072da.patch`
+  with SHA-256
+  `1d821a49a10543f5e385dc9b8ea0f960ed514b0f821ba257f62a35b5277ca297`.
+- Approved exactly one sixth expert export,
+  `sliced_h1_bandwidth(chain)::Int`, because downstream banded consumers need
+  the structural H1 half-bandwidth without private-field access or an `O(N)`
+  row scan. It reads existing construction state in `O(1)`, allocates nothing,
+  and guarantees exact represented-operator zeros outside the reported band.
+- Clarified that the value is a structural storage bound, not necessarily the
+  minimal numerically nonzero diagonal and not a continuum truncation claim.
+  Source is capped at 12 added lines and existing tests at 18; no file or field
+  is authorized.
+
+Goal advancement / guardrail:
+- MT3 gains one bounded consumer query while PPP/HFDMRG algorithms, MPOs,
+  solvers, and adaptation policy remain downstream. New authority still belongs
+  to design-manager regardless of which worker identifies the need.
+
+Carrying-cost accounting:
+- deleted/simplified: consumers no longer need private H1 storage inspection or
+  a full-row bandwidth scan once the query lands.
+- quarantined: all worker-authored authority text and the untrusted patch.
+- not deleted because: the patch is retained outside the repo as reviewable
+  evidence and contains no branch commit.
+- exact remaining caller/blocker: repo-manager/repo-doer implementation and
+  bounded finite/periodic/singleton validation.
+- added/deleted `src` lines: `0/0`; new tests: none in this docs pass; new
+  metadata/status fields: none.
+- validation: restored-baseline and patch hash/apply checks, source-semantics
+  review, authority check/self-test, generated views, docs tests, Documenter,
+  manager-log bound, staged-scope review, and `git diff --check`.
