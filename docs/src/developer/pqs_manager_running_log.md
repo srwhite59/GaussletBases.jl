@@ -88,6 +88,9 @@ fingerprints before a method-accuracy claim. RHF, scans, and ladders remain
 separate. Standard60/canonical-driver exposure remains pending.
 The specialized retained-GTO EGOI helper/test are deferred with no execution
 grant; the archived WIP is not a mainline merge candidate.
+The minimal sliced hydrogen-chain producer is approved for bounded
+implementation as a separate G10-plus-transverse operator facility; it is not
+a Cartesian/PQS route or solver lane.
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
@@ -1148,3 +1151,43 @@ Carrying-cost accounting:
 - exact remaining caller/blocker: none in producer plumbing; consumers own
   physical target construction and validation.
 - added/deleted `src` lines: `0/0`; new tests: none; new metadata fields: none.
+
+## Cartesian Hamiltonian Producer Pass 452 - Authorize Minimal Sliced Hydrogen Chains
+
+Commit(s):
+- this docs-only design authority amendment.
+
+Summary:
+- Approved `HP-SLICE-HCHAIN-FN-01/TEST-01` for one expert in-memory producer of
+  equally spaced hydrogen chains. It combines a uniform longitudinal G10 basis
+  with one deterministic paper-projected transverse function per site, full
+  analytic Galerkin H1, and longitudinal IntegralDiagonal Vee.
+- The owner must provide scalar and allocation-free caller-buffer row/action
+  access without dense `N x N` storage. Periodic templates may retain one
+  unit-cell block row; finite chains use the same interface without a
+  translation promise. Coulomb accuracy must cover the full H10000 separation
+  range through a validated analytic or asymptotic tail.
+- User-approved implementation bounds are preferred `320`, hard `360` added
+  source lines and at most `240` test lines in the existing IDA owner. The
+  complete finite/periodic producer must land together; partial scaffolding is
+  not acceptable.
+
+Goal advancement / guardrail:
+- MT3 gains a bounded pending producer facility and LT3 gains a factorized
+  long-system route. Electron sectors, HF/DMRG, MPO compression, artifacts,
+  drivers, multi-transverse slices, Cartesian/PQS machinery, and publication
+  energies remain outside the lane.
+
+Carrying-cost accounting:
+- deleted: none; this is new docs-only authority.
+- simplified: existing G10, contracted-basis loading, Gaussian analytic, and
+  ordinary-Coulomb kernels are mandatory donors rather than copied formulas.
+- quarantined: H10000 is a transient resource gate; solver and paper-energy
+  claims remain consumer work.
+- exact remaining caller/blocker: implement the complete producer within the
+  hard bound or return with the smallest demonstrated kernel/budget blocker.
+- added/deleted `src` lines: `0/0`; new tests: none in this pass; new metadata
+  or status fields: none.
+- validation: paper/source reconciliation, authority check and adversarial
+  self-test, generated-view parity, docs tests, local Documenter,
+  manager-log bound, scoped diff review, and `git diff --check`.

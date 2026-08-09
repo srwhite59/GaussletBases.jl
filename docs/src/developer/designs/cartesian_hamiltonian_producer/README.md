@@ -36,6 +36,11 @@ The stable conceptual boundaries are:
   [canonical driver](cartesian_driver_usability_workflow.md) for persisted
   producer output.
 
+The separately approved [sliced hydrogen-chain producer](sliced_hydrogen_chain.md)
+reuses the one-dimensional G10 and Gaussian analytic kernels but is not a
+Cartesian/PQS route. It owns a compact long-chain operator contract without
+dense matrices, artifacts, or solver policy.
+
 Read [current status](current.md) for implemented facilities, active lanes,
 physics targets, and blockers. Read [invariants](invariants.md) for
 cross-subsystem guardrails. For work on a specific ID, use its generated
@@ -50,6 +55,10 @@ ID or subsystem.
 - [current.md](current.md)
 - [registry.md](registry.md)
 - [invariants.md](invariants.md)
+- [Sliced hydrogen-chain producer](sliced_hydrogen_chain.md) for the approved
+  expert G10-times-transverse minimal H-chain basis, full analytic one-body
+  operator, longitudinal integral-diagonal interaction, and lazy long-chain
+  representation contract
 - [Terminal basis and base assembly](terminal_basis_and_base_assembly.md) for
   the implemented foundational terminal objects, support-local realization,
   blockwise one-body/IDA matrices, and Hamiltonian construction boundary

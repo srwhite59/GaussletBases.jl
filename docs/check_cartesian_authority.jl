@@ -321,8 +321,8 @@ function _path_errors(item, id, index, tracked)
     state == "existing" && (!isfile(absolute) || !(path in tracked)) &&
         push!(errors, "$id.paths[$index] existing path must be a tracked file: $path")
     state == "planned" && path in tracked && push!(errors, "$id.paths[$index] planned path is tracked: $path")
-    state == "planned" && !(kind in ("test", "driver")) &&
-        push!(errors, "$id.paths[$index] planned state is test/driver-only")
+    state == "planned" && !(kind in ("source", "test", "driver")) &&
+        push!(errors, "$id.paths[$index] planned state is source/test/driver-only")
     state == "optional_local" && kind != "measurement" &&
         push!(errors, "$id.paths[$index] optional_local state is measurement-only")
     state == "optional_local" && path in tracked &&
