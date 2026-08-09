@@ -1,7 +1,7 @@
 # Sliced Hydrogen-Chain Producer
 
-Status: approved for bounded implementation; implementation preflight is
-complete, but no source is implemented yet.
+Status: approved for bounded implementation; the complete numerical prototype
+is validated but unaccepted, and no source is implemented yet.
 
 Authority IDs:
 
@@ -246,10 +246,10 @@ data, `IntegralDiagonal` convention, legacy contracted-basis loading,
 `GaussianAnalyticIntegrals`, and `ordinary_coulomb` kernels. It must not broaden
 their contracts or copy their coefficient tables.
 
-The implementation-preflight-adjusted budget is:
+The complete-prototype-adjusted budget is:
 
-- preferred: at most `480` added source lines in total;
-- hard: at most `520` added source lines in total;
+- preferred: at most `850` added source lines in total;
+- hard: at most `900` added source lines in total;
 - tests: at most `240` added lines in existing `test/ida/runtests.jl`;
 - no other added source, test, tool, driver, helper, or module file.
 
@@ -258,6 +258,13 @@ validated long-range interaction policy must land together. Do not split
 incomplete scaffolding to evade the budget. If a readable implementation
 cannot fit the hard limit, make no source commit and report the smallest
 specific reusable-kernel extraction or revised budget required.
+
+Before source acceptance, finite mode must replace any quadratic all-class
+tail-bound scan with a conservative linear-cost bound. Its Vee transition
+diagnostic must evaluate an actual finite-mode near/tail comparison rather than
+remaining zero because only periodic blocks were sampled. These are corrections
+inside the approved implementation, not authority for a new API, helper file,
+or approximation policy.
 
 ## Validation Contract
 
@@ -279,6 +286,9 @@ The committed bounded validation in `test/ida/runtests.jl` must cover:
    `UniformBasis`, and no `N x N` allocation; and
 9. malformed geometry, rank, phase, boundary, weight, tail-range, and
    tolerance rejection.
+
+Finite-mode validation must exercise the linear-cost tail bound and a nontrivial
+Vee transition diagnostic explicitly.
 
 H10000 is a transient scaling gate, not a committed test. Report construction
 time, steady-state scalar/row/action allocation, retained storage by category,

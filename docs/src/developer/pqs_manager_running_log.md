@@ -1230,3 +1230,43 @@ Carrying-cost accounting:
 - validation: draft hash/shape review, canonical/authority parity, authority
   check and self-test, docs tests, Documenter, manager-log bound, staged-scope
   review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 454 - Accept Complete Sliced-Chain Budget
+
+Commit(s):
+- this docs-only design authority amendment.
+
+Summary:
+- Accepted the complete 842-line numerical prototype
+  (`ecfbe5810ab60804f15207ffe4d03c179f18fc15d40124bc34f05f31736f32d5`)
+  as budget evidence, not as source implementation. It retained 7.18 MB for
+  H1000/18,003 sites and 66.9 MB for H10000/180,003 sites, with construction
+  times of 6.9 and 39.8 seconds and zero warm scalar, row, and H1-action
+  allocations.
+- Bounded numerical evidence reached `8.9e-10` Ha finite H1/direct parity,
+  `4.3e-10` Ha independent H1 quadrature error, `4.3e-11` Ha near-Vee error,
+  and `2.9e-9` Ha at the 36-bohr Vee tail. No larger Coulomb expansion was
+  authorized; H1 and Vee continue to share high135, with exact-`1/r` checks as
+  diagnostics and common remote-kernel consistency preserved.
+- Raised only the source budget to preferred `850`, hard `900` lines including
+  six root-wiring lines. The 240-line test limit, five exports, single source
+  owner, scientific contract, and exclusions are unchanged.
+
+Goal advancement / guardrail:
+- MT3 now has a complete demonstrated numerical shape. Acceptance still
+  requires replacing the finite-mode quadratic all-class tail-bound scan with a
+  conservative linear bound and making the finite Vee transition diagnostic
+  evaluate a real near/tail comparison.
+
+Carrying-cost accounting:
+- deleted: none; no prototype source was admitted in this docs-only pass.
+- simplified: no new framework or helper split was permitted to accommodate
+  the larger readable implementation.
+- quarantined: the `/tmp` numerical prototype remains untracked and unaccepted.
+- exact remaining caller/blocker: the two finite-mode corrections, committed
+  bounded tests, and manager review of the final source diff.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none.
+- validation: prototype hash/line and defect review, canonical/authority parity,
+  authority check/self-test, generated views, docs tests, Documenter,
+  manager-log bound, staged-scope review, and `git diff --check`.
