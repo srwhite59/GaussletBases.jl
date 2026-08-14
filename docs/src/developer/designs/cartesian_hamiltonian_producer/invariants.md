@@ -217,6 +217,11 @@ The canonical RG algorithm contract is
   ordering, metric, and explicit Coulomb-expansion fingerprints from which it
   was built. “Direct” is exact under that recorded finite expansion, not a
   continuum-exact `1/r` claim.
+- Complete `GG`, `GA/AG`, and `AA` source products, including off-diagonal
+  transition products, must be contracted through the explicit low-rank
+  represented density. Stream or tile contracted PGDG/Gaussian pair actions;
+  do not materialize a global source-pair Coulomb matrix, substitute parent
+  IDA factors, or store all primitive-pair terms at once.
 - Direct and fitted molecular potentials are different concrete/provenanced
   routes. A fitted object may never satisfy a direct/oracle input merely by
   carrying similar fields or a route symbol. Complete-matrix agreement or a

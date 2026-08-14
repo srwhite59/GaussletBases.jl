@@ -110,7 +110,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/reference_hart
 sha256 = "043c086bbf17b024ab2546c9b09745ad98dc226b7597992f02c1500a001a48d8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/represented_mixed_density_hartree.md"
-sha256 = "5982bb4c9e34e7a5804dc3e4f1bb8117ac1956fc318b00c6e023632888d9a744"
+sha256 = "3e0678d9ba8aef4e99bc64d1aa74716853ee793729c83c04adf289995d900796"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md"
 sha256 = "61408d71a27d419606f13716cd2c1b88035b7449263f2747e1b720b1c32698a3"
@@ -3826,7 +3826,7 @@ dependency_ids = ["HP-RG-FN-01", "HP-RG-FN-02", "HP-RHO0-MIXH-GAAA-FN-01", "HP-R
 grant = "implementation"
 id = "HP-REP-MIXDENS-HARTREE-FN-01"
 lifecycle = "approved"
-scope = "Implement only the private direct represented-density layers: exact native [G,R] to mixed G/A reconstruction, a concrete expansion-provenanced direct potential, complete materialized GG/GA/AA fields, the existing exact one-body transform, and an explicit no-half scalar. The first pass is capped at 150 added source lines, adds no fitted route or root export, preserves atomic wrappers, and stops without a commit if complete blocks do not fit."
+scope = "Implement only the private direct represented-density layers: exact native [G,R] reconstruction; a nonmaterializing tiled contracted PGDG/Gaussian pair action for complete GG, GA/AG, and AA source products under each expansion exponent; complete materialized target fields; the existing exact one-body transform; and an explicit no-half scalar. Preferred/hard source limits are 350/450 added lines. No dense pair matrix, IDA substitute, fit, quadrature, truncation, screening, root export, atomic regression, or partial scaffolding."
 surfaces = ["source"]
 title = "represented multicenter mixed-density direct Hartree producer"
 
@@ -3847,7 +3847,14 @@ title = "represented multicenter mixed-density direct Hartree producer"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "459"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "460"
 
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussianAnalyticIntegrals.jl"
+    state = "existing"
     [[records.paths]]
     kind = "source"
     path = "src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl"
@@ -3860,13 +3867,17 @@ title = "represented multicenter mixed-density direct Hartree producer"
     kind = "source"
     path = "src/cartesian_reference_density/represented_molecular_hartree.jl"
     state = "planned"
+    [[records.paths]]
+    kind = "source"
+    path = "src/gaussian_coulomb_reference.jl"
+    state = "existing"
 [[records]]
 dependency_ids = ["HP-REP-MIXDENS-HARTREE-FN-01"]
 evidence_refs = []
 grant = "implementation"
 id = "HP-REP-MIXDENS-HARTREE-TEST-01"
 lifecycle = "approved"
-scope = "Add only the planned bounded multicenter mixed-basis oracle test, capped at 180 lines: charge/Gram reconstruction, nonzero mixed source products, complete GG/GA/AA and native [G,R] parity, no-half energy and derivative checks, malformed identity failures, and unchanged atomic fast-path output. No Cr2 fixture, solver, or fitted-route test."
+scope = "Add only the planned bounded multicenter mixed-basis oracle test, capped at 180 lines: charge/Gram reconstruction; isolated and combined GG, GA/AG, and AA source sectors; complete field/native [G,R] parity; no-half energy/derivative checks; malformed identity failures; unchanged atomic output; and a two-size no-pair-matrix workspace/resource gate. No Cr2 fixture, solver, or fitted-route test."
 surfaces = ["tests"]
 title = "represented multicenter mixed-density Hartree validation"
 

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `ef6bc4ee2252525cb3ae8ebed25459743e1c4909f4ebb15abded74111440bc4f`.
+> [authority.toml](authority.toml), SHA-256 `cdea0635f65a79aedabe39ed668e9eae20937ec8118bf56d1b00a1b55ae6b213`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2355,16 +2355,19 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [represented\_mixed\_density\_hartree.md](represented_mixed_density_hartree.md); heading `Represented Mixed-Density Hartree Producer`
 - **Owned paths:**
+  - `source` / `existing`: `src/GaussianAnalyticIntegrals.jl`
   - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
   - `source` / `existing`: `src/cartesian_reference_density/CartesianReferenceDensity.jl`
   - `source` / `planned`: `src/cartesian_reference_density/represented_molecular_hartree.jl`
+  - `source` / `existing`: `src/gaussian_coulomb_reference.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/cr2_req084_molecular_full_hartree_capability_2026-08-13.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/work/REQ-084/repo_design_manager_assignment.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/req084_cr2_molecular_full_hartree_capability_2026-08-13.md`
   - `manager_pass`: `459`
+  - `manager_pass`: `460`
 - **Dependencies:** `HP-RG-FN-01`, `HP-RG-FN-02`, `HP-RHO0-MIXH-GAAA-FN-01`, `HP-RHO0-MIXH-GG-FN-01`
-- **Scope:** Implement only the private direct represented-density layers: exact native \[G,R\] to mixed G/A reconstruction, a concrete expansion-provenanced direct potential, complete materialized GG/GA/AA fields, the existing exact one-body transform, and an explicit no-half scalar. The first pass is capped at 150 added source lines, adds no fitted route or root export, preserves atomic wrappers, and stops without a commit if complete blocks do not fit.
+- **Scope:** Implement only the private direct represented-density layers: exact native \[G,R\] reconstruction; a nonmaterializing tiled contracted PGDG/Gaussian pair action for complete GG, GA/AG, and AA source products under each expansion exponent; complete materialized target fields; the existing exact one-body transform; and an explicit no-half scalar. Preferred/hard source limits are 350/450 added lines. No dense pair matrix, IDA substitute, fit, quadrature, truncation, screening, root export, atomic regression, or partial scaffolding.
 
 ### HP-REP-MIXDENS-HARTREE-TEST-01 - represented multicenter mixed-density Hartree validation
 
@@ -2378,7 +2381,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `planned`: `test/nested/cartesian_represented_molecular_hartree_runtests.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-REP-MIXDENS-HARTREE-FN-01`
-- **Scope:** Add only the planned bounded multicenter mixed-basis oracle test, capped at 180 lines: charge/Gram reconstruction, nonzero mixed source products, complete GG/GA/AA and native \[G,R\] parity, no-half energy and derivative checks, malformed identity failures, and unchanged atomic fast-path output. No Cr2 fixture, solver, or fitted-route test.
+- **Scope:** Add only the planned bounded multicenter mixed-basis oracle test, capped at 180 lines: charge/Gram reconstruction; isolated and combined GG, GA/AG, and AA source sectors; complete field/native \[G,R\] parity; no-half energy/derivative checks; malformed identity failures; unchanged atomic output; and a two-size no-pair-matrix workspace/resource gate. No Cr2 fixture, solver, or fitted-route test.
 
 ### HP-REP-XGTO-IMPORT-FN-01 - external GTO orbital import
 

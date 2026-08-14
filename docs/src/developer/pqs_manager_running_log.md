@@ -37,7 +37,10 @@ archaeology and are not normal startup reading.
 - REQ-084 stopped correctly before molecular-full Cr2 interpretation because
   no repo owner constructs the complete Hartree field of a represented density
   containing terminal and supplement components. A direct, typed internal
-  producer is approved; source and full-space certification remain pending.
+  producer is approved. Pass 459 implementation preflight established that the
+  missing operation is the contracted source pair-product action itself, not
+  the existing target evaluators; source and full-space certification remain
+  pending.
 - The source-backed Cr2 composition/replay migration is closed. The matched
   full-parent/PQS/White-Lindsey H2+ and fixed-state H2 paper mechanics now use
   common aspect-aware shared-shell dimensions. Parent and PQS rows are
@@ -101,8 +104,9 @@ as a separate G10-plus-transverse operator facility; it is not a
 Cartesian/PQS route or solver lane. Its stable consumer fields are fixed in
 the canonical contract; HFDMRG adaptation remains downstream work.
 The represented mixed-density direct Hartree producer is approved for bounded
-implementation. Its first pass is direct-only; fitted acceleration and Cr2
-acceptance remain later, separately reviewed gates.
+implementation with a streamed/tiled contracted PGDG/Gaussian pair action. Its
+first pass is direct-only; fitted acceleration and Cr2 acceptance remain later,
+separately reviewed gates.
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
@@ -1483,3 +1487,65 @@ Carrying-cost accounting:
 - validation: source/authority reconciliation, canonical hashes, authority
   check/self-test, generated views, docs tests, Documenter, manager-log bound,
   staged docs-only review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 460 - Authorize Contracted Hartree Pair Action
+
+Commit(s):
+- this docs-only correction to the Pass 459 implementation boundary.
+
+Summary:
+- Accepted repo-manager's no-edit stop. Existing neutral raw kernels can
+  evaluate a constructed potential on complete `GG/GA/AA` targets, but the only
+  density-to-potential constructor is same-center atomic. Parent/PGDG IDA
+  factors do not represent off-diagonal transition products, and the dense
+  Gaussian pair matrix is an explicitly bounded `N^4` oracle rather than a
+  production backend.
+- Authorized the missing nonmaterializing operation: for each explicit Coulomb
+  exponent, stream or tile complete contracted PGDG/Gaussian `GG`, `GA/AG`, and
+  `AA` source products and contract them against the low-rank represented spin
+  density. Dense final field blocks remain required; global source-pair
+  matrices, product truncation, screening, quadrature, fitting, and IDA
+  substitution remain forbidden.
+- Added narrow analytic-kernel extraction authority in
+  `GaussianAnalyticIntegrals.jl`. The dense oracle may be simplified to call
+  the shared primitive but must remain numerically unchanged and test-only.
+  Source limits are now `350` preferred and `450` hard; the existing `180`-line
+  test limit remains.
+
+Goal advancement / guardrail:
+- MT3 is refined from wrapper-level orchestration to the actual missing
+  numerical producer. Acceptance still requires isolated and combined source
+  sector parity, complete target-field parity, unchanged atomic output, and a
+  two-size resource gate demonstrating tiled/action workspace rather than
+  source-pair-squared storage.
+
+Carrying-cost accounting:
+- deleted/simplified: the amendment permits one shared one-dimensional analytic
+  primitive to replace duplicate private polynomial-kernel algebra.
+- quarantined: dense pair matrices, fitted acceleration, and Cr2 interpretation.
+- not deleted because: the dense Gaussian implementation remains the bounded
+  independent oracle, and atomic wrappers remain the accepted fast path.
+- exact remaining caller/blocker: coherent direct implementation within `450`
+  added source lines, bounded oracle/resource tests, then separate CR2
+  full-space certification.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none.
+- validation: direct source/kernel review, canonical hash and authority render,
+  authority check/self-test, generated views, docs tests, Documenter,
+  manager-log bound, staged docs-only review, and `git diff --check`.
+
+### Medium-Term Checkpoint After Pass 460
+
+- **MT1 - active:** conformance remediation remains bounded and separate from
+  this new numerical capability.
+- **MT2 - completed:** the earlier source-backed Cr2 migration remains closed;
+  REQ-084 is a new represented-field consumer gate, not a reopening.
+- **MT3 - active/refined:** Standard60 remains pending; the represented
+  mixed-density Hartree lane now owns its missing pair action explicitly.
+  Fitted acceleration and Cr2 acceptance remain later gates.
+- **MT4 - active:** residual/protected evidence and consumer-selected PRF policy
+  are unchanged.
+- **MT5 - maintenance:** machine authority and generated views remain atomic;
+  this pass corrects implementation scope without reopening docs migration.
+- **MT6 - active:** shared analytic extraction may reduce duplication, but no
+  general ERI framework, provider hierarchy, or partial scaffolding is allowed.

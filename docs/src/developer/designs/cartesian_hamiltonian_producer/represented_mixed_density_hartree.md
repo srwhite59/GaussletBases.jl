@@ -29,6 +29,9 @@ The implementation must reuse, not duplicate:
   reconstruction;
 - terminal Gaussian-sum and neutral mixed-Hartree target kernels in
   `cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`;
+- polynomial-Gaussian product, convolution, and pair-factor algebra in
+  `GaussianAnalyticIntegrals.jl`, with the dense Gaussian Coulomb reference
+  serving only as an extraction donor and bounded oracle;
 - the explicit `CoulombGaussianExpansion` object supplied by the caller;
 - `transform_augmented_operator` for the exact one-body transformation from
   raw `GG/GA/AA` blocks to native `[G,R]` order;
@@ -117,6 +120,65 @@ compression must be algebraically exact for the represented density and the
 supplied expansion. It may not fit, truncate, screen, or silently substitute a
 different density.
 
+### Contracted Pair-Product Action
+
+The production source operation missing at Pass 459 is a nonmaterializing
+contracted PGDG/Gaussian pair-product action. For each occupied spin orbital
+and each Coulomb expansion exponent, it must contract
+
+```text
+rho_GG = sum_s sum_k n[s,k] sum_ij C_G[i,k,s] C_G[j,k,s] G_i G_j
+rho_GA = sum_s sum_k n[s,k] sum_ia C_G[i,k,s] C_A[a,k,s]
+         (G_i A_a + A_a G_i)
+rho_AA = sum_s sum_k n[s,k] sum_ab C_A[a,k,s] C_A[b,k,s] A_a A_b.
+```
+
+All diagonal and off-diagonal products are required. The real-orbital
+`GA/AG` multiplicity must be represented exactly once with its factor of two;
+symmetry must not drop transition products or count them twice.
+
+The action consumes block-local terminal parent states and contraction
+coefficients together with explicit supplement primitives. For the separable
+kernel term
+
+```text
+exp(-gamma * |r-r'|^2)
+  = product_axis exp(-gamma * (x_axis-x'_axis)^2),
+```
+
+it constructs or applies the exact one-dimensional polynomial-Gaussian
+source-pair convolution, contracts it immediately with the low-rank occupied
+coefficients, and accumulates the target potential factors. It may tile source
+block pairs and cache repeated one-dimensional state/family factors.
+
+It must not construct or retain:
+
+- an ordered or compact source-pair Coulomb matrix;
+- a `pair_count x pair_count` kernel;
+- all terminal/supplement primitive-pair terms at once;
+- dense `P_GG` merely to drive the contraction.
+
+The required dense `GG/GA/AA` output matrices are not forbidden by this rule.
+Workspace and caches must scale with occupied rank, source/target tiles, and
+one-dimensional state/family inventories, not with the square of the global
+source-pair count.
+
+Existing parent/PGDG IDA factors contain charge-density approximations and
+cannot replace `G_i G_j` transition products. Calling the dense
+`gaussian_coulomb_pair_matrix` from production is also forbidden.
+
+### Shared Analytic Kernel
+
+The implementation may extract one narrow allocation-conscious
+polynomial-Gaussian pair/convolution primitive into
+`GaussianAnalyticIntegrals.jl`. It may then replace duplicated private algebra
+in `gaussian_coulomb_reference.jl` with that shared primitive, provided the
+dense oracle remains numerically unchanged and remains an oracle only.
+
+This extraction does not authorize a general ERI API, shell-quartet engine,
+provider hierarchy, or new root export. Three-dimensional represented-density
+orchestration remains in the approved raw/reference-density owners.
+
 “Direct” means exact contraction of the represented density under the recorded
 Gaussian Coulomb expansion. It is not a claim that a finite expansion is exact
 continuum `1/r`. Diagnostics must retain the expansion policy, parameters,
@@ -189,6 +251,7 @@ The first implementation may add only these private names inside
 `CartesianReferenceDensity`:
 
 - `RepresentedMixedDensity`;
+- `ContractedMixedDensityPairAction`;
 - `DirectRepresentedHartreePotential`;
 - `RepresentedHartreeField`;
 - narrow constructors/evaluators implementing the three layers above.
@@ -204,7 +267,11 @@ Approved source ownership is limited to:
 - `src/cartesian_reference_density/CartesianReferenceDensity.jl` for one
   include;
 - `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` for narrow reuse
-  or generalization of neutral pair-density/potential target kernels.
+  or generalization of neutral pair-density/potential target kernels;
+- `src/GaussianAnalyticIntegrals.jl` for the narrow shared one-dimensional
+  pair/convolution primitive;
+- `src/gaussian_coulomb_reference.jl` only to remove duplicated private
+  polynomial-kernel algebra and preserve oracle parity.
 
 Existing residual transforms and screened-Hartree assembly are consumers, not
 edit surfaces in this pass.
@@ -221,6 +288,8 @@ The test must cover:
 
 - alpha, beta, and total mixed-metric charge and final/mixed Gram recovery;
 - nonzero `G-A` source-density terms, so omitting mixed products fails visibly;
+- isolated `GG`, `GA/AG`, and `AA` source sectors plus their combined result,
+  including translated centers and off-diagonal signs/multiplicities;
 - complete `GG`, `GA`, and `AA` agreement with an independently contracted
   small four-index oracle;
 - native `[G,R]` transformed-field parity through
@@ -231,6 +300,16 @@ The test must cover:
 - rejection of malformed ordering, transforms, metrics, occupations, and
   density/potential fingerprints;
 - exact unchanged output from the existing same-center atomic path.
+
+Add a bounded resource-scaling gate over two fixture sizes. It must report
+occupied rank, source/target dimensions, source block-pair count, retained
+one-dimensional cache entries, output bytes, peak additional workspace, and
+the largest retained workspace shapes. The test and source diff must establish
+structurally that no global pair-index matrix exists; do not add a persistent
+status flag for that claim. The larger fixture must demonstrate that additional
+workspace follows the tiled/action representation rather than global
+source-pair squared or `N^4` storage. Do not turn wall time into a fragile
+committed threshold.
 
 These are numerical-object tests, not a solver or Cr2 fixture. The test may use
 the existing dense `N^4` Gaussian Coulomb helper only at its bounded oracle
@@ -261,11 +340,13 @@ does not create a Cr2 default, production endpoint, artifact, or solver path.
 
 ## Failure Rule And Budget
 
-The implementation budget is at most `150` added source lines across all
-approved source files, including module wiring, and at most `180` added lines
-in the one planned test file. No other source or test file is approved.
+The preferred implementation budget is at most `350` added source lines and
+the hard limit is `450` added source lines across all approved source files,
+including module wiring and any shared-kernel extraction. The existing test
+limit remains `180` added lines in the one planned test file. No other source
+or test file is approved.
 
-If a coherent direct implementation cannot fit this boundary, makes the atomic
+If a coherent direct implementation exceeds the hard limit, makes the atomic
 path regress, or cannot provide complete raw blocks, make no source commit.
 Report the smallest justified reusable extraction or user-approved budget
 increase. Do not split partial scaffolding across commits.
@@ -275,6 +356,8 @@ increase. Do not split partial scaffolding across commits.
 This authority does not permit:
 
 - a general four-index ERI engine or production call to the dense `N^4` oracle;
+- dense global source-pair matrices, IDA transition-product substitution,
+  quadrature, product truncation, or pair screening;
 - a fitted molecular potential in the first source pass;
 - an occupied-only, external-AO, diagonal, row-gauge, or random-probe substitute;
 - changes to screened-Hartree formulas, `q0/P0`, residual selection, MWG, IDA,
