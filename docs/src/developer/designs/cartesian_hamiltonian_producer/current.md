@@ -45,6 +45,7 @@ claim.
 | `HP-R1-ESECTOR-*` | Explicit charged sectors implemented; maintenance | Preserve exact basis/operator independence from `nup`/`ndn`, positive nonzero sectors, neutral compatibility, supplemented parity, and charged artifact readback |
 | `HP-PQS-PRF-CONSUMER-*` | Implemented/completed maintenance | Preserve exact descriptor-to-PRF source binding, explicit consumer targets, additive/fixed-span parity, and category-owned unscreened Hamiltonian assembly |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
+| `HP-REP-MIXDENS-HARTREE-*` | Direct represented-density Hartree producer approved, not implemented | Reconstruct the exact mixed terminal/supplement density, build its typed direct potential, and materialize complete `GG/GA/AA` fields; no fitted route in the first pass |
 | `HP-SLICE-HCHAIN-*` | Six-export producer implemented; validation completed; maintenance | Preserve the O(1), zero-allocation structural-bandwidth query, exact represented off-band zeros, compact operator physics, and existing consumer contract; no further export, field, solver, or dense matrix |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; specialized retained-GTO helper/test deferred with no execution grant | Preserve the archived experiment only; any new helper requires docs-only reactivation tied to a current physics target |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
@@ -107,6 +108,11 @@ driver, public facade, producer default, artifact schema family, or solver API.
    approximate `J0`, with consistency error reported. Determinant-exact
    `J0/E0` would be a new scientific amendment, not a conformance repair; do
    not interpret a run under the other convention without deciding this first.
+8. **Complete molecular represented Hartree.** REQ-084 correctly stopped before
+   molecular-full Cr2 interpretation. The direct internal producer is approved,
+   but source and its complete-field certificate are pending. An AO-projected
+   field, occupied action, random probes, or an auxiliary fit cannot close this
+   blocker.
 
 Durable numerical and workflow guardrails live in
 [invariants](invariants.md); the task-specific contract map lives in

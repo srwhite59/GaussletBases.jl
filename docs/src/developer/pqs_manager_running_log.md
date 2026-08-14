@@ -34,6 +34,10 @@ archaeology and are not normal startup reading.
   `P0/q0`, the density fit for `E0`, and the fitted potential as an approximate
   `J0` evaluator with reported consistency error. A determinant-exact `J0/E0`
   convention requires a separate scientific amendment.
+- REQ-084 stopped correctly before molecular-full Cr2 interpretation because
+  no repo owner constructs the complete Hartree field of a represented density
+  containing terminal and supplement components. A direct, typed internal
+  producer is approved; source and full-space certification remain pending.
 - The source-backed Cr2 composition/replay migration is closed. The matched
   full-parent/PQS/White-Lindsey H2+ and fixed-state H2 paper mechanics now use
   common aspect-aware shared-shell dimensions. Parent and PQS rows are
@@ -96,6 +100,9 @@ The minimal sliced hydrogen-chain producer is implemented and in maintenance
 as a separate G10-plus-transverse operator facility; it is not a
 Cartesian/PQS route or solver lane. Its stable consumer fields are fixed in
 the canonical contract; HFDMRG adaptation remains downstream work.
+The represented mixed-density direct Hartree producer is approved for bounded
+implementation. Its first pass is direct-only; fitted acceleration and Cr2
+acceptance remain later, separately reviewed gates.
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
@@ -1435,3 +1442,44 @@ Carrying-cost accounting:
 - validation: source/contract and exact-budget review, authority check and
   adversarial self-test, generated-view parity, docs tests, Documenter,
   manager-log bound, staged docs-only scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 459 - Authorize Represented Mixed-Density Hartree
+
+Commit(s):
+- this docs-only design authority amendment.
+
+Summary:
+- Accepted REQ-084's missing capability as neutral repository infrastructure:
+  reconstruct a represented spin density through residual `T_G/T_A`, build its
+  direct Coulomb potential under one explicit expansion, and materialize the
+  complete `GG/GA/AA` field before the existing native `[G,R]` one-body
+  transform. The no-half direct scalar remains explicit and tied to the same
+  density and potential.
+- The first implementation is private and direct-only. Any fitted molecular
+  potential requires a later amendment, a distinct concrete/provenanced route,
+  and complete-matrix agreement or a rigorous full-space bound. AO-projected
+  fields, occupied actions, selected rows, and random probes are not oracles.
+- Approved one planned source owner, two existing reuse surfaces, and one small
+  multicenter brute-force test owner. CR2 acceptance remains external and must
+  apply the frozen REQ-084 charge, field, external-sector, Hermiticity, energy,
+  and derivative gates.
+
+Goal advancement / guardrail:
+- MT3 gains a bounded direct-Hartree producer lane while screened-Hartree
+  algebra, atomic fast paths, exchange, artifacts, solvers, and Cr2 policy stay
+  unchanged. Stop without a source commit if complete blocks cannot fit the
+  `150`-line source ceiling or cannot be certified over the full space.
+
+Carrying-cost accounting:
+- deleted/simplified: no numerical code changed; the design reuses residual
+  transforms, neutral mixed-Hartree target kernels, and the existing exact
+  augmented one-body transform instead of creating a four-index framework.
+- quarantined: fitted acceleration and Cr2-scale endpoint interpretation.
+- not deleted because: same-center atomic wrappers remain a live fast path.
+- exact remaining caller/blocker: direct source implementation, bounded
+  multicenter oracle tests, then a separate CR2 consumer certificate.
+- added/deleted `src` lines: `0/0`; new tests: none in this docs pass; new
+  metadata/status fields: none.
+- validation: source/authority reconciliation, canonical hashes, authority
+  check/self-test, generated views, docs tests, Documenter, manager-log bound,
+  staged docs-only review, and `git diff --check`.

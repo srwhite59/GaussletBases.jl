@@ -20,6 +20,9 @@ Live correction ownership is separate:
   owns its implemented API;
 - [Protected additive reference correction](protected_additive_reference_correction.md)
   owns additive molecular `P0/J0/E0` composition.
+- [Represented mixed-density Hartree](represented_mixed_density_hartree.md)
+  owns the approved direct construction for a general represented multicenter
+  density with terminal and supplement components.
 
 ## Source Ownership
 
@@ -89,9 +92,11 @@ term stream, and Coulomb-expanded potential terms. It returns parent/proxy
 `GA`, symmetric `AA`, and compact diagnostics. This wrapper remains a neutral
 oracle seam even when no correction workflow calls it directly.
 
-A molecular reference Hartree field is a caller-side sum of one-center atomic
-contributions. These helpers do not introduce cross-atom reference-density
-pair products.
+Under the six IDs owned by this page, a molecular reference Hartree field is a
+caller-side sum of one-center atomic contributions. These helpers do not
+introduce cross-atom reference-density pair products. The separately approved
+represented mixed-density producer owns complete multicenter pair products; it
+does not broaden or replace these atomic wrappers.
 
 ## Protected Fixed And Localized Transforms
 

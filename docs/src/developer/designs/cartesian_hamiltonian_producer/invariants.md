@@ -205,6 +205,30 @@ The canonical RG algorithm contract is
   They do not mutate unscreened `H1_L/Vee_L` and are not a corrected artifact
   without later authority.
 
+## Represented Molecular Hartree Fields
+
+- A general represented molecular Hartree density is reconstructed from the
+  native final occupied coefficients and the exact residual `T_G/T_A`
+  transforms. Terminal-terminal, terminal-supplement, and
+  supplement-supplement source-density products are all part of the physical
+  object; an external-AO projection or occupied-only field image is not an
+  equivalent density.
+- A direct represented-density potential must retain the exact density,
+  ordering, metric, and explicit Coulomb-expansion fingerprints from which it
+  was built. “Direct” is exact under that recorded finite expansion, not a
+  continuum-exact `1/r` claim.
+- Direct and fitted molecular potentials are different concrete/provenanced
+  routes. A fitted object may never satisfy a direct/oracle input merely by
+  carrying similar fields or a route symbol. Complete-matrix agreement or a
+  rigorous full-space bound is required before a fit can replace direct field
+  evaluation.
+- The complete raw `GG/GA/AA` field transforms through the existing exact
+  one-body operator owner. This does not authorize a transformed interaction,
+  `C' V C`, or generalized final-basis overlap workflow.
+- Keep the no-half scalar `E0 = (rho|rho)` explicit and derived from the same
+  density and potential as the field. Screened-Hartree assembly remains a
+  later consumer and does not own represented-density reconstruction.
+
 ## Provenance And Metadata
 
 - Metadata may contain provenance only. It must not carry transforms,

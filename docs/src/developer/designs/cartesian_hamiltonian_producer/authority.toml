@@ -107,7 +107,10 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_usability_s
 sha256 = "364e8803c12548b7e451744deed96b56777c4f023c0bc36b4c67c0891917ddd7"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/reference_hartree_numerics.md"
-sha256 = "eadd500026774e4a1a1a386b4057df8cd2e1be57c0a52c40336f38a7484f55ff"
+sha256 = "043c086bbf17b024ab2546c9b09745ad98dc226b7597992f02c1500a001a48d8"
+[[documents]]
+path = "docs/src/developer/designs/cartesian_hamiltonian_producer/represented_mixed_density_hartree.md"
+sha256 = "5982bb4c9e34e7a5804dc3e4f1bb8117ac1956fc318b00c6e023632888d9a744"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md"
 sha256 = "61408d71a27d419606f13716cd2c1b88035b7449263f2747e1b720b1c32698a3"
@@ -3818,6 +3821,64 @@ title = "raw source-mode validation"
     heading = "Route/Stage Metadata Contract"
     kind = "evidence"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/route_stage_metadata_contract.md"
+[[records]]
+dependency_ids = ["HP-RG-FN-01", "HP-RG-FN-02", "HP-RHO0-MIXH-GAAA-FN-01", "HP-RHO0-MIXH-GG-FN-01"]
+grant = "implementation"
+id = "HP-REP-MIXDENS-HARTREE-FN-01"
+lifecycle = "approved"
+scope = "Implement only the private direct represented-density layers: exact native [G,R] to mixed G/A reconstruction, a concrete expansion-provenanced direct potential, complete materialized GG/GA/AA fields, the existing exact one-body transform, and an explicit no-half scalar. The first pass is capped at 150 added source lines, adds no fitted route or root export, preserves atomic wrappers, and stops without a commit if complete blocks do not fit."
+surfaces = ["source"]
+title = "represented multicenter mixed-density direct Hartree producer"
+
+    [[records.document_refs]]
+    heading = "Represented Mixed-Density Hartree Producer"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/represented_mixed_density_hartree.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/cr2_req084_molecular_full_hartree_capability_2026-08-13.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/work/REQ-084/repo_design_manager_assignment.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/req084_cr2_molecular_full_hartree_capability_2026-08-13.md"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "459"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_reference_density/CartesianReferenceDensity.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_reference_density/represented_molecular_hartree.jl"
+    state = "planned"
+[[records]]
+dependency_ids = ["HP-REP-MIXDENS-HARTREE-FN-01"]
+evidence_refs = []
+grant = "implementation"
+id = "HP-REP-MIXDENS-HARTREE-TEST-01"
+lifecycle = "approved"
+scope = "Add only the planned bounded multicenter mixed-basis oracle test, capped at 180 lines: charge/Gram reconstruction, nonzero mixed source products, complete GG/GA/AA and native [G,R] parity, no-half energy and derivative checks, malformed identity failures, and unchanged atomic fast-path output. No Cr2 fixture, solver, or fitted-route test."
+surfaces = ["tests"]
+title = "represented multicenter mixed-density Hartree validation"
+
+    [[records.document_refs]]
+    heading = "Represented Mixed-Density Hartree Producer"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/represented_mixed_density_hartree.md"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/nested/cartesian_represented_molecular_hartree_runtests.jl"
+    state = "planned"
 [[records]]
 dependency_ids = []
 grant = "maintenance"

@@ -92,6 +92,9 @@ ID or subsystem.
   numerical supplement complement, and validates packet capture afterward
 - [Reference Hartree numerics](reference_hartree_numerics.md) for implemented
   neutral exact `GG/GA/AA` kernels and protected fixed/localized transforms
+- [Represented mixed-density Hartree](represented_mixed_density_hartree.md) for
+  the approved internal direct reconstruction and complete multicenter
+  `GG/GA/AA` field contract
 - [Rho0 and reference-density correction history](rho0_reference_density_matrix.md)
   for superseded fixed-`P0` experiments and the deferred XPAIR question
 - [Terminal shellification due diligence](terminal_shellification_due_diligence.md)
