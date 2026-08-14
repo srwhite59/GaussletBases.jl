@@ -1587,3 +1587,44 @@ Carrying-cost accounting:
   bounded numerical owner; new metadata/status fields: none.
 - validation: package load, represented-Hartree `50/50`, screened-Hartree
   `93/93`, exact line/scope scan, staged suspicious-line scan, and diff checks.
+
+## Cartesian Hamiltonian Producer Pass 462 - Correct Represented Hartree Scaling Contract
+
+Commit(s):
+- this docs-only authority correction.
+
+Summary:
+- Accepted the REQ-084 production preflight stop. The frozen `6915 + 138 =
+  7053` Cr2 state, transforms, bridge, `48`-electron charge, and high-135
+  identity are unchanged, but the Pass 461 contraction would visit
+  `6.739e9` source pairs and `9.097e11` Coulomb terms. It is a bounded exact
+  oracle, not a production algorithm.
+- Required production to contract occupied coefficients within terminal and
+  supplement blocks before source-pair expansion, then apply exact separable
+  axis maps to complete `GG`, `GA/AG`, and `AA` source and target sectors.
+  The flattened global component loop must leave production dispatch.
+- Separated residual validity from represented-state accuracy. The residual
+  owner keeps its `1e-10` cross and scale-aware `5e-8` identity checks; state
+  Gram and charge recovery remain independent `1e-10` gates. No basis
+  reorthogonalization or consumer tolerance override is permitted.
+
+Goal advancement / guardrail:
+- MT3 remains active rather than accepted at Cr2 scale. The next source pass
+  must deliver the working exact replacement, bounded oracle parity, and an
+  actual-plan resource model. CR2 applies provisional `24`-hour/`48`-GiB
+  external stop bounds before complete field construction.
+
+Carrying-cost accounting:
+- deleted/simplified: authority now requires removal or hard bounding of the
+  unbounded component-pair production loop in the replacement commit.
+- quarantined: fitted potentials, screening, truncation, IDA substitution,
+  Cr2 policy, and molecular-full interpretation.
+- not deleted because: the Pass 461 code remains committed bounded evidence
+  until the coherent numerical replacement lands.
+- exact remaining caller/blocker: repo-manager/repo-doer implementation of the
+  occupied-contracted separable block action, then external REQ-084 acceptance.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none.
+- validation: source/preflight reconciliation, canonical hash and authority
+  render/check/self-test, generated views, docs tests, Documenter,
+  manager-log bound, staged docs-only review, and `git diff --check`.

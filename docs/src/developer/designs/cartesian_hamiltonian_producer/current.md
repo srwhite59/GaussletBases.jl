@@ -45,7 +45,7 @@ claim.
 | `HP-R1-ESECTOR-*` | Explicit charged sectors implemented; maintenance | Preserve exact basis/operator independence from `nup`/`ndn`, positive nonzero sectors, neutral compatibility, supplemented parity, and charged artifact readback |
 | `HP-PQS-PRF-CONSUMER-*` | Implemented/completed maintenance | Preserve exact descriptor-to-PRF source binding, explicit consumer targets, additive/fixed-span parity, and category-owned unscreened Hamiltonian assembly |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
-| `HP-REP-MIXDENS-HARTREE-*` | Direct represented-density Hartree producer implemented; bounded repository validation passed | Run the separate Cr2 complete-field, external-sector, energy, derivative, and resource acceptance; no fitted route or production endpoint claim |
+| `HP-REP-MIXDENS-HARTREE-*` | Bounded exact implementation passed; Cr2 preflight rejected its global component-pair scaling and shared residual/state tolerance | Replace production dispatch with occupied-contracted separable block tensors, apply RG-owned residual validity separately, and pass the actual-plan resource gate before resuming the complete field |
 | `HP-SLICE-HCHAIN-*` | Six-export producer implemented; validation completed; maintenance | Preserve the O(1), zero-allocation structural-bandwidth query, exact represented off-band zeros, compact operator physics, and existing consumer contract; no further export, field, solver, or dense matrix |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; specialized retained-GTO helper/test deferred with no execution grant | Preserve the archived experiment only; any new helper requires docs-only reactivation tied to a current physics target |
 | `HP-RG-SPECTRAL-AUDIT-01` | Measurement-only | Characterize the surviving low residual-sector mode; no pruning or spectral guard is approved |
@@ -83,27 +83,34 @@ driver, public facade, producer default, artifact schema family, or solver API.
    clean five-row replay are complete. The external same-density Coulomb
    oracle must be rerun against the corrected WL fingerprints before method
    accuracy or curve evidence is interpreted.
-2. **Standard Coulomb implementation.** The analytic K60 preset and artifact
+2. **Represented molecular Hartree scaling.** The frozen Cr2 state reconstructs
+   to roundoff, but the bounded implementation would enumerate `6.739e9`
+   source pairs and `9.097e11` high-135 terms. Production must contract the
+   occupied rank inside terminal/supplement blocks and apply separable axis
+   maps before global pair enumeration. Residual validity follows the RG
+   `1e-10` cross and scale-aware `5e-8` identity contract; state charge/Gram
+   remains a separate `1e-10` gate. No molecular-full result exists yet.
+3. **Standard Coulomb implementation.** The analytic K60 preset and artifact
    fingerprint are approved but not source-backed. The controlled Cr2
    screened comparison stays `:high` and must not be changed mid-comparison.
-3. **Parent-backed consumer studies.** The compact in-memory expert PRF API is
+4. **Parent-backed consumer studies.** The compact in-memory expert PRF API is
    accepted with exact descriptor-to-PRF source binding. Hooke and other
    consumers must still construct and justify their own parent-space targets,
    beginning with the proposed one-center Be `1s/2s` study.
    Transition-density exchange, exact PRF-GTO
    interactions, automatic selection, artifacts, and endpoint acceptance
    remain unapproved.
-4. **Deferred retained-GTO EGOI.** Generic matrix-level EGOI remains
+5. **Deferred retained-GTO EGOI.** Generic matrix-level EGOI remains
    implemented. The specialized retained-GTO adapter is archived rather than
    active; there is no source/test blocker or execution lane.
-5. **Residual spectral interpretation.** Tightening the RG cutoff removed
+6. **Residual spectral interpretation.** Tightening the RG cutoff removed
    marginal residuals but did not remove the measured low two-owner mode.
    Injection and cutoff changes are not substitutes for a separately approved
    safety policy.
-6. **Protected atoms and counterpoise.** One-center protected compactness,
+7. **Protected atoms and counterpoise.** One-center protected compactness,
    separated kinetic/unit-nuclear persistence, and counterpoise sidecars remain
    separate future designs.
-7. **Screened-reference exactness policy.** Current source uses determinant
+8. **Screened-reference exactness policy.** Current source uses determinant
    orbitals for `P0/q0`, the density fit for `E0`, and the fitted potential for
    approximate `J0`, with consistency error reported. Determinant-exact
    `J0/E0` would be a new scientific amendment, not a conformance repair; do

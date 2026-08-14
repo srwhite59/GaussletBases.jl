@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `1cc4f9a64c6e9355a1043b34fd5b03bbf80c4944afc3054c551820f3fe6df6ce`.
+> [authority.toml](authority.toml), SHA-256 `a24b591b97ddec9871dc8cedda58c6039c1c5c9d00f9f32be22d1bfd23a102f5`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2359,6 +2359,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
   - `source` / `existing`: `src/cartesian_reference_density/CartesianReferenceDensity.jl`
   - `source` / `existing`: `src/cartesian_reference_density/represented_molecular_hartree.jl`
+  - `source` / `planned`: `src/cartesian_reference_density/represented_hartree_contractions.jl`
+  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
   - `source` / `existing`: `src/gaussian_coulomb_reference.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/cr2_req084_molecular_full_hartree_capability_2026-08-13.md`
@@ -2366,8 +2368,13 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/req084_cr2_molecular_full_hartree_capability_2026-08-13.md`
   - `manager_pass`: `459`
   - `manager_pass`: `460`
+  - `git_commit`: `a77ceed5d1b1f074c04a2b11cda2b962be2d47a7`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/work/REQ-084/repo_design_manager_scaling_assignment.md`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/req084_cr2_molecular_full_hartree_continuation_preflight_2026-08-14.md`
+  - `manager_pass`: `461`
+  - `manager_pass`: `462`
 - **Dependencies:** `HP-RG-FN-01`, `HP-RG-FN-02`, `HP-RHO0-MIXH-GAAA-FN-01`, `HP-RHO0-MIXH-GG-FN-01`
-- **Scope:** Implement only the private direct represented-density layers: exact native \[G,R\] reconstruction; a nonmaterializing tiled contracted PGDG/Gaussian pair action for complete GG, GA/AG, and AA source products under each expansion exponent; complete materialized target fields; the existing exact one-body transform; and an explicit no-half scalar. Preferred/hard source limits are 350/450 added lines. No dense pair matrix, IDA substitute, fit, quadrature, truncation, screening, root export, atomic regression, or partial scaffolding.
+- **Scope:** Replace the bounded global component-pair production loop with the exact occupied-contracted block/separable action for complete GG, GA/AG, and AA source and target sectors under every expansion term. Revalidate residual cross/identity with the authoritative RG 1e-10/scale-aware 5e-8 contract while keeping state charge/Gram at 1e-10. The correction may add 650 preferred/800 hard source lines but must delete or hard-bound the old unbounded path in the same commit. No fit, screening, truncation, IDA substitute, residual mutation, public API, Cr2 branch, or partial scaffolding.
 
 ### HP-REP-MIXDENS-HARTREE-TEST-01 - represented multicenter mixed-density Hartree validation
 
@@ -2381,7 +2388,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/nested/cartesian_represented_molecular_hartree_runtests.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-REP-MIXDENS-HARTREE-FN-01`
-- **Scope:** Add only the planned bounded multicenter mixed-basis oracle test, capped at 180 lines: charge/Gram reconstruction; isolated and combined GG, GA/AG, and AA source sectors; complete field/native \[G,R\] parity; no-half energy/derivative checks; malformed identity failures; unchanged atomic output; and a two-size no-pair-matrix workspace/resource gate. No Cr2 fixture, solver, or fitted-route test.
+- **Scope:** Extend only the existing bounded mixed-basis test owner by 120 preferred/180 hard lines, with final length at most 360: compare occupied-contracted block/separable GG, GA/AG, and AA sectors and complete native fields with the bounded component and independent Gaussian oracles; distinguish residual 1e-10 cross/scale-aware 5e-8 identity validity from strict 1e-10 state recovery; and validate deterministic two-size contraction/resource accounting plus unchanged atomic and screened owners. No Cr2 fixture, fit, solver, or metadata/status test.
 
 ### HP-REP-XGTO-IMPORT-FN-01 - external GTO orbital import
 

@@ -110,7 +110,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/reference_hart
 sha256 = "043c086bbf17b024ab2546c9b09745ad98dc226b7597992f02c1500a001a48d8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/represented_mixed_density_hartree.md"
-sha256 = "4c8a2be342b126c40477dfed6b50580f7a634bdf314a8d78b6bbef2e64310d1e"
+sha256 = "6690f258a20a7011412b32c2de1ecbe16c9bf1bb5055cba80294d281fa544eb4"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md"
 sha256 = "61408d71a27d419606f13716cd2c1b88035b7449263f2747e1b720b1c32698a3"
@@ -3826,7 +3826,7 @@ dependency_ids = ["HP-RG-FN-01", "HP-RG-FN-02", "HP-RHO0-MIXH-GAAA-FN-01", "HP-R
 grant = "implementation"
 id = "HP-REP-MIXDENS-HARTREE-FN-01"
 lifecycle = "approved"
-scope = "Implement only the private direct represented-density layers: exact native [G,R] reconstruction; a nonmaterializing tiled contracted PGDG/Gaussian pair action for complete GG, GA/AG, and AA source products under each expansion exponent; complete materialized target fields; the existing exact one-body transform; and an explicit no-half scalar. Preferred/hard source limits are 350/450 added lines. No dense pair matrix, IDA substitute, fit, quadrature, truncation, screening, root export, atomic regression, or partial scaffolding."
+scope = "Replace the bounded global component-pair production loop with the exact occupied-contracted block/separable action for complete GG, GA/AG, and AA source and target sectors under every expansion term. Revalidate residual cross/identity with the authoritative RG 1e-10/scale-aware 5e-8 contract while keeping state charge/Gram at 1e-10. The correction may add 650 preferred/800 hard source lines but must delete or hard-bound the old unbounded path in the same commit. No fit, screening, truncation, IDA substitute, residual mutation, public API, Cr2 branch, or partial scaffolding."
 surfaces = ["source"]
 title = "represented multicenter mixed-density direct Hartree producer"
 
@@ -3850,6 +3850,21 @@ title = "represented multicenter mixed-density direct Hartree producer"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "460"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "a77ceed5d1b1f074c04a2b11cda2b962be2d47a7"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/work/REQ-084/repo_design_manager_scaling_assignment.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/req084_cr2_molecular_full_hartree_continuation_preflight_2026-08-14.md"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "461"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "462"
 
     [[records.paths]]
     kind = "source"
@@ -3869,6 +3884,14 @@ title = "represented multicenter mixed-density direct Hartree producer"
     state = "existing"
     [[records.paths]]
     kind = "source"
+    path = "src/cartesian_reference_density/represented_hartree_contractions.jl"
+    state = "planned"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_residual_gaussians/residual_basis.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
     path = "src/gaussian_coulomb_reference.jl"
     state = "existing"
 [[records]]
@@ -3877,7 +3900,7 @@ evidence_refs = []
 grant = "implementation"
 id = "HP-REP-MIXDENS-HARTREE-TEST-01"
 lifecycle = "approved"
-scope = "Add only the planned bounded multicenter mixed-basis oracle test, capped at 180 lines: charge/Gram reconstruction; isolated and combined GG, GA/AG, and AA source sectors; complete field/native [G,R] parity; no-half energy/derivative checks; malformed identity failures; unchanged atomic output; and a two-size no-pair-matrix workspace/resource gate. No Cr2 fixture, solver, or fitted-route test."
+scope = "Extend only the existing bounded mixed-basis test owner by 120 preferred/180 hard lines, with final length at most 360: compare occupied-contracted block/separable GG, GA/AG, and AA sectors and complete native fields with the bounded component and independent Gaussian oracles; distinguish residual 1e-10 cross/scale-aware 5e-8 identity validity from strict 1e-10 state recovery; and validate deterministic two-size contraction/resource accounting plus unchanged atomic and screened owners. No Cr2 fixture, fit, solver, or metadata/status test."
 surfaces = ["tests"]
 title = "represented multicenter mixed-density Hartree validation"
 

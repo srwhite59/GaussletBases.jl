@@ -1,6 +1,8 @@
 # Represented Mixed-Density Hartree Producer
 
-Status: approved internal implementation and bounded validation under
+Status: the bounded exact implementation at `a77ceed5d` is accepted as a small
+oracle, but its production contraction and residual revalidation are not
+Cr2-usable. Their replacement remains approved under
 `HP-REP-MIXDENS-HARTREE-FN-01` and
 `HP-REP-MIXDENS-HARTREE-TEST-01`. No public API, artifact, solver, or Cr2
 endpoint is authorized.
@@ -98,6 +100,40 @@ occupation, or reconstruction mismatch. It must verify that mixed-metric
 orbital Grams and spin traces reproduce the supplied orthonormal final-basis
 state to the declared numerical tolerance. Labels alone are not identity.
 
+### Residual Validity Versus State Accuracy
+
+The residual basis and the represented determinant have different numerical
+contracts. One call-local tolerance must not control both.
+
+An existing `CartesianResidualGaussianBasis` is revalidated with the current
+Residual Gaussian owner rules:
+
+```text
+G_R = T_G + X*T_A
+S_RR = residual_gaussian_overlap(T_G, T_A, X, S_AA)
+
+norm(G_R, Inf) <= 1e-10
+
+identity_error = maximum(abs, S_RR - I)
+identity_scale = maximum(abs, S_RR)
+identity_error <= 5e-8 * (1 + max(1, identity_scale)).
+```
+
+These are the authoritative cross and scale-aware final-identity checks from
+the residual construction contract. Revalidation also requires exact
+dimensions, finite transforms, a supported non-injected native `[G,R]`
+ordering, and matching candidate identity. It does not rerun selection,
+reorthogonalize the basis, change its rank or orientation, or infer validity
+from represented charge.
+
+The represented occupied state is then checked independently at `1e-10` for
+final/mixed Gram recovery and spin-resolved charge recovery. Field symmetry,
+energy closure, and derivatives retain their own later tolerances. No consumer
+may pass a looser residual override to weaken charge, state, field, or
+derivative gates. Diagnostics report the residual cross error, residual
+identity maximum and infinity norms, scale-aware bound, state Gram errors, and
+spin charges separately.
+
 ## Layer 2: Direct Coulomb Potential
 
 `DirectRepresentedHartreePotential` is a private concrete route constructed
@@ -120,11 +156,15 @@ compression must be algebraically exact for the represented density and the
 supplied expansion. It may not fit, truncate, screen, or silently substitute a
 different density.
 
-### Contracted Pair-Product Action
+### Occupied-Contracted Separable Block Action
 
-The production source operation missing at Pass 459 is a nonmaterializing
-contracted PGDG/Gaussian pair-product action. For each occupied spin orbital
-and each Coulomb expansion exponent, it must contract
+The component-pair implementation at `a77ceed5d` is exact on bounded fixtures,
+but it expands the Cr2 state to `116091` source components, then visits
+`6738618186` unique source pairs and `909713455110` high-135 pair terms. That
+ordering is a bounded oracle, not the production action.
+
+For each occupied spin orbital and each Coulomb expansion exponent, the
+production action must still contract
 
 ```text
 rho_GG = sum_s sum_k n[s,k] sum_ij C_G[i,k,s] C_G[j,k,s] G_i G_j
@@ -137,35 +177,71 @@ All diagonal and off-diagonal products are required. The real-orbital
 `GA/AG` multiplicity must be represented exactly once with its factor of two;
 symmetry must not drop transition products or count them twice.
 
-The action consumes block-local terminal parent states and contraction
-coefficients together with explicit supplement primitives. For the separable
-kernel term
+The action first maps each terminal occupied block into its own parent support.
+For terminal block `b`, support map `B_b`, and spin occupations `n_sigma`, form
+only block-local occupied arrays and density tiles:
+
+```text
+D_b_sigma       = B_b * C_G_sigma[b.columns, :]
+P_GG[b,c]       = sum_sigma D_b_sigma * Diagonal(n_sigma) * D_c_sigma'
+P_GA[b,:]       = sum_sigma D_b_sigma * Diagonal(n_sigma) * C_A_sigma'
+P_AA            = sum_sigma C_A_sigma * Diagonal(n_sigma) * C_A_sigma'.
+```
+
+`B_b` is the identity on an identity block and the committed terminal
+coefficient matrix otherwise. The implementation may retain the occupied
+block arrays, but not a global parent density or global parent-pair inventory.
+Supplement contractions remain in the contracted orbital/family
+representation; primitive coefficients are expanded only inside the relevant
+axis contraction.
+
+For the separable kernel term
 
 ```text
 exp(-gamma * |r-r'|^2)
   = product_axis exp(-gamma * (x_axis-x'_axis)^2),
 ```
 
-it constructs or applies the exact one-dimensional polynomial-Gaussian
-source-pair convolution, contracts it immediately with the low-rank occupied
-coefficients, and accumulates the target potential factors. It may tile source
-block pairs and cache repeated one-dimensional state/family factors.
+the implementation builds reusable one-dimensional maps keyed by the explicit
+coupling exponent and the actual source/target state or Gaussian-family pair.
+Each `GG`, `GA/AG`, or `AA` density tile is transformed by a deterministic
+sequence of axis-wise matrix/tensor contractions and accumulated directly into
+one target terminal-block pair, terminal/supplement block, or supplement block.
+It must not implement the six-index operation as scalar source-target quartets.
+
+This changes contraction order only. Every target block receives every source
+sector, and terminal support locality is an execution partition rather than a
+screening rule. No block, coefficient, primitive, or Coulomb term may be
+dropped because it is small or distant.
 
 It must not construct or retain:
 
 - an ordered or compact source-pair Coulomb matrix;
 - a `pair_count x pair_count` kernel;
+- a flattened global list of parent sites plus supplement primitives for the
+  production field path;
+- a global parent coefficient or density matrix when block-local occupied
+  arrays suffice;
 - all terminal/supplement primitive-pair terms at once;
 - dense `P_GG` merely to drive the contraction.
 
 The required dense `GG/GA/AA` output matrices are not forbidden by this rule.
-Workspace and caches must scale with occupied rank, source/target tiles, and
-one-dimensional state/family inventories, not with the square of the global
-source-pair count.
+Apart from those outputs, storage must scale with occupied rank, the sum of
+block-local support arrays, the largest live source/target tensor tile, and
+unique one-dimensional state/family tables. It must not scale as the square of
+the global parent or primitive-component count. Runtime must be stated as the
+sum of the actually scheduled block/tensor contractions under all expansion
+terms, not as a nominal global component-pair loop.
 
 Existing parent/PGDG IDA factors contain charge-density approximations and
 cannot replace `G_i G_j` transition products. Calling the dense
 `gaussian_coulomb_pair_matrix` from production is also forbidden.
+
+The current component-pair loop must be removed from production dispatch. It
+may survive only as an explicitly bounded small-fixture oracle with a hard
+dimension/component guard if that materially simplifies parity testing;
+otherwise the independent Gaussian oracle replaces it. Do not retain two
+unbounded production algorithms.
 
 ### Shared Analytic Kernel
 
@@ -247,7 +323,7 @@ route. A density/potential/field fingerprint mismatch is a hard failure.
 
 ## Initial Internal Surface
 
-The first implementation may add only these private names inside
+The implementation owns only these private names inside
 `CartesianReferenceDensity`:
 
 - `RepresentedMixedDensity`;
@@ -259,13 +335,21 @@ The first implementation may add only these private names inside
 Exact private spelling of the constructors may follow local Julia style, but no
 name is root-exported. Do not add an abstract provider hierarchy, persistent
 artifact shape, metadata carrier, public keyword, or alternate correction
-object.
+object. `ContractedMixedDensityPairAction` should be repurposed as the compact
+occupied-block contraction plan rather than supplemented by a parallel plan
+type. Its variable-size inventories must be vector-backed.
 
 Approved source ownership is limited to:
 
 - private `src/cartesian_reference_density/represented_molecular_hartree.jl`;
+- one private
+  `src/cartesian_reference_density/represented_hartree_contractions.jl` for
+  the occupied-block/separable contraction kernel;
 - `src/cartesian_reference_density/CartesianReferenceDensity.jl` for one
   include;
+- `src/cartesian_residual_gaussians/residual_basis.jl` only to expose one
+  private reusable residual-validity calculation matching its existing
+  construction contract;
 - `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` for narrow reuse
   or generalization of neutral pair-density/potential target kernels;
 - `src/GaussianAnalyticIntegrals.jl` for the narrow shared one-dimensional
@@ -273,8 +357,7 @@ Approved source ownership is limited to:
 - `src/gaussian_coulomb_reference.jl` only to remove duplicated private
   polynomial-kernel algebra and preserve oracle parity.
 
-Existing residual transforms and screened-Hartree assembly are consumers, not
-edit surfaces in this pass.
+Residual selection/construction and screened-Hartree assembly remain unchanged.
 
 ## Bounded Repository Validation
 
@@ -284,7 +367,7 @@ multicenter H2-style or synthetic terminal-plus-supplement fixture, small enough
 for an independent dense primitive-pair oracle built with the same explicit
 Coulomb expansion.
 
-The test must cover:
+The existing bounded exact checks remain and the replacement test must cover:
 
 - alpha, beta, and total mixed-metric charge and final/mixed Gram recovery;
 - nonzero `G-A` source-density terms, so omitting mixed products fails visibly;
@@ -301,15 +384,31 @@ The test must cover:
   density/potential fingerprints;
 - exact unchanged output from the existing same-center atomic path.
 
+The fixture must contain at least two terminal blocks, nontrivial terminal
+contraction coefficients, multiple occupied alpha/beta columns, and translated
+multi-primitive supplement functions. Compare each isolated source sector and
+their sum against both the bounded component-pair result, while retained, and
+the independent dense Gaussian oracle. This must distinguish occupied-first
+block contraction from flattened global pair enumeration.
+
+Add residual-policy checks in which a finite unused residual direction has an
+identity error above `1e-10` but within the scale-aware `5e-8` contract and is
+accepted while strict state charge/Gram checks still pass. A cross error above
+`1e-10`, a scale-aware identity failure, or a state recovery error above
+`1e-10` must fail independently. Do not add an `allow_invalid_residual` or
+consumer-selected tolerance knob.
+
 Add a bounded resource-scaling gate over two fixture sizes. It must report
-occupied rank, source/target dimensions, source block-pair count, retained
-one-dimensional cache entries, output bytes, peak additional workspace, and
-the largest retained workspace shapes. The test and source diff must establish
-structurally that no global pair-index matrix exists; do not add a persistent
-status flag for that claim. The larger fixture must demonstrate that additional
-workspace follows the tiled/action representation rather than global
-source-pair squared or `N^4` storage. Do not turn wall time into a fragile
-committed threshold.
+occupied rank; terminal block/support and supplement orbital/primitive counts;
+evaluated source-sector and target-block contraction counts; unique
+one-dimensional table counts and bytes; output bytes; operation estimates by
+sector; peak additional workspace; and the largest live tile/intermediate
+shapes. Counts must come from the actual deterministic contraction plan. The
+test and source diff must establish structurally that no global component-pair
+inventory or pair-index matrix exists; do not add a persistent status flag for
+that claim. The larger fixture must demonstrate block/occupied scaling rather
+than global source-pair-squared or `N^4` storage. Do not turn wall time into a
+fragile committed threshold.
 
 These are numerical-object tests, not a solver or Cr2 fixture. The test may use
 the existing dense `N^4` Gaussian Coulomb helper only at its bounded oracle
@@ -319,6 +418,14 @@ size; production source must not call it as a large-system backend.
 
 After repository tests and manager review pass, CR2 may run a separate ignored
 or external consumer acceptance against the frozen represented determinant.
+Before entering complete field construction, that consumer must build the
+actual contraction plan and report its exact block/tensor counts, cached
+one-dimensional tables, operation estimate, output bytes, peak workspace, and
+representative warmed sector timings. The producing host gate is provisionally
+`24` hours and `48 GiB`; this is an external workflow stop rule, not a source
+default or runtime promise. If the model cannot defend both bounds, stop before
+the full field rather than committing preflight-only source.
+
 That pass must retain the precommitted REQ-084 gates:
 
 - charge error at most `1e-10 e`;
@@ -340,16 +447,19 @@ does not create a Cr2 default, production endpoint, artifact, or solver path.
 
 ## Failure Rule And Budget
 
-The preferred implementation budget is at most `350` added source lines and
-the hard limit is `450` added source lines across all approved source files,
-including module wiring and any shared-kernel extraction. The existing test
-limit remains `180` added lines in the one planned test file. No other source
-or test file is approved.
+The scaling correction may add at most `650` preferred and `800` hard source
+lines across the approved files, including the one new private contraction file
+and wiring. It must delete or hard-bound the current flattened component-pair
+production loop in the same commit; adding a second unbounded path is not
+accepted. The existing test owner may add `120` preferred and `180` hard lines,
+for a final file no longer than `360` lines. No other source or test file is
+approved.
 
-If a coherent direct implementation exceeds the hard limit, makes the atomic
-path regress, or cannot provide complete raw blocks, make no source commit.
-Report the smallest justified reusable extraction or user-approved budget
-increase. Do not split partial scaffolding across commits.
+If a coherent exact contraction exceeds the hard limits, cannot defend the
+external `24`-hour/`48`-GiB preflight bounds, makes the atomic or screened path
+regress, or cannot provide complete raw blocks, make no source commit. Report
+the smallest justified reusable extraction or budget correction. Do not split
+partial planning/scaffolding from the working numerical replacement.
 
 ## Explicit Non-Goals
 
@@ -362,6 +472,8 @@ This authority does not permit:
 - an occupied-only, external-AO, diagonal, row-gauge, or random-probe substitute;
 - changes to screened-Hartree formulas, `q0/P0`, residual selection, MWG, IDA,
   exchange, EGOI, or one-body physics;
+- residual reorthogonalization, rank/orientation changes, or a call-local
+  validity override;
 - public exports, facade/driver controls, artifacts, sidecars, solvers, SCF/HF,
   or Cr2-specific source behavior;
 - molecular refitting, endpoint interpretation, or a production Cr2 claim.
