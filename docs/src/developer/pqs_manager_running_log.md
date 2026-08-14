@@ -1549,3 +1549,41 @@ Carrying-cost accounting:
   this pass corrects implementation scope without reopening docs migration.
 - **MT6 - active:** shared analytic extraction may reduce duplication, but no
   general ERI framework, provider hierarchy, or partial scaffolding is allowed.
+
+## Cartesian Hamiltonian Producer Pass 461 - Implement Represented Mixed-Density Hartree
+
+Commit(s):
+- this source implementation commit.
+
+Summary:
+- Added the private represented-density, contracted source-pair action, direct
+  potential, and complete field objects. The producer reconstructs the native
+  `[G,R]` state into terminal/supplement coordinates, streams every unordered
+  `GG`, `GA/AG`, and `AA` source pair with exact multiplicity, materializes all
+  three target blocks, applies the existing native transform, and returns the
+  explicit no-half direct scalar.
+- The bounded two-supplement oracle agrees to `8.33e-16` in raw blocks and
+  `3.77e-15` after transformation; charge is `0.7 + 0.4 = 1.1`, and raw/native
+  energy closure is `5.55e-17`. The new owner passed `50/50`; the unchanged
+  screened-Hartree owner passed `93/93`.
+
+Goal advancement / guardrail:
+- MT3 now has the reusable direct producer needed by REQ-084. The implementation
+  retains no global source-pair matrix, but Cr2-scale runtime and full-space
+  accuracy remain unclaimed until the separate consumer acceptance runs.
+
+Carrying-cost accounting:
+- deleted: none; this is a new numerical capability.
+- simplified: reused the existing polynomial-Gaussian primitive, terminal block
+  assembler, supplement inventory, and exact augmented transform instead of
+  adding an ERI backend or duplicate dense production path.
+- quarantined: the dense pair matrix remains bounded test-oracle code; fitting,
+  screening, IDA substitution, and Cr2 policy remain outside this producer.
+- not deleted because: same-center atomic wrappers remain the live accepted fast
+  path and passed unchanged-output checks.
+- exact remaining caller/blocker: external Cr2 charge, complete-field,
+  external-sector, energy, derivative, and resource acceptance.
+- added/deleted `src` lines: `450/0`; new tests: one authorized `180`-line
+  bounded numerical owner; new metadata/status fields: none.
+- validation: package load, represented-Hartree `50/50`, screened-Hartree
+  `93/93`, exact line/scope scan, staged suspicious-line scan, and diff checks.

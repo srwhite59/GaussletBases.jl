@@ -276,6 +276,79 @@ function _fill_mixed_hartree_axis_factor_table!(destination, left, right,
     return destination
 end
 
+function _mixed_hartree_contracted_pair_table(
+    left, left_coefficients, right, right_coefficients,
+    source_left, source_right, coupling_exponent::Float64)
+    kernel = getfield(_GB_PARENT.GaussianAnalyticIntegrals,
+        :polynomial_gaussian_pair_factor_integral)
+    primitive = zeros(Float64, length(left.exponents), length(right.exponents))
+    @inbounds for column in axes(primitive, 2), row in axes(primitive, 1)
+        value = 0.0
+        for source_column in eachindex(source_right.coefficients),
+                source_row in eachindex(source_left.coefficients)
+            value += source_left.coefficients[source_row] *
+                source_right.coefficients[source_column] * kernel(
+                    left.exponents[row], left.centers[row], left.powers[row],
+                    left.prefactors[row], right.exponents[column],
+                    right.centers[column], right.powers[column],
+                    right.prefactors[column], source_left.exponents[source_row],
+                    source_left.centers[source_row], source_left.powers[source_row],
+                    source_left.prefactors[source_row],
+                    source_right.exponents[source_column],
+                    source_right.centers[source_column],
+                    source_right.powers[source_column],
+                    source_right.prefactors[source_column], coupling_exponent)
+        end
+        primitive[row, column] = value
+    end
+    isnothing(left_coefficients) || (primitive = transpose(left_coefficients) * primitive)
+    isnothing(right_coefficients) || (primitive = primitive * right_coefficients)
+    return Matrix{Float64}(primitive)
+end
+function _mixed_hartree_pair_target_axis_tables(
+    proxy_layer, families, source_left, source_right, coupling_exponent::Float64)
+    proxy_inputs = _proxy_axis_factor_inputs(proxy_layer)
+    stencil = Matrix{Float64}(_GB_PARENT.stencil_matrix(proxy_layer))
+    gg = _mixed_hartree_contracted_pair_table(proxy_inputs, stencil,
+        proxy_inputs, stencil, source_left, source_right, coupling_exponent)
+    ga = Matrix{Float64}[
+        _mixed_hartree_contracted_pair_table(proxy_inputs, stencil, family, nothing,
+            source_left, source_right, coupling_exponent)
+        for family in families]
+    aa = Matrix{Float64}[
+        _mixed_hartree_contracted_pair_table(left, nothing, right, nothing,
+            source_left, source_right, coupling_exponent)
+        for left in families, right in families]
+    return (; gg, ga, aa)
+end
+function _accumulate_mixed_hartree_pair_targets!(GA, AA, supplement, inventory,
+    axis_tables, scale::Float64, scratch)
+    fill_product! = getfield(_GB_PARENT, :_qwrg_fill_product_column!)
+    for (orbital_index, orbital) in pairs(supplement.orbitals)
+        ids = ntuple(axis -> inventory.maps[axis][orbital_index], 3)
+        column = view(GA, :, orbital_index)
+        for primitive in eachindex(orbital.coefficients)
+            fill_product!(scratch,
+                view(axis_tables[1].ga[ids[1]], :, primitive),
+                view(axis_tables[2].ga[ids[2]], :, primitive),
+                view(axis_tables[3].ga[ids[3]], :, primitive))
+            column .+= scale * Float64(orbital.coefficients[primitive]) .* scratch
+        end
+    end
+    for left_index in axes(AA, 1), right_index in left_index:size(AA, 2)
+        left, right = supplement.orbitals[left_index], supplement.orbitals[right_index]
+        left_ids = ntuple(axis -> inventory.maps[axis][left_index], 3)
+        right_ids = ntuple(axis -> inventory.maps[axis][right_index], 3)
+        value = scale * _weighted_hadamard3(left.coefficients,
+            axis_tables[1].aa[left_ids[1], right_ids[1]], false,
+            axis_tables[2].aa[left_ids[2], right_ids[2]], false,
+            axis_tables[3].aa[left_ids[3], right_ids[3]], false,
+            right.coefficients)
+        AA[left_index, right_index] += value
+        left_index == right_index || (AA[right_index, left_index] += value)
+    end
+    return nothing
+end
 function _mixed_hartree_ga_block(proxy, supplement, inventory, potential_terms)
     ncart, norbital = proxy.ncart, length(supplement.orbitals)
     GA = zeros(Float64, ncart, norbital)

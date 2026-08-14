@@ -263,7 +263,7 @@ object.
 
 Approved source ownership is limited to:
 
-- planned `src/cartesian_reference_density/represented_molecular_hartree.jl`;
+- private `src/cartesian_reference_density/represented_molecular_hartree.jl`;
 - `src/cartesian_reference_density/CartesianReferenceDensity.jl` for one
   include;
 - `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` for narrow reuse
@@ -278,7 +278,7 @@ edit surfaces in this pass.
 
 ## Bounded Repository Validation
 
-The planned committed test owner is
+The committed test owner is
 `test/nested/cartesian_represented_molecular_hartree_runtests.jl`. Use a small
 multicenter H2-style or synthetic terminal-plus-supplement fixture, small enough
 for an independent dense primitive-pair oracle built with the same explicit

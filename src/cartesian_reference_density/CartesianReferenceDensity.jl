@@ -9,5 +9,6 @@ const _GB_PARENT = parentmodule(@__MODULE__)
 
 include("atomic_hf_reference_packets.jl")
 include("screened_hartree_correction.jl")
+include("represented_molecular_hartree.jl")
 
 end # module CartesianReferenceDensity

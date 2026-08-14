@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `cdea0635f65a79aedabe39ed668e9eae20937ec8118bf56d1b00a1b55ae6b213`.
+> [authority.toml](authority.toml), SHA-256 `1cc4f9a64c6e9355a1043b34fd5b03bbf80c4944afc3054c551820f3fe6df6ce`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2358,7 +2358,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/GaussianAnalyticIntegrals.jl`
   - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
   - `source` / `existing`: `src/cartesian_reference_density/CartesianReferenceDensity.jl`
-  - `source` / `planned`: `src/cartesian_reference_density/represented_molecular_hartree.jl`
+  - `source` / `existing`: `src/cartesian_reference_density/represented_molecular_hartree.jl`
   - `source` / `existing`: `src/gaussian_coulomb_reference.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/cr2_req084_molecular_full_hartree_capability_2026-08-13.md`
@@ -2378,7 +2378,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [represented\_mixed\_density\_hartree.md](represented_mixed_density_hartree.md); heading `Represented Mixed-Density Hartree Producer`
 - **Owned paths:**
-  - `test` / `planned`: `test/nested/cartesian_represented_molecular_hartree_runtests.jl`
+  - `test` / `existing`: `test/nested/cartesian_represented_molecular_hartree_runtests.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-REP-MIXDENS-HARTREE-FN-01`
 - **Scope:** Add only the planned bounded multicenter mixed-basis oracle test, capped at 180 lines: charge/Gram reconstruction; isolated and combined GG, GA/AG, and AA source sectors; complete field/native \[G,R\] parity; no-half energy/derivative checks; malformed identity failures; unchanged atomic output; and a two-size no-pair-matrix workspace/resource gate. No Cr2 fixture, solver, or fitted-route test.

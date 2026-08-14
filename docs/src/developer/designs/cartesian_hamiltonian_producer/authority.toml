@@ -110,7 +110,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/reference_hart
 sha256 = "043c086bbf17b024ab2546c9b09745ad98dc226b7597992f02c1500a001a48d8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/represented_mixed_density_hartree.md"
-sha256 = "3e0678d9ba8aef4e99bc64d1aa74716853ee793729c83c04adf289995d900796"
+sha256 = "4c8a2be342b126c40477dfed6b50580f7a634bdf314a8d78b6bbef2e64310d1e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md"
 sha256 = "61408d71a27d419606f13716cd2c1b88035b7449263f2747e1b720b1c32698a3"
@@ -3866,7 +3866,7 @@ title = "represented multicenter mixed-density direct Hartree producer"
     [[records.paths]]
     kind = "source"
     path = "src/cartesian_reference_density/represented_molecular_hartree.jl"
-    state = "planned"
+    state = "existing"
     [[records.paths]]
     kind = "source"
     path = "src/gaussian_coulomb_reference.jl"
@@ -3889,7 +3889,7 @@ title = "represented multicenter mixed-density Hartree validation"
     [[records.paths]]
     kind = "test"
     path = "test/nested/cartesian_represented_molecular_hartree_runtests.jl"
-    state = "planned"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "maintenance"
