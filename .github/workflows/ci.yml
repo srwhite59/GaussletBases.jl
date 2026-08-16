@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.10"
+
+      - name: Cache Julia artifacts
+        uses: julia-actions/cache@v2
+
+      - name: Instantiate package
+        run: julia --project=. -e 'using Pkg; Pkg.instantiate()'
+
+      - name: Check package load
+        run: julia --project=. -e 'using GaussletBases'
+
+      - name: Run selected tests
+        env:
+          GAUSSLETBASES_TEST_GROUPS: core,ida,cartesian
+          GAUSSLETBASES_SLOW_TESTS: "0"
+        run: julia --project=. -e 'using Pkg; Pkg.test()'

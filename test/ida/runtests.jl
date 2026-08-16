@@ -501,6 +501,7 @@ end
     end
 end
 
+if _RUN_SLOW_TESTS
 @testset "Angular benchmark exact HamV6 bridge export" begin
     benchmark = _atomic_injected_angular_small_ed_benchmark_fixture()
     hf_payload = angular_benchmark_exact_hamv6_payload(
@@ -563,6 +564,7 @@ end
             @test file["basis/l_flat"] == payload.basis_values["l_flat"]
         end
     end
+end
 end
 
 @testset "Atomic export source metadata supports rmax-based recipes" begin

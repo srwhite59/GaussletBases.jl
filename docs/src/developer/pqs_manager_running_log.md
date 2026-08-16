@@ -1628,3 +1628,40 @@ Carrying-cost accounting:
 - validation: source/preflight reconciliation, canonical hash and authority
   render/check/self-test, generated views, docs tests, Documenter,
   manager-log bound, staged docs-only review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 463 - Add Bounded Numerical CI
+
+Commit(s):
+- this package-test and CI wiring commit.
+
+Summary:
+- Added an explicit Julia `Test` target, wired the existing public Cartesian
+  base-Hamiltonian regression as the `:cartesian` test group, and added a
+  push-to-main/pull-request CI job for package load plus the existing `core`,
+  `ida`, and `cartesian` groups. No numerical test, tolerance, fixture, source
+  path, or scientific convention changed.
+- The existing angular exact-HamV6 export benchmark took about fourteen
+  minutes inside the nominally fast IDA owner. It remains unchanged and is now
+  selected by the existing `GAUSSLETBASES_SLOW_TESTS=1` policy; the bounded CI
+  gate leaves slow tests disabled and has a fifteen-minute job timeout.
+
+Goal advancement / guardrail:
+- LT6, MT1, and MT6 gain automatic numerical enforcement for package basics,
+  IDA, and the current public Cartesian H/H2 endpoint. The other standalone
+  nested tests remain manual and are not converted into default development
+  scaffolding. Ordinary-QW endpoint coverage remains a separate lifecycle
+  decision rather than being recreated here.
+
+Carrying-cost accounting:
+- deleted: none.
+- simplified: one existing slow benchmark is now classified by the existing
+  slow-test switch; one test-group entry owns the public Cartesian endpoint.
+- quarantined: the fourteen-minute benchmark remains opt-in slow coverage.
+- not deleted because: the benchmark still protects the exact HamV6 bridge.
+- exact remaining caller/blocker: broader nested and ordinary-QW coverage
+  requires separate runtime and lifecycle decisions.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none.
+- validation: package load; selected `Pkg.test` with `12,734/12,734` assertions
+  in about `1m49s`; terminal due-diligence inspection; workflow/scope review;
+  and `git diff --check`.

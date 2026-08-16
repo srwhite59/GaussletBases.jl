@@ -15,6 +15,7 @@ const _AVAILABLE_TEST_GROUPS = (
     :core,
     :angular,
     :ida,
+    :cartesian,
     :docs,
     :examples,
     :misc,
@@ -892,6 +893,9 @@ if _test_group_enabled(:ida)
     include(joinpath(@__DIR__, "ida", "runtests.jl"))
 end
 
+if _test_group_enabled(:cartesian)
+    include(joinpath(@__DIR__, "driver_public", "cartesian_base_hamiltonian_runtests.jl"))
+end
 
 if _test_group_enabled(:misc)
     include(joinpath(@__DIR__, "misc", "runtests.jl"))
