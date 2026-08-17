@@ -558,7 +558,7 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     source_block = first(block for block in basis.blocks if
         !isnothing(block.coefficients) &&
         length(block.support_indices) > size(block.coefficients, 2))
-    regions = cartesian_parent_residual_regions(base_working)
+    regions = GaussletBases.cartesian_parent_residual_regions(base_working)
     @test length(unique(region.region_key for region in regions)) == length(regions)
     region = only(filter(candidate ->
         candidate.terminal_column_range == source_block.column_range, regions))
@@ -574,13 +574,13 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     prf = C.build_parent_residual_function_block(
         basis, source_block, parent.parent_axis_bundle_object,
         source_block.support_indices, selected_targets)
-    consumer_prf = cartesian_parent_residual_block(
+    consumer_prf = GaussletBases.cartesian_parent_residual_block(
         base_working, region, source_block.support_indices, selected_targets)
     @test consumer_prf.support_indices == prf.support_indices
     @test consumer_prf.coefficients == prf.coefficients
     stale_region = deepcopy(region)
     stale_region.support_indices[1] += 1
-    @test_throws ArgumentError cartesian_parent_residual_block(
+    @test_throws ArgumentError GaussletBases.cartesian_parent_residual_block(
         base_working, stale_region, source_block.support_indices, selected_targets)
     prf_parts = [C.build_parent_residual_function_block(
         basis, source_block, parent.parent_axis_bundle_object,
@@ -659,12 +659,12 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     target_coordinates[1] = cos(0.05)
     target_coordinates[length(source_block.column_range) + 1] = sin(0.05)
     injection_request = (; source_block, prfs = [prf], target_coordinates)
-    additive = cartesian_parent_backed_composition(
+    additive = GaussletBases.cartesian_parent_backed_composition(
         base_working, [(; region, prf = consumer_prf)])
     other_region = only(filter(candidate -> candidate.region_key !== region.region_key, regions))
-    @test_throws ArgumentError cartesian_parent_backed_composition(
+    @test_throws ArgumentError GaussletBases.cartesian_parent_backed_composition(
         base_working, [(; region = other_region, prf = consumer_prf)])
-    @test_throws ArgumentError cartesian_parent_backed_composition(
+    @test_throws ArgumentError GaussletBases.cartesian_parent_backed_composition(
         base_working, [(; region)])
     @test additive.terminal_basis === basis
     @test additive.parent_backed_dimension == basis.final_dimension + 2
@@ -672,7 +672,7 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     composition = C.build_parent_backed_injected_composition(
         basis, parent.parent_axis_bundle_object, [injection_request])
     source_index = findfirst(block -> block === source_block, basis.blocks)
-    consumer_composition = cartesian_parent_backed_composition(base_working,
+    consumer_composition = GaussletBases.cartesian_parent_backed_composition(base_working,
         [(; region, prf = consumer_prf, target_coordinates)]; inject = true)
     @test consumer_composition.terminal_basis.blocks[source_index].coefficients ==
         composition.terminal_basis.blocks[source_index].coefficients
@@ -785,9 +785,9 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     parent_interaction = C.parent_backed_injected_residual_gto_interaction(
         composition, parent.parent_axis_bundle_object, parent_augmentation,
         parent_operators; expansion)
-    consumer_result = cartesian_parent_backed_hamiltonian(
+    consumer_result = GaussletBases.cartesian_parent_backed_hamiltonian(
         base_working, FACADE_SUPPLEMENT, consumer_composition)
-    @test consumer_result isa CartesianParentBackedHamiltonianResult
+    @test consumer_result isa GaussletBases.CartesianParentBackedHamiltonianResult
     @test consumer_result.hamiltonian.kinetic == parent_operators.kinetic
     @test consumer_result.hamiltonian.nuclear_attraction_unit_by_center ==
         parent_operators.nuclear_attraction_unit_by_center
