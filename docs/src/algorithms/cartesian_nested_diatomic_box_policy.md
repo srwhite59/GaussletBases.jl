@@ -11,11 +11,12 @@ bond_aligned_diatomic_nested_fixed_block
 bond_aligned_diatomic_nested_geometry_diagnostics
 ```
 
-`HP-QW-NESTED-DIAT-FN-01` and `HP-QW-NESTED-DIAT-TEST-01` authorize a bounded
-correctness repair. This is a repair decision, not retirement authority and
-not a promotion of the route to PQS/WL production policy. The exports,
-signatures, defaults, coefficients, dimensions, shell policy, geometry, and
-numerical operators remain unchanged outside the defective cases.
+`HP-QW-NESTED-DIAT-FN-01` is implemented and maintained, and
+`HP-QW-NESTED-DIAT-TEST-01` owns the completed regression contract. Commit
+`6a3656991` repaired the three bounded defects below. This is not a promotion
+of the route to PQS/WL production policy. The exports, signatures, defaults,
+coefficients, dimensions, shell policy, geometry, and numerical operators
+remain unchanged outside the repaired cases.
 
 The baseline defects at `754c6dd10` are:
 
@@ -30,7 +31,7 @@ The baseline defects at `754c6dd10` are:
    `shared_shell_endcap_panel_L` controls accepted by the source and fixed-block
    front doors.
 
-The implementation must:
+Maintenance must preserve the landed behavior:
 
 - assemble the existing sequence packet on the no-shared-layer path before a
   fixed block consumes it, without changing a working shared-shell path;
@@ -53,18 +54,18 @@ src/cartesian_nested_diatomic.jl
 src/ordinary_qw_nested_frontends.jl
 ```
 
-The preferred implementation budget is at most `30` added source lines and the
-hard limit is `60`. No root wiring, export, type family, helper file, or new
-public keyword is authorized.
+The accepted repair used `12` added and `8` deleted source lines, within its
+`30/60` preferred/hard budget. No root wiring, export, type family, helper
+file, or new public keyword was added; maintenance does not authorize one.
 
-Validation belongs only in `test/core/runtests.jl`: one bounded legal unsplit
-H2 regression must prove packet availability and successful source/fixed-block
-reuse, and one bounded endcap/panel regression must prove actual provenance and
-nondefault policy/`q`/`L` forwarding through diagnostics. The preferred test
-budget is `45` added lines and the hard limit is `70`; no new test file or
-incidental wiring of historical nested test suites is allowed. Review must also
-compare one already-working default construction with the baseline and require
-unchanged dimensions, coefficients, geometry, and numerical operators.
+Validation belongs only in `test/core/runtests.jl`. Its bounded legal unsplit
+H2 regression proves packet availability and successful source/fixed-block
+reuse. Its endcap/panel regression proves actual provenance and nondefault
+policy/`q`/`L` forwarding through diagnostics. The accepted `57` test lines
+exceed the preferred `45` but remain below the hard limit of `70`; they add no
+test file or historical nested-suite wiring. The baseline shared-shell
+construction remains `539 x 347`, with unchanged geometry, coefficients,
+overlap, and kinetic fingerprints.
 
 This authority does not permit changes to current PQS/WL source-box production,
 ordinary-QW correction or residual policy, shell thresholds/defaults,

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `6b40e02ac8c4260afad605ae19c0c6cfd86fc3273f3e794e4eef126fab52ad3c`.
+> [authority.toml](authority.toml), SHA-256 `2abc832ebc13791517aca3e518bdfe32cda1a09269fa230664e90e5deb3a0123`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1821,8 +1821,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-QW-NESTED-DIAT-FN-01 - repair exported ordinary-QW nested diatomic front doors
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1831,14 +1831,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/cartesian_nested_diatomic.jl`
   - `source` / `existing`: `src/ordinary_qw_nested_frontends.jl`
 - **Evidence:**
+  - `git_commit`: `6a365699102ebe30c31a9499f338cb192334ef1c`
   - `manager_pass`: `472`
+  - `manager_pass`: `474`
 - **Dependencies:** none
-- **Scope:** Repair only the three existing root-exported bond-aligned ordinary-QW nested diatomic front doors: ensure a legal unsplit/no-shared-layer source owns the packet required by fixed-block construction; preserve each shared shell's actual rectangular or endcap/panel provenance without invalid concrete-type coercion; and forward the existing shared-shell policy, q, and L controls through basis-level geometry diagnostics. Preserve source reuse, signatures, exports, defaults, coefficients, dimensions, geometry, shell policy, and numerical operators. Preferred/hard added-source limits are 30/60 lines across the two owned files. Add no helper file, type family, field, metadata, status, keyword, export, adapter, fallback, PQS/WL change, or broader ordinary-QW work.
+- **Scope:** Maintain the three existing root-exported bond-aligned ordinary-QW nested diatomic front doors: a legal unsplit/no-shared-layer source owns the packet required by fixed-block construction; shared shells retain their actual rectangular or endcap/panel provenance without invalid concrete-type coercion; and basis-level geometry diagnostics forward the existing shared-shell policy, q, and L controls. Preserve source reuse, signatures, exports, defaults, coefficients, dimensions, geometry, shell policy, and numerical operators. Add no helper file, type family, field, metadata, status, keyword, export, adapter, fallback, PQS/WL change, or broader ordinary-QW work.
 
 ### HP-QW-NESTED-DIAT-TEST-01 - validate ordinary-QW nested diatomic front-door repairs
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1846,9 +1848,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/core/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `6a365699102ebe30c31a9499f338cb192334ef1c`
   - `manager_pass`: `472`
+  - `manager_pass`: `474`
 - **Dependencies:** `HP-QW-NESTED-DIAT-FN-01`
-- **Scope:** Add exactly two bounded regressions to the existing core owner: a legal unsplit H2 case proving packet availability and source/fixed-block reuse, and an endcap/panel diagnostics case proving actual provenance plus nondefault existing policy/q/L forwarding. Preferred/hard added-test limits are 45/70 lines. Compare one already-working default construction with the baseline for unchanged dimensions, coefficients, geometry, and numerical operators. Add no test file, historical nested-suite wiring, metadata/status assertion, PQS/WL fixture, or numerical-policy change.
+- **Scope:** Maintain exactly two bounded regressions in the existing core owner: a legal unsplit H2 case proving packet availability and source/fixed-block reuse, and an endcap/panel diagnostics case proving actual provenance plus nondefault existing policy/q/L forwarding. Preserve the default baseline checks for unchanged dimensions, coefficients, geometry, overlap, and kinetic operators. Add no test file, historical nested-suite wiring, metadata/status assertion, PQS/WL fixture, or numerical-policy change.
 
 ### HP-R1-ART-01 - public base producer artifact provenance
 

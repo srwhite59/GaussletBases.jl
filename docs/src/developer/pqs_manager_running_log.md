@@ -1077,3 +1077,41 @@ Carrying-cost accounting:
 - validation: both baseline defects reproduced, package load, complete core
   owner `460/460`, focused new regressions `20/20`, anti-bloat review, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 474 - Close Ordinary-QW Diatomic Repair Lifecycle
+
+Commit(s):
+- `6a3656991` - bounded source and regression repair;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted all three repairs under `HP-QW-NESTED-DIAT-FN-01/TEST-01`.
+  The function ID is implemented with maintenance permission; the test ID is
+  completed with maintenance permission. The source now builds the required
+  packet for legal unsplit H2, preserves rectangular or endcap/panel
+  provenance without invalid coercion, and forwards the existing policy,
+  `q`, and `L` diagnostics controls.
+- The working shared-shell route remains `539 x 347`, with unchanged geometry,
+  coefficients, overlap, and kinetic fingerprints. Focused regressions passed
+  `20/20`, the complete core owner passed `460/460`, and package load passed.
+
+Goal advancement / guardrail:
+- MT1 closes the supported-surface conformance repair. Current PQS/WL
+  production, ordinary-QW defaults and numerical policy, correction/residual
+  routes, chain/square construction, represented Hartree, artifacts, drivers,
+  and solvers remain unchanged.
+
+Carrying-cost accounting:
+- deleted: packetless legal no-layer behavior and invalid concrete provenance
+  coercion.
+- simplified: diagnostics reuse the actual provenance vector and normalized
+  frontend context.
+- quarantined: historical nested suites remain unwired.
+- not deleted because: all three root exports retain explicit supported
+  experimental-workflow documentation.
+- exact remaining caller/blocker: none for this repair.
+- added/deleted `src` lines: `12/8`; new tests: two bounded regressions in the
+  existing core owner, `57` lines; new metadata/status fields: none.
+- validation: implementation diff review, package load, `20/20` focused and
+  `460/460` core assertions, authority render/check/self-test, docs tests,
+  Documenter, manager-log bound, docs-only scope review, and `git diff --check`.
