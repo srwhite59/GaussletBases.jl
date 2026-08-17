@@ -146,8 +146,8 @@ Lowdin and construction checks. `pqs_terminal_one_body` and
 `pqs_terminal_ida` own current operator assembly in that realized basis.
 
 The former unit-pair, pair-plan, safe-term, source-shell bridge/readiness, and
-pair-materialization pilots are approved for
-[retirement](designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md).
+pair-materialization pilots were
+[retired](designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md).
 `CartesianPairBlockMaterialization` remains only as the narrow module owner of
 `pqs_source_axis_transforms.jl`, which supplies mapped-COMX axis facts to the
 live route. It is not a general materialization layer.

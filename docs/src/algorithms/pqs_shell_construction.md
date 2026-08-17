@@ -172,8 +172,8 @@ nonzero and remain assembled over terminal block pairs.
   under the
   [contracted-parent/multilayer retirement](../developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md).
   It is not a current terminal-basis donor.
-- The unused source-shell final-basis prototype is approved for deletion under
-  the [pair-ladder retirement](../developer/designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md).
+- The unused source-shell final-basis prototype was deleted under the
+  [pair-ladder retirement](../developer/designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md).
 
 ## Current Implementation Deviations
 

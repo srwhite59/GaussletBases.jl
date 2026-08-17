@@ -2,14 +2,14 @@
 
 ## Status And Authority
 
-This page owns the approved retirement contract for:
+This page records the completed retirement of:
 
 - `HP-RETIRE-PAIR-LADDER-FN-01`;
 - `HP-RETIRE-PAIR-LADDER-TEST-01`.
 
-Status: approved for exact source and tool retirement in Pass 468. The source
-pass is separate. Until it lands, the old modules remain loaded but grant no
-new implementation direction.
+Status: source retirement completed at `32bb3e2a7` and was accepted in Pass
+470. The function ID is retired and the validation ID is completed; neither
+grants further work.
 
 ## Decision
 
@@ -32,9 +32,9 @@ The qualified internal APIs are not public compatibility obligations. Do not
 preserve them through aliases, stubs, deprecations, adapters, moved helpers,
 or replacement tests.
 
-## Exact Retirement Surface
+## Retired Source
 
-Delete these complete source families:
+Pass 469 deleted these complete source families:
 
 ```text
 src/cartesian_unit_pairs/
@@ -43,13 +43,13 @@ src/cartesian_route_core/unit_pairs.jl
 src/cartesian_route_core/pair_operator_plans.jl
 ```
 
-In `src/cartesian_pair_block_materialization/`, delete every file except:
+In `src/cartesian_pair_block_materialization/`, it deleted every file except:
 
 ```text
 pqs_source_axis_transforms.jl
 ```
 
-Delete the orphaned final-basis prototype and standalone wrappers:
+It also deleted the orphaned final-basis prototype and standalone wrappers:
 
 ```text
 src/cartesian_final_basis_realization/pqs_source_shell_final_basis.jl
@@ -58,7 +58,7 @@ modules/CartesianRouteCore.jl
 tools/cartesian_driver_ladder_lib.jl
 ```
 
-Remove only the matching includes, exports, aliases, imports, and obsolete
+It removed only the matching includes, exports, aliases, imports, and obsolete
 module descriptions from:
 
 ```text
@@ -69,10 +69,10 @@ src/cartesian_pair_block_materialization/CartesianPairBlockMaterialization.jl
 ```
 
 `CartesianPairBlockMaterialization` remains loaded only as the narrow internal
-owner of the retained mapped-COMX axis-transform helper. Reduce its wrapper to
-the imports, constant aliases, export, and include required by that helper.
-This is retained numerical ownership, not compatibility glue for the retired
-ladder.
+owner of the retained mapped-COMX axis-transform helper. Its wrapper was
+reduced from `247` to `19` lines containing only the imports, constant aliases,
+export, and include required by that helper. This is retained numerical
+ownership, not compatibility glue for the retired ladder.
 
 ## Mapped-COMX Exception
 
@@ -111,7 +111,7 @@ At baseline `140ac6a8f1346426d1cca4aa364ebfcf4cebbf90`:
 If implementation review finds a live committed caller or side effect, stop
 without committing and report it. Do not narrow the deletion by adding glue.
 
-## Accounting And Budget
+## Accepted Accounting
 
 The audited file content is:
 
@@ -122,14 +122,11 @@ adjacent orphaned final-basis/module/tool files                  +664
 direct old file content to delete or replace                    9,922
 ```
 
-The 247-line CPBM wrapper is replaced by a minimal owner around the retained
-173-line helper. Root include/export/docstring cleanup adds further deletions.
-The source pass must reduce tracked source by at least approximately 9,900
-lines.
-
-At most 30 added source lines are allowed for the reduced CPBM owner. Add no
-new source, test, tool, module, helper, metadata, status vocabulary, artifact,
-or compatibility file. No test edit is authorized.
+The accepted source delta was `+8/-9,950`, net `-9,942` source lines. Including
+the obsolete tool, the complete pass was `+8/-9,951`. The retained
+`pqs_source_axis_transforms.jl` remained byte-for-byte unchanged. No source,
+test, tool, module, helper, metadata, status vocabulary, artifact, or
+compatibility file was added.
 
 ## Preserved Owners
 
@@ -157,28 +154,30 @@ parent and common shellification
 
 It must not present the retired pair ladder as the intended future architecture.
 
-## Validation Contract
+## Accepted Validation
 
-The source pass must:
+The source pass:
 
-1. confirm all retired includes, modules, types, functions, and tool paths are
+1. confirmed all retired includes, modules, types, functions, and tool paths
    absent from committed source;
-2. run package load and the unchanged `core`, `ida`, and `cartesian` groups;
-3. inspect the public Cartesian terminal due-diligence endpoint;
-4. run one transient mapped-COMX terminal construction before and after the
-   deletion and require exact dimension plus coefficient/transform fingerprint
-   parity;
-5. confirm the retained helper path and mapped-COMX authority paths are
-   unchanged;
-6. report exact added/deleted line accounting and the anti-bloat diff scan;
-7. pass `git diff --check`.
+2. passed package load and the unchanged `core`, `ida`, and `cartesian` groups
+   at `12,720/12,720`;
+3. passed the public Cartesian endpoint at `232/232`, with PQS/WL dimensions
+   `487/487`, parent axes `9 x 9 x 15`, and no padding or weight warnings;
+4. reproduced the mapped-COMX construction exactly: source shape `(5,5,5)`,
+   `125` source modes, terminal shape `1331 x 98`, and unchanged ordinary,
+   mapped, and terminal-coefficient fingerprints;
+5. preserved the retained helper path and file bytes exactly;
+6. passed the deleted-symbol, anti-bloat, and `git diff --check` gates;
+7. passed GitHub numerical CI. The first Docs run failed only because machine
+   authority still named the deleted paths; Pass 470 closes that lifecycle.
 
 The existing tests are validation inputs, not edit surfaces. Add no committed
 probe or replacement test for deleted internal APIs.
 
 ## Non-Goals
 
-This authority does not permit:
+This closed authority does not permit:
 
 - a new pair-planning, pair-materialization, provider, or route framework;
 - changes to terminal coefficients, mapped-COMX output, one-body operators,

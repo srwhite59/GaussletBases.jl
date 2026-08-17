@@ -34,9 +34,9 @@ tools/run_cartesian_line_ladder.jl
 ```
 
 `tools/cartesian_driver_ladder_lib.jl` remained quarantined historical support
-after this retirement and is now included in the separately approved
+after this retirement and was later deleted under the separate
 [pair-ladder retirement](cartesian_pair_planning_materialization_retirement.md).
-It is not a canonical workflow or source of driver authority.
+It was not a canonical workflow or source of driver authority.
 
 ## Current Guardrail
 

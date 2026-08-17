@@ -29,7 +29,7 @@ for current route work.
 | --- | --- | --- |
 | CPB block-provider pilot | Deleted in Pass 465: 6,446 source lines, no replacement. | [CPB provider retirement](designs/cartesian_hamiltonian_producer/cartesian_cpb_block_provider_retirement.md) |
 | Contracted-parent/metrics and PQS multilayer route | Deleted in Pass 467: 10,590 tracked lines, no replacement. | [Contracted-parent/multilayer retirement](designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md) |
-| Unit-pair, pair-plan, and pair-materialization ladder | Approved for exact deletion; retain only mapped-COMX axis transforms in a minimal owner. | [Pair-ladder retirement](designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md) |
+| Unit-pair, pair-plan, and pair-materialization ladder | Deleted in Pass 469: 9,942 net source lines; mapped-COMX axis transforms retained in a minimal owner. | [Pair-ladder retirement](designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md) |
 | Route-driver materialization/report/save wrappers | Deleted; canonical driver and direct artifact path remain. | [Route-driver materialization retirement](designs/cartesian_hamiltonian_producer/route_driver_materialization_retirement.md) |
 | QW/high-order experimental and carried-space adapters | Deleted; active QW kernels and chain/square basis types remain separate. | [QW/high-order retirement](designs/cartesian_hamiltonian_producer/qw_high_order_experimental_retirement.md) |
 | Complete-core-shell RHF payload stack | Deleted; no replacement payload or compatibility API. | [RHF retirement](designs/cartesian_hamiltonian_producer/complete_core_shell_rhf_retirement.md) |

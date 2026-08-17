@@ -343,8 +343,7 @@ source CPB_i, source CPB_j
 The current producer realizes terminal blocks directly from the common
 shellification/lowering records and assembles one-body and IDA blocks through
 the terminal operator owners. The former unit-pair, pair-plan, and
-pair-materialization layer is approved for retirement and is not the next CPB
-architecture.
+pair-materialization layer was retired and is not the next CPB architecture.
 
 LW often collapses the intermediate and final stages because its CPB boundary
 strata already live on disjoint shell support. PQS must not collapse them unless

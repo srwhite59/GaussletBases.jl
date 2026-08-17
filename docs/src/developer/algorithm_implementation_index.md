@@ -246,7 +246,7 @@ Source anchors:
 - **retired history**: the deleted contracted-parent/multilayer
   complete-core-shell oracle is recorded in
   `docs/src/developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md`
-- **approved retirement**: the unused source-shell final-basis prototype and
+- **retired history**: the unused source-shell final-basis prototype and
   pair-planning/materialization ladder are owned by
   `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md`
 
@@ -275,7 +275,7 @@ Source anchors:
   `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`
 - **retired history**: the unused contracted-parent source-box shadow and
   private GTO adapter were deleted in Pass 467
-- **approved retirement**: the orphaned source-safe-term, bridge, readiness,
+- **retired history**: the orphaned source-safe-term, bridge, readiness,
   and pair-materialization pilots are not current donor paths
 
 Do-not-forget rule:

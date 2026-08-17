@@ -26,7 +26,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_hami
 sha256 = "1508a43da6534fd71826d956d942068f37ac2eee5e7d106218aec75c49e7454e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md"
-sha256 = "bdef897f73566e5d1d4243dae0c212516a4f8ec50a6e16353e8d7e27b5301790"
+sha256 = "62578861400c82d1521aa1d17df6ca4dc2831d3877e6630c792882e10f4b43e8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
 sha256 = "28882b0681709f2644f499c6c74f2981c94760224a04329a06b223191ffb7a53"
@@ -35,7 +35,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/complete_core_
 sha256 = "99520abb40f2d828f9cd80fb56517259fb20c37310a58924380d3d6c2e00f4be"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md"
-sha256 = "9b4c26235f5ee228f105ee4a54f19a1ffa0f43bc234002a939689e9a6777c672"
+sha256 = "de6d346e8f5abae91343c572fed42006e26d9d07478819e805941d5d10fda63e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
 sha256 = "68cfa9dcc5b5fa59f553f22251e81fcbe5b54bec4bef627b2907cf81db492a36"
@@ -44,7 +44,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_o
 sha256 = "f9d964a80d831836cccf52a13b9590d0fb51acb6eccf24ad24efeb93be3aea76"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md"
-sha256 = "37a26d5443a31c785dc476d75ef60833a7d7147553e989a77656907c00e4d25b"
+sha256 = "51b8c888b36ee2c37db99d2ae90fc458134517173c7421bc85a95876ebf37fe8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/nesting_supplement_composition_plan.md"
 sha256 = "2a5f0d4551f439a2cab5f71f28ce980f1accb48258cdda525e0d95631f66dc61"
@@ -137,7 +137,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/rho0_reference
 sha256 = "d602ec8148cc3476a0f3e1f49d6c5dd206ee5f00b160cfae6969a45f2431feb8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/route_driver_materialization_retirement.md"
-sha256 = "9e151c6e3aad32bec7ec48adf2fb41548bae5b8279d1cb88fd27c21b2b51ebb1"
+sha256 = "7ff8786c73981f68b2dcc21614b8a94cf5f8c94000ac62f45217e629f63a0d63"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/route_stage_metadata_contract.md"
 sha256 = "d81cb6ec3130f34b8a6da7c2d078672ce477bd23b52fc8283c6e809f545fcb46"
@@ -4251,209 +4251,46 @@ title = "ladder runner deletion validation"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/route_driver_materialization_retirement.md"
 [[records]]
 dependency_ids = []
-grant = "retirement"
+grant = "none"
 id = "HP-RETIRE-PAIR-LADDER-FN-01"
-lifecycle = "approved"
+lifecycle = "retired"
+paths = []
 scope = "Delete the orphaned unit-pair, pair-operator-plan, pair-block materialization, source-shell final-basis, standalone module-wrapper, and ladder-tool surfaces exactly as specified, while retaining pqs_source_axis_transforms.jl in place behind a minimal CPBM owner. Add no alias, shim, replacement framework, helper, test, metadata, or status vocabulary; require at least approximately 9,900 net source lines removed and stop if a live caller, side effect, or mapped-COMX output change is found."
-surfaces = ["source", "tools"]
+surfaces = []
 title = "retire orphaned Cartesian pair planning and materialization ladder"
 
     [[records.document_refs]]
     heading = "Cartesian Pair Planning And Materialization Retirement"
-    kind = "canonical"
+    kind = "history"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "32bb3e2a7c58cf935353e34217f4226f84a6557a"
+    [[records.evidence_refs]]
     kind = "manager_pass"
-    value = "468"
-
-    [[records.paths]]
-    kind = "source"
-    path = "modules/CartesianCPB.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "modules/CartesianRouteCore.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/GaussletBases.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_final_basis_realization/pqs_source_shell_final_basis.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/CartesianPairBlockMaterialization.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/direct_kinetic.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/direct_one_body.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/direct_overlap.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/direct_position.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/direct_x2.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/one_body_block_collection.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/one_body_dispatch.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/one_body_factor_inputs.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/one_body_global_kinetic.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/one_body_global_matrix_helpers.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/one_body_global_overlap.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/one_body_global_position.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/one_body_global_x2.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/one_body_placement_plan.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/one_body_terms.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/pqs_source_final_readiness.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/pqs_source_safe_terms.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/pqs_source_shell_bridge.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/pqs_source_shell_final_basis.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/preflight.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/records.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_block_materialization/summaries.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_operator_plans/CartesianPairOperatorPlans.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_operator_plans/plan_inventory.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_operator_plans/records.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_pair_operator_plans/summaries.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_route_core/CartesianRouteCore.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_route_core/pair_operator_plans.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_route_core/unit_pairs.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_unit_pairs/CartesianUnitPairs.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_unit_pairs/pair_inventory.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_unit_pairs/records.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_unit_pairs/summaries.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "tool"
-    path = "tools/cartesian_driver_ladder_lib.jl"
-    state = "existing"
+    value = "470"
 [[records]]
-dependency_ids = ["HP-RETIRE-PAIR-LADDER-FN-01"]
-evidence_refs = []
-grant = "retirement"
+dependency_ids = []
+grant = "none"
 id = "HP-RETIRE-PAIR-LADDER-TEST-01"
-lifecycle = "approved"
+lifecycle = "completed"
+paths = []
 scope = "Run the existing core, ida, and Cartesian endpoint tests unchanged plus one transient before/after mapped-COMX terminal parity construction; add or edit no committed test or probe, and stop for a separate amendment if validation requires test changes."
-surfaces = ["tests"]
+surfaces = []
 title = "validate Cartesian pair-ladder retirement"
 
     [[records.document_refs]]
     heading = "Cartesian Pair Planning And Materialization Retirement"
-    kind = "canonical"
+    kind = "evidence"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md"
 
-    [[records.paths]]
-    kind = "test"
-    path = "test/core/runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/ida/runtests.jl"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "32bb3e2a7c58cf935353e34217f4226f84a6557a"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "470"
 [[records]]
 dependency_ids = []
 evidence_refs = []

@@ -137,9 +137,8 @@ Historical contracted-parent plans may retain a short retirement banner or
 link. They grant no restoration authority.
 
 The no-caller pair-planning/materialization ladder was preserved by Pass 467
-and is separately approved for retirement under
-`HP-RETIRE-PAIR-LADDER-FN-01`. That later decision does not change this pass's
-accepted line accounting or validation.
+and was separately retired under `HP-RETIRE-PAIR-LADDER-FN-01`. That later
+decision does not change this pass's accepted line accounting or validation.
 
 ## Accepted Validation
 

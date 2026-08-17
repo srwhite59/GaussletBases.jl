@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `04129fcd4a5889c6977a04bb09852e086afe647047de167d3301a7c242d41d50`.
+> [authority.toml](authority.toml), SHA-256 `2442f9a264c4bb31fdf7665977c0a5ab168a90d0659c5c11bf03790be19aad13`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2652,72 +2652,32 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-RETIRE-PAIR-LADDER-FN-01 - retire orphaned Cartesian pair planning and materialization ladder
 
-- **Lifecycle:** `approved`
-- **Grant:** `retirement`
-- **Surfaces:** `source`, `tools`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `retired`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
-  - `canonical` [cartesian\_pair\_planning\_materialization\_retirement.md](cartesian_pair_planning_materialization_retirement.md); heading `Cartesian Pair Planning And Materialization Retirement`
-- **Owned paths:**
-  - `source` / `existing`: `modules/CartesianCPB.jl`
-  - `source` / `existing`: `modules/CartesianRouteCore.jl`
-  - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_source_shell_final_basis.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/CartesianPairBlockMaterialization.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/direct_kinetic.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/direct_one_body.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/direct_overlap.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/direct_position.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/direct_x2.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/one_body_block_collection.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/one_body_dispatch.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/one_body_factor_inputs.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/one_body_global_kinetic.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/one_body_global_matrix_helpers.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/one_body_global_overlap.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/one_body_global_position.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/one_body_global_x2.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/one_body_placement_plan.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/one_body_terms.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/pqs_source_final_readiness.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/pqs_source_safe_terms.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/pqs_source_shell_bridge.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/pqs_source_shell_final_basis.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/preflight.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/records.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/summaries.jl`
-  - `source` / `existing`: `src/cartesian_pair_operator_plans/CartesianPairOperatorPlans.jl`
-  - `source` / `existing`: `src/cartesian_pair_operator_plans/plan_inventory.jl`
-  - `source` / `existing`: `src/cartesian_pair_operator_plans/records.jl`
-  - `source` / `existing`: `src/cartesian_pair_operator_plans/summaries.jl`
-  - `source` / `existing`: `src/cartesian_route_core/CartesianRouteCore.jl`
-  - `source` / `existing`: `src/cartesian_route_core/pair_operator_plans.jl`
-  - `source` / `existing`: `src/cartesian_route_core/unit_pairs.jl`
-  - `source` / `existing`: `src/cartesian_unit_pairs/CartesianUnitPairs.jl`
-  - `source` / `existing`: `src/cartesian_unit_pairs/pair_inventory.jl`
-  - `source` / `existing`: `src/cartesian_unit_pairs/records.jl`
-  - `source` / `existing`: `src/cartesian_unit_pairs/summaries.jl`
-  - `tool` / `existing`: `tools/cartesian_driver_ladder_lib.jl`
+  - `history` [cartesian\_pair\_planning\_materialization\_retirement.md](cartesian_pair_planning_materialization_retirement.md); heading `Cartesian Pair Planning And Materialization Retirement`
+- **Owned paths:** none
 - **Evidence:**
-  - `manager_pass`: `468`
+  - `git_commit`: `32bb3e2a7c58cf935353e34217f4226f84a6557a`
+  - `manager_pass`: `470`
 - **Dependencies:** none
 - **Scope:** Delete the orphaned unit-pair, pair-operator-plan, pair-block materialization, source-shell final-basis, standalone module-wrapper, and ladder-tool surfaces exactly as specified, while retaining pqs\_source\_axis\_transforms.jl in place behind a minimal CPBM owner. Add no alias, shim, replacement framework, helper, test, metadata, or status vocabulary; require at least approximately 9,900 net source lines removed and stop if a live caller, side effect, or mapped-COMX output change is found.
 
 ### HP-RETIRE-PAIR-LADDER-TEST-01 - validate Cartesian pair-ladder retirement
 
-- **Lifecycle:** `approved`
-- **Grant:** `retirement`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
-  - `canonical` [cartesian\_pair\_planning\_materialization\_retirement.md](cartesian_pair_planning_materialization_retirement.md); heading `Cartesian Pair Planning And Materialization Retirement`
-- **Owned paths:**
-  - `test` / `existing`: `test/core/runtests.jl`
-  - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
-  - `test` / `existing`: `test/ida/runtests.jl`
-- **Evidence:** none
-- **Dependencies:** `HP-RETIRE-PAIR-LADDER-FN-01`
+  - `evidence` [cartesian\_pair\_planning\_materialization\_retirement.md](cartesian_pair_planning_materialization_retirement.md); heading `Cartesian Pair Planning And Materialization Retirement`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `32bb3e2a7c58cf935353e34217f4226f84a6557a`
+  - `manager_pass`: `470`
+- **Dependencies:** none
 - **Scope:** Run the existing core, ida, and Cartesian endpoint tests unchanged plus one transient before/after mapped-COMX terminal parity construction; add or edit no committed test or probe, and stop for a separate amendment if validation requires test changes.
 
 ### HP-RETIRE-QW-DONOR-FN-01 - retire obsolete QW and high-order experimental source cluster

@@ -1889,3 +1889,56 @@ Carrying-cost accounting:
   render/check/self-test, generated-view parity, focused stale-story scans,
   docs tests, Documenter, manager-log bound, docs-only scope review, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 470 - Close Pair-Ladder Retirement
+
+Commit(s):
+- `32bb3e2a7` - exact source/tool retirement;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the Pass 469 deletion at `+8/-9,950` source lines, net `-9,942`;
+  including the obsolete tool, the pass was `+8/-9,951`. CPBM fell from `247`
+  to `19` lines, with no replacement framework, alias, test, metadata, or
+  compatibility path.
+- `HP-RETIRE-PAIR-LADDER-FN-01` is retired and its validation ID is completed.
+  Deleted paths no longer carry execution ownership. The mapped-COMX helper
+  remains byte-for-byte unchanged at its existing path and retains its active
+  MCOMX owners.
+- Mapped-COMX parity was exact for `(5,5,5)` source dimensions, `125` modes,
+  `1331 x 98` terminal shape, and all axis/terminal fingerprints. Package load,
+  `12,720/12,720` grouped tests, the `232/232` public endpoint, due diligence,
+  and GitHub numerical CI passed. The first Docs run failed only on stale
+  deleted authority paths; this closeout removes them.
+
+Goal advancement / guardrail:
+- MT6 closes a third large no-caller retirement without disturbing current
+  PQS/WL physics. `CartesianParentAxisFactors.jl` remains a separate audit,
+  not implied deletion authority.
+
+Carrying-cost accounting:
+- deleted: pair inventories, pair plans, materialization pilots, source-shell
+  prototype, standalone wrappers, and tombstone tool.
+- simplified: CPBM and surviving route/final-basis module wiring.
+- quarantined: ignored historical probes remain pinned to old commits.
+- not deleted because: mapped-COMX axis transforms have one live producer
+  caller and independent authority.
+- exact remaining caller/blocker: none for this retirement.
+- added/deleted `src` lines: `8/9,950`; new tests: none; new metadata/status
+  fields: none.
+- validation: source/caller diff review, package/numerical gates, mapped-COMX
+  parity, terminal due diligence, authority render/check/self-test, docs tests,
+  Documenter, manager-log bound, and `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 470
+
+- **MT1 - active:** conformance remediation remains separate from retirements.
+- **MT2 - completed:** the controlled Cr2 source migration remains closed.
+- **MT3 - active:** Standard60 and scalable represented Hartree remain the
+  pending producer facilities; paper-oracle interpretation stays external.
+- **MT4 - active:** residual/protected evidence and consumer-selected PRFs are
+  unchanged.
+- **MT5 - maintenance:** machine authority again matches the source tree and
+  generated views after lifecycle closeout.
+- **MT6 - active:** the pair ladder is fully removed. Further cleanup requires
+  a fresh caller/capability audit and must preserve current endpoints.

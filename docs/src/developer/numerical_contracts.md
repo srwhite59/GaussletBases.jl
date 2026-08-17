@@ -63,8 +63,8 @@ The active PQS/White--Lindsey producer realizes terminal blocks on disjoint
 owned support and assembles exact one-body and IDA operators through current
 terminal owners. Retained-unit and transform-contract records may feed that
 construction, but the former unit-pair index, pair-operator-plan, source-safe
-term, bridge/readiness, and pair-block-materialization ladder is approved for
-[retirement](designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md).
+term, bridge/readiness, and pair-block-materialization ladder was
+[retired](designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md).
 
 Old decomposed-WL pair-count ladders, timing tables, local block placement
 results, and He/H2 acceptance numbers were development evidence for that

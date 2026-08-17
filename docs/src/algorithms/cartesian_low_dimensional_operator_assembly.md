@@ -128,8 +128,8 @@ model choice, not a failed attempt to store full four-index ERIs.
 
 The obsolete multilayer complete-core-shell path was
 [retired](../developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md).
-The unused source-safe-term/pair-materialization pilot is separately approved
-for [retirement](../developer/designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md).
+The unused source-safe-term/pair-materialization pilot was separately
+[retired](../developer/designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md).
 
 ## Current Implementation Deviations
 

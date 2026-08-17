@@ -112,10 +112,11 @@ Source-span construction:
   reduced `CartesianPairBlockMaterialization` module, in
   `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`.
 
-The former unit-pair, pair-plan, and pair-materialization ladder is separately
-approved for retirement. That retirement keeps this file, function, module
-path, and numerical behavior unchanged; it does not move mapped-COMX ownership
-or turn the retained module into a general materialization layer.
+The former unit-pair, pair-plan, and pair-materialization ladder was
+separately retired. That retirement kept this file byte-for-byte unchanged
+and preserved its function, module path, and numerical behavior; it did not
+move mapped-COMX ownership or turn the retained module into a general
+materialization layer.
 
 Terminal consumption:
 

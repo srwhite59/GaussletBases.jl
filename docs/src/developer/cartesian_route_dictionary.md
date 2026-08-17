@@ -14,8 +14,8 @@ terminal realization builds basis functions
 operator assembly builds H1 and IDA in that realized basis
 ```
 
-The old unit-pair, pair-operator-plan, and pair-block-materialization ladder is
-approved for [retirement](designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md).
+The old unit-pair, pair-operator-plan, and pair-block-materialization ladder was
+[retired](designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md).
 Its types and status vocabulary are historical, not the intended architecture.
 
 ## Current Route Map
