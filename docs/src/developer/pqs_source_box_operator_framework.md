@@ -18,9 +18,9 @@ PQS is source-box first:
 filled raw product source CPB
 -> one-dimensional COMX/product source transforms
 -> boundary product-mode retained rule
--> source-space operator factors / pair plans
--> optional shell realization or support-row adapter
--> final retained blocks and diagnostics
+-> restrict to authoritative owned shell support
+-> shell-local realization and canonicalization
+-> terminal one-body and IDA assembly
 ```
 
 The raw product-box stage and shell-realization stage are distinct. Boundary
@@ -71,7 +71,7 @@ No shell-row projection, Lowdin cleanup, final retained weights, density
 normalization, Hamiltonian export, or artifact writing belongs in this raw
 source-box reference stage.
 
-## Source Pair Operators
+## Operator Construction
 
 Retained source blocks should be ordinary transformed raw-source blocks:
 
@@ -79,9 +79,9 @@ Retained source blocks should be ordinary transformed raw-source blocks:
 O_retained = T_left' * O_raw_product(left, right) * T_right
 ```
 
-This framing should cover direct slabs, rectangular source boxes, PQS shells,
-PQS/product mixed blocks, and later supplement/source adapters without adding a
-new special Hamiltonian case for each pair family.
+This framing describes the low-dimensional contraction, not a separate
+unit-pair planning API. The current producer assembles terminal block pairs
+directly through the terminal one-body and IDA owners.
 
 Safe one-body source terms are overlap, position, `x2`, and kinetic. For
 electron-electron or IDA-style terms, keep the Gaussian expansion/factor index
@@ -140,20 +140,17 @@ source-mode boundary selector facts tied to raw source ordering. It does not
 own retained-rule policy, shell projection, Lowdin cleanup, final retained
 units, IDA weights, pair blocks, Hamiltonians, exports, or artifacts.
 
-`CartesianPairOperatorPlans` consumes retained-unit pairs plus retained-unit
-transform contracts. It must not infer realization paths directly from
-retained-unit kinds.
-
-`CartesianPairBlockMaterialization` may materialize safe source-space one-body
-blocks and adapter summaries. Metadata-only bridge/readiness summaries are not
-route authority and must not grow into Hamiltonian, export, artifact, Coulomb,
-IDA/MWG, or public-driver surfaces.
-
 `pqs_terminal_basis_realization` is the active terminal realization surface for
 PQS shells. It realizes boundary source modes on owned support with shell-local
-Lowdin and construction checks. Older complete-core/shell or source-shell
-helpers are donor/oracle/reference material unless the current design docs say
-otherwise.
+Lowdin and construction checks. `pqs_terminal_one_body` and
+`pqs_terminal_ida` own current operator assembly in that realized basis.
+
+The former unit-pair, pair-plan, safe-term, source-shell bridge/readiness, and
+pair-materialization pilots are approved for
+[retirement](designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md).
+`CartesianPairBlockMaterialization` remains only as the narrow module owner of
+`pqs_source_axis_transforms.jl`, which supplies mapped-COMX axis facts to the
+live route. It is not a general materialization layer.
 
 ## Common Shell Geometry
 

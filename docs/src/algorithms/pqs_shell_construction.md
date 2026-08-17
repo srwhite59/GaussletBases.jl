@@ -165,16 +165,15 @@ nonzero and remain assembled over terminal block pairs.
 
 - `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
   owns the current terminal block-local realization contract.
-- `src/cartesian_final_basis_realization/pqs_source_shell_final_basis.jl`
-  is a donor/reference path only where it still preserves older shell
-  projection vocabulary; it is not current terminal support authority.
 - `src/cartesian_shellification/terminal_geometry.jl` implements the
   diatomic atom-contact core seed-box hull rule and terminal region coverage
   checks before lowering.
-- The obsolete complete-core-shell and multilayer oracle route is approved for
-  deletion under the
+- The obsolete complete-core-shell and multilayer oracle route was deleted
+  under the
   [contracted-parent/multilayer retirement](../developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md).
   It is not a current terminal-basis donor.
+- The unused source-shell final-basis prototype is approved for deletion under
+  the [pair-ladder retirement](../developer/designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md).
 
 ## Current Implementation Deviations
 

@@ -1843,3 +1843,49 @@ Carrying-cost accounting:
   numerical gates, terminal due diligence, GitHub numerical CI, authority
   render/check/self-test, generated-view parity, docs tests, Documenter,
   manager-log bound, docs-only scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 468 - Authorize Pair-Ladder Retirement
+
+Commit(s):
+- this docs-only retirement-authority commit.
+
+Summary:
+- Approved exact retirement of the unused unit-pair, pair-operator-plan,
+  pair-block materialization, source-shell final-basis, standalone module, and
+  ladder-tool surfaces. The audited old file content is `9,922` lines before
+  the small retained-owner rewrite; the implementation must remove at least
+  approximately `9,900` net source lines and add no replacement framework,
+  adapter, helper, metadata, status vocabulary, or test.
+- Preserved `pqs_source_axis_transforms.jl` at its current path as the sole
+  continuing numerical role of a reduced `CartesianPairBlockMaterialization`
+  module. Its mapped-COMX dimensions, coefficients, transform fingerprints,
+  ordinary fallback, and two existing authority owners must remain unchanged.
+- Corrected active route documentation to end at terminal realization and
+  direct one-body/IDA assembly rather than the abandoned pair ladder. The
+  route dictionary, retirement ledger, and numerical-contract page were
+  compressed; this docs pass is net `-1,126` lines including generated views
+  and this ledger entry.
+
+Goal advancement / guardrail:
+- MT6 advances through another evidence-backed no-caller retirement. The next
+  pass is exact deletion and current-endpoint validation, not route redesign.
+  The authority checker now recognizes exact tracked `modules/` wrappers as
+  source paths so their deletion is machine-authorized rather than implicit.
+
+Carrying-cost accounting:
+- deleted: duplicated active documentation for the abandoned pair ladder.
+- simplified: CPB, source-box, operator, and route vocabulary now point to the
+  live terminal owners and one explicit mapped-COMX exception.
+- quarantined: ignored historical probes and old pair-ladder evidence may stay
+  pinned to the pre-retirement commit.
+- not deleted because: current shellification, lowering, retained-unit,
+  transform-contract, terminal, raw-block, residual, and Hamiltonian owners
+  have independent live consumers.
+- exact remaining caller/blocker: delete the authorized source/tool paths and
+  prove before/after mapped-COMX terminal fingerprint parity.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none.
+- validation: exact caller/path/line audit, canonical hash update, authority
+  render/check/self-test, generated-view parity, focused stale-story scans,
+  docs tests, Documenter, manager-log bound, docs-only scope review, and
+  `git diff --check`.

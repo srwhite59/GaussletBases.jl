@@ -12,8 +12,9 @@ ID is retired and the validation ID is completed; neither grants further work.
 
 The retirement removes an orphaned experimental provider pilot. It does not
 retire Cartesian coordinate-product-box geometry, parent-axis factors,
-Gaussian raw-block kernels, pair materialization, terminal realization, or any
-current Hamiltonian producer.
+Gaussian raw-block kernels, terminal realization, or any current Hamiltonian
+producer. The pair-planning/materialization ladder was preserved in this pass
+and is now governed by a separate retirement contract.
 
 ## Retirement Decision
 
@@ -121,8 +122,13 @@ The retirement must not delete, move, or reinterpret:
   `src/cartesian_gaussian_raw_blocks/`;
 - Cartesian terminal, PQS, White--Lindsey, PRF, residual-GTO, and
   represented-Hartree owners;
-- `src/cartesian_pair_block_materialization/`;
+- the mapped-COMX axis-transform helper retained in
+  `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`;
 - contracted-parent and multilayer source surfaces.
+
+The pair-planning/materialization ladder and the contracted-parent/multilayer
+cluster received later independent retirement decisions. Their deletion does
+not amend the provider retirement evidence.
 
 The old CPB overlap-placement ladder and CPB-provider destinations in cleanup
 notes become historical evidence only. They grant no replacement or deletion
@@ -147,9 +153,10 @@ justified for a deleted API with no committed consumer.
 
 ## Non-Goals
 
-This authority does not permit:
+This closed authority does not itself permit:
 
-- pair-materialization, contracted-parent, or multilayer deletion;
+- pair-materialization, contracted-parent, or multilayer deletion; those
+  surfaces require their separate retirement records;
 - changes to CPB geometry, parent factors, raw Gaussian blocks, terminal
   realization, PQS/WL, PRFs, residual Gaussians, represented Hartree, IDA, MWG,
   artifacts, drivers, or solvers;

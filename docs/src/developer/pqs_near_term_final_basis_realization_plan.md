@@ -6,6 +6,9 @@
 > contracted-parent, multilayer, and complete-core-shell implementation
 > described below was deleted in Pass 467 under
 > [HP-RETIRE-CONTRACTED-PARENT-FN-01](designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md).
+> Its pair-plan/materialization and source-shell final-basis prototypes are
+> separately approved for deletion under
+> [HP-RETIRE-PAIR-LADDER-FN-01](designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md).
 > Retain this page only as design history; do not use its prospective status or
 > source map for implementation work.
 

@@ -12,7 +12,8 @@ Status: source retirement completed at `7fbe512dc` and was accepted in Pass
 grants further work. Current PGDG parent, source-box-first PQS contraction,
 White--Lindsey realization, terminal basis, PRF mechanics, pair
 materialization, Gaussian raw blocks, represented Hartree, and IDA assembly
-remain unchanged.
+were unchanged by this retirement. The pair ladder now has its own later
+retirement contract.
 
 ## Decision
 
@@ -124,7 +125,8 @@ The accepted deletion did not delete, move, or reinterpret:
 - `src/CartesianParentGaussletBases.jl` and
   `src/CartesianParentAxisFactors.jl`;
 - current shellification and terminal PQS/White--Lindsey realization;
-- `src/cartesian_pair_block_materialization/`;
+- the mapped-COMX axis-transform helper under
+  `src/cartesian_pair_block_materialization/`;
 - Gaussian analytic and raw-block owners;
 - source-shell realization, PRF, residual-GTO, represented-Hartree, and IDA
   facilities;
@@ -133,6 +135,11 @@ The accepted deletion did not delete, move, or reinterpret:
 
 Historical contracted-parent plans may retain a short retirement banner or
 link. They grant no restoration authority.
+
+The no-caller pair-planning/materialization ladder was preserved by Pass 467
+and is separately approved for retirement under
+`HP-RETIRE-PAIR-LADDER-FN-01`. That later decision does not change this pass's
+accepted line accounting or validation.
 
 ## Accepted Validation
 

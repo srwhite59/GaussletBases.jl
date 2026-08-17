@@ -108,8 +108,14 @@ inspect mapped orders, expose high-order controls, or add another route.
 Source-span construction:
 
 - `src/cartesian_nested_faces.jl`;
-- narrow source-axis plumbing in
+- narrow source-axis plumbing, and the sole continuing numerical role of the
+  reduced `CartesianPairBlockMaterialization` module, in
   `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`.
+
+The former unit-pair, pair-plan, and pair-materialization ladder is separately
+approved for retirement. That retirement keeps this file, function, module
+path, and numerical behavior unchanged; it does not move mapped-COMX ownership
+or turn the retained module into a general materialization layer.
 
 Terminal consumption:
 

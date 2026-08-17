@@ -327,7 +327,7 @@ Shell realization
     direct or trivial.
 
 Final retained unit
-    Column-owning unit consumed by pair planning and Hamiltonian assembly.
+    Column-owning unit consumed by terminal realization and operator assembly.
 ```
 
 The common operator pattern should be:
@@ -340,15 +340,11 @@ source CPB_i, source CPB_j
 -> final retained operator block
 ```
 
-The current private mixed one-body consumer lives at the pair-block
-materialization layer, after pair planning has produced a
-`PairBlockMaterializationPlan`. It consumes one safe one-body term plus
-caller-supplied factor/provider facts and dispatches to existing local
-direct/direct, PQS/PQS raw source-space, and White-Lindsey boundary-stratum
-adapter selectors. Its output is a local batch result plus compact summary.
-It is not route-driver wiring, global operator assembly, Hamiltonian assembly,
-Coulomb, IDA/MWG, artifact/export, PQS shell projection/Lowdin, or full
-White-Lindsey route assembly.
+The current producer realizes terminal blocks directly from the common
+shellification/lowering records and assembles one-body and IDA blocks through
+the terminal operator owners. The former unit-pair, pair-plan, and
+pair-materialization layer is approved for retirement and is not the next CPB
+architecture.
 
 LW often collapses the intermediate and final stages because its CPB boundary
 strata already live on disjoint shell support. PQS must not collapse them unless
@@ -362,7 +358,8 @@ Each layer should have one main output type.
 shellification -> ShellificationRegion / owned shell support
 lowering       -> CPBs plus a lowering recipe
 construction   -> intermediate and final retained spaces
-pair planning  -> pairs of final retained units
+realization    -> terminal basis blocks and native column ranges
+operators      -> terminal block-pair H1 and IDA assembly
 ```
 
 In this vocabulary, **atom-growth** is a shellification policy, not the name of
@@ -391,9 +388,9 @@ product source domain; selected source modes are later realized back onto the
 owned shell support by projection and cleanup.
 
 Thus the layers should not leak into each other: shellification should not own
-face/edge/corner or COMX-mode decisions, and pair planning should not start from
-shells or source CPBs directly. Pair planning starts after construction, from
-final retained units that keep links back to their owned support, source CPBs,
+face/edge/corner or COMX-mode decisions, and operator assembly should not
+rediscover geometry from shells or source CPBs. It consumes realized terminal
+blocks whose retained contracts keep links back to owned support, source CPBs,
 intermediate retained space, shell realization, and lowering recipe.
 
 ## Suggested object vocabulary
@@ -417,14 +414,7 @@ ShellRealization
     Optional projection/cleanup map from intermediate space to final support.
 
 FinalRetainedUnit
-    Column-owning retained object used by pair planning.
-
-UnitPair
-    Upper-triangular pair of final retained units.
-
-PairOperatorBlock
-    Operator block between units. It should record whether it came from a
-    source-CPB algorithm, a materialized adapter, or an oracle.
+    Column-owning retained object consumed by terminal realization.
 ```
 
 For LW, lowering sources are commonly:
@@ -449,8 +439,8 @@ PQSShellRealization
 Future implementation work should follow these rules:
 
 1. Do not call `B_outer \ B_inner` a CPB. It is owned support or shell support.
-2. Do not treat LW face/edge/corner strata as the universal model for pair
-   blocks. They are one lowering recipe.
+2. Do not treat LW face/edge/corner strata as the universal operator model.
+   They are one lowering recipe.
 3. Do not treat PQS shell-row projection plus Lowdin as the raw product-box
    operator construction. It is shell realization.
 4. Do not introduce dense parent-space operator construction as the PQS
@@ -458,14 +448,31 @@ Future implementation work should follow these rules:
    source CPBs.
 5. Do distinguish `owned_support`, `source_cpb`, `intermediate_retained_space`,
    `shell_realization`, and `final_retained_unit` in new contracts.
-6. When validating current LW materialization, label packet slicing or
-   fixed-block slicing as an adapter or oracle unless it is the intended
-   algorithmic pair-block path.
+6. Label old packet/fixed-block slicing as historical oracle evidence, not a
+   current operator path.
 7. When adding PQS to the driver, introduce it as a lowering recipe for a
    shellification region through a filled source CPB, not as a parallel broad
    route that bypasses the shared geometry/source/realization vocabulary.
 
-## Minimal flow diagrams
+## Current Minimal Flow Diagrams
+
+The unit-pair and pair-materialization diagrams formerly below this heading
+are superseded by the
+[pair-ladder retirement](designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md).
+The current flow ends in direct terminal realization and operator assembly:
+
+```text
+parent lattice
+-> shellification regions with disjoint owned support
+-> source CPBs and lowering recipes
+-> retained units and transform contracts
+-> PQS or White-Lindsey terminal realization
+-> exact one-body and IDA assembly
+```
+
+The detailed adapter, readiness, pair-inventory, and local materialization
+narrative that follows is historical development evidence only. It does not
+grant source authority or describe the intended route after retirement.
 
 Common early route:
 

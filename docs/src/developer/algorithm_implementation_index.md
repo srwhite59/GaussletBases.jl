@@ -240,11 +240,15 @@ Key docs:
 Source anchors:
 - **active reusable kernel**:
   `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
-- **active donor pattern**:
-  `src/cartesian_final_basis_realization/pqs_source_shell_final_basis.jl`
+- **active operator owners**:
+  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`,
+  `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`
 - **retired history**: the deleted contracted-parent/multilayer
   complete-core-shell oracle is recorded in
   `docs/src/developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md`
+- **approved retirement**: the unused source-shell final-basis prototype and
+  pair-planning/materialization ladder are owned by
+  `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md`
 
 Do-not-forget rule:
 Use `inv(sqrt(Symmetric(overlap)))` for symmetric Lowdin. Build from raw
@@ -265,10 +269,14 @@ Key docs:
 
 Source anchors:
 - **active reusable kernel**: `src/cartesian_route_core/retained_spaces.jl`
-- **oracle/reference only**:
-  `src/cartesian_pair_block_materialization/pqs_source_safe_terms.jl`
+- **active terminal consumer**:
+  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+- **mapped-COMX axis facts only**:
+  `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`
 - **retired history**: the unused contracted-parent source-box shadow and
   private GTO adapter were deleted in Pass 467
+- **approved retirement**: the orphaned source-safe-term, bridge, readiness,
+  and pair-materialization pilots are not current donor paths
 
 Do-not-forget rule:
 COMX boundary product modes define retained source modes. Support rows and

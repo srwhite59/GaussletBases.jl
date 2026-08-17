@@ -190,6 +190,9 @@ ID or subsystem.
 - [Cartesian CPB block-provider retirement](cartesian_cpb_block_provider_retirement.md)
   records completed removal of the orphaned provider pilot while preserving
   active CPB geometry, parent factors, raw blocks, and producer routes
+- [Cartesian pair planning and materialization retirement](cartesian_pair_planning_materialization_retirement.md)
+  authorizes removal of the unused pair ladder while retaining the mapped-COMX
+  axis-transform owner at its current path
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 ## Contracts, Amendments, And Completed Records

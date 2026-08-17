@@ -260,7 +260,7 @@ shape; it reports and validates the source-backed construction.
 
 Physical nuclear attraction must use the actual two centers through the
 existing arbitrary-center kernel. No route may use
-`pqs_source_shell_realization_final_basis`, CPBM source-shell bridge/readiness
+the retired source-shell final-basis prototype, source-shell bridge/readiness
 paths, or shell/support-row compatibility materialization. The supplemented
 preflight instead uses the existing supplemented working-basis seam exactly as
 specified below; it remains the separately frozen neutral-H2 endpoint.

@@ -310,14 +310,15 @@ function _path_errors(item, id, index, tracked)
         push!(errors, "$id.paths[$index] existing filesystem object must be a file: $path")
 
     prefixes = Dict(
-        "source" => "src/",
-        "test" => "test/",
-        "tool" => "tools/",
-        "driver" => "bin/",
-        "docs" => "docs/",
-        "measurement" => "tmp/work/",
+        "source" => ("src/", "modules/"),
+        "test" => ("test/",),
+        "tool" => ("tools/",),
+        "driver" => ("bin/",),
+        "docs" => ("docs/",),
+        "measurement" => ("tmp/work/",),
     )
-    startswith(path, prefixes[kind]) || push!(errors, "$id.paths[$index] has wrong prefix: $path")
+    any(prefix -> startswith(path, prefix), prefixes[kind]) ||
+        push!(errors, "$id.paths[$index] has wrong prefix: $path")
     state == "existing" && (!isfile(absolute) || !(path in tracked)) &&
         push!(errors, "$id.paths[$index] existing path must be a tracked file: $path")
     state == "planned" && path in tracked && push!(errors, "$id.paths[$index] planned path is tracked: $path")
