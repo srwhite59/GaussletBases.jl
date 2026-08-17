@@ -27,13 +27,11 @@ jobs:
           julia --startup-file=no --project=docs docs/check_cartesian_authority.jl --self-test
 
   docs:
+    if: github.event_name == 'pull_request'
     needs: cartesian-authority
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      actions: write
-      pull-requests: read
-      statuses: write
+      contents: read
 
     steps:
       - name: Check out repository
@@ -51,4 +49,32 @@ jobs:
         run: julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
 
       - name: Build docs
+        run: julia --project=docs docs/make.jl
+
+  docs-deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: cartesian-authority
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.10"
+
+      - name: Cache Julia artifacts
+        uses: julia-actions/cache@v2
+
+      - name: Instantiate docs environment
+        run: julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+
+      - name: Build and deploy docs
+        env:
+          GAUSSLETBASES_DOCS_DEPLOY: "true"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: julia --project=docs docs/make.jl
