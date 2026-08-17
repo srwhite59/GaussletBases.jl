@@ -7,8 +7,6 @@ This module owns the common terminal-basis object consumed by the staged
 Cartesian Hamiltonian producer. It realizes PQS terminal shells, the narrow
 White-Lindsey low-order terminal-basis seam, terminal one-body products, IDA
 interaction assembly, and Residual-Gaussian augmented-operator compatibility
-helpers. It also keeps older PQS shell-support projection and complete
-core/shell final-basis utilities used by live reference and migration paths.
 
 It does not build raw source operator blocks, pair-block materialization
 records, by-center nuclear CPBM result blocks, RHF results, driver public
@@ -42,10 +40,6 @@ export pqs_source_shell_realization_final_basis,
 #     shell-support oracle projection, and retained-boundary one-body transfer.
 include("pqs_source_shell_final_basis.jl")
 
-# pqs_complete_core_shell_final_basis.jl
-#     Direct-core plus surrounding-shell final-basis realization, one-body
-#     transfer, H1 solve, and localized IDA density-interaction seam.
-include("pqs_complete_core_shell_final_basis.jl")
 
 include("terminal_face_product_blocks.jl")
 include("pqs_terminal_basis_realization.jl")
