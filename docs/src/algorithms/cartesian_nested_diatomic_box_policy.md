@@ -1,5 +1,78 @@
 # Cartesian Nested Diatomic Box Policy
 
+## Exported Front-Door Maintenance Contract
+
+The root-exported ordinary-QW entry points remain supported experimental
+workflows:
+
+```julia
+bond_aligned_diatomic_nested_fixed_source
+bond_aligned_diatomic_nested_fixed_block
+bond_aligned_diatomic_nested_geometry_diagnostics
+```
+
+`HP-QW-NESTED-DIAT-FN-01` and `HP-QW-NESTED-DIAT-TEST-01` authorize a bounded
+correctness repair. This is a repair decision, not retirement authority and
+not a promotion of the route to PQS/WL production policy. The exports,
+signatures, defaults, coefficients, dimensions, shell policy, geometry, and
+numerical operators remain unchanged outside the defective cases.
+
+The baseline defects at `754c6dd10` are:
+
+1. A legal unsplit H2 source with no shared-shell layers may return its child
+   sequence without the packet required by fixed-block construction.
+2. Endcap/panel provenance is a structured record distinct from
+   `_CartesianNestedShellLayerProvenance3D`; forcing it into that concrete
+   vector type raises a `MethodError` and discards the route's real provenance
+   contract.
+3. The basis-level geometry-diagnostics overload omits the existing
+   `shared_shell_layer_policy`, `shared_shell_endcap_panel_q`, and
+   `shared_shell_endcap_panel_L` controls accepted by the source and fixed-block
+   front doors.
+
+The implementation must:
+
+- assemble the existing sequence packet on the no-shared-layer path before a
+  fixed block consumes it, without changing a working shared-shell path;
+- carry each shell layer's actual provenance through the common diagnostics
+  result without coercing endcap/panel provenance into the rectangular-shell
+  type;
+- forward the three existing shared-shell policy/order keywords through the
+  basis-level diagnostics overload using the same normalized frontend context
+  as source and fixed-block construction;
+- preserve source reuse: diagnostics and fixed-block construction from an
+  already built source must describe that exact source rather than rebuilding
+  it; and
+- fail normally on malformed existing inputs without adding a compatibility
+  adapter, status vocabulary, metadata field, or fallback geometry.
+
+Exact implementation ownership is limited to:
+
+```text
+src/cartesian_nested_diatomic.jl
+src/ordinary_qw_nested_frontends.jl
+```
+
+The preferred implementation budget is at most `30` added source lines and the
+hard limit is `60`. No root wiring, export, type family, helper file, or new
+public keyword is authorized.
+
+Validation belongs only in `test/core/runtests.jl`: one bounded legal unsplit
+H2 regression must prove packet availability and successful source/fixed-block
+reuse, and one bounded endcap/panel regression must prove actual provenance and
+nondefault policy/`q`/`L` forwarding through diagnostics. The preferred test
+budget is `45` added lines and the hard limit is `70`; no new test file or
+incidental wiring of historical nested test suites is allowed. Review must also
+compare one already-working default construction with the baseline and require
+unchanged dimensions, coefficients, geometry, and numerical operators.
+
+This authority does not permit changes to current PQS/WL source-box production,
+ordinary-QW correction or residual policy, shell thresholds/defaults,
+chain/square routes, represented Hartree, artifacts, drivers, or solvers. If a
+repair requires a signature/default change, a new persistent object, more than
+the hard line budget, or reconstruction of a deleted PQS fallback, stop without
+committing and return the exact blocker for a new design decision.
+
 ## Pseudocode
 
 1. Restrict this policy to the landed bond-aligned homonuclear diatomic nested

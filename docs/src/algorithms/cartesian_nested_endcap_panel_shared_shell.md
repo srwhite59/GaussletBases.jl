@@ -4,6 +4,12 @@ This page records the guarded opt-in endcap/panel shared-shell route for the
 bond-aligned diatomic nested source builder. It is an experimental mainline
 route, not the default diatomic nested policy and not a broad OPCU import.
 
+At baseline `754c6dd10`, the exported basis-level diagnostics front door has a
+known provenance-coercion and keyword-forwarding defect. The route remains
+supported; bounded repair is approved under `HP-QW-NESTED-DIAT-FN-01` rather
+than withdrawing the export. Treat endcap/panel diagnostics as pending that
+repair while retaining the numerical and opt-in policy boundaries below.
+
 ## Pseudocode
 
 1. Start from the ordinary bond-aligned diatomic nested source geometry.

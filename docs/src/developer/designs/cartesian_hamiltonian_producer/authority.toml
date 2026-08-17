@@ -4,6 +4,9 @@ authorization_complete = true
 schema_version = 3
 
 [[documents]]
+path = "docs/src/algorithms/cartesian_nested_diatomic_box_policy.md"
+sha256 = "280c1aa76261a67e247646524f216f8bcca5023427525793a34960f3bd68eeca"
+[[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/atomic_hf_reference_packets.md"
 sha256 = "c39308268cc18538ee99db4913f7801af547b1940efe59e6af06bb82271f75d0"
 [[documents]]
@@ -3033,6 +3036,54 @@ title = "semantic source-q override validation"
     [[records.paths]]
     kind = "test"
     path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-QW-NESTED-DIAT-FN-01"
+lifecycle = "approved"
+scope = "Repair only the three existing root-exported bond-aligned ordinary-QW nested diatomic front doors: ensure a legal unsplit/no-shared-layer source owns the packet required by fixed-block construction; preserve each shared shell's actual rectangular or endcap/panel provenance without invalid concrete-type coercion; and forward the existing shared-shell policy, q, and L controls through basis-level geometry diagnostics. Preserve source reuse, signatures, exports, defaults, coefficients, dimensions, geometry, shell policy, and numerical operators. Preferred/hard added-source limits are 30/60 lines across the two owned files. Add no helper file, type family, field, metadata, status, keyword, export, adapter, fallback, PQS/WL change, or broader ordinary-QW work."
+surfaces = ["source"]
+title = "repair exported ordinary-QW nested diatomic front doors"
+
+    [[records.document_refs]]
+    heading = "Exported Front-Door Maintenance Contract"
+    kind = "canonical"
+    path = "docs/src/algorithms/cartesian_nested_diatomic_box_policy.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "472"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_nested_diatomic.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_qw_nested_frontends.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-QW-NESTED-DIAT-FN-01"]
+grant = "implementation"
+id = "HP-QW-NESTED-DIAT-TEST-01"
+lifecycle = "approved"
+scope = "Add exactly two bounded regressions to the existing core owner: a legal unsplit H2 case proving packet availability and source/fixed-block reuse, and an endcap/panel diagnostics case proving actual provenance plus nondefault existing policy/q/L forwarding. Preferred/hard added-test limits are 45/70 lines. Compare one already-working default construction with the baseline for unchanged dimensions, coefficients, geometry, and numerical operators. Add no test file, historical nested-suite wiring, metadata/status assertion, PQS/WL fixture, or numerical-policy change."
+surfaces = ["tests"]
+title = "validate ordinary-QW nested diatomic front-door repairs"
+
+    [[records.document_refs]]
+    heading = "Exported Front-Door Maintenance Contract"
+    kind = "canonical"
+    path = "docs/src/algorithms/cartesian_nested_diatomic_box_policy.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "472"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/core/runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = []

@@ -25,6 +25,11 @@ The current ordinary story is:
 This line is still experimental, but it is now a real second workflow surface
 in the package rather than a hidden side note.
 
+The exported bond-aligned diatomic source, fixed-block, and diagnostics front
+doors remain supported. Their legal no-shared-shell packet path and
+endcap/panel diagnostics have a bounded repair pending under
+`HP-QW-NESTED-DIAT-FN-01`; no ordinary-QW policy or default change is implied.
+
 ## Start here
 
 Within the rendered docs, the best supporting pages are:

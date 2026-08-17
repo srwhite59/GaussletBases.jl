@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `2442f9a264c4bb31fdf7665977c0a5ab168a90d0659c5c11bf03790be19aad13`.
+> [authority.toml](authority.toml), SHA-256 `6b40e02ac8c4260afad605ae19c0c6cfd86fc3273f3e794e4eef126fab52ad3c`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1818,6 +1818,37 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `414`
 - **Dependencies:** `HP-PQS-SHELLQ-OVERRIDE-FN-01`
 - **Scope:** Validate route-q 7 to source-q 6 and 5 coarsening, expected retained-count reduction, unchanged parent/support/ownership/cores/slabs/route metadata, orthonormal contraction columns, omitted/empty parity, finite symmetric full construction, and rejection of malformed, below-3, Boolean, equal-route, asymmetric, and unmatched requests. Preserve existing refinement, residual, packet-capture, \`J0/E0\`, correction, dimension, and due-diligence gates. No new accessor, dense baseline-to-variant overlap API, source-pass HF, endpoint energy assertion, or production claim is approved.
+
+### HP-QW-NESTED-DIAT-FN-01 - repair exported ordinary-QW nested diatomic front doors
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [cartesian\_nested\_diatomic\_box\_policy.md](../../../algorithms/cartesian_nested_diatomic_box_policy.md); heading `Exported Front-Door Maintenance Contract`
+- **Owned paths:**
+  - `source` / `existing`: `src/cartesian_nested_diatomic.jl`
+  - `source` / `existing`: `src/ordinary_qw_nested_frontends.jl`
+- **Evidence:**
+  - `manager_pass`: `472`
+- **Dependencies:** none
+- **Scope:** Repair only the three existing root-exported bond-aligned ordinary-QW nested diatomic front doors: ensure a legal unsplit/no-shared-layer source owns the packet required by fixed-block construction; preserve each shared shell's actual rectangular or endcap/panel provenance without invalid concrete-type coercion; and forward the existing shared-shell policy, q, and L controls through basis-level geometry diagnostics. Preserve source reuse, signatures, exports, defaults, coefficients, dimensions, geometry, shell policy, and numerical operators. Preferred/hard added-source limits are 30/60 lines across the two owned files. Add no helper file, type family, field, metadata, status, keyword, export, adapter, fallback, PQS/WL change, or broader ordinary-QW work.
+
+### HP-QW-NESTED-DIAT-TEST-01 - validate ordinary-QW nested diatomic front-door repairs
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [cartesian\_nested\_diatomic\_box\_policy.md](../../../algorithms/cartesian_nested_diatomic_box_policy.md); heading `Exported Front-Door Maintenance Contract`
+- **Owned paths:**
+  - `test` / `existing`: `test/core/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `472`
+- **Dependencies:** `HP-QW-NESTED-DIAT-FN-01`
+- **Scope:** Add exactly two bounded regressions to the existing core owner: a legal unsplit H2 case proving packet availability and source/fixed-block reuse, and an endcap/panel diagnostics case proving actual provenance plus nondefault existing policy/q/L forwarding. Preferred/hard added-test limits are 45/70 lines. Compare one already-working default construction with the baseline for unchanged dimensions, coefficients, geometry, and numerical operators. Add no test file, historical nested-suite wiring, metadata/status assertion, PQS/WL fixture, or numerical-policy change.
 
 ### HP-R1-ART-01 - public base producer artifact provenance
 

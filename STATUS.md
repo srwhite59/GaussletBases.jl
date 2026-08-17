@@ -95,6 +95,11 @@ Current supported surface includes:
 This line is still experimental in the scientific sense, especially around
 policy and workflow maturation, but it is a real current repo surface.
 
+The three exported fixed-source, fixed-block, and geometry-diagnostics front
+doors remain supported. A bounded maintenance repair is approved for the legal
+unsplit/no-shared-shell packet path and endcap/panel diagnostics; these are
+known implementation defects, not a retirement or policy change.
+
 ### Experimental chain / square-lattice nested producers
 
 These routes exist and can be used for producer-side experiments, but they are
