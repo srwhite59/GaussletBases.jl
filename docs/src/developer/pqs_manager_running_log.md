@@ -1705,3 +1705,57 @@ Carrying-cost accounting:
 - validation: caller/export/side-effect audit, authority render/check/self-test,
   generated-view parity, docs tests, Documenter, manager-log bound, staged
   docs-only review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 465 - Retire CPB Provider Pilot
+
+Commit(s):
+- `181ed6968` - exact source retirement;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted deletion of `src/CartesianCPBBlockProviders.jl` and its sole root
+  include. The change was exactly `+0/-6,446` source lines and added no
+  replacement, alias, compatibility surface, helper, test, or historical-runner
+  edit.
+- Package load passed in `6.86` seconds. The unchanged `core`, `ida`, and
+  `cartesian` groups passed in `91.75` seconds; the public Cartesian endpoint
+  passed `232/232`, with terminal due diligence unchanged. GitHub numerical CI
+  passed. The first docs run failed only because machine authority still named
+  the deleted path as existing; this closeout removes that stale execution
+  grant and path.
+- `HP-RETIRE-CPB-PROVIDER-FN-01` is now retired and its validation ID is
+  completed. Adjacent CPB geometry, parent factors, raw blocks, pair
+  materialization, contracted-parent/multilayer code, terminal/PQS/WL, PRFs,
+  residuals, and represented Hartree remain unchanged.
+
+Goal advancement / guardrail:
+- MT6 advances through a complete no-caller deletion with no replacement
+  framework. Reintroducing any provider surface requires new authority.
+
+Carrying-cost accounting:
+- deleted: the full 6,445-line provider and one include.
+- simplified: root loading and machine authority no longer carry an orphan.
+- quarantined: three external historical Cr/Cr2 runners remain pinned to old
+  commits.
+- not deleted because: adjacent numerical owners have live independent roles.
+- exact remaining caller/blocker: none for this retirement.
+- added/deleted `src` lines: `0/6,446`; new tests: none; new metadata/status
+  fields: none.
+- validation: package load, unchanged numerical groups, endpoint due diligence,
+  GitHub numerical CI, authority render/check/self-test, docs tests,
+  Documenter, manager-log bound, scope review, and `git diff --check`.
+
+### Medium-Term Checkpoint After Pass 465
+
+- **MT1 - active:** bounded conformance remediation remains separate from
+  retirement work.
+- **MT2 - completed:** source-backed Cr2 migration remains closed.
+- **MT3 - active:** represented mixed-density Hartree still requires the
+  occupied-contracted separable replacement and actual-plan resource gate.
+- **MT4 - active:** residual/protected evidence and consumer-owned PRF policy
+  are unchanged.
+- **MT5 - maintenance:** machine authority remains atomic; this pass closes a
+  stale deleted-path record immediately after source retirement.
+- **MT6 - active:** the orphaned CPB provider is fully removed; broader
+  pair-materialization, contracted-parent, multilayer, and ordinary-QW cleanup
+  remain independent caller/authority decisions.

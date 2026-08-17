@@ -185,8 +185,8 @@ ID or subsystem.
   records the completed obsolete experimental-cluster and orphaned-adapter
   deletions
 - [Cartesian CPB block-provider retirement](cartesian_cpb_block_provider_retirement.md)
-  authorizes removal of the orphaned provider pilot while preserving active
-  CPB geometry, parent factors, raw blocks, and producer routes
+  records completed removal of the orphaned provider pilot while preserving
+  active CPB geometry, parent factors, raw blocks, and producer routes
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 ## Contracts, Amendments, And Completed Records

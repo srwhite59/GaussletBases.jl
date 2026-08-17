@@ -7,8 +7,8 @@ This page owns the retirement contract for:
 - `HP-RETIRE-CPB-PROVIDER-FN-01`
 - `HP-RETIRE-CPB-PROVIDER-TEST-01`
 
-Status: source retirement is approved. Deletion and validation require a
-separate reviewed implementation pass.
+Status: source retirement completed in Pass 465 at `181ed6968`. The function
+ID is retired and the validation ID is completed; neither grants further work.
 
 The retirement removes an orphaned experimental provider pilot. It does not
 retire Cartesian coordinate-product-box geometry, parent-axis factors,
@@ -17,15 +17,15 @@ current Hamiltonian producer.
 
 ## Retirement Decision
 
-At baseline `34f4c656a1f64a5285fa0bac3291b2288c81d444`, delete:
+Starting from baseline `34f4c656a1f64a5285fa0bac3291b2288c81d444`,
+Pass 465 deleted:
 
 - `src/CartesianCPBBlockProviders.jl`, in full;
 - only `include("CartesianCPBBlockProviders.jl")` from
   `src/GaussletBases.jl`.
 
-The module contains `6,445` lines and the include contributes one line. The
-required source reduction is therefore exactly `6,446` lines, with zero added
-source lines.
+The module contained `6,445` lines and the include contributed one line. The
+source reduction was exactly `6,446` lines, with zero added source lines.
 
 Do not add an alias, stub, deprecation, compatibility module, replacement
 provider, helper, or test. Qualified access to this internal, unadvertised
@@ -128,21 +128,22 @@ The old CPB overlap-placement ladder and CPB-provider destinations in cleanup
 notes become historical evidence only. They grant no replacement or deletion
 authority over the preserved owners.
 
-## Validation Contract
+## Accepted Validation
 
-The source retirement pass must:
+The source retirement pass:
 
-1. remove the file, include, module name, and all 47 exported names from
+1. removed the file, include, module name, and all 47 exported names from
    committed source;
-2. confirm package load;
-3. run the unchanged `core`, `ida`, and `cartesian` test groups;
-4. inspect and report terminal due diligence for the Cartesian endpoint;
-5. confirm exactly `6,446` deleted and zero added source lines;
-6. run `git diff --check` and the mechanical anti-bloat scan.
+2. confirmed package load in `6.86` seconds;
+3. passed the unchanged `core`, `ida`, and `cartesian` groups in `91.75`
+   seconds, including the `232/232` public Cartesian endpoint;
+4. inspected the unchanged terminal due-diligence endpoint;
+5. confirmed exactly `6,446` deleted and zero added source lines;
+6. passed `git diff --check`, the mechanical anti-bloat scan, and GitHub
+   numerical CI.
 
-Tests are validation inputs, not edit surfaces for this retirement. If any test
-change is required, stop and request a separate amendment. No replacement test
-is justified for a deleted API with no committed consumer.
+Tests were validation inputs, not edit surfaces. No replacement test was
+justified for a deleted API with no committed consumer.
 
 ## Non-Goals
 

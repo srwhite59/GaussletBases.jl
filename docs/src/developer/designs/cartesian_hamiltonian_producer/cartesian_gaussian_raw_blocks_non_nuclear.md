@@ -125,8 +125,8 @@ They still serve atomic Qiu-White reference/operator assembly, hybrid
 representation sidecars, and dense-parent GTO probes in
 `ordinary_qw_operator_assembly.jl`, `cartesian_qw_hybrid_representation.jl`,
 and `cartesian_gto_probes.jl`. The orphaned
-`CartesianCPBBlockProviders.jl` caller is separately approved for retirement
-and is not part of this ownership contract. Their
+`CartesianCPBBlockProviders.jl` caller was removed in `181ed6968` and is not
+part of this ownership contract. Their
 `factor_ga`/`factor_aa` outputs are outside this overlap/kinetic/moment
 contract. Rewiring or deleting them requires a separate caller/ownership audit.
 

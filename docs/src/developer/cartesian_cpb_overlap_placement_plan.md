@@ -4,7 +4,7 @@ Date: 2026-06-09
 
 This note preserves the development history of an uncompleted retained/global
 placement ladder over the experimental `CartesianCPBBlockProviders` pilot.
-That pilot is approved for retirement under the
+That pilot was retired in Pass 465 under the
 [Cartesian CPB block-provider retirement contract](designs/cartesian_hamiltonian_producer/cartesian_cpb_block_provider_retirement.md).
 Nothing below is current source authority or a next-step plan. A future local
 operator or placement facility requires a new design based on current owners;

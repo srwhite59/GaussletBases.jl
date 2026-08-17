@@ -4,7 +4,7 @@ Date: 2026-06-09
 
 This note records the parent-axis factor design and the historical
 `CartesianCPBBlockProviders` experiment. Parent-axis factors remain active.
-The provider pilot is approved for retirement under the
+The provider pilot was retired in Pass 465 under the
 [Cartesian CPB block-provider retirement contract](designs/cartesian_hamiltonian_producer/cartesian_cpb_block_provider_retirement.md),
 and every provider, placement, cache, and migration proposal below is
 historical rather than current source authority.

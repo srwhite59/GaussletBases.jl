@@ -199,8 +199,8 @@ compact residual object.
 
 Why to check:
 Coordinate-product-box geometry and parent factor packets remain reusable
-route-neutral infrastructure. The former CPB local block-provider pilot is
-approved for retirement and is not a current implementation donor.
+route-neutral infrastructure. The former CPB local block-provider pilot was
+retired in `181ed6968` and is not a current implementation donor.
 
 Key docs:
 - `docs/src/developer/cartesian_coordinate_product_box_contract.md`
@@ -210,9 +210,9 @@ Key docs:
 Source anchors:
 - **active reusable kernel**: `src/CartesianParentAxisFactors.jl`,
   `parent_overlap_axis_factor_packet`
-- **retirement-approved experimental pilot**:
-  `src/CartesianCPBBlockProviders.jl`; it has no committed consumer and must
-  not be restored as a provider dependency
+- **retired experimental pilot**: `CartesianCPBBlockProviders`; its source was
+  deleted after a no-caller audit and must not be restored as a provider
+  dependency
 
 Do-not-forget rule:
 CPB geometry stays pure and parent factors remain parent-owned. Current local
