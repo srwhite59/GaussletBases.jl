@@ -95,7 +95,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_one_center_
 sha256 = "15f4ac5db40d40f8ca73876aad4f1efe625fed46086e240a5d6138ede3fef42b"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
-sha256 = "564a3d83fcd846cb9c683481b8d10021bb918e3557928e85e2320d53107b6ebe"
+sha256 = "dd0e979c92cef8ec808c2da7ac70391ca19fe3a3d1458b4dc732971b709cbad8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_homonuclear_diatomic_supplemented_workflow.md"
 sha256 = "15528a3f6dfa8d0a00aca5e5978e708e3cfccfe7c177c869fe3e438dee81af8e"
@@ -2880,7 +2880,7 @@ dependency_ids = ["HP-PQS-ASPECTSHELL-FN-01", "HP-R1-FN-01"]
 grant = "design"
 id = "HP-PQS-READER-DOC-01"
 lifecycle = "approved"
-scope = "Authorize only the reader-facing documentation entrance defined by the canonical contract: add docs/src/manual/projected_q_shells.md; link it from README.md, docs/src/index.md, docs/src/manual/index.md, docs/src/examples/index.md, and docs/src/howto/example_guide.md; and expose that page plus the three existing PQS/IDA algorithm pages in docs/make.jl. Preserve the radial beginner path. Preferred/hard limits are 70/100 lines for the new page and 35/55 added lines across all other reader links/navigation; test/docs/runtests.jl may add at most 18 focused consistency lines if needed. Add no source/API, parser, framework, artifact, solver, screening, supplement, PRF, paper-driver, manuscript-number, or broad molecular claim."
+scope = "Authorize only the reader-facing documentation entrance defined by the canonical contract: add docs/src/manual/projected_q_shells.md; link it from README.md, docs/src/index.md, docs/src/manual/index.md, docs/src/examples/index.md, and docs/src/howto/example_guide.md; expose the three owned PQS/IDA algorithm pages in docs/make.jl only after reconciling their stale implementation/retirement wording; and preserve the radial beginner path. Preferred/hard limits are 70/100 lines for the new page and 35/55 added lines across all other reader links, navigation, and stale-status corrections. Add no source/API, parser, framework, artifact, solver, screening, supplement, PRF, paper-driver, manuscript-number, or broad molecular claim."
 surfaces = ["docs"]
 title = "reader-facing PQS documentation entrance"
 
@@ -2891,18 +2891,46 @@ title = "reader-facing PQS documentation entrance"
 
     [[records.evidence_refs]]
     kind = "manager_pass"
-    value = "478"
+    value = "479"
 
     [[records.paths]]
     kind = "docs"
+    path = "docs/src/algorithms/cartesian_ida_overview.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/ida_hamiltonian_and_counterpoise.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/pqs_shell_construction.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/examples/index.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/howto/example_guide.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/index.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/manual/index.md"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-ASPECTSHELL-FN-01", "HP-PQS-READER-DOC-01", "HP-R1-FN-01", "HP-R1-TEST-01"]
 grant = "implementation"
 id = "HP-PQS-READER-TEST-01"
 lifecycle = "approved"
-scope = "Add only examples/39_pqs_h2plus.jl using exported GaussletBases names plus LinearAlgebra, with the exact bounded H2+ PQS/WL fixture and invariant checks in the canonical contract. Preferred/hard example limits are 55/75 lines. Add only its invocation to the existing quick-example test in test/runtests.jl, at most three added lines, and only the examples token to the existing Julia-1.10 GAUSSLETBASES_TEST_GROUPS value in .github/workflows/ci.yml. Add no test file, source/API/default, private call, parser, artifact, solver, supplement, PRF, screening, numerical-order gate, workflow framework, or other CI change."
+scope = "Add only the planned examples/39_pqs_h2plus.jl using exported GaussletBases names plus LinearAlgebra and the exact bounded H2+ PQS/WL fixture and tolerance checks in the canonical contract. Preferred/hard example limits are 55/75 lines. Add only its invocation to the owned quick-example test in test/runtests.jl, at most 18 focused navigation/content lines in test/docs/runtests.jl, and only the examples token to the existing Julia-1.10 GAUSSLETBASES_TEST_GROUPS value in .github/workflows/ci.yml. Add no test file, source/API/default, private call, parser, artifact, solver, supplement, PRF, screening, numerical-order gate, workflow framework, or other CI change."
 surfaces = ["tests"]
 title = "public PQS H2+ example validation"
 
@@ -2913,8 +2941,12 @@ title = "public PQS H2+ example validation"
 
     [[records.evidence_refs]]
     kind = "manager_pass"
-    value = "478"
+    value = "479"
 
+    [[records.paths]]
+    kind = "test"
+    path = "test/docs/runtests.jl"
+    state = "existing"
     [[records.paths]]
     kind = "test"
     path = "test/runtests.jl"

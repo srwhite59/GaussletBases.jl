@@ -298,6 +298,9 @@ add or edit only these reader-facing surfaces:
 README.md
 docs/make.jl
 docs/src/index.md
+docs/src/algorithms/cartesian_ida_overview.md
+docs/src/algorithms/ida_hamiltonian_and_counterpoise.md
+docs/src/algorithms/pqs_shell_construction.md
 docs/src/manual/index.md
 docs/src/manual/projected_q_shells.md
 docs/src/examples/index.md
@@ -322,15 +325,16 @@ remain consumer or external work.
 Rendered navigation must show the new manual page and the existing
 `cartesian_ida_overview.md`, `pqs_shell_construction.md`, and
 `ida_hamiltonian_and_counterpoise.md` algorithm pages. Their detailed content
-must be linked rather than copied. README, documentation home, manual,
-examples landing, and the full example guide must reach the reader path.
+must be linked rather than copied. Before exposure, stale implementation and
+retirement-status wording in those three pages must be reconciled with current
+source and authority without changing their mathematics. README,
+documentation home, manual, examples landing, and the full example guide must
+reach the reader path.
 
 The reader page may add at most 70 preferred / 100 hard lines. All other
-reader-link and navigation edits together may add at most 35 preferred / 55
-hard lines. Existing `test/docs/runtests.jl` may receive at most 18 added lines
-of focused navigation/content consistency checks if Documenter and existing
-checks do not already protect the new links. No new docs framework, content
-duplication, manuscript result, or completeness claim is authorized.
+reader-link, navigation, and stale-status corrections together may add at most
+35 preferred / 55 hard lines. No new docs framework, content duplication,
+manuscript result, or completeness claim is authorized.
 
 `HP-PQS-READER-TEST-01` authorizes exactly one new public example:
 
@@ -353,15 +357,17 @@ tail_spacing = 2.8; compact Coulomb default
 
 It must require dimension `293` for both methods, stored charges/positions and
 electron sector, finite symmetric one-body and IDA interaction matrices,
-`E_nn = 0.5`, and a bounded lowest-eigenpair residual. It may print each
-one-body energy, but must not assert an energy ordering or present either value
-as converged or publication evidence.
+`E_nn = 0.5`, symmetry error at most `1e-10`, and lowest-eigenpair residual at
+most `1e-10`. It may print each one-body energy, but must not assert an energy
+ordering or present either value as converged or publication evidence.
 
 The example budget is 55 preferred / 75 hard lines. The existing quick-example
 test in `test/runtests.jl` may add only the one example invocation, with a hard
 limit of three added lines. The existing Julia-1.10 CI group list may add only
-the `examples` group so this quick smoke runs durably; no workflow framework or
-other CI change is authorized. No new test file is permitted.
+the `examples` group so this quick smoke runs durably. Existing
+`test/docs/runtests.jl` may receive at most 18 focused lines protecting the new
+navigation and content. No workflow framework, other CI change, or new test
+file is authorized.
 
 Acceptance requires a clean Julia 1.10 example run through the documented
 installation/project path, package load, the focused public Cartesian test,

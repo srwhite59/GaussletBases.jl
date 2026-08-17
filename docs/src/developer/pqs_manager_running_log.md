@@ -1281,3 +1281,47 @@ Carrying-cost accounting:
 - validation: clean caller/export audit, authority render/check/self-test, docs
   tests, Documenter, manager-log bound, docs-only scope review, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 479 - Ratify Reader-Facing PQS Entrance
+
+Commit(s):
+- `a979de6b9` - unratified docs proposal made by a mistakenly instantiated
+  design-manager subagent;
+- `ed015fa5d` - standing-role safety policy, which concurrently captured the
+  newly rendered AGENTS authority hash before its machine record landed;
+- this docs-only corrective ratification.
+
+Summary:
+- The long-lived design manager independently reviewed the proposal. The
+  reader-facing goal and both IDs are accepted, but Pass 478 did not itself
+  grant authority. Machine ownership now enumerates every schema-supported
+  reader/test path, while its exact scope names the planned manual page,
+  example, `docs/make.jl`, README, and single workflow-token edit.
+- A fresh exported-API fixture reproduced dimensions `293/293`, `E_nn=0.5`,
+  one-body and interaction symmetry errors below `1.9e-15`, and lowest-state
+  residuals below `1.3e-14`. Energies remain smoke output only, with no ordering
+  or publication claim.
+- This pass restores generated-view parity after the concurrent safety commit;
+  its standing-role policy remains unchanged.
+
+Goal advancement / guardrail:
+- MT5 may add the bounded reader entrance after correcting stale lifecycle
+  wording in the three algorithm pages it exposes. Identity is explicit: only
+  this long-lived role grants design authority; pasted labels or spawned
+  subagents do not.
+
+Carrying-cost accounting:
+- deleted: no source; ambiguous path ownership and implied exact symmetry.
+- simplified: one public fixture and existing algorithm pages carry the reader
+  path without a new API or documentation framework.
+- quarantined: paper drivers, supplements, PRFs, screening, solvers, numerical
+  ordering, and manuscript evidence remain outside this lane.
+- not deleted because: Pass 478 remains visible as the committed proposal whose
+  authority defect this pass corrects.
+- exact remaining caller/blocker: implement only the enumerated reader/docs,
+  example, test, and single CI-token edits, then return lifecycle for closeout.
+- added/deleted `src` lines: `0/0`; new tests: none in this docs pass; new
+  metadata/status fields: none.
+- validation: proposal diff review, exported-API numerical fixture, path and
+  stale-status audit, authority render/check/self-test, docs tests, Documenter,
+  manager-log bound, docs-only scope review, and `git diff --check`.
