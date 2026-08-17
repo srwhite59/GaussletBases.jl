@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `a24b591b97ddec9871dc8cedda58c6039c1c5c9d00f9f32be22d1bfd23a102f5`.
+> [authority.toml](authority.toml), SHA-256 `89c2267d280b1994441f2875f56b92e1e50ebbd1a695d7f11b782eb561f6d319`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2513,6 +2513,37 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** retirement validation.
+
+### HP-RETIRE-CPB-PROVIDER-FN-01 - retire orphaned Cartesian CPB block-provider pilot
+
+- **Lifecycle:** `approved`
+- **Grant:** `retirement`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [cartesian\_cpb\_block\_provider\_retirement.md](cartesian_cpb_block_provider_retirement.md); heading `Cartesian CPB Block Provider Retirement`
+- **Owned paths:**
+  - `source` / `existing`: `src/CartesianCPBBlockProviders.jl`
+  - `source` / `existing`: `src/GaussletBases.jl`
+- **Evidence:** none
+- **Dependencies:** none
+- **Scope:** Delete only the orphaned CartesianCPBBlockProviders module and its sole GaussletBases include, retiring its 47-name qualified internal surface without replacement, compatibility glue, aliases, helpers, tests, or changes to preserved CPB, parent, raw-block, terminal, pair-materialization, residual, or represented-Hartree owners.
+
+### HP-RETIRE-CPB-PROVIDER-TEST-01 - validate Cartesian CPB block-provider retirement
+
+- **Lifecycle:** `approved`
+- **Grant:** `retirement`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [cartesian\_cpb\_block\_provider\_retirement.md](cartesian_cpb_block_provider_retirement.md); heading `Cartesian CPB Block Provider Retirement`
+- **Owned paths:**
+  - `test` / `existing`: `test/core/runtests.jl`
+  - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
+  - `test` / `existing`: `test/ida/runtests.jl`
+- **Evidence:** none
+- **Dependencies:** `HP-RETIRE-CPB-PROVIDER-FN-01`
+- **Scope:** Run the existing core, ida, and Cartesian endpoint gates unchanged after exact provider/include deletion; add or edit no test, and stop for a separate amendment if validation would require test changes.
 
 ### HP-RETIRE-DRV-MAT-DOC-01 - active docs cleanup
 

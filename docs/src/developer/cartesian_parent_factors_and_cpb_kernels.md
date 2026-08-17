@@ -1,14 +1,16 @@
-# Cartesian Parent Factors and CPB Block Providers
+# Cartesian Parent Factors and Historical CPB Block Provider Pilot
 
 Date: 2026-06-09
 
-This note records a proposed architectural direction for Cartesian parent
-operator data, coordinate-product-box local blocks, and the staged PQS /
-White-Lindsey route. It is a design note, not an implementation contract yet.
+This note records the parent-axis factor design and the historical
+`CartesianCPBBlockProviders` experiment. Parent-axis factors remain active.
+The provider pilot is approved for retirement under the
+[Cartesian CPB block-provider retirement contract](designs/cartesian_hamiltonian_producer/cartesian_cpb_block_provider_retirement.md),
+and every provider, placement, cache, and migration proposal below is
+historical rather than current source authority.
 
 The immediate motivation was the private global-overlap input-facts work. That
-driver-helper bridge was retired in pass 202; the parent-factor and CPB-provider
-direction below remains the intended replacement pressure. Earlier tests showed
+driver-helper bridge was retired in pass 202. Earlier tests showed
 two different real dry-run report states:
 
 - a manual-count dry report can carry parent axis counts, but has no parent
@@ -20,10 +22,8 @@ two different real dry-run report states:
   narrow structured source path, but the route materializer payload should not
   become the long-term owner of universal parent-axis data.
 
-That is useful evidence, but it should not turn route-driver report payloads
-into the long-term owner of parent operator data. The better direction is to
-promote the underlying idea into a parent-owned axis factor packet and a CPB
-block-provider layer.
+That remains useful evidence for parent-owned axis factors. It no longer
+justifies the orphaned CPB provider or its route-placement ladder.
 
 ## Core Correction
 
@@ -83,20 +83,20 @@ CartesianParentGaussletBases.jl
   parent-owned one-body and Coulomb axis factor packets
   parent factor provenance, convention, and index-domain summaries
 
-future CartesianCPBBlockProviders
+historical CartesianCPBBlockProviders pilot
   depends on CPB geometry plus CartesianParentGaussletBases
   returns CPB-local axis blocks, slices, factored blocks, or optional dense
   local blocks
 
-route helpers and materializers
-  consume parent factors and CPB block providers
+historical route proposal
+  consume parent factors through CPB block providers
 ```
 
 Parent-dependent code should not move into `CartesianCPB`. CPB geometry remains
-the coordinate-window language. Parent factors are part of the parent module;
-CPB block providers are the layer above both parent factors and CPB geometry.
+the coordinate-window language, and parent factors remain part of the parent
+layer. The proposed provider layer above them is retired.
 
-The intended namespace direction is:
+The historical namespace direction was:
 
 ```julia
 GaussletBases.CartesianParentGaussletBases.parent_overlap_axis_factor_packet(
@@ -1189,10 +1189,11 @@ axis_order = (:x, :y, :z)
 
 The exact labels can change, but the information cannot be omitted.
 
-## CPB Operator-Block Provider Layer
+## Historical CPB Operator-Block Provider Layer
 
-A CPB is only coordinate-window geometry. A CPB operator-block provider binds a
-parent factor packet to local operator-block operations over CPB pairs:
+The retired design treated a CPB as coordinate-window geometry and proposed a
+provider binding parent factors to local operator-block operations over CPB
+pairs:
 
 ```julia
 struct CartesianCPBBlockProvider{P,F,M}
@@ -1202,14 +1203,14 @@ struct CartesianCPBBlockProvider{P,F,M}
 end
 ```
 
-The preferred module name is `CartesianCPBBlockProviders`. "Provider" is more
+The pilot used the module name `CartesianCPBBlockProviders`. "Provider" was more
 accurate than "matrix kernel" for this layer because the functions may return
 views, copied slices, factored axis blocks, or dense local operator blocks.
 Dense matrix materialization is only one possible service, not the defining
 behavior.
 
-The first implementation should prefer a stateless, deterministic block
-provider. Cache policy can be added as a wrapper:
+The historical plan preferred a stateless, deterministic block provider and
+considered cache policy as a wrapper:
 
 ```julia
 struct CachedCartesianCPBBlockProvider{K,C,M}
@@ -1627,7 +1628,7 @@ dry report shows that a structured axis-bundle object may exist under
 the route materializer payload the natural authority for universal parent-axis
 factors.
 
-The intended replacement direction is:
+The historical replacement direction was:
 
 ```text
 parent basis
@@ -1642,8 +1643,7 @@ parent basis
 The private bridge has now disappeared. It should not reappear as a broad scalar
 report-field interface for every operator term.
 
-The current overlap-only implementation already has a local CPB product-space
-path:
+The provider pilot implemented this local CPB product-space path:
 
 ```text
 CartesianParentGaussletBases.parent_overlap_axis_factor_packet
@@ -1654,20 +1654,17 @@ CartesianParentGaussletBases.parent_overlap_axis_factor_packet
 -> CartesianCPBBlockProviders.cpb_local_overlap_block_collection
 ```
 
-That path can validate CPB interval pairs, slice parent-owned overlap axis
-factors, optionally materialize a local dense CPB overlap block, and group local
-provider outputs into compact collection metadata. It remains local CPB overlap
-only. It is not route/global overlap adoption, does not place a global matrix,
-does not assign retained transforms, and does not change private route-driver
-overlap behavior.
+That path validated CPB interval pairs, sliced parent-owned overlap axis
+factors, optionally materialized a local dense CPB overlap block, and grouped
+local provider outputs into compact collection metadata. It never became
+route/global overlap adoption, never placed a global matrix, never acquired
+real retained transforms, and never changed route-driver overlap behavior.
 
-The later synthetic retained-transform pilot should be treated as proof that
+The later synthetic retained-transform pilot is historical evidence that
 local CPB operator blocks can be transformed by realization-specific maps, not
-as proof that route/global placement is ready. The next useful implementation,
-if any, should be an overlap-only cleanup/renaming pass or a small generic
-`CPBOperatorBlock` design. It should not be another placement metadata layer
-unless a reviewed White-Lindsey/PQS realization design has first identified
-real retained transforms and range ownership.
+as proof that route/global placement was ready. It creates no continuing
+implementation direction; any future placement facility requires new design
+authority rooted in current White--Lindsey/PQS owners.
 
 ## What This Does Not Claim
 
@@ -1687,9 +1684,9 @@ The parent factor packet owns universal parent-axis factors. It does not own
 retained-basis semantics, IDA division, shell/PQS realization, or global matrix
 assembly.
 
-## Suggested Migration Path
+## Historical Migration Path
 
-The migration should be incremental:
+The following migration was proposed but is not current work:
 
 0. Keep one-body CPB-pair providers distinct from electron-electron
    CPB-pair-pair providers in names, tests, and returned objects.
@@ -1714,7 +1711,7 @@ At each step, prefer compact objects and summaries over report-field aliases.
 When a route still needs compatibility fields, derive them at the report
 boundary rather than carrying them through every stage.
 
-## Testing Strategy
+## Historical Testing Strategy
 
 Early tests should be narrow and factual:
 
@@ -1735,7 +1732,7 @@ Avoid broad nested/integration tests for each small contract pass. Performance
 validation becomes necessary when a provider starts serving production-like
 routes or public APIs.
 
-## Open Questions
+## Historical Open Questions
 
 - Should the first object be named `CartesianParentAxisFactorPacket3D`,
   `CartesianParentAxisOperatorBundle3D`, or something closer to the existing

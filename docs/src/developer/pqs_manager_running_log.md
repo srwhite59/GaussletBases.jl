@@ -1665,3 +1665,43 @@ Carrying-cost accounting:
 - validation: package load; selected `Pkg.test` with `12,734/12,734` assertions
   in about `1m49s`; terminal due-diligence inspection; workflow/scope review;
   and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 464 - Authorize CPB Provider Retirement
+
+Commit(s):
+- this docs-only retirement-authority commit.
+
+Summary:
+- Approved deletion of the orphaned `CartesianCPBBlockProviders.jl` pilot and
+  its sole root include. The audit found no committed source, test, driver,
+  tool, example, artifact, registration, serialization, or load-time consumer;
+  the qualified 47-name internal surface is not a compatibility obligation.
+- The exact later source reduction is `6,445 + 1 = 6,446` lines. Three
+  completed external July Cr/Cr2 pure-GTO probes may remain pinned to a
+  pre-retirement commit. No adapter is authorized for them.
+- Corrected the implementation index and old CPB provider/placement narratives
+  to historical status. CPB geometry, parent-axis factors, Gaussian raw blocks,
+  pair materialization, contracted-parent/multilayer code, terminal/PQS/WL,
+  PRFs, residuals, and represented Hartree remain separate active owners.
+
+Goal advancement / guardrail:
+- MT6 advances by authorizing a large no-caller deletion without creating a
+  replacement framework. The source pass must stop if it finds a live
+  committed caller or side effect.
+
+Carrying-cost accounting:
+- deleted: none in this docs-only pass; `6,446` source lines authorized for the
+  next reviewed pass.
+- simplified: stale provider and placement claims now point to one retirement
+  contract.
+- quarantined: historical external probes and the unimplemented placement
+  ladder.
+- not deleted because: all adjacent numerical and route owners require their
+  own caller/authority decisions.
+- exact remaining caller/blocker: exact file/include deletion followed by
+  package load and unchanged `core`, `ida`, and `cartesian` groups.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none.
+- validation: caller/export/side-effect audit, authority render/check/self-test,
+  generated-view parity, docs tests, Documenter, manager-log bound, staged
+  docs-only review, and `git diff --check`.

@@ -198,24 +198,27 @@ compact residual object.
 ## CPB Local Blocks And Parent Axis Factors
 
 Why to check:
-Coordinate-product-box geometry, parent factor packets, and CPB local block
-providers are intended to replace ad hoc route/report payload factor plumbing.
+Coordinate-product-box geometry and parent factor packets remain reusable
+route-neutral infrastructure. The former CPB local block-provider pilot is
+approved for retirement and is not a current implementation donor.
 
 Key docs:
 - `docs/src/developer/cartesian_coordinate_product_box_contract.md`
 - `docs/src/developer/cartesian_parent_factors_and_cpb_kernels.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_cpb_block_provider_retirement.md`
 
 Source anchors:
 - **active reusable kernel**: `src/CartesianParentAxisFactors.jl`,
   `parent_overlap_axis_factor_packet`
-- **active reusable kernel**: `src/CartesianCPBBlockProviders.jl`,
-  `cpb_interval_pair`,
-  `cpb_overlap_axis_blocks`, `cpb_overlap_dense_block`,
-  `cpb_electron_nuclear_by_center_local_block`
+- **retirement-approved experimental pilot**:
+  `src/CartesianCPBBlockProviders.jl`; it has no committed consumer and must
+  not be restored as a provider dependency
 
 Do-not-forget rule:
-CPB geometry stays pure. Parent factors and CPB providers own reusable local
-operator blocks; route-global placement is a separate layer.
+CPB geometry stays pure and parent factors remain parent-owned. Current local
+operator work must use its actual terminal, raw-block, residual, or
+represented-field owner; the retired provider and its unimplemented placement
+ladder are not fallback authority.
 
 ## PQS Terminal Basis Realization And Lowdin
 

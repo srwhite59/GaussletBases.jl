@@ -1,12 +1,16 @@
-# CPB Overlap Placement Plan
+# Historical CPB Overlap Placement Plan
 
 Date: 2026-06-09
 
-This note defines the next retained/global placement boundary for local CPB
-overlap data. It is a design plan only. It does not implement placement, make
-route-global overlap available, or change private overlap behavior.
+This note preserves the development history of an uncompleted retained/global
+placement ladder over the experimental `CartesianCPBBlockProviders` pilot.
+That pilot is approved for retirement under the
+[Cartesian CPB block-provider retirement contract](designs/cartesian_hamiltonian_producer/cartesian_cpb_block_provider_retirement.md).
+Nothing below is current source authority or a next-step plan. A future local
+operator or placement facility requires a new design based on current owners;
+it must not restore these metadata layers by default.
 
-Current state:
+Historical state at the retirement baseline:
 
 - local overlap provider data exists through
   `parent_overlap_axis_factor_packet -> cpb_interval_pair ->
@@ -21,9 +25,9 @@ Current state:
 - global overlap remains blocked, and even all placeholder facts still block on
   `:placement_not_implemented`.
 
-## Input Object
+## Historical Input Object
 
-Retained/global placement must consume a
+The abandoned placement design proposed consuming a
 `CartesianCPBBlockProviders.CPBLocalOverlapBlockCollection`.
 
 It must not consume:
@@ -215,7 +219,7 @@ Local CPB overlap collection availability is not global overlap availability.
 It means only that structured local CPB product-space overlap data exists and
 is ready for a reviewed placement layer to consume.
 
-## Current Metadata Status
+## Historical Metadata Status
 
 Implemented so far:
 
@@ -266,7 +270,7 @@ There is still no transform application, placement, global overlap
 accumulation, route adoption, kinetic, position, x2, Coulomb, Hamiltonian,
 IDA/MWG, PQS Lowdin/projection, export, or artifact work.
 
-## Reviewed Placement Plan Object
+## Historical Reviewed Placement Plan Object
 
 The reviewed overlap placement plan object is metadata-only. It owns:
 
@@ -311,10 +315,9 @@ existing missing range/dimension requirements remain the authority. This
 remains metadata-only validation: it does not apply transforms, place blocks,
 or assemble route/global overlap.
 
-## Next-Step Decision
+## Historical Next-Step Decision
 
-The overlap placement metadata layer is now tight enough to stop adding status
-layers for its own sake. The active metadata gates are:
+The overlap placement metadata experiment had accumulated the following gates:
 
 - `CPBLocalOverlapBlockCollection`;
 - `CPBRetainedTransformCarry`;
@@ -322,7 +325,7 @@ layers for its own sake. The active metadata gates are:
 - `CPBReviewedOverlapPlacementPlan`;
 - `CPBOverlapPlacementFacts`.
 
-The next implementation decision is a fork:
+The then-proposed implementation decision was a fork:
 
 - A. Real-source carry path: find or design how real retained transforms and
   source-pair retained column ranges should be carried from route/report state
@@ -444,7 +447,7 @@ realizations should consume CPB operator blocks and how real retained
 transforms and ranges should be produced. Do not keep adding placement metadata
 layers before that realization design exists.
 
-## Structured Carry Objects For Placement
+## Historical Structured Carry Objects For Placement
 
 The next implementation boundary should introduce compact carry objects before
 any numerical placement code. These objects should be private or internal at

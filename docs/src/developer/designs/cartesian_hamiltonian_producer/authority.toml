@@ -7,6 +7,9 @@ schema_version = 3
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/atomic_hf_reference_packets.md"
 sha256 = "c39308268cc18538ee99db4913f7801af547b1940efe59e6af06bb82271f75d0"
 [[documents]]
+path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_cpb_block_provider_retirement.md"
+sha256 = "b2608c66762f794fd6c71289871d51e62a8dcd759e1da01ae4fb693f90159150"
+[[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driver_atom_workflow.md"
 sha256 = "7657ace602280e75cc254363dc5e1b86e47076114fb0732713526015647a79f9"
 [[documents]]
@@ -14,7 +17,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driv
 sha256 = "98f7d9620fd6a01701976ec7540365b01bb8af25e52381741f768e526c479f1f"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md"
-sha256 = "2d8737bf799822f293243d99a0d02cf17e92d9e958685c362f84870f2a89f7c1"
+sha256 = "09702e3dc7e5f368c9a1028f203c3d38247c62220a127c5d7557e0db653dc413"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_nuclear.md"
 sha256 = "33bb01cb95260ff73c3704c57af13b07cf6c24db98bd42ceaa2d2d33bb499ade"
@@ -4074,6 +4077,56 @@ title = "retirement validation"
     heading = "Complete-Core-Shell RHF Retirement"
     kind = "evidence"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/complete_core_shell_rhf_retirement.md"
+[[records]]
+dependency_ids = []
+evidence_refs = []
+grant = "retirement"
+id = "HP-RETIRE-CPB-PROVIDER-FN-01"
+lifecycle = "approved"
+scope = "Delete only the orphaned CartesianCPBBlockProviders module and its sole GaussletBases include, retiring its 47-name qualified internal surface without replacement, compatibility glue, aliases, helpers, tests, or changes to preserved CPB, parent, raw-block, terminal, pair-materialization, residual, or represented-Hartree owners."
+surfaces = ["source"]
+title = "retire orphaned Cartesian CPB block-provider pilot"
+
+    [[records.document_refs]]
+    heading = "Cartesian CPB Block Provider Retirement"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_cpb_block_provider_retirement.md"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/CartesianCPBBlockProviders.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-RETIRE-CPB-PROVIDER-FN-01"]
+evidence_refs = []
+grant = "retirement"
+id = "HP-RETIRE-CPB-PROVIDER-TEST-01"
+lifecycle = "approved"
+scope = "Run the existing core, ida, and Cartesian endpoint gates unchanged after exact provider/include deletion; add or edit no test, and stop for a separate amendment if validation would require test changes."
+surfaces = ["tests"]
+title = "validate Cartesian CPB block-provider retirement"
+
+    [[records.document_refs]]
+    heading = "Cartesian CPB Block Provider Retirement"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_cpb_block_provider_retirement.md"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/core/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/ida/runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 evidence_refs = []

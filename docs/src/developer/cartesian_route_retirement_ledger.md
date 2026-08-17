@@ -19,8 +19,17 @@ toward adapter, oracle, or retired?" The ledger is not a public API contract.
 It is a cleanup map for preventing old route glue, report aliases, and oracle
 paths from becoming new route authority.
 
+Current correction, 2026-08-16: the orphaned
+`CartesianCPBBlockProviders.jl` pilot is approved for deletion under the
+[Cartesian CPB block-provider retirement contract](designs/cartesian_hamiltonian_producer/cartesian_cpb_block_provider_retirement.md).
+Older `MOVE_TO_CPB_PROVIDER`, provider-test, and provider-placement statements
+below are historical classifications, not current replacement instructions.
+They do not authorize deletion or migration of pair-materialization,
+contracted-parent, multilayer, or other surviving source.
+
 | Old surface / file | Current role | Replacement module/stage | Equivalence test | Status | Deletion condition | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
+| `src/CartesianCPBBlockProviders.jl` | Orphaned experimental local-block provider with no committed consumer. | None. Current CPB geometry, parent factors, raw blocks, terminal operators, and represented fields retain their existing owners. | Package load plus unchanged `core`, `ida`, and `cartesian` groups after exact file/include deletion. | approved-for-retirement | Delete the 6,445-line file and its one include together; add no replacement or test. | The old provider/placement ladder is historical. External July Cr/Cr2 probes may remain pinned to an old commit. |
 | `src/pqs_source_box_route_driver_helpers.jl` | Legacy route-driver glue and report compatibility aliases. | Module-owned route state/summaries and future route adapter over the module spine. | Focused driver/report compatibility checks comparing compact structured summaries to the still-required report aliases. | compatibility | Final reports and downstream consumers no longer depend on flat scalar aliases; route code consumes module-owned objects directly. | No new route concepts should be introduced here. |
 | `src/cartesian_pair_block_materialization/white_lindsey_*` and old White--Lindsey nested kernels such as `_nested_doside_1d`, `_nested_face_product`, `_nested_edge_product`, `_nested_corner_piece` | Old-kernel reuse behind the White--Lindsey boundary-stratum adapter. | `CartesianPairBlockMaterialization` White--Lindsey boundary-stratum adapter. | Focused local adapter equivalence tests against selected old-kernel/fixed-block slices for retained-unit coefficients and low-order one-body blocks. | adapter/oracle | New spine can produce and validate all low-order one-body blocks and global overlap/one-body placement without treating old kernels as route authority. | Old kernels may feed adapters or oracle comparisons; they should not decide route structure. |
 | Old White--Lindsey materialized seed / fixed-block safe one-body matrices | Oracle/reference for selected safe one-body global matrix slices. | `CartesianPairBlockMaterialization` route-global safe one-body path: route-local one-body block collection -> term-specific placement plan -> term-specific dense global retained matrix. | `test/nested/cartesian_pair_block_global_overlap_oracle_runtests.jl` covers selected old-oracle overlap slices through `White-Lindsey local adapter overlap blocks -> local one-body block collection -> overlap placement plan -> global overlap matrix`: face/face `162:170, 162:170`, face/edge `162:170, 210:212`, and transpose-filled edge/face `210:212, 162:170`. Observed max absolute errors were `1.7636953211319766e-15`, `2.6343504968563524e-46`, and `2.6343504968563524e-46`, respectively. `test/nested/cartesian_pair_block_global_kinetic_oracle_runtests.jl` covers selected White--Lindsey global kinetic equivalence through `White-Lindsey local adapter kinetic blocks -> local one-body block collection -> kinetic placement plan -> global kinetic matrix` on the same slices. Observed kinetic max absolute errors were `3.4638958368304884e-14`, `3.1907967999947086e-30`, and `3.1907967999947086e-30`, respectively. `test/nested/cartesian_pair_block_global_position_oracle_runtests.jl` covers selected global `position_x`, `position_y`, and `position_z` equivalence through `White-Lindsey local adapter position blocks -> local one-body block collection -> position placement plan -> global position matrix` on the same slices. Observed position_x max absolute errors were `1.7435358081325719e-15`, `9.857551802004026e-46`, and `9.857551802004026e-46`; position_y errors were `8.459873058838228e-16`, `8.758115402030107e-46`, and `8.758115402030107e-46`; position_z errors were `8.474501317837309e-16`, `4.926439913641935e-47`, and `4.926439913641935e-47`. `test/nested/cartesian_pair_block_global_x2_oracle_runtests.jl` covers selected global `x2_x`, `x2_y`, and `x2_z` equivalence through `White-Lindsey local adapter x2 blocks -> local one-body block collection -> x2 placement plan -> global x2 matrix` on the same slices. Observed x2_x max absolute errors were `1.844473375912524e-15`, `6.0243961376664915e-34`, and `6.0243961376664915e-34`; x2_y errors were `4.541938536395539e-16`, `1.7964170116877891e-32`, and `1.7964170116877891e-32`; x2_z errors were `4.577863961878137e-16`, `2.7369110631344083e-47`, and `2.7369110631344083e-47`. Synthetic global retained matrix pilots now exist for `:overlap`, `:kinetic`, `:position_x`, `:position_y`, `:position_z`, `:x2_x`, `:x2_y`, and `:x2_z`. | adapter/oracle-only; partially replaced for selected face/face and face/edge safe one-body slices | Broader retained-unit inventory equivalence, broader local/global block equivalence, and route-driver adoption must land before deleting old authority. | This is selected-slice overlap, kinetic, position, and x2 equivalence plus synthetic safe one-body global assembly coverage, not full-route replacement. Keep the old path as validation authority. No full White--Lindsey route assembly, driver integration, Hamiltonian assembly, term summing, Coulomb, IDA/MWG, PQS projection/Lowdin, exports, or artifacts are claimed here. |
@@ -567,20 +576,25 @@ PQS one-electron update, 2026-06-12:
 - `_pqs_current_route_safe_term_matrices(...)` remains oracle/debug vocabulary.
   It should not be reintroduced as the production PQS final-basis route.
 
-## CartesianContractedParentMetrics CPB-Layer Retirement Audit
+## Historical CartesianContractedParentMetrics CPB-Layer Audit
 
-Audit target: `src/CartesianContractedParentMetrics.jl` as of the CPB-local
-operator layer pivot. This file is about 19.8k lines and currently mixes five
+Audit target: `src/CartesianContractedParentMetrics.jl` as of the former
+CPB-local operator-layer pivot. At that baseline the file mixed five
 different roles: core retained metric packet construction, source-box operator
 kernels, oracle comparisons, route diagnostics/report writers, and private
 shadow/fallback transition paths. No code was deleted in this audit.
+
+The classifications below are preserved to explain old cleanup decisions.
+`MOVE_TO_CPB_PROVIDER` no longer names a live destination. No surviving helper
+may be deleted, moved, or rewritten from this table without a separate current
+caller/owner audit.
 
 Classification labels:
 
 - `KEEP_CORE_METRICS`: retained overlap, weights, centers, first moments, and
   retained position packet construction.
-- `MOVE_TO_CPB_PROVIDER`: local source-box/operator block kernels now better
-  expressed as CPB-local operator blocks.
+- `MOVE_TO_CPB_PROVIDER`: historical proposal to express local source-box
+  kernels as CPB-local blocks; no current action or destination.
 - `KEEP_AS_ORACLE_REFERENCE`: comparison helpers useful for testing CPB blocks
   or route adapters.
 - `MOVE_TO_ROUTE_DIAGNOSTICS`: readiness, route-smoke, schema, report, and
@@ -595,22 +609,22 @@ Classified regions by line/function family:
 | `65-313` | `CartesianContractedParentMetricPacket3D`, `_AxisMetricData1D`, coefficient-entry helpers, `_contract_pair_matrix`, `_contract_linear_vector`, `_contracted_first_moments` | `KEEP_CORE_METRICS` | This is the retained metric packet core for overlap, weights, centers, and position moments. |
 | `315-655` | `_metric_dispatch_*`, `_pqs_product_mixed_block_policy`, `_contracted_parent_metric_dispatch_shadow_plan` | `MOVE_TO_ROUTE_DIAGNOSTICS`; `RETIRE_OR_QUARANTINE` for the shadow wrapper | These are readiness/dispatch diagnostics, not CPB kernels. |
 | `657-809` | staged-axis interval/count/projection helpers and `_product_doside_retained_unit_plan` | `KEEP_AS_ORACLE_REFERENCE` | Useful retained transform/range facts for old product/doside units; do not make them new provider authority. |
-| `811-1221` | product/doside source-box pair plans, safe one-body factor blocks, and reference blocks; retired `_product_doside_source_box_shadow_blocks` aggregate helper | `MOVE_TO_CPB_PROVIDER`; shadow aggregate retired | Safe one-body local block math maps to CPB axis-product and sum-of-axis-products blocks. |
-| `1222-1705` | local Gaussian-sum and density-density product/doside source-box helpers | `MOVE_TO_CPB_PROVIDER` | CPB-local Coulomb-family kernels or precursors. |
+| `811-1221` | product/doside source-box pair plans, safe one-body factor blocks, and reference blocks; retired `_product_doside_source_box_shadow_blocks` aggregate helper | historical `MOVE_TO_CPB_PROVIDER`; shadow aggregate retired | No current destination is selected; preserve surviving callers until a separate audit. |
+| `1222-1705` | local Gaussian-sum and density-density product/doside source-box helpers | historical `MOVE_TO_CPB_PROVIDER` | No current destination is selected. |
 | `1716-2026` | IDA pair-factor provenance and raw-weight to density-normalized conversion | `KEEP_AS_ORACLE_REFERENCE` / future CPB source adapter | Keep as convention oracle until CPB source summaries carry the same facts. |
-| `2028-2177` | centered local Gaussian term-table construction | `MOVE_TO_CPB_PROVIDER` | Belongs with CPB-local electron-nuclear/electron-electron Gaussian-sum kernels. |
+| `2028-2177` | centered local Gaussian term-table construction | historical `MOVE_TO_CPB_PROVIDER` | Retain under its current owner unless separately audited. |
 | `2178-2294` | product/doside retained low-order, separable-sum, kinetic retained blocks | `KEEP_AS_ORACLE_REFERENCE` | Useful retained-block oracle while CPB blocks and realization transforms are validated. |
 | `2295-2580` | PQS/product support-local low-order and kinetic reference blocks | `KEEP_AS_ORACLE_REFERENCE` | Compares factored PQS/product blocks against support-local oracle entries. |
 | `2599-3352` | raw product-box mode matrices, structural plans, operator factors, shell realization plans | `MOVE_TO_ROUTE_DIAGNOSTICS` | Route-state/readiness facts; future home is route-spine modules. |
-| `3364-4557` | PQS/product source-box safe one-body, Gaussian-sum, density-density, and by-center nuclear helpers | `MOVE_TO_CPB_PROVIDER`; selected outputs `KEEP_AS_ORACLE_REFERENCE` | Local operator kernels belong to CPB provider/result records. |
-| `4559-5722` | PQS/PQS source-box safe one-body, Gaussian-sum, density-density, and by-center nuclear helpers | `MOVE_TO_CPB_PROVIDER`; selected outputs `KEEP_AS_ORACLE_REFERENCE` | Same as PQS/product, but for PQS/PQS raw-box pairs. |
-| `5722-6170` | PQS/product source-box shadow blocks and all-pairs inventory | `RETIRE_OR_QUARANTINE` | Private shadow layout; replace with CPB provider collections plus explicit route inventory. |
+| `3364-4557` | PQS/product source-box safe one-body, Gaussian-sum, density-density, and by-center nuclear helpers | historical `MOVE_TO_CPB_PROVIDER`; selected outputs `KEEP_AS_ORACLE_REFERENCE` | No current provider destination; preserve current callers and oracle roles pending separate authority. |
+| `4559-5722` | PQS/PQS source-box safe one-body, Gaussian-sum, density-density, and by-center nuclear helpers | historical `MOVE_TO_CPB_PROVIDER`; selected outputs `KEEP_AS_ORACLE_REFERENCE` | Same current-owner rule as PQS/product raw-box pairs. |
+| `5722-6170` | PQS/product source-box shadow blocks and all-pairs inventory | `RETIRE_OR_QUARANTINE` | Historical provider-collection replacement idea; no current replacement authority. |
 | `6172-6793` | PQS/PQS/product route descriptor, raw-box geometry facts, raw-box route producer | `MOVE_TO_ROUTE_DIAGNOSTICS` / `RETIRE_OR_QUARANTINE` | Fixture route producer and descriptor diagnostics. |
 | `6795-8042` | route descriptor diagnostics, route fact audits, contact-cap and mismatch fixture construction | `MOVE_TO_ROUTE_DIAGNOSTICS` | Readiness and fixture diagnostics. |
 | `8042-8897` | contact-cap, outer-mismatch, and atom-box safe-term operator comparisons | `KEEP_AS_ORACLE_REFERENCE` | Old retained/support path comparisons, not provider-layer authority. |
 | `8913-12153` | current-route inventories, shell-realization transform facts, source metadata exports, safe-term matrices, authority comparisons | `MOVE_TO_ROUTE_DIAGNOSTICS`; selected comparison payloads `KEEP_AS_ORACLE_REFERENCE` | Route/report inventory and authority comparison plumbing. |
 | `12155-12617` | route descriptor diagnostic and three-unit safe-term shadow consumer | `RETIRE_OR_QUARANTINE` | Private route-shaped shadow consumer. |
-| `12619-16016` | density-density and nuclear-attraction route producers/consumers | `MOVE_TO_CPB_PROVIDER` for pair kernels; `MOVE_TO_ROUTE_DIAGNOSTICS` for route-shaped assembly | Local pair blocks belong to CPB provider Coulomb-family kernels; retained route assembly is diagnostic. |
+| `12619-16016` | density-density and nuclear-attraction route producers/consumers | historical `MOVE_TO_CPB_PROVIDER` for pair kernels; `MOVE_TO_ROUTE_DIAGNOSTICS` for route-shaped assembly | Provider migration is superseded; keep current callers until separately audited. |
 | `16018-18187` | component route smoke, summaries, report adapters, sidecar/schema writers | `MOVE_TO_ROUTE_DIAGNOSTICS` | Smoke reports and schema/report writers. |
 | `18187-18877` | raw-product reference blocks, fallback staged separable/kinetic/metric/x2 blocks, staged linear vectors | `KEEP_AS_ORACLE_REFERENCE`; fallback entry points `RETIRE_OR_QUARANTINE` | Useful dense/support-local oracle contractions. |
 | `18892-19255` | packet-build safe-field shadows, `_cartesian_packet_build_source_safe_field_shadow` | `RETIRE_OR_QUARANTINE` | Explicit shadow/source-field transition path. |
@@ -635,10 +649,11 @@ Tests that still call private CCPM helpers:
 
 Recommended first cleanup target:
 
-Shrink the product/product safe one-body source-box test burden instead of
-moving its full transitional architecture into new scaffolding. The CPB
-provider layer already owns active coverage for overlap, kinetic, position,
-x2, axis-product, and sum-of-axis-products blocks. The old
+At the time of the audit, the recommended first target was to shrink the
+product/product safe one-body source-box test burden instead of moving its full
+transitional architecture into new scaffolding. The now-retiring provider had
+pilot coverage for overlap, kinetic, position, x2, axis-product, and
+sum-of-axis-products blocks. The old
 `_product_doside_source_box_pair_plan(...)`,
 `_product_doside_source_box_block_from_factors(...)`,
 and `_product_doside_source_box_reference_block(...)` family should remain only
@@ -654,21 +669,21 @@ First retirement cut:
   `test/nested/pqs_projected_q_shell_local_layer_integration_runtests.jl`.
   The later cleanup removed the final slow-test caller and retired the aggregate
   `_product_doside_source_box_shadow_blocks(...)` helper itself. Product/doside
-  one-body block coverage now belongs to direct reference helpers and CPB
-  provider tests.
-- Detailed safe one-body correctness is intentionally left to focused CPB
-  provider tests for axis-product, sum-of-axis-products, overlap, kinetic,
-  position, and x2 blocks.
+  one-body block coverage was reduced to direct reference helpers and the
+  historical provider tests.
+- The historical provider tests are not a continuing correctness owner. Any
+  surviving one-body helper must be validated through its current caller or
+  active numerical owner.
 - `src/CartesianContractedParentMetrics.jl` marks the product/product
-  source-box family as a private oracle and route-shadow bridge. New safe
-  one-body product-box checks should use CPB provider axis-product or
-  sum-of-axis-products blocks directly.
+  source-box family as a private oracle and route-shadow bridge. The former
+  instruction to redirect new checks to CPB provider blocks is superseded;
+  choose a current owner under separate authority instead.
 - Deletion of the aggregate shadow helper is complete. Remaining product/doside
   source-box reference helpers are still blocked by route-shadow and diagnostics
   paths in `CartesianContractedParentMetrics.jl` and downstream current-route
   inventory/oracle comparisons. The next deletion-oriented cut should replace
-  those component calls with CPB provider blocks or quarantine the whole shadow
-  route as oracle-only.
+  those component calls only after a current caller/owner audit. The retiring
+  provider is not a replacement target.
 
 Second deletion pass:
 
@@ -729,8 +744,8 @@ Fourth caller-driven audit:
   scaffold, no longer exercises the single-term reference wrapper, and no
   longer asserts unsupported-term helper vocabulary. It now keeps only compact
   pair-plan shape/status checks plus finite numerical equivalence for the
-  active multi-term oracle. CPB provider tests remain responsible for detailed
-  local one-body operator correctness.
+  active multi-term oracle. The old provider tests are historical evidence,
+  not current ownership of local one-body correctness.
 
 Fifth batched caller-driven sweep:
 
@@ -783,7 +798,7 @@ Batch actions:
   density-density or nuclear matrices from every old source-box pair helper.
   It also no longer asserts all-pairs inventory object names, helper maps, or
   repeated diagnostic nonclaims for these Coulomb-family paths.
-- Detailed local Coulomb numerical correctness is intentionally owned by the
-  CPB provider electron-electron and electron-nuclear local block tests. The
-  CCPM route-shaped Coulomb helpers remain retirement-bound diagnostics/oracles
-  until a real CPB route adaptation replaces their remaining source callers.
+- Detailed local Coulomb checks in the provider pilot are historical evidence.
+  The CCPM route-shaped Coulomb helpers remain separate diagnostics/oracles
+  until their own current caller/owner audit authorizes a replacement or
+  retirement; the retiring provider supplies neither.

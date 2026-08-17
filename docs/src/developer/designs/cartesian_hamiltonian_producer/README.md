@@ -182,8 +182,11 @@ ID or subsystem.
   records deletion of the old route-driver materialization/report/save wrapper
   workflow and stale tool/test pressure
 - [QW/high-order and carried-space retirement](qw_high_order_experimental_retirement.md)
-  records the completed obsolete experimental-cluster deletion and the
-  approved final orphaned-adapter retirement
+  records the completed obsolete experimental-cluster and orphaned-adapter
+  deletions
+- [Cartesian CPB block-provider retirement](cartesian_cpb_block_provider_retirement.md)
+  authorizes removal of the orphaned provider pilot while preserving active
+  CPB geometry, parent factors, raw blocks, and producer routes
 - [Algorithm implementation index](../../algorithm_implementation_index.md)
 
 ## Contracts, Amendments, And Completed Records
