@@ -1,7 +1,7 @@
 # Parent-Backed Injected Composition
 
-Status: implemented internal numerical facility; bounded de-promotion of the
-PRF-specific root exports is approved pending implementation.
+Status: implemented internal numerical facility; the PRF-specific wrappers and
+result types are private diagnostic/provenance surfaces.
 
 Authority IDs:
 
@@ -68,7 +68,7 @@ constructor under `HP-R1-FILE-01`. Active drivers, source consumers, and the
 public Cartesian endpoint depend on that export. Its staged return fields are
 not a stable public result schema.
 
-The approved de-promotion removes these six PRF-specific root exports while
+The completed de-promotion removed these six PRF-specific root exports while
 retaining their implementations unchanged for qualified internal validation:
 
 ```text
@@ -80,10 +80,10 @@ cartesian_parent_backed_composition
 cartesian_parent_backed_hamiltonian
 ```
 
-Until the deletion lands, their presence in the root export list is
-transitional and grants no compatibility obligation. No alias, deprecation,
-shim, replacement, additional export, type, field, signature, artifact
-identity, or automatic selection policy is approved.
+These names remain module-qualified internal definitions and grant no
+compatibility obligation. No alias, deprecation, shim, replacement, additional
+export, type, field, signature, artifact identity, or automatic selection
+policy is approved.
 
 Every composition request must bind its descriptor and PRF to the same exact
 terminal source block. Before either additive or injected composition proceeds,

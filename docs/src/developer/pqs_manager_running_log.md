@@ -52,9 +52,9 @@ archaeology and are not normal startup reading.
 - PRF mechanics retain semantic region discovery, consumer-targeted residual
   construction, additive/fixed-span composition, and the category-owned
   unscreened Hamiltonian as private diagnostic/provenance surfaces. Six
-  unsupported root exports are approved for de-promotion; physical target
-  selection, transition-density exchange, and PRF-to-GTO-residual interactions
-  remain consumer questions.
+  unsupported root exports have been removed; physical target selection,
+  transition-density exchange, and PRF-to-GTO-residual interactions remain
+  consumer questions.
 - Explicit charged electron sectors are implemented without changing bare
   basis or operator arrays. Specialized retained-GTO EGOI remains archived
   and deferred with no execution grant.
@@ -85,9 +85,8 @@ archaeology and are not normal startup reading.
 
 **MT1 - Conformance remediation (active).** Resolve the bounded Pass 398
 discrepancies and demonstrated exported-surface defects under explicit
-authority. The ordinary-QW nested diatomic repair is closed. The next bounded
-API correction removes six unsupported PRF-specific root exports without
-changing their numerical implementation. Keep each repair narrow.
+authority. The ordinary-QW nested diatomic repair and PRF API de-promotion are
+closed without numerical changes. Keep each subsequent repair narrow.
 
 **MT2 - Controlled Cr2 source migration (completed).** The source-backed
 fixed-state and bounded replay reproduced the former consumer-local path. Any
@@ -1170,3 +1169,40 @@ Carrying-cost accounting:
   expert R1 working-basis export from private PRF wrappers.
 - **MT6 - active:** remove six export entries and no numerical implementation;
   further cleanup still requires fresh caller and capability audits.
+
+## Cartesian Hamiltonian Producer Pass 476 - Close PRF API De-Promotion Lifecycle
+
+Commit(s):
+- `820c2fc8b` - exact export/test qualification implementation;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted removal of exactly six unsupported PRF root exports and qualification
+  of exactly nine existing nested-H2 references. Runtime verification confirms
+  that all six names remain defined inside `GaussletBases` but are unexported;
+  `cartesian_base_working_basis` remains exported under `HP-R1-FILE-01`.
+- `HP-PQS-PRF-CONSUMER-FN-01` returns to implemented private/internal
+  maintenance, and its test ID returns to completed internal maintenance. PRF
+  definitions, diagnostics, numerical behavior, and historical Cr2
+  reproduction capability are unchanged. This is API de-promotion, not PRF
+  retirement.
+
+Goal advancement / guardrail:
+- MT1 closes the public-surface discrepancy and MT6 removes carrying cost
+  without deleting physics capability. No PRF deletion, numerical change,
+  compatibility shim, or broader public-surface work is authorized.
+
+Carrying-cost accounting:
+- deleted: six unsupported root export entries.
+- simplified: nine existing test references are explicitly module-qualified.
+- quarantined: historical PRF/Cr2 evidence remains unchanged.
+- not deleted because: all PRF definitions and diagnostics retain internal
+  provenance, validation, and reproduction value.
+- exact remaining caller/blocker: none for this API de-promotion.
+- added/deleted `src` lines: `0/6`; new tests: none, nine net-zero substitutions;
+  new metadata/status fields: none.
+- validation: implementation diff review, package load, nested H2 `464/464`,
+  supplemented facade `73/73`, bounded groups `12,740/12,740`, unchanged H2
+  due-diligence fingerprints, runtime defined/unexported check, authority
+  render/check/self-test, docs tests, Documenter, manager-log bound, docs-only
+  scope review, and `git diff --check`.

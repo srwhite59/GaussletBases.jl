@@ -59,7 +59,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/occupied_first
 sha256 = "7f5d9d262246fb486c438db3a0a23450dd3e944ec303548429c21d6ec3a0d7ff"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_backed_injected_composition.md"
-sha256 = "85469725d9caa475d9ae708b82325e80387086e0c865cba627d07404a149113d"
+sha256 = "dbc451f42356cbb27a1bbcca67372ecc893afc899684619625807dfec3317286"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_residual_functions.md"
 sha256 = "8453e6fe29a0e349b6499669e23c11e55fa33f41486b48c1b54c42a55a253b3a"
@@ -2561,12 +2561,12 @@ title = "parent-backed Gaussian direct validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-PRF-FN-01", "HP-PQS-PRF-INJECT-COMP-FN-01", "HP-PQS-PRF-INJECT-INTERACT-FN-01", "HP-R3U-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-PRF-CONSUMER-FN-01"
-lifecycle = "approved"
-scope = "Delete exactly six PRF-specific root export entries from src/GaussletBases.jl: CartesianParentResidualRegion, CartesianParentBackedHamiltonianResult, cartesian_parent_residual_regions, cartesian_parent_residual_block, cartesian_parent_backed_composition, and cartesian_parent_backed_hamiltonian. Retain cartesian_base_working_basis as the unchanged expert/unstable root export owned by HP-R1-FILE-01. Retain all six named definitions, including both types, unchanged and unexported. Add no alias, shim, deprecation, helper, replacement, export, type, field, signature, metadata, default, artifact, driver, solver, or numerical change. Expected source delta is exactly +0/-6."
+lifecycle = "implemented"
+scope = "Maintain only the six unexported PRF diagnostic/provenance definitions in src/cartesian_base_hamiltonian.jl: CartesianParentResidualRegion, CartesianParentBackedHamiltonianResult, cartesian_parent_residual_regions, cartesian_parent_residual_block, cartesian_parent_backed_composition, and cartesian_parent_backed_hamiltonian. Preserve exact descriptor-to-PRF source binding, delegation to the independently owned PRF/injection/operator/interaction numerics, and unchanged historical Cr2 reproduction capability. Do not re-export them or add an alias, shim, deprecation, helper, replacement, type, field, signature, metadata, default, artifact, driver, solver, numerical change, broader PRF cleanup, or public compatibility promise."
 surfaces = ["source"]
-title = "de-promote PRF consumer root exports"
+title = "private PRF consumer diagnostics"
 
     [[records.document_refs]]
     heading = "Consumer API Contract"
@@ -2594,17 +2594,23 @@ title = "de-promote PRF consumer root exports"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "475"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "820c2fc8bc9fa25ca699994e3eff0805b5b5eb98"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "476"
 
     [[records.paths]]
     kind = "source"
-    path = "src/GaussletBases.jl"
+    path = "src/cartesian_base_hamiltonian.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-PRF-CONSUMER-FN-01", "HP-PQS-PRF-INJECT-COMP-TEST-01", "HP-PQS-PRF-INJECT-INTERACT-TEST-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-PRF-CONSUMER-TEST-01"
-lifecycle = "approved"
-scope = "Qualify exactly the nine existing unqualified PRF wrapper calls and type assertion in test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl as GaussletBases.<name> after export removal. Add or remove no assertion and make no numerical, fixture, owner, file, probe, endpoint-policy, or broader API change. The edit is nine substitutions with zero net lines."
+lifecycle = "completed"
+scope = "Maintain only the existing qualified internal PRF validation in test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl: semantic-region uniqueness, stale-basis and cross-region rejection, additive/fixed-span composition parity, exact final-Hamiltonian parity, and omitted-path and malformed-input gates. Keep every PRF call and type assertion module-qualified. Add or remove no assertion, fixture, owner, file, probe, endpoint policy, public API promise, or numerical behavior."
 surfaces = ["tests"]
 title = "qualify internal PRF consumer validation"
 
@@ -2634,6 +2640,12 @@ title = "qualify internal PRF consumer validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "475"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "820c2fc8bc9fa25ca699994e3eff0805b5b5eb98"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "476"
 
     [[records.paths]]
     kind = "test"

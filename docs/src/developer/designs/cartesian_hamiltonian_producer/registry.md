@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `3bf990165c5a8e08de758b4f3428ca073d62755470917ff1e798811857a5f4d4`.
+> [authority.toml](authority.toml), SHA-256 `a18114b8d7739fff0cf26768d89a5e6a932d488438febebc1de63e4d983bd9cf`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1541,16 +1541,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Dependencies:** `HP-PQS-PARENT-GDIRECT-FN-01`
 - **Scope:** Maintain only the committed analytic onsite, symmetry, finiteness, positive-semidefinite, far-tail, expansion-identity, charge, tiled-parity, bounded parent-IDA, and unchanged-G-G checks. No transition-exchange, PRF-GTO-residual, Cr2, HF, endpoint, or complete-Hamiltonian assertion.
 
-### HP-PQS-PRF-CONSUMER-FN-01 - de-promote PRF consumer root exports
+### HP-PQS-PRF-CONSUMER-FN-01 - private PRF consumer diagnostics
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Consumer API Contract`
 - **Owned paths:**
-  - `source` / `existing`: `src/GaussletBases.jl`
+  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/hooke/reports/hooke_be_ns5_prf_completion_status_2026-08-06.md`
   - `manager_pass`: `449`
@@ -1559,13 +1559,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `be59362b8`
   - `manager_pass`: `451`
   - `manager_pass`: `475`
+  - `git_commit`: `820c2fc8bc9fa25ca699994e3eff0805b5b5eb98`
+  - `manager_pass`: `476`
 - **Dependencies:** `HP-PQS-PRF-FN-01`, `HP-PQS-PRF-INJECT-COMP-FN-01`, `HP-PQS-PRF-INJECT-INTERACT-FN-01`, `HP-R3U-FN-01`
-- **Scope:** Delete exactly six PRF-specific root export entries from src/GaussletBases.jl: CartesianParentResidualRegion, CartesianParentBackedHamiltonianResult, cartesian\_parent\_residual\_regions, cartesian\_parent\_residual\_block, cartesian\_parent\_backed\_composition, and cartesian\_parent\_backed\_hamiltonian. Retain cartesian\_base\_working\_basis as the unchanged expert/unstable root export owned by HP-R1-FILE-01. Retain all six named definitions, including both types, unchanged and unexported. Add no alias, shim, deprecation, helper, replacement, export, type, field, signature, metadata, default, artifact, driver, solver, or numerical change. Expected source delta is exactly +0/-6.
+- **Scope:** Maintain only the six unexported PRF diagnostic/provenance definitions in src/cartesian\_base\_hamiltonian.jl: CartesianParentResidualRegion, CartesianParentBackedHamiltonianResult, cartesian\_parent\_residual\_regions, cartesian\_parent\_residual\_block, cartesian\_parent\_backed\_composition, and cartesian\_parent\_backed\_hamiltonian. Preserve exact descriptor-to-PRF source binding, delegation to the independently owned PRF/injection/operator/interaction numerics, and unchanged historical Cr2 reproduction capability. Do not re-export them or add an alias, shim, deprecation, helper, replacement, type, field, signature, metadata, default, artifact, driver, solver, numerical change, broader PRF cleanup, or public compatibility promise.
 
 ### HP-PQS-PRF-CONSUMER-TEST-01 - qualify internal PRF consumer validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1580,8 +1582,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `be59362b8`
   - `manager_pass`: `451`
   - `manager_pass`: `475`
+  - `git_commit`: `820c2fc8bc9fa25ca699994e3eff0805b5b5eb98`
+  - `manager_pass`: `476`
 - **Dependencies:** `HP-PQS-PRF-CONSUMER-FN-01`, `HP-PQS-PRF-INJECT-COMP-TEST-01`, `HP-PQS-PRF-INJECT-INTERACT-TEST-01`
-- **Scope:** Qualify exactly the nine existing unqualified PRF wrapper calls and type assertion in test/nested/cartesian\_r3a\_h2\_augmented\_one\_body\_runtests.jl as GaussletBases.\<name\> after export removal. Add or remove no assertion and make no numerical, fixture, owner, file, probe, endpoint-policy, or broader API change. The edit is nine substitutions with zero net lines.
+- **Scope:** Maintain only the existing qualified internal PRF validation in test/nested/cartesian\_r3a\_h2\_augmented\_one\_body\_runtests.jl: semantic-region uniqueness, stale-basis and cross-region rejection, additive/fixed-span composition parity, exact final-Hamiltonian parity, and omitted-path and malformed-input gates. Keep every PRF call and type assertion module-qualified. Add or remove no assertion, fixture, owner, file, probe, endpoint policy, public API promise, or numerical behavior.
 
 ### HP-PQS-PRF-FN-01 - parent residual function mechanics
 
