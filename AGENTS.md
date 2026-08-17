@@ -32,6 +32,24 @@ substantive work. Reread this file, the role prompt or current assignment, and
 any governing framework doc cited by the task; then briefly restate role,
 current task boundary, and signoff line.
 
+## Standing role and subagent authority
+
+Named standing roles are separate user-started agents, not subagent personas.
+No agent may spawn or rename a subagent as `repo-design-manager`,
+`repo-manager`, `repo-doer`, `bloat-fixer`, or another standing role unless the
+user explicitly authorizes that exact delegation.
+
+Subagents remain bounded helpers of the parent agent. They do not acquire
+independent authority to approve designs, amend `authority.toml` or other
+authority records, broaden scope, commit, push, or use a standing role's
+signoff unless the user or governing startup authority explicitly grants that
+exact action.
+
+If another standing role is needed, prepare a short pasteable request for the
+user. Do not simulate or instantiate that role. Stopping an unauthorized
+subagent does not itself authorize reverting or amending work it already made;
+report the exact state to the owning role and user.
+
 ## Julia execution
 
 Prefer one of these two launch styles for routine work:
@@ -522,7 +540,7 @@ execution whitelist even when their historical ID stays in the registry.
 <!-- BEGIN CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST -->
 > **Generated authority view. Do not edit this block.**
 > Source: `docs/src/developer/designs/cartesian_hamiltonian_producer/authority.toml`.
-> Authority SHA-256: `c441787cc8f1e90d1f17455eb6f9a51e9bdcd5a916770aa5f360ec920ce91638`.
+> Authority SHA-256: `0093f3e09a0b7a75ca6080ceddc1beba4651f2293861f049a71b039f11bbb087`.
 
 Cartesian Hamiltonian producer source work is currently authorized only for
 these approved design IDs:
