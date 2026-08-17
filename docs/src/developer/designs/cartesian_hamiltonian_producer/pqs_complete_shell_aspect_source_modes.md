@@ -143,11 +143,10 @@ Every downstream representation of an eligible shell must consume the same
 - due-diligence actual-shape rows;
 - final realization validation.
 
-The PQS multilayer source plan continues to accept noncubic
-`raw_source_dims`, require equal transverse dimensions, derive transverse `q`
-and bond-axis `L`, and call `_nested_projected_q_shell_layer(...)` with the
-explicit shape. It must not replace `L` with `q` after an authoritative shape
-exists.
+The current PQS terminal route carries noncubic `source_mode_shape` through
+its lowering, support, retained-rule, and terminal-realization records. It
+must require equal transverse dimensions, derive transverse `q` and bond-axis
+`L`, and must not replace `L` with `q` after an authoritative shape exists.
 
 White-Lindsey carries the existing `source_mode_shape` to its stratum children
 and derives each free-axis count from the corresponding component minus two.
@@ -171,12 +170,14 @@ Current maintenance ownership is limited to:
 
 - `src/pqs_source_box_route_driver_helpers.jl` for angular-dimension
   selection and matched lowering-contract enrichment;
-- `src/pqs_multilayer_shell_region_plan.jl` for carrying the PQS shape;
-- `src/pqs_multilayer_shell_source_plan.jl` for noncubic PQS realization;
 - `src/cartesian_base_hamiltonian.jl` for due-diligence shape reporting and
   route-aware aggregate interpretation;
 - `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
   for axis-specific WL one-dimensional counts.
+
+The obsolete contracted-parent/multilayer planning route is independently
+approved for retirement under `HP-RETIRE-CONTRACTED-PARENT-FN-01`. It is not
+an aspect-shell owner or fallback implementation.
 
 The older angular selector remains in its established diatomic owner. No
 second selector or user-facing aspect parameter is introduced.

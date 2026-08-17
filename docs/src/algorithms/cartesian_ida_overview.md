@@ -111,16 +111,19 @@ R^T S R \approx I.
 
 Current implementation surfaces are:
 
-- `src/cartesian_final_basis_realization/pqs_source_shell_final_basis.jl`
-  for shell-local projection and Lowdin realization.
-- `src/cartesian_final_basis_realization/pqs_complete_core_shell_final_basis.jl`
-  for common complete core/shell basis and IDA interaction helpers.
-- `src/pqs_multilayer_complete_core_shell_h1.jl` for the common PQS H1 and
-  density-interaction payload.
+- `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  for current support-local terminal realization.
+- `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` and
+  `src/cartesian_final_basis_realization/pqs_terminal_ida.jl` for current
+  terminal one-body and IDA assembly.
 - `src/cartesian_ida_hamiltonian.jl` for the public one-basis IDA Hamiltonian
   object and minimal artifact reader/writer.
 - `src/cartesian_gaussian_axis_integrals.jl` for shared Cartesian Gaussian axis
   integral kernels where present.
+
+The older contracted-parent/multilayer complete-core-shell oracle is approved
+for [retirement](../developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md)
+and is not a current implementation surface.
 
 ## Current Implementation Deviations
 

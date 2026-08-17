@@ -1,5 +1,14 @@
 # PQS Near-Term Final-Basis Realization Plan
 
+> **Historical June 2026 plan. Not current authority.** Current terminal
+> realization is owned by the producer contracts linked from
+> `designs/cartesian_hamiltonian_producer/README.md`. The alternative
+> contracted-parent, multilayer, and complete-core-shell implementation
+> described below is approved for deletion under
+> [HP-RETIRE-CONTRACTED-PARENT-FN-01](designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md).
+> Retain this page only as design history; do not use its prospective status or
+> source map for implementation work.
+
 This note captures the immediate module-boundary, algorithm-shape, and test
 discipline decisions after the 2026-06-12 PQS source-box pivot baton loop.
 It is a near-term implementation guide, not a new framework layer.

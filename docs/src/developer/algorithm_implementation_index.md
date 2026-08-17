@@ -234,7 +234,7 @@ block pairs.
 Key docs:
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/`
 - `docs/src/developer/pqs_source_box_operator_framework.md`
-- `docs/src/developer/pqs_near_term_final_basis_realization_plan.md`
+- `docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md`
 - `JuliaStyle.md`, Lowdin guidance
 
 Source anchors:
@@ -242,9 +242,9 @@ Source anchors:
   `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
 - **active donor pattern**:
   `src/cartesian_final_basis_realization/pqs_source_shell_final_basis.jl`
-- **oracle/reference only**:
-  `src/cartesian_final_basis_realization/pqs_complete_core_shell_final_basis.jl`
-- **oracle/reference only**: `src/pqs_multilayer_complete_core_shell_h1.jl`
+- **approved retirement**: the contracted-parent/multilayer
+  complete-core-shell oracle, recorded in
+  `docs/src/developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md`
 
 Do-not-forget rule:
 Use `inv(sqrt(Symmetric(overlap)))` for symmetric Lowdin. Build from raw
@@ -265,11 +265,10 @@ Key docs:
 
 Source anchors:
 - **active reusable kernel**: `src/cartesian_route_core/retained_spaces.jl`
-- **active donor pattern**:
-  `src/cartesian_contracted_parent_metrics/source_box_pair_shadow.jl`:
-  `_pqs_raw_product_box_plan`, `_pqs_product_box_realization_plan`
 - **oracle/reference only**:
   `src/cartesian_pair_block_materialization/pqs_source_safe_terms.jl`
+- **approved retirement**: the unused contracted-parent source-box shadow and
+  private GTO adapter
 
 Do-not-forget rule:
 COMX boundary product modes define retained source modes. Support rows and
@@ -341,8 +340,7 @@ Source anchors:
   `pqs_terminal_residual_gto_augmented_unit_nuclear`
 - **consumer example only**: `src/ordinary_qw_operator_assembly.jl`,
   `assembled_one_body_hamiltonian`
-- **oracle/reference only**: `src/pqs_multilayer_support_one_body.jl`:
-  `pqs_multilayer_support_electron_nuclear_by_center_matrices`
+- **approved retirement**: the unused multilayer support one-body oracle
 - **retired/do not call**:
   deleted CPBM global electron-nuclear retained-matrix pilot
 
@@ -404,8 +402,8 @@ Source anchors:
   `_mapped_coulomb_expanded_symmetric_matrix`
 - **active donor pattern**: `src/ordinary_qw_raw_blocks.jl`,
   `_qwrg_fixed_block_interaction_matrix`
-- **active donor pattern**: `src/cartesian_contracted_parent_metrics/core.jl`:
-  `_pqs_source_box_ida_factor_provenance`
+- **approved retirement**: the unused contracted-parent IDA provenance and
+  metric oracle cluster
 - **consumer example only**: `src/ordinary_cartesian_ida.jl`,
   `_ordinary_cartesian_ida_from_pair_factors`,
   `_ordinary_cartesian_ida_from_gausslet_bundle`
@@ -526,7 +524,8 @@ Source anchors:
 - **oracle/reference only**: `src/cartesian_nested_faces.jl`
 - **oracle/reference only**: `src/ordinary_qw_raw_blocks.jl`
 - **consumer example only**: `src/ordinary_qw_operator_assembly.jl`
-- **oracle/reference only**: `src/cartesian_contracted_parent_metrics/`
+- **approved retirement**: `src/cartesian_contracted_parent_metrics/`; its
+  historical oracle role has no current caller
 
 Do-not-forget rule:
 Old code may feed adapters or oracle comparisons. It should not silently become

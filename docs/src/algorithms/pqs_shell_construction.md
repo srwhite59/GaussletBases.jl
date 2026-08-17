@@ -171,11 +171,10 @@ nonzero and remain assembled over terminal block pairs.
 - `src/cartesian_shellification/terminal_geometry.jl` implements the
   diatomic atom-contact core seed-box hull rule and terminal region coverage
   checks before lowering.
-- `src/cartesian_final_basis_realization/pqs_complete_core_shell_final_basis.jl`
-  is oracle/reference for legacy complete core/shell basis assembly, not the
-  current block-local terminal support authority.
-- `src/pqs_multilayer_complete_core_shell_h1.jl` consumes the completed basis
-  in legacy/operator-reference paths.
+- The obsolete complete-core-shell and multilayer oracle route is approved for
+  deletion under the
+  [contracted-parent/multilayer retirement](../developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md).
+  It is not a current terminal-basis donor.
 
 ## Current Implementation Deviations
 

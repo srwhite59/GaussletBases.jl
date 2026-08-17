@@ -171,13 +171,17 @@ matrix readback path ignores those extra keys.
 
 ## Code Map
 
-- `src/pqs_multilayer_complete_core_shell_h1.jl` builds the common complete
-  core/shell H1 path and separated center contributions.
-- `src/cartesian_final_basis_realization/pqs_complete_core_shell_final_basis.jl`
-  builds IDA density interaction helpers in the completed localized basis.
+- `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` builds
+  current terminal one-body operators and separated unit-nuclear fields.
+- `src/cartesian_final_basis_realization/pqs_terminal_ida.jl` builds the
+  current terminal IDA interaction.
 - `src/cartesian_ida_hamiltonian.jl` contains the public one-basis IDA
   Hamiltonian object and minimal artifact reader/writer.
 - `src/cartesian_base_hamiltonian.jl` contains the narrow public H/H2 facade.
+
+The obsolete contracted-parent/multilayer complete-core-shell route is
+approved for
+[retirement](../developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md).
 
 ## Current Implementation Deviations
 

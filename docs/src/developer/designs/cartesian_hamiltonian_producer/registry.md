@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `cac5f160a2785081f28069ab6c404cf76e9e3830db13fdea43f92be0f35db0c3`.
+> [authority.toml](authority.toml), SHA-256 `7310ec1e319bb39949525cab1ecf825f51e27792c18f7e5546efc1ad96ebed67`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1299,8 +1299,6 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
   - `source` / `existing`: `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/pqs_multilayer_shell_region_plan.jl`
-  - `source` / `existing`: `src/pqs_multilayer_shell_source_plan.jl`
   - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/pqs_wl_shared_shell_policy_audit_2026-07-29.md`
@@ -2513,6 +2511,53 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** retirement validation.
+
+### HP-RETIRE-CONTRACTED-PARENT-FN-01 - retire obsolete contracted-parent and multilayer route
+
+- **Lifecycle:** `approved`
+- **Grant:** `retirement`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [contracted\_parent\_multilayer\_retirement.md](contracted_parent_multilayer_retirement.md); heading `Contracted-Parent And Multilayer Retirement`
+- **Owned paths:**
+  - `source` / `existing`: `src/CartesianContractedParentMetrics.jl`
+  - `source` / `existing`: `src/CartesianContractedParents.jl`
+  - `source` / `existing`: `src/GaussletBases.jl`
+  - `source` / `existing`: `src/cartesian_contracted_parent_metrics/core.jl`
+  - `source` / `existing`: `src/cartesian_contracted_parent_metrics/product_staged_metric_fallbacks.jl`
+  - `source` / `existing`: `src/cartesian_contracted_parent_metrics/source_box_pair_shadow.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_complete_core_shell_final_basis.jl`
+  - `source` / `existing`: `src/cartesian_gto_probes.jl`
+  - `source` / `existing`: `src/pqs_multilayer_complete_core_shell_h1.jl`
+  - `source` / `existing`: `src/pqs_multilayer_shell_region_plan.jl`
+  - `source` / `existing`: `src/pqs_multilayer_shell_source_plan.jl`
+  - `source` / `existing`: `src/pqs_multilayer_support_density.jl`
+  - `source` / `existing`: `src/pqs_multilayer_support_one_body.jl`
+  - `source` / `existing`: `src/pqs_source_box_low_order_materialization.jl`
+- **Evidence:**
+  - `manager_pass`: `466`
+  - `repo_path`: `tmp/work/benchmark_cartesian_contracted_parent_metric_packet.jl`
+  - `repo_path`: `tmp/work/validate_product_doside_source_box_unification.jl`
+  - `repo_path`: `tmp/work/validate_route_shaped_safe_term_consumer.jl`
+- **Dependencies:** none
+- **Scope:** Delete exactly the no-caller contracted-parent/metrics submodules, five-file PQS multilayer family, complete-core-shell final-basis utility, seven root includes, final-basis include/doc claim, private GTO source-box shadow, dead atomic multilayer adapter, and three tracked probes, for 9,541 source plus 983 probe lines. Add no replacement, alias, shim, helper, moved kernel, or compatibility surface; preserve every current parent, terminal, PQS/WL, PRF, pair-materialization, raw-block, represented-Hartree, IDA, artifact, and driver owner. Stop without committing if a live caller or side effect is found.
+
+### HP-RETIRE-CONTRACTED-PARENT-TEST-01 - validate contracted-parent and multilayer retirement
+
+- **Lifecycle:** `approved`
+- **Grant:** `retirement`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [contracted\_parent\_multilayer\_retirement.md](contracted_parent_multilayer_retirement.md); heading `Contracted-Parent And Multilayer Retirement`
+- **Owned paths:**
+  - `test` / `existing`: `test/ida/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `466`
+- **Dependencies:** `HP-RETIRE-CONTRACTED-PARENT-FN-01`
+- **Scope:** Delete only the obsolete 66-line contracted-parent PGDG-factor testset from test/ida/runtests.jl, add or edit no replacement test, then validate package load, unchanged core/ida/cartesian groups, public Cartesian terminal due diligence, exact line accounting, the anti-bloat scan, and git diff --check.
 
 ### HP-RETIRE-CPB-PROVIDER-FN-01 - retire orphaned Cartesian CPB block-provider pilot
 

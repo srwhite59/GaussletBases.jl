@@ -31,6 +31,9 @@ sha256 = "28882b0681709f2644f499c6c74f2981c94760224a04329a06b223191ffb7a53"
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/complete_core_shell_rhf_retirement.md"
 sha256 = "99520abb40f2d828f9cd80fb56517259fb20c37310a58924380d3d6c2e00f4be"
 [[documents]]
+path = "docs/src/developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md"
+sha256 = "75dc7b4ccaf38686abbe109f8cd99850faba53cb8c8b6a8984a32d4b56127a9a"
+[[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
 sha256 = "68cfa9dcc5b5fa59f553f22251e81fcbe5b54bec4bef627b2907cf81db492a36"
 [[documents]]
@@ -56,7 +59,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_residua
 sha256 = "24aea15b22071cf594bd09aff7849c3d04476946562eaae7a89869e74acd6c73"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_complete_shell_aspect_source_modes.md"
-sha256 = "8146c1b1c23911b1ff56d41d35721f747aa35a22e804898474f3292a778cc5c0"
+sha256 = "09ffdbabd6d9f78c235d85ba0d8ea033c57eb9eb9d13af221b862b97d586bdad"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_factor.md"
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
@@ -80,7 +83,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/public_ns_core
 sha256 = "142b1126ee3026b86298881855be33cc49b039b9f2b5eabca7feb2cdf5d37b3a"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/qw_high_order_experimental_retirement.md"
-sha256 = "2f3adcff3e012e412803e7324dfbb7b43bdec0adf4e752b34bf491e4aeacc781"
+sha256 = "33c530212f53ae31c07f2cb6de5dcc0d6b04ab26cf4a5978e85943d9213909d4"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_one_center_base_atoms.md"
 sha256 = "15f4ac5db40d40f8ca73876aad4f1efe625fed46086e240a5d6138ede3fef42b"
@@ -2097,14 +2100,6 @@ title = "matched PQS/WL aspect-aware shell modes"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/pqs_multilayer_shell_region_plan.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/pqs_multilayer_shell_source_plan.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
     path = "src/pqs_source_box_route_driver_helpers.jl"
     state = "existing"
 [[records]]
@@ -4077,6 +4072,115 @@ title = "retirement validation"
     heading = "Complete-Core-Shell RHF Retirement"
     kind = "evidence"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/complete_core_shell_rhf_retirement.md"
+[[records]]
+dependency_ids = []
+grant = "retirement"
+id = "HP-RETIRE-CONTRACTED-PARENT-FN-01"
+lifecycle = "approved"
+scope = "Delete exactly the no-caller contracted-parent/metrics submodules, five-file PQS multilayer family, complete-core-shell final-basis utility, seven root includes, final-basis include/doc claim, private GTO source-box shadow, dead atomic multilayer adapter, and three tracked probes, for 9,541 source plus 983 probe lines. Add no replacement, alias, shim, helper, moved kernel, or compatibility surface; preserve every current parent, terminal, PQS/WL, PRF, pair-materialization, raw-block, represented-Hartree, IDA, artifact, and driver owner. Stop without committing if a live caller or side effect is found."
+surfaces = ["source"]
+title = "retire obsolete contracted-parent and multilayer route"
+
+    [[records.document_refs]]
+    heading = "Contracted-Parent And Multilayer Retirement"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "466"
+    [[records.evidence_refs]]
+    kind = "repo_path"
+    value = "tmp/work/benchmark_cartesian_contracted_parent_metric_packet.jl"
+    [[records.evidence_refs]]
+    kind = "repo_path"
+    value = "tmp/work/validate_product_doside_source_box_unification.jl"
+    [[records.evidence_refs]]
+    kind = "repo_path"
+    value = "tmp/work/validate_route_shaped_safe_term_consumer.jl"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/CartesianContractedParentMetrics.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/CartesianContractedParents.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_contracted_parent_metrics/core.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_contracted_parent_metrics/product_staged_metric_fallbacks.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_contracted_parent_metrics/source_box_pair_shadow.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/pqs_complete_core_shell_final_basis.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_gto_probes.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/pqs_multilayer_complete_core_shell_h1.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/pqs_multilayer_shell_region_plan.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/pqs_multilayer_shell_source_plan.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/pqs_multilayer_support_density.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/pqs_multilayer_support_one_body.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/pqs_source_box_low_order_materialization.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-RETIRE-CONTRACTED-PARENT-FN-01"]
+grant = "retirement"
+id = "HP-RETIRE-CONTRACTED-PARENT-TEST-01"
+lifecycle = "approved"
+scope = "Delete only the obsolete 66-line contracted-parent PGDG-factor testset from test/ida/runtests.jl, add or edit no replacement test, then validate package load, unchanged core/ida/cartesian groups, public Cartesian terminal due diligence, exact line accounting, the anti-bloat scan, and git diff --check."
+surfaces = ["tests"]
+title = "validate contracted-parent and multilayer retirement"
+
+    [[records.document_refs]]
+    heading = "Contracted-Parent And Multilayer Retirement"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "466"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/ida/runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"

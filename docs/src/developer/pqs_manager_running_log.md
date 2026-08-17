@@ -1759,3 +1759,45 @@ Carrying-cost accounting:
 - **MT6 - active:** the orphaned CPB provider is fully removed; broader
   pair-materialization, contracted-parent, multilayer, and ordinary-QW cleanup
   remain independent caller/authority decisions.
+
+## Cartesian Hamiltonian Producer Pass 466 - Authorize Contracted-Parent And Multilayer Retirement
+
+Commit(s):
+- this docs-only retirement-authority commit.
+
+Summary:
+- Approved exact deletion of the abandoned contracted-parent/metrics,
+  five-file PQS multilayer, and complete-core-shell final-basis route, plus its
+  seven root includes, two dead partial adapters, one obsolete IDA testset, and
+  three tracked probes. The audited reduction is `9,541` source, `66` test,
+  and `983` tracked-probe lines: `10,590` total.
+- Caller review found no current public or production numerical consumer. The
+  two submodule APIs and multilayer family are internal planning/oracle
+  vocabulary, not compatibility obligations. The matched aspect-shell ID
+  retains only its current base-Hamiltonian, White--Lindsey-realizer, and
+  route-helper ownership.
+- Current parent bases/factors, shellification, terminal PQS/White--Lindsey,
+  PRFs, source-shell realization, pair materialization, Gaussian raw blocks,
+  represented Hartree, IDA, artifacts, and drivers remain protected.
+
+Goal advancement / guardrail:
+- MT6 advances through another large no-caller retirement. The implementation
+  pass must stop if it finds a live committed caller or side effect; it may not
+  add a shim, move a kernel, or narrow the deletion through compatibility glue.
+
+Carrying-cost accounting:
+- deleted: none in this docs-only pass; `10,590` tracked lines authorized for
+  the next reviewed deletion.
+- simplified: stale code maps and donor claims now identify current terminal
+  and representation owners.
+- quarantined: ignored historical probes may remain pinned to old commits.
+- not deleted because: all current numerical owners have independent live
+  consumers and contracts.
+- exact remaining caller/blocker: exact deletion and unchanged active endpoint
+  validation only.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none.
+- validation: source/caller/load-side-effect audit, exact line accounting,
+  authority render/check/self-test, generated-view parity, docs tests,
+  Documenter, manager-log bound, docs-only scope review, and
+  `git diff --check`.

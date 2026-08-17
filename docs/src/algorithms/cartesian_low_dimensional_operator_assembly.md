@@ -119,12 +119,15 @@ model choice, not a failed attempt to store full four-index ERIs.
 
 - `src/cartesian_pair_block_materialization/pqs_source_safe_terms.jl`
   contains source-space safe one-body term assembly.
-- `src/pqs_multilayer_complete_core_shell_h1.jl` consumes support operators
-  for the common complete core/shell H1 path.
+- `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` consumes
+  factorized products for current terminal one-body assembly.
 - `src/cartesian_gaussian_axis_integrals.jl` owns shared Gaussian axis integral
   kernels where present.
 - `src/ordinary_qw_raw_blocks.jl` still contains donor/reference raw-block
   surfaces used by surviving QW routes.
+
+The obsolete multilayer complete-core-shell operator path is approved for
+[retirement](../developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md).
 
 ## Current Implementation Deviations
 

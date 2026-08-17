@@ -33,6 +33,7 @@ This section is where to go when you want:
 - [Cartesian parent factors and historical CPB provider pilot](cartesian_parent_factors_and_cpb_kernels.md)
 - [Historical CPB overlap placement plan](cartesian_cpb_overlap_placement_plan.md)
 - [Cartesian CPB block-provider retirement](designs/cartesian_hamiltonian_producer/cartesian_cpb_block_provider_retirement.md)
+- [Contracted-parent and multilayer retirement](designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md)
 - [Cartesian coordinate product box contract](cartesian_coordinate_product_box_contract.md)
 - [Cartesian route dictionary](cartesian_route_dictionary.md)
 - [Historical Cartesian QW receipt wrapper status](cartesian_qw_receipt_wrapper_status.md)
