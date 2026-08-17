@@ -59,10 +59,10 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/occupied_first
 sha256 = "7f5d9d262246fb486c438db3a0a23450dd3e944ec303548429c21d6ec3a0d7ff"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_backed_injected_composition.md"
-sha256 = "7da5f3e15183cc47e673bfedb63a4f801e5987e7404100ba9c6f06210c697b90"
+sha256 = "85469725d9caa475d9ae708b82325e80387086e0c865cba627d07404a149113d"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_residual_functions.md"
-sha256 = "24aea15b22071cf594bd09aff7849c3d04476946562eaae7a89869e74acd6c73"
+sha256 = "8453e6fe29a0e349b6499669e23c11e55fa33f41486b48c1b54c42a55a253b3a"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_complete_shell_aspect_source_modes.md"
 sha256 = "515b630b785cf494f8474ae82cda336b47d4ec605efdd96cb5cf46dc96f13ccf"
@@ -95,7 +95,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_one_center_
 sha256 = "15f4ac5db40d40f8ca73876aad4f1efe625fed46086e240a5d6138ede3fef42b"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
-sha256 = "0ae0e7d6a17cde85c8a0b438707f4b959a9cae0f502f235a142e53e903fdada0"
+sha256 = "3312b953470779e94fac3ef4ce419c0eac0b191179c1538c0366eb3b49d7f17b"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_homonuclear_diatomic_supplemented_workflow.md"
 sha256 = "15528a3f6dfa8d0a00aca5e5978e708e3cfccfe7c177c869fe3e438dee81af8e"
@@ -2561,12 +2561,12 @@ title = "parent-backed Gaussian direct validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-PRF-FN-01", "HP-PQS-PRF-INJECT-COMP-FN-01", "HP-PQS-PRF-INJECT-INTERACT-FN-01", "HP-R3U-FN-01"]
-grant = "maintenance"
+grant = "implementation"
 id = "HP-PQS-PRF-CONSUMER-FN-01"
-lifecycle = "implemented"
-scope = "Maintain only the accepted root-exported expert interface consisting of cartesian_base_working_basis, CartesianParentResidualRegion, CartesianParentBackedHamiltonianResult, cartesian_parent_residual_regions, cartesian_parent_residual_block, cartesian_parent_backed_composition, and cartesian_parent_backed_hamiltonian. Preserve exact descriptor-to-PRF source-key/support binding before additive or injected composition, delegation to the existing PRF/injection/operator/interaction owners, and exact ordinary-PQS and omitted-PRF behavior. Add no export, type, field, signature, metadata, default, automatic selection, artifact, sidecar, driver, screening policy, solver, HF, supplement-policy scan, or element/molecule special case under this maintenance grant."
+lifecycle = "approved"
+scope = "Delete exactly six PRF-specific root export entries from src/GaussletBases.jl: CartesianParentResidualRegion, CartesianParentBackedHamiltonianResult, cartesian_parent_residual_regions, cartesian_parent_residual_block, cartesian_parent_backed_composition, and cartesian_parent_backed_hamiltonian. Retain cartesian_base_working_basis as the unchanged expert/unstable root export owned by HP-R1-FILE-01. Retain all six named definitions, including both types, unchanged and unexported. Add no alias, shim, deprecation, helper, replacement, export, type, field, signature, metadata, default, artifact, driver, solver, or numerical change. Expected source delta is exactly +0/-6."
 surfaces = ["source"]
-title = "consumer-callable PQS parent residual functions"
+title = "de-promote PRF consumer root exports"
 
     [[records.document_refs]]
     heading = "Consumer API Contract"
@@ -2591,27 +2591,22 @@ title = "consumer-callable PQS parent residual functions"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "451"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "475"
 
     [[records.paths]]
     kind = "source"
     path = "src/GaussletBases.jl"
     state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_base_hamiltonian.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-PRF-CONSUMER-FN-01", "HP-PQS-PRF-INJECT-COMP-TEST-01", "HP-PQS-PRF-INJECT-INTERACT-TEST-01"]
-grant = "maintenance"
+grant = "implementation"
 id = "HP-PQS-PRF-CONSUMER-TEST-01"
-lifecycle = "completed"
-scope = "Maintain only the existing bounded H2 checks for semantic-region uniqueness, stale-basis rejection, exact descriptor-to-PRF cross-region rejection, additive/fixed-span composition parity, exact final-Hamiltonian parity, and existing omitted-path and malformed-input gates. Keep one-center Be inventory as external evidence; add no committed Be/Cr2 fixture, selector, test file, probe, endpoint policy, or broader API assertion under this validation grant."
+lifecycle = "approved"
+scope = "Qualify exactly the nine existing unqualified PRF wrapper calls and type assertion in test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl as GaussletBases.<name> after export removal. Add or remove no assertion and make no numerical, fixture, owner, file, probe, endpoint-policy, or broader API change. The edit is nine substitutions with zero net lines."
 surfaces = ["tests"]
-title = "consumer-callable PQS PRF validation"
+title = "qualify internal PRF consumer validation"
 
     [[records.document_refs]]
     heading = "Consumer API Contract"
@@ -2636,6 +2631,9 @@ title = "consumer-callable PQS PRF validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "451"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "475"
 
     [[records.paths]]
     kind = "test"
@@ -3261,7 +3259,7 @@ dependency_ids = []
 grant = "maintenance"
 id = "HP-R1-FILE-01"
 lifecycle = "implemented"
-scope = "maintain the public base producer in its current owner file and the existing `cartesian_base_hamiltonian` export."
+scope = "maintain the public base producer in its current owner file, the existing `cartesian_base_hamiltonian` export, and the existing expert/unstable `cartesian_base_working_basis` export. The working-basis return fields are not a stable public schema, and this ownership does not export PRF-specific wrappers."
 surfaces = ["source"]
 title = "public base producer source file"
 
@@ -3270,6 +3268,9 @@ title = "public base producer source file"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
 
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "475"
     [[records.evidence_refs]]
     kind = "repo_path"
     value = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"

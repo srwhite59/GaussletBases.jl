@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `2abc832ebc13791517aca3e518bdfe32cda1a09269fa230664e90e5deb3a0123`.
+> [authority.toml](authority.toml), SHA-256 `3bf990165c5a8e08de758b4f3428ca073d62755470917ff1e798811857a5f4d4`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1541,18 +1541,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Dependencies:** `HP-PQS-PARENT-GDIRECT-FN-01`
 - **Scope:** Maintain only the committed analytic onsite, symmetry, finiteness, positive-semidefinite, far-tail, expansion-identity, charge, tiled-parity, bounded parent-IDA, and unchanged-G-G checks. No transition-exchange, PRF-GTO-residual, Cr2, HF, endpoint, or complete-Hamiltonian assertion.
 
-### HP-PQS-PRF-CONSUMER-FN-01 - consumer-callable PQS parent residual functions
+### HP-PQS-PRF-CONSUMER-FN-01 - de-promote PRF consumer root exports
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Consumer API Contract`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/hooke/reports/hooke_be_ns5_prf_completion_status_2026-08-06.md`
   - `manager_pass`: `449`
@@ -1560,13 +1558,14 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `450`
   - `git_commit`: `be59362b8`
   - `manager_pass`: `451`
+  - `manager_pass`: `475`
 - **Dependencies:** `HP-PQS-PRF-FN-01`, `HP-PQS-PRF-INJECT-COMP-FN-01`, `HP-PQS-PRF-INJECT-INTERACT-FN-01`, `HP-R3U-FN-01`
-- **Scope:** Maintain only the accepted root-exported expert interface consisting of cartesian\_base\_working\_basis, CartesianParentResidualRegion, CartesianParentBackedHamiltonianResult, cartesian\_parent\_residual\_regions, cartesian\_parent\_residual\_block, cartesian\_parent\_backed\_composition, and cartesian\_parent\_backed\_hamiltonian. Preserve exact descriptor-to-PRF source-key/support binding before additive or injected composition, delegation to the existing PRF/injection/operator/interaction owners, and exact ordinary-PQS and omitted-PRF behavior. Add no export, type, field, signature, metadata, default, automatic selection, artifact, sidecar, driver, screening policy, solver, HF, supplement-policy scan, or element/molecule special case under this maintenance grant.
+- **Scope:** Delete exactly six PRF-specific root export entries from src/GaussletBases.jl: CartesianParentResidualRegion, CartesianParentBackedHamiltonianResult, cartesian\_parent\_residual\_regions, cartesian\_parent\_residual\_block, cartesian\_parent\_backed\_composition, and cartesian\_parent\_backed\_hamiltonian. Retain cartesian\_base\_working\_basis as the unchanged expert/unstable root export owned by HP-R1-FILE-01. Retain all six named definitions, including both types, unchanged and unexported. Add no alias, shim, deprecation, helper, replacement, export, type, field, signature, metadata, default, artifact, driver, solver, or numerical change. Expected source delta is exactly +0/-6.
 
-### HP-PQS-PRF-CONSUMER-TEST-01 - consumer-callable PQS PRF validation
+### HP-PQS-PRF-CONSUMER-TEST-01 - qualify internal PRF consumer validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1580,8 +1579,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `450`
   - `git_commit`: `be59362b8`
   - `manager_pass`: `451`
+  - `manager_pass`: `475`
 - **Dependencies:** `HP-PQS-PRF-CONSUMER-FN-01`, `HP-PQS-PRF-INJECT-COMP-TEST-01`, `HP-PQS-PRF-INJECT-INTERACT-TEST-01`
-- **Scope:** Maintain only the existing bounded H2 checks for semantic-region uniqueness, stale-basis rejection, exact descriptor-to-PRF cross-region rejection, additive/fixed-span composition parity, exact final-Hamiltonian parity, and existing omitted-path and malformed-input gates. Keep one-center Be inventory as external evidence; add no committed Be/Cr2 fixture, selector, test file, probe, endpoint policy, or broader API assertion under this validation grant.
+- **Scope:** Qualify exactly the nine existing unqualified PRF wrapper calls and type assertion in test/nested/cartesian\_r3a\_h2\_augmented\_one\_body\_runtests.jl as GaussletBases.\<name\> after export removal. Add or remove no assertion and make no numerical, fixture, owner, file, probe, endpoint-policy, or broader API change. The edit is nine substitutions with zero net lines.
 
 ### HP-PQS-PRF-FN-01 - parent residual function mechanics
 
@@ -1972,9 +1972,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/GaussletBases.jl`
   - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
 - **Evidence:**
+  - `manager_pass`: `475`
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
 - **Dependencies:** none
-- **Scope:** maintain the public base producer in its current owner file and the existing \`cartesian\_base\_hamiltonian\` export.
+- **Scope:** maintain the public base producer in its current owner file, the existing \`cartesian\_base\_hamiltonian\` export, and the existing expert/unstable \`cartesian\_base\_working\_basis\` export. The working-basis return fields are not a stable public schema, and this ownership does not export PRF-specific wrappers.
 
 ### HP-R1-FN-01 - public base Hamiltonian producer facade
 

@@ -1,7 +1,8 @@
 # Parent Residual Functions And Parent-Backed Gaussian Direct Interaction
 
-Status: implemented numerical facility; a bounded consumer interface is approved
-separately by the parent-backed composition contract.
+Status: implemented numerical facility; its bounded PRF-specific consumer
+wrappers are private diagnostic/provenance surfaces under the parent-backed
+composition contract. They carry no public compatibility promise.
 
 Authority IDs:
 
@@ -270,9 +271,9 @@ Implementation is limited to existing owners:
   Coulomb formula and its compact resource.
 
 These mechanics remain owned by `CartesianFinalBasisRealization`. The separate
-consumer API contract may expose semantic region descriptors and validated
-construction calls without exporting these low-level helpers individually. No
-new file or module is approved.
+consumer contract may retain private semantic region descriptors and validated
+construction calls without root-exporting the PRF wrappers or these low-level
+helpers. No new file or module is approved.
 
 Commit `5b46ae073` implemented:
 

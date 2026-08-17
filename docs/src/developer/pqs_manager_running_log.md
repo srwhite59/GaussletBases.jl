@@ -49,11 +49,12 @@ archaeology and are not normal startup reading.
   common aspect-aware shared-shell dimensions. Parent and PQS rows are
   unchanged; rebuilt WL rows await external same-density oracle
   interpretation before a method-accuracy claim.
-- The opt-in expert PRF interface now exposes semantic region discovery,
-  consumer-targeted residual construction, additive/fixed-span composition,
-  and the category-owned unscreened Hamiltonian. Physical target selection,
-  transition-density exchange, and PRF-to-GTO-residual interactions remain
-  consumer questions.
+- PRF mechanics retain semantic region discovery, consumer-targeted residual
+  construction, additive/fixed-span composition, and the category-owned
+  unscreened Hamiltonian as private diagnostic/provenance surfaces. Six
+  unsupported root exports are approved for de-promotion; physical target
+  selection, transition-density exchange, and PRF-to-GTO-residual interactions
+  remain consumer questions.
 - Explicit charged electron sectors are implemented without changing bare
   basis or operator arrays. Specialized retained-GTO EGOI remains archived
   and deferred with no execution grant.
@@ -84,8 +85,9 @@ archaeology and are not normal startup reading.
 
 **MT1 - Conformance remediation (active).** Resolve the bounded Pass 398
 discrepancies and demonstrated exported-surface defects under explicit
-authority. The immediate fail-fast sequence is closed; the ordinary-QW nested
-diatomic front doors now have one bounded repair lane. Keep each repair narrow.
+authority. The ordinary-QW nested diatomic repair is closed. The next bounded
+API correction removes six unsupported PRF-specific root exports without
+changing their numerical implementation. Keep each repair narrow.
 
 **MT2 - Controlled Cr2 source migration (completed).** The source-backed
 fixed-state and bounded replay reproduced the former consumer-local path. Any
@@ -114,9 +116,10 @@ separately reviewed gates.
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
 injection/localization policy remain separate future decisions. Parent residual
 function mechanics, the onsite-calibrated Gaussian direct resource, and the
-bounded expert consumer interface are implemented and source-backed. Hooke
-owns the first Be `1s/2s` target study. Selection, transition-density exchange,
-and PRF-to-GTO-residual interactions remain consumer or measurement questions.
+private diagnostic/provenance wrappers are implemented and source-backed.
+Hooke owns the first Be `1s/2s` target study. Selection, transition-density
+exchange, and PRF-to-GTO-residual interactions remain consumer or measurement
+questions.
 
 **MT5 - Documentation and authority maintenance (maintenance).** The broad
 reorganization and cutover are complete. Update machine authority atomically,
@@ -126,11 +129,11 @@ New source authority remains design-manager-owned even when the user requests
 the feature goal from repo-manager.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
-metadata, and development-era tests as conformance work identifies them. New
-scaffolding must advance a live physics or module contract and account for what
-it replaces. The exported ordinary-QW diatomic front doors are repair targets,
-not retirement candidates; the broader endpoint/correction audit remains a
-deferred retirement map.
+metadata, unsupported exports, and development-era tests as conformance work
+identifies them. New scaffolding must advance a live physics or module contract
+and account for what it replaces. The repaired ordinary-QW diatomic front doors
+remain supported; the broader endpoint/correction audit remains a deferred
+retirement map.
 
 ## Manager Guardrails
 
@@ -1115,3 +1118,55 @@ Carrying-cost accounting:
 - validation: implementation diff review, package load, `20/20` focused and
   `460/460` core assertions, authority render/check/self-test, docs tests,
   Documenter, manager-log bound, docs-only scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 475 - Authorize PRF API De-Promotion
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- A fresh caller audit found no committed production, driver, example, or
+  public-documentation consumer for six PRF-specific root exports. Their only
+  live uses are nine unqualified references in the existing nested H2 owner.
+  The underlying PRF, injection, one-body, interaction, and validation owners
+  remain implemented and unchanged.
+- `HP-PQS-PRF-CONSUMER-FN-01/TEST-01` temporarily authorize exactly six export
+  deletions and nine qualification substitutions. `HP-R1-FILE-01` now owns the
+  unchanged expert/unstable `cartesian_base_working_basis` export, which has
+  active driver, source, and public-test callers.
+
+Goal advancement / guardrail:
+- MT1 and MT6 remove an unsupported public-compatibility claim without
+  deleting numerical capability. No PRF implementation, type, assertion,
+  default, metadata, artifact, solver, or physics policy may change.
+
+Carrying-cost accounting:
+- deleted: no source in this docs-only pass; implementation is authorized to
+  remove six export entries.
+- simplified: export ownership separates the live R1 working-basis constructor
+  from private PRF diagnostics.
+- quarantined: historical PRF/Cr2 evidence remains unchanged.
+- not deleted because: all PRF numerical implementations and both internal
+  types retain independent live authority and validation value.
+- exact remaining caller/blocker: delete six exports, qualify nine existing
+  nested-test references, and then reconcile lifecycle back to maintenance.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none.
+- validation: caller/export closure, authority render/check/self-test,
+  generated-view parity, docs tests, Documenter, manager-log bound, docs-only
+  scope review, and `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 475
+
+- **MT1 - active:** ordinary-QW front-door conformance is closed; bounded PRF
+  API de-promotion is the next source correction.
+- **MT2 - completed:** controlled Cr2 source migration remains closed.
+- **MT3 - active:** Standard60 and scalable represented Hartree remain pending;
+  paper-oracle interpretation stays external.
+- **MT4 - active:** PRF numerics remain implemented; only unsupported root
+  exposure is being removed. Residual/protected scientific questions are
+  unchanged.
+- **MT5 - maintenance:** authority and canonical contracts distinguish the
+  expert R1 working-basis export from private PRF wrappers.
+- **MT6 - active:** remove six export entries and no numerical implementation;
+  further cleanup still requires fresh caller and capability audits.

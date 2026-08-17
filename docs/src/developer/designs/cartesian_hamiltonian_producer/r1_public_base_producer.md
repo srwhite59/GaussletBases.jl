@@ -58,6 +58,13 @@ The return is the existing `CartesianIDAHamiltonian{Float64}` directly. The
 facade never returns a wrapper, status object, report, payload, or partial
 result.
 
+`HP-R1-FILE-01` also maintains the existing root export
+`cartesian_base_working_basis`. It is an expert/unstable staged constructor
+used by current drivers, source consumers, and public/nested validation. Its
+export is maintained, but its returned stage fields are not a stable public
+schema and it is not a second base-Hamiltonian facade. PRF-specific wrappers
+do not inherit public status from this working-basis export.
+
 ## System Input
 
 `system` must contain exactly:

@@ -1,7 +1,7 @@
 # Parent-Backed Injected Composition
 
-Status: implemented internal numerical facility and accepted root-exported
-in-memory expert consumer interface.
+Status: implemented internal numerical facility; bounded de-promotion of the
+PRF-specific root exports is approved pending implementation.
 
 Authority IDs:
 
@@ -19,10 +19,11 @@ shell, source order, injection target, residual orientation, or solver method.
 
 ## Consumer API Contract
 
-The implemented numerical owners are exposed through one small, root-exported,
-in-memory expert interface. This interface is deliberately staged
-because the consumer must inspect the parent/terminal basis before it can
-construct physical target columns.
+The implemented numerical owners are consumed through a staged in-memory
+diagnostic/provenance surface because the consumer must inspect the
+parent/terminal basis before it can construct physical target columns. The PRF
+wrappers and result types are internal implementation names, not a public
+compatibility promise.
 
 The accepted sequence is:
 
@@ -46,12 +47,15 @@ The accepted calls are:
 
 ```julia
 base = cartesian_base_working_basis(system; basis, supplemented = true)
-regions = cartesian_parent_residual_regions(base)
-prf = cartesian_parent_residual_block(base, region, parent_indices, target_columns)
-composition = cartesian_parent_backed_composition(base, [(; region, prf)])
-injected = cartesian_parent_backed_composition(
+regions = GaussletBases.cartesian_parent_residual_regions(base)
+prf = GaussletBases.cartesian_parent_residual_block(
+    base, region, parent_indices, target_columns)
+composition = GaussletBases.cartesian_parent_backed_composition(
+    base, [(; region, prf)])
+injected = GaussletBases.cartesian_parent_backed_composition(
     base, [(; region, prf, target_coordinates)]; inject = true)
-result = cartesian_parent_backed_hamiltonian(base, supplement, composition)
+result = GaussletBases.cartesian_parent_backed_hamiltonian(
+    base, supplement, composition)
 ```
 
 `target_columns` and `target_coordinates` are consumer-owned numerical inputs;
@@ -59,10 +63,15 @@ the producer neither constructs nor ranks them. Each region descriptor is bound
 to its semantic identity, exact support, terminal columns, and terminal-basis
 fingerprint, and is rejected against a different or stale working basis.
 
-The accepted interface boundary is exactly the existing seven root exports:
+`cartesian_base_working_basis` remains a root-exported expert/unstable staged
+constructor under `HP-R1-FILE-01`. Active drivers, source consumers, and the
+public Cartesian endpoint depend on that export. Its staged return fields are
+not a stable public result schema.
+
+The approved de-promotion removes these six PRF-specific root exports while
+retaining their implementations unchanged for qualified internal validation:
 
 ```text
-cartesian_base_working_basis
 CartesianParentResidualRegion
 CartesianParentBackedHamiltonianResult
 cartesian_parent_residual_regions
@@ -71,10 +80,10 @@ cartesian_parent_backed_composition
 cartesian_parent_backed_hamiltonian
 ```
 
-No additional export, type, field, signature, artifact identity, or automatic
-selection policy is approved. The working-basis value is an expert in-memory
-construction object used only by this staged sequence; exporting its constructor
-does not make its internal stage fields a separately stable public contract.
+Until the deletion lands, their presence in the root export list is
+transitional and grants no compatibility obligation. No alias, deprecation,
+shim, replacement, additional export, type, field, signature, artifact
+identity, or automatic selection policy is approved.
 
 Every composition request must bind its descriptor and PRF to the same exact
 terminal source block. Before either additive or injected composition proceeds,
@@ -354,9 +363,10 @@ owners:
 
 The implementation consumes the existing numerical-complete residual builder,
 parent-Gaussian direct resource, augmented transforms, and screened-Hartree API
-without moving their ownership into these IDs. The consumer API IDs separately
-authorize the narrow in-memory root exports above. They do not authorize a driver
-input, artifact field, restart format, module, source file, solver, or default.
+without moving their ownership into these IDs. The consumer IDs own only the
+private in-memory wrappers and their qualified validation. They do not
+authorize a driver input, artifact field, restart format, module, source file,
+solver, default, or PRF public compatibility surface.
 
 ## Validation Contract
 
