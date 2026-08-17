@@ -1863,7 +1863,7 @@ Summary:
 - Corrected active route documentation to end at terminal realization and
   direct one-body/IDA assembly rather than the abandoned pair ladder. The
   route dictionary, retirement ledger, and numerical-contract page were
-  compressed; this docs pass is net `-1,126` lines including generated views
+  compressed; this docs pass is net `-1,125` lines including generated views
   and this ledger entry.
 
 Goal advancement / guardrail:
