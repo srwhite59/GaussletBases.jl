@@ -1942,3 +1942,30 @@ Carrying-cost accounting:
   generated views after lifecycle closeout.
 - **MT6 - active:** the pair ladder is fully removed. Further cleanup requires
   a fresh caller/capability audit and must preserve current endpoints.
+
+## Cartesian Hamiltonian Producer Pass 471 - Remove Dead Parent-Less Shellification Fallback
+
+Commit(s):
+- this maintenance commit.
+
+Summary / goal:
+- Removed the unreachable axis-count/index fallback from terminal
+  shellification. Current parent construction always supplies the mapped parent
+  object and physical atom locations, so the fallback could only reintroduce a
+  deleted helper and fail if activated. This is a mechanical MT1/MT6 cleanup
+  with no strategic or numerical-contract change.
+
+Carrying-cost accounting:
+- deleted: parent-less synthetic axes, integer nuclear-position reconstruction,
+  the undefined axis-index call, and its center-index helper.
+- simplified: terminal shellification now reads live parent axes and physical
+  nuclear locations directly.
+- quarantined: none.
+- not deleted because: current parent construction and shellification remain
+  active producer owners.
+- exact remaining caller/blocker: exported ordinary-QW diatomic front doors
+  require a separate repair-versus-retirement decision.
+- added/deleted `src` lines: `9/62`; new tests: none; new metadata/status fields:
+  none.
+- validation: package load, public Cartesian endpoint `232/232`, anti-bloat
+  diff review, and `git diff --check`.

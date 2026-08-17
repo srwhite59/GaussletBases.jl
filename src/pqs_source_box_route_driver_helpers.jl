@@ -829,72 +829,19 @@ function cartesian_parent(system, spacing_inputs, parent_inputs, recipe)
 end
 
 function _pqs_source_box_route_driver_terminal_parent_axes(parent)
-    parent_basis_object =
-        hasproperty(parent, :parent_basis_object) ? parent.parent_basis_object : nothing
-    if !isnothing(parent_basis_object)
-        axes = CartesianParentGaussletBases.parent_axes(parent_basis_object)
-        return (
-            collect(axes.x.center_data),
-            collect(axes.y.center_data),
-            collect(axes.z.center_data),
-        )
-    end
-    counts = _pqs_route_driver_axis_count_tuple(parent.axis_counts)
-    isnothing(counts) &&
-        throw(ArgumentError("terminal shellification requires parent axis counts"))
-    all(>(0), counts) ||
-        throw(ArgumentError("terminal shellification requires positive parent axis counts"))
-    return (collect(1:counts[1]), collect(1:counts[2]), collect(1:counts[3]))
-end
-
-function _pqs_source_box_route_driver_terminal_center_index(count::Int)
-    count > 0 || throw(ArgumentError("terminal shellification axis count must be positive"))
-    return cld(count, 2)
+    axes = CartesianParentGaussletBases.parent_axes(parent.parent_basis_object)
+    return (
+        collect(axes.x.center_data),
+        collect(axes.y.center_data),
+        collect(axes.z.center_data),
+    )
 end
 
 function _pqs_source_box_route_driver_terminal_nuclear_positions(parent)
-    parent_basis_object =
-        hasproperty(parent, :parent_basis_object) ? parent.parent_basis_object : nothing
-    if !isnothing(parent_basis_object)
-        return Tuple(
-            ntuple(axis -> Float64(location[axis]), 3)
-            for location in parent.atom_locations
-        )
-    end
-
-    counts = _pqs_route_driver_axis_count_tuple(parent.axis_counts)
-    isnothing(counts) &&
-        throw(ArgumentError("terminal shellification requires parent axis counts"))
-    core_side = parent.standard_setup.core_cube_side
-    radius = div(core_side - 1, 2)
-    center = ntuple(
-        axis -> _pqs_source_box_route_driver_terminal_center_index(counts[axis]),
-        3,
+    return Tuple(
+        ntuple(axis -> Float64(location[axis]), 3)
+        for location in parent.atom_locations
     )
-    if parent.system_classification == :one_center
-        return (center,)
-    end
-    parent.system_classification == :bond_aligned_diatomic || throw(
-        ArgumentError("terminal shellification supports one-center or bond-aligned diatomic parents"),
-    )
-    bond_axis_index = _pqs_source_box_route_driver_axis_index(parent.bond_axis)
-    low_center = 1 + radius
-    high_center = counts[bond_axis_index] - radius
-    low_center > 0 && high_center <= counts[bond_axis_index] || throw(
-        ArgumentError("terminal shellification atom core centers fall outside parent axis"),
-    )
-    atom_axis_coordinates =
-        Tuple(location[bond_axis_index] for location in parent.atom_locations)
-    atom_order = Tuple(sortperm(collect(atom_axis_coordinates)))
-    length(atom_order) == 2 || throw(
-        ArgumentError("terminal shellification diatomic path requires two atom locations"),
-    )
-    positions = Vector{NTuple{3,Int}}(undef, 2)
-    for (atom_index, axis_center) in zip(atom_order, (low_center, high_center))
-        positions[atom_index] =
-            ntuple(axis -> axis == bond_axis_index ? axis_center : center[axis], 3)
-    end
-    return Tuple(positions)
 end
 
 function _pqs_source_box_route_driver_shell_stage_terminal_shellification(
