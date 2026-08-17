@@ -131,6 +131,63 @@ end
     @test 1.0 / dudx(mapping(basis.basis_x), 0.0) ≈ 0.5 atol = 1.0e-10 rtol = 0.0
 end
 
+@testset "Bond-aligned diatomic unsplit source packet reuse" begin
+    basis = bond_aligned_homonuclear_qw_basis(
+        family = :G10,
+        bond_length = 1.4,
+        core_spacing = 0.7,
+        xmax_parallel = 2.0,
+        xmax_transverse = 2.0,
+        bond_axis = :z,
+    )
+    source = bond_aligned_diatomic_nested_fixed_source(basis)
+    result = bond_aligned_diatomic_nested_fixed_block(source)
+
+    @test isempty(source.shared_shell_layers)
+    @test !source.geometry.did_split
+    @test !isnothing(source.sequence.packet)
+    @test result.source === source
+    @test result.fixed_block.shell === source.sequence
+    @test result.fixed_block.coefficient_matrix === source.sequence.coefficient_matrix
+end
+
+@testset "Bond-aligned diatomic endcap diagnostics" begin
+    basis = bond_aligned_homonuclear_qw_basis(
+        family = :G10,
+        bond_length = 1.4,
+        core_spacing = 0.7,
+        xmax_parallel = 6.0,
+        xmax_transverse = 4.0,
+        bond_axis = :z,
+    )
+    default_source = bond_aligned_diatomic_nested_fixed_source(basis)
+    default_result = bond_aligned_diatomic_nested_fixed_block(default_source)
+    default_fixed = default_result.fixed_block
+
+    @test default_result.source === default_source
+    @test length(default_source.shared_shell_layers) == 1
+    @test default_source.geometry.working_box == (2:6, 2:6, 2:10)
+    @test size(default_fixed.coefficient_matrix) == (539, 347)
+    @test sum(default_fixed.coefficient_matrix) ≈ 412.9689205549215 atol = 1.0e-10 rtol = 0.0
+    @test norm(default_fixed.coefficient_matrix) ≈ 18.627936010197118 atol = 1.0e-10 rtol = 0.0
+    @test tr(default_fixed.overlap) ≈ 347.0 atol = 1.0e-12 rtol = 0.0
+    @test tr(default_fixed.kinetic) ≈ 1332.6360164588475 atol = 1.0e-9 rtol = 0.0
+
+    diagnostics = bond_aligned_diatomic_nested_geometry_diagnostics(
+        basis;
+        shared_shell_layer_policy = :endcap_panel_owned,
+        shared_shell_endcap_panel_q = 3,
+        shared_shell_endcap_panel_L = 5,
+    )
+    provenance = only(diagnostics.shared_shell_provenance)
+    @test diagnostics.shared_shell_count == 1
+    @test provenance == only(diagnostics.source.shared_shell_layers).provenance
+    @test provenance.support_contract == :thin_endcap_box_perimeter
+    @test provenance.coefficient_contract == :product_doside
+    @test provenance.q == 3
+    @test provenance.L == 5
+end
+
 @testset "CombinedInvsqrtMapping supports first bond-aligned heteronuclear rule" begin
     bond_length = 1.45
     basis = bond_aligned_heteronuclear_qw_basis(;

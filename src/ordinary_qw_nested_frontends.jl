@@ -329,19 +329,19 @@ function _bond_aligned_diatomic_atom_growth_anatomy_diagnostics(
     end
 end
 
-struct _CartesianNestedSourceGlassBoxContract{A}
+struct _CartesianNestedSourceGlassBoxContract{A,P<:AbstractVector}
     fixed_dimension::Int
     contract_audit::A
     shared_shell_dimensions::Vector{Int}
-    shared_shell_provenance::Vector{_CartesianNestedShellLayerProvenance3D}
+    shared_shell_provenance::P
     leaf_count::Int
 end
 
-struct _CartesianNestedGlassBoxContract{A}
+struct _CartesianNestedGlassBoxContract{A,P<:AbstractVector}
     fixed_dimension::Int
     contract_audit::A
     layer_dimensions::Vector{Int}
-    layer_provenance::Vector{_CartesianNestedShellLayerProvenance3D}
+    layer_provenance::P
     leaf_count::Union{Nothing,Int}
 end
 
@@ -412,9 +412,7 @@ end
 function _nested_source_shared_shell_provenance(
     source::_CartesianNestedBondAlignedDiatomicSource3D,
 )
-    return _CartesianNestedShellLayerProvenance3D[
-        shell.provenance for shell in source.shared_shell_layers
-    ]
+    return [shell.provenance for shell in source.shared_shell_layers]
 end
 
 function _nested_glass_box_contract_audit(
@@ -647,6 +645,9 @@ function bond_aligned_diatomic_nested_geometry_diagnostics(
     shared_shell_retain_xz::Union{Nothing,Tuple{Int,Int}} = nothing,
     shared_shell_retain_yz::Union{Nothing,Tuple{Int,Int}} = nothing,
     packet_kernel::Symbol = :factorized_direct,
+    shared_shell_layer_policy::Symbol = :complete_rectangular,
+    shared_shell_endcap_panel_q::Int = 4,
+    shared_shell_endcap_panel_L::Int = 4,
 )
     context = _normalized_nested_source_frontend_context(
         basis;
@@ -663,6 +664,9 @@ function bond_aligned_diatomic_nested_geometry_diagnostics(
         shared_shell_retain_xz = shared_shell_retain_xz,
         shared_shell_retain_yz = shared_shell_retain_yz,
         packet_kernel = packet_kernel,
+        shared_shell_layer_policy = shared_shell_layer_policy,
+        shared_shell_endcap_panel_q = shared_shell_endcap_panel_q,
+        shared_shell_endcap_panel_L = shared_shell_endcap_panel_L,
     )
     return _nested_source_frontend_geometry_diagnostics(context)
 end

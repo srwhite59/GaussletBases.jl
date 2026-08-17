@@ -4075,7 +4075,7 @@ function _nested_bond_aligned_diatomic_source(
                     core_near_nucleus_protect_rows = protect_rows,
                     term_coefficients = term_coefficients,
                     packet_kernel = packet_kernel,
-                    build_packet = false,
+                    build_packet = isempty(shared_shell_layers),
                 )
             end
             push!(child_sequences, shared_child)

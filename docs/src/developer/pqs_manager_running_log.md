@@ -1040,3 +1040,40 @@ Carrying-cost accounting:
 - validation: source/claim/caller reconciliation, archive line/hash parity,
   authority render/check/self-test, generated-view parity, docs tests,
   Documenter, manager-log bound, scoped diff review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 473 - Repair Ordinary-QW Diatomic Front Doors
+
+Commit(s):
+- this implementation commit.
+
+Summary:
+- Accepted the bounded repair of all three exported bond-aligned ordinary-QW
+  nested front doors. A legal unsplit source now builds its packet through the
+  existing child-sequence constructor; sources with shared layers retain their
+  prior deferred-packet path. Diagnostics now preserve the actual rectangular
+  or endcap/panel provenance vector type, and the basis diagnostics overload
+  forwards the existing policy, `q`, and `L` controls.
+- The default shared-shell fixture remains `539 x 347`, with unchanged geometry
+  and coefficient, overlap, and kinetic fingerprints. The nondefault
+  endcap/panel diagnostic reports its actual `q=3`, `L=5` provenance.
+
+Goal advancement / guardrail:
+- MT1 closes the supported-surface defects without changing ordinary-QW
+  defaults, coefficients, operators, or current PQS/WL production. The repair
+  adds no fallback, compatibility layer, or broader QW policy.
+
+Carrying-cost accounting:
+- deleted: the packetless legal no-layer behavior and invalid concrete
+  rectangular-provenance coercion.
+- simplified: both provenance contracts carry their existing vector type;
+  packet construction stays in the existing sequence owner.
+- quarantined: historical nested suites remain unwired.
+- not deleted because: the three exports remain documented supported
+  experimental workflows.
+- exact remaining caller/blocker: no implementation blocker; design-manager
+  lifecycle closeout remains.
+- added/deleted `src` lines: `12/8`; new tests: two bounded testsets, `57`
+  lines and `20/20` assertions; new metadata/status fields: none.
+- validation: both baseline defects reproduced, package load, complete core
+  owner `460/460`, focused new regressions `20/20`, anti-bloat review, and
+  `git diff --check`.
