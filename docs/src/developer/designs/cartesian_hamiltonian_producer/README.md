@@ -182,7 +182,7 @@ ID or subsystem.
   records deletion of the old route-driver materialization/report/save wrapper
   workflow and stale tool/test pressure
 - [Contracted-parent and multilayer retirement](contracted_parent_multilayer_retirement.md)
-  authorizes exact deletion of the obsolete alternative representation,
+  records completed deletion of the obsolete alternative representation,
   complete-core-shell oracle, dead adapters, test pressure, and tracked probes
 - [QW/high-order and carried-space retirement](qw_high_order_experimental_retirement.md)
   records the completed obsolete experimental-cluster and orphaned-adapter

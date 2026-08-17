@@ -184,7 +184,7 @@ must derive all affected dimensions from it:
 - lowering-contract inventory;
 - retained-unit and support records;
 - retained-unit transform contracts;
-- raw-product retained rules and multilayer source plans;
+- raw-product retained rules;
 - terminal realization and final column ranges;
 - source-mode provenance already available in memory;
 - terminal inventory and due-diligence rows;
@@ -224,8 +224,8 @@ the exported base facade or canonical driver. No new module, file, struct,
 persistent result shape, public input, artifact field, or committed large
 fixture is approved.
 
-Existing multilayer realization files are intentionally outside the source
-ceiling. Their current authoritative-shape path must work unchanged or the
+The retired multilayer realization route is not a source owner. The current
+terminal realization must consume the authoritative shape unchanged or the
 implementation stops.
 
 The implemented coarsening path reuses the existing post-shellification

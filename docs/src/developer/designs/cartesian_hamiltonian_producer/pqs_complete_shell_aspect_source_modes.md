@@ -175,9 +175,9 @@ Current maintenance ownership is limited to:
 - `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
   for axis-specific WL one-dimensional counts.
 
-The obsolete contracted-parent/multilayer planning route is independently
-approved for retirement under `HP-RETIRE-CONTRACTED-PARENT-FN-01`. It is not
-an aspect-shell owner or fallback implementation.
+The obsolete contracted-parent/multilayer planning route was retired under
+`HP-RETIRE-CONTRACTED-PARENT-FN-01`. It is not an aspect-shell owner or
+fallback implementation.
 
 The older angular selector remains in its established diatomic owner. No
 second selector or user-facing aspect parameter is introduced.

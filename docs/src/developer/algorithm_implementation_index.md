@@ -242,8 +242,8 @@ Source anchors:
   `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
 - **active donor pattern**:
   `src/cartesian_final_basis_realization/pqs_source_shell_final_basis.jl`
-- **approved retirement**: the contracted-parent/multilayer
-  complete-core-shell oracle, recorded in
+- **retired history**: the deleted contracted-parent/multilayer
+  complete-core-shell oracle is recorded in
   `docs/src/developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md`
 
 Do-not-forget rule:
@@ -267,8 +267,8 @@ Source anchors:
 - **active reusable kernel**: `src/cartesian_route_core/retained_spaces.jl`
 - **oracle/reference only**:
   `src/cartesian_pair_block_materialization/pqs_source_safe_terms.jl`
-- **approved retirement**: the unused contracted-parent source-box shadow and
-  private GTO adapter
+- **retired history**: the unused contracted-parent source-box shadow and
+  private GTO adapter were deleted in Pass 467
 
 Do-not-forget rule:
 COMX boundary product modes define retained source modes. Support rows and
@@ -340,7 +340,8 @@ Source anchors:
   `pqs_terminal_residual_gto_augmented_unit_nuclear`
 - **consumer example only**: `src/ordinary_qw_operator_assembly.jl`,
   `assembled_one_body_hamiltonian`
-- **approved retirement**: the unused multilayer support one-body oracle
+- **retired history**: the unused multilayer support one-body oracle was
+  deleted in Pass 467
 - **retired/do not call**:
   deleted CPBM global electron-nuclear retained-matrix pilot
 
@@ -402,8 +403,8 @@ Source anchors:
   `_mapped_coulomb_expanded_symmetric_matrix`
 - **active donor pattern**: `src/ordinary_qw_raw_blocks.jl`,
   `_qwrg_fixed_block_interaction_matrix`
-- **approved retirement**: the unused contracted-parent IDA provenance and
-  metric oracle cluster
+- **retired history**: the unused contracted-parent IDA provenance and metric
+  oracle cluster was deleted in Pass 467
 - **consumer example only**: `src/ordinary_cartesian_ida.jl`,
   `_ordinary_cartesian_ida_from_pair_factors`,
   `_ordinary_cartesian_ida_from_gausslet_bundle`
@@ -524,8 +525,8 @@ Source anchors:
 - **oracle/reference only**: `src/cartesian_nested_faces.jl`
 - **oracle/reference only**: `src/ordinary_qw_raw_blocks.jl`
 - **consumer example only**: `src/ordinary_qw_operator_assembly.jl`
-- **approved retirement**: `src/cartesian_contracted_parent_metrics/`; its
-  historical oracle role has no current caller
+- **retired history**: the contracted-parent metric cluster was deleted in
+  Pass 467; its historical oracle role had no current caller
 
 Do-not-forget rule:
 Old code may feed adapters or oracle comparisons. It should not silently become

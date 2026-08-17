@@ -1,5 +1,10 @@
 # Cartesian Source/Build Unification Plan
 
+> **Historical route note. Not current authority.** The contracted-parent
+> rule, metric, and resolved-payload checkpoints below were deleted without
+> replacement in Pass 467 under `HP-RETIRE-CONTRACTED-PARENT-*`. Use the
+> current producer contracts and algorithm index for implementation work.
+
 ## Purpose
 
 Record the current repo-manager judgment about how the Cartesian line in

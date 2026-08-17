@@ -1801,3 +1801,45 @@ Carrying-cost accounting:
   authority render/check/self-test, generated-view parity, docs tests,
   Documenter, manager-log bound, docs-only scope review, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 467 - Complete Contracted-Parent And Multilayer Retirement
+
+Commit(s):
+- `7fbe512dc` - exact source, obsolete-test, and tracked-probe retirement;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the exact `+0/-10,590` deletion authorized in Pass 466: `9,541`
+  source, `66` obsolete test, and `983` tracked-probe lines. No replacement,
+  alias, helper, test, adapter, or compatibility surface was added.
+- `HP-RETIRE-CONTRACTED-PARENT-FN-01` is retired and its validation ID is
+  completed. Deleted paths and probes no longer appear as execution ownership
+  or current evidence. Current parent, terminal, PQS/WL, PRF,
+  pair-materialization, raw-block, represented-Hartree, and IDA owners remain
+  unchanged.
+- Package load passed in `6.58` seconds; unchanged `core`, `ida`, and
+  `cartesian` groups passed `12,720/12,720` in `90.83` seconds. The public
+  Cartesian endpoint passed `232/232` with unchanged terminal due diligence,
+  and GitHub numerical CI passed. The first docs run failed only because the
+  machine record still named deleted paths; this closeout removes that stale
+  authority.
+
+Goal advancement / guardrail:
+- MT6 advances through a complete no-caller retirement with no replacement
+  framework. Reintroduction of any retired surface requires new authority.
+
+Carrying-cost accounting:
+- deleted: the exact contracted-parent/metrics, multilayer, complete-core-shell
+  oracle, dead adapters, obsolete test, and tracked probes.
+- simplified: root loading, active source maps, and machine authority no
+  longer carry the abandoned route.
+- quarantined: historical plans and ignored probes remain evidence only.
+- not deleted because: all current numerical owners have independent live
+  consumers and contracts.
+- exact remaining caller/blocker: none for this retirement.
+- added/deleted `src` lines: `0/9,541`; new tests: none; new metadata/status
+  fields: none.
+- validation: exact source diff and caller review, package and unchanged
+  numerical gates, terminal due diligence, GitHub numerical CI, authority
+  render/check/self-test, generated-view parity, docs tests, Documenter,
+  manager-log bound, docs-only scope review, and `git diff --check`.

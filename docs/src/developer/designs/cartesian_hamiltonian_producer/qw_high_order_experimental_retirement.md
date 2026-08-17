@@ -114,9 +114,8 @@ Preserve these current owners unchanged:
 - `src/cartesian_cross_overlap.jl`;
 - `src/cartesian_representation_transfer.jl`;
 - `src/CartesianParentGaussletBases.jl`;
-- the then-separate `src/CartesianContractedParents.jl` surface, which is now
-  approved for independent retirement under
-  `HP-RETIRE-CONTRACTED-PARENT-FN-01`;
+- the then-separate `src/CartesianContractedParents.jl` surface, subsequently
+  retired under `HP-RETIRE-CONTRACTED-PARENT-FN-01`;
 - `src/cartesian_qw_hybrid_representation.jl`;
 - chain/square basis types and geometry;
 - current WL/PQS construction.
