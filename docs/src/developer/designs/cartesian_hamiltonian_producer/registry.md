@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `a18114b8d7739fff0cf26768d89a5e6a932d488438febebc1de63e4d983bd9cf`.
+> [authority.toml](authority.toml), SHA-256 `c441787cc8f1e90d1f17455eb6f9a51e9bdcd5a916770aa5f360ec920ce91638`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1704,6 +1704,36 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `416`
 - **Dependencies:** `HP-PQS-PRF-FN-01`
 - **Scope:** Maintain only the committed synthetic and bounded H2 checks for consumer-selected targets, strict malformed-input failures, deterministic phases, terminal/PRF metric identities, exact one-body oracle parity, and unchanged G construction. No Cr2, HF, or selection-policy assertion.
+
+### HP-PQS-READER-DOC-01 - reader-facing PQS documentation entrance
+
+- **Lifecycle:** `approved`
+- **Grant:** `design`
+- **Surfaces:** `docs`
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `Reader-Facing PQS Entrance`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md`
+- **Evidence:**
+  - `manager_pass`: `478`
+- **Dependencies:** `HP-PQS-ASPECTSHELL-FN-01`, `HP-R1-FN-01`
+- **Scope:** Authorize only the reader-facing documentation entrance defined by the canonical contract: add docs/src/manual/projected\_q\_shells.md; link it from README.md, docs/src/index.md, docs/src/manual/index.md, docs/src/examples/index.md, and docs/src/howto/example\_guide.md; and expose that page plus the three existing PQS/IDA algorithm pages in docs/make.jl. Preserve the radial beginner path. Preferred/hard limits are 70/100 lines for the new page and 35/55 added lines across all other reader links/navigation; test/docs/runtests.jl may add at most 18 focused consistency lines if needed. Add no source/API, parser, framework, artifact, solver, screening, supplement, PRF, paper-driver, manuscript-number, or broad molecular claim.
+
+### HP-PQS-READER-TEST-01 - public PQS H2+ example validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `Reader-Facing PQS Entrance`
+- **Owned paths:**
+  - `test` / `existing`: `test/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `478`
+- **Dependencies:** `HP-PQS-ASPECTSHELL-FN-01`, `HP-PQS-READER-DOC-01`, `HP-R1-FN-01`, `HP-R1-TEST-01`
+- **Scope:** Add only examples/39\_pqs\_h2plus.jl using exported GaussletBases names plus LinearAlgebra, with the exact bounded H2+ PQS/WL fixture and invariant checks in the canonical contract. Preferred/hard example limits are 55/75 lines. Add only its invocation to the existing quick-example test in test/runtests.jl, at most three added lines, and only the examples token to the existing Julia-1.10 GAUSSLETBASES\_TEST\_GROUPS value in .github/workflows/ci.yml. Add no test file, source/API/default, private call, parser, artifact, solver, supplement, PRF, screening, numerical-order gate, workflow framework, or other CI change.
 
 ### HP-PQS-SCREEN-HARTREE-AUDIT-01 - protected-GTO screened Hartree residual-density audit
 

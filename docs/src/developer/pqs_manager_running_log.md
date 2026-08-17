@@ -1240,3 +1240,44 @@ Carrying-cost accounting:
 - validation: implementation diff and permission review, remote Docs and CI,
   live-site verification, authority check/self-test, docs tests, Documenter,
   manager-log bound, docs-only scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 478 - Authorize Reader-Facing PQS Entrance
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- A clean audit at `013a5ccad` confirmed that the existing exported
+  `cartesian_base_hamiltonian` facade and `CartesianIDAHamiltonian` accessors
+  are sufficient for a small H2+ PQS/White-Lindsey comparison. A transient
+  public-name-only probe built two dimension-`293` Hamiltonians and passed
+  finite/symmetric operator, geometry, nuclear-repulsion, and eigen-residual
+  checks. Its energies remain bounded smoke evidence, not paper or ordering
+  claims.
+- `HP-PQS-READER-DOC-01` authorizes one concise manual page plus bounded
+  navigation/link edits. `HP-PQS-READER-TEST-01` authorizes
+  `examples/39_pqs_h2plus.jl`, one quick-smoke invocation, and only the
+  `examples` token in the existing Julia-1.10 CI group list.
+
+Goal advancement / guardrail:
+- MT5 gains a reader-facing path through already-supported PQS/WL physics
+  without promoting the paper driver or adding a source/API seam. The radial
+  workflow remains the beginner entrance; solver, supplement, PRF, screening,
+  and paper-campaign scope remains external.
+
+Carrying-cost accounting:
+- deleted: none; this pass grants bounded reader documentation over an existing
+  public endpoint.
+- simplified: three authoritative algorithm pages become visible navigation
+  targets instead of being paraphrased into a second algorithm description.
+- quarantined: paper-driver controls, manuscript numbers, and private staged
+  objects remain outside the public example.
+- not deleted because: the public facade and existing algorithm pages are the
+  live implementation and explanation owners.
+- exact remaining caller/blocker: implement the authorized page/example and
+  prove the clean Julia-1.10 smoke plus deployed `/dev/` entry.
+- added/deleted `src` lines: `0/0`; new tests: no new file, one existing quick
+  example invocation; new metadata/status fields: none.
+- validation: clean caller/export audit, authority render/check/self-test, docs
+  tests, Documenter, manager-log bound, docs-only scope review, and
+  `git diff --check`.
