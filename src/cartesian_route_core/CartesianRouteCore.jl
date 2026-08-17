@@ -1,8 +1,8 @@
 """
     CartesianRouteCore
 
-Internal typed contract layer for Cartesian shellification, CPB lowering,
-retained-unit planning, and pair-operator planning.
+Internal typed contract layer for Cartesian shellification, CPB lowering, and
+retained-unit planning.
 
 This module is intentionally not a public user API. It exists to keep the
 Cartesian route code from becoming a flat collection of named-tuple fields. The
@@ -15,8 +15,6 @@ must remain distinct:
         -> IntermediateRetainedSpace
         -> ShellRealization
         -> FinalRetainedUnit
-        -> UnitPairInventory
-        -> PairOperatorPlanInventory
 
 Responsibilities:
 - re-export Coordinate Product Box (CPB) primitives from `CartesianCPB` for
@@ -24,8 +22,7 @@ Responsibilities:
 - represent shellification-owned support without confusing shells with CPBs;
 - represent lowering sources for White--Lindsey and PQS routes;
 - represent intermediate retained spaces and shell-realization plans;
-- represent final retained units used by pair planning;
-- represent metadata-only pair-operator plans before numerical blocks exist.
+- represent final retained units consumed by terminal realization.
 
 Non-responsibilities:
 - do not build numerical coefficient matrices;
@@ -39,8 +36,6 @@ Important invariants:
 - White--Lindsey shell lowering may use facet/edge/corner CPBs.
 - PQS shell lowering uses a filled source CPB plus boundary-mode selection and
   later shell realization.
-- Pair planning starts from `FinalRetainedUnit` objects, not directly from
-  shellification regions or source CPBs.
 
 Metadata policy:
 - `metadata` fields are for diagnostics, provenance, labels, and transitional
@@ -69,15 +64,6 @@ const codimension = CartesianCPB.codimension
 # API. External package users should not rely on this module. Route-driver code
 # may either import these names or call them as `CartesianRouteCore.name`.
 #
-# Pair-operator plan constructors remain module-qualified for now to avoid
-# making metadata-only planning records look like stable public API.
-#
-# Intentionally not exported for now:
-# - SourceOperatorPlan, RealizationApplicationPlan, FinalPairBlockPlan,
-#   PairOperatorPlan, PairOperatorPlanInventory
-# - source_operator_plan, realization_application_plan, final_pair_block_plan,
-#   pair_operator_plan, pair_operator_plan_inventory
-# - pair-operator path/readiness/count query helpers
 export CoordinateProductBox,
        OwnedSupport,
        ShellificationRegion,
@@ -85,8 +71,6 @@ export CoordinateProductBox,
        IntermediateRetainedSpace,
        ShellRealization,
        FinalRetainedUnit,
-       UnitPair,
-       UnitPairInventory,
        cpb,
        filled_cpb,
        slab_cpb,
@@ -102,7 +86,6 @@ export CoordinateProductBox,
        trivial_shell_realization,
        pqs_shell_realization,
        final_retained_unit,
-       unit_pair_inventory,
        intervals,
        shape,
        codimension,
@@ -112,8 +95,6 @@ export CoordinateProductBox,
        source_cpbs,
        lowering_recipe,
        unit_keys,
-       pair_keys,
-       pair_entries,
        final_units
 
 # File organization:
@@ -127,17 +108,9 @@ export CoordinateProductBox,
 #
 # retained_spaces.jl
 #     IntermediateRetainedSpace, ShellRealization, FinalRetainedUnit.
-#
-# unit_pairs.jl
-#     UnitPair and UnitPairInventory from final retained units.
-#
-# pair_operator_plans.jl
-#     Metadata-only source/operator/realization/final-block plans.
 include("shellification_regions.jl")
 include("lowering_sources.jl")
 include("retained_spaces.jl")
-include("unit_pairs.jl")
-include("pair_operator_plans.jl")
 
 # Example: White--Lindsey complete-shell lowering
 #

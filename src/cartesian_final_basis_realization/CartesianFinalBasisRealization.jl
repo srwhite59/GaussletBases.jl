@@ -8,9 +8,8 @@ Cartesian Hamiltonian producer. It realizes PQS terminal shells, the narrow
 White-Lindsey low-order terminal-basis seam, terminal one-body products, IDA
 interaction assembly, and Residual-Gaussian augmented-operator compatibility
 
-It does not build raw source operator blocks, pair-block materialization
-records, by-center nuclear CPBM result blocks, RHF results, driver public
-inputs, exports, or artifact schemas.
+It does not build raw source operator blocks, RHF results, driver public inputs,
+exports, or artifact schemas.
 """
 module CartesianFinalBasisRealization
 
@@ -30,16 +29,6 @@ import ..GaussletBases: _cartesian_flat_index, _cartesian_unflat_index, _nested_
 
 const CRPS = CartesianRawProductSources
 const CRG = CartesianResidualGaussians
-
-export pqs_source_shell_realization_final_basis,
-       pqs_source_shell_projected_one_body_matrix,
-       pqs_source_shell_final_one_body_from_boundary_matrix
-
-# pqs_source_shell_final_basis.jl
-#     PQS shell/support realization, Lowdin final basis diagnostics,
-#     shell-support oracle projection, and retained-boundary one-body transfer.
-include("pqs_source_shell_final_basis.jl")
-
 
 include("terminal_face_product_blocks.jl")
 include("pqs_terminal_basis_realization.jl")
