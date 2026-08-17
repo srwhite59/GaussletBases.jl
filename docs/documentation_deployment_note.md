@@ -1,33 +1,26 @@
-# Documentation Deployment Note
+# Documentation Deployment
 
-The current Documenter site structure is already close to the intended
-KrylovKit-style package-docs layout:
+The rendered Documenter site is the primary documentation surface:
 
-- Home
-- Manual
-- Reference
-- Developer Notes
+- <https://srwhite59.github.io/GaussletBases.jl/dev/>
 
-The remaining problem is not page organization inside the docs source tree. The
-remaining problem is delivery surface.
+Local builds remain available with `julia --project=docs docs/make.jl`.
 
-GitHub's repository browser will always present the `docs/` directory as a file
-listing. It cannot display the rendered Documenter sidebar, landing pages, or
-top-level navigation in the way a deployed docs site can.
+The `Docs` workflow enforces a least-privilege split:
 
-So the correct next step is to deploy the rendered site and treat that as the
-primary documentation surface.
+- the Cartesian-authority job uses `contents: read`;
+- pull requests build documentation with `contents: read` and never deploy;
+- pushes to `main` use a separate deployment job with only `contents: write`;
+- `GITHUB_TOKEN` and `GAUSSLETBASES_DOCS_DEPLOY=true` are exposed only to the
+  deployment step.
 
-That means:
+Commit `62a1a4821` restored this standard same-repository Documenter deployment
+path. Docs run `32072728238` and general CI run `32072728319` passed; the
+`gh-pages` branch advanced from `a9b74566e` to `255ea4ed4`, built from that
+commit. The live producer current-status page returned successfully with the
+corresponding current-main content.
 
-- keep the local docs build working with `julia --project=docs docs/make.jl`
-- add standard `deploydocs(...)` deployment in `docs/make.jl`
-- update the docs CI workflow so pushes to `main` deploy the site
-- serve the published site through the usual GitHub Pages `gh-pages` branch
-  target
-- point README and repository-side docs links to the rendered docs URL rather
-  than expecting users to browse raw markdown through the GitHub tree
-
-This is still a documentation-delivery pass, not a new content or navigation
-pass. The intended left-panel experience comes from the deployed Documenter
-site, not from GitHub's file browser.
+No custom credential, repository-setting change, alternate deployment
+framework, source/API change, or documentation-navigation redesign is part of
+this contract. GitHub's repository browser remains a raw-file view; the
+published site provides the intended rendered navigation.

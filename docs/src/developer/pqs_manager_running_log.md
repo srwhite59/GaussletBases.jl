@@ -1206,3 +1206,37 @@ Carrying-cost accounting:
   due-diligence fingerprints, runtime defined/unexported check, authority
   render/check/self-test, docs tests, Documenter, manager-log bound, docs-only
   scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 477 - Close Documentation Deployment Readiness
+
+Commit(s):
+- `62a1a4821` - least-privilege main-branch documentation deployment;
+- this docs-only readiness closeout.
+
+Summary:
+- Accepted the standard same-repository Documenter deployment path. Pull
+  requests build with `contents: read` and cannot deploy; pushes to `main` use
+  a separate job with only `contents: write`. `GITHUB_TOKEN` and
+  `GAUSSLETBASES_DOCS_DEPLOY=true` are scoped to the deployment step.
+- Remote Docs run `32072728238` and general CI run `32072728319` passed.
+  `gh-pages` advanced from `a9b74566e` to `255ea4ed4`, built from
+  `62a1a4821`, and the live `/dev/` producer current-status page contains the
+  corresponding current-main PRF de-promotion text.
+
+Goal advancement / guardrail:
+- MT5 closes documentation-delivery readiness without creating Cartesian
+  machine authority. No repository setting, custom credential, source/API,
+  documentation navigation, or deployment framework changed.
+
+Carrying-cost accounting:
+- deleted: unnecessary write permissions from build-only contexts.
+- simplified: explicit pull-request build and main-only deploy jobs.
+- quarantined: the deployment token is absent from pull-request jobs.
+- not deleted because: the small duplicated build sequence keeps permissions
+  isolated without a workflow framework.
+- exact remaining caller/blocker: none for documentation deployment.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status
+  fields: none; workflow delta: `+30/-4`.
+- validation: implementation diff and permission review, remote Docs and CI,
+  live-site verification, authority check/self-test, docs tests, Documenter,
+  manager-log bound, docs-only scope review, and `git diff --check`.
