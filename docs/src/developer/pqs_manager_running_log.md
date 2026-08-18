@@ -1536,3 +1536,54 @@ Carrying-cost accounting:
 - validation: archived SHA-256 verification, detached commit/status/diff audit,
   example and `18/18` release logs, candidate Julia-1.10 CI, authority checks,
   docs tests, Documenter, manager-log bound, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 485 - Authorize v0.2 Compatibility Bounds
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Approved exactly six root `[compat]` additions: JLD2 `0.6.4`,
+  LinearAlgebra `1.10`, SHA `0.7`, SparseArrays `1.10`, SpecialFunctions `2.8`,
+  and TOML `1`. Julia `1.10` remains the supported minimum and Julia `1.12.6`
+  the canonical current replay environment.
+- `HP-PQS-PUBLIC-COMPAT-FN-01` owns only the six-line `Project.toml` edit.
+  `HP-PQS-PUBLIC-COMPAT-TEST-01` records validation without granting any test
+  edit. Fresh resolution, archived environment identity, unchanged public
+  examples, docs, bounded tests, and Julia `1.10` CI are mandatory evidence.
+- The authority checker now recognizes only the exact root `Project.toml` as a
+  source-owned path; no general root-path kind or broader metadata grant was
+  added.
+
+Goal advancement / guardrail:
+- MT5 gains the final bounded dependency-declaration gate before release
+  review. Package versioning, tagging, registration, manifests, workflows,
+  source code, and tests remain outside this pass.
+
+Carrying-cost accounting:
+- deleted: none; this is a six-line package-metadata authorization.
+- simplified: one explicit compatibility record replaces implicit reliance on
+  whatever versions a fresh resolver selects.
+- quarantined: release/version decisions and generated manifests remain
+  outside tracked source.
+- not deleted because: the six direct dependencies are live package inputs.
+- exact remaining caller/blocker: repo-manager must implement only the six
+  bounds, prove both supported Julia lines, and return lifecycle for closeout.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none; authority-tool delta: `2/1` lines.
+- validation: package/dependency and CI audit, authority render/check/self-test,
+  docs tests, Documenter, manager-log bound, scoped diff, and
+  `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 485
+
+- **MT1 - active:** bounded conformance remediation remains evidence-driven.
+- **MT2 - completed:** controlled Cr2 source migration remains closed.
+- **MT3 - active:** Standard60, scalable represented Hartree, and corrected-WL
+  oracle interpretation remain independent pending work.
+- **MT4 - active:** residual/protected and consumer-owned PRF studies are
+  unchanged.
+- **MT5 - active:** public v0.2 mechanics and clean replay are complete; the
+  exact compatibility declaration is pending before release review.
+- **MT6 - active:** cleanup remains caller-driven; this pass adds no code,
+  framework, test, workflow, or tracked runtime environment.

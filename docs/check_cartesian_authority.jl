@@ -317,7 +317,8 @@ function _path_errors(item, id, index, tracked)
         "docs" => ("docs/",),
         "measurement" => ("tmp/work/",),
     )
-    any(prefix -> startswith(path, prefix), prefixes[kind]) ||
+    root_project = kind == "source" && path == "Project.toml"
+    (root_project || any(prefix -> startswith(path, prefix), prefixes[kind])) ||
         push!(errors, "$id.paths[$index] has wrong prefix: $path")
     state == "existing" && (!isfile(absolute) || !(path in tracked)) &&
         push!(errors, "$id.paths[$index] existing path must be a tracked file: $path")

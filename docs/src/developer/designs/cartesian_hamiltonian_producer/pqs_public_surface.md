@@ -357,6 +357,46 @@ the focused `18/18` release gate passed with a tracked-clean candidate tree.
 This accepts the bounded replay only; release review, versioning, and tagging
 remain separate decisions.
 
+## Dependency Compatibility Lifecycle
+
+`HP-PQS-PUBLIC-COMPAT-FN-01` authorizes one pending package-metadata change.
+`HP-PQS-PUBLIC-COMPAT-TEST-01` owns its acceptance evidence but grants no test
+edit. The root `Project.toml` must retain `julia = "1.10"` and add exactly:
+
+```toml
+JLD2 = "0.6.4"
+LinearAlgebra = "1.10"
+SHA = "0.7"
+SparseArrays = "1.10"
+SpecialFunctions = "2.8"
+TOML = "1"
+```
+
+These are Julia package compatibility ranges, not exact dependency pins.
+Julia `1.10` remains the minimum supported line; Julia `1.12.6` remains the
+canonical current replay environment. The package version remains `0.1.0`
+until a separate versioning decision.
+
+Implementation may edit only the six new `[compat]` lines in `Project.toml`.
+It must not change source code, exports, tests, examples, documentation content,
+workflows, the docs project, manifest policy, or any version or release
+metadata. No root manifest may be added or tracked.
+
+Acceptance requires a fresh Julia `1.12.6` resolution and instantiation from
+the edited committed project in an empty machine-local depot. Archive the new
+generated manifest, project and manifest hashes, `project_hash`, runtime and
+registry identity, direct dependency versions, commands, logs, and clean-tree
+state. Verify that every resolved direct dependency satisfies its declared
+range, then run package load, both bounded public examples, the focused release
+gate, docs resolution/build, authority check/self-test, docs tests, and the
+bounded numerical groups. Existing numerical tolerances govern output parity;
+raw-byte identity is not required. Julia `1.10` CI remains the lower-line gate.
+
+Stop without widening or lowering a bound if either fresh resolution, package
+load, public numerical output, docs, or Julia `1.10` CI fails. General
+registration, a root manifest, a package-version change, and `v0.2.0-rc1`
+remain separate decisions.
+
 ## Compatibility
 
 Historical Table I records remain immutable provenance. The public replay must
