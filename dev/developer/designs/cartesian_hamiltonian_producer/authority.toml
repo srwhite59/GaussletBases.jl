@@ -95,7 +95,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_one_center_
 sha256 = "15f4ac5db40d40f8ca73876aad4f1efe625fed46086e240a5d6138ede3fef42b"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
-sha256 = "dd0e979c92cef8ec808c2da7ac70391ca19fe3a3d1458b4dc732971b709cbad8"
+sha256 = "febf46ffc81947b3d401d67f86cb5943d954b6f749023233f2b2e72997ef4a62"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_homonuclear_diatomic_supplemented_workflow.md"
 sha256 = "15528a3f6dfa8d0a00aca5e5978e708e3cfccfe7c177c869fe3e438dee81af8e"
@@ -2877,10 +2877,10 @@ title = "parent residual function validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-ASPECTSHELL-FN-01", "HP-R1-FN-01"]
-grant = "design"
+grant = "maintenance"
 id = "HP-PQS-READER-DOC-01"
-lifecycle = "approved"
-scope = "Authorize only the reader-facing documentation entrance defined by the canonical contract: add docs/src/manual/projected_q_shells.md; link it from README.md, docs/src/index.md, docs/src/manual/index.md, docs/src/examples/index.md, and docs/src/howto/example_guide.md; expose the three owned PQS/IDA algorithm pages in docs/make.jl only after reconciling their stale implementation/retirement wording; and preserve the radial beginner path. Preferred/hard limits are 70/100 lines for the new page and 35/55 added lines across all other reader links, navigation, and stale-status corrections. Add no source/API, parser, framework, artifact, solver, screening, supplement, PRF, paper-driver, manuscript-number, or broad molecular claim."
+lifecycle = "implemented"
+scope = "Maintain only the implemented reader-facing PQS entrance, its visible links to the three owned PQS/IDA algorithm pages, and radial-first onboarding. Preserve the bounded one-center and bond-aligned homonuclear geometry statement and construction-smoke interpretation. Add no source/API, parser, documentation framework, duplicated algorithm account, artifact, solver, screening, supplement, PRF, paper-driver, manuscript result, or broad molecular claim."
 surfaces = ["docs"]
 title = "reader-facing PQS documentation entrance"
 
@@ -2890,8 +2890,14 @@ title = "reader-facing PQS documentation entrance"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "01f0fe002"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "479"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "480"
 
     [[records.paths]]
     kind = "docs"
@@ -2925,12 +2931,16 @@ title = "reader-facing PQS documentation entrance"
     kind = "docs"
     path = "docs/src/manual/index.md"
     state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/manual/projected_q_shells.md"
+    state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-ASPECTSHELL-FN-01", "HP-PQS-READER-DOC-01", "HP-R1-FN-01", "HP-R1-TEST-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-READER-TEST-01"
-lifecycle = "approved"
-scope = "Add only the planned examples/39_pqs_h2plus.jl using exported GaussletBases names plus LinearAlgebra and the exact bounded H2+ PQS/WL fixture and tolerance checks in the canonical contract. Preferred/hard example limits are 55/75 lines. Add only its invocation to the owned quick-example test in test/runtests.jl, at most 18 focused navigation/content lines in test/docs/runtests.jl, and only the examples token to the existing Julia-1.10 GAUSSLETBASES_TEST_GROUPS value in .github/workflows/ci.yml. Add no test file, source/API/default, private call, parser, artifact, solver, supplement, PRF, screening, numerical-order gate, workflow framework, or other CI change."
+lifecycle = "completed"
+scope = "Maintain only the committed examples/39_pqs_h2plus.jl public-only fixture, its one quick-example invocation, focused documentation link/public-name checks, the existing Julia-1.10 examples-group selection, and the canonical 1e-10 symmetry/eigen-residual gates. Add no test file, source/API/default, private call, parser, artifact, solver, supplement, PRF, screening, numerical-order gate, workflow framework, or other CI behavior."
 surfaces = ["tests"]
 title = "public PQS H2+ example validation"
 
@@ -2940,8 +2950,14 @@ title = "public PQS H2+ example validation"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "01f0fe002"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "479"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "480"
 
     [[records.paths]]
     kind = "test"
