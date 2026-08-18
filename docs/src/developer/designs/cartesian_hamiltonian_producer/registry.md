@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `219900c944872bdb0a609f4484ee9fd22a7ae48653150e6cf6025d44e25cf44c`.
+> [authority.toml](authority.toml), SHA-256 `63078f987c688db9e41f50fa86a0fd3f933810aa6fa4674b127c894ae5c19a40`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1767,9 +1767,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 ### HP-PQS-PUBLIC-DOC-PARITY-FN-01 - PQS v0.2 reader-document parity repair
 
 - **Lifecycle:** `approved`
-- **Grant:** `design`
-- **Surfaces:** `docs`
-- **Execution whitelist:** `false`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Reader-Facing Documentation Parity`
 - **Owned paths:**
@@ -1778,10 +1778,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_diatomic_coordinate_distortion.md`
   - `docs` / `existing`: `docs/src/howto/example_guide.md`
   - `docs` / `existing`: `docs/src/reference/export.md`
+  - `source` / `existing`: `src/cartesian_reference_density/screened_hartree_correction.jl`
+  - `source` / `existing`: `src/pqs_matched_h2plus.jl`
 - **Evidence:**
   - `manager_pass`: `487`
 - **Dependencies:** `HP-PQS-PUBLIC-DOC-01`, `HP-PQS-PUBLIC-MATCHED-FN-01`, `HP-PQS-PUBLIC-SCREEN-FN-01`, `HP-QW-NESTED-DIAT-FN-01`
-- **Scope:** Repair only the accepted v0.2 reader-document parity: add the exact eleven accepted v0.2 exports to the curated @docs reference; replace personal absolute provenance paths in the two owned rendered nested-diatomic algorithm pages with path-free historical provenance prose; and label example 28 as internal and non-contractual in both reader guides that present it. Preferred/hard documentation additions are 24/36 lines across the five owned pages. No source, export, example-code, numerical, dependency, workflow, version, tag, release, citation, changelog, paper-claim, provenance deletion, API promotion, example promotion, or broad documentation rewrite.
+- **Scope:** Repair only the accepted v0.2 reader-document parity. Add concise public docstrings for the exact ten accepted exports that currently lack them, without changing definitions, signatures, fields, exports, dispatch, or behavior; the existing pqs\_h2plus\_comparison docstring is unchanged. Add all eleven exports to the curated @docs reference; replace personal absolute provenance paths in the two owned rendered nested-diatomic pages with path-free historical prose; and label example 28 internal/non-contractual in both reader guides. Preferred/hard additions are 90/120 source docstring lines, 24/36 documentation lines, and 24/32 existing-test lines. No executable source, example code, numerical, dependency, workflow, version, tag, release, citation, changelog, paper claim, provenance deletion, API/example promotion, or broad rewrite.
 
 ### HP-PQS-PUBLIC-DOC-PARITY-TEST-01 - PQS v0.2 reader-document parity validation
 

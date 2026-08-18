@@ -299,6 +299,25 @@ screened_hartree_consistency_error
 screened_hartree_field_kind
 ```
 
+Documenter's `@docs` resolution requires attached Julia docstrings. The same
+record therefore permits concise public docstrings for the ten names above
+that currently lack them: both result types, both field types,
+`ScreenedHartreeCorrection`, the `screened_hartree_correction` generic covering
+both accepted overloads, and the four accessors. The existing
+`pqs_h2plus_comparison` docstring is outside this correction and remains
+unchanged.
+
+Those docstrings must describe only the accepted interface on this page. The
+row and comparison docstrings may name their stable public fields. The field
+docstrings must preserve exact-versus-fitted route identity, copied matrix
+ownership, and Coulomb-self-integral terminology. The correction constructor
+must state the common orthonormal-basis convention, spin-summed density with
+fractional occupations, and supplied-field boundary. Its signed consistency
+error remains `Tr(P0 * J0) - (rho0|rho0)`. The correction-result docstring must
+direct callers to the four accessors rather than make its internal fields
+public schema. No definition, signature, field, export, dispatch, executable
+expression, numerical behavior, or compatibility promise may change.
+
 The two rendered nested-diatomic algorithm pages must preserve their private
 historical provenance only as path-free prose. They must expose no personal
 absolute path, Dropbox path, invented URL, imported private file, or new
@@ -315,11 +334,14 @@ internal classification. Documenter remains the executable `@docs` resolution
 gate. No new test file, parser, generalized export inventory, example
 execution, or broad documentation scan is authorized.
 
-The implementation budget is preferred `24` and hard `36` added documentation
-lines across the five owned pages, plus preferred `24` and hard `32` added
-lines in the existing docs test. No new file is allowed. If a readable exact
-repair cannot fit, stop and report the specific excess rather than compressing
-the checks or broadening the surface.
+The implementation budget is preferred `90` and hard `120` added source lines,
+all of which must be docstrings in the two existing owners; preferred `24` and
+hard `36` added documentation lines across the five reader pages; and
+preferred `24` and hard `32` added lines in the existing docs test. No new
+file is allowed. These are stop-and-report bounds, not pressure to obscure the
+public contract. If a readable exact repair cannot fit, stop and report the
+specific excess rather than compressing the documentation or broadening the
+surface.
 
 ## Validation Contract
 

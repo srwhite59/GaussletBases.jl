@@ -1661,3 +1661,48 @@ Carrying-cost accounting:
 - validation: exact export/path/presentation audit, authority render/check and
   self-test, generated-view parity, docs tests, Documenter, manager-log bound,
   scoped diff review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 488 - Authorize v0.2 Public Docstrings
+
+Commit(s):
+- this docs-only authority correction.
+
+Summary:
+- Repo-manager's fail-closed implementation preflight established that only
+  `pqs_h2plus_comparison` among the eleven accepted v0.2 exports has an attached
+  Julia docstring. Documenter therefore rejected the other ten curated
+  `@docs` entries even though their implementation and export status are
+  already accepted.
+- The existing `HP-PQS-PUBLIC-DOC-PARITY-FN-01` now permits concise public
+  docstrings for exactly those ten bindings in their two existing source
+  owners. It does not create another ID or permit any executable, signature,
+  field, export, dispatch, numerical, or compatibility change.
+- The docstrings must preserve the typed exact/fitted distinction, same
+  orthonormal-basis convention, spin-summed fractional-occupation density,
+  public Coulomb-self-integral names, signed consistency convention, and the
+  accessor-only public view of `ScreenedHartreeCorrection`.
+
+Goal advancement / guardrail:
+- MT5's reader-parity gate remains pending implementation, but its exact
+  source-backed prerequisite is now authorized. The `90/120` source-line
+  budget applies only to docstrings and is a stop-and-report bound, not a
+  reason to compress the public contract.
+
+Carrying-cost accounting:
+- deleted: the false assumption that every accepted export already had a
+  resolvable public docstring.
+- simplified: the existing parity ID owns the complete repair; no new
+  authority family or documentation mechanism is introduced.
+- quarantined: implementation internals, raw correction fields, and private
+  fitting/packet machinery remain outside the public documentation contract.
+- not deleted because: all eleven exports are accepted v0.2 surface, and the
+  ten missing docstrings are required for Documenter-backed reference parity.
+- exact remaining caller/blocker: repo-manager must add only the ten
+  docstrings, restore the bounded reader/test draft, and return lifecycle for
+  docs-only closeout.
+- added/deleted `src` lines: `0/0` in this authority pass; planned source
+  additions are docstrings only; new tests: no new file, only the already
+  approved focused docs-test edit; new metadata/status fields: none.
+- validation: exact source/docstring preflight review, authority
+  render/check/self-test, generated-view parity, docs tests, Documenter,
+  manager-log bound, docs-only scope review, and `git diff --check`.
