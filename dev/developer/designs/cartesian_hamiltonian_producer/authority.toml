@@ -71,7 +71,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "e109b82b04b33b335ab0ec7e090b00be9aed6b4a20ddc84f5ffd1c037bbf057b"
+sha256 = "bfed22a9084d729e8fdf3be01dbe6567d7818fad85effa12163d5b7e31dfb383"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "803063ecdc263c9767f08b41b0c20a736482d8dfe44a97d0720e6e3b19f3e91f"
@@ -2992,6 +2992,9 @@ title = "matched H2+ public release validation"
     kind = "git_commit"
     value = "058ee54f45c759949f70b54a699ccc318476f8ac"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "72c46f9ea0dd6b2da7a6a302d34ea1c501d18647"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "481"
     [[records.evidence_refs]]
@@ -3000,6 +3003,9 @@ title = "matched H2+ public release validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "483"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "484"
 
     [[records.paths]]
     kind = "test"
@@ -3062,6 +3068,9 @@ title = "public screened-Hartree assembly validation"
     kind = "git_commit"
     value = "058ee54f45c759949f70b54a699ccc318476f8ac"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "72c46f9ea0dd6b2da7a6a302d34ea1c501d18647"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "481"
     [[records.evidence_refs]]
@@ -3070,6 +3079,9 @@ title = "public screened-Hartree assembly validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "483"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "484"
 
     [[records.paths]]
     kind = "test"
