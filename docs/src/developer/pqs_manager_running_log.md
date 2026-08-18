@@ -1378,3 +1378,44 @@ Carrying-cost accounting:
   PQS reader entrance are now source-backed and CI-enforced.
 - **MT6 - active:** this pass removes stale reader wording without adding source
   or a documentation framework; further cleanup remains caller-driven.
+
+## Cartesian Hamiltonian Producer Pass 481 - Authorize PQS v0.2 Public Surface
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Approved a narrow release-facing layer over accepted mechanics: one frozen
+  full-parent/PQS/matched-White-Lindsey H2+ comparison and one typed public
+  correction assembly from a supplied same-basis reference Hartree field.
+  The existing general constructor remains `cartesian_base_hamiltonian`; staged
+  parent/shell objects and atomic packet/fitting machinery remain internal.
+- Public screening terminology now uses
+  `reference_coulomb_self_integral = Tr(P0*J0)`, twice the Hartree energy.
+  `P0` is spin-summed, fractional occupations are allowed, neutrality is not
+  tested, and the signed consistency error is
+  `Tr(P0*J0) - reference_coulomb_self_integral`. Exact represented and fitted
+  field inputs are distinct types. Ximg/XHF remains paper-local provenance.
+- The ordinary example is a small one-center two-electron assembly using a
+  real `CartesianIDAHamiltonian` interaction and bounded pure-GTO reference
+  oracle. It is not historical-He reproduction.
+
+Goal advancement / guardrail:
+- MT5 gains an approved but unimplemented v0.2 surface. No version bump, tag,
+  scientific recalculation, solver, artifact, packet API, mixed-basis field
+  producer, exchange claim, or paper-result revision is authorized.
+
+Carrying-cost accounting:
+- deleted: none; this pass grants a bounded public wrapper over live owners.
+- simplified: one contract separates stable construction, supplied-field
+  screening, and paper-only exactification.
+- quarantined: private driver reports, atomic fitting/evaluation, Ximg/XHF,
+  HFDMRG, and historical composite byte identity.
+- not deleted because: the private paper driver still owns broader historical
+  H2 reporting and fixed-state operations.
+- exact remaining caller/blocker: implement within the `360`/`130` hard source
+  bounds, then replay both examples cleanly before any release freeze.
+- added/deleted `src` lines: `0/0`; new tests: planned bounded PR and focused
+  release/nightly gates; new metadata/status fields: none.
+- validation: authority render/check/self-test, docs tests, Documenter,
+  manager-log bound, docs-only scope review, and `git diff --check`.

@@ -134,6 +134,9 @@ ID or subsystem.
 - [Screened Hartree correction assembly](screened_hartree_correction_assembly.md)
   for the implemented internal `Delta_J0`/`C` correction API built from
   represented references and same-basis `V_IDA`
+- [PQS v0.2 public surface](pqs_public_surface.md) for the approved bounded
+  matched-H2+ comparison and typed supplied-field screened-Hartree assembly;
+  implementation and release tagging remain pending
 - [External GTO orbital import](external_gto_orbital_import.md)
   for the representation-transfer facility that imports explicit external AO
   orbitals into an orthonormal final basis by `C_F = <F|G> C_G`, including the
