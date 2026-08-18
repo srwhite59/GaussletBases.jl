@@ -359,9 +359,10 @@ remain separate decisions.
 
 ## Dependency Compatibility Lifecycle
 
-`HP-PQS-PUBLIC-COMPAT-FN-01` authorizes one pending package-metadata change.
-`HP-PQS-PUBLIC-COMPAT-TEST-01` owns its acceptance evidence but grants no test
-edit. The root `Project.toml` must retain `julia = "1.10"` and add exactly:
+`HP-PQS-PUBLIC-COMPAT-FN-01` maintains the implemented package-metadata
+declaration. `HP-PQS-PUBLIC-COMPAT-TEST-01` records its completed acceptance
+evidence but grants no test or workflow edit. The root `Project.toml` must
+retain `julia = "1.10"` and exactly these six direct-dependency ranges:
 
 ```toml
 JLD2 = "0.6.4"
@@ -377,14 +378,24 @@ Julia `1.10` remains the minimum supported line; Julia `1.12.6` remains the
 canonical current replay environment. The package version remains `0.1.0`
 until a separate versioning decision.
 
-Implementation may edit only the six new `[compat]` lines in `Project.toml`.
-It must not change source code, exports, tests, examples, documentation content,
-workflows, the docs project, manifest policy, or any version or release
-metadata. No root manifest may be added or tracked.
+Commit `873b6e27a0f3e049fda70b4ff16dc0682354efce` added exactly those six
+lines. A fresh Julia `1.12.6` resolution selected JLD2 `0.6.5`,
+LinearAlgebra `1.12.0`, SHA `0.7.0`, SparseArrays `1.12.0`, SpecialFunctions
+`2.9.0`, and TOML `1.0.3`; every version satisfies its declared range. The
+public examples and numerical gates remained unchanged, Julia `1.10` CI
+passed, and no root manifest became tracked.
 
-Acceptance requires a fresh Julia `1.12.6` resolution and instantiation from
-the edited committed project in an empty machine-local depot. Archive the new
-generated manifest, project and manifest hashes, `project_hash`, runtime and
+Maintenance is limited to preserving these six ranges and the Julia `1.10`
+floor. It must not change source code, exports, tests, examples, documentation
+content, workflows, the docs project, manifest policy, or any version or
+release metadata. No root manifest may be added or tracked. Any widened range,
+lowered floor, added compatibility key, package-version change, tag, or release
+requires a separate docs-only decision.
+
+Compatibility changes require a fresh Julia `1.12.6` resolution and
+instantiation from the edited committed project in an empty machine-local
+depot. Archive the new generated manifest, project and manifest hashes,
+`project_hash`, runtime and
 registry identity, direct dependency versions, commands, logs, and clean-tree
 state. Verify that every resolved direct dependency satisfies its declared
 range, then run package load, both bounded public examples, the focused release

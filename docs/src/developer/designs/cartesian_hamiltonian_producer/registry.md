@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `5ee5fecdd0bb79f7e2f5ed0cdf90240fcf38c0dbea06bb2b5d25d25f68621dab`.
+> [authority.toml](authority.toml), SHA-256 `913c9df68d4278acf61ad54f966474bbe1fe220d2a020e71ca2d8e67b7dfdff7`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1707,8 +1707,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-PUBLIC-COMPAT-FN-01 - PQS v0.2 dependency compatibility declaration
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1716,14 +1716,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `source` / `existing`: `Project.toml`
 - **Evidence:**
+  - `git_commit`: `873b6e27a0f3e049fda70b4ff16dc0682354efce`
   - `git_commit`: `8bb5b88009cad222fcd5fddbfcd8ad65555e811a`
   - `manager_pass`: `485`
+  - `manager_pass`: `486`
 - **Dependencies:** `HP-PQS-PUBLIC-DOC-01`, `HP-PQS-PUBLIC-MATCHED-FN-01`, `HP-PQS-PUBLIC-SCREEN-FN-01`
-- **Scope:** Add exactly JLD2 = 0.6.4, LinearAlgebra = 1.10, SHA = 0.7, SparseArrays = 1.10, SpecialFunctions = 2.8, and TOML = 1 to the root Project.toml \[compat\] table while retaining julia = 1.10 and package version 0.1.0. Edit no other project key or tracked file. Verify the bounds by fresh isolated Julia 1.12.6 resolution before commit. No src code, export, test, example, docs-content, workflow, manifest-policy, root manifest, registration, version, tag, release, widened range, or lowered floor.
+- **Scope:** Maintain exactly JLD2 = 0.6.4, LinearAlgebra = 1.10, SHA = 0.7, SparseArrays = 1.10, SpecialFunctions = 2.8, and TOML = 1 in the root Project.toml \[compat\] table while retaining julia = 1.10 and package version 0.1.0. Any added key, widened range, lowered floor, version, tag, release, registration, or root-manifest change requires separate authority. No src code, export, test, example, docs-content, workflow, or manifest-policy change.
 
 ### HP-PQS-PUBLIC-COMPAT-TEST-01 - PQS v0.2 dependency compatibility validation
 
-- **Lifecycle:** `approved`
+- **Lifecycle:** `completed`
 - **Grant:** `none`
 - **Surfaces:** none
 - **Execution whitelist:** `false`
@@ -1731,10 +1733,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Dependency Compatibility Lifecycle`
 - **Owned paths:** none
 - **Evidence:**
+  - `git_commit`: `873b6e27a0f3e049fda70b4ff16dc0682354efce`
   - `git_commit`: `8bb5b88009cad222fcd5fddbfcd8ad65555e811a`
   - `manager_pass`: `485`
+  - `manager_pass`: `486`
 - **Dependencies:** `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`
-- **Scope:** Validation evidence only; this record grants no test or workflow edit. Accept only an exact six-bound Project.toml parse, fresh isolated Julia 1.12.6 resolution with archived manifest and direct-version proof, package load, unchanged bounded public examples and focused release gate, docs resolution/build, authority and docs checks, bounded numerical groups, successful Julia 1.10 CI, clean diff, and confirmation that no root Manifest.toml is tracked. Stop on any incompatible floor rather than widening or lowering a bound.
+- **Scope:** Completed validation evidence only; this record grants no test or workflow edit. The accepted declaration passed exact six-bound Project.toml parsing, fresh isolated Julia 1.12.6 resolution with archived manifest and direct-version proof, package load, unchanged bounded public examples and focused release gate, docs resolution/build, authority and docs checks, bounded numerical groups, successful Julia 1.10 CI, clean diff, and confirmation that no root Manifest.toml is tracked. Stop on any future incompatible floor rather than widening or lowering a bound.
 
 ### HP-PQS-PUBLIC-DOC-01 - PQS v0.2 public documentation
 

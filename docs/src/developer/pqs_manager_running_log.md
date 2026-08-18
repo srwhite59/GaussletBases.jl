@@ -1587,3 +1587,41 @@ Carrying-cost accounting:
   exact compatibility declaration is pending before release review.
 - **MT6 - active:** cleanup remains caller-driven; this pass adds no code,
   framework, test, workflow, or tracked runtime environment.
+
+## Cartesian Hamiltonian Producer Pass 486 - Accept v0.2 Compatibility Bounds
+
+Commit(s):
+- `873b6e27a0f3e049fda70b4ff16dc0682354efce` - exact six-line root
+  compatibility declaration;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the six declared direct-dependency ranges with Julia `1.10` still
+  the supported minimum and package version `0.1.0` unchanged. Fresh Julia
+  `1.12.6` resolution selected JLD2 `0.6.5`, LinearAlgebra `1.12.0`, SHA
+  `0.7.0`, SparseArrays `1.12.0`, SpecialFunctions `2.9.0`, and TOML `1.0.3`;
+  all satisfy the declaration.
+- Public screening and matched-H2+ outputs were unchanged, the focused release
+  gate passed `18/18`, bounded groups passed `12765/12765`, and Julia `1.10`
+  CI and Docs passed. The archived evidence bundle's `SHA256SUMS` file hashes
+  to `9e5c52d14df23c97f04d199b0b538e082eaa12cd19ec6aca61565cda3eb59394`.
+
+Goal advancement / guardrail:
+- MT5's compatibility-declaration gate is complete. Release review, package
+  versioning, tagging, and registration remain separate decisions; no root
+  manifest or runtime environment is tracked.
+
+Carrying-cost accounting:
+- deleted: stale pending-implementation wording.
+- simplified: compatibility authority is now narrow maintenance of six ranges.
+- quarantined: generated manifests, resolver logs, and replay evidence remain
+  machine-local and hash-verified.
+- not deleted because: direct dependency bounds are durable package metadata.
+- exact remaining caller/blocker: paper/release review and an explicit later
+  version/tag decision; no compatibility implementation blocker remains.
+- added/deleted `src` lines: `0/0`; `Project.toml`: `6/0`; new tests: none;
+  new metadata/status fields: none.
+- validation: exact commit/diff and evidence-hash audit, clean Julia `1.12.6`
+  replay, unchanged public examples, focused and bounded tests, Julia `1.10`
+  CI, Docs, authority checks, docs tests, Documenter, manager-log bound, and
+  `git diff --check`.
