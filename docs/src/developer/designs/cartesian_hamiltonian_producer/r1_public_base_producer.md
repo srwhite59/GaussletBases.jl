@@ -15,8 +15,8 @@ electron sectors are implemented under `HP-R1-ESECTOR-*`.
 - `HP-R1-TEST-01` - implemented standalone public endpoint gate.
 - `HP-R1-ESECTOR-FN-01` - implemented explicit charged-sector relaxation;
 - `HP-R1-ESECTOR-TEST-01` - completed sector-independence validation.
-- `HP-PQS-READER-DOC-01` - approved reader-facing PQS documentation entrance;
-- `HP-PQS-READER-TEST-01` - approved public example and quick-smoke wiring.
+- `HP-PQS-READER-DOC-01` - implemented reader-facing PQS documentation entrance;
+- `HP-PQS-READER-TEST-01` - completed public example and quick-smoke validation.
 
 Exact lifecycle, permission, source, test, and dependency metadata is recorded
 in [the registry](registry.md).
@@ -289,10 +289,9 @@ Driver authority is canonical in
 
 ## Reader-Facing PQS Entrance
 
-`HP-PQS-READER-DOC-01` authorizes one concise public entrance for the already
-implemented PQS and White-Lindsey choices. It changes no producer source,
-export, input, output, default, or numerical policy. The implementation may
-add or edit only these reader-facing surfaces:
+`HP-PQS-READER-DOC-01` owns the implemented public entrance for the PQS and
+White-Lindsey choices. It changes no producer source, export, input, output,
+default, or numerical policy. The maintained reader surfaces are:
 
 ```text
 README.md
@@ -307,42 +306,35 @@ docs/src/examples/index.md
 docs/src/howto/example_guide.md
 ```
 
-The new page is titled `Projected q-shells (PQS)`. It must preserve the radial
-workflow as the general beginner starting point and explain, without repeating
-the algorithm pages, that both constructions begin from one common parent and
-common physical shell ownership. White-Lindsey realizes shell content through
-face/edge/corner product-of-one-dimensional contractions. PQS starts from a
-filled source box, selects boundary product modes, restricts them to the
-shell-owned rows, and applies only the shell-local symmetric Lowdin step.
+`Projected q-shells (PQS)` preserves the radial workflow as the general
+beginner starting point and links rather than repeats the detailed algorithm
+pages. Both terminal constructions begin from one common parent and common
+physical shell ownership. White-Lindsey uses face/edge/corner products of
+one-dimensional contractions. PQS uses a filled source box, boundary product
+modes, restriction to shell-owned rows, and only the shell-local symmetric
+Lowdin step.
 
-The page must state the bounded public geometry honestly: origin-centered
-one-center atoms and homonuclear diatomics whose distinct centers lie on the
-Cartesian z axis. It must describe the example below as a small H2+ construction
-at `z = +/-1` bohr, not as convergence or publication evidence. SCF and
-correlated solvers, supplements, PRFs, screening, and paper-scale campaigns
-remain consumer or external work.
+The page states the bounded public geometry: origin-centered one-center atoms
+and homonuclear diatomics whose distinct centers lie on the Cartesian z axis.
+Its H2+ example at `z = +/-1` bohr is construction smoke evidence, not basis
+convergence or publication evidence. SCF and correlated solvers, supplements,
+PRFs, screening, and paper-scale campaigns remain consumer or external work.
 
 Rendered navigation must show the new manual page and the existing
 `cartesian_ida_overview.md`, `pqs_shell_construction.md`, and
-`ida_hamiltonian_and_counterpoise.md` algorithm pages. Their detailed content
-must be linked rather than copied. Before exposure, stale implementation and
-retirement-status wording in those three pages must be reconciled with current
-source and authority without changing their mathematics. README,
-documentation home, manual, examples landing, and the full example guide must
-reach the reader path.
+`ida_hamiltonian_and_counterpoise.md` algorithm pages. Their implementation
+and retirement status must remain current without changing their mathematics.
+README, documentation home, manual, examples landing, and the full example
+guide must continue to reach this path. No new docs framework, duplicated
+algorithm account, manuscript result, or completeness claim belongs here.
 
-The reader page may add at most 70 preferred / 100 hard lines. All other
-reader-link, navigation, and stale-status corrections together may add at most
-35 preferred / 55 hard lines. No new docs framework, content duplication,
-manuscript result, or completeness claim is authorized.
-
-`HP-PQS-READER-TEST-01` authorizes exactly one new public example:
+`HP-PQS-READER-TEST-01` owns exactly one public example:
 
 ```text
 examples/39_pqs_h2plus.jl
 ```
 
-The example may import only `GaussletBases` and `LinearAlgebra`. It must use
+The example imports only `GaussletBases` and `LinearAlgebra`. It uses
 only the exported `cartesian_base_hamiltonian`, `CartesianIDAHamiltonian`,
 `one_body_hamiltonian`, and `nuclear_repulsion` interface plus the public
 Hamiltonian fields. It constructs two complete unsupplemented Hamiltonians
@@ -355,26 +347,17 @@ xmax_parallel = 3.0; xmax_transverse = 2.0
 tail_spacing = 2.8; compact Coulomb default
 ```
 
-It must require dimension `293` for both methods, stored charges/positions and
-electron sector, finite symmetric one-body and IDA interaction matrices,
+It requires dimension `293` for both methods, stored charges/positions and
+electron sector, finite one-body and IDA interaction matrices,
 `E_nn = 0.5`, symmetry error at most `1e-10`, and lowest-eigenpair residual at
-most `1e-10`. It may print each one-body energy, but must not assert an energy
+most `1e-10`. It prints each one-body energy but must not assert an energy
 ordering or present either value as converged or publication evidence.
 
-The example budget is 55 preferred / 75 hard lines. The existing quick-example
-test in `test/runtests.jl` may add only the one example invocation, with a hard
-limit of three added lines. The existing Julia-1.10 CI group list may add only
-the `examples` group so this quick smoke runs durably. Existing
-`test/docs/runtests.jl` may receive at most 18 focused lines protecting the new
-navigation and content. No workflow framework, other CI change, or new test
-file is authorized.
-
-Acceptance requires a clean Julia 1.10 example run through the documented
-installation/project path, package load, the focused public Cartesian test,
-quick examples, docs tests, authority check/self-test, local Documenter,
-private-name scans, `git diff --check`, and deployed `/dev/` verification after
-the implementation push. The two established untracked handoffs remain
-untouched.
+The existing quick-example test invokes this file, the focused docs owner
+protects its links and public-name boundary, and the Julia-1.10 CI selection
+includes the existing `examples` group. No new test file, workflow framework,
+other CI change, source/API surface, private call, parser, artifact, solver,
+supplement, PRF, screening, or numerical-order gate is part of maintenance.
 
 ## Failure Behavior
 

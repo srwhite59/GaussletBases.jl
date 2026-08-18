@@ -1325,3 +1325,56 @@ Carrying-cost accounting:
 - validation: proposal diff review, exported-API numerical fixture, path and
   stale-status audit, authority render/check/self-test, docs tests, Documenter,
   manager-log bound, docs-only scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 480 - Close Reader-Facing PQS Entrance
+
+Commit(s):
+- `01f0fe002` - reader page, public example, navigation, and bounded checks;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the live `Projected q-shells (PQS)` entrance and public-only H2+
+  example. PQS/WL dimensions are `293/293`; one-body energies are
+  `-1.0961188816402305` and `-1.0936556483120647` Ha, with residuals below
+  `1.3e-14`. These values remain smoke output, not ordering, convergence, or
+  publication evidence.
+- `HP-PQS-READER-DOC-01` is implemented docs maintenance and
+  `HP-PQS-READER-TEST-01` is completed test maintenance. The radial beginner
+  path remains primary; the three existing PQS/IDA pages are now visible and
+  their stale retirement/support wording is corrected.
+
+Goal advancement / guardrail:
+- MT5 closes the bounded reader lane with zero source/API change. Solvers,
+  supplements, PRFs, screening, paper drivers, and broader molecular claims
+  remain outside it.
+
+Carrying-cost accounting:
+- deleted: stale retirement wording and obsolete no-example guidance.
+- simplified: existing algorithm pages are visible rather than duplicated.
+- quarantined: private and paper-campaign surfaces remain unlinked from the
+  example implementation.
+- not deleted because: the single example is the durable public smoke and the
+  focused docs assertions protect its reader path.
+- exact remaining caller/blocker: none for this reader entrance.
+- added/deleted `src` lines: `0/0`; new tests: no new test file, `10` docs
+  assertions lines and one quick-example invocation; new metadata/status
+  fields: none.
+- validation: implementation and budget review, package/public example,
+  Cartesian `232/232`, quick examples `2/2`, docs `60/60` and `10/10`,
+  authority render/check/self-test, Documenter, manager-log bound, remote Docs
+  `32082870263`, Julia-1.10 CI `32082870334`, live `/dev/` page, and
+  `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 480
+
+- **MT1 - active:** continue bounded conformance remediation; no new discrepancy
+  is introduced by the reader-only lane.
+- **MT2 - completed:** controlled Cr2 source migration remains closed.
+- **MT3 - active:** Standard60, scalable represented Hartree, and corrected-WL
+  oracle interpretation remain the pending producer/measurement work.
+- **MT4 - active:** residual/protected scientific questions and consumer-owned
+  PRF target studies remain unchanged.
+- **MT5 - maintenance:** authority, deployment, identity safety, and the public
+  PQS reader entrance are now source-backed and CI-enforced.
+- **MT6 - active:** this pass removes stale reader wording without adding source
+  or a documentation framework; further cleanup remains caller-driven.

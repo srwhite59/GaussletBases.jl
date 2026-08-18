@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `0093f3e09a0b7a75ca6080ceddc1beba4651f2293861f049a71b039f11bbb087`.
+> [authority.toml](authority.toml), SHA-256 `d6c9deffc0fa16070b25a79a752f1ef4fbe6cc7e876417c35b251c5401566fd1`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1707,8 +1707,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-READER-DOC-01 - reader-facing PQS documentation entrance
 
-- **Lifecycle:** `approved`
-- **Grant:** `design`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`
 - **Execution whitelist:** `false`
 - **Documents:**
@@ -1722,15 +1722,18 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/howto/example_guide.md`
   - `docs` / `existing`: `docs/src/index.md`
   - `docs` / `existing`: `docs/src/manual/index.md`
+  - `docs` / `existing`: `docs/src/manual/projected_q_shells.md`
 - **Evidence:**
+  - `git_commit`: `01f0fe002`
   - `manager_pass`: `479`
+  - `manager_pass`: `480`
 - **Dependencies:** `HP-PQS-ASPECTSHELL-FN-01`, `HP-R1-FN-01`
-- **Scope:** Authorize only the reader-facing documentation entrance defined by the canonical contract: add docs/src/manual/projected\_q\_shells.md; link it from README.md, docs/src/index.md, docs/src/manual/index.md, docs/src/examples/index.md, and docs/src/howto/example\_guide.md; expose the three owned PQS/IDA algorithm pages in docs/make.jl only after reconciling their stale implementation/retirement wording; and preserve the radial beginner path. Preferred/hard limits are 70/100 lines for the new page and 35/55 added lines across all other reader links, navigation, and stale-status corrections. Add no source/API, parser, framework, artifact, solver, screening, supplement, PRF, paper-driver, manuscript-number, or broad molecular claim.
+- **Scope:** Maintain only the implemented reader-facing PQS entrance, its visible links to the three owned PQS/IDA algorithm pages, and radial-first onboarding. Preserve the bounded one-center and bond-aligned homonuclear geometry statement and construction-smoke interpretation. Add no source/API, parser, documentation framework, duplicated algorithm account, artifact, solver, screening, supplement, PRF, paper-driver, manuscript result, or broad molecular claim.
 
 ### HP-PQS-READER-TEST-01 - public PQS H2+ example validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1739,9 +1742,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/docs/runtests.jl`
   - `test` / `existing`: `test/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `01f0fe002`
   - `manager_pass`: `479`
+  - `manager_pass`: `480`
 - **Dependencies:** `HP-PQS-ASPECTSHELL-FN-01`, `HP-PQS-READER-DOC-01`, `HP-R1-FN-01`, `HP-R1-TEST-01`
-- **Scope:** Add only the planned examples/39\_pqs\_h2plus.jl using exported GaussletBases names plus LinearAlgebra and the exact bounded H2+ PQS/WL fixture and tolerance checks in the canonical contract. Preferred/hard example limits are 55/75 lines. Add only its invocation to the owned quick-example test in test/runtests.jl, at most 18 focused navigation/content lines in test/docs/runtests.jl, and only the examples token to the existing Julia-1.10 GAUSSLETBASES\_TEST\_GROUPS value in .github/workflows/ci.yml. Add no test file, source/API/default, private call, parser, artifact, solver, supplement, PRF, screening, numerical-order gate, workflow framework, or other CI change.
+- **Scope:** Maintain only the committed examples/39\_pqs\_h2plus.jl public-only fixture, its one quick-example invocation, focused documentation link/public-name checks, the existing Julia-1.10 examples-group selection, and the canonical 1e-10 symmetry/eigen-residual gates. Add no test file, source/API/default, private call, parser, artifact, solver, supplement, PRF, screening, numerical-order gate, workflow framework, or other CI behavior.
 
 ### HP-PQS-SCREEN-HARTREE-AUDIT-01 - protected-GTO screened Hartree residual-density audit
 
