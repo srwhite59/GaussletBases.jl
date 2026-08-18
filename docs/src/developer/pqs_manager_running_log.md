@@ -1625,3 +1625,39 @@ Carrying-cost accounting:
   replay, unchanged public examples, focused and bounded tests, Julia `1.10`
   CI, Docs, authority checks, docs tests, Documenter, manager-log bound, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 487 - Authorize v0.2 Reader Parity
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Approved one bounded repair for three release-audit findings: add all eleven
+  accepted v0.2 exports to the curated `@docs` reference, replace personal
+  absolute paths in two rendered nested-diatomic pages with path-free
+  historical provenance, and classify example 28 explicitly as an internal,
+  non-contractual diagnostic in both reader guides.
+- `HP-PQS-PUBLIC-DOC-PARITY-FN-01` owns exactly five documentation paths;
+  `HP-PQS-PUBLIC-DOC-PARITY-TEST-01` owns only a focused extension of the
+  existing docs test. Documenter remains the symbol-resolution gate.
+
+Goal advancement / guardrail:
+- MT5 now has one reader-parity gate before release review. The accepted API,
+  examples, physics, dependencies, citations, version, tag, and release policy
+  remain unchanged. Private provenance is summarized rather than deleted.
+
+Carrying-cost accounting:
+- deleted: no provenance; only inaccessible path strings are authorized for
+  removal during implementation.
+- simplified: one curated reference and explicit example classification replace
+  reader ambiguity.
+- quarantined: private historical files remain outside the public docs tree.
+- not deleted because: both algorithm pages and example 28 remain useful in
+  their existing historical/diagnostic roles.
+- exact remaining caller/blocker: repo-manager must implement the five-doc and
+  one-test repair, then return lifecycle for docs-only closeout.
+- added/deleted `src` lines: `0/0`; new tests: no new file, one bounded existing
+  docs-test adjustment; new metadata/status fields: none.
+- validation: exact export/path/presentation audit, authority render/check and
+  self-test, generated-view parity, docs tests, Documenter, manager-log bound,
+  scoped diff review, and `git diff --check`.

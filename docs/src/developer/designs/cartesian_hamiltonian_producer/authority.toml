@@ -71,7 +71,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "571946fc6317c29e2211662e569af908af9ae339d59ab162c188679504cf234c"
+sha256 = "35e58f68d23dcec92812bea3699d7250b285addce99edb31a599ac3e5c6d60db"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "803063ecdc263c9767f08b41b0c20a736482d8dfe44a97d0720e6e3b19f3e91f"
@@ -2990,6 +2990,66 @@ title = "PQS v0.2 public documentation"
     [[records.paths]]
     kind = "docs"
     path = "docs/src/manual/reference_density_hartree_screening.md"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-PUBLIC-DOC-01", "HP-PQS-PUBLIC-MATCHED-FN-01", "HP-PQS-PUBLIC-SCREEN-FN-01", "HP-QW-NESTED-DIAT-FN-01"]
+grant = "design"
+id = "HP-PQS-PUBLIC-DOC-PARITY-FN-01"
+lifecycle = "approved"
+scope = "Repair only the accepted v0.2 reader-document parity: add the exact eleven accepted v0.2 exports to the curated @docs reference; replace personal absolute provenance paths in the two owned rendered nested-diatomic algorithm pages with path-free historical provenance prose; and label example 28 as internal and non-contractual in both reader guides that present it. Preferred/hard documentation additions are 24/36 lines across the five owned pages. No source, export, example-code, numerical, dependency, workflow, version, tag, release, citation, changelog, paper-claim, provenance deletion, API promotion, example promotion, or broad documentation rewrite."
+surfaces = ["docs"]
+title = "PQS v0.2 reader-document parity repair"
+
+    [[records.document_refs]]
+    heading = "Reader-Facing Documentation Parity"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "487"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/example_guide.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_nested_diatomic_box_policy.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_nested_diatomic_coordinate_distortion.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/howto/example_guide.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/reference/export.md"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-PUBLIC-DOC-PARITY-FN-01", "HP-PQS-READER-TEST-01"]
+grant = "implementation"
+id = "HP-PQS-PUBLIC-DOC-PARITY-TEST-01"
+lifecycle = "approved"
+scope = "Extend only test/docs/runtests.jl with one fixed eleven-name parity check between the existing root exports and curated reference entries, absence of personal absolute or Dropbox paths in the two owned rendered algorithm pages, and explicit internal/non-contractual classification of example 28 in both reader guides. Preferred/hard test additions are 24/32 lines. Add no test file, parser, generalized export inventory, example execution, workflow, numerical gate, or broad documentation scan."
+surfaces = ["tests"]
+title = "PQS v0.2 reader-document parity validation"
+
+    [[records.document_refs]]
+    heading = "Reader-Facing Documentation Parity"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "487"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/docs/runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-ASPECTSHELL-FN-01", "HP-PQS-COULOMB-ACCURACY-FN-01", "HP-R1-FN-01"]

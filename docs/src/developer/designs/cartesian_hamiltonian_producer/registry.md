@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `913c9df68d4278acf61ad54f966474bbe1fe220d2a020e71ca2d8e67b7dfdff7`.
+> [authority.toml](authority.toml), SHA-256 `219900c944872bdb0a609f4484ee9fd22a7ae48653150e6cf6025d44e25cf44c`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1763,6 +1763,40 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `482`
 - **Dependencies:** `HP-PQS-PUBLIC-MATCHED-FN-01`, `HP-PQS-PUBLIC-SCREEN-FN-01`
 - **Scope:** Maintain only the implemented v0.2 reader contract separating stable PQS/WL construction, supplied-field screened-Hartree assembly, and provenance-only Ximg/XHF. Keep the two bounded examples and rendered navigation aligned with the exported API without duplicating subsystem algorithms, exposing private packets/stages, or creating a documentation framework.
+
+### HP-PQS-PUBLIC-DOC-PARITY-FN-01 - PQS v0.2 reader-document parity repair
+
+- **Lifecycle:** `approved`
+- **Grant:** `design`
+- **Surfaces:** `docs`
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Reader-Facing Documentation Parity`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/example_guide.md`
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_diatomic_box_policy.md`
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_diatomic_coordinate_distortion.md`
+  - `docs` / `existing`: `docs/src/howto/example_guide.md`
+  - `docs` / `existing`: `docs/src/reference/export.md`
+- **Evidence:**
+  - `manager_pass`: `487`
+- **Dependencies:** `HP-PQS-PUBLIC-DOC-01`, `HP-PQS-PUBLIC-MATCHED-FN-01`, `HP-PQS-PUBLIC-SCREEN-FN-01`, `HP-QW-NESTED-DIAT-FN-01`
+- **Scope:** Repair only the accepted v0.2 reader-document parity: add the exact eleven accepted v0.2 exports to the curated @docs reference; replace personal absolute provenance paths in the two owned rendered nested-diatomic algorithm pages with path-free historical provenance prose; and label example 28 as internal and non-contractual in both reader guides that present it. Preferred/hard documentation additions are 24/36 lines across the five owned pages. No source, export, example-code, numerical, dependency, workflow, version, tag, release, citation, changelog, paper-claim, provenance deletion, API promotion, example promotion, or broad documentation rewrite.
+
+### HP-PQS-PUBLIC-DOC-PARITY-TEST-01 - PQS v0.2 reader-document parity validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Reader-Facing Documentation Parity`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `487`
+- **Dependencies:** `HP-PQS-PUBLIC-DOC-PARITY-FN-01`, `HP-PQS-READER-TEST-01`
+- **Scope:** Extend only test/docs/runtests.jl with one fixed eleven-name parity check between the existing root exports and curated reference entries, absence of personal absolute or Dropbox paths in the two owned rendered algorithm pages, and explicit internal/non-contractual classification of example 28 in both reader guides. Preferred/hard test additions are 24/32 lines. Add no test file, parser, generalized export inventory, example execution, workflow, numerical gate, or broad documentation scan.
 
 ### HP-PQS-PUBLIC-MATCHED-FN-01 - matched H2+ public comparison
 

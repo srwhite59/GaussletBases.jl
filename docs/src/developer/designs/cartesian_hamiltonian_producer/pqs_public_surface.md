@@ -280,6 +280,47 @@ oracle. It demonstrates energy and occupied-action closure with a nontrivial
 correction. It is an executable assembly example, not reproduction of the
 historical He calculation or a new He endpoint.
 
+## Reader-Facing Documentation Parity
+
+`HP-PQS-PUBLIC-DOC-PARITY-FN-01` owns one bounded reader-document repair.
+The curated export reference must resolve all eleven accepted v0.2 names:
+
+```text
+PQSH2PlusRow
+PQSH2PlusComparison
+pqs_h2plus_comparison
+ExactRepresentedHartreeField
+FittedReferenceHartreeField
+ScreenedHartreeCorrection
+screened_hartree_correction
+screened_hartree_delta_one_body
+screened_hartree_energy_constant
+screened_hartree_consistency_error
+screened_hartree_field_kind
+```
+
+The two rendered nested-diatomic algorithm pages must preserve their private
+historical provenance only as path-free prose. They must expose no personal
+absolute path, Dropbox path, invented URL, imported private file, or new
+bibliographic claim. `examples/28_ordinary_one_body_fidelity.jl` remains
+unchanged and must be labeled explicitly as an internal, non-contractual
+diagnostic in both reader guides that present it. This does not promote or
+retire the example.
+
+`HP-PQS-PUBLIC-DOC-PARITY-TEST-01` owns only a focused extension of the
+existing docs consistency test: use one fixed eleven-name list to require
+agreement between the existing root exports and curated reference entries,
+reject personal paths in the two rendered pages, and require the example-28
+internal classification. Documenter remains the executable `@docs` resolution
+gate. No new test file, parser, generalized export inventory, example
+execution, or broad documentation scan is authorized.
+
+The implementation budget is preferred `24` and hard `36` added documentation
+lines across the five owned pages, plus preferred `24` and hard `32` added
+lines in the existing docs test. No new file is allowed. If a readable exact
+repair cannot fit, stop and report the specific excess rather than compressing
+the checks or broadening the surface.
+
 ## Validation Contract
 
 Ordinary pull-request coverage uses small dimensions and requires:
