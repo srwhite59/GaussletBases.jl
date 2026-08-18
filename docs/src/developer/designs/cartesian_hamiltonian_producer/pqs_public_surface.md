@@ -9,6 +9,7 @@ Status: implemented and validated under:
   `HP-PQS-PUBLIC-SCREEN-TEST-01`.
 
 Implementation commit: `058ee54f45c759949f70b54a699ccc318476f8ac`.
+Clean replay candidate: `72c46f9ea0dd6b2da7a6a302d34ea1c501d18647`.
 
 This page owns the narrow supported interface intended for GaussletBases
 v0.2.0. It does not authorize a release tag. The existing numerical
@@ -265,10 +266,10 @@ examples/40_screened_hartree_fixed_density.jl
 examples/41_pqs_h2plus_table1.jl
 ```
 
-The screening manual page and both examples are now source-backed and may be
-rendered as executable public documentation. A candidate release still
-requires one clean replay of both examples; this lifecycle acceptance does not
-itself create a tag.
+The screening manual page and both examples are source-backed and may be
+rendered as executable public documentation. Their clean candidate replay is
+accepted under the protocol below. This validation does not itself create a
+version bump or release tag.
 
 The screening example uses two bounded pure-GTO orbitals and an explicitly
 declared one-center, two-electron fixed density. It obtains the direct IDA
@@ -346,6 +347,15 @@ commit the generated manifest, or reinterpret the fresh resolution as proof
 that every future dependency resolution is numerically identical. The archived
 manifest pins this candidate replay; lower-bound Julia compatibility remains a
 separate CI fact.
+
+Candidate `72c46f9ea0dd6b2da7a6a302d34ea1c501d18647` passed this protocol on
+Julia `1.12.6` for arm64 macOS. The archived fresh resolution has manifest
+SHA-256 `28d952b22ab0685bcc56fb11adb150fdbb0b7faf46e79a7a9f76ecf554f2c342`
+and project hash `4036d1ee56daf08aad6eb3a169bfb75510483a9e`; the General registry tree
+was `d274819867e3891d366fad62967ab1b7d1ca283a`. Both public examples and
+the focused `18/18` release gate passed with a tracked-clean candidate tree.
+This accepts the bounded replay only; release review, versioning, and tagging
+remain separate decisions.
 
 ## Compatibility
 

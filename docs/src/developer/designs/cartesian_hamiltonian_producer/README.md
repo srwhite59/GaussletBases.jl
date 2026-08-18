@@ -136,8 +136,8 @@ ID or subsystem.
   represented references and same-basis `V_IDA`
 - [PQS v0.2 public surface](pqs_public_surface.md) for the implemented bounded
   matched-H2+ comparison and typed supplied-field screened-Hartree assembly;
-  one isolated `Project.toml` resolution and archived replay manifest remain
-  pending before release review
+  its isolated Julia `1.12.6` candidate replay is accepted and release review
+  remains separate
 - [External GTO orbital import](external_gto_orbital_import.md)
   for the representation-transfer facility that imports explicit external AO
   orbitals into an orthonormal final basis by `C_F = <F|G> C_G`, including the

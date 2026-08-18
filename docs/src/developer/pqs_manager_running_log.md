@@ -1498,3 +1498,41 @@ Carrying-cost accounting:
 - validation: manifest-policy and tracked-file audit, authority checks,
   generated-view parity, docs tests, Documenter, manager-log bound, and diff
   checks.
+
+## Cartesian Hamiltonian Producer Pass 484 - Accept PQS v0.2 Clean Replay
+
+Commit(s):
+- `72c46f9ea0dd6b2da7a6a302d34ea1c501d18647` - exact candidate and clean
+  replay policy;
+- this docs-only evidence closure.
+
+Summary:
+- Accepted the isolated Julia `1.12.6` replay. The supplied-field screening
+  example preserved physical H1 exactly and passed energy/action closure at
+  `1e-11`; the matched H2+ rows remained `12789/1285/1285`, and the focused
+  release gate passed `18/18`.
+- The archived generated manifest has SHA-256
+  `28d952b22ab0685bcc56fb11adb150fdbb0b7faf46e79a7a9f76ecf554f2c342`,
+  project hash `4036d1ee56daf08aad6eb3a169bfb75510483a9e`, and General registry tree
+  `d274819867e3891d366fad62967ab1b7d1ca283a`. All archived evidence hashes
+  verified, and the detached candidate remained tracked-clean.
+
+Goal advancement / guardrail:
+- MT5's clean-replay blocker is closed. Paper/release review and any explicit
+  version or tag remain separate user decisions. This pass does not generalize
+  one fresh resolution into a dependency-stability guarantee.
+
+Carrying-cost accounting:
+- deleted: stale pending-replay status.
+- simplified: current navigation now points directly to release review.
+- quarantined: generated manifest bytes and run logs remain external evidence;
+  no runtime environment is committed.
+- not deleted because: the replay protocol remains the reproducibility contract
+  for this candidate.
+- exact remaining caller/blocker: paper/release review only; no producer source
+  blocker remains.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none.
+- validation: archived SHA-256 verification, detached commit/status/diff audit,
+  example and `18/18` release logs, candidate Julia-1.10 CI, authority checks,
+  docs tests, Documenter, manager-log bound, and `git diff --check`.

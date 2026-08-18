@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `caf4e352beda9365665b41176cca909d4f80f4b6fea359a924fb195aa6177d95`.
+> [authority.toml](authority.toml), SHA-256 `14e4f4bbedb93b9c636d7ff5cb1918126e3874a27999d5392a320695bc252ec0`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1762,9 +1762,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/reproduction/pqs_release_candidate_2026-08-17/data/table1_h2plus/table1_h2plus_matched_composite.tsv`
   - `git_commit`: `058ee54f45c759949f70b54a699ccc318476f8ac`
+  - `git_commit`: `72c46f9ea0dd6b2da7a6a302d34ea1c501d18647`
   - `manager_pass`: `481`
   - `manager_pass`: `482`
   - `manager_pass`: `483`
+  - `manager_pass`: `484`
 - **Dependencies:** `HP-PQS-PUBLIC-MATCHED-FN-01`
 - **Scope:** Maintain the focused release Table I parity gate and bounded public example. Preserve exact common topology and 12789/1285/1285 dimensions, capture atol 2e-8, energy/error atol 1e-7 hartree, same-run residual/capture closure 1e-9, and symmetry 1e-10. The clean candidate replay may freshly resolve the committed Project.toml in an empty isolated depot only if it archives the generated manifest, project/manifest hashes, runtime/registry identity, commands, logs, and tracked-clean state. No copied private or committed root manifest, raw-byte cross-platform gate, ordinary-PR slow run, Vee/solver assertion, general release framework, or historical composite-TSV byte identity.
 
@@ -1801,9 +1803,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/runtests.jl`
 - **Evidence:**
   - `git_commit`: `058ee54f45c759949f70b54a699ccc318476f8ac`
+  - `git_commit`: `72c46f9ea0dd6b2da7a6a302d34ea1c501d18647`
   - `manager_pass`: `481`
   - `manager_pass`: `482`
   - `manager_pass`: `483`
+  - `manager_pass`: `484`
 - **Dependencies:** `HP-PQS-PUBLIC-SCREEN-FN-01`, `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`
 - **Scope:** Maintain bounded public exact/fitted constructor, accessor, malformed-input, signed-consistency, energy/action-closure, and unchanged-physical-H1 tests plus the small one-center two-electron example. Obtain V\_IDA from a CartesianIDAHamiltonian and the accurate represented field from the existing two-orbital pure-GTO oracle. The candidate replay shares the archived fresh-resolution manifest and tracked-clean provenance required by HP-PQS-PUBLIC-MATCHED-TEST-01. No historical-He reproduction, packet fixture, external SCF, general four-index engine, exchange, solver, or mixed-basis field-construction claim.
 
