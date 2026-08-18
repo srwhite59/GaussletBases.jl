@@ -121,14 +121,13 @@ Current implementation surfaces are:
 - `src/cartesian_gaussian_axis_integrals.jl` for shared Cartesian Gaussian axis
   integral kernels where present.
 
-The older contracted-parent/multilayer complete-core-shell oracle is approved
-for [retirement](../developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md)
-and is not a current implementation surface.
+The older contracted-parent/multilayer complete-core-shell oracle was
+[retired](../developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md)
+and is no longer an implementation surface.
 
 ## Current Implementation Deviations
 
-The active H2 PQS route no longer applies the forbidden global core/shell
-Lowdin cleanup. The public `CartesianIDAHamiltonian` type and minimal
-versioned writer/reader now exist. The active H2 residual-GTO route is still
-H2/q5-specific producer work rather than a general Cr2-ready diatomic
-constructor.
+The active PQS route no longer applies the forbidden global core/shell Lowdin
+cleanup. The public base facade exposes bounded origin-centered one-center and
+homonuclear z-axis diatomic constructions; supplements, corrections, and
+broader molecular geometries remain separate workflows.

@@ -155,8 +155,8 @@ one-basis contract. Use `one_body_hamiltonian(ham; center_weights=...)` and
 branches.
 
 `cartesian_base_hamiltonian(system; basis, hamfile=nothing)` is the current
-public producer for the base Cartesian IDA Hamiltonian in the first supported
-PQS cases: origin-centered H and Cartesian z-axis H2. It returns
+public producer for the base Cartesian IDA Hamiltonian in the supported
+origin-centered one-center and homonuclear z-axis diatomic cases. It returns
 `CartesianIDAHamiltonian{Float64}` directly. A non-`nothing` `hamfile` writes
 the existing Hamiltonian artifact and adds fixed producer provenance under
 `producer_provenance/`.
@@ -177,15 +177,14 @@ matrix readback path ignores those extra keys.
   current terminal IDA interaction.
 - `src/cartesian_ida_hamiltonian.jl` contains the public one-basis IDA
   Hamiltonian object and minimal artifact reader/writer.
-- `src/cartesian_base_hamiltonian.jl` contains the narrow public H/H2 facade.
+- `src/cartesian_base_hamiltonian.jl` contains the bounded public facade.
 
-The obsolete contracted-parent/multilayer complete-core-shell route is
-approved for
-[retirement](../developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md).
+The obsolete contracted-parent/multilayer complete-core-shell route was
+[retired](../developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md).
 
 ## Current Implementation Deviations
 
-The public base producer is intentionally limited to origin-centered H and
-Cartesian z-axis H2. General atoms, x/y-aligned or arbitrarily oriented
-diatomics, Cr2-scale production readiness, supplements, corrections, and
-solver handoff are separate roadmap lanes.
+The public base producer is intentionally limited to origin-centered
+one-center atoms and homonuclear diatomics on the Cartesian z axis.
+Heteronuclear, x/y-aligned, or arbitrarily oriented molecules, supplements,
+corrections, and solver handoff are separate lanes.

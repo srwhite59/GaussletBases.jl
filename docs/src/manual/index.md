@@ -55,7 +55,8 @@ If you want atom-centered radial and atomic work:
 If you want the ordinary Cartesian branch:
 
 1. [Current ordinary branch](../explanations/current_ordinary_branch.md)
-2. [Example guide](../howto/example_guide.md)
+2. [Projected q-shells (PQS)](projected_q_shells.md)
+3. [Example guide](../howto/example_guide.md)
 
 The ordinary branch is worth reading after you understand the radial line. It
 is the right place to learn the current mapped ordinary workflow and the

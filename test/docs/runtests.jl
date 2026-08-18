@@ -31,6 +31,9 @@
     docs_site_index = read_doc("docs", "src", "index.md")
     docs_site_manual = read_doc("docs", "src", "manual", "index.md")
     docs_site_examples = read_doc("docs", "src", "howto", "example_guide.md")
+    docs_site_examples_landing = read_doc("docs", "src", "examples", "index.md")
+    docs_site_pqs = read_doc("docs", "src", "manual", "projected_q_shells.md")
+    pqs_example = read_doc("examples", "39_pqs_h2plus.jl")
     docs_site_reference_index = read_doc("docs", "src", "reference", "index.md")
     docs_site_reference_bases = read_doc("docs", "src", "reference", "bases_and_mappings.md")
     docs_site_reference_ops = read_doc("docs", "src", "reference", "operators_and_diagnostics.md")
@@ -183,6 +186,13 @@
             "[Developer Notes](../developer/index.md)",
             "38_qiu_white_reference_vee.jl",
         )
+        @test contains_all(docs_site_pqs, "# Projected q-shells (PQS)",
+            "PQS shell construction", "examples/39_pqs_h2plus.jl")
+        @test contains_all(docs_site_examples_landing, "39_pqs_h2plus.jl",
+            "Projected q-shells (PQS)")
+        @test contains_all(pqs_example, "cartesian_base_hamiltonian",
+            "CartesianIDAHamiltonian", "one_body_hamiltonian", "nuclear_repulsion")
+        @test !occursin("GaussletBases._", pqs_example)
         @test contains_all(
             docs_site_reference_index,
             "# Reference overview",

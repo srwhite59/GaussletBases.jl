@@ -103,6 +103,14 @@ The more diagnostic ordinary examples are:
 21. `27_ordinary_cartesian_ida_localized_backends.jl`
 22. `28_ordinary_one_body_fidelity.jl`
 
+The bounded public PQS/White-Lindsey molecular example is:
+
+23. `39_pqs_h2plus.jl`
+
+It constructs two unsupplemented H2+ base Hamiltonians with identical physical
+inputs. Read [Projected q-shells (PQS)](../manual/projected_q_shells.md) for
+the supported geometry and interpretation.
+
 For the current milestone/status framing, see
 `docs/ordinary_homonuclear_chain_experimental_note.md`.
 
@@ -133,4 +141,5 @@ Use these pages to keep the examples in context:
 - [Visualization utilities](visualization.md)
 - [Current atomic branch](../explanations/current_atomic_branch.md)
 - [Current ordinary branch](../explanations/current_ordinary_branch.md)
+- [Projected q-shells (PQS)](../manual/projected_q_shells.md)
 - [Developer Notes](../developer/index.md)

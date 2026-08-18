@@ -1,0 +1,48 @@
+# Projected q-shells (PQS)
+
+Projected q-shells (PQS) are a Cartesian terminal-basis construction for
+localized gausslet Hamiltonians. New users should still begin with the
+[radial workflow](../tutorials/first_radial_workflow.md); this page is the
+smallest current entrance to the bounded molecular PQS route.
+
+## PQS and White-Lindsey shells
+
+Both methods start from the same mapped three-dimensional parent basis and the
+same physical assignment of parent rows to cores, shells, and slabs. They
+differ in how each shell's retained functions are formed.
+
+White-Lindsey shells use face, edge, and corner products of one-dimensional
+contractions. PQS instead forms a filled source box, selects its boundary
+product modes, restricts those modes to the rows owned by the physical shell,
+and applies a symmetric Lowdin orthogonalization only within that shell.
+
+The detailed constructions are documented in:
+
+- [Cartesian PQS and IDA overview](../algorithms/cartesian_ida_overview.md)
+- [PQS shell construction](../algorithms/pqs_shell_construction.md)
+- [IDA Hamiltonian and counterpoise](../algorithms/ida_hamiltonian_and_counterpoise.md)
+
+## Supported public construction
+
+The public base-Hamiltonian facade currently accepts origin-centered
+one-center atoms and homonuclear diatomics with distinct centers on the
+Cartesian z axis. It constructs an unsupplemented, uncorrected localized-IDA
+Hamiltonian; it does not run a solver.
+
+[`examples/39_pqs_h2plus.jl`](https://github.com/srwhite59/GaussletBases.jl/blob/main/examples/39_pqs_h2plus.jl)
+builds a small H2+ case with nuclei at `z = -1,+1` bohr. The PQS and
+White-Lindsey calculations share every physical input and differ only in the
+`nesting` choice. The example checks the stored geometry and one-electron
+sector, the common 293-function dimension, finite symmetric one-body and IDA
+interaction matrices, nuclear repulsion, and the lowest-eigenpair residual.
+
+Run it from a checkout after instantiating the project:
+
+```bash
+julia --project=. examples/39_pqs_h2plus.jl
+```
+
+The printed one-body energies are a bounded construction smoke, not basis
+convergence or publication evidence. SCF and correlated solvers, Gaussian
+supplements, parent residual functions, screening, and paper-scale campaigns
+remain consumer or external workflows.

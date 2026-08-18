@@ -35,6 +35,9 @@ For lightweight point-cloud and path inspection utilities, also see
 That is still the best front door because the radial line is the current
 mature numerical workflow.
 
+For the bounded molecular Cartesian route, continue to
+[Projected q-shells (PQS)](manual/projected_q_shells.md).
+
 ## Primary documents
 
 The docs site is intentionally organized around this home page plus five
@@ -43,6 +46,8 @@ primary clickable documents rather than a large visible page tree:
 - [Manual](manual/index.md)  
   The user-facing guide to what the package does today, where to start, and
   which workflow to follow next.
+- [Projected q-shells (PQS)](manual/projected_q_shells.md)
+  A small public PQS/White-Lindsey H2+ construction.
 - [Algorithms](algorithms/index.md)  
   Implementation-facing basis-construction and operator-construction recipes,
   with pseudocode, code pointers, and references.

@@ -177,11 +177,10 @@ nonzero and remain assembled over terminal block pairs.
 
 ## Current Implementation Deviations
 
-The active H2 PQS route has removed the forbidden combined core/shell Lowdin.
-The private H2 residual-GTO route now uses an internal one-basis IDA object.
-The public `CartesianIDAHamiltonian` type and minimal writer/reader now exist,
-and the shell construction itself must remain source-box-first, owned-support
-restricted, and shell-local.
+The active PQS route has removed the forbidden combined core/shell Lowdin. The
+public base facade exposes bounded origin-centered one-center and homonuclear
+z-axis diatomic constructions. Shell construction remains source-box-first,
+owned-support restricted, and shell-local.
 
 Production source still needs cleanup to replace cross-overlap audit /
 `max_cross_overlap` plumbing with structural support checks. That cleanup is a

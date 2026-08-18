@@ -33,6 +33,6 @@ jobs:
 
       - name: Run selected tests
         env:
-          GAUSSLETBASES_TEST_GROUPS: core,ida,cartesian
+          GAUSSLETBASES_TEST_GROUPS: core,ida,cartesian,examples
           GAUSSLETBASES_SLOW_TESTS: "0"
         run: julia --project=. -e 'using Pkg; Pkg.test()'

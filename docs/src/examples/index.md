@@ -44,11 +44,14 @@ For the newer ordinary Cartesian line, continue with:
 `38_qiu_white_reference_vee.jl` is a slow reference example. Its nearest/GGT
 path is the default public run; the MWG branch remains opt-in and experimental.
 
-For the current public Cartesian base Hamiltonian path, use
-`cartesian_base_hamiltonian(...)` directly rather than an example script. The
-first supported calls are origin-centered H and Cartesian z-axis H2, shown in
-the [Export layer](../reference/export.md#cartesian-base-hamiltonian). Broader
-Cartesian molecules and supplement/correction workflows remain future lanes.
+For the current public Cartesian base Hamiltonian path, run:
+
+- `39_pqs_h2plus.jl`
+
+It compares bounded PQS and White-Lindsey H2+ constructions through public API
+only. See [Projected q-shells (PQS)](../manual/projected_q_shells.md) for scope
+and the [Export layer](../reference/export.md#cartesian-base-hamiltonian) for
+the facade contract.
 
 The older 1D COMX-cleaned hybrid examples remain in `examples/` only as
 legacy/internal experimental regressions and are intentionally omitted from

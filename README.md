@@ -186,6 +186,7 @@ Then continue with:
 
 - [Documentation home](https://srwhite59.github.io/GaussletBases.jl/dev/)
 - [Manual](https://srwhite59.github.io/GaussletBases.jl/dev/manual/)
+- [Projected q-shells (PQS)](https://srwhite59.github.io/GaussletBases.jl/dev/manual/projected_q_shells/)
 - [Example guide](https://srwhite59.github.io/GaussletBases.jl/dev/howto/example_guide/)
 
 If you want the next atomic step after those four, run:
