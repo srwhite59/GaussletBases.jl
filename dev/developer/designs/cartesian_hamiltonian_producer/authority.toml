@@ -71,7 +71,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "6c9820c8a40530b6532b6c1617ccc308e4de62d46cf29eb1fb4c603bb22d960b"
+sha256 = "e109b82b04b33b335ab0ec7e090b00be9aed6b4a20ddc84f5ffd1c037bbf057b"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "803063ecdc263c9767f08b41b0c20a736482d8dfe44a97d0720e6e3b19f3e91f"
@@ -2976,7 +2976,7 @@ dependency_ids = ["HP-PQS-PUBLIC-MATCHED-FN-01"]
 grant = "maintenance"
 id = "HP-PQS-PUBLIC-MATCHED-TEST-01"
 lifecycle = "completed"
-scope = "Maintain the focused release Table I parity gate and bounded public example. Preserve exact common topology and 12789/1285/1285 dimensions, capture atol 2e-8, energy/error atol 1e-7 hartree, same-run residual/capture closure 1e-9, and symmetry 1e-10. No raw-byte cross-platform gate, ordinary-PR slow run, Vee/solver assertion, general release framework, or historical composite-TSV byte identity."
+scope = "Maintain the focused release Table I parity gate and bounded public example. Preserve exact common topology and 12789/1285/1285 dimensions, capture atol 2e-8, energy/error atol 1e-7 hartree, same-run residual/capture closure 1e-9, and symmetry 1e-10. The clean candidate replay may freshly resolve the committed Project.toml in an empty isolated depot only if it archives the generated manifest, project/manifest hashes, runtime/registry identity, commands, logs, and tracked-clean state. No copied private or committed root manifest, raw-byte cross-platform gate, ordinary-PR slow run, Vee/solver assertion, general release framework, or historical composite-TSV byte identity."
 surfaces = ["tests"]
 title = "matched H2+ public release validation"
 
@@ -2997,6 +2997,9 @@ title = "matched H2+ public release validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "482"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "483"
 
     [[records.paths]]
     kind = "test"
@@ -3046,7 +3049,7 @@ dependency_ids = ["HP-PQS-PUBLIC-SCREEN-FN-01", "HP-PQS-SCREEN-HARTREE-CORR-TEST
 grant = "maintenance"
 id = "HP-PQS-PUBLIC-SCREEN-TEST-01"
 lifecycle = "completed"
-scope = "Maintain bounded public exact/fitted constructor, accessor, malformed-input, signed-consistency, energy/action-closure, and unchanged-physical-H1 tests plus the small one-center two-electron example. Obtain V_IDA from a CartesianIDAHamiltonian and the accurate represented field from the existing two-orbital pure-GTO oracle. No historical-He reproduction, packet fixture, external SCF, general four-index engine, exchange, solver, or mixed-basis field-construction claim."
+scope = "Maintain bounded public exact/fitted constructor, accessor, malformed-input, signed-consistency, energy/action-closure, and unchanged-physical-H1 tests plus the small one-center two-electron example. Obtain V_IDA from a CartesianIDAHamiltonian and the accurate represented field from the existing two-orbital pure-GTO oracle. The candidate replay shares the archived fresh-resolution manifest and tracked-clean provenance required by HP-PQS-PUBLIC-MATCHED-TEST-01. No historical-He reproduction, packet fixture, external SCF, general four-index engine, exchange, solver, or mixed-basis field-construction claim."
 surfaces = ["tests"]
 title = "public screened-Hartree assembly validation"
 
@@ -3064,6 +3067,9 @@ title = "public screened-Hartree assembly validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "482"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "483"
 
     [[records.paths]]
     kind = "test"
