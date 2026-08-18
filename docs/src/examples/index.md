@@ -53,6 +53,16 @@ only. See [Projected q-shells (PQS)](../manual/projected_q_shells.md) for scope
 and the [Export layer](../reference/export.md#cartesian-base-hamiltonian) for
 the facade contract.
 
+The v0.2 public validation examples are:
+
+- `40_screened_hartree_fixed_density.jl`
+- `41_pqs_h2plus_table1.jl`
+
+The first is a bounded supplied-field screened-Hartree assembly example. The
+second is the slower fixed full-parent/PQS/White-Lindsey H2+ comparison used
+for release validation. See [Reference-density Hartree screening](../manual/reference_density_hartree_screening.md)
+and [Projected q-shells (PQS)](../manual/projected_q_shells.md).
+
 The older 1D COMX-cleaned hybrid examples remain in `examples/` only as
 legacy/internal experimental regressions and are intentionally omitted from
 this public sequence.

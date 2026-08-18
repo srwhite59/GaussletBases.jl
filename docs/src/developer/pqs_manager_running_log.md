@@ -1419,3 +1419,45 @@ Carrying-cost accounting:
   release/nightly gates; new metadata/status fields: none.
 - validation: authority render/check/self-test, docs tests, Documenter,
   manager-log bound, docs-only scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 482 - Accept PQS v0.2 Public Surface
+
+Commit(s):
+- `058ee54f45c759949f70b54a699ccc318476f8ac` - matched H2+ and supplied-field
+  screened-Hartree public implementation;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the fixed three-row H2+ comparison at dimensions
+  `12789/1285/1285`. Parent, PQS, and White-Lindsey total energies are
+  `-0.602240572951005`, `-0.601972271268026`, and
+  `-0.601875407737237` Ha; captures are `1.0`, `0.999970935633849`, and
+  `0.999956210164623`.
+- Accepted distinct exact-represented and fitted supplied-field types,
+  spin-summed fractional occupations, signed consistency reporting, defensive
+  correction access, and a two-function `CartesianIDAHamiltonian` example.
+  Atomic fitting, packets, solvers, exchange, and Ximg/XHF remain outside the
+  public surface. All five `HP-PQS-PUBLIC-*` records now own maintenance only;
+  this does not create a release tag.
+
+Goal advancement / guardrail:
+- MT5 now has a source-backed release-facing construction and screening layer.
+  One clean replay of both examples remains required before freezing a
+  candidate release; broader paper and HFDMRG reproduction remains separate.
+
+Carrying-cost accounting:
+- deleted: none; this pass accepts intentionally bounded public wrappers.
+- simplified: reader documentation now points directly to the two executable
+  examples and distinguishes supplied-field assembly from internal fitting.
+- quarantined: staged producer objects, paper-driver reports, packet/fitting
+  machinery, solvers, Ximg/XHF, and release tagging.
+- not deleted because: the private paper driver retains broader historical and
+  fixed-state responsibilities not present in the public wrapper.
+- exact remaining caller/blocker: clean candidate replay and paper-manager
+  release review only; no implementation blocker remains.
+- added/deleted `src` lines: `477/0` (`347` matched, `130` screening); new
+  tests: one `52`-line focused release owner plus `80` existing-owner lines;
+  new metadata/status fields: none.
+- validation: source/API and anti-bloat review, package load, IDA `12070/12070`,
+  focused H2+ `18/18`, bounded CI groups, docs checks, Documenter, authority
+  check/self-test after reconciliation, manager-log bound, and diff checks.

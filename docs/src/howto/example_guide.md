@@ -111,6 +111,15 @@ It constructs two unsupplemented H2+ base Hamiltonians with identical physical
 inputs. Read [Projected q-shells (PQS)](../manual/projected_q_shells.md) for
 the supported geometry and interpretation.
 
+The v0.2 validation examples are:
+
+24. `40_screened_hartree_fixed_density.jl`
+25. `41_pqs_h2plus_table1.jl`
+
+The screening example is a quick supplied-field algebra gate. The matched H2+
+comparison reconstructs the larger fixed parent and is intended for explicit
+release validation rather than every local edit.
+
 For the current milestone/status framing, see
 `docs/ordinary_homonuclear_chain_experimental_note.md`.
 
@@ -142,4 +151,5 @@ Use these pages to keep the examples in context:
 - [Current atomic branch](../explanations/current_atomic_branch.md)
 - [Current ordinary branch](../explanations/current_ordinary_branch.md)
 - [Projected q-shells (PQS)](../manual/projected_q_shells.md)
+- [Reference-density Hartree screening](../manual/reference_density_hartree_screening.md)
 - [Developer Notes](../developer/index.md)

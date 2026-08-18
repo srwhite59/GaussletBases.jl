@@ -46,3 +46,22 @@ The printed one-body energies are a bounded construction smoke, not basis
 convergence or publication evidence. SCF and correlated solvers, Gaussian
 supplements, parent residual functions, screening, and paper-scale campaigns
 remain consumer or external workflows.
+
+## Matched H2+ comparison
+
+[`examples/41_pqs_h2plus_table1.jl`](https://github.com/srwhite59/GaussletBases.jl/blob/main/examples/41_pqs_h2plus_table1.jl)
+is the slower fixed public comparison intended for release validation. It
+reconstructs one `21 x 21 x 29` parent and matched `1285`-function PQS and
+White-Lindsey terminal spaces at the declared Table I parameters. The returned
+rows report parent-state capture, electronic and total energies, contraction
+error, and error relative to a caller-supplied independent total energy.
+
+Run it explicitly when validating a candidate release:
+
+```bash
+julia --project=. examples/41_pqs_h2plus_table1.jl /tmp/pqs_h2plus_table1.tsv
+```
+
+The comparison fixes its construction parameters and exposes no scan or staged
+producer objects. Its cross-platform acceptance uses declared physical
+tolerances rather than raw-byte equality.

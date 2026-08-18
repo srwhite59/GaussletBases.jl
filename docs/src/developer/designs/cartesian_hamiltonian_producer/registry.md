@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `6105f6acf760b18b6cdbd8a3fe8311ed2ecfed531800bbfac8fa6b1561d992d7`.
+> [authority.toml](authority.toml), SHA-256 `4fcd8d98c4291469c1b4f77b0ba5972d08c9806850f369eb0aa5535ed7c5c546`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1707,13 +1707,14 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-PUBLIC-DOC-01 - PQS v0.2 public documentation
 
-- **Lifecycle:** `approved`
-- **Grant:** `design`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`
 - **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `User Documentation And Layering`
 - **Owned paths:**
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/README.md`
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md`
   - `docs` / `existing`: `docs/src/examples/index.md`
   - `docs` / `existing`: `docs/src/howto/example_guide.md`
@@ -1722,48 +1723,54 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/manual/reference_density_hartree_screening.md`
 - **Evidence:**
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/notes/assignments/repo_design_manager_pqs_v0p2_public_surface_2026-08-17.md`
+  - `git_commit`: `058ee54f45c759949f70b54a699ccc318476f8ac`
   - `manager_pass`: `481`
+  - `manager_pass`: `482`
 - **Dependencies:** `HP-PQS-PUBLIC-MATCHED-FN-01`, `HP-PQS-PUBLIC-SCREEN-FN-01`
-- **Scope:** Implement only the bounded v0.2 reader contract separating stable PQS/WL construction, supplied-field screened-Hartree assembly, and provenance-only Ximg/XHF. Maintain the approved-pending warning until source is accepted; then add the two examples and rendered navigation without duplicating subsystem algorithms, exposing private packets/stages, or creating a documentation framework.
+- **Scope:** Maintain only the implemented v0.2 reader contract separating stable PQS/WL construction, supplied-field screened-Hartree assembly, and provenance-only Ximg/XHF. Keep the two bounded examples and rendered navigation aligned with the exported API without duplicating subsystem algorithms, exposing private packets/stages, or creating a documentation framework.
 
 ### HP-PQS-PUBLIC-MATCHED-FN-01 - matched H2+ public comparison
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Matched H2+ Public Comparison`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `planned`: `src/pqs_matched_h2plus.jl`
+  - `source` / `existing`: `src/pqs_matched_h2plus.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/notes/assignments/repo_design_manager_pqs_v0p2_public_surface_2026-08-17.md`
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/reproduction/pqs_release_candidate_2026-08-17/data/table1_h2plus/table1_h2plus_matched_composite.tsv`
+  - `git_commit`: `058ee54f45c759949f70b54a699ccc318476f8ac`
   - `manager_pass`: `481`
+  - `manager_pass`: `482`
 - **Dependencies:** `HP-PQS-ASPECTSHELL-FN-01`, `HP-PQS-COULOMB-ACCURACY-FN-01`, `HP-R1-FN-01`
-- **Scope:** Implement only \`PQSH2PlusRow\`, \`PQSH2PlusComparison\`, and \`pqs\_h2plus\_comparison(; independent\_reference\_total\_energy\_hartree)\` for the frozen R=2, ns=5, padding-10, tail-2.8, high135 parent/PQS-q5/matched-WL-q3 comparison. Require common parent and physical-shell facts, exact 12789/1285 dimensions and 275+960+50 accounting, matrix-free parent solution, and stable compact rows. No public stage object, Vee, solver, artifact, parser, scan, scalar-WL fallback, paper-driver schema, or adjustable construction policy.
+- **Scope:** Maintain only \`PQSH2PlusRow\`, \`PQSH2PlusComparison\`, and \`pqs\_h2plus\_comparison(; independent\_reference\_total\_energy\_hartree)\` for the frozen R=2, ns=5, padding-10, tail-2.8, high135 parent/PQS-q5/matched-WL-q3 comparison. Preserve common parent and physical-shell facts, exact 12789/1285 dimensions and 275+960+50 accounting, matrix-free parent solution, and stable compact rows. No public stage object, Vee, solver, artifact, parser, scan, scalar-WL fallback, paper-driver schema, or adjustable construction policy.
 
 ### HP-PQS-PUBLIC-MATCHED-TEST-01 - matched H2+ public release validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Validation Contract`
 - **Owned paths:**
-  - `test` / `planned`: `test/pqs_h2plus_table1_release_runtests.jl`
+  - `test` / `existing`: `test/pqs_h2plus_table1_release_runtests.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/reproduction/pqs_release_candidate_2026-08-17/data/table1_h2plus/table1_h2plus_matched_composite.tsv`
+  - `git_commit`: `058ee54f45c759949f70b54a699ccc318476f8ac`
   - `manager_pass`: `481`
+  - `manager_pass`: `482`
 - **Dependencies:** `HP-PQS-PUBLIC-MATCHED-FN-01`
-- **Scope:** Implement one focused release/nightly Table I parity gate and the bounded public example. Require exact common topology and 12789/1285/1285 dimensions, capture atol 2e-8, energy/error atol 1e-7 hartree, same-run residual/capture closure 1e-9, and symmetry 1e-10. No raw-byte cross-platform gate, ordinary-PR slow run, Vee/solver assertion, general release framework, or historical composite-TSV byte identity.
+- **Scope:** Maintain the focused release Table I parity gate and bounded public example. Preserve exact common topology and 12789/1285/1285 dimensions, capture atol 2e-8, energy/error atol 1e-7 hartree, same-run residual/capture closure 1e-9, and symmetry 1e-10. No raw-byte cross-platform gate, ordinary-PR slow run, Vee/solver assertion, general release framework, or historical composite-TSV byte identity.
 
 ### HP-PQS-PUBLIC-SCREEN-FN-01 - public supplied-field screened-Hartree assembly
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1774,14 +1781,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/cartesian_reference_density/screened_hartree_correction.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/notes/assignments/repo_design_manager_pqs_v0p2_public_surface_2026-08-17.md`
+  - `git_commit`: `058ee54f45c759949f70b54a699ccc318476f8ac`
   - `manager_pass`: `481`
+  - `manager_pass`: `482`
 - **Dependencies:** `HP-PQS-SCREEN-HARTREE-CORR-FN-01`
-- **Scope:** Implement only the typed supplied-field public assembly: \`ExactRepresentedHartreeField\`, \`FittedReferenceHartreeField\`, existing \`ScreenedHartreeCorrection\`, \`screened\_hartree\_correction\`, and four correction accessors. Require one orthonormal basis/order, spin-summed P0 with fractional occupations allowed, public Coulomb-self-integral terminology, signed Tr(P0\*J0)-self-integral consistency, and density\_nonnegativity\_atol semantics. Atomic fitting, general terminal-plus-supplement field evaluation, packet placement/additivity, exchange, artifacts, solvers, and Ximg/XHF remain internal or forbidden.
+- **Scope:** Maintain only the typed supplied-field public assembly: \`ExactRepresentedHartreeField\`, \`FittedReferenceHartreeField\`, existing \`ScreenedHartreeCorrection\`, \`screened\_hartree\_correction\`, and four correction accessors. Preserve one orthonormal basis/order, spin-summed P0 with fractional occupations allowed, public Coulomb-self-integral terminology, signed Tr(P0\*J0)-self-integral consistency, and density\_nonnegativity\_atol semantics. Atomic fitting, general terminal-plus-supplement field evaluation, packet placement/additivity, exchange, artifacts, solvers, and Ximg/XHF remain internal or forbidden.
 
 ### HP-PQS-PUBLIC-SCREEN-TEST-01 - public screened-Hartree assembly validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1790,9 +1799,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/ida/runtests.jl`
   - `test` / `existing`: `test/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `058ee54f45c759949f70b54a699ccc318476f8ac`
   - `manager_pass`: `481`
+  - `manager_pass`: `482`
 - **Dependencies:** `HP-PQS-PUBLIC-SCREEN-FN-01`, `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`
-- **Scope:** Implement bounded public exact/fitted constructor, accessor, malformed-input, signed-consistency, energy/action-closure, and unchanged-physical-H1 tests plus the small one-center two-electron example. Obtain V\_IDA from a CartesianIDAHamiltonian and the accurate represented field from the existing two-orbital pure-GTO oracle. No historical-He reproduction, packet fixture, external SCF, general four-index engine, exchange, solver, or mixed-basis field-construction claim.
+- **Scope:** Maintain bounded public exact/fitted constructor, accessor, malformed-input, signed-consistency, energy/action-closure, and unchanged-physical-H1 tests plus the small one-center two-electron example. Obtain V\_IDA from a CartesianIDAHamiltonian and the accurate represented field from the existing two-orbital pure-GTO oracle. No historical-He reproduction, packet fixture, external SCF, general four-index engine, exchange, solver, or mixed-basis field-construction claim.
 
 ### HP-PQS-READER-DOC-01 - reader-facing PQS documentation entrance
 

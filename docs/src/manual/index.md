@@ -56,7 +56,8 @@ If you want the ordinary Cartesian branch:
 
 1. [Current ordinary branch](../explanations/current_ordinary_branch.md)
 2. [Projected q-shells (PQS)](projected_q_shells.md)
-3. [Example guide](../howto/example_guide.md)
+3. [Reference-density Hartree screening](reference_density_hartree_screening.md)
+4. [Example guide](../howto/example_guide.md)
 
 The ordinary branch is worth reading after you understand the radial line. It
 is the right place to learn the current mapped ordinary workflow and the
@@ -89,4 +90,6 @@ depth, without crowding the main manual.
 - [Recommended atomic setup](../howto/recommended_atomic_setup.md)
 - [Current atomic branch](../explanations/current_atomic_branch.md)
 - [Current ordinary branch](../explanations/current_ordinary_branch.md)
+- [Projected q-shells (PQS)](projected_q_shells.md)
+- [Reference-density Hartree screening](reference_density_hartree_screening.md)
 - [Angular research track](../explanations/angular_research_track.md)

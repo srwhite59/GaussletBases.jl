@@ -1,6 +1,6 @@
 # PQS v0.2 Public Surface
 
-Status: approved for implementation under:
+Status: implemented and validated under:
 
 - `HP-PQS-PUBLIC-DOC-01`;
 - `HP-PQS-PUBLIC-MATCHED-FN-01` and
@@ -8,9 +8,10 @@ Status: approved for implementation under:
 - `HP-PQS-PUBLIC-SCREEN-FN-01` and
   `HP-PQS-PUBLIC-SCREEN-TEST-01`.
 
-This page owns the narrow supported interface proposed for GaussletBases
-v0.2.0. It does not authorize a release tag or claim that the approved names
-are implemented before their lifecycle is reconciled. The existing numerical
+Implementation commit: `058ee54f45c759949f70b54a699ccc318476f8ac`.
+
+This page owns the narrow supported interface intended for GaussletBases
+v0.2.0. It does not authorize a release tag. The existing numerical
 contracts remain in [R1 public base producer](r1_public_base_producer.md),
 [matched PQS/White-Lindsey aspect modes](pqs_complete_shell_aspect_source_modes.md),
 and [screened-Hartree correction assembly](screened_hartree_correction_assembly.md).
@@ -252,7 +253,7 @@ Ximg/XHF remains provenance-only. It is neither reconstruction of a physical
 mixed-basis four-index interaction nor transferable exchange/correlation
 theory. No Ximg/XHF name, constructor, result, or accessor is exported.
 
-The planned user surfaces are:
+The implemented user surfaces are:
 
 ```text
 docs/src/manual/projected_q_shells.md
@@ -264,9 +265,10 @@ examples/40_screened_hartree_fixed_density.jl
 examples/41_pqs_h2plus_table1.jl
 ```
 
-Until source implementation is accepted, the screening manual page must say
-that the names are approved but unavailable on the current package version and
-must not be added to rendered navigation as an executable feature.
+The screening manual page and both examples are now source-backed and may be
+rendered as executable public documentation. A candidate release still
+requires one clean replay of both examples; this lifecycle acceptance does not
+itself create a tag.
 
 The screening example uses two bounded pure-GTO orbitals and an explicitly
 declared one-center, two-electron fixed density. It obtains the direct IDA
