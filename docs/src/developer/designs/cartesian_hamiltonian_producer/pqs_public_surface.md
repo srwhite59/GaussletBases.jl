@@ -316,6 +316,37 @@ The slower test is not part of every local edit gate. It is run by a focused
 read-only release/nightly workflow and manually before the candidate release
 is frozen.
 
+## Clean Candidate Replay Environment
+
+GaussletBases is a Julia package, and its root `Manifest.toml` is intentionally
+ignored. A committed root manifest is not required for the candidate replay
+and must not be added solely for this campaign.
+
+The clean replay starts from one exact detached candidate commit with no
+private manifest and an empty machine-local depot. It may run
+`Pkg.instantiate()` against the committed root `Project.toml`, allowing Julia
+to perform one fresh compatible resolution. Before any example or release test
+runs, preserve the generated `Manifest.toml` outside the repository together
+with:
+
+- the exact candidate commit and tracked-clean status;
+- Julia version, platform, and `versioninfo()` output;
+- the complete committed `Project.toml` SHA-256;
+- the complete generated `Manifest.toml` SHA-256, `project_hash`,
+  `julia_version`, and full bytes;
+- registry name/UUID and available revision identity;
+- the instantiate command and log; and
+- hashes of the example outputs and focused release-test log.
+
+The generated ignored manifest may remain in the detached worktree while the
+replay runs, but it is environment evidence rather than a source change. The
+tracked tree must remain unchanged and pass `git diff --check`. Do not copy a
+private ignored manifest from another checkout, resolve inside a Dropbox depot,
+commit the generated manifest, or reinterpret the fresh resolution as proof
+that every future dependency resolution is numerically identical. The archived
+manifest pins this candidate replay; lower-bound Julia compatibility remains a
+separate CI fact.
+
 ## Compatibility
 
 Historical Table I records remain immutable provenance. The public replay must

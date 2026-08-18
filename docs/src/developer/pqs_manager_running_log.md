@@ -1461,3 +1461,40 @@ Carrying-cost accounting:
 - validation: source/API and anti-bloat review, package load, IDA `12070/12070`,
   focused H2+ `18/18`, bounded CI groups, docs checks, Documenter, authority
   check/self-test after reconciliation, manager-log bound, and diff checks.
+
+## Cartesian Hamiltonian Producer Pass 483 - Define Clean Replay Resolution
+
+Commit(s):
+- this docs-only validation-policy amendment.
+
+Summary:
+- The first detached candidate replay stopped correctly because the package
+  intentionally commits no root manifest. Chose fresh isolated resolution over
+  adding a package-root `Manifest.toml`: exact source remains the detached
+  commit, while the generated manifest becomes archived replay evidence.
+- The replay must begin without a private manifest in an empty machine-local
+  depot, instantiate the committed `Project.toml`, and preserve the generated
+  manifest bytes, SHA-256, `project_hash`, Julia/platform and registry identity,
+  commands, logs, outputs, and tracked-clean state before interpretation.
+
+Goal advancement / guardrail:
+- MT5 remains blocked only on executing the now-defined replay. This policy
+  does not alter dependencies, `.gitignore`, source, tests, examples, release
+  tags, or lower-bound Julia CI. It also does not claim future unconstrained
+  resolutions are identical; the archived manifest pins this candidate run.
+
+Carrying-cost accounting:
+- deleted: the accidental implication that a committed root manifest is needed.
+- simplified: one package-appropriate resolution and provenance rule now owns
+  both public examples and the focused release test.
+- quarantined: private ignored manifests, Dropbox depots, release tagging, and
+  general dependency-policy changes.
+- not deleted because: the package-level no-manifest policy and Julia `1.10`
+  CI remain valid independent compatibility contracts.
+- exact remaining caller/blocker: repo-manager must rerun the detached replay
+  under the archived fresh-resolution protocol.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none.
+- validation: manifest-policy and tracked-file audit, authority checks,
+  generated-view parity, docs tests, Documenter, manager-log bound, and diff
+  checks.
