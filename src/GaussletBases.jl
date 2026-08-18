@@ -21,6 +21,17 @@ export AbstractFunction1D,
        CartesianGaussianShellOrbitalRepresentation3D,
        CartesianGaussianShellSupplementRepresentation3D,
        CartesianIDAHamiltonian,
+       PQSH2PlusRow,
+       PQSH2PlusComparison,
+       pqs_h2plus_comparison,
+       ExactRepresentedHartreeField,
+       FittedReferenceHartreeField,
+       ScreenedHartreeCorrection,
+       screened_hartree_correction,
+       screened_hartree_delta_one_body,
+       screened_hartree_energy_constant,
+       screened_hartree_consistency_error,
+       screened_hartree_field_kind,
        cartesian_base_hamiltonian,
        cartesian_base_working_basis,
        CartesianBasisBundle3D,
@@ -633,7 +644,16 @@ include("CartesianParentGaussletBases.jl")
 include("pqs_source_box_route_driver_helpers.jl")
 include("pqs_source_box_low_order_materialization.jl")
 include("cartesian_base_hamiltonian.jl")
+include("pqs_matched_h2plus.jl")
 include("cartesian_reference_density/CartesianReferenceDensity.jl")
+using .CartesianReferenceDensity: ExactRepresentedHartreeField,
+                                  FittedReferenceHartreeField,
+                                  ScreenedHartreeCorrection,
+                                  screened_hartree_correction,
+                                  screened_hartree_delta_one_body,
+                                  screened_hartree_energy_constant,
+                                  screened_hartree_consistency_error,
+                                  screened_hartree_field_kind
 include("pqs_source_box_diatomic_complete_core_shell.jl")
 include("pqs_source_box_route_driver_skeletons.jl")
 include("ordinary_qw_nested_frontends.jl")

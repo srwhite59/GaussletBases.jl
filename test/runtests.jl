@@ -909,6 +909,7 @@ if _test_group_enabled(:examples)
 @testset "Example scripts (quick smoke subset)" begin
     @test _run_example_script("01_first_gausslet.jl")
     @test _run_example_script("39_pqs_h2plus.jl")
+    @test _run_example_script("40_screened_hartree_fixed_density.jl")
 end
 
 if _RUN_SLOW_TESTS

@@ -76,6 +76,54 @@ function _screened_hartree_matrix(name, matrix)
     return _sym(M), norm(M - transpose(M), Inf)
 end
 
+function _public_hartree_field(name, matrix, self_integral, provenance)
+    M, symmetry_error = _screened_hartree_matrix(name, matrix)
+    symmetry_error <= 1.0e-10 || throw(ArgumentError(
+        "$(name) symmetry error $(symmetry_error) exceeds 1.0e-10"))
+    value = Float64(self_integral)
+    isfinite(value) || throw(ArgumentError("Coulomb self integral must be finite"))
+    provenance isa AbstractString ||
+        throw(ArgumentError("Hartree-field provenance must be a string"))
+    description = strip(String(provenance))
+    isempty(description) &&
+        throw(ArgumentError("Hartree-field provenance must not be empty"))
+    return M, value, description
+end
+
+struct ExactRepresentedHartreeField
+    matrix::Matrix{Float64}
+    reference_coulomb_self_integral::Float64
+    provenance::String
+
+    function ExactRepresentedHartreeField(
+        matrix,
+        reference_coulomb_self_integral;
+        provenance,
+    )
+        M, value, description = _public_hartree_field(
+            "reference Hartree field", matrix,
+            reference_coulomb_self_integral, provenance)
+        return new(M, value, description)
+    end
+end
+
+struct FittedReferenceHartreeField
+    matrix::Matrix{Float64}
+    density_coulomb_self_integral::Float64
+    provenance::String
+
+    function FittedReferenceHartreeField(
+        matrix,
+        density_coulomb_self_integral;
+        provenance,
+    )
+        M, value, description = _public_hartree_field(
+            "fitted reference Hartree field", matrix,
+            density_coulomb_self_integral, provenance)
+        return new(M, value, description)
+    end
+end
+
 function _screened_hartree_trace_product(A, B)
     size(A) == size(B) || throw(DimensionMismatch("trace-product size mismatch"))
     return Float64(sum(Matrix{Float64}(A) .* Matrix{Float64}(B)))
@@ -300,6 +348,72 @@ function build_screened_hartree_correction(
         represented_reference_p0_q0(reference_coefficients, occupations), nothing,
         nothing;
         kwargs...)
+end
+
+function _public_screened_hartree_tolerances(representation_atol,
+    density_nonnegativity_atol, symmetry_atol, closure_atol)
+    values = Float64[representation_atol, density_nonnegativity_atol,
+        symmetry_atol, closure_atol]
+    all(isfinite, values) && all(>=(0.0), values) ||
+        throw(ArgumentError("screened-Hartree tolerances must be finite and nonnegative"))
+    return values
+end
+
+function screened_hartree_correction(
+    V_IDA,
+    field::ExactRepresentedHartreeField,
+    reference_coefficients,
+    occupations;
+    representation_atol::Real = 1.0e-8,
+    density_nonnegativity_atol::Real = 1.0e-12,
+    symmetry_atol::Real = 1.0e-10,
+    closure_atol::Real = 1.0e-8,
+)
+    _public_screened_hartree_tolerances(representation_atol,
+        density_nonnegativity_atol, symmetry_atol, closure_atol)
+    reference = represented_reference_p0_q0(reference_coefficients, occupations)
+    return _build_screened_hartree_correction(V_IDA, field.matrix,
+        field.reference_coulomb_self_integral, reference, nothing, nothing;
+        source = :exact_represented,
+        representation_atol,
+        q0_atol = density_nonnegativity_atol,
+        input_symmetry_atol = symmetry_atol,
+        anchor_atol = closure_atol)
+end
+
+function screened_hartree_correction(
+    V_IDA,
+    field::FittedReferenceHartreeField,
+    reference_coefficients,
+    occupations;
+    representation_atol::Real = 1.0e-8,
+    density_nonnegativity_atol::Real = 1.0e-12,
+    symmetry_atol::Real = 1.0e-10,
+    closure_atol::Real = 1.0e-8,
+)
+    _public_screened_hartree_tolerances(representation_atol,
+        density_nonnegativity_atol, symmetry_atol, closure_atol)
+    reference = represented_reference_p0_q0(reference_coefficients, occupations)
+    consistency = _screened_hartree_trace_product(reference.P0, field.matrix) -
+        field.density_coulomb_self_integral
+    return _build_screened_hartree_correction(V_IDA, field.matrix,
+        field.density_coulomb_self_integral, reference, nothing, consistency;
+        source = :fitted_reference,
+        representation_atol,
+        q0_atol = density_nonnegativity_atol,
+        input_symmetry_atol = symmetry_atol,
+        anchor_atol = closure_atol)
+end
+
+screened_hartree_delta_one_body(c::ScreenedHartreeCorrection) = copy(c.delta_one_body)
+screened_hartree_energy_constant(c::ScreenedHartreeCorrection) = c.energy_constant
+screened_hartree_consistency_error(c::ScreenedHartreeCorrection) =
+    _screened_hartree_trace_product(c.P0, c.J0_G) - c.E0_G
+function screened_hartree_field_kind(correction::ScreenedHartreeCorrection)
+    kind = correction.packet_summary.source
+    kind in (:exact_represented, :fitted_reference) ||
+        throw(ArgumentError("correction was not assembled by the public supplied-field route"))
+    return kind
 end
 function build_additive_screened_hartree_correction(
     V_IDA, J0_G, E0_G::Real, coefficient_blocks, occupation_blocks;
