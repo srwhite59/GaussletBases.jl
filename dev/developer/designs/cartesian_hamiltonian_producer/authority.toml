@@ -71,7 +71,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "bfed22a9084d729e8fdf3be01dbe6567d7818fad85effa12163d5b7e31dfb383"
+sha256 = "0763531804810d0d5647734629a1e45ffb8a9871738a12c11c8008fb016cefd8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "803063ecdc263c9767f08b41b0c20a736482d8dfe44a97d0720e6e3b19f3e91f"
@@ -2878,6 +2878,52 @@ title = "parent residual function validation"
     kind = "test"
     path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
     state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-PUBLIC-DOC-01", "HP-PQS-PUBLIC-MATCHED-FN-01", "HP-PQS-PUBLIC-SCREEN-FN-01"]
+grant = "implementation"
+id = "HP-PQS-PUBLIC-COMPAT-FN-01"
+lifecycle = "approved"
+scope = "Add exactly JLD2 = 0.6.4, LinearAlgebra = 1.10, SHA = 0.7, SparseArrays = 1.10, SpecialFunctions = 2.8, and TOML = 1 to the root Project.toml [compat] table while retaining julia = 1.10 and package version 0.1.0. Edit no other project key or tracked file. Verify the bounds by fresh isolated Julia 1.12.6 resolution before commit. No src code, export, test, example, docs-content, workflow, manifest-policy, root manifest, registration, version, tag, release, widened range, or lowered floor."
+surfaces = ["source"]
+title = "PQS v0.2 dependency compatibility declaration"
+
+    [[records.document_refs]]
+    heading = "Dependency Compatibility Lifecycle"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "8bb5b88009cad222fcd5fddbfcd8ad65555e811a"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "485"
+
+    [[records.paths]]
+    kind = "source"
+    path = "Project.toml"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-PUBLIC-COMPAT-FN-01", "HP-PQS-PUBLIC-MATCHED-TEST-01", "HP-PQS-PUBLIC-SCREEN-TEST-01"]
+grant = "none"
+id = "HP-PQS-PUBLIC-COMPAT-TEST-01"
+lifecycle = "approved"
+paths = []
+scope = "Validation evidence only; this record grants no test or workflow edit. Accept only an exact six-bound Project.toml parse, fresh isolated Julia 1.12.6 resolution with archived manifest and direct-version proof, package load, unchanged bounded public examples and focused release gate, docs resolution/build, authority and docs checks, bounded numerical groups, successful Julia 1.10 CI, clean diff, and confirmation that no root Manifest.toml is tracked. Stop on any incompatible floor rather than widening or lowering a bound."
+surfaces = []
+title = "PQS v0.2 dependency compatibility validation"
+
+    [[records.document_refs]]
+    heading = "Dependency Compatibility Lifecycle"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "8bb5b88009cad222fcd5fddbfcd8ad65555e811a"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "485"
 [[records]]
 dependency_ids = ["HP-PQS-PUBLIC-MATCHED-FN-01", "HP-PQS-PUBLIC-SCREEN-FN-01"]
 grant = "maintenance"
