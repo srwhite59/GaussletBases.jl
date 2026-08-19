@@ -1,5 +1,6 @@
 @testset "Documentation consistency" begin
     include(joinpath(_PROJECT_ROOT, "docs", "check_manager_log.jl"))
+    include(joinpath(_PROJECT_ROOT, "docs", "make.jl"))
 
     read_doc(parts...) = read(joinpath(_PROJECT_ROOT, parts...), String)
     contains_all(text, phrases...) = all(phrase -> occursin(phrase, text), phrases)
@@ -355,13 +356,42 @@
         @test contains_all(
             docs_workflow,
             "name: Docs",
+            "tags:",
+            "- \"v*\"",
             "cartesian-authority:",
             "needs: cartesian-authority",
+            "startsWith(github.ref, 'refs/tags/v')",
             "julia --project=docs docs/make.jl",
             "Pkg.develop(PackageSpec(path=pwd()))",
             "docs/check_cartesian_authority.jl --check",
             "docs/check_cartesian_authority.jl --self-test",
         )
+        @test _documentation_target("pull_request", "refs/pull/1/merge") ==
+              (:pull_request, "dev")
+        @test _documentation_target("push", "refs/heads/main") == (:dev, "dev")
+        @test _documentation_target("push", "refs/tags/v0.2.0-rc1") ==
+              (:tag, "v0.2.0-rc1")
+        @test _documentation_target("push", "refs/tags/v0.2.0") ==
+              (:tag, "v0.2.0")
+        @test "$(_DOCS_SITE)/$(_documentation_target("push", "refs/heads/main")[2])/" ==
+              "https://srwhite59.github.io/GaussletBases.jl/dev/"
+        @test "$(_DOCS_SITE)/$(_documentation_target("push", "refs/tags/v0.2.0-rc1")[2])/" ==
+              "https://srwhite59.github.io/GaussletBases.jl/v0.2.0-rc1/"
+        for ref in ("refs/tags/v0.2", "refs/tags/release-v0.2.0",
+                    "refs/tags/v0.2.0+build", "refs/tags/v01.2.3")
+            @test_throws ErrorException _documentation_target("push", ref)
+        end
+        @test_throws ErrorException _documentation_target("schedule", "refs/heads/main")
+        @test !isempty(VersionNumber("0.2.0-rc1").prerelease)
+        @test isempty(VersionNumber("0.2.0").prerelease)
+        @test contains_all(docs_make,
+            "DOCS_DEPLOY && DOCS_TARGET[1] ∉ (:dev, :tag)",
+            "canonical = DOCS_CANONICAL")
+        @test length(findall("GITHUB_TOKEN:", docs_workflow)) == 1
+        @test length(findall("GAUSSLETBASES_DOCS_DEPLOY", docs_workflow)) == 1
+        @test length(findall("contents: write", docs_workflow)) == 1
+        @test length(findall("contents: read", docs_workflow)) == 2
+        @test !occursin("versions =", docs_make)
         @test !occursin("check_cartesian_authority", docs_make)
 
         @test ManagerLogPolicy.check_live_log() <= ManagerLogPolicy.LIVE_LOG_MAX_LINES

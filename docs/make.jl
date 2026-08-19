@@ -1,3 +1,25 @@
+const _DOCS_SITE = "https://srwhite59.github.io/GaussletBases.jl"
+const _DOCS_VERSION_TAG =
+    r"^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$"
+
+function _documentation_target(event::String, ref::String)
+    isempty(event) && isempty(ref) && return (:local, nothing)
+    event == "pull_request" && return (:pull_request, "dev")
+    event == "push" || error("unsupported documentation event: $(repr(event))")
+    ref == "refs/heads/main" && return (:dev, "dev")
+    prefix = "refs/tags/"
+    startswith(ref, prefix) || error("unsupported documentation push ref: $(repr(ref))")
+    tag = chop(ref; head = length(prefix), tail = 0)
+    occursin('+', tag) && error("documentation tags may not contain build metadata: $(repr(tag))")
+    match(_DOCS_VERSION_TAG, tag) === nothing &&
+        error("documentation tag is not an exact semantic version: $(repr(tag))")
+    version = tryparse(VersionNumber, tag[2:end])
+    (isnothing(version) || tag != "v$(version)") &&
+        error("documentation tag is not canonical: $(repr(tag))")
+    return (:tag, tag)
+end
+
+if abspath(PROGRAM_FILE) == abspath(@__FILE__)
 include(joinpath(@__DIR__, "check_manager_log.jl"))
 ManagerLogPolicy.check_live_log()
 
@@ -8,6 +30,13 @@ using GaussletBases
 
 const DOCS_CI = get(ENV, "CI", "false") == "true"
 const DOCS_DEPLOY = get(ENV, "GAUSSLETBASES_DOCS_DEPLOY", "false") == "true"
+const DOCS_TARGET = _documentation_target(
+    get(ENV, "GITHUB_EVENT_NAME", ""), get(ENV, "GITHUB_REF", ""))
+DOCS_DEPLOY && DOCS_TARGET[1] ∉ (:dev, :tag) &&
+    error("documentation deployment is not allowed for context $(DOCS_TARGET[1])")
+const DOCS_CANONICAL = DOCS_CI && !isnothing(DOCS_TARGET[2]) ?
+                       "$(_DOCS_SITE)/$(DOCS_TARGET[2])/" : nothing
+@info "Documentation build context" context = DOCS_TARGET[1] canonical = DOCS_CANONICAL deploy = DOCS_DEPLOY
 
 makedocs(
     sitename = "GaussletBases.jl",
@@ -17,7 +46,7 @@ makedocs(
     format = Documenter.HTML(
         prettyurls = DOCS_CI,
         edit_link = "main",
-        canonical = DOCS_CI ? "https://srwhite59.github.io/GaussletBases.jl/dev/" : nothing,
+        canonical = DOCS_CANONICAL,
         size_threshold_ignore = [
             "developer/designs/cartesian_hamiltonian_producer/history/manager_log/pqs_manager_running_log_through_pass_379.md",
             "developer/designs/cartesian_hamiltonian_producer/registry.md",
@@ -78,10 +107,6 @@ if DOCS_DEPLOY
         devbranch = "main",
     )
 elseif DOCS_CI
-    @info "Skipping docs deployment; set GAUSSLETBASES_DOCS_DEPLOY=true after gh-pages deployment authorization is configured."
-else
-    deploydocs(
-        repo = "github.com/srwhite59/GaussletBases.jl.git",
-        devbranch = "main",
-    )
+    @info "Documentation build completed without deployment." context = DOCS_TARGET[1]
+end
 end
