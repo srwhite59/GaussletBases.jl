@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `d13a8cf396acb2dccb52edb4d5a7d74584d41bbe5729f0a5073dc22b94bc86b1`.
+> [authority.toml](authority.toml), SHA-256 `dbf731743be4ac7a9c2d50e4e376fee9c5d0446b93d85d4f0158c272741d53b8`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1900,7 +1900,38 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `492`
   - `manager_pass`: `493`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PRF-CONSUMER-FN-01`, `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-DOC-PARITY-FN-01`, `HP-PQS-PUBLIC-MATCHED-FN-01`, `HP-PQS-PUBLIC-SCREEN-FN-01`, `HP-PQS-READER-DOC-01`, `HP-QW-NESTED-DIAT-FN-01`
-- **Scope:** Maintain the prepared but unpublished v0.2.0-rc1 candidate identity implemented by commit 41fa897ae919510b179a425027a8ce2d4a2167b3: root Project.toml version 0.2.0-rc1 and one concise root CHANGELOG.md grouped as Added, Changed, Fixed, Public-surface reduction, and Scope. Preserve traceability to accepted public APIs, examples 39-41, dependency bounds, documentation deployment, ordinary-QW fixes, and six-name PRF de-promotion without pass history, private numerical evidence, manuscript claims, dates, DOI/citation invention, or internal deletion inventories. No tag, GitHub release, registration, CITATION.cff, source/export/test/example/dependency/workflow/API/numerical/scientific-doc change, stable link, badge, homepage change, tracked root manifest, or paper-workspace import.
+- **Scope:** Maintain the prepared but unpublished v0.2.0-rc1 candidate identity implemented by commit 41fa897ae919510b179a425027a8ce2d4a2167b3: root Project.toml version 0.2.0-rc1 and one concise root CHANGELOG.md grouped as Added, Changed, Fixed, Public-surface reduction, and Scope. Preserve traceability to accepted public APIs, examples 39-41, dependency bounds, documentation deployment, ordinary-QW fixes, and six-name PRF de-promotion without pass history, private numerical evidence, manuscript claims, dates, DOI/citation invention, or internal deletion inventories. This record itself authorizes no tag; the exact annotated RC1 tag operation is separately owned by HP-PQS-PUBLIC-RC1-TAG-FN-01. No GitHub release, registration, CITATION.cff, source/export/test/example/dependency/workflow/API/numerical/scientific-doc change, stable link, badge, homepage change, tracked root manifest, or paper-workspace import.
+
+### HP-PQS-PUBLIC-RC1-TAG-FN-01 - v0.2.0-rc1 annotated tag publication
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tools`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0-rc1 Annotated Tag Lifecycle`
+- **Owned paths:**
+  - `tool` / `existing`: `.github/workflows/docs.yml`
+- **Evidence:**
+  - `git_commit`: `1546c18d3058cce2b5051b50788cda3c12585e51`
+  - `manager_pass`: `494`
+- **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-RC1-FN-01`
+- **Scope:** Create and push exactly one immutable annotated git tag named v0.2.0-rc1 with message GaussletBases v0.2.0-rc1, peeled target 1546c18d3058cce2b5051b50788cda3c12585e51, tree 1b53a9eb51d11cfc31b8b0356349c62f0de8915f, and target git-archive SHA-256 2a0b6938d3b341900d73668e7f0644c34b8a851e1b823356c53c2866fd19522a. Push only refs/tags/v0.2.0-rc1 and invoke the existing tag-triggered Docs workflow; the owned workflow path is an invocation surface and must not be edited. Require synchronized main, only the two established untracked handoffs, absent local/remote tag, exact package-version/tag agreement, target archive/content checks, and applicable clean-replay/CI/docs evidence before creation. Never move, replace, or delete the tag after push; on post-push failure preserve it and report. No branch push, GitHub release, registration, CITATION.cff, final v0.2.0, homepage/stable-link edit, or tracked-file/source/API/dependency/workflow/numerical/manuscript change.
+
+### HP-PQS-PUBLIC-RC1-TAG-TEST-01 - v0.2.0-rc1 annotated tag validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0-rc1 Annotated Tag Lifecycle`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `1546c18d3058cce2b5051b50788cda3c12585e51`
+  - `manager_pass`: `494`
+- **Dependencies:** `HP-PQS-PUBLIC-RC1-TAG-FN-01`
+- **Scope:** Required tag-acceptance evidence only; this record grants no file, workflow, tag-repair, or release edit. Verify annotated local and remote tag objects peel to frozen target 1546c18d3058cce2b5051b50788cda3c12585e51, the tag-triggered Docs workflow passes, /v0.2.0-rc1/ exists with its exact canonical URL, versions.js exposes the prerelease, /stable/ remains absent and unadvanced from the recorded baseline, /dev/ remains intact, and no branch or tracked content changed. A post-push failure preserves the immutable tag and is reported without retargeting.
 
 ### HP-PQS-PUBLIC-RC1-TEST-01 - v0.2.0-rc1 candidate-preparation validation
 
@@ -1916,7 +1947,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `492`
   - `manager_pass`: `493`
 - **Dependencies:** `HP-PQS-PUBLIC-RC1-FN-01`
-- **Scope:** Completed acceptance evidence only; this record grants no test, workflow, source, or docs edit. Commit 41fa897ae919510b179a425027a8ce2d4a2167b3 passed exact Project/changelog review, fresh Julia 1.12.6 GitHub installation, package load, public examples 01/39/40/41, focused H2+ 18/18, Julia 1.10 CI, authority/docs/manager-log checks, exact prerelease documentation classification without stable advancement, and a clean git archive excluding a root manifest and untracked handoffs. Tagging and release publication remain unauthorized.
+- **Scope:** Completed acceptance evidence only; this record grants no test, workflow, source, docs, or tag edit. Commit 41fa897ae919510b179a425027a8ce2d4a2167b3 passed exact Project/changelog review, fresh Julia 1.12.6 GitHub installation, package load, public examples 01/39/40/41, focused H2+ 18/18, Julia 1.10 CI, authority/docs/manager-log checks, exact prerelease documentation classification without stable advancement, and a clean git archive excluding a root manifest and untracked handoffs. The exact annotated tag operation is separately owned by HP-PQS-PUBLIC-RC1-TAG-FN-01; GitHub release publication remains unauthorized.
 
 ### HP-PQS-PUBLIC-SCREEN-FN-01 - public supplied-field screened-Hartree assembly
 

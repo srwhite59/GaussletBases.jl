@@ -74,7 +74,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "c8cf26b74588394ef49ea76910598e13b8d412d74fe835988a66b825834c0d19"
+sha256 = "88b643b5bb8ecbc6c75da58385f68f51b4185b8173af7ac94e5da91a03e5f966"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "803063ecdc263c9767f08b41b0c20a736482d8dfe44a97d0720e6e3b19f3e91f"
@@ -3231,7 +3231,7 @@ dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PRF-CONSUMER-FN-01", "H
 grant = "maintenance"
 id = "HP-PQS-PUBLIC-RC1-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the prepared but unpublished v0.2.0-rc1 candidate identity implemented by commit 41fa897ae919510b179a425027a8ce2d4a2167b3: root Project.toml version 0.2.0-rc1 and one concise root CHANGELOG.md grouped as Added, Changed, Fixed, Public-surface reduction, and Scope. Preserve traceability to accepted public APIs, examples 39-41, dependency bounds, documentation deployment, ordinary-QW fixes, and six-name PRF de-promotion without pass history, private numerical evidence, manuscript claims, dates, DOI/citation invention, or internal deletion inventories. No tag, GitHub release, registration, CITATION.cff, source/export/test/example/dependency/workflow/API/numerical/scientific-doc change, stable link, badge, homepage change, tracked root manifest, or paper-workspace import."
+scope = "Maintain the prepared but unpublished v0.2.0-rc1 candidate identity implemented by commit 41fa897ae919510b179a425027a8ce2d4a2167b3: root Project.toml version 0.2.0-rc1 and one concise root CHANGELOG.md grouped as Added, Changed, Fixed, Public-surface reduction, and Scope. Preserve traceability to accepted public APIs, examples 39-41, dependency bounds, documentation deployment, ordinary-QW fixes, and six-name PRF de-promotion without pass history, private numerical evidence, manuscript claims, dates, DOI/citation invention, or internal deletion inventories. This record itself authorizes no tag; the exact annotated RC1 tag operation is separately owned by HP-PQS-PUBLIC-RC1-TAG-FN-01. No GitHub release, registration, CITATION.cff, source/export/test/example/dependency/workflow/API/numerical/scientific-doc change, stable link, badge, homepage change, tracked root manifest, or paper-workspace import."
 surfaces = ["docs", "source"]
 title = "v0.2.0-rc1 candidate preparation"
 
@@ -3259,12 +3259,58 @@ title = "v0.2.0-rc1 candidate preparation"
     path = "Project.toml"
     state = "existing"
 [[records]]
+dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PUBLIC-RC1-FN-01"]
+grant = "implementation"
+id = "HP-PQS-PUBLIC-RC1-TAG-FN-01"
+lifecycle = "approved"
+scope = "Create and push exactly one immutable annotated git tag named v0.2.0-rc1 with message GaussletBases v0.2.0-rc1, peeled target 1546c18d3058cce2b5051b50788cda3c12585e51, tree 1b53a9eb51d11cfc31b8b0356349c62f0de8915f, and target git-archive SHA-256 2a0b6938d3b341900d73668e7f0644c34b8a851e1b823356c53c2866fd19522a. Push only refs/tags/v0.2.0-rc1 and invoke the existing tag-triggered Docs workflow; the owned workflow path is an invocation surface and must not be edited. Require synchronized main, only the two established untracked handoffs, absent local/remote tag, exact package-version/tag agreement, target archive/content checks, and applicable clean-replay/CI/docs evidence before creation. Never move, replace, or delete the tag after push; on post-push failure preserve it and report. No branch push, GitHub release, registration, CITATION.cff, final v0.2.0, homepage/stable-link edit, or tracked-file/source/API/dependency/workflow/numerical/manuscript change."
+surfaces = ["tools"]
+title = "v0.2.0-rc1 annotated tag publication"
+
+    [[records.document_refs]]
+    heading = "v0.2.0-rc1 Annotated Tag Lifecycle"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1546c18d3058cce2b5051b50788cda3c12585e51"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "494"
+
+    [[records.paths]]
+    kind = "tool"
+    path = ".github/workflows/docs.yml"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-PUBLIC-RC1-TAG-FN-01"]
+grant = "none"
+id = "HP-PQS-PUBLIC-RC1-TAG-TEST-01"
+lifecycle = "approved"
+paths = []
+scope = "Required tag-acceptance evidence only; this record grants no file, workflow, tag-repair, or release edit. Verify annotated local and remote tag objects peel to frozen target 1546c18d3058cce2b5051b50788cda3c12585e51, the tag-triggered Docs workflow passes, /v0.2.0-rc1/ exists with its exact canonical URL, versions.js exposes the prerelease, /stable/ remains absent and unadvanced from the recorded baseline, /dev/ remains intact, and no branch or tracked content changed. A post-push failure preserves the immutable tag and is reported without retargeting."
+surfaces = []
+title = "v0.2.0-rc1 annotated tag validation"
+
+    [[records.document_refs]]
+    heading = "v0.2.0-rc1 Annotated Tag Lifecycle"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1546c18d3058cce2b5051b50788cda3c12585e51"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "494"
+[[records]]
 dependency_ids = ["HP-PQS-PUBLIC-RC1-FN-01"]
 grant = "none"
 id = "HP-PQS-PUBLIC-RC1-TEST-01"
 lifecycle = "completed"
 paths = []
-scope = "Completed acceptance evidence only; this record grants no test, workflow, source, or docs edit. Commit 41fa897ae919510b179a425027a8ce2d4a2167b3 passed exact Project/changelog review, fresh Julia 1.12.6 GitHub installation, package load, public examples 01/39/40/41, focused H2+ 18/18, Julia 1.10 CI, authority/docs/manager-log checks, exact prerelease documentation classification without stable advancement, and a clean git archive excluding a root manifest and untracked handoffs. Tagging and release publication remain unauthorized."
+scope = "Completed acceptance evidence only; this record grants no test, workflow, source, docs, or tag edit. Commit 41fa897ae919510b179a425027a8ce2d4a2167b3 passed exact Project/changelog review, fresh Julia 1.12.6 GitHub installation, package load, public examples 01/39/40/41, focused H2+ 18/18, Julia 1.10 CI, authority/docs/manager-log checks, exact prerelease documentation classification without stable advancement, and a clean git archive excluding a root manifest and untracked handoffs. The exact annotated tag operation is separately owned by HP-PQS-PUBLIC-RC1-TAG-FN-01; GitHub release publication remains unauthorized."
 surfaces = []
 title = "v0.2.0-rc1 candidate-preparation validation"
 

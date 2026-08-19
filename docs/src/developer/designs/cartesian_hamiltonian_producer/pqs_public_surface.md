@@ -12,8 +12,9 @@ Implementation commit: `058ee54f45c759949f70b54a699ccc318476f8ac`.
 Clean replay candidate: `72c46f9ea0dd6b2da7a6a302d34ea1c501d18647`.
 
 This page owns the narrow supported interface intended for GaussletBases
-v0.2.0. It does not authorize a release tag. The existing numerical
-contracts remain in [R1 public base producer](r1_public_base_producer.md),
+v0.2.0. Exact candidate-tag authority is isolated below; GitHub release and
+final-release publication remain separate. The existing numerical contracts
+remain in [R1 public base producer](r1_public_base_producer.md),
 [matched PQS/White-Lindsey aspect modes](pqs_complete_shell_aspect_source_modes.md),
 and [screened-Hartree correction assembly](screened_hartree_correction_assembly.md).
 
@@ -535,9 +536,58 @@ The focused H2+ release test passed `18/18` with dimensions
 `12789/1285/1285`; examples 01, 39, 40, and 41 also passed. The implementation
 commit's Docs run failed only because the newly tracked changelog still had
 planned-path authority; this lifecycle closeout resolves that expected state
-transition without changing the candidate files. Tag creation, GitHub release
-publication, General registration, citation metadata, and final-release
-authorization require a separate explicit decision.
+transition without changing the candidate files. The exact annotated tag
+operation is separately bounded below; GitHub release publication, General
+registration, citation metadata, and final-release authorization still require
+separate explicit decisions.
+
+## v0.2.0-rc1 Annotated Tag Lifecycle
+
+`HP-PQS-PUBLIC-RC1-TAG-FN-01` authorizes one tag-only publication operation.
+The immutable target is the accepted candidate closeout commit
+`1546c18d3058cce2b5051b50788cda3c12585e51`, with tree
+`1b53a9eb51d11cfc31b8b0356349c62f0de8915f` and full tracked `git archive`
+SHA-256 `2a0b6938d3b341900d73668e7f0644c34b8a851e1b823356c53c2866fd19522a`.
+The later authority commit is deliberately not the tag target.
+
+The frozen target contains package version `0.2.0-rc1`, the accepted 39-line
+changelog and six dependency bounds, the accepted eleven-name public surface,
+reader parity, examples and tests, and tag-aware documentation deployment.
+Relative to implementation commit `41fa897ae919510b179a425027a8ce2d4a2167b3`,
+only the six accepted Pass 493 lifecycle documents changed; `Project.toml`,
+`CHANGELOG.md`, source and exports, tests and examples, dependency declarations,
+the Docs workflow, `docs/make.jl`, and reader-facing documentation are
+byte-identical.
+
+Before creating the tag, repo-manager must verify:
+
+- `main` equals `origin/main`, with only the two established untracked
+  successor handoffs;
+- neither local nor remote `v0.2.0-rc1` exists;
+- the target commit, tree, archive hash and contents match the frozen values,
+  with no root manifest or handoff in the archive;
+- the package version and tag name agree exactly, and the accepted Julia
+  `1.12.6` clean replay plus Julia `1.10` CI remain applicable; and
+- authority check/self-test, docs tests, package load, Documenter, manager-log
+  bound, and `git diff --check` pass.
+
+The only permitted mutation is an annotated tag named exactly
+`v0.2.0-rc1`, message `GaussletBases v0.2.0-rc1`, pointing to the frozen
+target, followed by a push of only `refs/tags/v0.2.0-rc1`. The existing Docs
+workflow is an invocation surface, not an editable file in this lifecycle.
+
+`HP-PQS-PUBLIC-RC1-TAG-TEST-01` grants no edit. Acceptance requires both local
+and remote annotated tag objects to peel to the frozen commit, the tag-triggered
+Docs workflow to pass, and the published folder
+`/v0.2.0-rc1/` to use that exact canonical URL. `versions.js` must expose the
+prerelease while `/stable/` remains absent and unadvanced from its pre-tag
+baseline; `/dev/` must remain intact. If any post-push check fails, preserve the
+immutable tag and report the failure without moving, replacing, or deleting it.
+
+No branch push, GitHub release, General registration, `CITATION.cff`, final
+`v0.2.0`, homepage or stable-link edit, custom release framework, or tracked
+source/API/dependency/workflow/numerical/manuscript mutation is authorized.
+After successful verification, lifecycle closeout is docs-only on `main`.
 
 ## Compatibility
 
@@ -604,7 +654,8 @@ This authority adds no public staged parent/shell/transform object, packet
 builder or reader, mixed-basis Hartree producer, density fitter, potential
 fitter/evaluator, solver, artifact, checkpoint, Ximg/XHF surface, HFDMRG
 surface, interaction/exchange correction, general four-index engine, or
-release tag.
+release machinery. The single annotated tag operation above is separately
+owned and adds no public interface or tracked implementation.
 
 If either example requires a new scientific approximation, public stage
 schema, general field-construction engine, or paper-local data dependency,

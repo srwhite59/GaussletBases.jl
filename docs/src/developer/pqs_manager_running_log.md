@@ -1933,3 +1933,39 @@ Carrying-cost accounting:
   hash/content check, authority render/check/self-test, generated-view parity,
   docs tests, Documenter, manager-log bound, remote Docs/CI, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 494 - Authorize v0.2.0-rc1 Annotated Tag
+
+Commit(s):
+- this docs-only tag authority amendment.
+
+Summary:
+- Approved one annotated `v0.2.0-rc1` tag with message
+  `GaussletBases v0.2.0-rc1`, frozen to accepted target
+  `1546c18d3058cce2b5051b50788cda3c12585e51`. Its tree is
+  `1b53a9eb51d11cfc31b8b0356349c62f0de8915f`; its full tracked archive SHA-256
+  is `2a0b6938d3b341900d73668e7f0644c34b8a851e1b823356c53c2866fd19522a`.
+- Local and remote tag names are absent. The target passes authority, package,
+  docs, ledger, and diff gates; the listed code, API, test, workflow, and reader
+  surfaces remain byte-identical to the validated implementation. Live baseline is `/dev/` 200,
+  `/stable/` 404, RC1 404, with `versions.js` listing only `dev`.
+
+Goal advancement / guardrail:
+- MT5 permits tag publication but not a GitHub release. Only the annotated tag
+  ref may be pushed. A post-push failure preserves the immutable tag and is
+  reported; retargeting or deletion is forbidden.
+
+Carrying-cost accounting:
+- deleted: the blanket statement that no separately authorized RC1 tag exists.
+- simplified: one exact target, tag name, message, and deployment acceptance
+  contract replace any discretionary release procedure.
+- quarantined: GitHub release, registration, citation, final release, and all
+  tracked-file mutations.
+- not deleted because: the existing workflow remains the validated tag trigger.
+- exact remaining caller/blocker: repo-manager must create/push only the tag
+  and return immutable-ref plus versioned-doc evidence for Pass 495 closeout.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none.
+- validation: exact target/tree/archive and candidate-byte audit, local/remote
+  tag absence, live docs baseline, authority check/self-test, docs `85/85` and
+  `10/10`, package load, Documenter, manager-log bound, and `git diff --check`.
