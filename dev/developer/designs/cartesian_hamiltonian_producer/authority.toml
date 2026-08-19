@@ -44,7 +44,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accura
 sha256 = "68cfa9dcc5b5fa59f553f22251e81fcbe5b54bec4bef627b2907cf81db492a36"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
-sha256 = "c910c344d085039ab3c1ac8862c720e90341f53f21d9040cf79897a4c656bc1e"
+sha256 = "34802d952fcca28d06fcdec60c7e48d268fdf6562e5c6a16d291de0868e2d6ea"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_orbital_import.md"
 sha256 = "f9d964a80d831836cccf52a13b9590d0fb51acb6eccf24ad24efeb93be3aea76"
@@ -2333,10 +2333,10 @@ title = "Coulomb accuracy validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-PUBLIC-DOC-01", "HP-PQS-PUBLIC-DOC-PARITY-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-DOCS-TAGDEPLOY-FN-01"
-lifecycle = "approved"
-scope = "Implement only tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior and main-to-dev deployment; accept only full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tags without build metadata; derive exact main/tag canonical URLs; fail before deploydocs on malformed tags or context mismatch; and retain Documenter's standard prerelease exclusion from stable. GITHUB_TOKEN and GAUSSLETBASES_DOCS_DEPLOY remain deployment-step-only under a contents:write deployment job. Stop above 30 added workflow lines or 40 added docs/make.jl lines. No new file, package-version change, tag, release, source/API/example/scientific-doc/dependency/citation/changelog change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, alias policy, or release framework."
+lifecycle = "implemented"
+scope = "Maintain only the implemented tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior, main-to-dev deployment, exact canonical full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tag folders without build metadata, fail-closed rejection before deploydocs, and Documenter's standard prerelease exclusion from stable. GITHUB_TOKEN and GAUSSLETBASES_DOCS_DEPLOY remain deployment-step-only under the contents:write deployment job. No new file, package-version change, tag, release, source/API/example/scientific-doc/dependency/citation/changelog change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, custom alias policy, or release framework."
 surfaces = ["docs", "tools"]
 title = "tag-aware versioned documentation deployment"
 
@@ -2346,8 +2346,14 @@ title = "tag-aware versioned documentation deployment"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "abee269eed7028c864fa18ae44b4b946af63dfcf"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "490"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "491"
 
     [[records.paths]]
     kind = "docs"
@@ -2367,10 +2373,10 @@ title = "tag-aware versioned documentation deployment"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-DOCS-TAGDEPLOY-TEST-01"
-lifecycle = "approved"
-scope = "Add only focused assertions in the existing docs test for PR/main/prerelease/final/malformed-tag classification, exact main and tag canonical paths, semantic-version rejection, unchanged least-privilege workflow boundaries, and standard prerelease exclusion from stable. Stop above 50 added test lines. Use transient local Documenter builds and version-expansion evidence for acceptance; add no test file, parser framework, actual tag/deployment, numerical gate, source test, or release behavior."
+lifecycle = "completed"
+scope = "Maintain only the focused existing docs-test assertions for PR/main/prerelease/final/malformed-tag classification, exact main and tag canonical paths, semantic-version rejection, unchanged least-privilege workflow boundaries, and standard prerelease exclusion from stable. Use transient Documenter builds and version-expansion evidence when this deployment contract changes. Add no test file, parser framework, actual tag/deployment, numerical gate, source test, or release behavior."
 surfaces = ["tests"]
 title = "tag-aware documentation deployment validation"
 
@@ -2380,8 +2386,14 @@ title = "tag-aware documentation deployment validation"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "abee269eed7028c864fa18ae44b4b946af63dfcf"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "490"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "491"
 
     [[records.paths]]
     kind = "test"
