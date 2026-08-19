@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `2f96a067e66ba32eaf2597ade2afee34cd7d3327109d42fb108d477fa547c43a`.
+> [authority.toml](authority.toml), SHA-256 `7b853cffdc70741d4a744a7b9187028a4584a54641cd31966f98c72ec671ae17`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1426,6 +1426,39 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** validation maintenance for implemented compact/high behavior and the already-approved Standard60/driver completion only.
+
+### HP-PQS-DOCS-TAGDEPLOY-FN-01 - tag-aware versioned documentation deployment
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `tools`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `Tag-Aware Version Deployment`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/current.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md`
+  - `tool` / `existing`: `.github/workflows/docs.yml`
+  - `tool` / `existing`: `docs/make.jl`
+- **Evidence:**
+  - `manager_pass`: `490`
+- **Dependencies:** `HP-PQS-PUBLIC-DOC-01`, `HP-PQS-PUBLIC-DOC-PARITY-FN-01`
+- **Scope:** Implement only tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior and main-to-dev deployment; accept only full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tags without build metadata; derive exact main/tag canonical URLs; fail before deploydocs on malformed tags or context mismatch; and retain Documenter's standard prerelease exclusion from stable. GITHUB\_TOKEN and GAUSSLETBASES\_DOCS\_DEPLOY remain deployment-step-only under a contents:write deployment job. Stop above 30 added workflow lines or 40 added docs/make.jl lines. No new file, package-version change, tag, release, source/API/example/scientific-doc/dependency/citation/changelog change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, alias policy, or release framework.
+
+### HP-PQS-DOCS-TAGDEPLOY-TEST-01 - tag-aware documentation deployment validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `Tag-Aware Version Deployment`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `490`
+- **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`
+- **Scope:** Add only focused assertions in the existing docs test for PR/main/prerelease/final/malformed-tag classification, exact main and tag canonical paths, semantic-version rejection, unchanged least-privilege workflow boundaries, and standard prerelease exclusion from stable. Stop above 50 added test lines. Use transient local Documenter builds and version-expansion evidence for acceptance; add no test file, parser framework, actual tag/deployment, numerical gate, source test, or release behavior.
 
 ### HP-PQS-MAP-SFACTOR-FN-01 - expert mapping \`s\_factor\` keyword
 

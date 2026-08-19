@@ -1748,3 +1748,65 @@ Carrying-cost accounting:
   `12789/1285/1285` outputs, authority checks, generated-view parity,
   manager-log bound, package load, Documenter, remote Docs/CI, deployed
   eleven-entry reference inspection, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 490 - Authorize Tag-Aware Documentation Deployment
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Approved `HP-PQS-DOCS-TAGDEPLOY-FN-01` for the existing Docs workflow and
+  `docs/make.jl`, plus `HP-PQS-DOCS-TAGDEPLOY-TEST-01` for focused assertions
+  in the existing docs test. Pull requests remain build-only/read-only, `main`
+  remains `/dev/`, and an exact semantic-version tag may deploy to its own
+  versioned folder.
+- Relocated the existing deployment note into the rendered producer-design
+  tree so its generated registry link is a valid canonical documentation link;
+  the move creates no second contract or new documentation layer.
+- The contract uses Documenter's standard version policy: prereleases such as
+  `v0.2.0-rc1` remain addressable without creating or advancing `stable`, while
+  a later final `v0.2.0` may become `stable`. Full tag validation must fail
+  before deployment for malformed or arbitrary tags; no fallback path is
+  permitted.
+
+Goal advancement / guardrail:
+- MT5 gains one bounded deployment-readiness implementation before any release
+  decision. This pass authorizes no package-version change, tag, GitHub release,
+  changelog/citation work, custom credential, alternate host, or general
+  release framework. Local simulations must cover PR, main, prerelease, final,
+  and malformed-tag contexts without publishing a tag.
+
+Carrying-cost accounting:
+- deleted: no code or prior deployment behavior in this docs-only pass.
+- simplified: one relocated existing deployment note now owns branch/tag
+  classification, canonical paths, and prerelease alias semantics.
+- quarantined: versioning, tagging, release creation, and publication metadata
+  remain separate decisions.
+- not deleted because: the current main-only least-privilege workflow remains
+  the implementation base and must continue updating `/dev/`.
+- exact remaining caller/blocker: repo-manager must implement and validate the
+  bounded workflow/build/test change, then return both IDs for docs-only
+  lifecycle closeout.
+- added/deleted `src` lines: `0/0`; authority checker: `3/1` lines for the two
+  exact established documentation-tool paths; new tests: no new test file,
+  only focused assertions in `test/docs/runtests.jl`; new metadata/status
+  fields: none.
+- validation: official/current Documenter policy and installed-source audit,
+  authority render/check/self-test, generated-view parity, docs tests,
+  Documenter, manager-log bound, docs-only scope review, and
+  `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 490
+
+- **MT1 - active:** conformance remediation remains bounded and evidence-led.
+- **MT2 - completed:** controlled Cr2 source migration remains closed.
+- **MT3 - active:** Standard60, scalable represented Hartree, and corrected-WL
+  oracle interpretation remain independent pending work.
+- **MT4 - active:** residual/protected and consumer-owned PRF studies are
+  unchanged.
+- **MT5 - active:** v0.2 public mechanics, compatibility, clean replay, and
+  reader parity are complete; tag-aware documentation deployment is approved
+  pending implementation, while version/tag/release decisions remain separate.
+- **MT6 - active:** this pass adds no source, helper, test file, credential,
+  schema, or deployment framework; the bounded implementation must reuse the
+  existing workflow, builder, and docs test.

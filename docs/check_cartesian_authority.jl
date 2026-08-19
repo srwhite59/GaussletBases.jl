@@ -318,7 +318,9 @@ function _path_errors(item, id, index, tracked)
         "measurement" => ("tmp/work/",),
     )
     root_project = kind == "source" && path == "Project.toml"
-    (root_project || any(prefix -> startswith(path, prefix), prefixes[kind])) ||
+    documentation_tool = kind == "tool" &&
+        path in (".github/workflows/docs.yml", "docs/make.jl")
+    (root_project || documentation_tool || any(prefix -> startswith(path, prefix), prefixes[kind])) ||
         push!(errors, "$id.paths[$index] has wrong prefix: $path")
     state == "existing" && (!isfile(absolute) || !(path in tracked)) &&
         push!(errors, "$id.paths[$index] existing path must be a tracked file: $path")
