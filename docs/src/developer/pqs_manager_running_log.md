@@ -1854,3 +1854,42 @@ Carrying-cost accounting:
   `10/10`, authority checks, package load, simulated canonical builds,
   Documenter, YAML and manager-log checks, remote Docs/CI, live `/dev/`
   inspection, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 492 - Authorize v0.2.0-rc1 Candidate Preparation
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Approved `HP-PQS-PUBLIC-RC1-FN-01` for exactly one package-version edit and
+  one new root `CHANGELOG.md`. The changelog must group accepted public changes
+  since `v0.1.0` without pass history, private numerical evidence, invented
+  citation metadata, or paper-workspace content.
+- `HP-PQS-PUBLIC-RC1-TEST-01` grants no file edit. It requires a clean Julia
+  `1.12.6` GitHub install pinned to the pushed preparation commit, examples
+  01/39/40/41, H2+ `18/18`, Julia `1.10` CI, docs/authority gates, prerelease
+  deployment simulation, and a clean archive.
+- The compatibility owner now governs only the six dependency ranges and Julia
+  floor; package-version ownership is explicitly separate.
+
+Goal advancement / guardrail:
+- MT5 enters candidate preparation. This pass authorizes no tag, GitHub
+  release, registration, citation file, manifest, source/API/numerical change,
+  stable-doc link, badge, or publication claim.
+
+Carrying-cost accounting:
+- deleted: the stale claim that dependency compatibility permanently owns
+  package version `0.1.0`.
+- simplified: one candidate record owns version metadata and reader changelog;
+  validation remains evidence-only with no new test code.
+- quarantined: tagging, release publication, registration, and citation
+  metadata remain separate decisions.
+- not deleted because: the six dependency ranges and Julia floor remain active
+  compatibility contracts.
+- exact remaining caller/blocker: repo-manager must produce the exact two-file
+  preparation commit and pass every clean-install/archive/release gate.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none; planned changelog hard limit: `70` lines.
+- validation: baseline/tag/export/commit trace audit, authority
+  render/check/self-test, docs tests, Documenter, manager-log bound, scoped
+  docs-only review, and `git diff --check`.

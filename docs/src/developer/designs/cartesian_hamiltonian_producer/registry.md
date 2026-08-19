@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `60d20dfaa4bad3bd2ccc24345ae8b71cb864a3dad06ec1e3e703d16377ad17e1`.
+> [authority.toml](authority.toml), SHA-256 `fd7db87054156a069592bf365276a086e685fa319a167b7e215a5436a60a8ed5`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1758,7 +1758,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `485`
   - `manager_pass`: `486`
 - **Dependencies:** `HP-PQS-PUBLIC-DOC-01`, `HP-PQS-PUBLIC-MATCHED-FN-01`, `HP-PQS-PUBLIC-SCREEN-FN-01`
-- **Scope:** Maintain exactly JLD2 = 0.6.4, LinearAlgebra = 1.10, SHA = 0.7, SparseArrays = 1.10, SpecialFunctions = 2.8, and TOML = 1 in the root Project.toml \[compat\] table while retaining julia = 1.10 and package version 0.1.0. Any added key, widened range, lowered floor, version, tag, release, registration, or root-manifest change requires separate authority. No src code, export, test, example, docs-content, workflow, or manifest-policy change.
+- **Scope:** Maintain exactly JLD2 = 0.6.4, LinearAlgebra = 1.10, SHA = 0.7, SparseArrays = 1.10, SpecialFunctions = 2.8, and TOML = 1 in the root Project.toml \[compat\] table while retaining julia = 1.10. Package version is owned separately by an explicit candidate/release record. Any added key, widened range, lowered floor, tag, release, registration, or root-manifest change requires separate authority. No src code, export, test, example, docs-content, workflow, or manifest-policy change.
 
 ### HP-PQS-PUBLIC-COMPAT-TEST-01 - PQS v0.2 dependency compatibility validation
 
@@ -1883,6 +1883,36 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `484`
 - **Dependencies:** `HP-PQS-PUBLIC-MATCHED-FN-01`
 - **Scope:** Maintain the focused release Table I parity gate and bounded public example. Preserve exact common topology and 12789/1285/1285 dimensions, capture atol 2e-8, energy/error atol 1e-7 hartree, same-run residual/capture closure 1e-9, and symmetry 1e-10. The clean candidate replay may freshly resolve the committed Project.toml in an empty isolated depot only if it archives the generated manifest, project/manifest hashes, runtime/registry identity, commands, logs, and tracked-clean state. No copied private or committed root manifest, raw-byte cross-platform gate, ordinary-PR slow run, Vee/solver assertion, general release framework, or historical composite-TSV byte identity.
+
+### HP-PQS-PUBLIC-RC1-FN-01 - v0.2.0-rc1 candidate preparation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0-rc1 Candidate Preparation`
+- **Owned paths:**
+  - `docs` / `planned`: `CHANGELOG.md`
+  - `source` / `existing`: `Project.toml`
+- **Evidence:**
+  - `manager_pass`: `492`
+- **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PRF-CONSUMER-FN-01`, `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-DOC-PARITY-FN-01`, `HP-PQS-PUBLIC-MATCHED-FN-01`, `HP-PQS-PUBLIC-SCREEN-FN-01`, `HP-PQS-READER-DOC-01`, `HP-QW-NESTED-DIAT-FN-01`
+- **Scope:** Prepare but do not publish v0.2.0-rc1: change only the root Project.toml version from 0.1.0 to 0.2.0-rc1 and add one concise root CHANGELOG.md grouped as Added, Changed, Fixed, Public-surface reduction, and Scope. Preserve exact traceability to accepted public APIs, examples 39-41, dependency bounds, documentation deployment, ordinary-QW fixes, and six-name PRF de-promotion without pass history, private numerical evidence, manuscript claims, dates, DOI/citation invention, or internal deletion inventories. CHANGELOG.md is preferred at most 45 lines and hard-limited to 70; clarity takes precedence and overflow must stop. No tag, GitHub release, registration, CITATION.cff, source/export/test/example/dependency/workflow/API/numerical/scientific-doc change, stable link, badge, homepage change, tracked root manifest, or paper-workspace import.
+
+### HP-PQS-PUBLIC-RC1-TEST-01 - v0.2.0-rc1 candidate-preparation validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0-rc1 Candidate Preparation`
+- **Owned paths:** none
+- **Evidence:**
+  - `manager_pass`: `492`
+- **Dependencies:** `HP-PQS-PUBLIC-RC1-FN-01`
+- **Scope:** Required acceptance evidence only; this record grants no test, workflow, source, or docs edit. Verify exact Project version and changelog traceability, a fresh Julia 1.12.6 GitHub install pinned to the pushed preparation commit, package load, public examples 01/39/40/41, focused H2+ 18/18, Julia 1.10 CI, authority/docs/manager-log checks, exact prerelease documentation classification without stable advancement, and a clean git archive excluding manifests and untracked handoffs. Any failure stops before tag or release authorization.
 
 ### HP-PQS-PUBLIC-SCREEN-FN-01 - public supplied-field screened-Hartree assembly
 

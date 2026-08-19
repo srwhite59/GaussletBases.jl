@@ -436,8 +436,10 @@ TOML = "1"
 
 These are Julia package compatibility ranges, not exact dependency pins.
 Julia `1.10` remains the minimum supported line; Julia `1.12.6` remains the
-canonical current replay environment. The package version remains `0.1.0`
-until a separate versioning decision.
+canonical current replay environment. Package-version ownership is separate
+from dependency compatibility. The candidate-preparation decision below may
+change the package version without changing any compatibility range or the
+Julia floor.
 
 Commit `873b6e27a0f3e049fda70b4ff16dc0682354efce` added exactly those six
 lines. A fresh Julia `1.12.6` resolution selected JLD2 `0.6.5`,
@@ -448,10 +450,10 @@ passed, and no root manifest became tracked.
 
 Maintenance is limited to preserving these six ranges and the Julia `1.10`
 floor. It must not change source code, exports, tests, examples, documentation
-content, workflows, the docs project, manifest policy, or any version or
-release metadata. No root manifest may be added or tracked. Any widened range,
-lowered floor, added compatibility key, package-version change, tag, or release
-requires a separate docs-only decision.
+content, workflows, the docs project, or manifest policy. No root manifest may
+be added or tracked. Any widened range, lowered floor, added compatibility key,
+tag, or release requires a separate docs-only decision; package-version changes
+require their own candidate/release record.
 
 Compatibility changes require a fresh Julia `1.12.6` resolution and
 instantiation from the edited committed project in an empty machine-local
@@ -466,8 +468,71 @@ raw-byte identity is not required. Julia `1.10` CI remains the lower-line gate.
 
 Stop without widening or lowering a bound if either fresh resolution, package
 load, public numerical output, docs, or Julia `1.10` CI fails. General
-registration, a root manifest, a package-version change, and `v0.2.0-rc1`
-remain separate decisions.
+registration, a root manifest, candidate publication, and tagging remain
+separate decisions.
+
+## v0.2.0-rc1 Candidate Preparation
+
+`HP-PQS-PUBLIC-RC1-FN-01` authorizes preparation, but not publication, of one
+release candidate. It permits exactly two repository changes:
+
+1. change the root `Project.toml` version from `0.1.0` to `0.2.0-rc1`; and
+2. add one concise root `CHANGELOG.md`.
+
+The changelog is reader-facing and grouped under `Added`, `Changed`, `Fixed`,
+`Public-surface reduction`, and `Scope`. It must summarize only:
+
+- the bounded matched-PQS/White-Lindsey H2+ types and constructor, supplied-
+  field screened-Hartree types/constructor/accessors, examples 39-41, and
+  bounded CI/release validation and versioned documentation support;
+- dependency compatibility, current Cartesian/nested documentation and API
+  reference, and least-privilege `/dev/` plus version-tag deployment;
+- legal unsplit-H2 packet construction, rectangular/endcap provenance, and
+  forwarding of existing endcap policy, `q`, and `L` diagnostics;
+- removal of six PRF-specific root exports while preserving their private
+  diagnostic/provenance implementation; and
+- the package boundary: basis/operator construction and bounded screening
+  assembly are included, while external SCF, correlated solvers, and paper-
+  scale campaigns are not.
+
+These claims trace respectively to the accepted reader/public records and
+commits `01f0fe002`, `058ee54f4`, `873b6e27a`, `c78defcc9`, `abee269ee`,
+`6a3656991`, and `820c2fc8b`. The implementation must also compare the fixed
+eleven-name curated reference with live root exports. The changelog must not
+contain manager-pass chronology, internal retirement inventories, detailed
+fingerprints or energies, private paper-validation history, manuscript
+headline claims, a publication date, DOI, journal status, final paper citation,
+or content imported from a paper workspace. `CITATION.cff` remains blocked on
+separate approved wording.
+
+`CHANGELOG.md` is preferred at no more than `45` lines and hard-limited to
+`70`. This is a stop-and-report bound, not permission to compress away reader
+clarity. No other root, source, test, example, dependency, workflow, API,
+scientific-document, badge, stable-link, or homepage edit is authorized. No
+root manifest may become tracked.
+
+`HP-PQS-PUBLIC-RC1-TEST-01` grants no file edit. Acceptance requires:
+
+- exact TOML parsing with package version `0.2.0-rc1` and unchanged dependency
+  compatibility;
+- a fresh Julia `1.12.6` install in an isolated machine-local project/depot via
+  the GitHub URL and exact pushed preparation commit, followed by package load;
+- public examples `01_first_gausslet.jl`, `39_pqs_h2plus.jl`,
+  `40_screened_hartree_fixed_density.jl`, and `41_pqs_h2plus_table1.jl`, plus
+  the focused H2+ release test passing `18/18`;
+- successful Julia `1.10` CI, authority check/self-test, generated-view parity,
+  docs tests, Documenter, manager-log bound, and `git diff --check`;
+- simulated `v0.2.0-rc1` documentation classification and canonical path, with
+  standard prerelease behavior not selecting `stable`; and
+- a clean `git archive` of the preparation commit containing `Project.toml` and
+  `CHANGELOG.md` but no root manifest or untracked handoff.
+
+The implementation must stop without commit if a changelog claim is not
+traceable, the exact two-file scope cannot be maintained, or any gate fails.
+After implementation and docs-only lifecycle closeout, return the exact
+candidate-preparation commit and evidence, then stop. Tag creation, GitHub
+release publication, General registration, and final-release authorization
+require a separate explicit decision.
 
 ## Compatibility
 

@@ -318,15 +318,17 @@ function _path_errors(item, id, index, tracked)
         "measurement" => ("tmp/work/",),
     )
     root_project = kind == "source" && path == "Project.toml"
+    root_changelog = kind == "docs" && path == "CHANGELOG.md"
     documentation_tool = kind == "tool" &&
         path in (".github/workflows/docs.yml", "docs/make.jl")
-    (root_project || documentation_tool || any(prefix -> startswith(path, prefix), prefixes[kind])) ||
+    (root_project || root_changelog || documentation_tool ||
+     any(prefix -> startswith(path, prefix), prefixes[kind])) ||
         push!(errors, "$id.paths[$index] has wrong prefix: $path")
     state == "existing" && (!isfile(absolute) || !(path in tracked)) &&
         push!(errors, "$id.paths[$index] existing path must be a tracked file: $path")
     state == "planned" && path in tracked && push!(errors, "$id.paths[$index] planned path is tracked: $path")
-    state == "planned" && !(kind in ("source", "test", "driver")) &&
-        push!(errors, "$id.paths[$index] planned state is source/test/driver-only")
+    state == "planned" && !(kind in ("source", "test", "driver") || root_changelog) &&
+        push!(errors, "$id.paths[$index] planned state is source/test/driver or root-CHANGELOG-only")
     state == "optional_local" && kind != "measurement" &&
         push!(errors, "$id.paths[$index] optional_local state is measurement-only")
     state == "optional_local" && path in tracked &&
