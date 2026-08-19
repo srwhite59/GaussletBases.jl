@@ -391,7 +391,28 @@
         @test length(findall("GAUSSLETBASES_DOCS_DEPLOY", docs_workflow)) == 1
         @test length(findall("contents: write", docs_workflow)) == 1
         @test length(findall("contents: read", docs_workflow)) == 2
-        @test !occursin("versions =", docs_make)
+        @test _DOCS_VERSIONS == Any[
+            "stable" => "v^",
+            "v#.#",
+            "v0.2.0-rc1" => "v0.2.0-rc1",
+            "dev" => "dev",
+        ]
+        @test occursin("versions = _DOCS_VERSIONS", docs_make)
+        mktempdir() do directory
+            mkpath(joinpath(directory, "dev"))
+            mkpath(joinpath(directory, "v0.2.0-rc1"))
+            script = """
+                using Documenter
+                entries, symlinks = Documenter.Writers.HTMLWriter.expand_versions(
+                    $(repr(directory)), $(repr(_DOCS_VERSIONS)))
+                @assert entries == ["v0.2.0-rc1", "dev"]
+                @assert !any(pair -> pair.first == pair.second, symlinks)
+                @assert !any(pair -> pair.first == "stable", symlinks)
+                """
+            docs_environment = joinpath(_PROJECT_ROOT, "docs")
+            command = `$(Base.julia_cmd()) --project=$docs_environment --startup-file=no -e $script`
+            @test success(command)
+        end
         @test !occursin("check_cartesian_authority", docs_make)
 
         @test ManagerLogPolicy.check_live_log() <= ManagerLogPolicy.LIVE_LOG_MAX_LINES

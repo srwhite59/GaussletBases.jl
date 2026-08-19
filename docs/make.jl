@@ -1,6 +1,12 @@
 const _DOCS_SITE = "https://srwhite59.github.io/GaussletBases.jl"
 const _DOCS_VERSION_TAG =
     r"^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$"
+const _DOCS_VERSIONS = [
+    "stable" => "v^",
+    "v#.#",
+    "v0.2.0-rc1" => "v0.2.0-rc1",
+    "dev" => "dev",
+]
 
 function _documentation_target(event::String, ref::String)
     isempty(event) && isempty(ref) && return (:local, nothing)
@@ -105,6 +111,7 @@ if DOCS_DEPLOY
     deploydocs(
         repo = "github.com/srwhite59/GaussletBases.jl.git",
         devbranch = "main",
+        versions = _DOCS_VERSIONS,
     )
 elseif DOCS_CI
     @info "Documentation build completed without deployment." context = DOCS_TARGET[1]
