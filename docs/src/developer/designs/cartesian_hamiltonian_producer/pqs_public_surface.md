@@ -282,8 +282,9 @@ historical He calculation or a new He endpoint.
 
 ## Reader-Facing Documentation Parity
 
-`HP-PQS-PUBLIC-DOC-PARITY-FN-01` owns one bounded reader-document repair.
-The curated export reference must resolve all eleven accepted v0.2 names:
+`HP-PQS-PUBLIC-DOC-PARITY-FN-01` maintains the reader-document repair
+implemented by `c78defcc9b299ee5f32cf42910812f5581657d93`. The curated export
+reference resolves all eleven accepted v0.2 names:
 
 ```text
 PQSH2PlusRow
@@ -299,12 +300,11 @@ screened_hartree_consistency_error
 screened_hartree_field_kind
 ```
 
-Documenter's `@docs` resolution requires attached Julia docstrings. The same
-record therefore permits concise public docstrings for the ten names above
-that currently lack them: both result types, both field types,
-`ScreenedHartreeCorrection`, the `screened_hartree_correction` generic covering
-both accepted overloads, and the four accessors. The existing
-`pqs_h2plus_comparison` docstring is outside this correction and remains
+Documenter's `@docs` resolution requires attached Julia docstrings. Concise
+public docstrings now exist for the ten names that previously lacked them:
+both result types, both field types, `ScreenedHartreeCorrection`, the
+`screened_hartree_correction` generic covering both accepted overloads, and
+the four accessors. The pre-existing `pqs_h2plus_comparison` docstring remained
 unchanged.
 
 Those docstrings must describe only the accepted interface on this page. The
@@ -334,14 +334,12 @@ internal classification. Documenter remains the executable `@docs` resolution
 gate. No new test file, parser, generalized export inventory, example
 execution, or broad documentation scan is authorized.
 
-The implementation budget is preferred `90` and hard `120` added source lines,
-all of which must be docstrings in the two existing owners; preferred `24` and
-hard `36` added documentation lines across the five reader pages; and
-preferred `24` and hard `32` added lines in the existing docs test. No new
-file is allowed. These are stop-and-report bounds, not pressure to obscure the
-public contract. If a readable exact repair cannot fit, stop and report the
-specific excess rather than compressing the documentation or broadening the
-surface.
+The accepted implementation added `80` source lines, all docstrings in the two
+existing owners, `23` reader-documentation lines, and `23` lines in the
+existing docs test. It added no new file, test file, metadata, executable
+behavior, or public name. Maintenance remains confined to the same owned paths
+and fixed eleven-name inventory; broader public-documentation or API work
+requires a separate amendment.
 
 ## Validation Contract
 

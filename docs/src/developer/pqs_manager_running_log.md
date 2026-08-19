@@ -1706,3 +1706,45 @@ Carrying-cost accounting:
 - validation: exact source/docstring preflight review, authority
   render/check/self-test, generated-view parity, docs tests, Documenter,
   manager-log bound, docs-only scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 489 - Accept v0.2 Reader Parity
+
+Commit(s):
+- `c78defcc9b299ee5f32cf42910812f5581657d93` - implemented reader parity;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted docstrings for exactly the ten previously undocumented public
+  bindings, with the existing `pqs_h2plus_comparison` docstring unchanged.
+  Runtime lookup now finds documentation for all eleven accepted v0.2 names,
+  and the curated reference renders every one.
+- The two nested-diatomic pages retain their provenance categories without
+  nine inaccessible personal paths. Both reader guides now identify example
+  28 as an internal, non-contractual diagnostic.
+- The source delta is `80/0`, entirely docstrings; reader documentation is
+  `23/11`; the existing docs test is `23/0`. No executable definition,
+  signature, field, export, dependency, workflow, or numerical result changed.
+  No new file, test file, or metadata shape was added.
+
+Goal advancement / guardrail:
+- MT5's reader-parity gate is complete. Public correction fields remain
+  non-contractual and the four accessors remain the supported result view.
+  Versioning, tagging, release, citation, and broader API decisions remain
+  separate.
+
+Carrying-cost accounting:
+- deleted: nine inaccessible personal path strings and stale pending status.
+- simplified: one curated reference now matches the accepted root surface.
+- quarantined: private provenance files and correction internals remain
+  outside the reader/API contract.
+- not deleted because: the two historical algorithm pages and internal example
+  28 remain useful when accurately classified.
+- exact remaining caller/blocker: release review only; reader parity has no
+  remaining implementation blocker.
+- added/deleted `src` lines: `80/0`, all docstrings; new tests: none, one
+  existing docs-test extension; new metadata/status fields: none.
+- validation: exact commit and runtime-doc review, docs `66/66` and `10/10`,
+  H2+ release `18/18`, unchanged screening closure/H1 and
+  `12789/1285/1285` outputs, authority checks, generated-view parity,
+  manager-log bound, package load, Documenter, remote Docs/CI, deployed
+  eleven-entry reference inspection, and `git diff --check`.

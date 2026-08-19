@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `1f7edf9fba070500580e1d923249a3c79dba69c7262dd2c568bfa2c3b1ca870f`.
+> [authority.toml](authority.toml), SHA-256 `2f96a067e66ba32eaf2597ade2afee34cd7d3327109d42fb108d477fa547c43a`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1766,8 +1766,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-PUBLIC-DOC-PARITY-FN-01 - PQS v0.2 reader-document parity repair
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1781,14 +1781,17 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/cartesian_reference_density/screened_hartree_correction.jl`
   - `source` / `existing`: `src/pqs_matched_h2plus.jl`
 - **Evidence:**
+  - `git_commit`: `c78defcc9b299ee5f32cf42910812f5581657d93`
   - `manager_pass`: `487`
+  - `manager_pass`: `488`
+  - `manager_pass`: `489`
 - **Dependencies:** `HP-PQS-PUBLIC-DOC-01`, `HP-PQS-PUBLIC-MATCHED-FN-01`, `HP-PQS-PUBLIC-SCREEN-FN-01`, `HP-QW-NESTED-DIAT-FN-01`
-- **Scope:** Repair only the accepted v0.2 reader-document parity. Add concise public docstrings for the exact ten accepted exports that currently lack them, without changing definitions, signatures, fields, exports, dispatch, or behavior; the existing pqs\_h2plus\_comparison docstring is unchanged. Add all eleven exports to the curated @docs reference; replace personal absolute provenance paths in the two owned rendered nested-diatomic pages with path-free historical prose; and label example 28 internal/non-contractual in both reader guides. Preferred/hard additions are 90/120 source docstring lines, 24/36 documentation lines, and 24/32 existing-test lines. No executable source, example code, numerical, dependency, workflow, version, tag, release, citation, changelog, paper claim, provenance deletion, API/example promotion, or broad rewrite.
+- **Scope:** Maintain only the implemented v0.2 reader parity: concise public docstrings on the exact ten accepted bindings added by c78defcc9, the unchanged existing pqs\_h2plus\_comparison docstring, all eleven existing root exports in the curated @docs reference, path-free historical provenance in the two owned nested-diatomic pages, and example 28's internal/non-contractual classification. Preserve the typed field semantics, common-basis and signed-consistency conventions, and accessor-only ScreenedHartreeCorrection contract. No executable source, definition, signature, field, export, dispatch, numerical, example-code, dependency, workflow, version, tag, release, citation, paper claim, API/example promotion, or broad rewrite.
 
 ### HP-PQS-PUBLIC-DOC-PARITY-TEST-01 - PQS v0.2 reader-document parity validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1796,9 +1799,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `c78defcc9b299ee5f32cf42910812f5581657d93`
   - `manager_pass`: `487`
+  - `manager_pass`: `488`
+  - `manager_pass`: `489`
 - **Dependencies:** `HP-PQS-PUBLIC-DOC-PARITY-FN-01`, `HP-PQS-READER-TEST-01`
-- **Scope:** Extend only test/docs/runtests.jl with one fixed eleven-name parity check between the existing root exports and curated reference entries, absence of personal absolute or Dropbox paths in the two owned rendered algorithm pages, and explicit internal/non-contractual classification of example 28 in both reader guides. Preferred/hard test additions are 24/32 lines. Add no test file, parser, generalized export inventory, example execution, workflow, numerical gate, or broad documentation scan.
+- **Scope:** Maintain only the fixed eleven-name root-export/curated-reference parity check, absence of personal absolute or Dropbox paths in the two owned rendered algorithm pages, and explicit internal/non-contractual example-28 classification in both reader guides. Preserve Documenter as the executable docstring-resolution gate. Add no test file, parser, generalized export inventory, example execution, workflow, numerical gate, or broad documentation scan.
 
 ### HP-PQS-PUBLIC-MATCHED-FN-01 - matched H2+ public comparison
 
