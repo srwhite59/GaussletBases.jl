@@ -40,10 +40,19 @@ event, or a mismatch between the resolved build context and deployment request
 fails before `deploydocs`; it never falls back to `dev` or another
 release folder.
 
-Deployment continues to use Documenter's standard version policy. A
-prerelease folder remains independently addressable but is excluded from the
-set used to create or advance `stable`. A later final `v0.2.0` tag may become
-`stable`; no custom alias policy is authorized. These semantics follow
+Deployment uses Documenter's standard final-release selectors together with
+one explicit prerelease selector entry:
+
+```julia
+"v0.2.0-rc1" => "v0.2.0-rc1"
+```
+
+This self-mapping keeps the existing RC1 folder in `versions.js` across both
+tag and later `main` deployments; it creates no alias. Documenter still
+excludes prerelease folders from the release set used to create or advance
+`stable`. A later final `v0.2.0` tag may become `stable` under the standard
+policy. No other prerelease entry, custom `stable` alias, or dynamic release
+index is authorized. These semantics follow
 [Documenter's deployment criteria](https://documenter.juliadocs.org/stable/lib/public/#Documenter.deploy_folder)
 and [versioned deployment policy](https://documenter.juliadocs.org/stable/man/hosting/#Documentation-Versions).
 
@@ -64,20 +73,38 @@ limit. If the behavior cannot fit without duplicated parsers, a new framework,
 broader credentials, or hidden release policy, implementation must stop and
 return to repo-design-manager.
 
+The Pass 495 repair is narrower than those standing limits. It may add only
+the explicit RC1 self-mapping to the existing `deploydocs` call and focused
+coverage in `test/docs/runtests.jl`: at most `8` added `docs/make.jl` lines and
+at most `25` added existing-test lines. `.github/workflows/docs.yml` must not
+change. If Documenter cannot retain RC1 without changing `stable`, the tag,
+or the credential/deployment model, stop and report.
+
 Validation must simulate, without creating or pushing a tag, pull-request,
 `main`, `v0.2.0-rc1`, final `v0.2.0`, and malformed-tag contexts. It must:
 
 - inspect the exact deployment classification for each context;
 - build locally under simulated `main` and `v0.2.0-rc1` environments and
   inspect the generated canonical links;
-- demonstrate under Documenter's standard version expansion that the
-  prerelease does not select `stable` while a final release may;
+- demonstrate with an isolated folder fixture that the explicit RC1
+  self-mapping lists `v0.2.0-rc1`, creates no self-symlink, and does not select
+  `stable`, while a later final release may;
 - retain the current job- and step-level credential boundaries;
 - pass authority check/self-test, generated-view parity, docs tests,
   manager-log bound, package load, Documenter, YAML/workflow inspection, and
   `git diff --check`;
 - pass remote Docs and CI after the implementation push and confirm that the
-  ordinary `main` deployment still updates the live `/dev/` site.
+  ordinary `main` deployment retains `/dev/`, lists RC1 in `versions.js`, and
+  leaves `/stable/` absent.
+
+The immutable annotated `v0.2.0-rc1` tag was pushed successfully at tag object
+`a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2`, peeling to
+`1546c18d3058cce2b5051b50788cda3c12585e51`. Tag-triggered Docs run
+`32295705338` published the exact canonical RC1 folder without changing
+`/dev/` or creating `/stable/`. Its default version expansion omitted the
+prerelease from `versions.js`; the explicit self-mapping above is the sole
+authorized correction. The immutable tag must not be moved, replaced,
+deleted, or retriggered as a repair mechanism.
 
 Commit `abee269eed7028c864fa18ae44b4b946af63dfcf` implemented the classifier,
 canonical paths, workflow trigger, and focused tests within the authorized

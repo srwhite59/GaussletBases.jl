@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `dbf731743be4ac7a9c2d50e4e376fee9c5d0446b93d85d4f0158c272741d53b8`.
+> [authority.toml](authority.toml), SHA-256 `cc67129e1e10f2db6a647738c09e0ec6eaf1bfa569fe9b5baa812296fd5210ef`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1444,8 +1444,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `abee269eed7028c864fa18ae44b4b946af63dfcf`
   - `manager_pass`: `490`
   - `manager_pass`: `491`
+  - `manager_pass`: `495`
 - **Dependencies:** `HP-PQS-PUBLIC-DOC-01`, `HP-PQS-PUBLIC-DOC-PARITY-FN-01`
-- **Scope:** Maintain only the implemented tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior, main-to-dev deployment, exact canonical full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tag folders without build metadata, fail-closed rejection before deploydocs, and Documenter's standard prerelease exclusion from stable. GITHUB\_TOKEN and GAUSSLETBASES\_DOCS\_DEPLOY remain deployment-step-only under the contents:write deployment job. No new file, package-version change, tag, release, source/API/example/scientific-doc/dependency/citation/changelog change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, custom alias policy, or release framework.
+- **Scope:** Maintain only the implemented tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior, main-to-dev deployment, exact canonical full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tag folders without build metadata, fail-closed rejection before deploydocs, and Documenter's standard exclusion of prereleases from stable. Retain the existing v0.2.0-rc1 folder in versions.js through one explicit v0.2.0-rc1 self-mapping on both tag and main deployments; this creates no alias and authorizes no other prerelease entry or custom stable policy. GITHUB\_TOKEN and GAUSSLETBASES\_DOCS\_DEPLOY remain deployment-step-only under the contents:write deployment job. The Pass 495 repair may edit only docs/make.jl and the canonical/current docs; .github/workflows/docs.yml is unchanged. No new file, package-version change, tag mutation, release, source/API/example/scientific-doc/dependency/citation/changelog change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, dynamic version index, or release framework.
 
 ### HP-PQS-DOCS-TAGDEPLOY-TEST-01 - tag-aware documentation deployment validation
 
@@ -1461,8 +1462,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `abee269eed7028c864fa18ae44b4b946af63dfcf`
   - `manager_pass`: `490`
   - `manager_pass`: `491`
+  - `manager_pass`: `495`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`
-- **Scope:** Maintain only the focused existing docs-test assertions for PR/main/prerelease/final/malformed-tag classification, exact main and tag canonical paths, semantic-version rejection, unchanged least-privilege workflow boundaries, and standard prerelease exclusion from stable. Use transient Documenter builds and version-expansion evidence when this deployment contract changes. Add no test file, parser framework, actual tag/deployment, numerical gate, source test, or release behavior.
+- **Scope:** Maintain only the focused existing docs-test assertions for PR/main/prerelease/final/malformed-tag classification, exact main and tag canonical paths, semantic-version rejection, unchanged least-privilege workflow boundaries, explicit v0.2.0-rc1 selector retention, and standard prerelease exclusion from stable. Use an isolated Documenter version-expansion fixture to require the RC1 entry, no self-symlink, and no stable alias without a final release. Add no test file, parser framework, actual tag/deployment, numerical gate, source test, or release behavior.
 
 ### HP-PQS-MAP-SFACTOR-FN-01 - expert mapping \`s\_factor\` keyword
 
@@ -1904,19 +1906,19 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-PUBLIC-RC1-TAG-FN-01 - v0.2.0-rc1 annotated tag publication
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tools`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0-rc1 Annotated Tag Lifecycle`
-- **Owned paths:**
-  - `tool` / `existing`: `.github/workflows/docs.yml`
+- **Owned paths:** none
 - **Evidence:**
   - `git_commit`: `1546c18d3058cce2b5051b50788cda3c12585e51`
   - `manager_pass`: `494`
+  - `manager_pass`: `495`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-RC1-FN-01`
-- **Scope:** Create and push exactly one immutable annotated git tag named v0.2.0-rc1 with message GaussletBases v0.2.0-rc1, peeled target 1546c18d3058cce2b5051b50788cda3c12585e51, tree 1b53a9eb51d11cfc31b8b0356349c62f0de8915f, and target git-archive SHA-256 2a0b6938d3b341900d73668e7f0644c34b8a851e1b823356c53c2866fd19522a. Push only refs/tags/v0.2.0-rc1 and invoke the existing tag-triggered Docs workflow; the owned workflow path is an invocation surface and must not be edited. Require synchronized main, only the two established untracked handoffs, absent local/remote tag, exact package-version/tag agreement, target archive/content checks, and applicable clean-replay/CI/docs evidence before creation. Never move, replace, or delete the tag after push; on post-push failure preserve it and report. No branch push, GitHub release, registration, CITATION.cff, final v0.2.0, homepage/stable-link edit, or tracked-file/source/API/dependency/workflow/numerical/manuscript change.
+- **Scope:** Completed immutable annotated-tag publication only; this record grants no further tag, file, workflow, or release mutation. Local and remote tag object a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2 peels to frozen target 1546c18d3058cce2b5051b50788cda3c12585e51 with tree 1b53a9eb51d11cfc31b8b0356349c62f0de8915f and target git-archive SHA-256 2a0b6938d3b341900d73668e7f0644c34b8a851e1b823356c53c2866fd19522a. Tag-triggered Docs run 32295705338 published the canonical RC1 folder without creating stable or changing dev. Never move, replace, delete, or recreate the tag. Selector-index repair is separately maintained by HP-PQS-DOCS-TAGDEPLOY-FN-01. No GitHub release, registration, CITATION.cff, final v0.2.0, homepage/stable-link edit, or tracked source/API/dependency/workflow/numerical/manuscript change.
 
 ### HP-PQS-PUBLIC-RC1-TAG-TEST-01 - v0.2.0-rc1 annotated tag validation
 
@@ -1930,8 +1932,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `git_commit`: `1546c18d3058cce2b5051b50788cda3c12585e51`
   - `manager_pass`: `494`
+  - `manager_pass`: `495`
 - **Dependencies:** `HP-PQS-PUBLIC-RC1-TAG-FN-01`
-- **Scope:** Required tag-acceptance evidence only; this record grants no file, workflow, tag-repair, or release edit. Verify annotated local and remote tag objects peel to frozen target 1546c18d3058cce2b5051b50788cda3c12585e51, the tag-triggered Docs workflow passes, /v0.2.0-rc1/ exists with its exact canonical URL, versions.js exposes the prerelease, /stable/ remains absent and unadvanced from the recorded baseline, /dev/ remains intact, and no branch or tracked content changed. A post-push failure preserves the immutable tag and is reported without retargeting.
+- **Scope:** Open tag-acceptance evidence only; this record grants no file, workflow, tag-repair, or release edit. Annotated local and remote tag object a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2 peels to frozen target 1546c18d3058cce2b5051b50788cda3c12585e51; tag-triggered Docs run 32295705338 passed; /v0.2.0-rc1/ has the exact canonical URL; /stable/ remains absent; /dev/ is unchanged. Acceptance remains open only until a main deployment under HP-PQS-DOCS-TAGDEPLOY-FN-01 makes versions.js expose RC1 without changing those facts. Preserve the immutable tag; do not retarget, replace, delete, or recreate it.
 
 ### HP-PQS-PUBLIC-RC1-TEST-01 - v0.2.0-rc1 candidate-preparation validation
 

@@ -559,35 +559,26 @@ only the six accepted Pass 493 lifecycle documents changed; `Project.toml`,
 the Docs workflow, `docs/make.jl`, and reader-facing documentation are
 byte-identical.
 
-Before creating the tag, repo-manager must verify:
+The tag operation is complete. Annotated tag object
+`a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2` exists locally and remotely and
+peels to the frozen target. Its tree and archive match the frozen values.
+Tag-triggered Docs run `32295705338` passed, `/v0.2.0-rc1/` is live with the
+exact canonical URL, `/stable/` remains absent, and `/dev/` is byte-identical
+to its pre-tag state. No further tag mutation is authorized.
 
-- `main` equals `origin/main`, with only the two established untracked
-  successor handoffs;
-- neither local nor remote `v0.2.0-rc1` exists;
-- the target commit, tree, archive hash and contents match the frozen values,
-  with no root manifest or handoff in the archive;
-- the package version and tag name agree exactly, and the accepted Julia
-  `1.12.6` clean replay plus Julia `1.10` CI remain applicable; and
-- authority check/self-test, docs tests, package load, Documenter, manager-log
-  bound, and `git diff --check` pass.
+`HP-PQS-PUBLIC-RC1-TAG-TEST-01` remains open only because Documenter's default
+version expansion omitted the prerelease from `versions.js`. The narrow repair
+belongs to `HP-PQS-DOCS-TAGDEPLOY-FN-01/TEST-01`: explicitly retain
+`v0.2.0-rc1` as a self-mapped selector entry during the next `main`
+documentation deployment. Acceptance then requires `versions.js` to list RC1,
+`/stable/` to remain absent, and `/dev/` plus the canonical RC1 folder to remain
+intact. The repair must not move, replace, delete, or recreate the tag.
 
-The only permitted mutation is an annotated tag named exactly
-`v0.2.0-rc1`, message `GaussletBases v0.2.0-rc1`, pointing to the frozen
-target, followed by a push of only `refs/tags/v0.2.0-rc1`. The existing Docs
-workflow is an invocation surface, not an editable file in this lifecycle.
-
-`HP-PQS-PUBLIC-RC1-TAG-TEST-01` grants no edit. Acceptance requires both local
-and remote annotated tag objects to peel to the frozen commit, the tag-triggered
-Docs workflow to pass, and the published folder
-`/v0.2.0-rc1/` to use that exact canonical URL. `versions.js` must expose the
-prerelease while `/stable/` remains absent and unadvanced from its pre-tag
-baseline; `/dev/` must remain intact. If any post-push check fails, preserve the
-immutable tag and report the failure without moving, replacing, or deleting it.
-
-No branch push, GitHub release, General registration, `CITATION.cff`, final
-`v0.2.0`, homepage or stable-link edit, custom release framework, or tracked
+No GitHub release, General registration, `CITATION.cff`, final `v0.2.0`,
+homepage or stable-link edit, custom release framework, or tracked
 source/API/dependency/workflow/numerical/manuscript mutation is authorized.
-After successful verification, lifecycle closeout is docs-only on `main`.
+After the selector repair is verified, tag lifecycle closeout is docs-only on
+`main`.
 
 ## Compatibility
 
