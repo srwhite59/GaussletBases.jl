@@ -74,7 +74,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "83bbf949008e88049527c6e9118187d4bab9f6f59535ad85e4349fc75cdcbc31"
+sha256 = "c8cf26b74588394ef49ea76910598e13b8d412d74fe835988a66b825834c0d19"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "803063ecdc263c9767f08b41b0c20a736482d8dfe44a97d0720e6e3b19f3e91f"
@@ -3228,10 +3228,10 @@ title = "matched H2+ public release validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PRF-CONSUMER-FN-01", "HP-PQS-PUBLIC-COMPAT-FN-01", "HP-PQS-PUBLIC-DOC-PARITY-FN-01", "HP-PQS-PUBLIC-MATCHED-FN-01", "HP-PQS-PUBLIC-SCREEN-FN-01", "HP-PQS-READER-DOC-01", "HP-QW-NESTED-DIAT-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-PUBLIC-RC1-FN-01"
-lifecycle = "approved"
-scope = "Prepare but do not publish v0.2.0-rc1: change only the root Project.toml version from 0.1.0 to 0.2.0-rc1 and add one concise root CHANGELOG.md grouped as Added, Changed, Fixed, Public-surface reduction, and Scope. Preserve exact traceability to accepted public APIs, examples 39-41, dependency bounds, documentation deployment, ordinary-QW fixes, and six-name PRF de-promotion without pass history, private numerical evidence, manuscript claims, dates, DOI/citation invention, or internal deletion inventories. CHANGELOG.md is preferred at most 45 lines and hard-limited to 70; clarity takes precedence and overflow must stop. No tag, GitHub release, registration, CITATION.cff, source/export/test/example/dependency/workflow/API/numerical/scientific-doc change, stable link, badge, homepage change, tracked root manifest, or paper-workspace import."
+lifecycle = "implemented"
+scope = "Maintain the prepared but unpublished v0.2.0-rc1 candidate identity implemented by commit 41fa897ae919510b179a425027a8ce2d4a2167b3: root Project.toml version 0.2.0-rc1 and one concise root CHANGELOG.md grouped as Added, Changed, Fixed, Public-surface reduction, and Scope. Preserve traceability to accepted public APIs, examples 39-41, dependency bounds, documentation deployment, ordinary-QW fixes, and six-name PRF de-promotion without pass history, private numerical evidence, manuscript claims, dates, DOI/citation invention, or internal deletion inventories. No tag, GitHub release, registration, CITATION.cff, source/export/test/example/dependency/workflow/API/numerical/scientific-doc change, stable link, badge, homepage change, tracked root manifest, or paper-workspace import."
 surfaces = ["docs", "source"]
 title = "v0.2.0-rc1 candidate preparation"
 
@@ -3241,13 +3241,19 @@ title = "v0.2.0-rc1 candidate preparation"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "41fa897ae919510b179a425027a8ce2d4a2167b3"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "492"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "493"
 
     [[records.paths]]
     kind = "docs"
     path = "CHANGELOG.md"
-    state = "planned"
+    state = "existing"
     [[records.paths]]
     kind = "source"
     path = "Project.toml"
@@ -3256,9 +3262,9 @@ title = "v0.2.0-rc1 candidate preparation"
 dependency_ids = ["HP-PQS-PUBLIC-RC1-FN-01"]
 grant = "none"
 id = "HP-PQS-PUBLIC-RC1-TEST-01"
-lifecycle = "approved"
+lifecycle = "completed"
 paths = []
-scope = "Required acceptance evidence only; this record grants no test, workflow, source, or docs edit. Verify exact Project version and changelog traceability, a fresh Julia 1.12.6 GitHub install pinned to the pushed preparation commit, package load, public examples 01/39/40/41, focused H2+ 18/18, Julia 1.10 CI, authority/docs/manager-log checks, exact prerelease documentation classification without stable advancement, and a clean git archive excluding manifests and untracked handoffs. Any failure stops before tag or release authorization."
+scope = "Completed acceptance evidence only; this record grants no test, workflow, source, or docs edit. Commit 41fa897ae919510b179a425027a8ce2d4a2167b3 passed exact Project/changelog review, fresh Julia 1.12.6 GitHub installation, package load, public examples 01/39/40/41, focused H2+ 18/18, Julia 1.10 CI, authority/docs/manager-log checks, exact prerelease documentation classification without stable advancement, and a clean git archive excluding a root manifest and untracked handoffs. Tagging and release publication remain unauthorized."
 surfaces = []
 title = "v0.2.0-rc1 candidate-preparation validation"
 
@@ -3268,8 +3274,14 @@ title = "v0.2.0-rc1 candidate-preparation validation"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "41fa897ae919510b179a425027a8ce2d4a2167b3"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "492"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "493"
 [[records]]
 dependency_ids = ["HP-PQS-SCREEN-HARTREE-CORR-FN-01"]
 grant = "maintenance"
