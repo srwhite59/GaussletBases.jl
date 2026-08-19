@@ -44,7 +44,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accura
 sha256 = "68cfa9dcc5b5fa59f553f22251e81fcbe5b54bec4bef627b2907cf81db492a36"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
-sha256 = "34802d952fcca28d06fcdec60c7e48d268fdf6562e5c6a16d291de0868e2d6ea"
+sha256 = "cbdeabffaca45cb0a68917d2d70f07e5e85c9d783a08f44f92171c544c7f09c1"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_orbital_import.md"
 sha256 = "f9d964a80d831836cccf52a13b9590d0fb51acb6eccf24ad24efeb93be3aea76"
@@ -74,7 +74,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "88b643b5bb8ecbc6c75da58385f68f51b4185b8173af7ac94e5da91a03e5f966"
+sha256 = "2d841ac94482a54113f04d74492e9e2ba8d727910105cf3f7a3d8af3dc15bc5d"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "803063ecdc263c9767f08b41b0c20a736482d8dfe44a97d0720e6e3b19f3e91f"
@@ -2336,7 +2336,7 @@ dependency_ids = ["HP-PQS-PUBLIC-DOC-01", "HP-PQS-PUBLIC-DOC-PARITY-FN-01"]
 grant = "maintenance"
 id = "HP-PQS-DOCS-TAGDEPLOY-FN-01"
 lifecycle = "implemented"
-scope = "Maintain only the implemented tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior, main-to-dev deployment, exact canonical full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tag folders without build metadata, fail-closed rejection before deploydocs, and Documenter's standard prerelease exclusion from stable. GITHUB_TOKEN and GAUSSLETBASES_DOCS_DEPLOY remain deployment-step-only under the contents:write deployment job. No new file, package-version change, tag, release, source/API/example/scientific-doc/dependency/citation/changelog change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, custom alias policy, or release framework."
+scope = "Maintain only the implemented tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior, main-to-dev deployment, exact canonical full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tag folders without build metadata, fail-closed rejection before deploydocs, and Documenter's standard exclusion of prereleases from stable. Retain the existing v0.2.0-rc1 folder in versions.js through one explicit v0.2.0-rc1 self-mapping on both tag and main deployments; this creates no alias and authorizes no other prerelease entry or custom stable policy. GITHUB_TOKEN and GAUSSLETBASES_DOCS_DEPLOY remain deployment-step-only under the contents:write deployment job. The Pass 495 repair may edit only docs/make.jl and the canonical/current docs; .github/workflows/docs.yml is unchanged. No new file, package-version change, tag mutation, release, source/API/example/scientific-doc/dependency/citation/changelog change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, dynamic version index, or release framework."
 surfaces = ["docs", "tools"]
 title = "tag-aware versioned documentation deployment"
 
@@ -2354,6 +2354,9 @@ title = "tag-aware versioned documentation deployment"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "491"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "495"
 
     [[records.paths]]
     kind = "docs"
@@ -2376,7 +2379,7 @@ dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01"]
 grant = "maintenance"
 id = "HP-PQS-DOCS-TAGDEPLOY-TEST-01"
 lifecycle = "completed"
-scope = "Maintain only the focused existing docs-test assertions for PR/main/prerelease/final/malformed-tag classification, exact main and tag canonical paths, semantic-version rejection, unchanged least-privilege workflow boundaries, and standard prerelease exclusion from stable. Use transient Documenter builds and version-expansion evidence when this deployment contract changes. Add no test file, parser framework, actual tag/deployment, numerical gate, source test, or release behavior."
+scope = "Maintain only the focused existing docs-test assertions for PR/main/prerelease/final/malformed-tag classification, exact main and tag canonical paths, semantic-version rejection, unchanged least-privilege workflow boundaries, explicit v0.2.0-rc1 selector retention, and standard prerelease exclusion from stable. Use an isolated Documenter version-expansion fixture to require the RC1 entry, no self-symlink, and no stable alias without a final release. Add no test file, parser framework, actual tag/deployment, numerical gate, source test, or release behavior."
 surfaces = ["tests"]
 title = "tag-aware documentation deployment validation"
 
@@ -2394,6 +2397,9 @@ title = "tag-aware documentation deployment validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "491"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "495"
 
     [[records.paths]]
     kind = "test"
@@ -3260,11 +3266,12 @@ title = "v0.2.0-rc1 candidate preparation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PUBLIC-RC1-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-PQS-PUBLIC-RC1-TAG-FN-01"
-lifecycle = "approved"
-scope = "Create and push exactly one immutable annotated git tag named v0.2.0-rc1 with message GaussletBases v0.2.0-rc1, peeled target 1546c18d3058cce2b5051b50788cda3c12585e51, tree 1b53a9eb51d11cfc31b8b0356349c62f0de8915f, and target git-archive SHA-256 2a0b6938d3b341900d73668e7f0644c34b8a851e1b823356c53c2866fd19522a. Push only refs/tags/v0.2.0-rc1 and invoke the existing tag-triggered Docs workflow; the owned workflow path is an invocation surface and must not be edited. Require synchronized main, only the two established untracked handoffs, absent local/remote tag, exact package-version/tag agreement, target archive/content checks, and applicable clean-replay/CI/docs evidence before creation. Never move, replace, or delete the tag after push; on post-push failure preserve it and report. No branch push, GitHub release, registration, CITATION.cff, final v0.2.0, homepage/stable-link edit, or tracked-file/source/API/dependency/workflow/numerical/manuscript change."
-surfaces = ["tools"]
+lifecycle = "completed"
+paths = []
+scope = "Completed immutable annotated-tag publication only; this record grants no further tag, file, workflow, or release mutation. Local and remote tag object a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2 peels to frozen target 1546c18d3058cce2b5051b50788cda3c12585e51 with tree 1b53a9eb51d11cfc31b8b0356349c62f0de8915f and target git-archive SHA-256 2a0b6938d3b341900d73668e7f0644c34b8a851e1b823356c53c2866fd19522a. Tag-triggered Docs run 32295705338 published the canonical RC1 folder without creating stable or changing dev. Never move, replace, delete, or recreate the tag. Selector-index repair is separately maintained by HP-PQS-DOCS-TAGDEPLOY-FN-01. No GitHub release, registration, CITATION.cff, final v0.2.0, homepage/stable-link edit, or tracked source/API/dependency/workflow/numerical/manuscript change."
+surfaces = []
 title = "v0.2.0-rc1 annotated tag publication"
 
     [[records.document_refs]]
@@ -3278,18 +3285,16 @@ title = "v0.2.0-rc1 annotated tag publication"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "494"
-
-    [[records.paths]]
-    kind = "tool"
-    path = ".github/workflows/docs.yml"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "495"
 [[records]]
 dependency_ids = ["HP-PQS-PUBLIC-RC1-TAG-FN-01"]
 grant = "none"
 id = "HP-PQS-PUBLIC-RC1-TAG-TEST-01"
 lifecycle = "approved"
 paths = []
-scope = "Required tag-acceptance evidence only; this record grants no file, workflow, tag-repair, or release edit. Verify annotated local and remote tag objects peel to frozen target 1546c18d3058cce2b5051b50788cda3c12585e51, the tag-triggered Docs workflow passes, /v0.2.0-rc1/ exists with its exact canonical URL, versions.js exposes the prerelease, /stable/ remains absent and unadvanced from the recorded baseline, /dev/ remains intact, and no branch or tracked content changed. A post-push failure preserves the immutable tag and is reported without retargeting."
+scope = "Open tag-acceptance evidence only; this record grants no file, workflow, tag-repair, or release edit. Annotated local and remote tag object a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2 peels to frozen target 1546c18d3058cce2b5051b50788cda3c12585e51; tag-triggered Docs run 32295705338 passed; /v0.2.0-rc1/ has the exact canonical URL; /stable/ remains absent; /dev/ is unchanged. Acceptance remains open only until a main deployment under HP-PQS-DOCS-TAGDEPLOY-FN-01 makes versions.js expose RC1 without changing those facts. Preserve the immutable tag; do not retarget, replace, delete, or recreate it."
 surfaces = []
 title = "v0.2.0-rc1 annotated tag validation"
 
@@ -3304,6 +3309,9 @@ title = "v0.2.0-rc1 annotated tag validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "494"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "495"
 [[records]]
 dependency_ids = ["HP-PQS-PUBLIC-RC1-FN-01"]
 grant = "none"
