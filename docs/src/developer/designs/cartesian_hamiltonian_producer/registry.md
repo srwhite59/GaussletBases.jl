@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `fd7db87054156a069592bf365276a086e685fa319a167b7e215a5436a60a8ed5`.
+> [authority.toml](authority.toml), SHA-256 `d13a8cf396acb2dccb52edb4d5a7d74584d41bbe5729f0a5073dc22b94bc86b1`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1886,23 +1886,25 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-PUBLIC-RC1-FN-01 - v0.2.0-rc1 candidate preparation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0-rc1 Candidate Preparation`
 - **Owned paths:**
-  - `docs` / `planned`: `CHANGELOG.md`
+  - `docs` / `existing`: `CHANGELOG.md`
   - `source` / `existing`: `Project.toml`
 - **Evidence:**
+  - `git_commit`: `41fa897ae919510b179a425027a8ce2d4a2167b3`
   - `manager_pass`: `492`
+  - `manager_pass`: `493`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PRF-CONSUMER-FN-01`, `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-DOC-PARITY-FN-01`, `HP-PQS-PUBLIC-MATCHED-FN-01`, `HP-PQS-PUBLIC-SCREEN-FN-01`, `HP-PQS-READER-DOC-01`, `HP-QW-NESTED-DIAT-FN-01`
-- **Scope:** Prepare but do not publish v0.2.0-rc1: change only the root Project.toml version from 0.1.0 to 0.2.0-rc1 and add one concise root CHANGELOG.md grouped as Added, Changed, Fixed, Public-surface reduction, and Scope. Preserve exact traceability to accepted public APIs, examples 39-41, dependency bounds, documentation deployment, ordinary-QW fixes, and six-name PRF de-promotion without pass history, private numerical evidence, manuscript claims, dates, DOI/citation invention, or internal deletion inventories. CHANGELOG.md is preferred at most 45 lines and hard-limited to 70; clarity takes precedence and overflow must stop. No tag, GitHub release, registration, CITATION.cff, source/export/test/example/dependency/workflow/API/numerical/scientific-doc change, stable link, badge, homepage change, tracked root manifest, or paper-workspace import.
+- **Scope:** Maintain the prepared but unpublished v0.2.0-rc1 candidate identity implemented by commit 41fa897ae919510b179a425027a8ce2d4a2167b3: root Project.toml version 0.2.0-rc1 and one concise root CHANGELOG.md grouped as Added, Changed, Fixed, Public-surface reduction, and Scope. Preserve traceability to accepted public APIs, examples 39-41, dependency bounds, documentation deployment, ordinary-QW fixes, and six-name PRF de-promotion without pass history, private numerical evidence, manuscript claims, dates, DOI/citation invention, or internal deletion inventories. No tag, GitHub release, registration, CITATION.cff, source/export/test/example/dependency/workflow/API/numerical/scientific-doc change, stable link, badge, homepage change, tracked root manifest, or paper-workspace import.
 
 ### HP-PQS-PUBLIC-RC1-TEST-01 - v0.2.0-rc1 candidate-preparation validation
 
-- **Lifecycle:** `approved`
+- **Lifecycle:** `completed`
 - **Grant:** `none`
 - **Surfaces:** none
 - **Execution whitelist:** `false`
@@ -1910,9 +1912,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0-rc1 Candidate Preparation`
 - **Owned paths:** none
 - **Evidence:**
+  - `git_commit`: `41fa897ae919510b179a425027a8ce2d4a2167b3`
   - `manager_pass`: `492`
+  - `manager_pass`: `493`
 - **Dependencies:** `HP-PQS-PUBLIC-RC1-FN-01`
-- **Scope:** Required acceptance evidence only; this record grants no test, workflow, source, or docs edit. Verify exact Project version and changelog traceability, a fresh Julia 1.12.6 GitHub install pinned to the pushed preparation commit, package load, public examples 01/39/40/41, focused H2+ 18/18, Julia 1.10 CI, authority/docs/manager-log checks, exact prerelease documentation classification without stable advancement, and a clean git archive excluding manifests and untracked handoffs. Any failure stops before tag or release authorization.
+- **Scope:** Completed acceptance evidence only; this record grants no test, workflow, source, or docs edit. Commit 41fa897ae919510b179a425027a8ce2d4a2167b3 passed exact Project/changelog review, fresh Julia 1.12.6 GitHub installation, package load, public examples 01/39/40/41, focused H2+ 18/18, Julia 1.10 CI, authority/docs/manager-log checks, exact prerelease documentation classification without stable advancement, and a clean git archive excluding a root manifest and untracked handoffs. Tagging and release publication remain unauthorized.
 
 ### HP-PQS-PUBLIC-SCREEN-FN-01 - public supplied-field screened-Hartree assembly
 

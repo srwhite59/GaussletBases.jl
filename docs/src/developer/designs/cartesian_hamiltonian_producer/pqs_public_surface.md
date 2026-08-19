@@ -473,8 +473,9 @@ separate decisions.
 
 ## v0.2.0-rc1 Candidate Preparation
 
-`HP-PQS-PUBLIC-RC1-FN-01` authorizes preparation, but not publication, of one
-release candidate. It permits exactly two repository changes:
+`HP-PQS-PUBLIC-RC1-FN-01` owns maintenance of the prepared, unpublished
+candidate at commit `41fa897ae919510b179a425027a8ce2d4a2167b3`. The accepted
+implementation made exactly two repository changes:
 
 1. change the root `Project.toml` version from `0.1.0` to `0.2.0-rc1`; and
 2. add one concise root `CHANGELOG.md`.
@@ -505,34 +506,38 @@ headline claims, a publication date, DOI, journal status, final paper citation,
 or content imported from a paper workspace. `CITATION.cff` remains blocked on
 separate approved wording.
 
-`CHANGELOG.md` is preferred at no more than `45` lines and hard-limited to
-`70`. This is a stop-and-report bound, not permission to compress away reader
-clarity. No other root, source, test, example, dependency, workflow, API,
-scientific-document, badge, stable-link, or homepage edit is authorized. No
-root manifest may become tracked.
+The resulting changelog is `39` lines, within its preferred `45`-line and hard
+`70`-line bounds. The preparation changed no source, test, example, dependency,
+workflow, API, scientific document, badge, stable link, or homepage, and no
+root manifest became tracked.
 
-`HP-PQS-PUBLIC-RC1-TEST-01` grants no file edit. Acceptance requires:
+`HP-PQS-PUBLIC-RC1-TEST-01` is completed evidence and grants no file edit. The
+accepted preparation passed:
 
 - exact TOML parsing with package version `0.2.0-rc1` and unchanged dependency
   compatibility;
-- a fresh Julia `1.12.6` install in an isolated machine-local project/depot via
-  the GitHub URL and exact pushed preparation commit, followed by package load;
+- a fresh Julia `1.12.6` GitHub installation from the exact pushed preparation
+  commit, followed by package load;
 - public examples `01_first_gausslet.jl`, `39_pqs_h2plus.jl`,
   `40_screened_hartree_fixed_density.jl`, and `41_pqs_h2plus_table1.jl`, plus
   the focused H2+ release test passing `18/18`;
-- successful Julia `1.10` CI, authority check/self-test, generated-view parity,
-  docs tests, Documenter, manager-log bound, and `git diff --check`;
+- successful Julia `1.10` CI run `32279994531`, authority check/self-test,
+  generated-view parity, docs tests, Documenter, manager-log bound, and
+  `git diff --check`;
 - simulated `v0.2.0-rc1` documentation classification and canonical path, with
   standard prerelease behavior not selecting `stable`; and
-- a clean `git archive` of the preparation commit containing `Project.toml` and
-  `CHANGELOG.md` but no root manifest or untracked handoff.
+- a clean `git archive` with SHA-256
+  `afc7fcfbe9871272a70b06c06340a99d60346aa44ed2d5621cdf88195e2c0a65`,
+  containing `Project.toml` and `CHANGELOG.md` but no root manifest or untracked
+  handoff.
 
-The implementation must stop without commit if a changelog claim is not
-traceable, the exact two-file scope cannot be maintained, or any gate fails.
-After implementation and docs-only lifecycle closeout, return the exact
-candidate-preparation commit and evidence, then stop. Tag creation, GitHub
-release publication, General registration, and final-release authorization
-require a separate explicit decision.
+The focused H2+ release test passed `18/18` with dimensions
+`12789/1285/1285`; examples 01, 39, 40, and 41 also passed. The implementation
+commit's Docs run failed only because the newly tracked changelog still had
+planned-path authority; this lifecycle closeout resolves that expected state
+transition without changing the candidate files. Tag creation, GitHub release
+publication, General registration, citation metadata, and final-release
+authorization require a separate explicit decision.
 
 ## Compatibility
 

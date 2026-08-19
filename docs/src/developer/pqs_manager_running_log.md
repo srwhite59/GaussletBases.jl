@@ -1893,3 +1893,43 @@ Carrying-cost accounting:
 - validation: baseline/tag/export/commit trace audit, authority
   render/check/self-test, docs tests, Documenter, manager-log bound, scoped
   docs-only review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 493 - Accept v0.2.0-rc1 Candidate Preparation
+
+Commit(s):
+- `41fa897ae919510b179a425027a8ce2d4a2167b3` - prepared the unpublished
+  `v0.2.0-rc1` candidate;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the exact two-file preparation: `Project.toml` now reports
+  `0.2.0-rc1`, and the new reader-facing `CHANGELOG.md` is `39` lines with the
+  approved grouped public summary. No tag, release, source, test, example,
+  dependency, workflow, API, numerical, citation, or manifest-policy change
+  occurred.
+- Clean Julia `1.12.6` GitHub installation, examples 01/39/40/41, H2+
+  `18/18`, unchanged `12789/1285/1285` dimensions, and Julia `1.10` CI run
+  `32279994531` passed. The clean archive reproduced SHA-256
+  `afc7fcfbe9871272a70b06c06340a99d60346aa44ed2d5621cdf88195e2c0a65`
+  and contains the candidate files without a root manifest or handoffs.
+
+Goal advancement / guardrail:
+- MT5's candidate-preparation gate is complete. The candidate is prepared but
+  unpublished; tag creation, GitHub release publication, registration,
+  citation metadata, and final-release decisions remain separately blocked.
+
+Carrying-cost accounting:
+- deleted: stale planned-path and pending-implementation authority state.
+- simplified: one implemented maintenance record now owns the exact candidate
+  identity, while validation is closed evidence with no grant.
+- quarantined: tagging, release publication, registration, and citation work.
+- not deleted because: the version and concise changelog define the reviewed
+  candidate that later release authority may reference.
+- exact remaining caller/blocker: an explicit tag/release decision; candidate
+  preparation itself has no implementation blocker.
+- added/deleted `src` lines: `0/0`; candidate metadata `1/1`; changelog `39/0`;
+  new tests: none; new metadata/status fields: none.
+- validation: exact commit/diff and changelog trace review, independent archive
+  hash/content check, authority render/check/self-test, generated-view parity,
+  docs tests, Documenter, manager-log bound, remote Docs/CI, and
+  `git diff --check`.
