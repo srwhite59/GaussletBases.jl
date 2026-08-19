@@ -157,6 +157,17 @@ For the narrative explanation of the current producer-side story, see:
 ```@docs
 atomic_ida_density_interaction_matrix
 CartesianIDAHamiltonian
+PQSH2PlusRow
+PQSH2PlusComparison
+pqs_h2plus_comparison
+ExactRepresentedHartreeField
+FittedReferenceHartreeField
+ScreenedHartreeCorrection
+screened_hartree_correction
+screened_hartree_delta_one_body
+screened_hartree_energy_constant
+screened_hartree_consistency_error
+screened_hartree_field_kind
 one_body_hamiltonian
 nuclear_repulsion
 build_atomic_fixed_radial_angular_sequence

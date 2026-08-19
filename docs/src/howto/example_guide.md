@@ -101,7 +101,7 @@ The more diagnostic ordinary examples are:
 
 20. `26_ordinary_cartesian_ida.jl`
 21. `27_ordinary_cartesian_ida_localized_backends.jl`
-22. `28_ordinary_one_body_fidelity.jl`
+22. `28_ordinary_one_body_fidelity.jl` - internal, non-contractual diagnostic
 
 The bounded public PQS/White-Lindsey molecular example is:
 

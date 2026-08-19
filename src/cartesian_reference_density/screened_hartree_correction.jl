@@ -1,3 +1,11 @@
+"""
+    ScreenedHartreeCorrection
+
+Accessor-only result of [`screened_hartree_correction`](@ref). Read its public
+correction matrix, scalar, signed consistency error, and field kind through the
+four `screened_hartree_*` accessors; its fields and internal representation are
+not a stable public interface.
+"""
 struct ScreenedHartreeCorrection
     delta_one_body::Matrix{Float64}
     energy_constant::Float64
@@ -90,6 +98,17 @@ function _public_hartree_field(name, matrix, self_integral, provenance)
     return M, value, description
 end
 
+"""
+    ExactRepresentedHartreeField(matrix, reference_coulomb_self_integral;
+        provenance)
+
+Supplied direct Hartree field evaluated for the declared represented density.
+The constructor copies and symmetrizes `matrix`; when assembling a correction,
+it must share one orthonormal basis and ordering with the interaction and
+reference coefficients. `reference_coulomb_self_integral` is
+`Tr(P0 * matrix) = (rho0|rho0)`. "Exact" refers to the declared represented
+density and Coulomb representation, not continuum exactness.
+"""
 struct ExactRepresentedHartreeField
     matrix::Matrix{Float64}
     reference_coulomb_self_integral::Float64
@@ -107,6 +126,16 @@ struct ExactRepresentedHartreeField
     end
 end
 
+"""
+    FittedReferenceHartreeField(matrix, density_coulomb_self_integral;
+        provenance)
+
+Supplied fitted-potential direct Hartree field. The constructor copies and
+symmetrizes `matrix`; when assembling a correction, it must share one
+orthonormal basis and ordering with the interaction and reference coefficients.
+`density_coulomb_self_integral` is the self integral of the underlying fitted
+density representation and is not redefined by the potential fit.
+"""
 struct FittedReferenceHartreeField
     matrix::Matrix{Float64}
     density_coulomb_self_integral::Float64
@@ -359,6 +388,17 @@ function _public_screened_hartree_tolerances(representation_atol,
     return values
 end
 
+"""
+    screened_hartree_correction(
+        V_IDA, field, reference_coefficients, occupations; kwargs...)
+
+Assemble a direct screened-Hartree correction from an
+[`ExactRepresentedHartreeField`](@ref) or [`FittedReferenceHartreeField`](@ref).
+`V_IDA`, the supplied field matrix, and `reference_coefficients` must use the
+same orthonormal basis and ordering. `occupations` are finite, nonnegative,
+spin-summed occupations and may be fractional. This operation consumes an
+already evaluated field; it does not construct or fit one.
+"""
 function screened_hartree_correction(
     V_IDA,
     field::ExactRepresentedHartreeField,
@@ -405,10 +445,35 @@ function screened_hartree_correction(
         anchor_atol = closure_atol)
 end
 
+"""
+    screened_hartree_delta_one_body(correction)
+
+Return a copy of the screened direct one-body correction matrix.
+"""
 screened_hartree_delta_one_body(c::ScreenedHartreeCorrection) = copy(c.delta_one_body)
+
+"""
+    screened_hartree_energy_constant(correction)
+
+Return the separate screened direct total-energy constant.
+"""
 screened_hartree_energy_constant(c::ScreenedHartreeCorrection) = c.energy_constant
+
+"""
+    screened_hartree_consistency_error(correction)
+
+Return the signed field-consistency error
+`Tr(P0 * J0) - (rho0|rho0)`. The exact represented route enforces closure;
+the fitted route reports this signed fit discrepancy.
+"""
 screened_hartree_consistency_error(c::ScreenedHartreeCorrection) =
     _screened_hartree_trace_product(c.P0, c.J0_G) - c.E0_G
+
+"""
+    screened_hartree_field_kind(correction)
+
+Return `:exact_represented` or `:fitted_reference` for the supplied field route.
+"""
 function screened_hartree_field_kind(correction::ScreenedHartreeCorrection)
     kind = correction.packet_summary.source
     kind in (:exact_represented, :fitted_reference) ||

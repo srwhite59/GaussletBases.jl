@@ -31,14 +31,26 @@
     docs_site_index = read_doc("docs", "src", "index.md")
     docs_site_manual = read_doc("docs", "src", "manual", "index.md")
     docs_site_examples = read_doc("docs", "src", "howto", "example_guide.md")
+    docs_flat_examples = read_doc("docs", "example_guide.md")
     docs_site_examples_landing = read_doc("docs", "src", "examples", "index.md")
     docs_site_pqs = read_doc("docs", "src", "manual", "projected_q_shells.md")
+    docs_site_diatomic_box = read_doc(
+        "docs", "src", "algorithms", "cartesian_nested_diatomic_box_policy.md")
+    docs_site_diatomic_distortion = read_doc(
+        "docs", "src", "algorithms", "cartesian_nested_diatomic_coordinate_distortion.md")
     pqs_example = read_doc("examples", "39_pqs_h2plus.jl")
     docs_site_reference_index = read_doc("docs", "src", "reference", "index.md")
     docs_site_reference_bases = read_doc("docs", "src", "reference", "bases_and_mappings.md")
     docs_site_reference_ops = read_doc("docs", "src", "reference", "operators_and_diagnostics.md")
     docs_site_reference_atomic = read_doc("docs", "src", "reference", "atomic_and_ordinary.md")
     docs_site_reference_export = read_doc("docs", "src", "reference", "export.md")
+    v0_2_exports = (
+        :PQSH2PlusRow, :PQSH2PlusComparison, :pqs_h2plus_comparison,
+        :ExactRepresentedHartreeField, :FittedReferenceHartreeField,
+        :ScreenedHartreeCorrection, :screened_hartree_correction,
+        :screened_hartree_delta_one_body, :screened_hartree_energy_constant,
+        :screened_hartree_consistency_error, :screened_hartree_field_kind,
+    )
     docs_site_developer = read_doc("docs", "src", "developer", "index.md")
     docs_site_developer_notes = read_doc("docs", "src", "developer", "supporting_notes.md")
     docs_site_architecture = read_doc("docs", "src", "developer", "architecture.md")
@@ -193,6 +205,17 @@
         @test contains_all(pqs_example, "cartesian_base_hamiltonian",
             "CartesianIDAHamiltonian", "one_body_hamiltonian", "nuclear_repulsion")
         @test !occursin("GaussletBases._", pqs_example)
+        @test all(name -> name in names(GaussletBases), v0_2_exports)
+        @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_export)\n"),
+            v0_2_exports)
+        for page in (docs_site_diatomic_box, docs_site_diatomic_distortion)
+            @test all(path -> !occursin(path, page),
+                ("/Users/srw", "Dropbox", "CloudStorage"))
+        end
+        for guide in (docs_site_examples, docs_flat_examples)
+            @test contains_all_lower(guide, "28_ordinary_one_body_fidelity.jl",
+                "internal", "non-contractual")
+        end
         @test contains_all(
             docs_site_reference_index,
             "# Reference overview",

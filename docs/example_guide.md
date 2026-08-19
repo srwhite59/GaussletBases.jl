@@ -122,7 +122,8 @@ first pages a new ordinary-branch reader should open:
 19. `27_ordinary_cartesian_ida_localized_backends.jl`  
     Compare the backend split for the ordinary static ingredients.
 20. `28_ordinary_one_body_fidelity.jl`  
-    Decompose the remaining mild-mapped one-body differences.
+    Internal, non-contractual diagnostic that decomposes the remaining
+    mild-mapped one-body differences.
 
 This keeps the ordinary branch readable as:
 

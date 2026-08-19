@@ -5,7 +5,7 @@ schema_version = 3
 
 [[documents]]
 path = "docs/src/algorithms/cartesian_nested_diatomic_box_policy.md"
-sha256 = "6a01000f43e7266b0fa163a3b20b08cb6dff9750dc04a17edd75c91315b34d5b"
+sha256 = "84587f169e1085f070a410a5ca2d32581bbcfcc7a58f97b0f49b834d5ade6f8e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/atomic_hf_reference_packets.md"
 sha256 = "c39308268cc18538ee99db4913f7801af547b1940efe59e6af06bb82271f75d0"

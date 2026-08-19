@@ -249,10 +249,10 @@ committing and return the exact blocker for a new design decision.
 - Landed atomic subtree route:
   [Cartesian nested atomic nonrecursive route](cartesian_nested_atomic_nonrecursive_route.md)
 - Historical provenance:
-  - `/Users/srw/Library/CloudStorage/Dropbox/chatarchive/reports/software_reviews/white_lindsey_run_provenance_2026-03-15.md`
-  - `/Users/srw/Library/CloudStorage/Dropbox/chatarchive/reports/software_reviews/nestpgg3d_family_map_2026-03-15.md`
-  - `/Users/srw/Dropbox/GaussletModules/Boxes.jl`
-  - `/Users/srw/Library/CloudStorage/Dropbox/chatarchive/references/papers/canonical/QiuWhite_source.tex`
+  - White-Lindsey run-provenance review
+  - nested PGDG 3D family-map review
+  - legacy GaussletModules box-construction implementation
+  - canonical Qiu-White source manuscript
 
 ## What This Frames
 

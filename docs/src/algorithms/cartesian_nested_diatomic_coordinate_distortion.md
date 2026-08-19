@@ -139,11 +139,11 @@
 - Companion geometry page:
   [Cartesian nested diatomic box policy](cartesian_nested_diatomic_box_policy.md)
 - Historical provenance:
-  - `/Users/srw/Library/CloudStorage/Dropbox/chatarchive/references/papers/canonical/QiuWhite_source.tex`
-  - `/Users/srw/Dropbox/GaussletModules/CoordinateMapping.jl`
-  - `/Users/srw/Dropbox/GaussletModules/PureGaussianGausslet.jl`
-  - `/Users/srw/Library/CloudStorage/Dropbox/chatarchive/reports/software_reviews/nestpgg3d_family_map_2026-03-15.md`
-  - `/Users/srw/Library/CloudStorage/Dropbox/chatarchive/reports/software_reviews/white_lindsey_run_provenance_2026-03-15.md`
+  - canonical Qiu-White source manuscript
+  - legacy GaussletModules coordinate-mapping implementation
+  - legacy GaussletModules pure-Gaussian-gausslet implementation
+  - nested PGDG 3D family-map review
+  - White-Lindsey run-provenance review
 
 ## What This Frames
 

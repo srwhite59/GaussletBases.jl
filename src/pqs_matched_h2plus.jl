@@ -1,3 +1,11 @@
+"""
+    PQSH2PlusRow
+
+One result row from [`pqs_h2plus_comparison`](@ref). Public fields identify the
+basis, dimension, captured parent-state norm, electronic and nuclear-repulsion
+energies, total energy, and the contraction and independent-reference errors,
+all in hartree where applicable.
+"""
 struct PQSH2PlusRow
     basis::Symbol
     dimension::Int
@@ -9,6 +17,13 @@ struct PQSH2PlusRow
     total_error_hartree::Float64
 end
 
+"""
+    PQSH2PlusComparison
+
+Matched full-parent, PQS, and White-Lindsey H2+ rows returned by
+[`pqs_h2plus_comparison`](@ref), together with the supplied independent
+reference energy and common parent/core/shell/slab dimension accounting.
+"""
 struct PQSH2PlusComparison
     rows::NTuple{3,PQSH2PlusRow}
     independent_reference_total_energy_hartree::Float64
