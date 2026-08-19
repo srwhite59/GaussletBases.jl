@@ -71,7 +71,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "9befc7d65bdba40cee1cd21024daf06b9c657f62bb4c0c3767532ce01e349c7c"
+sha256 = "7987cbc5f791374d91b491a558d0db25ac25a6ab895df74fdfbcacad64f89678"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "803063ecdc263c9767f08b41b0c20a736482d8dfe44a97d0720e6e3b19f3e91f"
@@ -2993,10 +2993,10 @@ title = "PQS v0.2 public documentation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-PUBLIC-DOC-01", "HP-PQS-PUBLIC-MATCHED-FN-01", "HP-PQS-PUBLIC-SCREEN-FN-01", "HP-QW-NESTED-DIAT-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-PUBLIC-DOC-PARITY-FN-01"
-lifecycle = "approved"
-scope = "Repair only the accepted v0.2 reader-document parity. Add concise public docstrings for the exact ten accepted exports that currently lack them, without changing definitions, signatures, fields, exports, dispatch, or behavior; the existing pqs_h2plus_comparison docstring is unchanged. Add all eleven exports to the curated @docs reference; replace personal absolute provenance paths in the two owned rendered nested-diatomic pages with path-free historical prose; and label example 28 internal/non-contractual in both reader guides. Preferred/hard additions are 90/120 source docstring lines, 24/36 documentation lines, and 24/32 existing-test lines. No executable source, example code, numerical, dependency, workflow, version, tag, release, citation, changelog, paper claim, provenance deletion, API/example promotion, or broad rewrite."
+lifecycle = "implemented"
+scope = "Maintain only the implemented v0.2 reader parity: concise public docstrings on the exact ten accepted bindings added by c78defcc9, the unchanged existing pqs_h2plus_comparison docstring, all eleven existing root exports in the curated @docs reference, path-free historical provenance in the two owned nested-diatomic pages, and example 28's internal/non-contractual classification. Preserve the typed field semantics, common-basis and signed-consistency conventions, and accessor-only ScreenedHartreeCorrection contract. No executable source, definition, signature, field, export, dispatch, numerical, example-code, dependency, workflow, version, tag, release, citation, paper claim, API/example promotion, or broad rewrite."
 surfaces = ["docs", "source"]
 title = "PQS v0.2 reader-document parity repair"
 
@@ -3006,8 +3006,17 @@ title = "PQS v0.2 reader-document parity repair"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "c78defcc9b299ee5f32cf42910812f5581657d93"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "487"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "488"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "489"
 
     [[records.paths]]
     kind = "docs"
@@ -3039,10 +3048,10 @@ title = "PQS v0.2 reader-document parity repair"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-PUBLIC-DOC-PARITY-FN-01", "HP-PQS-READER-TEST-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-PUBLIC-DOC-PARITY-TEST-01"
-lifecycle = "approved"
-scope = "Extend only test/docs/runtests.jl with one fixed eleven-name parity check between the existing root exports and curated reference entries, absence of personal absolute or Dropbox paths in the two owned rendered algorithm pages, and explicit internal/non-contractual classification of example 28 in both reader guides. Preferred/hard test additions are 24/32 lines. Add no test file, parser, generalized export inventory, example execution, workflow, numerical gate, or broad documentation scan."
+lifecycle = "completed"
+scope = "Maintain only the fixed eleven-name root-export/curated-reference parity check, absence of personal absolute or Dropbox paths in the two owned rendered algorithm pages, and explicit internal/non-contractual example-28 classification in both reader guides. Preserve Documenter as the executable docstring-resolution gate. Add no test file, parser, generalized export inventory, example execution, workflow, numerical gate, or broad documentation scan."
 surfaces = ["tests"]
 title = "PQS v0.2 reader-document parity validation"
 
@@ -3052,8 +3061,17 @@ title = "PQS v0.2 reader-document parity validation"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "c78defcc9b299ee5f32cf42910812f5581657d93"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "487"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "488"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "489"
 
     [[records.paths]]
     kind = "test"
