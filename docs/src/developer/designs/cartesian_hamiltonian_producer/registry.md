@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `cc67129e1e10f2db6a647738c09e0ec6eaf1bfa569fe9b5baa812296fd5210ef`.
+> [authority.toml](authority.toml), SHA-256 `7c158ed4b3527d51ebe5e948c02c797e6126a87d1741cec4a82e6db786419f4f`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1441,12 +1441,14 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `tool` / `existing`: `.github/workflows/docs.yml`
   - `tool` / `existing`: `docs/make.jl`
 - **Evidence:**
+  - `git_commit`: `31caa87d3b83599de7f7295678ee599209113552`
   - `git_commit`: `abee269eed7028c864fa18ae44b4b946af63dfcf`
   - `manager_pass`: `490`
   - `manager_pass`: `491`
   - `manager_pass`: `495`
+  - `manager_pass`: `496`
 - **Dependencies:** `HP-PQS-PUBLIC-DOC-01`, `HP-PQS-PUBLIC-DOC-PARITY-FN-01`
-- **Scope:** Maintain only the implemented tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior, main-to-dev deployment, exact canonical full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tag folders without build metadata, fail-closed rejection before deploydocs, and Documenter's standard exclusion of prereleases from stable. Retain the existing v0.2.0-rc1 folder in versions.js through one explicit v0.2.0-rc1 self-mapping on both tag and main deployments; this creates no alias and authorizes no other prerelease entry or custom stable policy. GITHUB\_TOKEN and GAUSSLETBASES\_DOCS\_DEPLOY remain deployment-step-only under the contents:write deployment job. The Pass 495 repair may edit only docs/make.jl and the canonical/current docs; .github/workflows/docs.yml is unchanged. No new file, package-version change, tag mutation, release, source/API/example/scientific-doc/dependency/citation/changelog change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, dynamic version index, or release framework.
+- **Scope:** Maintain only the implemented tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior, main-to-dev deployment, exact canonical full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tag folders without build metadata, fail-closed rejection before deploydocs, and Documenter's standard exclusion of prereleases from the real stable alias. Retain the existing v0.2.0-rc1 folder in versions.js through the explicit v0.2.0-rc1 self-mapping on both tag and main deployments; this creates no alias and authorizes no other prerelease entry or custom stable policy. GITHUB\_TOKEN and GAUSSLETBASES\_DOCS\_DEPLOY remain deployment-step-only under the contents:write deployment job. No new file, package-version change, tag mutation, release, source/API/example/scientific-doc/dependency/citation/changelog change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, dynamic version index, or release framework.
 
 ### HP-PQS-DOCS-TAGDEPLOY-TEST-01 - tag-aware documentation deployment validation
 
@@ -1459,10 +1461,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `31caa87d3b83599de7f7295678ee599209113552`
   - `git_commit`: `abee269eed7028c864fa18ae44b4b946af63dfcf`
   - `manager_pass`: `490`
   - `manager_pass`: `491`
   - `manager_pass`: `495`
+  - `manager_pass`: `496`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`
 - **Scope:** Maintain only the focused existing docs-test assertions for PR/main/prerelease/final/malformed-tag classification, exact main and tag canonical paths, semantic-version rejection, unchanged least-privilege workflow boundaries, explicit v0.2.0-rc1 selector retention, and standard prerelease exclusion from stable. Use an isolated Documenter version-expansion fixture to require the RC1 entry, no self-symlink, and no stable alias without a final release. Add no test file, parser framework, actual tag/deployment, numerical gate, source test, or release behavior.
 
@@ -1922,7 +1926,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-PUBLIC-RC1-TAG-TEST-01 - v0.2.0-rc1 annotated tag validation
 
-- **Lifecycle:** `approved`
+- **Lifecycle:** `completed`
 - **Grant:** `none`
 - **Surfaces:** none
 - **Execution whitelist:** `false`
@@ -1931,10 +1935,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:** none
 - **Evidence:**
   - `git_commit`: `1546c18d3058cce2b5051b50788cda3c12585e51`
+  - `git_commit`: `31caa87d3b83599de7f7295678ee599209113552`
   - `manager_pass`: `494`
   - `manager_pass`: `495`
+  - `manager_pass`: `496`
 - **Dependencies:** `HP-PQS-PUBLIC-RC1-TAG-FN-01`
-- **Scope:** Open tag-acceptance evidence only; this record grants no file, workflow, tag-repair, or release edit. Annotated local and remote tag object a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2 peels to frozen target 1546c18d3058cce2b5051b50788cda3c12585e51; tag-triggered Docs run 32295705338 passed; /v0.2.0-rc1/ has the exact canonical URL; /stable/ remains absent; /dev/ is unchanged. Acceptance remains open only until a main deployment under HP-PQS-DOCS-TAGDEPLOY-FN-01 makes versions.js expose RC1 without changing those facts. Preserve the immutable tag; do not retarget, replace, delete, or recreate it.
+- **Scope:** Completed tag-acceptance evidence only; this record grants no file, workflow, tag-repair, or release edit. Annotated local and remote tag object a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2 peels to frozen target 1546c18d3058cce2b5051b50788cda3c12585e51; tag-triggered Docs run 32295705338 and repair main-deployment Docs run 32302304167 passed; /v0.2.0-rc1/ and /dev/ retain exact canonical URLs; versions.js lists RC1 and dev; /stable/ remains absent. Documenter's internal DOCUMENTER\_STABLE fallback naming RC1 creates no stable selector entry, symlink, path, or final-release status. Preserve the immutable tag; do not retarget, replace, delete, or recreate it. GitHub release publication remains unauthorized.
 
 ### HP-PQS-PUBLIC-RC1-TEST-01 - v0.2.0-rc1 candidate-preparation validation
 

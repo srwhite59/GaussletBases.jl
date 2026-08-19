@@ -68,8 +68,8 @@ archaeology and are not normal startup reading.
 - The immutable annotated `v0.2.0-rc1` tag is published at object
   `a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2`, peeling to frozen target
   `1546c18d3058cce2b5051b50788cda3c12585e51`. Its canonical folder is live,
-  `/stable/` remains absent, and `/dev/` is unchanged. Tag acceptance remains
-  open only for the bounded `versions.js` selector repair; GitHub release
+  `versions.js` lists RC1 and `dev`, `/stable/` remains absent, and both
+  canonical folders are intact. Tag acceptance is closed; GitHub release
   publication remains unauthorized.
 - Production defaults, public workflows, corrected artifacts, and Cr2 endpoint
   claims remain unchanged unless separately authorized.
@@ -129,13 +129,13 @@ Hooke owns the first Be `1s/2s` target study. Selection, transition-density
 exchange, and PRF-to-GTO-residual interactions remain consumer or measurement
 questions.
 
-**MT5 - Documentation and authority maintenance (active).** The broad
-reorganization and cutover are complete. The RC1 candidate and immutable tag
-exist; one explicit prerelease selector repair remains active before tag
-acceptance can close. Update machine authority atomically, keep startup
-documents compact, and attach documentation edits to concrete findings rather
-than beginning another migration campaign. GitHub release publication and any
-later final release remain separate decisions.
+**MT5 - Documentation and authority maintenance (maintenance).** The broad
+reorganization and cutover are complete. The RC1 candidate, immutable tag,
+versioned folder, and explicit selector entry are accepted. Update machine
+authority atomically, keep startup documents compact, and attach documentation
+edits to concrete findings rather than beginning another migration campaign.
+GitHub release publication and any later final release remain separate
+decisions.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
 metadata, unsupported exports, and development-era tests as conformance work
@@ -1101,3 +1101,41 @@ Carrying-cost accounting:
   exports are retired or de-promoted without changing current PQS/WL physics.
 - Near-term work should close the selector repair, then stop for an explicit
   GitHub-release decision rather than expanding release machinery.
+
+## Cartesian Hamiltonian Producer Pass 496 - Close RC1 Selector And Tag Acceptance
+
+Commit(s):
+- `31caa87d3b83599de7f7295678ee599209113552` - retain RC1 in the
+  Documenter version selector;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the exact `_DOCS_VERSIONS` implementation and isolated expansion
+  gate. The change added `7` builder lines and `22/1` existing-test lines,
+  with no workflow, file, tag, package, API, dependency, or release mutation.
+- Docs run `32302304167` and CI run `32302304185` passed. Live
+  `versions.js` lists RC1 and `dev`; their canonical URLs are exact;
+  `/stable/` remains absent; and the immutable tag still peels to the frozen
+  target. Documenter's internal stable fallback names RC1 only because it is
+  the first listed version; no `stable` entry, symlink, path, or final-release
+  status exists.
+
+Goal advancement / guardrail:
+- MT5 closes RC1 tag acceptance. GitHub release publication, registration,
+  citation metadata, final `v0.2.0`, and any broader release framework remain
+  separately unauthorized.
+
+Carrying-cost accounting:
+- deleted: the stale no-`versions` assertion and open selector blocker.
+- simplified: one explicit four-entry policy owns version-selector ordering.
+- quarantined: final-release aliases and publication actions.
+- not deleted because: the RC1 self-mapping is required on every later main
+  deployment until a separately reviewed version policy replaces it.
+- exact remaining caller/blocker: no RC1 tag blocker remains; the next release
+  action requires explicit user/design authority.
+- added/deleted `src` lines: `0/0`; docs builder `7/0`; new tests: none,
+  existing docs test `22/1`; new metadata/status fields: none.
+- validation: implementation diff/budget review, tag object/peel check, live
+  selector/canonical/stable inspection, docs `87/87` and `10/10`, authority
+  check/self-test, package load, Documenter, manager-log bound, remote Docs/CI,
+  docs-only scope review, and `git diff --check`.

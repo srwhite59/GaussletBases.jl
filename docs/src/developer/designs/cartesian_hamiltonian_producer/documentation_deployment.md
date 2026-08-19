@@ -73,12 +73,10 @@ limit. If the behavior cannot fit without duplicated parsers, a new framework,
 broader credentials, or hidden release policy, implementation must stop and
 return to repo-design-manager.
 
-The Pass 495 repair is narrower than those standing limits. It may add only
-the explicit RC1 self-mapping to the existing `deploydocs` call and focused
-coverage in `test/docs/runtests.jl`: at most `8` added `docs/make.jl` lines and
-at most `25` added existing-test lines. `.github/workflows/docs.yml` must not
-change. If Documenter cannot retain RC1 without changing `stable`, the tag,
-or the credential/deployment model, stop and report.
+Commit `31caa87d3b83599de7f7295678ee599209113552` implemented the Pass 495
+repair with `7` added `docs/make.jl` lines and `22/1` existing-test
+lines. `_DOCS_VERSIONS` is now the single explicit selector policy passed to
+`deploydocs`; the workflow and credential model did not change.
 
 Validation must simulate, without creating or pushing a tag, pull-request,
 `main`, `v0.2.0-rc1`, final `v0.2.0`, and malformed-tag contexts. It must:
@@ -105,6 +103,14 @@ The immutable annotated `v0.2.0-rc1` tag was pushed successfully at tag object
 prerelease from `versions.js`; the explicit self-mapping above is the sole
 authorized correction. The immutable tag must not be moved, replaced,
 deleted, or retriggered as a repair mechanism.
+
+Main-deployment Docs run `32302304167` and CI run `32302304185` passed at
+the repair commit. The live `versions.js` lists exactly `v0.2.0-rc1` and
+`dev`; both folders retain their exact canonical URLs, and `/stable/`
+remains absent. With no final release present, Documenter sets its internal
+`DOCUMENTER_STABLE` JavaScript fallback to the first listed version, RC1.
+That fallback is not a `stable` selector entry, symlink, or published path
+and grants no final-release status.
 
 Commit `abee269eed7028c864fa18ae44b4b946af63dfcf` implemented the classifier,
 canonical paths, workflow trigger, and focused tests within the authorized

@@ -543,7 +543,7 @@ separate explicit decisions.
 
 ## v0.2.0-rc1 Annotated Tag Lifecycle
 
-`HP-PQS-PUBLIC-RC1-TAG-FN-01` authorizes one tag-only publication operation.
+`HP-PQS-PUBLIC-RC1-TAG-FN-01` records the completed tag-only publication.
 The immutable target is the accepted candidate closeout commit
 `1546c18d3058cce2b5051b50788cda3c12585e51`, with tree
 `1b53a9eb51d11cfc31b8b0356349c62f0de8915f` and full tracked `git archive`
@@ -566,19 +566,20 @@ Tag-triggered Docs run `32295705338` passed, `/v0.2.0-rc1/` is live with the
 exact canonical URL, `/stable/` remains absent, and `/dev/` is byte-identical
 to its pre-tag state. No further tag mutation is authorized.
 
-`HP-PQS-PUBLIC-RC1-TAG-TEST-01` remains open only because Documenter's default
-version expansion omitted the prerelease from `versions.js`. The narrow repair
-belongs to `HP-PQS-DOCS-TAGDEPLOY-FN-01/TEST-01`: explicitly retain
-`v0.2.0-rc1` as a self-mapped selector entry during the next `main`
-documentation deployment. Acceptance then requires `versions.js` to list RC1,
-`/stable/` to remain absent, and `/dev/` plus the canonical RC1 folder to remain
-intact. The repair must not move, replace, delete, or recreate the tag.
+`HP-PQS-PUBLIC-RC1-TAG-TEST-01` is completed. Commit
+`31caa87d3b83599de7f7295678ee599209113552` added the exact RC1 self-mapping
+under `HP-PQS-DOCS-TAGDEPLOY-FN-01/TEST-01`. Main-deployment Docs run
+`32302304167` passed; live `versions.js` lists RC1 and `dev`, `/stable/`
+remains absent, and both canonical folders remain intact. Documenter's
+internal `DOCUMENTER_STABLE` fallback names RC1 because no final release
+exists, but no `stable` selector entry, symlink, path, or release status was
+created. The repair did not move, replace, delete, or recreate the tag.
 
 No GitHub release, General registration, `CITATION.cff`, final `v0.2.0`,
 homepage or stable-link edit, custom release framework, or tracked
 source/API/dependency/workflow/numerical/manuscript mutation is authorized.
-After the selector repair is verified, tag lifecycle closeout is docs-only on
-`main`.
+The tag lifecycle is closed. Any GitHub release or later final tag requires a
+new explicit decision.
 
 ## Compatibility
 
