@@ -1810,3 +1810,47 @@ Carrying-cost accounting:
 - **MT6 - active:** this pass adds no source, helper, test file, credential,
   schema, or deployment framework; the bounded implementation must reuse the
   existing workflow, builder, and docs test.
+
+## Cartesian Hamiltonian Producer Pass 491 - Accept Tag-Aware Documentation Deployment
+
+Commit(s):
+- `abee269eed7028c864fa18ae44b4b946af63dfcf` - implemented tag-aware
+  Documenter deployment;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the fail-closed documentation classifier and workflow wiring. Pull
+  requests remain build-only with `contents: read`; `main` deploys `/dev/`;
+  canonical semantic-version tags deploy their exact folders; malformed,
+  noncanonical, and build-metadata tags fail before `deploydocs`.
+- Standard Documenter policy remains responsible for aliases: prereleases do
+  not create or advance `stable`, while a later final release may. No package
+  version, tag, release, custom credential, alternate host, or public/scientific
+  surface changed.
+- Docs run `32264133694` and CI run `32264133755` passed. `gh-pages` advanced
+  to `8a43fc8f3`, built from `abee269ee`, and the live `/dev/` contract page
+  contained the implemented behavior.
+
+Goal advancement / guardrail:
+- MT5's tag-aware documentation prerequisite is complete. Versioning,
+  changelog/citation work, candidate tagging, GitHub release creation, and
+  final-release authorization remain separate decisions.
+
+Carrying-cost accounting:
+- deleted: the obsolete local fallback `deploydocs` call and pending-status
+  wording.
+- simplified: one context classifier now owns canonical path and deployment
+  eligibility for PR, main, and version-tag builds.
+- quarantined: all release actions and version policy beyond standard
+  Documenter behavior remain outside this lane.
+- not deleted because: the least-privilege PR/main split remains the required
+  deployment boundary.
+- exact remaining caller/blocker: release review and an explicit later
+  version/tag decision; documentation deployment has no implementation blocker.
+- added/deleted `src` lines: `0/0`; workflow `3/1`; docs builder `32/7`; new
+  tests: none, one existing docs-test extension `30/0`; new metadata/status
+  fields: none.
+- validation: exact commit/diff and classifier review, docs `85/85` and
+  `10/10`, authority checks, package load, simulated canonical builds,
+  Documenter, YAML and manager-log checks, remote Docs/CI, live `/dev/`
+  inspection, and `git diff --check`.

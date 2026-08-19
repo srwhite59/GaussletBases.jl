@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `7b853cffdc70741d4a744a7b9187028a4584a54641cd31966f98c72ec671ae17`.
+> [authority.toml](authority.toml), SHA-256 `60d20dfaa4bad3bd2ccc24345ae8b71cb864a3dad06ec1e3e703d16377ad17e1`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1429,8 +1429,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-DOCS-TAGDEPLOY-FN-01 - tag-aware versioned documentation deployment
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `tools`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1441,14 +1441,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `tool` / `existing`: `.github/workflows/docs.yml`
   - `tool` / `existing`: `docs/make.jl`
 - **Evidence:**
+  - `git_commit`: `abee269eed7028c864fa18ae44b4b946af63dfcf`
   - `manager_pass`: `490`
+  - `manager_pass`: `491`
 - **Dependencies:** `HP-PQS-PUBLIC-DOC-01`, `HP-PQS-PUBLIC-DOC-PARITY-FN-01`
-- **Scope:** Implement only tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior and main-to-dev deployment; accept only full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tags without build metadata; derive exact main/tag canonical URLs; fail before deploydocs on malformed tags or context mismatch; and retain Documenter's standard prerelease exclusion from stable. GITHUB\_TOKEN and GAUSSLETBASES\_DOCS\_DEPLOY remain deployment-step-only under a contents:write deployment job. Stop above 30 added workflow lines or 40 added docs/make.jl lines. No new file, package-version change, tag, release, source/API/example/scientific-doc/dependency/citation/changelog change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, alias policy, or release framework.
+- **Scope:** Maintain only the implemented tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior, main-to-dev deployment, exact canonical full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tag folders without build metadata, fail-closed rejection before deploydocs, and Documenter's standard prerelease exclusion from stable. GITHUB\_TOKEN and GAUSSLETBASES\_DOCS\_DEPLOY remain deployment-step-only under the contents:write deployment job. No new file, package-version change, tag, release, source/API/example/scientific-doc/dependency/citation/changelog change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, custom alias policy, or release framework.
 
 ### HP-PQS-DOCS-TAGDEPLOY-TEST-01 - tag-aware documentation deployment validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1456,9 +1458,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `abee269eed7028c864fa18ae44b4b946af63dfcf`
   - `manager_pass`: `490`
+  - `manager_pass`: `491`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`
-- **Scope:** Add only focused assertions in the existing docs test for PR/main/prerelease/final/malformed-tag classification, exact main and tag canonical paths, semantic-version rejection, unchanged least-privilege workflow boundaries, and standard prerelease exclusion from stable. Stop above 50 added test lines. Use transient local Documenter builds and version-expansion evidence for acceptance; add no test file, parser framework, actual tag/deployment, numerical gate, source test, or release behavior.
+- **Scope:** Maintain only the focused existing docs-test assertions for PR/main/prerelease/final/malformed-tag classification, exact main and tag canonical paths, semantic-version rejection, unchanged least-privilege workflow boundaries, and standard prerelease exclusion from stable. Use transient Documenter builds and version-expansion evidence when this deployment contract changes. Add no test file, parser framework, actual tag/deployment, numerical gate, source test, or release behavior.
 
 ### HP-PQS-MAP-SFACTOR-FN-01 - expert mapping \`s\_factor\` keyword
 

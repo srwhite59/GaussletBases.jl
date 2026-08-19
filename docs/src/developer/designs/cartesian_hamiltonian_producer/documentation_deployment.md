@@ -16,12 +16,12 @@ The `Docs` workflow enforces a least-privilege split:
 
 ## Tag-Aware Version Deployment
 
-Tag-aware deployment is approved under
+Tag-aware deployment is implemented and maintained under
 `HP-PQS-DOCS-TAGDEPLOY-FN-01` and
-`HP-PQS-DOCS-TAGDEPLOY-TEST-01`, pending implementation. This amendment does
-not authorize a package-version change, a tag, or a release.
+`HP-PQS-DOCS-TAGDEPLOY-TEST-01`. This contract does not authorize a
+package-version change, a tag, or a release.
 
-The deployment classifier must preserve three distinct contexts:
+The deployment classifier preserves three distinct contexts:
 
 - a pull request is build-only with `contents: read`, receives no deployment
   credential, and cannot call `deploydocs`;
@@ -33,11 +33,11 @@ The deployment classifier must preserve three distinct contexts:
   tag folder. For example, `v0.2.0-rc1` uses canonical URL
   `https://srwhite59.github.io/GaussletBases.jl/v0.2.0-rc1/`.
 
-The workflow may use a `v*` trigger so that GitHub starts the check for a
-candidate version tag, but `docs/make.jl` must independently validate the full
+The workflow uses a `v*` trigger so that GitHub starts the check for a
+candidate version tag, while `docs/make.jl` independently validates the full
 tag before deployment. A non-version tag, a malformed `v` tag, an unsupported
 event, or a mismatch between the resolved build context and deployment request
-must fail before `deploydocs`; it must never fall back to `dev` or another
+fails before `deploydocs`; it never falls back to `dev` or another
 release folder.
 
 Deployment continues to use Documenter's standard version policy. A
@@ -47,9 +47,9 @@ set used to create or advance `stable`. A later final `v0.2.0` tag may become
 [Documenter's deployment criteria](https://documenter.juliadocs.org/stable/lib/public/#Documenter.deploy_folder)
 and [versioned deployment policy](https://documenter.juliadocs.org/stable/man/hosting/#Documentation-Versions).
 
-The implementation is limited to `.github/workflows/docs.yml`, `docs/make.jl`,
-and focused assertions in `test/docs/runtests.jl`. It may make the existing
-deployment note and compact current status truthful, but it may not add a
+Maintenance is limited to `.github/workflows/docs.yml`, `docs/make.jl`, and
+focused assertions in `test/docs/runtests.jl`. It may make this contract and
+compact current status truthful, but it may not add a
 helper file, release framework, custom credential, alternate host, manifest,
 artifact, source/API change, version bump, citation/changelog change, or
 scientific-document rewrite. The stop-and-report limits are:
@@ -64,7 +64,7 @@ limit. If the behavior cannot fit without duplicated parsers, a new framework,
 broader credentials, or hidden release policy, implementation must stop and
 return to repo-design-manager.
 
-Acceptance must simulate, without creating or pushing a tag, pull-request,
+Validation must simulate, without creating or pushing a tag, pull-request,
 `main`, `v0.2.0-rc1`, final `v0.2.0`, and malformed-tag contexts. It must:
 
 - inspect the exact deployment classification for each context;
@@ -79,10 +79,17 @@ Acceptance must simulate, without creating or pushing a tag, pull-request,
 - pass remote Docs and CI after the implementation push and confirm that the
   ordinary `main` deployment still updates the live `/dev/` site.
 
-The implementation commit returns these two records for a separate docs-only
-lifecycle closeout. Versioning, changelog and citation work, candidate tagging,
-GitHub release creation, and final-release authorization remain separate
-decisions.
+Commit `abee269eed7028c864fa18ae44b4b946af63dfcf` implemented the classifier,
+canonical paths, workflow trigger, and focused tests within the authorized
+files. Its deltas were `3/1` workflow lines, `32/7` `docs/make.jl` lines, and
+`30/0` existing-test lines. Docs run `32264133694` and general CI run
+`32264133755` passed; `gh-pages` advanced from `e164c91b5` to `8a43fc8f3`,
+built from that commit, and the live `/dev/` contract page reflected the new
+behavior. No package version, tag, release, source API, credential model, or
+documentation schema changed.
+
+Versioning, changelog and citation work, candidate tagging, GitHub release
+creation, and final-release authorization remain separate decisions.
 
 Commit `62a1a4821` restored this standard same-repository Documenter deployment
 path. Docs run `32072728238` and general CI run `32072728319` passed; the
