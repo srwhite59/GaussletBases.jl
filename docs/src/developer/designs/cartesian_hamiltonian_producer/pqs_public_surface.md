@@ -584,8 +584,8 @@ unauthorized.
 
 ## v0.2.0-rc1 GitHub Prerelease Lifecycle
 
-`HP-PQS-PUBLIC-RC1-RELEASE-FN-01` authorizes one published GitHub prerelease
-for the existing immutable `v0.2.0-rc1` tag. The release must have:
+`HP-PQS-PUBLIC-RC1-RELEASE-FN-01` records the completed GitHub prerelease for
+the existing immutable `v0.2.0-rc1` tag. Published release `373460389` has:
 
 - tag `v0.2.0-rc1`, verified rather than created by the release operation;
 - title `GaussletBases v0.2.0-rc1`;
@@ -634,9 +634,9 @@ Pkg.add(url = "https://github.com/srwhite59/GaussletBases.jl", rev = "v0.2.0-rc1
 - [Changelog at the immutable tag](https://github.com/srwhite59/GaussletBases.jl/blob/v0.2.0-rc1/CHANGELOG.md)
 ~~~~
 
-Because the body contains an inner Julia fence, the implementation may copy
-the text between the outer fence markers into a temporary notes file outside
-the repository. The noninteractive operation is:
+Because the body contains an inner Julia fence, the exact text between the
+outer fence markers was copied into a temporary notes file outside the
+repository. The completed noninteractive operation was:
 
 ```bash
 gh release create v0.2.0-rc1 \
@@ -648,28 +648,26 @@ gh release create v0.2.0-rc1 \
   --notes-file /private/tmp/gaussletbases_v0.2.0-rc1_release_notes.md
 ```
 
-Do not pass a filename or pattern after the tag, generate notes, start a
-discussion, create a draft, or supply `--target`. `CHANGELOG.md` is the sole
-tracked release-body source and is read-only in this operation. Before
-publication, require synchronized `main`, only the two established untracked
-handoffs, no existing release for the tag, exact local and remote tag object
-and peeled-target identity, package-version/tag agreement, and no moving-main
-link where the immutable tagged link exists. If a release appears before the
-operation or any identity check differs, stop without mutation.
+No filename or pattern followed the tag; no generated notes, discussion,
+draft, or `--target` was used. `CHANGELOG.md` remained a read-only tracked body
+source. Preflight verified synchronized `main`, only the two established
+untracked handoffs, release absence, exact local/remote tag identity and peel,
+package-version/tag agreement, and immutable links before publication.
 
-`HP-PQS-PUBLIC-RC1-RELEASE-TEST-01` grants no edit or publication authority.
-After creation it requires the GitHub release API and rendered page to show
-the exact tag/title/body, `isDraft=false`, `isPrerelease=true`, no uploaded
-assets, and source archive URLs resolving through the accepted tag. The
-latest-release endpoint must remain absent rather than select RC1. A fresh
-Julia `1.12.6` environment outside the repository must install the exact tag
-with the published command and load the package. The versioned documentation
-and canonical URL must remain live, while `/stable/` remains absent.
+`HP-PQS-PUBLIC-RC1-RELEASE-TEST-01` is completed and grants no edit or
+publication authority. GitHub API and rendered-page checks confirmed the
+exact tag, title, `1455`-byte body, `draft=false`, `prerelease=true`, no
+uploaded assets, and automatic source archives tied to the accepted tag. The
+latest-release endpoint remains absent. Both archives validated, and a fresh
+isolated Julia `1.12.6` installation loaded GaussletBases `v0.2.0-rc1` with
+manifest tree `1b53a9eb51d11cfc31b8b0356349c62f0de8915f`. RC1 and `/dev/`
+remain live with exact canonical URLs, `versions.js` lists RC1 and `dev`, and
+`/stable/` remains absent. Evidence is preserved under
+`/Users/srw/dmrgtmp/release_replays/gaussletbases_v0p2_rc1_release_2026-08-19/`.
 
-If publication succeeds but a later check fails, preserve the release and
-report the exact failure; do not edit, delete, recreate, or silently retry it.
-Publication changes no tracked file. A successful operation returns to
-repo-design-manager for a docs-only lifecycle closeout on `main`.
+The release lifecycle is closed. Do not edit, delete, recreate, retarget, add
+assets to, or silently retry the accepted release. Publication changed no
+tracked file.
 
 No General registration, `CITATION.cff`, final `v0.2.0`, paper title, DOI,
 journal status, manuscript headline number, publication-timing promise,

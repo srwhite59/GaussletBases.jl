@@ -74,7 +74,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "65259a09bb5125f83f16c0bc774cda60394287472e397c557b7bc225d8211cbb"
+sha256 = "bfea31442b0199539a557235beeb32ef779e58e05aecebc53d0f47147eadd55a"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "803063ecdc263c9767f08b41b0c20a736482d8dfe44a97d0720e6e3b19f3e91f"
@@ -3278,11 +3278,12 @@ title = "v0.2.0-rc1 candidate preparation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PUBLIC-RC1-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-PQS-PUBLIC-RC1-RELEASE-FN-01"
-lifecycle = "approved"
-scope = "Create exactly one published GitHub prerelease for the existing immutable v0.2.0-rc1 tag. Require remote tag object a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2 peeling to 1546c18d3058cce2b5051b50788cda3c12585e51, package version/tag agreement, synchronized main, only the two established untracked handoffs, and no existing release. Use gh release create with --verify-tag, exact title GaussletBases v0.2.0-rc1, --prerelease, --latest=false, and the exact package-centered canonical body separating Projected q-shells (PQS) from reference-density Hartree screening. Upload no assets and create no draft, discussion, tag, target, generated notes, custom archive, binary, manifest, paper workspace, validation log, or data bundle. CHANGELOG.md is a read-only body source; the owned Docs workflow path is a read-only versioned-documentation verification surface and must not be edited or invoked anew. Do not imply one combined method or paper, bind final v0.2.0 to either paper, or add titles, DOI, journal status, preferred citations, timing promises, manuscript numbers, General registration, CITATION.cff, repository metadata, stable link, source/API/test/example/dependency/workflow/numerical change, or broader release machinery. If preflight fails, make no release. If publication succeeds but verification fails, preserve the release and report without editing, deleting, recreating, or silently retrying it."
-surfaces = ["tools"]
+lifecycle = "completed"
+paths = []
+scope = "Completed GitHub prerelease publication only; this record grants no further release, tag, file, workflow, repository-metadata, or asset mutation. Release 373460389 is visible at the exact v0.2.0-rc1 tag with title GaussletBases v0.2.0-rc1, prerelease=true, draft=false, no uploaded assets, no latest final release, and the exact 1455-byte package-centered body separating Projected q-shells (PQS) from reference-density Hartree screening. Annotated tag object a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2 still peels to frozen commit 1546c18d3058cce2b5051b50788cda3c12585e51. Automatic source archives and a fresh isolated Julia 1.12.6 installation validate tree 1b53a9eb51d11cfc31b8b0356349c62f0de8915f; RC1 and dev documentation remain live, versions.js lists RC1 and dev, and /stable/ remains absent. Preserve the published release without editing, deleting, recreating, retargeting, adding assets, or changing its narrative. Final v0.2.0, General registration, CITATION.cff, paper titles/status/citations, stable links, repository metadata, and source/API/test/example/dependency/workflow/numerical changes require separate authority."
+surfaces = []
 title = "v0.2.0-rc1 GitHub prerelease publication"
 
     [[records.document_refs]]
@@ -3291,26 +3292,30 @@ title = "v0.2.0-rc1 GitHub prerelease publication"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
 
     [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/release_replays/gaussletbases_v0p2_rc1_release_2026-08-19"
+    [[records.evidence_refs]]
     kind = "git_commit"
     value = "1546c18d3058cce2b5051b50788cda3c12585e51"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "d653b267625e19059c72ae6925040b91b77f85fa"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "e63cdf6359293e7c274a6556357dc831b2f7eb02"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "497"
-
-    [[records.paths]]
-    kind = "tool"
-    path = ".github/workflows/docs.yml"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "498"
 [[records]]
 dependency_ids = ["HP-PQS-PUBLIC-RC1-RELEASE-FN-01"]
 grant = "none"
 id = "HP-PQS-PUBLIC-RC1-RELEASE-TEST-01"
-lifecycle = "approved"
+lifecycle = "completed"
 paths = []
-scope = "Required post-publication evidence only; this record grants no file, release, tag, workflow, or metadata mutation. Verify through GitHub that the one release is visible with exact tag v0.2.0-rc1, title and canonical body, isDraft=false, isPrerelease=true, latest=false, no uploaded assets, and automatic source archive URLs resolving through the accepted tag. Require the latest-release endpoint to remain absent, a fresh isolated Julia 1.12.6 installation from the published tag command to load GaussletBases, the versioned RC1 documentation and canonical URL to remain live, and /stable/ to remain absent. Preserve any published release on failure; do not edit, delete, recreate, or silently retry it."
+scope = "Completed post-publication evidence only; this record grants no file, release, tag, workflow, repository-metadata, or asset mutation. GitHub API and rendered-page checks confirm release 373460389 has exact tag v0.2.0-rc1, title and 1455-byte canonical body, draft=false, prerelease=true, no uploaded assets, and no latest final release. Both automatic source archives validated; a fresh isolated Julia 1.12.6 installation loaded GaussletBases v0.2.0-rc1 with manifest tree 1b53a9eb51d11cfc31b8b0356349c62f0de8915f. RC1 and dev documentation retain exact canonical URLs, versions.js lists RC1 and dev, and /stable/ remains absent. Preserve the accepted release and evidence without edit, deletion, recreation, retargeting, asset upload, or silent retry."
 surfaces = []
 title = "v0.2.0-rc1 GitHub prerelease validation"
 
@@ -3320,14 +3325,23 @@ title = "v0.2.0-rc1 GitHub prerelease validation"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
 
     [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/release_replays/gaussletbases_v0p2_rc1_release_2026-08-19"
+    [[records.evidence_refs]]
     kind = "git_commit"
     value = "1546c18d3058cce2b5051b50788cda3c12585e51"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "d653b267625e19059c72ae6925040b91b77f85fa"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "e63cdf6359293e7c274a6556357dc831b2f7eb02"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "497"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "498"
 [[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PUBLIC-RC1-FN-01"]
 grant = "none"

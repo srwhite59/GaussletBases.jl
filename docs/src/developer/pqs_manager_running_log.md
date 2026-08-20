@@ -69,9 +69,11 @@ archaeology and are not normal startup reading.
   `a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2`, peeling to frozen target
   `1546c18d3058cce2b5051b50788cda3c12585e51`. Its canonical folder is live,
   `versions.js` lists RC1 and `dev`, `/stable/` remains absent, and both
-  canonical folders are intact. Tag acceptance is closed. One exact
-  package-centered GitHub prerelease is approved pending publication, with
-  PQS and reference-density screening presented as distinct method surfaces.
+  canonical folders are intact. Tag acceptance is closed. GitHub release
+  `373460389` publishes the exact package-centered RC1 prerelease with no
+  uploaded assets or latest-final status; archive, clean-install, and docs
+  verification passed. PQS and reference-density screening remain distinct
+  method and future citation surfaces. Release acceptance is closed.
 - Production defaults, public workflows, corrected artifacts, and Cr2 endpoint
   claims remain unchanged unless separately authorized.
 
@@ -132,11 +134,10 @@ questions.
 
 **MT5 - Documentation and authority maintenance (active).** The broad
 reorganization and cutover are complete. The RC1 candidate, immutable tag,
-versioned folder, and explicit selector entry are accepted. One bounded
-GitHub prerelease publication is active; after verification, return this goal
-to maintenance. Keep PQS and screening as separate method and citation
-surfaces. Final release, registration, and citation metadata remain separate
-decisions.
+versioned folder, explicit selector entry, and package-centered GitHub
+prerelease are accepted. This goal has returned to maintenance. Keep PQS and
+screening as separate method and citation surfaces. Final release,
+registration, and citation metadata remain separate decisions.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
 metadata, unsupported exports, and development-era tests as conformance work
@@ -1177,3 +1178,43 @@ Carrying-cost accounting:
 - validation: synchronized-state and release-absence checks, local/remote tag
   identity, exact-body review, authority render/check/self-test, docs tests,
   Documenter, manager-log bound, docs-only scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 498 - Close RC1 GitHub Prerelease Lifecycle
+
+Commit(s):
+- `e63cdf6359293e7c274a6556357dc831b2f7eb02` - docs-only publication authority;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted GitHub release `373460389` at the immutable `v0.2.0-rc1` tag. The
+  API and rendered release agree on the exact `1455`-byte package-centered
+  body, title, prerelease status, non-draft state, zero uploaded assets, and
+  absence of a latest final release.
+- Reverified tag object `a4284f0bf` peeling to `1546c18d3`. Both automatic
+  source archives validated, and the isolated Julia `1.12.6` install records
+  frozen tree `1b53a9eb5`. RC1 and `/dev/` canonical pages remain live,
+  `versions.js` lists RC1 and `dev`, and `/stable/` remains absent.
+- Reconciled `HP-PQS-PUBLIC-RC1-RELEASE-FN-01/TEST-01` to completed/no-grant.
+  The accepted release may not be edited, deleted, recreated, retargeted, or
+  given later assets under these records.
+
+Goal advancement / guardrail:
+- MT5 returns to documentation and authority maintenance. Final `v0.2.0`,
+  General registration, citation metadata, paper titles/status, stable links,
+  and broader release machinery remain separately unauthorized. PQS and
+  screening remain distinct method and future citation surfaces.
+
+Carrying-cost accounting:
+- deleted: the one-shot publication grant and stale pending-release status.
+- simplified: RC1 candidate, tag, selector, and release state are all closed.
+- quarantined: final release, registration, citation, assets, and metadata edits.
+- not deleted because: the exact release body and evidence remain durable RC1
+  provenance.
+- exact remaining caller/blocker: no RC1 publication blocker remains; any
+  later release action requires new authority.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none.
+- validation: independent GitHub API/tag/docs checks, archived install and
+  archive evidence review, authority render/check/self-test, generated-view
+  parity, docs tests, Documenter, manager-log bound, docs-only scope review,
+  remote Docs/CI, and `git diff --check`.
