@@ -69,8 +69,9 @@ archaeology and are not normal startup reading.
   `a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2`, peeling to frozen target
   `1546c18d3058cce2b5051b50788cda3c12585e51`. Its canonical folder is live,
   `versions.js` lists RC1 and `dev`, `/stable/` remains absent, and both
-  canonical folders are intact. Tag acceptance is closed; GitHub release
-  publication remains unauthorized.
+  canonical folders are intact. Tag acceptance is closed. One exact
+  package-centered GitHub prerelease is approved pending publication, with
+  PQS and reference-density screening presented as distinct method surfaces.
 - Production defaults, public workflows, corrected artifacts, and Cr2 endpoint
   claims remain unchanged unless separately authorized.
 
@@ -129,12 +130,12 @@ Hooke owns the first Be `1s/2s` target study. Selection, transition-density
 exchange, and PRF-to-GTO-residual interactions remain consumer or measurement
 questions.
 
-**MT5 - Documentation and authority maintenance (maintenance).** The broad
+**MT5 - Documentation and authority maintenance (active).** The broad
 reorganization and cutover are complete. The RC1 candidate, immutable tag,
-versioned folder, and explicit selector entry are accepted. Update machine
-authority atomically, keep startup documents compact, and attach documentation
-edits to concrete findings rather than beginning another migration campaign.
-GitHub release publication and any later final release remain separate
+versioned folder, and explicit selector entry are accepted. One bounded
+GitHub prerelease publication is active; after verification, return this goal
+to maintenance. Keep PQS and screening as separate method and citation
+surfaces. Final release, registration, and citation metadata remain separate
 decisions.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
@@ -1139,3 +1140,40 @@ Carrying-cost accounting:
   selector/canonical/stable inspection, docs `87/87` and `10/10`, authority
   check/self-test, package load, Documenter, manager-log bound, remote Docs/CI,
   docs-only scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 497 - Authorize RC1 GitHub Prerelease
+
+Commit(s):
+- this docs-only publication authority amendment.
+
+Summary:
+- Added `HP-PQS-PUBLIC-RC1-RELEASE-FN-01/TEST-01` for one published GitHub
+  prerelease attached to the existing immutable tag. Preflight found no
+  release for the tag; the remote annotated object still peels to frozen
+  target `1546c18d3`.
+- Froze an exact package-centered release body. PQS and reference-density
+  Hartree screening have separate sections and are explicitly distinct method
+  surfaces, not one combined method, workflow, or paper. Future citation
+  metadata may cite their papers separately alongside package software.
+- Publication requires `--verify-tag --prerelease --latest=false`, no uploaded
+  assets, and no tracked mutation. Failed preflight makes no release; a
+  post-publication verification failure preserves and reports the release.
+
+Goal advancement / guardrail:
+- MT5 permits one RC1 GitHub prerelease publication. Final `v0.2.0`, General
+  registration, citation metadata, paper titles/status, stable aliases, and
+  broader release machinery remain unauthorized.
+
+Carrying-cost accounting:
+- deleted: blanket RC1-release prohibition and ambiguous combined-paper framing.
+- simplified: one exact title, body, command, and acceptance contract.
+- quarantined: custom assets, metadata changes, final release, and registration.
+- not deleted because: the immutable tag and changelog remain the validated
+  release identity and body source.
+- exact remaining caller/blocker: repo-manager must publish once and return
+  GitHub, fresh-install, versioned-doc, and absent-stable evidence.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  two machine-authority lifecycle records only.
+- validation: synchronized-state and release-absence checks, local/remote tag
+  identity, exact-body review, authority render/check/self-test, docs tests,
+  Documenter, manager-log bound, docs-only scope review, and `git diff --check`.

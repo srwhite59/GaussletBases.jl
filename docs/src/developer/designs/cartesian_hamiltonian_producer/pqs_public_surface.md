@@ -12,9 +12,9 @@ Implementation commit: `058ee54f45c759949f70b54a699ccc318476f8ac`.
 Clean replay candidate: `72c46f9ea0dd6b2da7a6a302d34ea1c501d18647`.
 
 This page owns the narrow supported interface intended for GaussletBases
-v0.2.0. Exact candidate-tag authority is isolated below; GitHub release and
-final-release publication remain separate. The existing numerical contracts
-remain in [R1 public base producer](r1_public_base_producer.md),
+v0.2.0. Exact candidate-tag and RC1 GitHub-prerelease authority are isolated
+below; final-release publication remains separate. The existing numerical
+contracts remain in [R1 public base producer](r1_public_base_producer.md),
 [matched PQS/White-Lindsey aspect modes](pqs_complete_shell_aspect_source_modes.md),
 and [screened-Hartree correction assembly](screened_hartree_correction_assembly.md).
 
@@ -469,13 +469,14 @@ raw-byte identity is not required. Julia `1.10` CI remains the lower-line gate.
 
 Stop without widening or lowering a bound if either fresh resolution, package
 load, public numerical output, docs, or Julia `1.10` CI fails. General
-registration, a root manifest, candidate publication, and tagging remain
-separate decisions.
+registration, a root manifest, candidate publication, tagging, and release
+publication are not authorized by the compatibility record; their exact
+lifecycle owners are separated below.
 
 ## v0.2.0-rc1 Candidate Preparation
 
-`HP-PQS-PUBLIC-RC1-FN-01` owns maintenance of the prepared, unpublished
-candidate at commit `41fa897ae919510b179a425027a8ce2d4a2167b3`. The accepted
+`HP-PQS-PUBLIC-RC1-FN-01` owns maintenance of the prepared candidate identity
+at commit `41fa897ae919510b179a425027a8ce2d4a2167b3`. The accepted
 implementation made exactly two repository changes:
 
 1. change the root `Project.toml` version from `0.1.0` to `0.2.0-rc1`; and
@@ -536,10 +537,10 @@ The focused H2+ release test passed `18/18` with dimensions
 `12789/1285/1285`; examples 01, 39, 40, and 41 also passed. The implementation
 commit's Docs run failed only because the newly tracked changelog still had
 planned-path authority; this lifecycle closeout resolves that expected state
-transition without changing the candidate files. The exact annotated tag
-operation is separately bounded below; GitHub release publication, General
-registration, citation metadata, and final-release authorization still require
-separate explicit decisions.
+transition without changing the candidate files. The completed annotated tag
+and approved GitHub prerelease each have separate lifecycle owners below.
+General registration, citation metadata, and final-release authorization still
+require separate explicit decisions.
 
 ## v0.2.0-rc1 Annotated Tag Lifecycle
 
@@ -575,11 +576,109 @@ internal `DOCUMENTER_STABLE` fallback names RC1 because no final release
 exists, but no `stable` selector entry, symlink, path, or release status was
 created. The repair did not move, replace, delete, or recreate the tag.
 
-No GitHub release, General registration, `CITATION.cff`, final `v0.2.0`,
-homepage or stable-link edit, custom release framework, or tracked
-source/API/dependency/workflow/numerical/manuscript mutation is authorized.
-The tag lifecycle is closed. Any GitHub release or later final tag requires a
-new explicit decision.
+The tag lifecycle is closed. The exact RC1 GitHub prerelease operation is
+separately bounded below. General registration, `CITATION.cff`, final
+`v0.2.0`, homepage or stable-link edits, a custom release framework, and
+tracked source/API/dependency/workflow/numerical/manuscript mutations remain
+unauthorized.
+
+## v0.2.0-rc1 GitHub Prerelease Lifecycle
+
+`HP-PQS-PUBLIC-RC1-RELEASE-FN-01` authorizes one published GitHub prerelease
+for the existing immutable `v0.2.0-rc1` tag. The release must have:
+
+- tag `v0.2.0-rc1`, verified rather than created by the release operation;
+- title `GaussletBases v0.2.0-rc1`;
+- prerelease status `true`, draft status `false`, and latest status `false`;
+- no uploaded assets, so only GitHub's automatic source archives appear; and
+- the exact release body below.
+
+~~~~markdown
+GaussletBases v0.2.0-rc1 is a public-testing prerelease of the GaussletBases
+v0.2 package surface.
+
+## Projected q-shells (PQS)
+
+- Bounded public PQS/White-Lindsey H2+ comparison types and constructor.
+- Public examples 39 and 41 cover the supported PQS construction and bounded
+  comparison.
+
+## Reference-density Hartree screening
+
+- Supplied-field correction assembly with stable public result accessors.
+- Public example 40 demonstrates the bounded screening algebra.
+
+PQS and reference-density Hartree screening are distinct method surfaces.
+Screening is not a layer of the public PQS workflow, and this prerelease does
+not present them as one combined method or one combined-paper validation.
+
+## Compatibility and scope
+
+- Julia 1.10 is the supported minimum; the canonical clean replay used Julia
+  1.12.6.
+- Six PRF-specific wrappers remain available internally for diagnostics and
+  provenance but are not exported.
+- GaussletBases supplies basis/operator construction and bounded screening
+  algebra; it is not a complete SCF or correlated molecular solver.
+
+## Install
+
+Install this prerelease directly from its immutable tag:
+
+```julia
+using Pkg
+Pkg.add(url = "https://github.com/srwhite59/GaussletBases.jl", rev = "v0.2.0-rc1")
+```
+
+- [Versioned v0.2.0-rc1 documentation](https://srwhite59.github.io/GaussletBases.jl/v0.2.0-rc1/)
+- [Changelog at the immutable tag](https://github.com/srwhite59/GaussletBases.jl/blob/v0.2.0-rc1/CHANGELOG.md)
+~~~~
+
+Because the body contains an inner Julia fence, the implementation may copy
+the text between the outer fence markers into a temporary notes file outside
+the repository. The noninteractive operation is:
+
+```bash
+gh release create v0.2.0-rc1 \
+  --repo srwhite59/GaussletBases.jl \
+  --verify-tag \
+  --title "GaussletBases v0.2.0-rc1" \
+  --prerelease \
+  --latest=false \
+  --notes-file /private/tmp/gaussletbases_v0.2.0-rc1_release_notes.md
+```
+
+Do not pass a filename or pattern after the tag, generate notes, start a
+discussion, create a draft, or supply `--target`. `CHANGELOG.md` is the sole
+tracked release-body source and is read-only in this operation. Before
+publication, require synchronized `main`, only the two established untracked
+handoffs, no existing release for the tag, exact local and remote tag object
+and peeled-target identity, package-version/tag agreement, and no moving-main
+link where the immutable tagged link exists. If a release appears before the
+operation or any identity check differs, stop without mutation.
+
+`HP-PQS-PUBLIC-RC1-RELEASE-TEST-01` grants no edit or publication authority.
+After creation it requires the GitHub release API and rendered page to show
+the exact tag/title/body, `isDraft=false`, `isPrerelease=true`, no uploaded
+assets, and source archive URLs resolving through the accepted tag. The
+latest-release endpoint must remain absent rather than select RC1. A fresh
+Julia `1.12.6` environment outside the repository must install the exact tag
+with the published command and load the package. The versioned documentation
+and canonical URL must remain live, while `/stable/` remains absent.
+
+If publication succeeds but a later check fails, preserve the release and
+report the exact failure; do not edit, delete, recreate, or silently retry it.
+Publication changes no tracked file. A successful operation returns to
+repo-design-manager for a docs-only lifecycle closeout on `main`.
+
+No General registration, `CITATION.cff`, final `v0.2.0`, paper title, DOI,
+journal status, manuscript headline number, publication-timing promise,
+combined-paper framing, custom asset, binary, manifest, paper workspace,
+validation log, data bundle, repository setting, metadata edit, tag mutation,
+stable link, source/API/test/example/dependency/workflow/numerical change, or
+broader release framework is authorized. Future citation metadata must permit
+separate PQS-paper, screening-paper, and package-software citations; exact
+titles and preferred citations remain deferred.
 
 ## Compatibility
 

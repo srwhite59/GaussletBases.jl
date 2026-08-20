@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `7c158ed4b3527d51ebe5e948c02c797e6126a87d1741cec4a82e6db786419f4f`.
+> [authority.toml](authority.toml), SHA-256 `dd237fea2e2ec3a4280412dbb1858d0159d26e6bbd62124b42a3a6c585e3a0b7`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1906,7 +1906,40 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `492`
   - `manager_pass`: `493`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PRF-CONSUMER-FN-01`, `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-DOC-PARITY-FN-01`, `HP-PQS-PUBLIC-MATCHED-FN-01`, `HP-PQS-PUBLIC-SCREEN-FN-01`, `HP-PQS-READER-DOC-01`, `HP-QW-NESTED-DIAT-FN-01`
-- **Scope:** Maintain the prepared but unpublished v0.2.0-rc1 candidate identity implemented by commit 41fa897ae919510b179a425027a8ce2d4a2167b3: root Project.toml version 0.2.0-rc1 and one concise root CHANGELOG.md grouped as Added, Changed, Fixed, Public-surface reduction, and Scope. Preserve traceability to accepted public APIs, examples 39-41, dependency bounds, documentation deployment, ordinary-QW fixes, and six-name PRF de-promotion without pass history, private numerical evidence, manuscript claims, dates, DOI/citation invention, or internal deletion inventories. This record itself authorizes no tag; the exact annotated RC1 tag operation is separately owned by HP-PQS-PUBLIC-RC1-TAG-FN-01. No GitHub release, registration, CITATION.cff, source/export/test/example/dependency/workflow/API/numerical/scientific-doc change, stable link, badge, homepage change, tracked root manifest, or paper-workspace import.
+- **Scope:** Maintain the prepared v0.2.0-rc1 candidate identity implemented by commit 41fa897ae919510b179a425027a8ce2d4a2167b3: root Project.toml version 0.2.0-rc1 and one concise root CHANGELOG.md grouped as Added, Changed, Fixed, Public-surface reduction, and Scope. Preserve traceability to accepted public APIs, examples 39-41, dependency bounds, documentation deployment, ordinary-QW fixes, and six-name PRF de-promotion without pass history, private numerical evidence, manuscript claims, dates, DOI/citation invention, or internal deletion inventories. This record itself authorizes no tag or release; the completed annotated tag is owned by HP-PQS-PUBLIC-RC1-TAG-FN-01 and the exact GitHub prerelease operation is separately owned by HP-PQS-PUBLIC-RC1-RELEASE-FN-01. No registration, CITATION.cff, source/export/test/example/dependency/workflow/API/numerical/scientific-doc change, stable link, badge, homepage change, tracked root manifest, or paper-workspace import.
+
+### HP-PQS-PUBLIC-RC1-RELEASE-FN-01 - v0.2.0-rc1 GitHub prerelease publication
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tools`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0-rc1 GitHub Prerelease Lifecycle`
+- **Owned paths:**
+  - `tool` / `existing`: `.github/workflows/docs.yml`
+- **Evidence:**
+  - `git_commit`: `1546c18d3058cce2b5051b50788cda3c12585e51`
+  - `git_commit`: `d653b267625e19059c72ae6925040b91b77f85fa`
+  - `manager_pass`: `497`
+- **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-RC1-FN-01`
+- **Scope:** Create exactly one published GitHub prerelease for the existing immutable v0.2.0-rc1 tag. Require remote tag object a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2 peeling to 1546c18d3058cce2b5051b50788cda3c12585e51, package version/tag agreement, synchronized main, only the two established untracked handoffs, and no existing release. Use gh release create with --verify-tag, exact title GaussletBases v0.2.0-rc1, --prerelease, --latest=false, and the exact package-centered canonical body separating Projected q-shells (PQS) from reference-density Hartree screening. Upload no assets and create no draft, discussion, tag, target, generated notes, custom archive, binary, manifest, paper workspace, validation log, or data bundle. CHANGELOG.md is a read-only body source; the owned Docs workflow path is a read-only versioned-documentation verification surface and must not be edited or invoked anew. Do not imply one combined method or paper, bind final v0.2.0 to either paper, or add titles, DOI, journal status, preferred citations, timing promises, manuscript numbers, General registration, CITATION.cff, repository metadata, stable link, source/API/test/example/dependency/workflow/numerical change, or broader release machinery. If preflight fails, make no release. If publication succeeds but verification fails, preserve the release and report without editing, deleting, recreating, or silently retrying it.
+
+### HP-PQS-PUBLIC-RC1-RELEASE-TEST-01 - v0.2.0-rc1 GitHub prerelease validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0-rc1 GitHub Prerelease Lifecycle`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `1546c18d3058cce2b5051b50788cda3c12585e51`
+  - `git_commit`: `d653b267625e19059c72ae6925040b91b77f85fa`
+  - `manager_pass`: `497`
+- **Dependencies:** `HP-PQS-PUBLIC-RC1-RELEASE-FN-01`
+- **Scope:** Required post-publication evidence only; this record grants no file, release, tag, workflow, or metadata mutation. Verify through GitHub that the one release is visible with exact tag v0.2.0-rc1, title and canonical body, isDraft=false, isPrerelease=true, latest=false, no uploaded assets, and automatic source archive URLs resolving through the accepted tag. Require the latest-release endpoint to remain absent, a fresh isolated Julia 1.12.6 installation from the published tag command to load GaussletBases, the versioned RC1 documentation and canonical URL to remain live, and /stable/ to remain absent. Preserve any published release on failure; do not edit, delete, recreate, or silently retry it.
 
 ### HP-PQS-PUBLIC-RC1-TAG-FN-01 - v0.2.0-rc1 annotated tag publication
 
@@ -1922,7 +1955,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `494`
   - `manager_pass`: `495`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-RC1-FN-01`
-- **Scope:** Completed immutable annotated-tag publication only; this record grants no further tag, file, workflow, or release mutation. Local and remote tag object a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2 peels to frozen target 1546c18d3058cce2b5051b50788cda3c12585e51 with tree 1b53a9eb51d11cfc31b8b0356349c62f0de8915f and target git-archive SHA-256 2a0b6938d3b341900d73668e7f0644c34b8a851e1b823356c53c2866fd19522a. Tag-triggered Docs run 32295705338 published the canonical RC1 folder without creating stable or changing dev. Never move, replace, delete, or recreate the tag. Selector-index repair is separately maintained by HP-PQS-DOCS-TAGDEPLOY-FN-01. No GitHub release, registration, CITATION.cff, final v0.2.0, homepage/stable-link edit, or tracked source/API/dependency/workflow/numerical/manuscript change.
+- **Scope:** Completed immutable annotated-tag publication only; this record grants no further tag, file, workflow, or release mutation. Local and remote tag object a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2 peels to frozen target 1546c18d3058cce2b5051b50788cda3c12585e51 with tree 1b53a9eb51d11cfc31b8b0356349c62f0de8915f and target git-archive SHA-256 2a0b6938d3b341900d73668e7f0644c34b8a851e1b823356c53c2866fd19522a. Tag-triggered Docs run 32295705338 published the canonical RC1 folder without creating stable or changing dev. Never move, replace, delete, or recreate the tag. Selector-index repair is separately maintained by HP-PQS-DOCS-TAGDEPLOY-FN-01. This completed record grants no GitHub release; the exact RC1 prerelease operation is separately owned by HP-PQS-PUBLIC-RC1-RELEASE-FN-01. No registration, CITATION.cff, final v0.2.0, homepage/stable-link edit, or tracked source/API/dependency/workflow/numerical/manuscript change.
 
 ### HP-PQS-PUBLIC-RC1-TAG-TEST-01 - v0.2.0-rc1 annotated tag validation
 
@@ -1940,7 +1973,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `495`
   - `manager_pass`: `496`
 - **Dependencies:** `HP-PQS-PUBLIC-RC1-TAG-FN-01`
-- **Scope:** Completed tag-acceptance evidence only; this record grants no file, workflow, tag-repair, or release edit. Annotated local and remote tag object a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2 peels to frozen target 1546c18d3058cce2b5051b50788cda3c12585e51; tag-triggered Docs run 32295705338 and repair main-deployment Docs run 32302304167 passed; /v0.2.0-rc1/ and /dev/ retain exact canonical URLs; versions.js lists RC1 and dev; /stable/ remains absent. Documenter's internal DOCUMENTER\_STABLE fallback naming RC1 creates no stable selector entry, symlink, path, or final-release status. Preserve the immutable tag; do not retarget, replace, delete, or recreate it. GitHub release publication remains unauthorized.
+- **Scope:** Completed tag-acceptance evidence only; this record grants no file, workflow, tag-repair, or release edit. Annotated local and remote tag object a4284f0bf448fb9d717de26ccbe1e9fc16db5ed2 peels to frozen target 1546c18d3058cce2b5051b50788cda3c12585e51; tag-triggered Docs run 32295705338 and repair main-deployment Docs run 32302304167 passed; /v0.2.0-rc1/ and /dev/ retain exact canonical URLs; versions.js lists RC1 and dev; /stable/ remains absent. Documenter's internal DOCUMENTER\_STABLE fallback naming RC1 creates no stable selector entry, symlink, path, or final-release status. Preserve the immutable tag; do not retarget, replace, delete, or recreate it. This completed record grants no release publication; the exact RC1 GitHub prerelease is separately owned by HP-PQS-PUBLIC-RC1-RELEASE-FN-01.
 
 ### HP-PQS-PUBLIC-RC1-TEST-01 - v0.2.0-rc1 candidate-preparation validation
 
@@ -1956,7 +1989,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `492`
   - `manager_pass`: `493`
 - **Dependencies:** `HP-PQS-PUBLIC-RC1-FN-01`
-- **Scope:** Completed acceptance evidence only; this record grants no test, workflow, source, docs, or tag edit. Commit 41fa897ae919510b179a425027a8ce2d4a2167b3 passed exact Project/changelog review, fresh Julia 1.12.6 GitHub installation, package load, public examples 01/39/40/41, focused H2+ 18/18, Julia 1.10 CI, authority/docs/manager-log checks, exact prerelease documentation classification without stable advancement, and a clean git archive excluding a root manifest and untracked handoffs. The exact annotated tag operation is separately owned by HP-PQS-PUBLIC-RC1-TAG-FN-01; GitHub release publication remains unauthorized.
+- **Scope:** Completed acceptance evidence only; this record grants no test, workflow, source, docs, tag, or release edit. Commit 41fa897ae919510b179a425027a8ce2d4a2167b3 passed exact Project/changelog review, fresh Julia 1.12.6 GitHub installation, package load, public examples 01/39/40/41, focused H2+ 18/18, Julia 1.10 CI, authority/docs/manager-log checks, exact prerelease documentation classification without stable advancement, and a clean git archive excluding a root manifest and untracked handoffs. The completed annotated tag is owned by HP-PQS-PUBLIC-RC1-TAG-FN-01; the exact GitHub prerelease operation is separately owned by HP-PQS-PUBLIC-RC1-RELEASE-FN-01.
 
 ### HP-PQS-PUBLIC-SCREEN-FN-01 - public supplied-field screened-Hartree assembly
 
