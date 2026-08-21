@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `407b7d7602be263221102c2eb3ce896518c2beae7291dc6b7d195c713002e58a`.
+> [authority.toml](authority.toml), SHA-256 `55b2216b88d28a9b13a0c3c970502dede6fefcf75587f187a71f1437d4371fd6`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2197,6 +2197,39 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `414`
 - **Dependencies:** `HP-PQS-SHELLQ-OVERRIDE-FN-01`
 - **Scope:** Validate route-q 7 to source-q 6 and 5 coarsening, expected retained-count reduction, unchanged parent/support/ownership/cores/slabs/route metadata, orthonormal contraction columns, omitted/empty parity, finite symmetric full construction, and rejection of malformed, below-3, Boolean, equal-route, asymmetric, and unmatched requests. Preserve existing refinement, residual, packet-capture, \`J0/E0\`, correction, dimension, and due-diligence gates. No new accessor, dense baseline-to-variant overlap API, source-pass HF, endpoint energy assertion, or production claim is approved.
+
+### HP-PUBLIC-EXPORT-INTEGRITY-FN-01 - repair invalid package exports
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Post-RC1 Export Integrity Repair`
+- **Owned paths:**
+  - `source` / `existing`: `src/GaussletBases.jl`
+  - `source` / `existing`: `src/cartesian_route_core/CartesianRouteCore.jl`
+- **Evidence:**
+  - `git_commit`: `41ab3e13121f5af1e145775500e91f9ac61c9760`
+  - `manager_pass`: `499`
+- **Dependencies:** none
+- **Scope:** Remove exactly four invalid export declarations without replacement: undefined root export CartesianBasisBundle3D, methodless root export nested\_fixed\_block\_timing\_report plus its bare generic declaration, and undefined internal CartesianRouteCore exports final\_units and unit\_keys. Add no definition, alias, shim, deprecation, helper, file, dependency, metadata, numerical behavior, or public replacement. Preserve @timeg, CuratedSpherePointSet, LegacySGaussianData, QiuWhiteHybridOrbital3D, and QiuWhiteResidualGaussianOperators unchanged; this authority makes no compatibility or use-policy decision about them. Expected source delta is +1/-6, net -5: the sole added line is the existing final valid route-core export lowering\_recipe without the comma that becomes syntactically invalid when the two following exports are deleted. Hard added-source limit is one line. Stop without a source commit if any removed name has a live committed caller or implementation. Do not change versioning, tags, releases, workflows, or the immutable RC1 state.
+
+### HP-PUBLIC-EXPORT-INTEGRITY-TEST-01 - validate package export integrity
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Post-RC1 Export Integrity Repair`
+- **Owned paths:**
+  - `test` / `existing`: `test/core/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `41ab3e13121f5af1e145775500e91f9ac61c9760`
+  - `manager_pass`: `499`
+- **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`
+- **Scope:** Add one compact regression to the existing core test owner. Audit GaussletBases and every defined direct package-owned child module discovered with names(GaussletBases; all=true, imported=false) and parentmodule(child) === GaussletBases. For each name returned by names(module; all=false, imported=false), require the binding to be defined; when the value is a Function, require methods(value) to be nonempty. The test must fail on the four baseline defects and pass after their deletion without snapshotting an export list, classifying use, traversing external/imported modules, or changing numerical assertions. Preferred added test budget is 20 lines; hard limit is 30. Add no test file, fixture, dependency, helper, compatibility assertion, version/release check, or broad architecture audit.
 
 ### HP-QW-NESTED-DIAT-FN-01 - repair exported ordinary-QW nested diatomic front doors
 

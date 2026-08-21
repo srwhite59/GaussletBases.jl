@@ -98,7 +98,9 @@ archaeology and are not normal startup reading.
 **MT1 - Conformance remediation (active).** Resolve the bounded Pass 398
 discrepancies and demonstrated exported-surface defects under explicit
 authority. The ordinary-QW nested diatomic repair and PRF API de-promotion are
-closed without numerical changes. Keep each subsequent repair narrow.
+closed without numerical changes. Four invalid package/internal exports now
+have one deletion-only repair and compact dynamic regression approved. Keep
+each subsequent repair narrow.
 
 **MT2 - Controlled Cr2 source migration (completed).** The source-backed
 fixed-state and bounded replay reproduced the former consumer-local path. Any
@@ -1218,3 +1220,45 @@ Carrying-cost accounting:
   archive evidence review, authority render/check/self-test, generated-view
   parity, docs tests, Documenter, manager-log bound, docs-only scope review,
   remote Docs/CI, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 499 - Authorize Export Integrity Repair
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Independent source and Julia `1.12.6` runtime inspection reproduced exactly
+  four export defects across the root module and `16` direct package-owned
+  child modules: undefined root `CartesianBasisBundle3D`, methodless root
+  `nested_fixed_block_timing_report`, and undefined internal route-core
+  `final_units`/`unit_keys`. No committed caller or implementation exists.
+- Added `HP-PUBLIC-EXPORT-INTEGRITY-FN-01/TEST-01` for deletion of the four
+  export entries plus the bare generic. Removing the final two route-core
+  entries also requires stripping the now-invalid trailing comma from
+  `lowering_recipe`, so the exact coherent source delta is `+1/-6`, net `-5`.
+  The test audits exported bindings and function methods without snapshotting
+  an API list or traversing imported modules.
+- Explicitly preserved `@timeg`, `CuratedSpherePointSet`,
+  `LegacySGaussianData`, `QiuWhiteHybridOrbital3D`, and
+  `QiuWhiteResidualGaussianOperators`; no compatibility policy is inferred.
+
+Goal advancement / guardrail:
+- MT1 gains one post-RC1 conformance repair. Package version, immutable tag and
+  release, workflows, numerical behavior, and broader public-surface policy
+  remain unchanged. After implementation/closeout, return control; separate
+  PQS-versus-screening paper CI/release wiring requires new design authority.
+
+Carrying-cost accounting:
+- deleted: authorized five stale source lines, pending implementation.
+- simplified: one dynamic integrity invariant replaces name-specific test pressure.
+- quarantined: unrelated compatibility classifications and release wiring.
+- not deleted because: all other audited exports are defined and callable.
+- exact remaining caller/blocker: repo-manager must implement the exact
+  deletion/regression and return validation evidence.
+- added/deleted `src` lines: authorized `1/6`, net `-5`; the one addition is
+  only the comma-free final route-core export; new tests: none, one existing
+  core owner may gain at most `30` lines; new metadata/status fields: none.
+- validation: exact baseline/state and caller scans, direct-module Julia audit,
+  authority render/check/self-test, generated-view parity, docs tests,
+  Documenter, manager-log bound, docs-only scope review, and
+  `git diff --check`.
