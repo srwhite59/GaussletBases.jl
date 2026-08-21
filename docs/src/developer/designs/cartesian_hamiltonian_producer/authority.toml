@@ -74,7 +74,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "e932ce04a7b40dbf480aed8c557e9983eea2eb3cc92186a1c43ce9bf06ca4ee7"
+sha256 = "9a61638facc67ef2ed776888fdde6fbc234afa46644c02e5000339a50054877a"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "803063ecdc263c9767f08b41b0c20a736482d8dfe44a97d0720e6e3b19f3e91f"
@@ -3766,10 +3766,10 @@ title = "semantic source-q override validation"
     state = "existing"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-EXPORT-INTEGRITY-FN-01"
-lifecycle = "approved"
-scope = "Remove exactly four invalid export declarations without replacement: undefined root export CartesianBasisBundle3D, methodless root export nested_fixed_block_timing_report plus its bare generic declaration, and undefined internal CartesianRouteCore exports final_units and unit_keys. Add no definition, alias, shim, deprecation, helper, file, dependency, metadata, numerical behavior, or public replacement. Preserve @timeg, CuratedSpherePointSet, LegacySGaussianData, QiuWhiteHybridOrbital3D, and QiuWhiteResidualGaussianOperators unchanged; this authority makes no compatibility or use-policy decision about them. Expected source delta is +1/-6, net -5: the sole added line is the existing final valid route-core export lowering_recipe without the comma that becomes syntactically invalid when the two following exports are deleted. Hard added-source limit is one line. Stop without a source commit if any removed name has a live committed caller or implementation. Do not change versioning, tags, releases, workflows, or the immutable RC1 state."
+lifecycle = "implemented"
+scope = "Maintain the export-integrity repair accepted in b72500f7e619db5875918e3290ed2b306be51f43. CartesianBasisBundle3D and nested_fixed_block_timing_report remain absent from the root export list, the bare nested_fixed_block_timing_report generic remains absent, and final_units and unit_keys remain absent from CartesianRouteCore exports. Preserve the valid lowering_recipe export and all numerical behavior. Add no replacement definition, alias, shim, deprecation, helper, file, dependency, metadata, or public name under this record. Preserve @timeg, CuratedSpherePointSet, LegacySGaussianData, QiuWhiteHybridOrbital3D, and QiuWhiteResidualGaussianOperators unchanged; this authority makes no compatibility or use-policy decision about them. Do not broaden into API classification, versioning, tags, releases, workflows, or immutable RC1 state."
 surfaces = ["source"]
 title = "repair invalid package exports"
 
@@ -3782,8 +3782,14 @@ title = "repair invalid package exports"
     kind = "git_commit"
     value = "41ab3e13121f5af1e145775500e91f9ac61c9760"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "b72500f7e619db5875918e3290ed2b306be51f43"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "499"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "500"
 
     [[records.paths]]
     kind = "source"
@@ -3795,10 +3801,10 @@ title = "repair invalid package exports"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-EXPORT-INTEGRITY-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-EXPORT-INTEGRITY-TEST-01"
-lifecycle = "approved"
-scope = "Add one compact regression to the existing core test owner. Audit GaussletBases and every defined direct package-owned child module discovered with names(GaussletBases; all=true, imported=false) and parentmodule(child) === GaussletBases. For each name returned by names(module; all=false, imported=false), require the binding to be defined; when the value is a Function, require methods(value) to be nonempty. The test must fail on the four baseline defects and pass after their deletion without snapshotting an export list, classifying use, traversing external/imported modules, or changing numerical assertions. Preferred added test budget is 20 lines; hard limit is 30. Add no test file, fixture, dependency, helper, compatibility assertion, version/release check, or broad architecture audit."
+lifecycle = "completed"
+scope = "Maintain the compact dynamic regression in test/core/runtests.jl. It audits GaussletBases and every defined direct package-owned child module discovered with names(GaussletBases; all=true, imported=false) and parentmodule(child) === GaussletBases. For each name returned by names(module; all=false, imported=false), require the binding to be defined; when the value is a Function, require methods(value) to be nonempty. Preserve this invariant without snapshotting an export list, classifying use, traversing external/imported modules, or adding numerical assertions. Add no test file, fixture, dependency, helper, compatibility assertion, version/release check, or broad architecture audit under this record."
 surfaces = ["tests"]
 title = "validate package export integrity"
 
@@ -3811,8 +3817,14 @@ title = "validate package export integrity"
     kind = "git_commit"
     value = "41ab3e13121f5af1e145775500e91f9ac61c9760"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "b72500f7e619db5875918e3290ed2b306be51f43"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "499"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "500"
 
     [[records.paths]]
     kind = "test"

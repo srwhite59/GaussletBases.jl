@@ -680,8 +680,8 @@ titles and preferred citations remain deferred.
 
 ## Post-RC1 Export Integrity Repair
 
-`HP-PUBLIC-EXPORT-INTEGRITY-FN-01/TEST-01` authorize one bounded cleanup of
-package export declarations discovered after the RC1 release. At baseline
+`HP-PUBLIC-EXPORT-INTEGRITY-FN-01/TEST-01` own the implemented bounded cleanup
+of package export declarations discovered after the RC1 release. At baseline
 `41ab3e13121f5af1e145775500e91f9ac61c9760`, runtime inspection of the root
 module and every direct package-owned child module finds exactly four defects:
 
@@ -691,36 +691,40 @@ module and every direct package-owned child module finds exactly four defects:
 - internal `CartesianRouteCore` exports `final_units` and `unit_keys`, neither
   of which is defined by that module.
 
-No committed source, test, driver, tool, or example calls these names. The
-implementation must remove the two root export entries, delete the bare
-`nested_fixed_block_timing_report` generic declaration, and remove the two
-internal route-core export entries. It must add no replacement definition,
-alias, shim, deprecation, helper, file, dependency, metadata, or numerical
-behavior. Julia does not permit the remaining final route-core export to keep
-a trailing comma, so the exact coherent source delta is `+1/-6`, net `-5`:
-the sole added line is existing export `lowering_recipe` without that comma.
-The hard added-source limit is one line. If a live caller or implementation is
-found, stop without committing rather than preserve an invalid surface through
-compatibility glue.
+No committed source, test, driver, tool, or example called these names. Commit
+`b72500f7e619db5875918e3290ed2b306be51f43` removed the two root export
+entries, the bare `nested_fixed_block_timing_report` generic declaration, and
+the two internal route-core export entries without replacement. The exact
+source delta was `+1/-6`, net `-5`; the sole added line retained valid export
+`lowering_recipe` without the trailing comma that became syntactically invalid.
+Maintenance keeps these invalid names and the bare generic absent while
+preserving valid exports and all numerical behavior. It adds no replacement
+definition, alias, shim, deprecation, helper, dependency, metadata, or public
+name.
 
-One regression belongs in existing owner `test/core/runtests.jl`. It must audit
+One regression in existing owner `test/core/runtests.jl` audits
 `GaussletBases` plus each defined direct child module discovered with
 `names(GaussletBases; all=true, imported=false)` where
 `parentmodule(child) === GaussletBases`. For every exported name
-returned by `names(module; all=false, imported=false)`, require a defined
-binding; if that binding is a `Function`, require at least one method. This
+returned by `names(module; all=false, imported=false)`, it requires a defined
+binding; if that binding is a `Function`, it requires at least one method. This
 checks export integrity without freezing an export inventory or traversing
-external/imported modules. The preferred added-test budget is `20` lines and
-the hard limit is `30`; no new test file or fixture is authorized.
+external/imported modules. The accepted `22`-line test passed `1386/1386`
+dynamic checks. It remains the compact maintenance gate; no export snapshot,
+new test file, fixture, compatibility assertion, or numerical assertion is
+authorized.
+
+Package load, core, IDA, Cartesian, examples, docs `87/87` and `10/10`, the
+authority self-test, Documenter, and diff checks passed. GitHub CI run
+`32444750148` and Docs run `32444750177` passed on the implementation commit.
 
 This repair deliberately leaves `@timeg`, `CuratedSpherePointSet`,
 `LegacySGaussianData`, `QiuWhiteHybridOrbital3D`, and
 `QiuWhiteResidualGaussianOperators` unchanged. Their compatibility or use
 policy is not decided here. Package version, tags, GitHub releases, workflows,
-and the immutable RC1 tag/release state also remain unchanged. After
-implementation and lifecycle closeout, return control; paper-aligned
-PQS-versus-screening CI/release wiring is a separate design boundary, not a
-continuation of this cleanup.
+and the immutable RC1 tag/release state also remain unchanged. This lifecycle
+is closed to maintenance; paper-aligned PQS-versus-screening CI/release wiring
+is a separate design boundary, not a continuation of this cleanup.
 
 ## Compatibility
 

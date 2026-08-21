@@ -97,10 +97,9 @@ archaeology and are not normal startup reading.
 
 **MT1 - Conformance remediation (active).** Resolve the bounded Pass 398
 discrepancies and demonstrated exported-surface defects under explicit
-authority. The ordinary-QW nested diatomic repair and PRF API de-promotion are
-closed without numerical changes. Four invalid package/internal exports now
-have one deletion-only repair and compact dynamic regression approved. Keep
-each subsequent repair narrow.
+authority. The ordinary-QW nested diatomic repair, PRF API de-promotion, and
+four-name package/internal export repair are closed without numerical changes.
+Keep each subsequent repair narrow and evidence-led.
 
 **MT2 - Controlled Cr2 source migration (completed).** The source-backed
 fixed-state and bounded replay reproduced the former consumer-local path. Any
@@ -1262,3 +1261,58 @@ Carrying-cost accounting:
   authority render/check/self-test, generated-view parity, docs tests,
   Documenter, manager-log bound, docs-only scope review, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 500 - Close Export Integrity Repair
+
+Commit(s):
+- `cad50256502098788f30bdcaa5d0226dd06473a1` - docs-only authority;
+- `b72500f7e619db5875918e3290ed2b306be51f43` - export cleanup and regression;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted exact removal of undefined root `CartesianBasisBundle3D`, methodless
+  root `nested_fixed_block_timing_report`, its bare generic, and undefined
+  internal route-core `final_units`/`unit_keys`. Valid `lowering_recipe` remains
+  exported. No alias, shim, replacement, numerical behavior, version, tag,
+  release, or workflow changed.
+- The `22`-line existing-core regression dynamically audits the root plus all
+  direct package-owned child modules. Manager rerun passed `1386/1386` export
+  checks and the complete core owner; remote CI `32444750148` and Docs
+  `32444750177` passed.
+- Reconciled the FN record to implemented/maintenance and TEST record to
+  completed/maintenance. Broader API classification remains outside this lane.
+
+Goal advancement / guardrail:
+- MT1 closes this demonstrated defect. MT5 and immutable RC1 state are
+  unchanged. The next separate boundary is paper-aligned PQS-versus-screening
+  CI/release wiring and requires new authority rather than continuation here.
+
+Carrying-cost accounting:
+- deleted: five invalid declarations.
+- simplified: the route-core export list and package export contract.
+- quarantined: broader compatibility/API classification and release work.
+- not deleted because: every other audited export is defined and callable.
+- exact remaining caller/blocker: none for export integrity; return control.
+- added/deleted `src` lines: `1/6`, net `-5`; new tests: none, existing core
+  owner `+22`; new metadata/status fields: none.
+- validation: implementation and caller diff review, preserved-export scan,
+  package load, core owner including `1386/1386` dynamic checks, reported
+  IDA/Cartesian/examples/docs gates, authority self-test, Documenter, remote
+  CI/Docs, manager-log bound, docs-only scope review, and `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 500
+
+- **MT1 - active/refined:** the ordinary-QW, PRF API, and four-name export
+  repairs are closed. Further conformance work must begin from a demonstrated
+  defect; no broad API classification campaign is active.
+- **MT2 - completed:** controlled Cr2 source migration remains closed.
+- **MT3 - active:** Standard60, scalable represented Hartree, and corrected-WL
+  external-oracle interpretation remain independent pending work.
+- **MT4 - active:** residual/protected and consumer-owned PRF studies are
+  unchanged by this API-only repair.
+- **MT5 - active maintenance:** RC1 candidate, tag, selector, and package
+  prerelease remain accepted and unchanged. Paper-aligned PQS versus screening
+  CI/release wiring is the next separate design question.
+- **MT6 - active:** this pass removed five invalid declarations for net `-5`
+  source lines; the `22`-line dynamic invariant earns its cost by covering the
+  root and all direct package-owned submodules without an API snapshot.
