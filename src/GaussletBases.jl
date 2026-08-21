@@ -34,7 +34,6 @@ export AbstractFunction1D,
        screened_hartree_field_kind,
        cartesian_base_hamiltonian,
        cartesian_base_working_basis,
-       CartesianBasisBundle3D,
        CartesianBasisTransferDiagnostics,
        CartesianBasisProjector3D,
        CartesianOrbitalTransferResult,
@@ -209,7 +208,6 @@ export AbstractFunction1D,
        build_one_center_atomic_legacy_profile_shell_sequence,
        one_center_atomic_legacy_profile_fixed_block,
        TimedNestedFixedBlockBuild,
-       nested_fixed_block_timing_report,
        OneCenterAtomicNestedLayerStructure,
        OneCenterAtomicNestedStructureDiagnostics,
        one_center_atomic_nested_structure_diagnostics,
@@ -465,7 +463,6 @@ function build_one_center_atomic_full_parent_shell_sequence end
 function one_center_atomic_full_parent_fixed_block end
 function build_one_center_atomic_legacy_profile_shell_sequence end
 function one_center_atomic_legacy_profile_fixed_block end
-function nested_fixed_block_timing_report end
 function one_center_atomic_nested_structure_diagnostics end
 function one_center_atomic_nested_structure_report end
 function bond_aligned_diatomic_geometry_payload end

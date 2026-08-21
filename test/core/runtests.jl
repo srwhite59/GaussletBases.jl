@@ -1,3 +1,25 @@
+@testset "Package export integrity" begin
+    package_modules = Module[GaussletBases]
+    for name in names(GaussletBases; all = true, imported = false)
+        isdefined(GaussletBases, name) || continue
+        child = getfield(GaussletBases, name)
+        if child isa Module && parentmodule(child) === GaussletBases
+            push!(package_modules, child)
+        end
+    end
+
+    for package_module in package_modules
+        for name in names(package_module; all = false, imported = false)
+            @test isdefined(package_module, name)
+            isdefined(package_module, name) || continue
+            value = getfield(package_module, name)
+            if value isa Function
+                @test !isempty(methods(value))
+            end
+        end
+    end
+end
+
 @testset "Uniform basis" begin
     ub = build_basis(UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0))
     primitive_data = primitives(ub)

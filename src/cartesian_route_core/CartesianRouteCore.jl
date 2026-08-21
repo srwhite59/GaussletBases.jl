@@ -93,9 +93,7 @@ export CoordinateProductBox,
        support_count,
        owned_support,
        source_cpbs,
-       lowering_recipe,
-       unit_keys,
-       final_units
+       lowering_recipe
 
 # File organization:
 #
