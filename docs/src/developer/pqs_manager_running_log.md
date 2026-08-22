@@ -1406,3 +1406,46 @@ Carrying-cost accounting:
   docs gates, authority render/check/self-test, docs tests, Documenter,
   manager-log bound, docs-only scope review, remote CI/Docs, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 503 - Authorize Paper-Aligned CI Gates
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Added `HP-PUBLIC-PAPER-CI-FN-01/TEST-01` for one compact three-row CI matrix:
+  the unchanged Julia `1.10` supported floor, a Julia `1.12` PQS paper gate,
+  and a separate Julia `1.12` screening paper gate. Pull requests, main pushes,
+  and `v*` tag pushes run all three without granting any tag or release action.
+- PQS reuses the unchanged `18`-test Table I owner plus one example-41 smoke.
+  Screening moves the complete public supplied-field testset from the broad
+  IDA owner into one narrow public owner, preserving every assertion and
+  tolerance, then adds one example-40 smoke. Duplication is forbidden.
+- The identified screening owner and five related nested research/internal
+  suites remain unwired pending a separate maintenance-versus-quarantine bloat
+  review.
+
+Goal advancement / guardrail:
+- MT5 gains paper-aligned continuous evidence while preserving PQS and
+  screening as distinct method/publication surfaces. Julia `1.10` remains the
+  compatibility floor; `1.12` becomes the canonical paper-gate line. RC1 tag,
+  frozen candidate, and release `373460389` remain immutable.
+
+Carrying-cost accounting:
+- deleted: no implementation yet; the design requires deletion of the old
+  screening-test copy in the same commit as relocation.
+- simplified: one matrix replaces the single unnamed CI job without creating a
+  release framework.
+- quarantined: nested research suites, Julia `1.11`/nightly, versioning,
+  release, citation, and docs-deployment work.
+- not deleted because: the existing supported-floor selection and both public
+  numerical contracts remain live.
+- exact remaining caller/blocker: repo-manager must implement within the
+  `45/65` preferred/hard runner-workflow budget and report all three gate
+  counts separately.
+- added/deleted `src` lines: `0/0`; new tests: one narrow owner containing only
+  relocated assertions; new metadata/status fields: two authority records only.
+- validation: exact workflow/runner/test-owner inspection, ID/path checks,
+  authority tool-path reconciliation, authority render/check/self-test,
+  generated-view parity, docs tests, Documenter, manager-log bound, docs-only
+  scope review, and `git diff --check`.

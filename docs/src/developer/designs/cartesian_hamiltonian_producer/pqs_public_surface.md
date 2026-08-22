@@ -726,6 +726,80 @@ and the immutable RC1 tag/release state also remain unchanged. This lifecycle
 is closed to maintenance; paper-aligned PQS-versus-screening CI/release wiring
 is a separate design boundary, not a continuation of this cleanup.
 
+## Paper-Aligned CI Boundary
+
+`HP-PUBLIC-PAPER-CI-FN-01` and `HP-PUBLIC-PAPER-CI-TEST-01` approve one
+bounded test/workflow implementation. PQS and reference-density Hartree
+screening are separate publication surfaces and must appear as independently
+named CI gates. This boundary adds no scientific or release authority.
+
+The CI matrix has exactly three rows:
+
+| Gate name | Julia | Test selection |
+| --- | --- | --- |
+| `Supported floor` | `1.10` | existing `core,ida,cartesian,examples` |
+| `PQS paper` | `1.12` | new `pqs_release` group |
+| `Screening paper` | `1.12` | new `screening_release` group |
+
+Julia `1.10` remains the declared compatibility-floor evidence. Julia `1.12`
+is the canonical paper-gate environment; this does not add Julia `1.11`,
+nightly, a new compatibility declaration, or a manifest policy.
+
+The `pqs_release` group must include the existing
+`test/pqs_h2plus_table1_release_runtests.jl` unchanged and add exactly one
+runner assertion that executes `examples/41_pqs_h2plus_table1.jl` through the
+existing example-script helper. The existing `18` numerical tests, fixtures,
+tolerances, and reference data remain unchanged.
+
+The `screening_release` group must move the complete existing
+`Public supplied-field screened Hartree` testset mechanically from
+`test/ida/runtests.jl` to
+`test/driver_public/screened_hartree_runtests.jl`. Every assertion, numerical
+tolerance, oracle, malformed-input case, and physical-H1 check must remain
+unchanged, and the old copy must be deleted in the same commit. Add exactly
+one runner assertion that executes
+`examples/40_screened_hartree_fixed_density.jl` through the existing helper.
+Do not duplicate the public testset or substitute the `481`-line nested
+screening owner.
+
+The workflow must run all three named gates for pull requests, pushes to
+`main`, and `v*` tag pushes. Use one compact matrix, retain job-level
+`contents: read`, keep slow tests disabled, and keep the current package
+instantiate/load boundary. The tag trigger changes CI behavior only; it does
+not authorize a version, tag, GitHub release, registration, citation, or docs
+deployment action. RC1 tag object, frozen candidate, and release `373460389`
+remain immutable.
+
+The identified `481`-line screening owner and five related research/internal
+suites under `test/nested` remain unwired. Their classification as maintained
+scheduled coverage, quarantine, or deletion is a separate bloat-review
+decision. No claim about their value or lifecycle is made here.
+
+Implementation ownership is limited to:
+
+```text
+.github/workflows/ci.yml
+test/runtests.jl
+test/ida/runtests.jl
+test/driver_public/screened_hartree_runtests.jl
+```
+
+Production source is zero. Test assertions are net zero except the two example
+smoke assertions. Added runner/workflow lines are preferred at most `45` and
+hard-stopped at `65`; the mechanically relocated testset is net-zero test
+content and does not justify assertion or tolerance churn. One new narrow test
+owner is allowed. Add no helper, fixture, data file, status vocabulary,
+dependency, manifest, API, or compatibility layer.
+
+Acceptance must report each gate name, Julia version, group, test count, and
+runtime separately. Run all three locally or in equivalent isolated Julia
+`1.10`/`1.12` environments, then require remote CI and Docs, package load,
+authority check/self-test, docs tests, Documenter, manager-log bound, workflow
+syntax inspection, and `git diff --check`. If the exact relocation or compact
+matrix cannot fit the hard bound, make no implementation commit and report the
+smallest missing reusable operation. Do not compress, drop, or weaken a
+scientific assertion to meet the budget.
+
 ## Compatibility
 
 Historical Table I records remain immutable provenance. The public replay must

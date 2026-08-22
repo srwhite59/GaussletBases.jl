@@ -319,9 +319,12 @@ function _path_errors(item, id, index, tracked)
     )
     root_project = kind == "source" && path == "Project.toml"
     root_changelog = kind == "docs" && path == "CHANGELOG.md"
-    documentation_tool = kind == "tool" &&
-        path in (".github/workflows/docs.yml", "docs/make.jl")
-    (root_project || root_changelog || documentation_tool ||
+    repository_workflow_tool = kind == "tool" && path in (
+        ".github/workflows/ci.yml",
+        ".github/workflows/docs.yml",
+        "docs/make.jl",
+    )
+    (root_project || root_changelog || repository_workflow_tool ||
      any(prefix -> startswith(path, prefix), prefixes[kind])) ||
         push!(errors, "$id.paths[$index] has wrong prefix: $path")
     state == "existing" && (!isfile(absolute) || !(path in tracked)) &&

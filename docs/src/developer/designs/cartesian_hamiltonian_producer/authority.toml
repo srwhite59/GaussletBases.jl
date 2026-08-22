@@ -74,7 +74,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "9a61638facc67ef2ed776888fdde6fbc234afa46644c02e5000339a50054877a"
+sha256 = "0c7bd0e212eb1457d024f921cb0078cae969452f1e97943d9a591c379f9b3737"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "4548ccdacc0775e53261b98918a3238543189a8254ef40528d54ca34a8150be1"
@@ -3832,6 +3832,64 @@ title = "validate package export integrity"
     [[records.paths]]
     kind = "test"
     path = "test/core/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-PUBLIC-COMPAT-FN-01", "HP-PQS-PUBLIC-MATCHED-TEST-01", "HP-PQS-PUBLIC-SCREEN-TEST-01"]
+grant = "implementation"
+id = "HP-PUBLIC-PAPER-CI-FN-01"
+lifecycle = "approved"
+scope = "Replace the existing single CI job with one compact, independently named three-row matrix: Supported floor on Julia 1.10 with the unchanged core,ida,cartesian,examples selection; PQS paper on Julia 1.12 with pqs_release; and Screening paper on Julia 1.12 with screening_release. Run all rows for pull requests, main pushes, and v* tag pushes while retaining contents:read, package instantiate/load, and disabled slow tests. Combined runner/workflow additions are preferred 45 and hard 65 lines. This grants workflow behavior only: no version, tag, release, registration, citation, docs deployment, dependency, compat, manifest, source, API, example-content, numerical, or nested-suite action. Preserve immutable RC1 tag/release state."
+surfaces = ["tools"]
+title = "paper-aligned PQS and screening CI workflow"
+
+    [[records.document_refs]]
+    heading = "Paper-Aligned CI Boundary"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "409bc41b46afced92e3e711b8a55760869ac5d3d"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "503"
+
+    [[records.paths]]
+    kind = "tool"
+    path = ".github/workflows/ci.yml"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-PUBLIC-MATCHED-TEST-01", "HP-PQS-PUBLIC-SCREEN-TEST-01", "HP-PUBLIC-PAPER-CI-FN-01"]
+grant = "implementation"
+id = "HP-PUBLIC-PAPER-CI-TEST-01"
+lifecycle = "approved"
+scope = "Add only pqs_release and screening_release to the existing runner. pqs_release includes the unchanged 18-test Table I owner and one example-41 smoke. screening_release mechanically relocates the complete Public supplied-field screened Hartree testset from the IDA owner to the one planned public owner with every assertion and tolerance unchanged, deletes the old copy, and adds one example-40 smoke. Test assertions are net zero except those two smokes; add no fixture, reference data, helper, tolerance, numerical policy, replacement test, or nested-suite wiring. Report the three CI gate names, Julia versions, groups, counts, and runtimes separately."
+surfaces = ["tests"]
+title = "paper-aligned PQS and screening release validation"
+
+    [[records.document_refs]]
+    heading = "Paper-Aligned CI Boundary"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "409bc41b46afced92e3e711b8a55760869ac5d3d"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "503"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/screened_hartree_runtests.jl"
+    state = "planned"
+    [[records.paths]]
+    kind = "test"
+    path = "test/ida/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = []

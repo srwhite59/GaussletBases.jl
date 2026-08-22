@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `54281571202eac99e671ba1b5ae9ac3d95d700cfc6698b70c6e321662e51b677`.
+> [authority.toml](authority.toml), SHA-256 `08c1eac2099fe428ac878370f090d30a8a0d3b0c911b59705ba559eaece06cd2`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2234,6 +2234,40 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `500`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`
 - **Scope:** Maintain the compact dynamic regression in test/core/runtests.jl. It audits GaussletBases and every defined direct package-owned child module discovered with names(GaussletBases; all=true, imported=false) and parentmodule(child) === GaussletBases. For each name returned by names(module; all=false, imported=false), require the binding to be defined; when the value is a Function, require methods(value) to be nonempty. Preserve this invariant without snapshotting an export list, classifying use, traversing external/imported modules, or adding numerical assertions. Add no test file, fixture, dependency, helper, compatibility assertion, version/release check, or broad architecture audit under this record.
+
+### HP-PUBLIC-PAPER-CI-FN-01 - paper-aligned PQS and screening CI workflow
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tools`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Paper-Aligned CI Boundary`
+- **Owned paths:**
+  - `tool` / `existing`: `.github/workflows/ci.yml`
+- **Evidence:**
+  - `git_commit`: `409bc41b46afced92e3e711b8a55760869ac5d3d`
+  - `manager_pass`: `503`
+- **Dependencies:** `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`
+- **Scope:** Replace the existing single CI job with one compact, independently named three-row matrix: Supported floor on Julia 1.10 with the unchanged core,ida,cartesian,examples selection; PQS paper on Julia 1.12 with pqs\_release; and Screening paper on Julia 1.12 with screening\_release. Run all rows for pull requests, main pushes, and v\* tag pushes while retaining contents:read, package instantiate/load, and disabled slow tests. Combined runner/workflow additions are preferred 45 and hard 65 lines. This grants workflow behavior only: no version, tag, release, registration, citation, docs deployment, dependency, compat, manifest, source, API, example-content, numerical, or nested-suite action. Preserve immutable RC1 tag/release state.
+
+### HP-PUBLIC-PAPER-CI-TEST-01 - paper-aligned PQS and screening release validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Paper-Aligned CI Boundary`
+- **Owned paths:**
+  - `test` / `planned`: `test/driver_public/screened_hartree_runtests.jl`
+  - `test` / `existing`: `test/ida/runtests.jl`
+  - `test` / `existing`: `test/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `409bc41b46afced92e3e711b8a55760869ac5d3d`
+  - `manager_pass`: `503`
+- **Dependencies:** `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PUBLIC-PAPER-CI-FN-01`
+- **Scope:** Add only pqs\_release and screening\_release to the existing runner. pqs\_release includes the unchanged 18-test Table I owner and one example-41 smoke. screening\_release mechanically relocates the complete Public supplied-field screened Hartree testset from the IDA owner to the one planned public owner with every assertion and tolerance unchanged, deletes the old copy, and adds one example-40 smoke. Test assertions are net zero except those two smokes; add no fixture, reference data, helper, tolerance, numerical policy, replacement test, or nested-suite wiring. Report the three CI gate names, Julia versions, groups, counts, and runtimes separately.
 
 ### HP-QW-NESTED-DIAT-FN-01 - repair exported ordinary-QW nested diatomic front doors
 
