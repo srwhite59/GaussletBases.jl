@@ -426,6 +426,37 @@ function gto_overlap_matrix(working, probes; block_indices = nothing)
 end
 
 function gto_overlap_matrix(
+    working::_CartesianResidualGTOMWGSystem,
+    probes;
+    block_indices = nothing,
+)
+    probe_representation = _gto_probe_representation(probes)
+    all(orbital -> all(isfinite, orbital.center) &&
+        all(isfinite, orbital.exponents) && all(isfinite, orbital.coefficients),
+        probe_representation.orbitals) ||
+        throw(ArgumentError("GTO probe orbitals must be finite"))
+    nG, _, nR = _validate_cartesian_residual_gto_mwg_system(
+        working.hamiltonian, working.terminal_basis, working.supplement, working.residual)
+    S_GX = CartesianFinalBasisRealization._terminal_residual_mixed_overlap(
+        working.terminal_basis, working.parent_axis_bundles, probe_representation)
+    S_AX = _cartesian_supplement_cross_overlap(working.supplement, probe_representation)
+    size(S_GX, 1) == nG && size(S_AX, 1) == working.residual.candidate_count ||
+        throw(DimensionMismatch("supplemented-system GTO overlap block dimension mismatch"))
+    size(S_GX, 2) == size(S_AX, 2) ||
+        throw(DimensionMismatch("supplemented-system GTO overlap column mismatch"))
+    S_RX = transpose(working.residual.T_G) * S_GX +
+           transpose(working.residual.T_A) * S_AX
+    overlap = [S_GX; S_RX]
+    size(overlap, 1) == nG + nR ||
+        throw(DimensionMismatch("supplemented-system final GTO overlap dimension mismatch"))
+    all(isfinite, overlap) ||
+        throw(ArgumentError("supplemented-system final GTO overlap is not finite"))
+    indices = _gto_block_indices(nG + nR, block_indices)
+    indices === nothing && return overlap
+    return Matrix{Float64}(overlap[indices, :])
+end
+
+function gto_overlap_matrix(
     working,
     probes,
     block_indices::AbstractVector{<:Integer},

@@ -1246,11 +1246,21 @@ end
 println("cartesian_r3a_h2_augmented_one_body_elapsed_s=", elapsed)
 
 facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
+    system_result = cartesian_residual_gto_mwg_system(
+        FACADE_SYSTEM; basis = FACADE_BASIS, supplement = FACADE_SUPPLEMENT)
+    system_ham = system_result.hamiltonian
     artifact = joinpath(mktempdir(), "r3_h2_supplemented.jld2")
     ham = GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
         FACADE_SYSTEM; basis = FACADE_BASIS, supplement = FACADE_SUPPLEMENT,
         hamfile = artifact)
     @test ham isa CartesianIDAHamiltonian{Float64}
+    @test system_ham.kinetic == ham.kinetic
+    @test system_ham.nuclear_attraction_unit_by_center ==
+        ham.nuclear_attraction_unit_by_center
+    @test system_ham.electron_electron_ida == ham.electron_electron_ida
+    @test system_ham.nup == ham.nup && system_ham.ndn == ham.ndn
+    @test system_ham.nuclear_charges == ham.nuclear_charges
+    @test system_ham.nuclear_positions == ham.nuclear_positions
     @test size(ham.electron_electron_ida) == (505, 505)
     H = one_body_hamiltonian(ham)
     eig = eigen(Symmetric(H))
@@ -1271,6 +1281,55 @@ facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
         he2_2plus_ham.nuclear_attraction_unit_by_center
     @test he2_ham.electron_electron_ida == he2_2plus_ham.electron_electron_ida
     @test he2_ham.nuclear_repulsion == he2_2plus_ham.nuclear_repulsion
+
+    C = GaussletBases.CartesianFinalBasisRealization
+    probes = system_result.supplement
+    S_GX = C._terminal_residual_mixed_overlap(
+        system_result.terminal_basis, system_result.parent_axis_bundles, probes)
+    S_AX = GaussletBases._cartesian_supplement_cross_overlap(probes, probes)
+    S_RX = transpose(system_result.residual.T_G) * S_GX +
+           transpose(system_result.residual.T_A) * S_AX
+    S_BX = [S_GX; S_RX]
+    computed_overlap = gto_overlap_matrix(system_result, probes)
+    nG, nR = size(S_GX, 1), size(S_RX, 1)
+    @test computed_overlap == S_BX
+    @test size(computed_overlap) == (nG + nR, length(probes.orbitals))
+    @test all(isfinite, computed_overlap)
+    overlap_rows = [nG + nR, 1, nG + 1, 1]
+    @test gto_overlap_matrix(system_result, probes;
+        block_indices = overlap_rows) == S_BX[overlap_rows, :]
+    @test_throws BoundsError gto_overlap_matrix(system_result, probes;
+        block_indices = [0])
+
+    C_X = zeros(Float64, size(S_AX, 1), 1)
+    C_X[1] = inv(sqrt(S_AX[1, 1]))
+    source_block = ExternalGTOOrbitalSpinBlock(:restricted, C_X, [2.0])
+    packet = ExternalGTOOrbitalPacket(probes, S_AX, source_block)
+    imported = import_external_gto_orbitals(system_result, packet)
+    @test imported.cross_overlap_size == size(S_BX)
+    @test imported.alpha.imported_coefficients == S_BX * C_X
+    @test imported.alpha.source_orthogonality_error <= 1.0e-12
+    @test abs(imported.alpha.worst_orbital_capture - 1.0) <= 1.0e-8
+    stale_packet = ExternalGTOOrbitalPacket(
+        probes, S_AX, source_block; ordering_fingerprint = "stale")
+    @test_throws ArgumentError import_external_gto_orbitals(system_result, stale_packet)
+
+    first_probe = first(probes.orbitals)
+    stale_orbital = CartesianGaussianShellOrbitalRepresentation3D(
+        first_probe.label * "_stale", first_probe.angular_powers, first_probe.center,
+        first_probe.exponents, fill(NaN, length(first_probe.coefficients)),
+        first_probe.primitive_normalization)
+    stale_orbitals = copy(probes.orbitals)
+    stale_orbitals[1] = stale_orbital
+    stale_probes = CartesianGaussianShellSupplementRepresentation3D(
+        probes.supplement_kind, stale_orbitals, basis_metadata(probes))
+    @test_throws ArgumentError gto_overlap_matrix(system_result, stale_probes)
+    @test_throws ArgumentError GaussletBases._cartesian_residual_gto_mwg_system_result(
+        system_result.hamiltonian, system_result.terminal_basis,
+        system_result.parent_axis_bundles, stale_probes, system_result.residual, NUCLEI)
+    @test_throws DimensionMismatch GaussletBases._cartesian_residual_gto_mwg_system_result(
+        he2_ham, system_result.terminal_basis, system_result.parent_axis_bundles,
+        probes, system_result.residual, NUCLEI)
 
     readback = read_cartesian_ida_hamiltonian(artifact)
     kinetic_delta = norm(readback.kinetic - ham.kinetic, Inf)

@@ -51,6 +51,7 @@
         :ScreenedHartreeCorrection, :screened_hartree_correction,
         :screened_hartree_delta_one_body, :screened_hartree_energy_constant,
         :screened_hartree_consistency_error, :screened_hartree_field_kind,
+        :cartesian_residual_gto_mwg_system,
     )
     docs_site_developer = read_doc("docs", "src", "developer", "index.md")
     docs_site_developer_notes = read_doc("docs", "src", "developer", "supporting_notes.md")

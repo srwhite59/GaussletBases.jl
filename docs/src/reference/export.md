@@ -157,6 +157,7 @@ For the narrative explanation of the current producer-side story, see:
 ```@docs
 atomic_ida_density_interaction_matrix
 CartesianIDAHamiltonian
+cartesian_residual_gto_mwg_system
 PQSH2PlusRow
 PQSH2PlusComparison
 pqs_h2plus_comparison

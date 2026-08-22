@@ -1245,12 +1245,50 @@ function _cartesian_r3_h2_validation_fixture(input, supplement_input)
            isnothing(supplement_input.width_filtering)
 end
 
-function cartesian_residual_gto_mwg_hamiltonian(
+struct _CartesianResidualGTOMWGSystem{D,S}
+    hamiltonian::CartesianIDAHamiltonian{Float64}
+    terminal_basis::CartesianFinalBasisRealization.CartesianTerminalBasisRealization
+    parent_axis_bundles::D
+    supplement::S
+    residual::CartesianResidualGaussians.CartesianResidualGaussianBasis
+end
+
+function _validate_cartesian_residual_gto_mwg_system(
+    hamiltonian, terminal_basis, supplement, residual)
+    nG = terminal_basis.final_dimension
+    nA = length(supplement.orbitals)
+    nR = residual.residual_dimension
+    residual.base_dimension == nG ||
+        throw(DimensionMismatch("supplemented-system residual base dimension mismatch"))
+    residual.candidate_count == nA ||
+        throw(DimensionMismatch("supplemented-system residual candidate count mismatch"))
+    size(residual.T_G) == (nG, nR) ||
+        throw(DimensionMismatch("supplemented-system T_G shape mismatch"))
+    size(residual.T_A) == (nA, nR) ||
+        throw(DimensionMismatch("supplemented-system T_A shape mismatch"))
+    size(hamiltonian.kinetic) == (nG + nR, nG + nR) ||
+        throw(DimensionMismatch("supplemented-system Hamiltonian dimension mismatch"))
+    all(isfinite, residual.T_G) && all(isfinite, residual.T_A) ||
+        throw(ArgumentError("supplemented-system residual transforms must be finite"))
+    return nG, nA, nR
+end
+
+function _cartesian_residual_gto_mwg_system_result(
+    hamiltonian, terminal_basis, parent_axis_bundles, supplement, residual, atom_locations)
+    CartesianFinalBasisRealization._r3_validate_residual_contract(
+        terminal_basis, supplement, residual, atom_locations)
+    _validate_cartesian_residual_gto_mwg_system(
+        hamiltonian, terminal_basis, supplement, residual)
+    return _CartesianResidualGTOMWGSystem(
+        hamiltonian, terminal_basis, parent_axis_bundles, supplement, residual)
+end
+
+function _cartesian_residual_gto_mwg_system(
     system::NamedTuple;
     basis::NamedTuple,
     supplement::NamedTuple,
     hamfile::Union{Nothing,AbstractString} = nothing,
-)::CartesianIDAHamiltonian{Float64}
+)
     !(!isnothing(hamfile) && isempty(String(hamfile))) ||
         throw(ArgumentError("hamfile must not be empty"))
     base = cartesian_base_working_basis(system; basis, supplemented = true)
@@ -1266,8 +1304,43 @@ function cartesian_residual_gto_mwg_hamiltonian(
         base, residual, augmented_products;
         base_unit_nuclear = base_ham.nuclear_attraction_unit_by_center)
     augmented_vee = cartesian_residual_gto_augmented_vee(base, base_ham, residual, augmented_products, augmented_unit_nuclear)
-    return cartesian_residual_gto_mwg_hamiltonian_assembly(base, base_ham, supplement_basis,
+    hamiltonian = cartesian_residual_gto_mwg_hamiltonian_assembly(base, base_ham, supplement_basis,
         residual, augmented_products, augmented_unit_nuclear, augmented_vee; hamfile)
+    return _cartesian_residual_gto_mwg_system_result(
+        hamiltonian, base.terminal_basis, base.parent.parent_axis_bundle_object,
+        supplement_basis.basis, residual, base.input.locations)
+end
+
+
+"""
+    cartesian_residual_gto_mwg_system(system; basis, supplement)
+
+Construct a residual-GTO/MWG Cartesian Hamiltonian together with the exact
+same-construction data needed for GTO cross overlaps. The supported expert
+surface is `result.hamiltonian`, `gto_overlap_matrix(result, probes)`, and
+`import_external_gto_orbitals(result, packet)`.
+
+The returned concrete type is intentionally opaque. It is not a generalized
+basis representation and does not provide final-basis self overlaps or
+Hamiltonian transformations.
+"""
+function cartesian_residual_gto_mwg_system(
+    system::NamedTuple;
+    basis::NamedTuple,
+    supplement::NamedTuple,
+)
+    return _cartesian_residual_gto_mwg_system(
+        system; basis, supplement, hamfile = nothing)
+end
+
+function cartesian_residual_gto_mwg_hamiltonian(
+    system::NamedTuple;
+    basis::NamedTuple,
+    supplement::NamedTuple,
+    hamfile::Union{Nothing,AbstractString} = nothing,
+)::CartesianIDAHamiltonian{Float64}
+    return _cartesian_residual_gto_mwg_system(
+        system; basis, supplement, hamfile).hamiltonian
 end
 
 function cartesian_residual_gto_supplement_basis(base, supplement::NamedTuple)
