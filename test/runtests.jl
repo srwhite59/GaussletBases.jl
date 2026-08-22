@@ -18,6 +18,8 @@ const _AVAILABLE_TEST_GROUPS = (
     :cartesian,
     :docs,
     :examples,
+    :pqs_release,
+    :screening_release,
     :misc,
 )
 const _FAST_TEST_GROUPS = Set((
@@ -777,6 +779,20 @@ function _run_example_script(name::AbstractString)
     example_path = joinpath(_PROJECT_ROOT, "examples", name)
     cmd = `$(Base.julia_cmd()) --startup-file=no --project=$(_PROJECT_ROOT) $example_path`
     return success(cmd)
+end
+
+if _test_group_enabled(:pqs_release)
+    include(joinpath(@__DIR__, "pqs_h2plus_table1_release_runtests.jl"))
+    @testset "PQS paper example" begin
+        @test _run_example_script("41_pqs_h2plus_table1.jl")
+    end
+end
+
+if _test_group_enabled(:screening_release)
+    include(joinpath(@__DIR__, "driver_public", "screened_hartree_runtests.jl"))
+    @testset "Screening paper example" begin
+        @test _run_example_script("40_screened_hartree_fixed_density.jl")
+    end
 end
 
 function _midpoint_reference_matrices(basis; xmin = -20.0, xmax = 20.0, h = 0.02)

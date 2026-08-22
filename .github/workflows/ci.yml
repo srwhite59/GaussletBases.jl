@@ -4,14 +4,30 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*"
   pull_request:
 
 jobs:
   test:
+    name: ${{ matrix.gate }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - gate: Supported floor
+            julia: "1.10"
+            groups: core,ida,cartesian,examples
+          - gate: PQS paper
+            julia: "1.12"
+            groups: pqs_release
+          - gate: Screening paper
+            julia: "1.12"
+            groups: screening_release
 
     steps:
       - name: Check out repository
@@ -20,7 +36,7 @@ jobs:
       - name: Set up Julia
         uses: julia-actions/setup-julia@v2
         with:
-          version: "1.10"
+          version: ${{ matrix.julia }}
 
       - name: Cache Julia artifacts
         uses: julia-actions/cache@v2
@@ -33,6 +49,6 @@ jobs:
 
       - name: Run selected tests
         env:
-          GAUSSLETBASES_TEST_GROUPS: core,ida,cartesian,examples
+          GAUSSLETBASES_TEST_GROUPS: ${{ matrix.groups }}
           GAUSSLETBASES_SLOW_TESTS: "0"
         run: julia --project=. -e 'using Pkg; Pkg.test()'
