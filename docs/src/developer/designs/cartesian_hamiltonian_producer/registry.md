@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `f4b7c18656602f43afa3cccadacf61734ef1ec77fc96cff30c17bbb2a95e2c43`.
+> [authority.toml](authority.toml), SHA-256 `d7627ffd056d4f9786980095238a1834ef97c50f6f3abd22ffa25332946d80d8`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2839,6 +2839,41 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:** none
 - **Dependencies:** `HP-REP-MIXDENS-HARTREE-FN-01`
 - **Scope:** Extend only the existing bounded mixed-basis test owner by 120 preferred/180 hard lines, with final length at most 360: compare occupied-contracted block/separable GG, GA/AG, and AA sectors and complete native fields with the bounded component and independent Gaussian oracles; distinguish residual 1e-10 cross/scale-aware 5e-8 identity validity from strict 1e-10 state recovery; and validate deterministic two-size contraction/resource accounting plus unchanged atomic and screened owners. No Cr2 fixture, fit, solver, or metadata/status test.
+
+### HP-REP-PQS-RG-WORKING-FN-01 - PQS residual-GTO same-construction working basis
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `PQS Residual-GTO Same-Construction Working Basis`
+- **Owned paths:**
+  - `source` / `existing`: `src/GaussletBases.jl`
+  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian_gto_probes.jl`
+  - `docs` / `existing`: `docs/src/reference/export.md`
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/requests/REQ-101_amendment_public_external_gto_import.md`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/work/REQ-101/public_import_resume/preflight.md`
+  - `manager_pass`: `501`
+- **Dependencies:** `HP-R3U-FN-01`, `HP-R3U-WIRE-01`, `HP-REP-XGTO-IMPORT-FN-01`
+- **Scope:** Add one expert export, \`cartesian\_residual\_gto\_mwg\_system\`, returning an unexported concrete same-construction result with stable \`.hamiltonian\`, \`gto\_overlap\_matrix(result, probes)\`, and unchanged external-import behavior. Retain only terminal/factorized-parent/supplement/residual data and compute native \`S\_RX = T\_G' \* S\_GX + T\_A' \* S\_AX\` without a dense parent-by-terminal or assembled raw-to-final map. Preserve the direct facade/artifact exactly. Preferred/hard source budget 110/150 added lines; no new file, exported type, generalized representation, persistence, parser, solver, screening automation, or paper-specific branch.
+
+### HP-REP-PQS-RG-WORKING-TEST-01 - PQS residual-GTO working-basis validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `PQS Residual-GTO Same-Construction Working Basis`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+  - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
+- **Evidence:** none
+- **Dependencies:** `HP-REP-PQS-RG-WORKING-FN-01`, `HP-REP-XGTO-IMPORT-TEST-01`
+- **Scope:** Extend only the existing supplemented-H2 and docs owners by 70 preferred/100 hard lines total. Require direct-Hamiltonian parity, native exact \`S\_GX\`/\`S\_AX\`/\`S\_RX\` formula parity, block selection, malformed-carrier rejection, unchanged \`ExternalGTOOrbitalPacket\` import as \`S\_BX\*C\_X\`, terminal due diligence, and one curated-reference entry. REQ-101 remains external acceptance; add no C2 fixture or test file.
 
 ### HP-REP-XGTO-IMPORT-FN-01 - external GTO orbital import
 

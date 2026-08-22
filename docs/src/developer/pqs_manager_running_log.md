@@ -1316,3 +1316,50 @@ Carrying-cost accounting:
 - **MT6 - active:** this pass removed five invalid declarations for net `-5`
   source lines; the `22`-line dynamic invariant earns its cost by covering the
   root and all direct package-owned submodules without an API snapshot.
+
+## Cartesian Hamiltonian Producer Pass 501 - Authorize Same-Construction Residual-GTO Representation
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Source and frozen REQ-101 preflight review confirmed that the supplemented
+  PQS producer constructs the exact terminal, supplement, residual transforms,
+  one-body operators, and MWG interaction together, then returns an opaque
+  Hamiltonian and discards the representation needed by the public external-GTO
+  importer. An accessor on `CartesianIDAHamiltonian` cannot recover it.
+- Added `HP-REP-PQS-RG-WORKING-FN-01/TEST-01`. The approved public surface is
+  one expert constructor, `cartesian_residual_gto_mwg_system`, returning an
+  unexported concrete result with stable `result.hamiltonian`,
+  `gto_overlap_matrix(result, probes)`, and
+  `import_external_gto_orbitals(result, packet)` behavior.
+- The exact native overlap is
+  `S_RX = T_G' * S_GX + T_A' * S_AX`. The result retains existing compact
+  construction objects only; no dense parent-by-terminal or raw-to-final map,
+  generalized metric, artifact, parser, or consumer policy is approved.
+
+Goal advancement / guardrail:
+- MT3 gains the missing representation seam required before REQ-101 may test
+  represented-density screening. Repository acceptance is bounded H2 mechanics;
+  the frozen C2 early gate remains separate external evidence and no HFDMRG or
+  screening automation follows from this approval.
+
+Carrying-cost accounting:
+- deleted: no source yet; the design rejects Hamiltonian reconstruction and a
+  second consumer-local overlap implementation.
+- simplified: one shared construction must serve the old direct facade and the
+  new result.
+- quarantined: generalized representation, persistence, PySCF parsing, solver,
+  screening, and paper-specific policy.
+- not deleted because: the direct Hamiltonian/artifact facade remains a live
+  compatibility path.
+- exact remaining caller/blocker: repo-manager must implement within `110/150`
+  preferred/hard source lines and pass the H2 formula/import gate before the
+  external REQ-101 `R=2.35`, `ns=5` replay.
+- added/deleted `src` lines: `0/0`; new tests: none, two existing owners may
+  gain at most `100` total lines; new metadata/status fields: two authority
+  records only.
+- validation: exact baseline/caller/type/kernel review, frozen REQ-101 request
+  and preflight review, authority render/check/self-test, generated-view parity,
+  docs tests, Documenter, manager-log bound, docs-only scope review, and
+  `git diff --check`.

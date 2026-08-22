@@ -55,6 +55,7 @@ claim.
 | `HP-PUBLIC-EXPORT-INTEGRITY-*` | Four invalid export declarations removed; dynamic root/direct-submodule regression completed; maintenance | Preserve the absence of the invalid names and bare generic, the valid remaining exports, and the dynamic defined-binding/nonempty-method invariant; no broader API or release policy follows |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
 | `HP-REP-MIXDENS-HARTREE-*` | Bounded exact implementation passed; Cr2 preflight rejected its global component-pair scaling and shared residual/state tolerance | Replace production dispatch with occupied-contracted separable block tensors, apply RG-owned residual validity separately, and pass the actual-plan resource gate before resuming the complete field |
+| `HP-REP-PQS-RG-WORKING-*` | Same-construction augmented working-basis boundary approved, not implemented | Add one expert constructor whose result retains the terminal/factorized/supplement/residual data needed for exact GTO cross overlap; preserve the direct Hamiltonian facade and then rerun the frozen REQ-101 early import gate |
 | `HP-SLICE-HCHAIN-*` | Six-export producer implemented; validation completed; maintenance | Preserve the O(1), zero-allocation structural-bandwidth query, exact represented off-band zeros, compact operator physics, and existing consumer contract; no further export, field, solver, or dense matrix |
 | `HP-QW-NESTED-DIAT-*` | Three root-exported ordinary-QW nested diatomic front doors repaired; implementation and regressions are in maintenance | Preserve legal no-shared-shell packet construction, actual endcap/panel provenance, and existing policy/`q`/`L` diagnostics forwarding without changing defaults or current PQS/WL production |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; specialized retained-GTO helper/test deferred with no execution grant | Preserve the archived experiment only; any new helper requires docs-only reactivation tied to a current physics target |
@@ -125,13 +126,20 @@ driver, public facade, producer default, artifact schema family, or solver API.
    approximate `J0`, with consistency error reported. Determinant-exact
    `J0/E0` would be a new scientific amendment, not a conformance repair; do
    not interpret a run under the other convention without deciding this first.
-8. **Complete molecular represented Hartree.** REQ-084 correctly stopped before
+9. **Complete molecular represented Hartree.** REQ-084 correctly stopped before
    molecular-full Cr2 interpretation. The direct internal producer is approved,
    but source and its complete-field certificate are pending. The first
    implementation preflight identified the absent nonmaterializing contracted
    pair-product action; result wrappers alone are incomplete scaffolding. An
    AO-projected field, occupied action, random probes, IDA transition-product
    substitute, or auxiliary fit cannot close this blocker.
+10. **Supplemented PQS external import.** The residual-GTO producer currently
+    discards its terminal, factorized-parent, supplement, and residual
+    representation after returning `CartesianIDAHamiltonian`. A narrow
+    same-construction result and exact `gto_overlap_matrix` dispatch are
+    approved under `HP-REP-PQS-RG-WORKING-*`; reconstruction from the opaque
+    Hamiltonian, a consumer-local map, and a dense parent-by-terminal matrix
+    remain forbidden. REQ-101 resumes only after the bounded H2 source gate.
 
 Durable numerical and workflow guardrails live in
 [invariants](invariants.md); the task-specific contract map lives in

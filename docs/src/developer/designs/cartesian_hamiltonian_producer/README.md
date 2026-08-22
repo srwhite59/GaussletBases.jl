@@ -66,6 +66,10 @@ ID or subsystem.
   non-authoritative Slice A/B/C/D disposition and later subsystem index
 - [Residual Gaussian domain module](residual_gaussian_domain_module.md) for
   current RG algorithm authority
+- [PQS residual-GTO same-construction working basis](pqs_residual_gto_working_basis.md)
+  for the approved expert constructor that retains exact GTO cross-overlap
+  data beside the augmented Hamiltonian without changing either artifact
+  schemas or `CartesianIDAHamiltonian`
 - [Residual Gaussian orthogonality robustness](residual_gaussian_orthogonality_robustness.md)
   for the current merge/identity checks, production cutoff precedence, and
   superseded tolerance history
