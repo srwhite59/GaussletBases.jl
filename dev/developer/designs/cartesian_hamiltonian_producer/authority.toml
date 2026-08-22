@@ -76,6 +76,9 @@ sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
 sha256 = "9a61638facc67ef2ed776888fdde6fbc234afa46644c02e5000339a50054877a"
 [[documents]]
+path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
+sha256 = "cf1a20de21fc57e80e923bbf4290797be2ee32ca6f0d3506edcade06b8a10bd6"
+[[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "803063ecdc263c9767f08b41b0c20a736482d8dfe44a97d0720e6e3b19f3e91f"
 [[documents]]
@@ -4772,6 +4775,69 @@ title = "represented multicenter mixed-density Hartree validation"
     [[records.paths]]
     kind = "test"
     path = "test/nested/cartesian_represented_molecular_hartree_runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-R3U-FN-01", "HP-R3U-WIRE-01", "HP-REP-XGTO-IMPORT-FN-01"]
+grant = "implementation"
+id = "HP-REP-PQS-RG-WORKING-FN-01"
+lifecycle = "approved"
+scope = "Add one expert export, `cartesian_residual_gto_mwg_system`, returning an unexported concrete same-construction result with stable `.hamiltonian`, `gto_overlap_matrix(result, probes)`, and unchanged external-import behavior. Retain only terminal/factorized-parent/supplement/residual data and compute native `S_RX = T_G' * S_GX + T_A' * S_AX` without a dense parent-by-terminal or assembled raw-to-final map. Preserve the direct facade/artifact exactly. Preferred/hard source budget 110/150 added lines; no new file, exported type, generalized representation, persistence, parser, solver, screening automation, or paper-specific branch."
+surfaces = ["docs", "source"]
+title = "PQS residual-GTO same-construction working basis"
+
+    [[records.document_refs]]
+    heading = "PQS Residual-GTO Same-Construction Working Basis"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/requests/REQ-101_amendment_public_external_gto_import.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/work/REQ-101/public_import_resume/preflight.md"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "501"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_base_hamiltonian.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_gto_probes.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/reference/export.md"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-REP-PQS-RG-WORKING-FN-01", "HP-REP-XGTO-IMPORT-TEST-01"]
+evidence_refs = []
+grant = "implementation"
+id = "HP-REP-PQS-RG-WORKING-TEST-01"
+lifecycle = "approved"
+scope = "Extend only the existing supplemented-H2 and docs owners by 70 preferred/100 hard lines total. Require direct-Hamiltonian parity, native exact `S_GX`/`S_AX`/`S_RX` formula parity, block selection, malformed-carrier rejection, unchanged `ExternalGTOOrbitalPacket` import as `S_BX*C_X`, terminal due diligence, and one curated-reference entry. REQ-101 remains external acceptance; add no C2 fixture or test file."
+surfaces = ["tests"]
+title = "PQS residual-GTO working-basis validation"
+
+    [[records.document_refs]]
+    heading = "PQS Residual-GTO Same-Construction Working Basis"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/docs/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = []
