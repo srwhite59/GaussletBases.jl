@@ -1449,3 +1449,40 @@ Carrying-cost accounting:
   authority tool-path reconciliation, authority render/check/self-test,
   generated-view parity, docs tests, Documenter, manager-log bound, docs-only
   scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 504 - Reconcile Paper CI Implementation Path
+
+Commit(s):
+- `e65764377bd4640916e80342071da754d80aca32` - three-gate matrix and test relocation;
+- this docs-only intermediate reconciliation.
+
+Summary:
+- Accepted the implementation shape and changed the new screening owner from
+  planned to existing. The public screening testset moved mechanically from
+  the IDA owner with all `22` assertions and tolerances unchanged; PQS retains
+  its unchanged `18`-test owner. The two example smokes and compact matrix add
+  `34` runner/workflow lines, below the `45`-line preferred limit.
+- Local validation passed PQS `18/18 + 1/1`, screening `22/22 + 1/1`, and the
+  unchanged bounded groups `14,133` checks. Remote `Screening paper` and
+  `Supported floor` passed. `PQS paper` was canceled only at the inherited
+  `15`-minute limit after setup, instantiation, and package load; Docs stopped
+  only on the intentionally stale planned-path record.
+
+Goal advancement / guardrail:
+- MT5 now has the intended separate PQS and screening gates, but acceptance is
+  deliberately open. Authorize only `timeout-minutes: 15 -> 30`; no test,
+  matrix, Julia-version, group, scientific, RC1, or release change follows.
+
+Carrying-cost accounting:
+- deleted: the old broad-IDA copy of the public screening testset.
+- simplified: one matrix names the compatibility floor and two paper gates.
+- quarantined: six nested research suites and all release/version policy.
+- not deleted because: the unchanged PQS owner and public screening assertions
+  remain the accepted method-specific gates.
+- exact remaining caller/blocker: commit the one-line timeout repair, then pass
+  all three remote CI rows and Docs before final lifecycle closeout.
+- added/deleted `src` lines: `0/0`; new tests: one relocated owner, no new
+  numerical assertions beyond two smokes; new metadata/status fields: none.
+- validation: implementation/relocation/diff review, local and partial remote
+  evidence, authority path reconciliation, generated views, docs checks,
+  Documenter, manager-log bound, and `git diff --check`.

@@ -733,6 +733,18 @@ bounded test/workflow implementation. PQS and reference-density Hartree
 screening are separate publication surfaces and must appear as independently
 named CI gates. This boundary adds no scientific or release authority.
 
+Implementation commit `e65764377bd4640916e80342071da754d80aca32` landed the
+three-row matrix, both release groups, and the mechanical screening-test
+relocation. Local acceptance passed `18/18` PQS tests plus its example smoke,
+`22/22` screening tests plus its example smoke, and `14,133` checks in the
+unchanged bounded groups. Remotely, `Screening paper` and `Supported floor`
+passed; `PQS paper` reached the inherited `15`-minute job limit after setup,
+instantiation, and package load, with no reported numerical failure. The
+lifecycle therefore remains open. Exactly one workflow follow-up may change
+`timeout-minutes` from `15` to `30`; no test, matrix-row, Julia-version, group,
+or scientific change accompanies it. Final maintenance status requires all
+three corrected remote rows and Docs to pass.
+
 The CI matrix has exactly three rows:
 
 | Gate name | Julia | Test selection |
