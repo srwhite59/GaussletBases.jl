@@ -30,7 +30,7 @@ source/contract findings, not another migration campaign.
 | Protected-localized basis | Compact-main protected replacement, exact localized one-body matrices, inherited-site `Vee_L`; direct `C' V C` is rejected | [Protected-localized basis](protected_localized_basis.md) |
 | Protected persistence | Opt-in protected Hamiltonian artifacts with native locality metadata, plus same-parent ladder bundles and exact cross-overlap transfer | [Protected artifact](protected_localized_artifact.md), [protected ladder](protected_localized_ladder.md) |
 | Reference infrastructure | Converged atomic HF packets, neutral reference-Hartree numerics, in-memory screened direct-Hartree correction, and additive protected molecular references | [Atomic packets](atomic_hf_reference_packets.md), [reference Hartree numerics](reference_hartree_numerics.md), [screened Hartree](screened_hartree_correction_assembly.md), [additive references](protected_additive_reference_correction.md) |
-| Representation transfer | External-GTO import by cross overlap and standalone protected native `S_LG` sidecars; source self-overlap remains validation-only | [External GTO import](external_gto_orbital_import.md) |
+| Representation transfer | External-GTO import by cross overlap, standalone protected native `S_LG` sidecars, and an opaque same-construction supplemented-PQS result with exact native `[G,R]` cross overlap; source self-overlap remains validation-only | [External GTO import](external_gto_orbital_import.md), [PQS residual-GTO working basis](pqs_residual_gto_working_basis.md) |
 
 These are bounded internal/repo facilities. “Implemented” does not imply a
 public export, solver workflow, broad molecular support, or production Cr2
@@ -55,7 +55,7 @@ claim.
 | `HP-PUBLIC-EXPORT-INTEGRITY-*` | Four invalid export declarations removed; dynamic root/direct-submodule regression completed; maintenance | Preserve the absence of the invalid names and bare generic, the valid remaining exports, and the dynamic defined-binding/nonempty-method invariant; no broader API or release policy follows |
 | `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
 | `HP-REP-MIXDENS-HARTREE-*` | Bounded exact implementation passed; Cr2 preflight rejected its global component-pair scaling and shared residual/state tolerance | Replace production dispatch with occupied-contracted separable block tensors, apply RG-owned residual validity separately, and pass the actual-plan resource gate before resuming the complete field |
-| `HP-REP-PQS-RG-WORKING-*` | Same-construction augmented working-basis boundary approved, not implemented | Add one expert constructor whose result retains the terminal/factorized/supplement/residual data needed for exact GTO cross overlap; preserve the direct Hamiltonian facade and then rerun the frozen REQ-101 early import gate |
+| `HP-REP-PQS-RG-WORKING-*` | Same-construction augmented working-basis constructor implemented; H2 validation completed; maintenance | Preserve the opaque overlap-only result, native `S_RX = T_G' S_GX + T_A' S_AX`, exact direct-facade/artifact parity, and existing importer behavior; the frozen REQ-101 early import gate may now run |
 | `HP-SLICE-HCHAIN-*` | Six-export producer implemented; validation completed; maintenance | Preserve the O(1), zero-allocation structural-bandwidth query, exact represented off-band zeros, compact operator physics, and existing consumer contract; no further export, field, solver, or dense matrix |
 | `HP-QW-NESTED-DIAT-*` | Three root-exported ordinary-QW nested diatomic front doors repaired; implementation and regressions are in maintenance | Preserve legal no-shared-shell packet construction, actual endcap/panel provenance, and existing policy/`q`/`L` diagnostics forwarding without changing defaults or current PQS/WL production |
 | `HP-RG-PROTECT-EGOI-*` | Measurement completed; specialized retained-GTO helper/test deferred with no execution grant | Preserve the archived experiment only; any new helper requires docs-only reactivation tied to a current physics target |
@@ -133,13 +133,12 @@ driver, public facade, producer default, artifact schema family, or solver API.
    pair-product action; result wrappers alone are incomplete scaffolding. An
    AO-projected field, occupied action, random probes, IDA transition-product
    substitute, or auxiliary fit cannot close this blocker.
-10. **Supplemented PQS external import.** The residual-GTO producer currently
-    discards its terminal, factorized-parent, supplement, and residual
-    representation after returning `CartesianIDAHamiltonian`. A narrow
-    same-construction result and exact `gto_overlap_matrix` dispatch are
-    approved under `HP-REP-PQS-RG-WORKING-*`; reconstruction from the opaque
-    Hamiltonian, a consumer-local map, and a dense parent-by-terminal matrix
-    remain forbidden. REQ-101 resumes only after the bounded H2 source gate.
+10. **Supplemented PQS external import.** The opaque same-construction result
+    and exact native `gto_overlap_matrix` dispatch are implemented under
+    `HP-REP-PQS-RG-WORKING-*`; the bounded H2 source/import gate passed. The
+    frozen REQ-101 `R=2.35`, `ns=5` early case may now run. Reconstruction from
+    the opaque Hamiltonian, a consumer-local map, and a dense
+    parent-by-terminal matrix remain forbidden.
 
 Durable numerical and workflow guardrails live in
 [invariants](invariants.md); the task-specific contract map lives in

@@ -1363,3 +1363,46 @@ Carrying-cost accounting:
   and preflight review, authority render/check/self-test, generated-view parity,
   docs tests, Documenter, manager-log bound, docs-only scope review, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 502 - Close Residual-GTO Working-Basis Lifecycle
+
+Commit(s):
+- `b7378064f15cd506e81884974b60cbbd30e43d9e` - docs-only authority;
+- `346589a6dafd8fbfe1794947dc8cb7da4d07606b` - same-construction system and overlap action;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the opaque supplemented-PQS system result with stable
+  `.hamiltonian`, exact GTO cross overlap, and unchanged external-orbital
+  import. The direct Hamiltonian/artifact facade delegates to the same private
+  construction and remains exactly identical.
+- Native overlap is `S_RX = T_G' * S_GX + T_A' * S_AX`; no generalized
+  representation, dense parent-to-terminal or raw-to-final map, exported
+  result type, artifact field, parser, solver, or screening automation landed.
+- Independent manager rerun passed the complete H2 owner `464/464` and the
+  supplemented facade/import owner `92/92`: `487 + 18 = 505`, exact formula
+  and imported-coefficient parity, zero artifact/readback deltas, capture
+  within `1e-8` of unity, and unchanged terminal due diligence. Remote CI
+  `32601647725` and Docs `32601647791` also passed.
+
+Goal advancement / guardrail:
+- MT3 now has the source-backed representation boundary needed by REQ-101.
+  The frozen external `R=2.35`, `ns=5` early import gate may proceed; no C2
+  endpoint, represented-Hartree result, solver, or consumer policy is accepted
+  by this pass.
+
+Carrying-cost accounting:
+- deleted: three duplicate direct-facade construction lines.
+- simplified: system and direct facades now share one construction.
+- quarantined: transient representation data remain opaque, in-memory, and
+  cross-overlap-only.
+- not deleted because: the direct Hamiltonian/artifact facade remains live.
+- exact remaining caller/blocker: REQ-101 must run its separate frozen consumer
+  acceptance; no repository source blocker remains.
+- added/deleted `src` lines: `108/3`; new tests: none, existing owners `+60`;
+  new metadata/status fields: none.
+- validation: implementation/caller/diff review, suspicious-added-line scan,
+  independent H2 `464/464` plus facade/import `92/92`, reported bounded CI and
+  docs gates, authority render/check/self-test, docs tests, Documenter,
+  manager-log bound, docs-only scope review, remote CI/Docs, and
+  `git diff --check`.

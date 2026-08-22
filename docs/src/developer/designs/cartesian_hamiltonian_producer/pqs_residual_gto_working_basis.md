@@ -3,8 +3,9 @@
 ## Status And Authority
 
 `HP-REP-PQS-RG-WORKING-FN-01` and
-`HP-REP-PQS-RG-WORKING-TEST-01` approve a narrow expert construction and its
-bounded validation. Source is not yet implemented.
+`HP-REP-PQS-RG-WORKING-TEST-01` own the implemented narrow expert construction
+and its completed bounded validation. Commit `346589a6d` is the accepted source
+implementation; both records now grant maintenance only.
 
 This contract closes one representation boundary. It does not change residual
 selection, one-body or interaction physics, external-packet semantics, or the
@@ -12,11 +13,13 @@ opaque `CartesianIDAHamiltonian` contract.
 
 ## Consumer Need
 
-`cartesian_residual_gto_mwg_hamiltonian(...)` constructs a PQS terminal basis
+Before this boundary was implemented,
+`cartesian_residual_gto_mwg_hamiltonian(...)` constructed a PQS terminal basis
 `G`, a Gaussian supplement `A`, retained residuals `R`, exact augmented
-one-body matrices, and the MWG interaction in one pass. It currently returns
-only `CartesianIDAHamiltonian`, after the data needed to overlap the final
-basis with later GTO probes has been discarded.
+one-body matrices, and the MWG interaction in one pass, then returned only
+`CartesianIDAHamiltonian`. The implemented system constructor retains the
+compact same-construction data needed to overlap that final basis with later
+GTO probes.
 
 The external importer correctly requires
 
@@ -31,7 +34,7 @@ is not authorized.
 
 ## Public Boundary
 
-Add exactly one expert root export:
+The package exports exactly one expert root constructor:
 
 ```julia
 cartesian_residual_gto_mwg_system(
@@ -156,8 +159,25 @@ defects that existing Hamiltonian tests cannot detect:
    import.
 6. Inspect and report terminal due diligence for the endpoint.
 
-After repository acceptance, the separate REQ-101 consumer may rerun only its
-frozen `R=2.35`, `ns=5`, PQS early case. It must use the unchanged external
+Accepted implementation evidence from commit `346589a6d` is:
+
+- the H2 basis has `487` terminal plus `18` residual functions, for native
+  dimension `505`;
+- the system and direct facades produce exactly equal Hamiltonian matrices,
+  and artifact readback deltas remain zero;
+- direct assembly and the implemented `S_GX`/`S_AX`/`S_RX` formula agree
+  exactly, as do imported coefficients and `S_BX*C_X`;
+- the imported occupied capture is within `1e-8` of unity;
+- the complete existing H2 owner passed `464/464`, and the supplemented
+  facade/import owner passed `92/92`;
+- terminal due diligence remains `9x9x15` parent axes, approximately
+  `+/-4.871`, `+/-4.871`, and `+/-6.110` bounds, `4`-bohr padding, retained
+  rows `[275,114,98]`, and only the pre-existing shape, axis-display, and
+  large-identity warnings.
+
+With repository acceptance complete, the separate REQ-101 consumer may rerun
+only its frozen `R=2.35`, `ns=5`, PQS early case. It must use the unchanged
+external
 determinant and supplement, the public packet/importer, source metric
 `C_X' S_XX C_X`, Euclidean final capture, the existing `1e-8` capture bounds,
 and worst occupied loss at most `1e-4`. This is external acceptance evidence,

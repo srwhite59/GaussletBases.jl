@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `d7627ffd056d4f9786980095238a1834ef97c50f6f3abd22ffa25332946d80d8`.
+> [authority.toml](authority.toml), SHA-256 `54281571202eac99e671ba1b5ae9ac3d95d700cfc6698b70c6e321662e51b677`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2842,8 +2842,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-REP-PQS-RG-WORKING-FN-01 - PQS residual-GTO same-construction working basis
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2856,14 +2856,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/requests/REQ-101_amendment_public_external_gto_import.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/work/REQ-101/public_import_resume/preflight.md`
+  - `git_commit`: `346589a6dafd8fbfe1794947dc8cb7da4d07606b`
   - `manager_pass`: `501`
+  - `manager_pass`: `502`
 - **Dependencies:** `HP-R3U-FN-01`, `HP-R3U-WIRE-01`, `HP-REP-XGTO-IMPORT-FN-01`
-- **Scope:** Add one expert export, \`cartesian\_residual\_gto\_mwg\_system\`, returning an unexported concrete same-construction result with stable \`.hamiltonian\`, \`gto\_overlap\_matrix(result, probes)\`, and unchanged external-import behavior. Retain only terminal/factorized-parent/supplement/residual data and compute native \`S\_RX = T\_G' \* S\_GX + T\_A' \* S\_AX\` without a dense parent-by-terminal or assembled raw-to-final map. Preserve the direct facade/artifact exactly. Preferred/hard source budget 110/150 added lines; no new file, exported type, generalized representation, persistence, parser, solver, screening automation, or paper-specific branch.
+- **Scope:** Maintain the expert \`cartesian\_residual\_gto\_mwg\_system\` constructor and its unexported concrete same-construction result with stable \`.hamiltonian\`, \`gto\_overlap\_matrix(result, probes)\`, and unchanged external-import behavior. Retain only terminal/factorized-parent/supplement/residual data and preserve native \`S\_RX = T\_G' \* S\_GX + T\_A' \* S\_AX\`, exact direct-facade/artifact parity, block selection, finiteness and dimension failures, and the opaque overlap-only boundary accepted in 346589a6dafd8fbfe1794947dc8cb7da4d07606b. Add no new file, exported type, generalized representation, persistence, parser, solver, screening automation, dense parent-to-terminal/raw-to-final map, or paper-specific branch under this record.
 
 ### HP-REP-PQS-RG-WORKING-TEST-01 - PQS residual-GTO working-basis validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2871,9 +2873,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
   - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
-- **Evidence:** none
+- **Evidence:**
+  - `git_commit`: `346589a6dafd8fbfe1794947dc8cb7da4d07606b`
+  - `manager_pass`: `501`
+  - `manager_pass`: `502`
 - **Dependencies:** `HP-REP-PQS-RG-WORKING-FN-01`, `HP-REP-XGTO-IMPORT-TEST-01`
-- **Scope:** Extend only the existing supplemented-H2 and docs owners by 70 preferred/100 hard lines total. Require direct-Hamiltonian parity, native exact \`S\_GX\`/\`S\_AX\`/\`S\_RX\` formula parity, block selection, malformed-carrier rejection, unchanged \`ExternalGTOOrbitalPacket\` import as \`S\_BX\*C\_X\`, terminal due diligence, and one curated-reference entry. REQ-101 remains external acceptance; add no C2 fixture or test file.
+- **Scope:** Maintain only the accepted checks in the existing supplemented-H2 and docs owners: exact direct-Hamiltonian and artifact parity, native \`S\_GX\`/\`S\_AX\`/\`S\_RX\` formula parity, block selection, malformed and nonfinite rejection, unchanged \`ExternalGTOOrbitalPacket\` import as \`S\_BX\*C\_X\`, capture diagnostics, terminal due diligence, and curated-reference parity. REQ-101 remains external acceptance; add no C2 fixture, test file, generalized-representation assertion, solver, or screening policy under this record.
 
 ### HP-REP-XGTO-IMPORT-FN-01 - external GTO orbital import
 
