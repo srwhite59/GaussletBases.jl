@@ -728,30 +728,29 @@ is a separate design boundary, not a continuation of this cleanup.
 
 ## Paper-Aligned CI Boundary
 
-`HP-PUBLIC-PAPER-CI-FN-01` and `HP-PUBLIC-PAPER-CI-TEST-01` approve one
-bounded test/workflow implementation. PQS and reference-density Hartree
+`HP-PUBLIC-PAPER-CI-FN-01` and `HP-PUBLIC-PAPER-CI-TEST-01` own one
+implemented, bounded test/workflow contract. PQS and reference-density Hartree
 screening are separate publication surfaces and must appear as independently
 named CI gates. This boundary adds no scientific or release authority.
 
 Implementation commit `e65764377bd4640916e80342071da754d80aca32` landed the
 three-row matrix, both release groups, and the mechanical screening-test
-relocation. Local acceptance passed `18/18` PQS tests plus its example smoke,
-`22/22` screening tests plus its example smoke, and `14,133` checks in the
-unchanged bounded groups. Remotely, `Screening paper` and `Supported floor`
-passed; `PQS paper` reached the inherited `15`-minute job limit after setup,
-instantiation, and package load, with no reported numerical failure. The
-lifecycle therefore remains open. Exactly one workflow follow-up may change
-`timeout-minutes` from `15` to `30`; no test, matrix-row, Julia-version, group,
-or scientific change accompanies it. Final maintenance status requires all
-three corrected remote rows and Docs to pass.
+relocation. Commit `a4e85e820fd4056e985a18e20da87180f370ef66` changed only
+the inherited workflow timeout from `15` to `30` minutes. Remote CI run
+`32606409367` then passed all three unchanged gates: `Supported floor` on
+Julia `1.10.12` passed `14,133/14,133` in `5m21s`; `Screening paper` on Julia
+`1.12.7` passed `22/22` plus its example smoke in `1m03s`; and `PQS paper` on
+Julia `1.12.7` passed `18/18` plus its example smoke in `18m53s` total. Docs
+run `32606409363` also passed. The earlier PQS cancellation was therefore an
+operational timeout, not a numerical failure. Both records are in maintenance.
 
 The CI matrix has exactly three rows:
 
 | Gate name | Julia | Test selection |
 | --- | --- | --- |
 | `Supported floor` | `1.10` | existing `core,ida,cartesian,examples` |
-| `PQS paper` | `1.12` | new `pqs_release` group |
-| `Screening paper` | `1.12` | new `screening_release` group |
+| `PQS paper` | `1.12` | `pqs_release` group |
+| `Screening paper` | `1.12` | `screening_release` group |
 
 Julia `1.10` remains the declared compatibility-floor evidence. Julia `1.12`
 is the canonical paper-gate environment; this does not add Julia `1.11`,

@@ -1486,3 +1486,53 @@ Carrying-cost accounting:
 - validation: implementation/relocation/diff review, local and partial remote
   evidence, authority path reconciliation, generated views, docs checks,
   Documenter, manager-log bound, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 505 - Close Paper-Aligned CI Lifecycle
+
+Commit(s):
+- `e65764377bd4640916e80342071da754d80aca32` - matrix, groups, and test relocation;
+- `a4e85e820fd4056e985a18e20da87180f370ef66` - timeout-only repair;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Closed the workflow record as implemented/maintenance and its validation
+  record as completed/maintenance. The obsolete IDA test path is no longer a
+  continuing owner; maintenance is limited to the matrix workflow, runner,
+  and narrow public screening owner.
+- Remote CI `32606409367` passed `Supported floor` on Julia `1.10.12`
+  (`14,133/14,133`, `5m21s`), `Screening paper` on Julia `1.12.7` (`22/22`
+  plus smoke, `1m03s`), and `PQS paper` on Julia `1.12.7` (`18/18` plus
+  smoke, `18m53s`). Docs `32606409363` passed. The original cancellation was
+  solely the inherited `15`-minute limit; the endpoint is unchanged.
+
+Goal advancement / guardrail:
+- MT5's paper-aligned CI subtask is complete. PQS and screening remain
+  separately named publication surfaces; tag, release, citation, nested-suite,
+  and scientific policy remain outside this maintenance contract.
+
+Carrying-cost accounting:
+- deleted: the old `79`-line screening copy and obsolete IDA authority path.
+- simplified: one three-row matrix now owns compatibility and paper evidence.
+- quarantined: six nested research suites remain deliberately unwired.
+- not deleted because: all three gates protect live public contracts.
+- exact remaining caller/blocker: none for this lifecycle.
+- added/deleted `src` lines: `0/0`; new tests: one relocated owner and two
+  smokes; new metadata/status fields: none.
+- validation: commit/diff review, direct remote-run inspection, authority
+  render/check/self-test, generated views, docs tests, Documenter,
+  manager-log bound, docs-only scope review, and `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 505
+
+- **MT1 - active:** continue only evidence-led conformance repairs; the paper
+  CI work introduced no new discrepancy.
+- **MT2 - completed:** controlled Cr2 source migration remains closed.
+- **MT3 - active:** Standard60, scalable represented Hartree, corrected-WL
+  interpretation, and REQ-101 consumer acceptance remain separate work.
+- **MT4 - active:** residual/protected and consumer-owned PRF questions remain
+  unchanged.
+- **MT5 - maintenance:** RC1 state is immutable and the separate PQS/screening
+  CI gates are now accepted; final release, registration, and citations remain
+  separate decisions.
+- **MT6 - active:** nested research-suite classification remains a later
+  maintenance-versus-quarantine review; no suite was wired by this pass.

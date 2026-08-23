@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `8404c0633dd0e6ef9470765fe8d273a4f0f4d3871ae134fc82e943fb6479cd65`.
+> [authority.toml](authority.toml), SHA-256 `08a05a1e8201e479b0970888c5dca38d7c81b895ff9b8a9d96f681ee961b3ef1`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2237,8 +2237,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-PAPER-CI-FN-01 - paper-aligned PQS and screening CI workflow
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `tools`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2247,31 +2247,34 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `tool` / `existing`: `.github/workflows/ci.yml`
 - **Evidence:**
   - `git_commit`: `409bc41b46afced92e3e711b8a55760869ac5d3d`
+  - `git_commit`: `a4e85e820fd4056e985a18e20da87180f370ef66`
   - `git_commit`: `e65764377bd4640916e80342071da754d80aca32`
   - `manager_pass`: `503`
   - `manager_pass`: `504`
+  - `manager_pass`: `505`
 - **Dependencies:** `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`
-- **Scope:** The compact three-row matrix landed in e65764377bd4640916e80342071da754d80aca32: Supported floor on Julia 1.10 with the unchanged core,ida,cartesian,examples selection; PQS paper on Julia 1.12 with pqs\_release; and Screening paper on Julia 1.12 with screening\_release. The only remaining implementation action is changing timeout-minutes from 15 to 30 so the locally passing PQS gate can complete remotely; make no other workflow or test change. Run all rows for pull requests, main pushes, and v\* tag pushes while retaining contents:read, package instantiate/load, and disabled slow tests. Keep this lifecycle open until all three remote rows and Docs pass. Combined initial runner/workflow additions are preferred 45 and hard 65 lines. This grants workflow behavior only: no version, tag, release, registration, citation, docs deployment, dependency, compat, manifest, source, API, example-content, numerical, or nested-suite action. Preserve immutable RC1 tag/release state.
+- **Scope:** Maintain exactly the implemented three-row matrix: Supported floor on Julia 1.10 with the core,ida,cartesian,examples selection; PQS paper on Julia 1.12 with pqs\_release; and Screening paper on Julia 1.12 with screening\_release. Run all rows for pull requests, main pushes, and v\* tag pushes with timeout-minutes = 30, contents:read, package instantiate/load, and disabled slow tests. Preserve the independently named gates and do not merge the two paper surfaces. This maintenance grant permits no version, tag, release, registration, citation, docs deployment, dependency, compat, manifest, source, API, example-content, numerical, nested-suite, matrix-expansion, or Julia-version action. Preserve immutable RC1 tag/release state.
 
 ### HP-PUBLIC-PAPER-CI-TEST-01 - paper-aligned PQS and screening release validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Paper-Aligned CI Boundary`
 - **Owned paths:**
   - `test` / `existing`: `test/driver_public/screened_hartree_runtests.jl`
-  - `test` / `existing`: `test/ida/runtests.jl`
   - `test` / `existing`: `test/runtests.jl`
 - **Evidence:**
   - `git_commit`: `409bc41b46afced92e3e711b8a55760869ac5d3d`
+  - `git_commit`: `a4e85e820fd4056e985a18e20da87180f370ef66`
   - `git_commit`: `e65764377bd4640916e80342071da754d80aca32`
   - `manager_pass`: `503`
   - `manager_pass`: `504`
+  - `manager_pass`: `505`
 - **Dependencies:** `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PUBLIC-PAPER-CI-FN-01`
-- **Scope:** The pqs\_release and screening\_release groups landed in e65764377bd4640916e80342071da754d80aca32. pqs\_release includes the unchanged 18-test Table I owner and one example-41 smoke. screening\_release mechanically relocates the complete Public supplied-field screened Hartree testset from the IDA owner to the existing narrow public owner with every assertion and tolerance unchanged, deletes the old copy, and adds one example-40 smoke. No further test-content edit is authorized while final remote acceptance awaits the workflow-only timeout repair. Test assertions are net zero except those two smokes; add no fixture, reference data, helper, tolerance, numerical policy, replacement test, or nested-suite wiring. Report the three CI gate names, Julia versions, groups, counts, and runtimes separately.
+- **Scope:** Maintain exactly two public release groups. pqs\_release includes the unchanged 18-test Table I owner and one example-41 smoke. screening\_release owns the mechanically relocated 22-test Public supplied-field screened Hartree testset with every assertion and tolerance unchanged plus one example-40 smoke. Preserve separate gate reporting by name, Julia version, group, count, and runtime. Add no fixture, reference data, helper, tolerance, numerical policy, replacement test, duplicate IDA-owner copy, nested-suite wiring, or new paper gate.
 
 ### HP-QW-NESTED-DIAT-FN-01 - repair exported ordinary-QW nested diatomic front doors
 
