@@ -1536,3 +1536,47 @@ Carrying-cost accounting:
   separate decisions.
 - **MT6 - active:** nested research-suite classification remains a later
   maintenance-versus-quarantine review; no suite was wired by this pass.
+
+## Cartesian Hamiltonian Producer Pass 506 - Authorize Public Residual-GTO CI Owner
+
+Commit(s):
+- `346589a6dafd8fbfe1794947dc8cb7da4d07606b` - implemented public system and overlap action;
+- this docs-only authority amendment.
+
+Summary:
+- Added `HP-REP-PQS-RG-WORKING-CI-FN-01/TEST-01` to close the demonstrated
+  runner gap for `cartesian_residual_gto_mwg_system`. Its functional H2
+  coverage currently lives only in the unwired `1,427`-line R3A suite.
+- Approved one public-only owner under `test/driver_public` and one include in
+  the existing `:cartesian` group. It covers the opaque result's supported
+  Hamiltonian, full/indexed GTO overlap, normalized packet import, capture,
+  fingerprint rejection, bounded malformed inputs, dimensions, symmetry, and
+  the accepted self-Coulomb fingerprint.
+- The extraction must leave unique private transform-formula,
+  assembly-boundary, artifact/readback, provenance, and due-diligence evidence
+  unwired. It may not inspect private result fields or call a private overlap
+  helper from the new owner.
+
+Goal advancement / guardrail:
+- MT1 gains normal compatibility-floor protection for one post-RC1 public
+  export. MT5 remains unchanged: final-release versus RC2 inclusion is a later
+  decision. MT6 still owns the separate classification of the remaining
+  nested research suite.
+
+Carrying-cost accounting:
+- deleted: no test code yet; implementation must delete at least as many old
+  public-facade lines as the new owner plus runner include adds.
+- simplified: one supported public contract moves into the existing Cartesian
+  gate without another CI row.
+- quarantined: private R3A artifact/provenance and research assertions remain
+  unwired pending separate review.
+- not deleted because: the exact transform oracle and artifact evidence remain
+  unique.
+- exact remaining caller/blocker: repo-manager must complete a public-only
+  extraction with total tracked test LOC non-increasing.
+- added/deleted `src` lines: `0/0`; new tests: one planned narrow owner; new
+  metadata/status fields: two authority records only.
+- validation: source/export/caller and exact test-block review, runner and
+  public API inspection, authority render/check/self-test, generated-view
+  parity, docs tests, Documenter, manager-log bound, docs-only scope review,
+  and `git diff --check`.

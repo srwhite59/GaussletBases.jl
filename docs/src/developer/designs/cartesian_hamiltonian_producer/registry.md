@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `08a05a1e8201e479b0970888c5dca38d7c81b895ff9b8a9d96f681ee961b3ef1`.
+> [authority.toml](authority.toml), SHA-256 `9227beb7199ca914f6c094b2b20e2728edb23888f940d27de4c2e229f7ee31d1`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2881,6 +2881,41 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Dependencies:** `HP-REP-MIXDENS-HARTREE-FN-01`
 - **Scope:** Extend only the existing bounded mixed-basis test owner by 120 preferred/180 hard lines, with final length at most 360: compare occupied-contracted block/separable GG, GA/AG, and AA sectors and complete native fields with the bounded component and independent Gaussian oracles; distinguish residual 1e-10 cross/scale-aware 5e-8 identity validity from strict 1e-10 state recovery; and validate deterministic two-size contraction/resource accounting plus unchanged atomic and screened owners. No Cr2 fixture, fit, solver, or metadata/status test.
 
+### HP-REP-PQS-RG-WORKING-CI-FN-01 - PQS residual-GTO public Cartesian CI wiring
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `Public Cartesian CI Extraction`
+- **Owned paths:**
+  - `test` / `existing`: `test/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `346589a6dafd8fbfe1794947dc8cb7da4d07606b`
+  - `git_commit`: `0adac132c213efc712d27347b043dd57c204d745`
+  - `manager_pass`: `506`
+- **Dependencies:** `HP-REP-PQS-RG-WORKING-FN-01`
+- **Scope:** Add exactly one include for the planned public residual-GTO/MWG system owner to the existing :cartesian group in test/runtests.jl. The Julia 1.10 Supported-floor row must own the regression through the unchanged cartesian selection. Add no CI row, workflow edit, group, example smoke, nested-suite wiring, fixture, helper, or source/API behavior; do not alter the separately named PQS and screening paper gates.
+
+### HP-REP-PQS-RG-WORKING-CI-TEST-01 - PQS residual-GTO public Cartesian validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `Public Cartesian CI Extraction`
+- **Owned paths:**
+  - `test` / `planned`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
+  - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
+- **Evidence:**
+  - `git_commit`: `346589a6dafd8fbfe1794947dc8cb7da4d07606b`
+  - `git_commit`: `0adac132c213efc712d27347b043dd57c204d745`
+  - `manager_pass`: `506`
+- **Dependencies:** `HP-REP-PQS-RG-WORKING-CI-FN-01`, `HP-REP-PQS-RG-WORKING-TEST-01`, `HP-REP-XGTO-IMPORT-TEST-01`
+- **Scope:** Create only test/driver\_public/cartesian\_residual\_gto\_mwg\_system\_runtests.jl and extract the duplicated public-facade coverage from the unwired R3A owner. Through public APIs, construct the accepted H2 residual-GTO/MWG system; treat the result as opaque except for .hamiltonian; validate 487 + 18 = 505 dimensions, finite symmetric matrices, sector/nuclei, the 0.4574161883692301 self-Coulomb fingerprint, full/indexed GTO overlap, one normalized public-only external packet, restricted or alpha/beta import capture/orthogonality, stale-fingerprint rejection, and a bounded malformed system/basis/supplement set. Do not call private overlap helpers or inspect private result fields. Preserve unique private exact-formula, assembly-boundary, artifact/provenance, and due-diligence checks in the old suite. Preferred/hard new-owner budget is 100/140 lines; delete at least the owner-plus-runner addition from the old public section so total tracked test LOC is non-increasing. Add no fixture, helper, production source, workflow, API, numerical policy, or other nested-suite wiring.
+
 ### HP-REP-PQS-RG-WORKING-FN-01 - PQS residual-GTO same-construction working basis
 
 - **Lifecycle:** `implemented`
@@ -2919,7 +2954,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `501`
   - `manager_pass`: `502`
 - **Dependencies:** `HP-REP-PQS-RG-WORKING-FN-01`, `HP-REP-XGTO-IMPORT-TEST-01`
-- **Scope:** Maintain only the accepted checks in the existing supplemented-H2 and docs owners: exact direct-Hamiltonian and artifact parity, native \`S\_GX\`/\`S\_AX\`/\`S\_RX\` formula parity, block selection, malformed and nonfinite rejection, unchanged \`ExternalGTOOrbitalPacket\` import as \`S\_BX\*C\_X\`, capture diagnostics, terminal due diligence, and curated-reference parity. REQ-101 remains external acceptance; add no C2 fixture, test file, generalized-representation assertion, solver, or screening policy under this record.
+- **Scope:** Maintain the accepted private-oracle and documentation checks in the existing supplemented-H2 and docs owners: exact direct-Hamiltonian/artifact parity, native \`S\_GX\`/\`S\_AX\`/\`S\_RX\` formula and private assembly-boundary validation, artifact readback/provenance, terminal due diligence, and curated-reference parity. Public-only result, overlap, packet-import, and malformed-input coverage transfers solely under HP-REP-PQS-RG-WORKING-CI-\*. Preserve unique private evidence while removing duplicate public assertions. REQ-101 remains external acceptance; add no C2 fixture, generalized-representation assertion, solver, or screening policy under this record.
 
 ### HP-REP-XGTO-IMPORT-FN-01 - external GTO orbital import
 

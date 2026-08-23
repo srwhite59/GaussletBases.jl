@@ -136,16 +136,16 @@ These are stop-and-report bounds, not reasons to obscure validation or merge
 unrelated responsibilities. If coherent implementation exceeds the hard
 bound, make no source commit and return the exact missing reusable operation.
 
-## Validation
+## Accepted Implementation Validation
 
-Extend only:
+The original implementation validation used:
 
-- `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`;
+- `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` for exact
+  same-construction, formula, import, artifact, and provenance evidence;
 - `test/docs/runtests.jl` for the single export/reference parity entry.
 
-Preferred/hard added-test limits are 70/100 lines. Add no test file or fixture.
-The supplemented H2 gate must catch the information-loss and transpose/order
-defects that existing Hamiltonian tests cannot detect:
+That supplemented H2 gate caught the information-loss and transpose/order
+defects that the older Hamiltonian tests could not detect:
 
 1. Construct the result through the new public function and preserve exact
    Hamiltonian matrices, dimensions, due diligence, and direct-facade behavior.
@@ -174,6 +174,56 @@ Accepted implementation evidence from commit `346589a6d` is:
   `+/-4.871`, `+/-4.871`, and `+/-6.110` bounds, `4`-bohr padding, retained
   rows `[275,114,98]`, and only the pre-existing shape, axis-display, and
   large-identity warnings.
+
+## Public Cartesian CI Extraction
+
+`HP-REP-PQS-RG-WORKING-CI-FN-01` and
+`HP-REP-PQS-RG-WORKING-CI-TEST-01` authorize one bounded extraction because
+the exported constructor is otherwise protected only by an unwired,
+mixed-purpose nested suite.
+
+Add exactly one narrow public owner:
+
+```text
+test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl
+```
+
+Include that owner once in the existing `:cartesian` group in
+`test/runtests.jl`. The existing Julia `1.10` Supported-floor row owns the
+remote regression. Do not add a CI row, alter the PQS or screening paper
+groups, or wire the complete R3A file or any other `test/nested` suite.
+
+The new owner exercises only documented public behavior:
+
+1. Construct the bounded H2 system with the accepted `q=5`, `0.5` core
+   spacing, `6.0/4.0` extents, and contracted H/cc-pVTZ `lmax=1` supplement.
+2. Treat the concrete result as opaque except for `result.hamiltonian`.
+   Validate native dimension `487 + 18 = 505`, finite symmetric matrices,
+   the `1/1` particle sector, nuclei, and the existing
+   `0.4574161883692301` self-Coulomb fingerprint.
+3. Build a normalized one-orbital external GTO probe entirely through public
+   representation and packet constructors. Exercise full and indexed
+   `gto_overlap_matrix`, either restricted or alpha/beta import, source
+   orthogonality, capture, and stale packet fingerprint rejection. Do not call
+   `_cartesian_supplement_cross_overlap`, inspect private result fields, or
+   reconstruct the residual transform formula in this owner.
+4. Reject a small representative set of malformed public `system`, `basis`,
+   and `supplement` inputs. Do not reproduce every historical blocked-path
+   assertion.
+
+The old R3A owner must lose the public-facade assertions duplicated by this
+gate. Preserve there only unique private exact-formula, assembly-boundary,
+artifact/readback, provenance, and due-diligence evidence until that suite has
+its separate maintenance-versus-quarantine review. The existing
+`HP-REP-PQS-RG-WORKING-TEST-01` continues to own those private oracle and docs
+checks; the new CI records own only the public extraction and runner wiring.
+
+Preferred/hard additions to the new owner are `100/140` test lines. Delete at
+least as many tracked test lines from the old public-facade section as are
+added by the new owner and runner include, so total tracked test LOC does not
+increase. Add no fixture file or shared helper. If a public-only probe cannot
+satisfy the contract within that non-growth rule, make no implementation
+commit and report the smallest missing reusable fixture or public operation.
 
 With repository acceptance complete, the separate REQ-101 consumer may rerun
 only its frozen `R=2.35`, `ns=5`, PQS early case. It must use the unchanged
