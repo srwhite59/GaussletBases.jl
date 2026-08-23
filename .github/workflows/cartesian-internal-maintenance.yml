@@ -7,7 +7,7 @@ jobs:
   maintenance:
     name: Cartesian internal maintenance
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
