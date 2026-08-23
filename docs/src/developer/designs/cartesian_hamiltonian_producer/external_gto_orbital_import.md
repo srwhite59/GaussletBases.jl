@@ -271,18 +271,32 @@ unchanged.
 
 ## Validation And Failure Boundary
 
-The committed test owner is:
+The current committed nested owner is:
 
 ```text
 test/nested/cartesian_external_gto_import_runtests.jl
 ```
 
-It covers generic restricted/spin-resolved imports, fingerprint/order/metric
-failures, occupied rotations, exact protected handoff parity, rectangular
-capture dimensions, alpha/beta direct imports, sidecar key inventory and
-roundtrip, saved-overlap reimport, packet/member/artifact validation, relocated
-artifact acceptance, and payload tampering. It uses synthetic repo-owned
-packets and no PySCF dependency or molecular endpoint.
+Pass 508 approves moving its unique public general-import assertions into the
+already-wired owner:
+
+```text
+test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl
+```
+
+That extraction covers occupied rotations, explicit spin handling, packet
+ordering and source-metric identity, and malformed metric/fingerprint/spin
+inputs through root-public APIs. It reuses the existing residual-GTO system and
+a mathematically orthonormal two-probe Cartesian Gaussian fixture; it may not
+call a private overlap helper. The redundant first nested testset is deleted in
+the same commit.
+
+The complete protected-sidecar testset remains direct-run in the nested file.
+It continues to own exact protected handoff parity, rectangular capture,
+sidecar keys and roundtrip, saved-overlap reimport, packet/member/artifact
+validation, relocated-artifact acceptance, and payload tampering. Shared
+helpers needed by that retained testset remain. Both owners use synthetic
+repo-owned packets and no PySCF dependency or molecular endpoint.
 
 The facility must not add or perform:
 

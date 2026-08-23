@@ -1620,3 +1620,46 @@ Carrying-cost accounting:
   Docs-log inspection, authority render/check/self-test, generated views, docs
   tests, package load, Documenter, manager-log bound, docs-only scope review,
   and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 508 - Authorize External-GTO Public Coverage Extraction
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Reopened only `HP-REP-PQS-RG-WORKING-CI-TEST-01` for a bounded extraction
+  from the first external-GTO nested testset into the existing wired public
+  residual-GTO owner. The implementation must reuse the paid H2 construction
+  and a public, mathematically orthonormal two-probe Cartesian Gaussian
+  fixture; private overlap helpers remain forbidden.
+- Approved public checks are equal-occupation rotations, explicit alpha/beta
+  imports, source metric/order identity, stale or wrong fingerprints/metrics,
+  invalid spin combinations, and nonorthonormal source coefficients. The
+  complete protected-sidecar testset, artifact schema, tamper coverage, and
+  direct-run status remain unchanged.
+
+Goal advancement / guardrail:
+- MT6 begins evidence-led nested-suite classification by extracting a real
+  public gap without wiring another suite. The three current CI gates and RC1
+  remain unchanged. Added test lines are `65-95` preferred and `110` hard;
+  deletion must include the approximately `110`-line redundant first testset
+  and leave total tracked test lines negative.
+
+Carrying-cost accounting:
+- deleted: no implementation yet; the approved implementation must delete the
+  complete duplicate general-import nested testset.
+- simplified: public import validation joins its existing public consumer
+  owner instead of creating another fixture, file, runner, or CI row.
+- quarantined: the protected sidecar and the other five nested suites remain
+  direct-run and outside this pass.
+- not deleted because: protected sidecar roundtrip, identity, and tamper checks
+  remain unique internal artifact evidence.
+- exact remaining caller/blocker: repo-manager must preserve all sidecar helper
+  dependencies while achieving a negative tracked-test delta; otherwise no
+  implementation commit is allowed.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  none.
+- validation: exact assertion/helper ownership review, authority and canonical
+  contract reconciliation, generated-view parity, authority check/self-test,
+  docs tests, Documenter, manager-log bound, docs-only scope review, and
+  `git diff --check`.

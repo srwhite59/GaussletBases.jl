@@ -177,10 +177,11 @@ Accepted implementation evidence from commit `346589a6d` is:
 
 ## Public Cartesian CI Extraction
 
-`HP-REP-PQS-RG-WORKING-CI-FN-01` and
-`HP-REP-PQS-RG-WORKING-CI-TEST-01` own the implemented public-CI extraction.
-Commit `50b5ee9a1` moved the supported contract out of the unwired,
-mixed-purpose nested suite without changing production behavior.
+`HP-REP-PQS-RG-WORKING-CI-FN-01` owns the implemented public-CI wiring.
+`HP-REP-PQS-RG-WORKING-CI-TEST-01` owns the accepted `21`-check baseline and
+is reopened narrowly for the approved external-GTO public-coverage extraction.
+Commit `50b5ee9a1` moved the original supported contract out of the unwired,
+mixed-purpose R3A suite without changing production behavior.
 
 Maintain exactly one narrow public owner:
 
@@ -220,10 +221,12 @@ checks; the new CI records own only the public extraction and runner wiring.
 
 The accepted owner is `68` lines and the runner adds one line; `75` obsolete
 public-facade lines were removed from the old owner, for net `-5` tracked test
-lines. Future maintenance must not use this record to expand the fixture,
-restore duplicate nested assertions, or add a helper. The original
-preferred/hard owner limits were `100/140` lines and remain upper bounds, not
-targets.
+lines. The Pass 508 extraction below is the sole approved extension: it may add
+the inline two-probe public fixture while deleting the duplicated nested
+testset, but no standalone fixture/helper file. Other maintenance must not
+expand the fixture or restore duplicate nested assertions. The original
+preferred/hard owner limits were `100/140` lines; the narrower Pass 508 added-
+line and net-reduction limits supersede them for this extraction.
 
 Accepted evidence from commit `50b5ee9a1` is:
 
@@ -234,6 +237,45 @@ Accepted evidence from commit `50b5ee9a1` is:
   paper without changing either paper gate;
 - terminal due diligence remains `9x9x15` parent axes, `4`-bohr padding, `487`
   terminal functions, `18` residuals, and final dimension `505`.
+
+### Approved External-GTO Public Coverage Extraction
+
+The existing public owner may now absorb the unique general-import assertions
+from the first testset in
+`test/nested/cartesian_external_gto_import_runtests.jl`. It must reuse the
+already-constructed residual-GTO system; another Cartesian construction is
+forbidden.
+
+Construct exactly two normalized, mutually orthogonal Cartesian Gaussian
+probes through root-public representation APIs. A matched `px`/`py` pair with
+the same center, exponent, and contraction is preferred: normalization and
+angular parity then make `S_GG = I` a property of the fixture rather than a
+private-helper result. The public owner must not call
+`_cartesian_supplement_cross_overlap` or inspect an internal representation.
+
+The extracted assertions are limited to:
+
+- one basic successful import;
+- equal-occupation occupied-space rotation invariance;
+- explicit alpha/beta import and invalid spin combinations;
+- valid source-metric and ordering identity;
+- stale ordering or fingerprint rejection;
+- refingerprinted-but-wrong and nonsymmetric source metrics;
+- rejection of nonorthonormal source coefficients.
+
+Delete the complete redundant `External GTO orbital import` testset from the
+nested file. Preserve its complete `Protected external GTO representation
+sidecar` testset, artifact/tamper cases, direct-run status, and every shared
+helper that remains necessary. Do not leave a duplicate restricted-import
+cluster in both owners.
+
+Added public-owner lines are limited to `65-95` preferred and `110` hard.
+Delete at least the approximately `110` lines of the old first testset. Total
+tracked test lines must decrease, preferably by `15-45`. Add no test file,
+runner include, workflow edit, CI row, source/API change, fixture file, or
+coverage from another nested suite. If preserving the sidecar helpers makes a
+coherent negative delta impossible, make no implementation commit and report
+the exact shared-helper obstacle.
 
 With repository acceptance complete, the separate REQ-101 consumer may rerun
 only its frozen `R=2.35`, `ns=5`, PQS early case. It must use the unchanged

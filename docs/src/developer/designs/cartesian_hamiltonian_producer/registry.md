@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `ce740564a1760f619e1437e0ddfaaa1194d1a64d93dd4e0c3b1f8a7e66f05c69`.
+> [authority.toml](authority.toml), SHA-256 `785f34cbc0020596eb1531d114cc45fce6a25122ae598fc07fddbb9fe532b1d0`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2898,27 +2898,28 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `506`
   - `manager_pass`: `507`
 - **Dependencies:** `HP-REP-PQS-RG-WORKING-FN-01`
-- **Scope:** Maintain exactly one include for test/driver\_public/cartesian\_residual\_gto\_mwg\_system\_runtests.jl in the existing :cartesian group in test/runtests.jl, as accepted in 50b5ee9a1fd77bbcf7b8e8e95b3f0a79a53d11bc. The Julia 1.10 Supported-floor row owns the regression through the unchanged cartesian selection. Add no CI row, workflow edit, group, example smoke, nested-suite wiring, fixture, helper, or source/API behavior; do not alter the separately named PQS and screening paper gates.
+- **Scope:** Maintain exactly one include for test/driver\_public/cartesian\_residual\_gto\_mwg\_system\_runtests.jl in the existing :cartesian group in test/runtests.jl, as accepted in 50b5ee9a1fd77bbcf7b8e8e95b3f0a79a53d11bc. The Julia 1.10 Supported-floor row owns the regression through the unchanged cartesian selection. Add no CI row, workflow edit, group, example smoke, nested-suite wiring, standalone fixture/helper file, or source/API behavior; inline public test construction is owned only by HP-REP-PQS-RG-WORKING-CI-TEST-01. Do not alter the separately named PQS and screening paper gates.
 
 ### HP-REP-PQS-RG-WORKING-CI-TEST-01 - PQS residual-GTO public Cartesian validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `Public Cartesian CI Extraction`
 - **Owned paths:**
   - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
-  - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
+  - `test` / `existing`: `test/nested/cartesian_external_gto_import_runtests.jl`
 - **Evidence:**
   - `git_commit`: `346589a6dafd8fbfe1794947dc8cb7da4d07606b`
   - `git_commit`: `0adac132c213efc712d27347b043dd57c204d745`
   - `git_commit`: `50b5ee9a1fd77bbcf7b8e8e95b3f0a79a53d11bc`
   - `manager_pass`: `506`
   - `manager_pass`: `507`
+  - `manager_pass`: `508`
 - **Dependencies:** `HP-REP-PQS-RG-WORKING-CI-FN-01`, `HP-REP-PQS-RG-WORKING-TEST-01`, `HP-REP-XGTO-IMPORT-TEST-01`
-- **Scope:** Maintain the accepted 68-line public owner and its 21 public-contract checks from 50b5ee9a1fd77bbcf7b8e8e95b3f0a79a53d11bc: opaque result except for .hamiltonian; 487 + 18 = 505 dimensions; finite symmetric matrices; sector/nuclei; the 0.4574161883692301 self-Coulomb fingerprint; full/indexed GTO overlap; normalized restricted packet import, capture, orthogonality, stale-fingerprint rejection; and three bounded malformed public inputs. Keep private overlap helpers and result fields out of this owner. Preserve unique private exact-formula, assembly-boundary, artifact/provenance, and due-diligence checks in the unwired R3A suite without restoring the 75 removed public lines. Add no fixture, helper, production source, workflow, API, numerical policy, duplicate coverage, or other nested-suite wiring.
+- **Scope:** Extend only the existing wired public owner with the unique public portion of the external-GTO import validation, then delete the complete first \`External GTO orbital import\` testset from the nested owner. Reuse the already-constructed residual-GTO system and construct exactly two normalized, mutually orthogonal Cartesian Gaussian probes through root-public APIs so \`S\_GG = I\` follows from the fixture. Cover one successful import, equal-occupation occupied rotation, explicit alpha/beta handling, source metric/order identity, stale ordering/fingerprint, refingerprinted wrong metric, nonsymmetric metric, invalid spin combinations, and nonorthonormal source coefficients. Call no private helper. Preserve the complete protected-sidecar testset and every helper it still needs. Add 65-95 preferred/110 hard test lines, delete at least the approximately 110-line redundant first testset, and require a negative tracked-test delta, preferably 15-45 lines. Add no source, API, fixture file, runner, workflow, CI row, dependency, numerical policy, or other nested-suite edit. If shared helper retention prevents a coherent negative delta, make no implementation commit and report the exact obstacle.
 
 ### HP-REP-PQS-RG-WORKING-FN-01 - PQS residual-GTO same-construction working basis
 
@@ -2985,10 +2986,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [external\_gto\_orbital\_import.md](external_gto_orbital_import.md); heading `External GTO Orbital Import`
 - **Owned paths:**
+  - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
   - `test` / `existing`: `test/nested/cartesian_external_gto_import_runtests.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-REP-XGTO-IMPORT-FN-01`
-- **Scope:** maintain packet identity/order/\`S\_GG\`, restricted/spin-resolved import, capture, rotation-invariance, and malformed-input checks.
+- **Scope:** Maintain packet identity/order/\`S\_GG\`, restricted/spin-resolved import, capture, rotation invariance, and malformed-input checks across the wired public residual-GTO owner and the separately retained protected-sidecar nested owner. Public importer assertions transfer only under HP-REP-PQS-RG-WORKING-CI-TEST-01; protected-sidecar assertions remain governed by HP-REP-XGTO-PROTECT-SIDECAR-TEST-01.
 
 ### HP-REP-XGTO-PROTECT-SIDECAR-FN-01 - protected external-GTO representation sidecar
 

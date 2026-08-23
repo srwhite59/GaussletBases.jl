@@ -47,7 +47,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_
 sha256 = "006cf3d692f971c467e2e28a50a752a72bc6db9df103b8842e91afa551c0ed02"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_orbital_import.md"
-sha256 = "f9d964a80d831836cccf52a13b9590d0fb51acb6eccf24ad24efeb93be3aea76"
+sha256 = "bcfa29b66405b239110a8e9cbd9a22a88e447ddc3731af765422c2470f01d942"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md"
 sha256 = "51b8c888b36ee2c37db99d2ae90fc458134517173c7421bc85a95876ebf37fe8"
@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_sur
 sha256 = "9c05113de4ae5313e9d77e7fbd3a740727e6cf7de399ddfbe74a9c49c94b682e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
-sha256 = "6a32a31442314319e277cbd9c3a553c299dac8c5d35977ce3bceb46b204d53a6"
+sha256 = "d6b483613d68a75d9e44b18f1180fe978d5afac7e4c10034824465ae06662303"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "803063ecdc263c9767f08b41b0c20a736482d8dfe44a97d0720e6e3b19f3e91f"
@@ -4859,7 +4859,7 @@ dependency_ids = ["HP-REP-PQS-RG-WORKING-FN-01"]
 grant = "maintenance"
 id = "HP-REP-PQS-RG-WORKING-CI-FN-01"
 lifecycle = "implemented"
-scope = "Maintain exactly one include for test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl in the existing :cartesian group in test/runtests.jl, as accepted in 50b5ee9a1fd77bbcf7b8e8e95b3f0a79a53d11bc. The Julia 1.10 Supported-floor row owns the regression through the unchanged cartesian selection. Add no CI row, workflow edit, group, example smoke, nested-suite wiring, fixture, helper, or source/API behavior; do not alter the separately named PQS and screening paper gates."
+scope = "Maintain exactly one include for test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl in the existing :cartesian group in test/runtests.jl, as accepted in 50b5ee9a1fd77bbcf7b8e8e95b3f0a79a53d11bc. The Julia 1.10 Supported-floor row owns the regression through the unchanged cartesian selection. Add no CI row, workflow edit, group, example smoke, nested-suite wiring, standalone fixture/helper file, or source/API behavior; inline public test construction is owned only by HP-REP-PQS-RG-WORKING-CI-TEST-01. Do not alter the separately named PQS and screening paper gates."
 surfaces = ["tests"]
 title = "PQS residual-GTO public Cartesian CI wiring"
 
@@ -4890,10 +4890,10 @@ title = "PQS residual-GTO public Cartesian CI wiring"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-REP-PQS-RG-WORKING-CI-FN-01", "HP-REP-PQS-RG-WORKING-TEST-01", "HP-REP-XGTO-IMPORT-TEST-01"]
-grant = "maintenance"
+grant = "implementation"
 id = "HP-REP-PQS-RG-WORKING-CI-TEST-01"
-lifecycle = "completed"
-scope = "Maintain the accepted 68-line public owner and its 21 public-contract checks from 50b5ee9a1fd77bbcf7b8e8e95b3f0a79a53d11bc: opaque result except for .hamiltonian; 487 + 18 = 505 dimensions; finite symmetric matrices; sector/nuclei; the 0.4574161883692301 self-Coulomb fingerprint; full/indexed GTO overlap; normalized restricted packet import, capture, orthogonality, stale-fingerprint rejection; and three bounded malformed public inputs. Keep private overlap helpers and result fields out of this owner. Preserve unique private exact-formula, assembly-boundary, artifact/provenance, and due-diligence checks in the unwired R3A suite without restoring the 75 removed public lines. Add no fixture, helper, production source, workflow, API, numerical policy, duplicate coverage, or other nested-suite wiring."
+lifecycle = "approved"
+scope = "Extend only the existing wired public owner with the unique public portion of the external-GTO import validation, then delete the complete first `External GTO orbital import` testset from the nested owner. Reuse the already-constructed residual-GTO system and construct exactly two normalized, mutually orthogonal Cartesian Gaussian probes through root-public APIs so `S_GG = I` follows from the fixture. Cover one successful import, equal-occupation occupied rotation, explicit alpha/beta handling, source metric/order identity, stale ordering/fingerprint, refingerprinted wrong metric, nonsymmetric metric, invalid spin combinations, and nonorthonormal source coefficients. Call no private helper. Preserve the complete protected-sidecar testset and every helper it still needs. Add 65-95 preferred/110 hard test lines, delete at least the approximately 110-line redundant first testset, and require a negative tracked-test delta, preferably 15-45 lines. Add no source, API, fixture file, runner, workflow, CI row, dependency, numerical policy, or other nested-suite edit. If shared helper retention prevents a coherent negative delta, make no implementation commit and report the exact obstacle."
 surfaces = ["tests"]
 title = "PQS residual-GTO public Cartesian validation"
 
@@ -4917,6 +4917,9 @@ title = "PQS residual-GTO public Cartesian validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "507"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "508"
 
     [[records.paths]]
     kind = "test"
@@ -4924,7 +4927,7 @@ title = "PQS residual-GTO public Cartesian validation"
     state = "existing"
     [[records.paths]]
     kind = "test"
-    path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
+    path = "test/nested/cartesian_external_gto_import_runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-R3U-FN-01", "HP-R3U-WIRE-01", "HP-REP-XGTO-IMPORT-FN-01"]
@@ -5036,7 +5039,7 @@ evidence_refs = []
 grant = "maintenance"
 id = "HP-REP-XGTO-IMPORT-TEST-01"
 lifecycle = "implemented"
-scope = "maintain packet identity/order/`S_GG`, restricted/spin-resolved import, capture, rotation-invariance, and malformed-input checks."
+scope = "Maintain packet identity/order/`S_GG`, restricted/spin-resolved import, capture, rotation invariance, and malformed-input checks across the wired public residual-GTO owner and the separately retained protected-sidecar nested owner. Public importer assertions transfer only under HP-REP-PQS-RG-WORKING-CI-TEST-01; protected-sidecar assertions remain governed by HP-REP-XGTO-PROTECT-SIDECAR-TEST-01."
 surfaces = ["tests"]
 title = "external GTO orbital import validation"
 
@@ -5045,6 +5048,10 @@ title = "external GTO orbital import validation"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_orbital_import.md"
 
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl"
+    state = "existing"
     [[records.paths]]
     kind = "test"
     path = "test/nested/cartesian_external_gto_import_runtests.jl"
