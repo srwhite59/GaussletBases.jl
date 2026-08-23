@@ -1,0 +1,29 @@
+name: Cartesian internal maintenance
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 10 * * 3"
+jobs:
+  maintenance:
+    name: Cartesian internal maintenance
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with: {version: "1.12"}
+      - uses: julia-actions/cache@v2
+      - name: Instantiate package
+        run: julia --project=. -e 'using Pkg; Pkg.instantiate()'
+      - name: Check package load
+        run: julia --project=. -e 'using GaussletBases'
+      - name: Atomic reference packet
+        run: julia --project=. test/nested/cartesian_atomic_hf_reference_packet_runtests.jl
+      - name: Protected external GTO sidecar
+        run: julia --project=. test/nested/cartesian_external_gto_import_runtests.jl
+      - name: R3A augmented one-body
+        run: julia --project=. test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+      - name: Screened Hartree correction
+        run: julia --project=. test/nested/cartesian_screened_hartree_correction_runtests.jl

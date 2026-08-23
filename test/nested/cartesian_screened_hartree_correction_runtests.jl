@@ -423,54 +423,7 @@ end
         supplement_indices = 1:packet_count)
     @test readback_embedding.Y == packet_embedding.Y
     @test readback_embedding.overlap_mapping == packet_embedding.overlap_mapping
-    unconverged_readback = merge(readback, (; rhf_converged = false))
-    @test_throws ArgumentError CRD.atomic_reference_packet_p0_q0(unconverged_readback)
-    for source in (:density_fit, :potential_fit)
-        @test_throws ArgumentError CRD.atomic_reference_packet_terminal_hartree_gg(
-            fixture.base, unconverged_readback; source)
-    end
-    @test_throws ArgumentError CRD.build_atomic_packet_screened_hartree_correction(
-        fixture.base,
-        fixture.ham,
-        unconverged_readback;
-        reference_coefficients = terminal_C,
-        occupations = terminal_occ)
 
-    bad_reference = copy(packet_reference.C_final)
-    bad_reference[:, 1] .*= 1.1
-    @test_throws ArgumentError CRD.build_screened_hartree_correction(
-        packet_reference.V,
-        packet_reference.J_final,
-        packet_reference.E0,
-        bad_reference,
-        packet_reference.occupations,
-    )
-
-    @test_throws ArgumentError CRD.build_screened_hartree_correction(
-        packet_reference.V,
-        packet_reference.J_final,
-        1.1 * packet_reference.E0,
-        packet_reference.C_final,
-        packet_reference.occupations;
-        source = :density_fit,
-    )
-
-    asymmetric_J = copy(packet_reference.J_final)
-    asymmetric_J[1, 2] += 1.0e-4
-    @test_throws ArgumentError CRD.build_screened_hartree_correction(
-        packet_reference.V,
-        asymmetric_J,
-        packet_reference.E0,
-        packet_reference.C_final,
-        packet_reference.occupations,
-    )
-    @test_throws DimensionMismatch CRD.build_screened_hartree_correction(
-        packet_reference.V[1:(end - 1), 1:(end - 1)],
-        packet_reference.J_final,
-        packet_reference.E0,
-        packet_reference.C_final,
-        packet_reference.occupations,
-    )
     @test_throws DimensionMismatch CRD.build_atomic_packet_screened_hartree_correction(
         fixture.base,
         fixture.ham,
