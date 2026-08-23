@@ -47,7 +47,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_
 sha256 = "006cf3d692f971c467e2e28a50a752a72bc6db9df103b8842e91afa551c0ed02"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_orbital_import.md"
-sha256 = "bcfa29b66405b239110a8e9cbd9a22a88e447ddc3731af765422c2470f01d942"
+sha256 = "d96de83c2f64b65c170002ae17cde88c817730e6568875f0f13e9e0560d0e3ab"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md"
 sha256 = "51b8c888b36ee2c37db99d2ae90fc458134517173c7421bc85a95876ebf37fe8"
@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_sur
 sha256 = "9c05113de4ae5313e9d77e7fbd3a740727e6cf7de399ddfbe74a9c49c94b682e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
-sha256 = "d6b483613d68a75d9e44b18f1180fe978d5afac7e4c10034824465ae06662303"
+sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "803063ecdc263c9767f08b41b0c20a736482d8dfe44a97d0720e6e3b19f3e91f"
@@ -4890,10 +4890,10 @@ title = "PQS residual-GTO public Cartesian CI wiring"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-REP-PQS-RG-WORKING-CI-FN-01", "HP-REP-PQS-RG-WORKING-TEST-01", "HP-REP-XGTO-IMPORT-TEST-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-REP-PQS-RG-WORKING-CI-TEST-01"
-lifecycle = "approved"
-scope = "Extend only the existing wired public owner with the unique public portion of the external-GTO import validation, then delete the complete first `External GTO orbital import` testset from the nested owner. Reuse the already-constructed residual-GTO system and construct exactly two normalized, mutually orthogonal Cartesian Gaussian probes through root-public APIs so `S_GG = I` follows from the fixture. Cover one successful import, equal-occupation occupied rotation, explicit alpha/beta handling, source metric/order identity, stale ordering/fingerprint, refingerprinted wrong metric, nonsymmetric metric, invalid spin combinations, and nonorthonormal source coefficients. Call no private helper. Preserve the complete protected-sidecar testset and every helper it still needs. Add 65-95 preferred/110 hard test lines, delete at least the approximately 110-line redundant first testset, and require a negative tracked-test delta, preferably 15-45 lines. Add no source, API, fixture file, runner, workflow, CI row, dependency, numerical policy, or other nested-suite edit. If shared helper retention prevents a coherent negative delta, make no implementation commit and report the exact obstacle."
+lifecycle = "completed"
+scope = "Maintain the accepted 136-line, 47-check public residual-GTO/import owner from c633d5db0e51c1795f4a4ea194929eca3fc53b69: one paid H2 construction; normalized matched `px`/`py` probes selected through public representation APIs with `S_GG = I`; basic and equal-occupation rotated imports; explicit alpha/beta imports; ordering/metric/fingerprint identity and rejection; invalid spin combinations; and nonorthonormal source-coefficient rejection. Keep the public owner free of private names and duplicate restricted-import clusters. Preserve the complete 49-check protected-sidecar testset and its required helpers as direct-run internal evidence. The accepted extraction added/deleted 75/7 public-owner lines and deleted 111 nested lines, for total test delta +75/-118 and net -43. Add no source, API, fixture file, runner, workflow, CI row, dependency, numerical policy, duplicate nested coverage, or other nested-suite wiring under maintenance."
 surfaces = ["tests"]
 title = "PQS residual-GTO public Cartesian validation"
 
@@ -4920,6 +4920,12 @@ title = "PQS residual-GTO public Cartesian validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "508"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "c633d5db0e51c1795f4a4ea194929eca3fc53b69"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "509"
 
     [[records.paths]]
     kind = "test"
@@ -5035,11 +5041,10 @@ title = "external GTO orbital import"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-REP-XGTO-IMPORT-FN-01"]
-evidence_refs = []
 grant = "maintenance"
 id = "HP-REP-XGTO-IMPORT-TEST-01"
 lifecycle = "implemented"
-scope = "Maintain packet identity/order/`S_GG`, restricted/spin-resolved import, capture, rotation invariance, and malformed-input checks across the wired public residual-GTO owner and the separately retained protected-sidecar nested owner. Public importer assertions transfer only under HP-REP-PQS-RG-WORKING-CI-TEST-01; protected-sidecar assertions remain governed by HP-REP-XGTO-PROTECT-SIDECAR-TEST-01."
+scope = "Maintain the accepted split of packet identity/order/`S_GG`, restricted/spin-resolved import, capture, rotation invariance, and malformed-input checks from c633d5db0e51c1795f4a4ea194929eca3fc53b69. Public importer assertions live only in the wired residual-GTO owner under HP-REP-PQS-RG-WORKING-CI-TEST-01; the protected-sidecar testset remains direct-run under HP-REP-XGTO-PROTECT-SIDECAR-TEST-01. Restore no duplicate general-import nested testset."
 surfaces = ["tests"]
 title = "external GTO orbital import validation"
 
@@ -5047,6 +5052,13 @@ title = "external GTO orbital import validation"
     heading = "External GTO Orbital Import"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_orbital_import.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "c633d5db0e51c1795f4a4ea194929eca3fc53b69"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "509"
 
     [[records.paths]]
     kind = "test"
