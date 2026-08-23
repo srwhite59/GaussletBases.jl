@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `a003bd359421975ab175a83da3d117a1f0c4de4aa9454b347289d0dc9fbd28df`.
+> [authority.toml](authority.toml), SHA-256 `749d4df5f229e3cd8593b215e53aaafe975c052dd328d4b8f98e8e71a29f0bd5`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -9,6 +9,36 @@ owned paths, scope, `current.md`, `invariants.md`, and canonical contract.
 Lifecycle never grants work by itself. Any missing or conflicting fact fails closed.
 
 ## Records
+
+### HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01 - scheduled Cartesian internal numerical-maintenance workflow
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tools`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [test\_suite\_reorganization\_plan.md](../../test_suite_reorganization_plan.md); heading `Scheduled Cartesian Internal Maintenance Gate`
+- **Owned paths:**
+  - `tool` / `planned`: `.github/workflows/cartesian-internal-maintenance.yml`
+- **Evidence:**
+  - `manager_pass`: `510`
+- **Dependencies:** `HP-PQS-ATOMREF-PACKET-TEST-01`, `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`, `HP-R3-TEST-01`, `HP-REP-XGTO-PROTECT-SIDECAR-TEST-01`
+- **Scope:** Create only \`.github/workflows/cartesian-internal-maintenance.yml\`: Julia 1.12, weekly cron \`17 10 \* \* 3\` plus \`workflow\_dispatch\`, no push/PR/main/tag trigger, one sequential job with job-level \`contents: read\`, one instantiate and package-load check, then the atomic-packet, protected-sidecar, R3A, and screened-Hartree nested files in that exact order as four separate Julia processes. Use \`timeout-minutes: 10\`; an operational timeout requires a separate amendment. Upload no artifacts and add no helper, framework, payload, or dependency. Preferred/hard workflow budget is 30/40 lines. Manually dispatch once after push and require success before closeout. Preserve \`.github/workflows/ci.yml\`, all public gates, RC1, and release state.
+
+### HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-TEST-01 - scheduled internal gate and screening deduplication validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [test\_suite\_reorganization\_plan.md](../../test_suite_reorganization_plan.md); heading `Scheduled Cartesian Internal Maintenance Gate`
+- **Owned paths:**
+  - `test` / `existing`: `test/nested/cartesian_screened_hartree_correction_runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `510`
+- **Dependencies:** `HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01`, `HP-PQS-ATOMREF-PACKET-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`
+- **Scope:** Edit only \`test/nested/cartesian\_screened\_hartree\_correction\_runtests.jl\`. Delete only generic supplied-field malformed-input assertions already protected by the 22-check public screening owner and packet readback/schema failures already protected by the 117-check atomic-packet owner; run both stronger owners before and after. Preserve packet correction, occupied embedding, additive P0/q0 and self/cross accounting, translated density fields, GG/GA/AA checks, fitted-field validation, and consumer-specific rejection. Add no assertion, fixture, file, runner, workflow row, or other nested-suite edit. Expected deletion is 45-70 lines, but proof of duplication controls. Combined workflow/test delta must be net non-positive; otherwise stop without commit and report the exact overlap obstacle. Occupied-first injection and represented molecular Hartree remain unscheduled and unclassified.
 
 ### HP-CGAI-FN-01 - historical Cartesian Gaussian axis-helper proposal
 

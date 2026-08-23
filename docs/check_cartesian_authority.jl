@@ -320,6 +320,7 @@ function _path_errors(item, id, index, tracked)
     root_project = kind == "source" && path == "Project.toml"
     root_changelog = kind == "docs" && path == "CHANGELOG.md"
     repository_workflow_tool = kind == "tool" && path in (
+        ".github/workflows/cartesian-internal-maintenance.yml",
         ".github/workflows/ci.yml",
         ".github/workflows/docs.yml",
         "docs/make.jl",
@@ -330,8 +331,9 @@ function _path_errors(item, id, index, tracked)
     state == "existing" && (!isfile(absolute) || !(path in tracked)) &&
         push!(errors, "$id.paths[$index] existing path must be a tracked file: $path")
     state == "planned" && path in tracked && push!(errors, "$id.paths[$index] planned path is tracked: $path")
-    state == "planned" && !(kind in ("source", "test", "driver") || root_changelog) &&
-        push!(errors, "$id.paths[$index] planned state is source/test/driver or root-CHANGELOG-only")
+    state == "planned" && !(kind in ("source", "test", "driver") ||
+        root_changelog || repository_workflow_tool) &&
+        push!(errors, "$id.paths[$index] planned state is source/test/driver, root-CHANGELOG, or enumerated workflow-only")
     state == "optional_local" && kind != "measurement" &&
         push!(errors, "$id.paths[$index] optional_local state is measurement-only")
     state == "optional_local" && path in tracked &&

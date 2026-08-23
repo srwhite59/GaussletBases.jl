@@ -261,6 +261,81 @@ Repo-specific classification:
 - `test/nested/cartesian_pair_stage_low_order_policy_runtests.jl` is an
   integration gate, not a per-pass gate
 
+## Scheduled Cartesian Internal Maintenance Gate
+
+`HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01` and
+`HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-TEST-01` authorize one bounded internal
+numerical-maintenance gate. It is not ordinary CI and grants no public,
+release, or scientific-policy status to the tests it executes.
+
+The only approved workflow path is:
+
+```text
+.github/workflows/cartesian-internal-maintenance.yml
+```
+
+It must use Julia `1.12` and one sequential read-only job with job-level
+`contents: read`. The only triggers are manual `workflow_dispatch` and the
+weekly cron `17 10 * * 3`. Pushes, pull requests, `main`, and tags must not
+trigger it. The job instantiates once, checks package load once, and then runs
+exactly these existing files, in this order, as four separate Julia processes:
+
+```text
+test/nested/cartesian_atomic_hf_reference_packet_runtests.jl
+test/nested/cartesian_external_gto_import_runtests.jl
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
+test/nested/cartesian_screened_hartree_correction_runtests.jl
+```
+
+Separate processes are mandatory because the standalone files have overlapping
+constants and helper names. The initial job timeout is `10` minutes. If the
+first manual dispatch reaches only that operational limit, preserve the
+failure evidence and request a separate bounded timeout amendment; do not
+change it speculatively. Upload no artifact and add no helper script, test
+framework, status payload, or coverage dependency. The workflow is preferred
+at no more than `30` added lines and hard-stopped at `40`.
+
+The workflow record owns only the new workflow. The validation record owns
+edits only to
+`test/nested/cartesian_screened_hartree_correction_runtests.jl`; the other
+three files are unchanged execution inputs under their existing owners. Do not
+edit or split the governance-heavy R3A file, the atomic-packet owner, or the
+protected-sidecar owner.
+
+Within the screening file, remove only two demonstrated duplicate classes:
+
+- generic supplied-field malformed-input assertions already protected by the
+  `22`-check public owner
+  `test/driver_public/screened_hartree_runtests.jl`;
+- packet readback/schema failures already protected by the `117`-check atomic
+  owner `test/nested/cartesian_atomic_hf_reference_packet_runtests.jl`.
+
+Run each stronger owner before and after deletion. Preserve packet correction,
+occupied embedding, additive `P0/q0`, self/cross accounting, translated
+density fields, `GG/GA/AA` checks, fitted-field validation, and
+consumer-specific rejection. The expected deletion is `45-70` test lines, but
+the overlap proof controls: if fewer lines are redundant, report that exact
+overlap rather than weakening unique coverage. Add no assertion, fixture, or
+test file. The workflow-plus-test delta must be net non-positive; if the
+provable deletion cannot offset the coherent workflow, stop without an
+implementation commit and report the obstacle.
+
+The occupied-first injection and represented molecular-Hartree suites remain
+excluded, direct-run evidence. The former stays private research evidence; the
+latter remains blocked on its scaling-owner decision. Do not run, reclassify,
+or schedule either suite. Do not edit `test/runtests.jl`, the existing
+three-row public CI workflow, production source, APIs, dependencies, manifests,
+examples, versions, tags, releases, or immutable RC1 state.
+
+Implementation acceptance requires one successful manual dispatch after the
+workflow reaches `main`. Report the check count and runtime of each scheduled
+file and their combined runtime, plus screening checks and lines before/after
+with the stronger owner named for each deleted cluster. Run the public and
+atomic owners, all three existing public CI gates, Docs, authority
+check/self-test, docs tests, package load, Documenter, manager-log bound, YAML
+inspection, and diff checks. The implementation pass stops after handback;
+planned-path and lifecycle closeout remain a separate docs-only pass.
+
 ## Planned phases
 
 ### Phase 1: runner split and first low-risk extraction
@@ -340,10 +415,11 @@ Only after the split is stable:
 
 The current bounded chunk should be:
 
-- semantic cleanup of the extracted `docs` test contract
-- narrow follow-on cleanup of known stale expectations such as
-  `working_box`-based test assumptions where they no longer match the live
-  object contract
+- implement the scheduled Cartesian internal-maintenance gate above;
+- remove only the two proven screening duplicate classes while retaining a
+  net-non-positive combined workflow/test delta;
+- leave occupied-first injection and represented molecular Hartree in their
+  current direct-run dispositions.
 
 Do not reopen the runner structure unless the optional `examples` extraction
 later proves worth doing.

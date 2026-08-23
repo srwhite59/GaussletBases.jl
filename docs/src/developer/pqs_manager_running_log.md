@@ -1703,3 +1703,62 @@ Carrying-cost accounting:
   and `49/49`, reported `279/279` Cartesian gate and due diligence, authority
   render/check/self-test, generated views, docs tests, package load,
   Documenter, manager-log bound, remote Docs/CI review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 510 - Authorize Scheduled Internal Maintenance Gate
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Added `HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01/TEST-01` for one
+  schedule/manual-only Julia `1.12` workflow. It runs the atomic-packet,
+  protected-sidecar, R3A, and screened-Hartree nested owners sequentially as
+  separate Julia processes, with one instantiate/load and a `10`-minute
+  initial timeout. Push, pull-request, branch, and tag triggers are forbidden.
+- Approved edits only to the screened-Hartree nested file. Generic
+  supplied-field malformed cases may be deleted only when owned by the wired
+  `22`-check public test; packet readback/schema failures may be deleted only
+  when owned by the `117`-check atomic packet test. Unique correction,
+  embedding, additive, translated-field, mixed-block, fitted-field, and
+  consumer rejection evidence remains.
+
+Goal advancement / guardrail:
+- MT6 moves four live internal suites from blanket "unwired" status to one
+  explicit low-cadence maintenance gate without adding them to ordinary CI.
+  Occupied-first injection remains private direct-run evidence and represented
+  molecular Hartree remains blocked on scaling ownership. MT5 and immutable
+  RC1/release state are unchanged.
+
+Carrying-cost accounting:
+- deleted: no implementation yet; the approved pass must remove only proven
+  duplicate screening lines.
+- simplified: one bounded workflow replaces ad hoc manual execution for four
+  independently owned internal suites.
+- quarantined: occupied-first injection and represented molecular Hartree stay
+  unscheduled; the public three-row matrix stays separate.
+- not deleted because: the four scheduled suites retain unique numerical,
+  artifact, representation, and correction evidence.
+- exact remaining caller/blocker: repo-manager must fit the workflow in
+  `30/40` preferred/hard lines, keep combined workflow/test delta non-positive,
+  and pass one manual dispatch; an operational timeout requires a separate
+  amendment.
+- added/deleted `src` lines: `0/0`; new tests: none; new metadata/status fields:
+  two authority records only.
+- validation: workflow/test/owner and duplicate-cluster review, authority
+  render/check/self-test, generated views, docs tests, Documenter,
+  manager-log bound, docs-only scope review, and `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 510
+
+- **MT1 - active:** continue only evidence-led conformance and ownership
+  repairs; this pass changes test cadence, not physics or API behavior.
+- **MT2 - completed:** controlled Cr2 source migration remains closed.
+- **MT3 - active:** Standard60, scalable represented Hartree, corrected-WL
+  interpretation, and REQ-101 consumer acceptance remain separate work.
+- **MT4 - active:** residual/protected and consumer-owned PRF studies are
+  unchanged.
+- **MT5 - maintenance:** RC1, its release, and the three public CI gates remain
+  immutable and separate from the internal schedule.
+- **MT6 - active/refined:** implement and manually accept the four-suite
+  scheduled gate, then continue the evidence-backed disposition of
+  occupied-first injection and represented molecular Hartree separately.
