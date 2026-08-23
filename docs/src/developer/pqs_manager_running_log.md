@@ -1663,3 +1663,43 @@ Carrying-cost accounting:
   contract reconciliation, generated-view parity, authority check/self-test,
   docs tests, Documenter, manager-log bound, docs-only scope review, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 509 - Close External-GTO Public Coverage Lifecycle
+
+Commit(s):
+- `83342c74568328089e25815a0efe45428e004c30` - docs-only authority;
+- `c633d5db0e51c1795f4a4ea194929eca3fc53b69` - public extraction;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Closed `HP-REP-PQS-RG-WORKING-CI-TEST-01` as completed/maintenance. The
+  existing public owner now runs `47` checks using one paid H2 construction and
+  a normalized matched `px`/`py` fixture with mathematical `S_GG = I`. It owns
+  rotations, spin-resolved import, metric/order/fingerprint identity and
+  rejection, invalid spin combinations, and nonorthonormal coefficients.
+- Deleted the complete `111`-line duplicate general-import nested testset. The
+  `49`-check protected-sidecar testset and all helpers needed for roundtrip,
+  identity, artifact, and tamper evidence remain unchanged and direct-run.
+
+Goal advancement / guardrail:
+- MT6 completes its first evidence-backed nested-suite classification action:
+  public behavior moved into ordinary coverage while unique internal artifact
+  evidence stayed quarantined. The three CI gates and RC1 remain unchanged.
+
+Carrying-cost accounting:
+- deleted: `111` lines of duplicated general-import nested coverage and `7`
+  replaced public-owner lines.
+- simplified: public importer behavior is co-owned with its existing residual-
+  GTO consumer and one construction.
+- quarantined: the protected-sidecar testset remains direct-run; the other five
+  audited nested suites remain unchanged.
+- not deleted because: sidecar roundtrip, rectangular capture, artifact
+  identity, and tamper rejection remain unique internal contracts.
+- exact remaining caller/blocker: none for this extraction; the next nested-
+  suite action requires its own selected authority.
+- added/deleted `src` lines: `0/0`; new tests: none; test delta `+75/-118`, net
+  `-43`; new metadata/status fields: none.
+- validation: implementation/diff/private-name review, manager reruns `47/47`
+  and `49/49`, reported `279/279` Cartesian gate and due diligence, authority
+  render/check/self-test, generated views, docs tests, package load,
+  Documenter, manager-log bound, remote Docs/CI review, and `git diff --check`.

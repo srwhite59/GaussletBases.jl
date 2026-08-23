@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `785f34cbc0020596eb1531d114cc45fce6a25122ae598fc07fddbb9fe532b1d0`.
+> [authority.toml](authority.toml), SHA-256 `a003bd359421975ab175a83da3d117a1f0c4de4aa9454b347289d0dc9fbd28df`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2902,8 +2902,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-REP-PQS-RG-WORKING-CI-TEST-01 - PQS residual-GTO public Cartesian validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2918,8 +2918,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `506`
   - `manager_pass`: `507`
   - `manager_pass`: `508`
+  - `git_commit`: `c633d5db0e51c1795f4a4ea194929eca3fc53b69`
+  - `manager_pass`: `509`
 - **Dependencies:** `HP-REP-PQS-RG-WORKING-CI-FN-01`, `HP-REP-PQS-RG-WORKING-TEST-01`, `HP-REP-XGTO-IMPORT-TEST-01`
-- **Scope:** Extend only the existing wired public owner with the unique public portion of the external-GTO import validation, then delete the complete first \`External GTO orbital import\` testset from the nested owner. Reuse the already-constructed residual-GTO system and construct exactly two normalized, mutually orthogonal Cartesian Gaussian probes through root-public APIs so \`S\_GG = I\` follows from the fixture. Cover one successful import, equal-occupation occupied rotation, explicit alpha/beta handling, source metric/order identity, stale ordering/fingerprint, refingerprinted wrong metric, nonsymmetric metric, invalid spin combinations, and nonorthonormal source coefficients. Call no private helper. Preserve the complete protected-sidecar testset and every helper it still needs. Add 65-95 preferred/110 hard test lines, delete at least the approximately 110-line redundant first testset, and require a negative tracked-test delta, preferably 15-45 lines. Add no source, API, fixture file, runner, workflow, CI row, dependency, numerical policy, or other nested-suite edit. If shared helper retention prevents a coherent negative delta, make no implementation commit and report the exact obstacle.
+- **Scope:** Maintain the accepted 136-line, 47-check public residual-GTO/import owner from c633d5db0e51c1795f4a4ea194929eca3fc53b69: one paid H2 construction; normalized matched \`px\`/\`py\` probes selected through public representation APIs with \`S\_GG = I\`; basic and equal-occupation rotated imports; explicit alpha/beta imports; ordering/metric/fingerprint identity and rejection; invalid spin combinations; and nonorthonormal source-coefficient rejection. Keep the public owner free of private names and duplicate restricted-import clusters. Preserve the complete 49-check protected-sidecar testset and its required helpers as direct-run internal evidence. The accepted extraction added/deleted 75/7 public-owner lines and deleted 111 nested lines, for total test delta +75/-118 and net -43. Add no source, API, fixture file, runner, workflow, CI row, dependency, numerical policy, duplicate nested coverage, or other nested-suite wiring under maintenance.
 
 ### HP-REP-PQS-RG-WORKING-FN-01 - PQS residual-GTO same-construction working basis
 
@@ -2988,9 +2990,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
   - `test` / `existing`: `test/nested/cartesian_external_gto_import_runtests.jl`
-- **Evidence:** none
+- **Evidence:**
+  - `git_commit`: `c633d5db0e51c1795f4a4ea194929eca3fc53b69`
+  - `manager_pass`: `509`
 - **Dependencies:** `HP-REP-XGTO-IMPORT-FN-01`
-- **Scope:** Maintain packet identity/order/\`S\_GG\`, restricted/spin-resolved import, capture, rotation invariance, and malformed-input checks across the wired public residual-GTO owner and the separately retained protected-sidecar nested owner. Public importer assertions transfer only under HP-REP-PQS-RG-WORKING-CI-TEST-01; protected-sidecar assertions remain governed by HP-REP-XGTO-PROTECT-SIDECAR-TEST-01.
+- **Scope:** Maintain the accepted split of packet identity/order/\`S\_GG\`, restricted/spin-resolved import, capture, rotation invariance, and malformed-input checks from c633d5db0e51c1795f4a4ea194929eca3fc53b69. Public importer assertions live only in the wired residual-GTO owner under HP-REP-PQS-RG-WORKING-CI-TEST-01; the protected-sidecar testset remains direct-run under HP-REP-XGTO-PROTECT-SIDECAR-TEST-01. Restore no duplicate general-import nested testset.
 
 ### HP-REP-XGTO-PROTECT-SIDECAR-FN-01 - protected external-GTO representation sidecar
 
