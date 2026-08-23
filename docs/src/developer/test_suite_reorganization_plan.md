@@ -288,17 +288,15 @@ test/nested/cartesian_screened_hartree_correction_runtests.jl
 ```
 
 Separate processes are mandatory because the standalone files have overlapping
-constants and helper names. Commit `1f550899f` implemented the exact workflow
-in `29` lines. Its first manual dispatch passed setup, package load, and the
-first three suites before the final screened-Hartree step was canceled at the
-initial `10`-minute job limit. Local execution completed all four suites in
-about `197.3` seconds, so this is operational timeout evidence rather than a
-numerical failure. The only approved repair is
-`timeout-minutes: 10 -> 15`; no command, test, cadence, trigger, permission,
-Julia version, cache, ordering, or workflow-name change accompanies it. If the
-`15`-minute run also times out, preserve that evidence and request a separate
-decision. Upload no artifact and add no helper script, test framework, status
-payload, or coverage dependency.
+constants and helper names. Commit `1f550899f` implemented the exact `29`-line
+workflow. Its first manual dispatch reached the initial `10`-minute job limit
+only during the final suite. Commit `b8e89dae0` then changed only
+`timeout-minutes: 10 -> 15`, with a `+1/-1` delta. Manual run `32657600781`
+passed in `9m59s`: atomic packet `117/117`, protected sidecar `49/49`, R3A
+`464/464` plus facade `64/64`, and screened Hartree `85/85`. The maintained
+ceiling is therefore `15` minutes. Any further timeout change requires a new
+evidence-backed amendment. Upload no artifact and add no helper script, test
+framework, status payload, or coverage dependency.
 
 The workflow record owns only the new workflow. The validation record owns
 edits only to
@@ -332,14 +330,12 @@ or schedule either suite. Do not edit `test/runtests.jl`, the existing
 three-row public CI workflow, production source, APIs, dependencies, manifests,
 examples, versions, tags, releases, or immutable RC1 state.
 
-Final acceptance still requires one successful manual dispatch after the
-`15`-minute repair reaches `main`. Report the check count and runtime of each
-scheduled file and their combined runtime, plus screening checks and lines
-before/after with the stronger owner named for each deleted cluster. Run the
-public and atomic owners, all three existing public CI gates, Docs, authority
-check/self-test, docs tests, package load, Documenter, manager-log bound, YAML
-inspection, and diff checks. The timeout implementation stops after handback;
-lifecycle closeout remains a separate docs-only pass.
+The gate is accepted for weekly and manual maintenance. Each run must retain
+the four independent processes, existing order, read-only permissions, and
+Julia `1.12`. Contract maintenance requires authority check/self-test, docs
+tests, package load, Documenter, manager-log bound, YAML inspection, diff
+checks, and the relevant remote workflow evidence. The schedule does not
+promote these internal suites into ordinary public CI or publication gates.
 
 ## Planned phases
 
@@ -418,13 +414,10 @@ Only after the split is stable:
 
 ## Next bounded chunk
 
-The current bounded chunk should be:
-
-- implement the scheduled Cartesian internal-maintenance gate above;
-- remove only the two proven screening duplicate classes while retaining a
-  net-non-positive combined workflow/test delta;
-- leave occupied-first injection and represented molecular Hartree in their
-  current direct-run dispositions.
+The scheduled Cartesian internal-maintenance gate is complete. Select no
+automatic follow-on from this page. Occupied-first injection remains private
+direct-run evidence, and represented molecular Hartree remains blocked on its
+scaling-owner decision; either requires a separate lifecycle assignment.
 
 Do not reopen the runner structure unless the optional `examples` extraction
 later proves worth doing.

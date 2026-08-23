@@ -1830,3 +1830,54 @@ Carrying-cost accounting:
 - added/deleted `src` lines `0/0`; new tests and metadata fields none;
   validation: authority/render checks, docs tests, Documenter, log bound,
   docs-only scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 513 - Complete Maintenance Timeout Replay
+
+Commit(s):
+- `b8e89dae08840665847628e2c8b2e8bf42730387` - timeout-only workflow edit.
+
+Summary:
+- Changed only `timeout-minutes: 10 -> 15`, with a `+1/-1` workflow delta.
+  Commands, test composition, ordering, cadence, triggers, permissions, Julia
+  version, public CI, source, and tests were byte-unchanged.
+- Manual run `32657600781` passed in `9m59s`: atomic packet `117/117`, protected
+  sidecar `49/49`, R3A `464/464` plus facade `64/64`, and screened Hartree
+  `85/85`. Companion Docs run `32657586192` and CI run `32657586188` passed.
+
+Goal advancement / guardrail:
+- MT6 completes the scheduled-gate acceptance. The maintained ceiling is `15`
+  minutes; no evidence supports another increase or a suite-composition change.
+
+Carrying-cost accounting:
+- deleted: no code or test; simplified: one operational scalar resolved the
+  timeout; quarantined: occupied-first and represented Hartree remain outside
+  the schedule; not deleted because: all four owners retain unique contracts.
+- exact remaining caller/blocker: lifecycle closeout only; added/deleted `src`
+  lines `0/0`; new tests and metadata fields none; validation: exact diff,
+  YAML, authority, docs tests, successful manual run, Docs/CI, and clean status.
+
+## Cartesian Hamiltonian Producer Pass 514 - Close Scheduled Maintenance Lifecycle
+
+Commit(s):
+- this docs-only lifecycle closeout.
+
+Summary:
+- Reconciled `HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01` to
+  implemented/maintenance. Its test record remains completed/maintenance.
+  The canonical contract now records the accepted run and removes all pending
+  implementation and replay wording.
+
+Goal advancement / guardrail:
+- MT6 is complete for these four suites. Maintenance preserves the exact
+  low-cadence workflow; timeout, suite, trigger, permission, Julia-version, or
+  public-CI changes require new authority. This closure creates no next source
+  lane and leaves RC1 and release state unchanged.
+
+Carrying-cost accounting:
+- deleted: stale pending-replay wording; simplified: function and test records
+  now expose maintenance-only ownership; quarantined: the two excluded suites
+  retain their prior dispositions; not deleted because: the scheduled owners
+  remain live numerical maintenance contracts.
+- exact remaining caller/blocker: none for this lifecycle; added/deleted `src`
+  lines `0/0`; new tests and metadata fields none; validation: authority render,
+  docs tests, Documenter, manager-log bound, scoped diff, and remote Docs/CI.

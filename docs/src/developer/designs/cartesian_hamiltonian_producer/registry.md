@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `c2e1358d96a15e3cdc05a87d074f609c7e8b880afa161581fbb99b3196ff22eb`.
+> [authority.toml](authority.toml), SHA-256 `5440d2de8f367a2f638bab4c04cb19b10eb3bd09399c9ddfb7b0a5fa49ec5ff4`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -12,8 +12,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01 - scheduled Cartesian internal numerical-maintenance workflow
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `tools`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -22,10 +22,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `tool` / `existing`: `.github/workflows/cartesian-internal-maintenance.yml`
 - **Evidence:**
   - `git_commit`: `1f550899ffac6b682081595b482e1bdfb2e65da2`
+  - `git_commit`: `b8e89dae08840665847628e2c8b2e8bf42730387`
   - `manager_pass`: `510`
   - `manager_pass`: `512`
+  - `manager_pass`: `514`
 - **Dependencies:** `HP-PQS-ATOMREF-PACKET-TEST-01`, `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`, `HP-R3-TEST-01`, `HP-REP-XGTO-PROTECT-SIDECAR-TEST-01`
-- **Scope:** Edit only existing \`.github/workflows/cartesian-internal-maintenance.yml\`, replacing \`timeout-minutes: 10\` with \`timeout-minutes: 15\`. Commit \`1f550899ffac6b682081595b482e1bdfb2e65da2\` otherwise implements the accepted Julia 1.12 weekly/manual, read-only, sequential four-process workflow exactly. Change no command, test, cadence, trigger, permission, Julia version, cache, ordering, workflow name, helper, payload, dependency, public gate, RC1, or release state. Manually dispatch after push and require all four suites to pass before lifecycle closeout. If 15 minutes also times out, make no further edit and report the evidence.
+- **Scope:** Maintain exactly the implemented \`.github/workflows/cartesian-internal-maintenance.yml\`: Julia 1.12, weekly cron \`17 10 \* \* 3\` plus \`workflow\_dispatch\`, one sequential job with job-level \`contents: read\`, one instantiate and package-load check, then atomic packet, protected sidecar, R3A, and screened Hartree as four separate processes in that order, with \`timeout-minutes: 15\`. Commit \`b8e89dae08840665847628e2c8b2e8bf42730387\` changed only the timeout, and manual run \`32657600781\` passed in 9m59s. Maintenance is limited to semantics-preserving workflow syntax or action-version upkeep. No command, test composition, ordering, cadence, trigger, permission, Julia version, timeout, public gate, source, test, RC1, or release-state change is authorized without a new amendment.
 
 ### HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-TEST-01 - scheduled internal gate and screening deduplication validation
 
