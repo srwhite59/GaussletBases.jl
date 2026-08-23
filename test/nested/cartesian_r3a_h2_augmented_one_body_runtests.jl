@@ -1253,34 +1253,10 @@ facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
     ham = GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
         FACADE_SYSTEM; basis = FACADE_BASIS, supplement = FACADE_SUPPLEMENT,
         hamfile = artifact)
-    @test ham isa CartesianIDAHamiltonian{Float64}
     @test system_ham.kinetic == ham.kinetic
-    @test system_ham.nuclear_attraction_unit_by_center ==
-        ham.nuclear_attraction_unit_by_center
+    @test system_ham.nuclear_attraction_unit_by_center == ham.nuclear_attraction_unit_by_center
     @test system_ham.electron_electron_ida == ham.electron_electron_ida
-    @test system_ham.nup == ham.nup && system_ham.ndn == ham.ndn
-    @test system_ham.nuclear_charges == ham.nuclear_charges
-    @test system_ham.nuclear_positions == ham.nuclear_positions
-    @test size(ham.electron_electron_ida) == (505, 505)
     H = one_body_hamiltonian(ham)
-    eig = eigen(Symmetric(H))
-    orbital = eig.vectors[:, argmin(eig.values)]
-    facade_self_coulomb = self_coulomb(ham.electron_electron_ida, orbital)
-    @test facade_self_coulomb ≈ R3B_OWNER_LOCAL_SELF_COULOMB atol = 1.0e-10
-
-    he2 = merge(FACADE_SYSTEM, (;
-        atom_symbols = ["He", "He"], nuclear_charges = [2.0, 2.0], nup = 2, ndn = 2))
-    he2_2plus = merge(he2, (; nup = 1, ndn = 1))
-    sector_basis = merge(FACADE_BASIS, (; q = 3))
-    he2_ham = GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
-        he2; basis = sector_basis, supplement = FACADE_SUPPLEMENT)
-    he2_2plus_ham = GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
-        he2_2plus; basis = sector_basis, supplement = FACADE_SUPPLEMENT)
-    @test he2_ham.kinetic == he2_2plus_ham.kinetic
-    @test he2_ham.nuclear_attraction_unit_by_center ==
-        he2_2plus_ham.nuclear_attraction_unit_by_center
-    @test he2_ham.electron_electron_ida == he2_2plus_ham.electron_electron_ida
-    @test he2_ham.nuclear_repulsion == he2_2plus_ham.nuclear_repulsion
 
     C = GaussletBases.CartesianFinalBasisRealization
     probes = system_result.supplement
@@ -1291,28 +1267,7 @@ facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
            transpose(system_result.residual.T_A) * S_AX
     S_BX = [S_GX; S_RX]
     computed_overlap = gto_overlap_matrix(system_result, probes)
-    nG, nR = size(S_GX, 1), size(S_RX, 1)
     @test computed_overlap == S_BX
-    @test size(computed_overlap) == (nG + nR, length(probes.orbitals))
-    @test all(isfinite, computed_overlap)
-    overlap_rows = [nG + nR, 1, nG + 1, 1]
-    @test gto_overlap_matrix(system_result, probes;
-        block_indices = overlap_rows) == S_BX[overlap_rows, :]
-    @test_throws BoundsError gto_overlap_matrix(system_result, probes;
-        block_indices = [0])
-
-    C_X = zeros(Float64, size(S_AX, 1), 1)
-    C_X[1] = inv(sqrt(S_AX[1, 1]))
-    source_block = ExternalGTOOrbitalSpinBlock(:restricted, C_X, [2.0])
-    packet = ExternalGTOOrbitalPacket(probes, S_AX, source_block)
-    imported = import_external_gto_orbitals(system_result, packet)
-    @test imported.cross_overlap_size == size(S_BX)
-    @test imported.alpha.imported_coefficients == S_BX * C_X
-    @test imported.alpha.source_orthogonality_error <= 1.0e-12
-    @test abs(imported.alpha.worst_orbital_capture - 1.0) <= 1.0e-8
-    stale_packet = ExternalGTOOrbitalPacket(
-        probes, S_AX, source_block; ordering_fingerprint = "stale")
-    @test_throws ArgumentError import_external_gto_orbitals(system_result, stale_packet)
 
     first_probe = first(probes.orbitals)
     stale_orbital = CartesianGaussianShellOrbitalRepresentation3D(
@@ -1323,13 +1278,9 @@ facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
     stale_orbitals[1] = stale_orbital
     stale_probes = CartesianGaussianShellSupplementRepresentation3D(
         probes.supplement_kind, stale_orbitals, basis_metadata(probes))
-    @test_throws ArgumentError gto_overlap_matrix(system_result, stale_probes)
     @test_throws ArgumentError GaussletBases._cartesian_residual_gto_mwg_system_result(
         system_result.hamiltonian, system_result.terminal_basis,
         system_result.parent_axis_bundles, stale_probes, system_result.residual, NUCLEI)
-    @test_throws DimensionMismatch GaussletBases._cartesian_residual_gto_mwg_system_result(
-        he2_ham, system_result.terminal_basis, system_result.parent_axis_bundles,
-        probes, system_result.residual, NUCLEI)
 
     readback = read_cartesian_ida_hamiltonian(artifact)
     kinetic_delta = norm(readback.kinetic - ham.kinetic, Inf)
@@ -1394,31 +1345,6 @@ facade_elapsed = @elapsed @testset "R3 H2 supplemented Hamiltonian facade" begin
         @test values[:h2_self_coulomb_reference] == R3B_OWNER_LOCAL_SELF_COULOMB
     end
 
-    @test_throws ArgumentError GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
-        merge(FACADE_SYSTEM, (; extra = true));
-        basis = FACADE_BASIS, supplement = FACADE_SUPPLEMENT)
-    @test_throws ArgumentError GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
-        FACADE_SYSTEM; basis = merge(FACADE_BASIS, (; radius = 4.0)),
-        supplement = FACADE_SUPPLEMENT)
-    @test_throws ArgumentError GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
-        FACADE_SYSTEM; basis = FACADE_BASIS,
-        supplement = merge(FACADE_SUPPLEMENT, (; extra = true)))
-    @test_throws ArgumentError GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
-        FACADE_SYSTEM; basis = FACADE_BASIS,
-        supplement = merge(FACADE_SUPPLEMENT, (; width_filtering = (; min_width = 1.0))))
-    @test_throws ArgumentError GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
-        merge(FACADE_SYSTEM, (; atom_locations = [(-2.0, 0.0, 0.0), (2.0, 0.0, 0.0)]));
-        basis = FACADE_BASIS, supplement = FACADE_SUPPLEMENT)
-    @test_throws ArgumentError GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
-        merge(FACADE_SYSTEM, (; atom_locations = [(1.0, 0.0, -2.0), (1.0, 0.0, 2.0)]));
-        basis = FACADE_BASIS, supplement = FACADE_SUPPLEMENT)
-    @test_throws ArgumentError GaussletBases.cartesian_residual_gto_mwg_hamiltonian(
-        (; atom_symbols = ["Cr", "Cr"], nuclear_charges = [24.0, 24.0],
-         atom_locations = NUCLEI, nup = 24, ndn = 24);
-        basis = FACADE_BASIS, supplement = FACADE_SUPPLEMENT)
-
-    println("r3u_h2_facade_self_coulomb=", facade_self_coulomb,
-        " delta=", facade_self_coulomb - R3B_OWNER_LOCAL_SELF_COULOMB)
     println("r3u_h2_facade_readback_deltas kinetic=", kinetic_delta,
         " unit_U=", unit_delta, " one_body=", one_body_delta, " V=", V_delta)
     println("r3u_h2_facade_artifact=", artifact)

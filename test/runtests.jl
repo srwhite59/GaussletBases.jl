@@ -911,6 +911,7 @@ end
 
 if _test_group_enabled(:cartesian)
     include(joinpath(@__DIR__, "driver_public", "cartesian_base_hamiltonian_runtests.jl"))
+    include(joinpath(@__DIR__, "driver_public", "cartesian_residual_gto_mwg_system_runtests.jl"))
 end
 
 if _test_group_enabled(:misc)
