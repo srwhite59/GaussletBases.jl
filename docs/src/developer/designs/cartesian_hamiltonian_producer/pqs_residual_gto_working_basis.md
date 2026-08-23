@@ -178,17 +178,17 @@ Accepted implementation evidence from commit `346589a6d` is:
 ## Public Cartesian CI Extraction
 
 `HP-REP-PQS-RG-WORKING-CI-FN-01` and
-`HP-REP-PQS-RG-WORKING-CI-TEST-01` authorize one bounded extraction because
-the exported constructor is otherwise protected only by an unwired,
-mixed-purpose nested suite.
+`HP-REP-PQS-RG-WORKING-CI-TEST-01` own the implemented public-CI extraction.
+Commit `50b5ee9a1` moved the supported contract out of the unwired,
+mixed-purpose nested suite without changing production behavior.
 
-Add exactly one narrow public owner:
+Maintain exactly one narrow public owner:
 
 ```text
 test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl
 ```
 
-Include that owner once in the existing `:cartesian` group in
+Keep that owner included once in the existing `:cartesian` group in
 `test/runtests.jl`. The existing Julia `1.10` Supported-floor row owns the
 remote regression. Do not add a CI row, alter the PQS or screening paper
 groups, or wire the complete R3A file or any other `test/nested` suite.
@@ -218,12 +218,22 @@ its separate maintenance-versus-quarantine review. The existing
 `HP-REP-PQS-RG-WORKING-TEST-01` continues to own those private oracle and docs
 checks; the new CI records own only the public extraction and runner wiring.
 
-Preferred/hard additions to the new owner are `100/140` test lines. Delete at
-least as many tracked test lines from the old public-facade section as are
-added by the new owner and runner include, so total tracked test LOC does not
-increase. Add no fixture file or shared helper. If a public-only probe cannot
-satisfy the contract within that non-growth rule, make no implementation
-commit and report the smallest missing reusable fixture or public operation.
+The accepted owner is `68` lines and the runner adds one line; `75` obsolete
+public-facade lines were removed from the old owner, for net `-5` tracked test
+lines. Future maintenance must not use this record to expand the fixture,
+restore duplicate nested assertions, or add a helper. The original
+preferred/hard owner limits were `100/140` lines and remain upper bounds, not
+targets.
+
+Accepted evidence from commit `50b5ee9a1` is:
+
+- the focused public owner passed `21/21` and the complete `:cartesian` group
+  passed `253/253`;
+- the retained nested owners passed `464/464` plus `64/64` private checks;
+- remote CI run `32613923516` passed Supported floor, PQS paper, and Screening
+  paper without changing either paper gate;
+- terminal due diligence remains `9x9x15` parent axes, `4`-bohr padding, `487`
+  terminal functions, `18` residuals, and final dimension `505`.
 
 With repository acceptance complete, the separate REQ-101 consumer may rerun
 only its frozen `R=2.35`, `ns=5`, PQS early case. It must use the unchanged

@@ -1580,3 +1580,43 @@ Carrying-cost accounting:
   public API inspection, authority render/check/self-test, generated-view
   parity, docs tests, Documenter, manager-log bound, docs-only scope review,
   and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 507 - Close Public Residual-GTO CI Lifecycle
+
+Commit(s):
+- `b32ade431211d9b5caee184909dc4692b50e08db` - docs-only authority;
+- `50b5ee9a1fd77bbcf7b8e8e95b3f0a79a53d11bc` - public owner and runner extraction;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Closed the wiring record as implemented/maintenance and validation as
+  completed/maintenance. The new `68`-line public owner runs under the normal
+  `:cartesian` group and passed `21/21`; it uses only the opaque result's
+  supported `.hamiltonian`, GTO overlap, and external-import surfaces.
+- Removed `75` public-facade lines from the unwired R3A suite while retaining
+  its unique private transform formula, assembly-boundary, artifact/readback,
+  provenance, and due-diligence evidence. Total test delta is `+70/-75`, net
+  `-5`, with no production, API, workflow, or numerical change.
+- Local Cartesian acceptance was `253/253`; retained nested owners passed
+  `464/464` plus `64/64`. Remote CI `32613923516` passed Supported floor, PQS
+  paper, and Screening paper. The original Docs failure was only the expected
+  planned-path mismatch repaired by this closeout.
+
+Goal advancement / guardrail:
+- MT1 closes the demonstrated post-RC1 public-export coverage gap. MT5 remains
+  unchanged: final-release versus RC2 inclusion is separate. MT6 still owns
+  classification of the remaining unwired research suite.
+
+Carrying-cost accounting:
+- deleted: `75` duplicated public-facade test lines.
+- simplified: the normal Cartesian gate now owns the supported public contract.
+- quarantined: unique private R3A evidence remains unwired.
+- not deleted because: exact transform and artifact evidence remain distinct
+  internal contracts.
+- exact remaining caller/blocker: none for this lifecycle.
+- added/deleted `src` lines: `0/0`; new tests: one accepted `68`-line owner;
+  new metadata/status fields: none.
+- validation: implementation and anti-bloat diff review, remote run and failed
+  Docs-log inspection, authority render/check/self-test, generated views, docs
+  tests, package load, Documenter, manager-log bound, docs-only scope review,
+  and `git diff --check`.
