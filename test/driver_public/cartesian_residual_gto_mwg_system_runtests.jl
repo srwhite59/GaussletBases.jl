@@ -37,27 +37,95 @@ using Test
     probe_source = legacy_bond_aligned_diatomic_gaussian_supplement(
         "H", "cc-pVTZ", nuclei; lmax = 1)
     source_representation = basis_representation(probe_source)
+    probe_orbitals = source_representation.orbitals[[4, 5]]
+    @test getproperty.(probe_orbitals, :angular_powers) == [(1, 0, 0), (0, 1, 0)]
+    @test all(orbital -> orbital.center == first(nuclei), probe_orbitals)
+    @test probe_orbitals[1].exponents == probe_orbitals[2].exponents
+    @test all(orbital -> length(orbital.exponents) == 1 &&
+        orbital.coefficients == [1.0] &&
+        orbital.primitive_normalization == :axiswise_normalized_cartesian_gaussian,
+        probe_orbitals)
     probes = CartesianGaussianShellSupplementRepresentation3D(
-        :public_ci_probe, [source_representation.orbitals[2]],
+        :public_ci_probe, probe_orbitals,
         basis_metadata(source_representation))
     overlap = gto_overlap_matrix(result, probes)
     rows = [nfinal, 1, 488, 1]
-    @test size(overlap) == (nfinal, 1)
+    @test size(overlap) == (nfinal, 2)
     @test all(isfinite, overlap)
     @test gto_overlap_matrix(result, probes; block_indices = rows) == overlap[rows, :]
     @test_throws BoundsError gto_overlap_matrix(result, probes; block_indices = [0])
 
-    source_block = ExternalGTOOrbitalSpinBlock(:restricted, ones(1, 1), [2.0])
-    packet = ExternalGTOOrbitalPacket(probes, ones(1, 1), source_block)
+    S_GG = Matrix{Float64}(I, 2, 2)
+    coefficients = Matrix{Float64}(I, 2, 2)
+    source_block = ExternalGTOOrbitalSpinBlock(:restricted, coefficients, [1.0, 1.0])
+    packet = ExternalGTOOrbitalPacket(probes, S_GG, source_block)
     imported = import_external_gto_orbitals(result, packet)
     @test imported.cross_overlap_size == size(overlap)
     @test imported.cross_overlap_finite
+    @test imported.ordering_fingerprint_valid
+    @test imported.S_GG_fingerprint_valid
+    @test imported.S_GG_symmetry_error <= 1.0e-12
+    @test imported.S_GG_expected_error <= 1.0e-12
     @test imported.alpha.imported_coefficients == overlap
     @test imported.alpha.source_orthogonality_error <= 1.0e-12
+    @test imported.alpha.capture_matrix ≈ transpose(overlap) * overlap
+    @test imported.alpha.density_trace_source == 2.0
+    @test imported.alpha.density_trace_capture ≈
+        dot(source_block.occupations, imported.alpha.orbital_captures)
     @test abs(imported.alpha.worst_orbital_capture - 1.0) <= 1.0e-8
-    stale_packet = ExternalGTOOrbitalPacket(
-        probes, ones(1, 1), source_block; ordering_fingerprint = "stale")
-    @test_throws ArgumentError import_external_gto_orbitals(result, stale_packet)
+
+    theta = 0.37
+    rotation = [cos(theta) -sin(theta); sin(theta) cos(theta)]
+    rotated_block = ExternalGTOOrbitalSpinBlock(
+        :restricted, coefficients * rotation, [1.0, 1.0])
+    rotated_packet = ExternalGTOOrbitalPacket(probes, S_GG, rotated_block)
+    rotated = import_external_gto_orbitals(result, rotated_packet)
+    @test rotated.alpha.imported_coefficients ≈ overlap * rotation
+    @test rotated.alpha.source_orthogonality_error <= 1.0e-12
+    @test rotated.alpha.density_trace_capture ≈
+        imported.alpha.density_trace_capture atol = 1.0e-12 rtol = 1.0e-12
+
+    alpha = ExternalGTOOrbitalSpinBlock(:alpha, coefficients[:, 1:1], [1.0])
+    beta = ExternalGTOOrbitalSpinBlock(:beta, coefficients[:, 2:2], [1.0])
+    spin_packet = ExternalGTOOrbitalPacket(probes, S_GG, alpha; beta)
+    spin_import = import_external_gto_orbitals(result, spin_packet)
+    @test spin_import.alpha.spin == :alpha
+    @test spin_import.beta !== nothing
+    @test spin_import.beta.spin == :beta
+    @test spin_import.alpha.imported_coefficients == overlap[:, 1:1]
+    @test spin_import.beta.imported_coefficients == overlap[:, 2:2]
+
+    stale_order = ExternalGTOOrbitalPacket(
+        probes, S_GG, source_block; ordering_fingerprint = "stale")
+    @test_throws ArgumentError import_external_gto_orbitals(result, stale_order)
+    stale_overlap = ExternalGTOOrbitalPacket(
+        probes, S_GG, source_block; S_GG_fingerprint = "stale")
+    @test_throws ArgumentError import_external_gto_orbitals(result, stale_overlap)
+
+    wrong_metric = copy(S_GG)
+    wrong_metric[1, 1] += 0.05
+    wrong_metric_packet = ExternalGTOOrbitalPacket(
+        probes, wrong_metric, source_block;
+        S_GG_fingerprint = external_gto_overlap_fingerprint(wrong_metric))
+    @test_throws ArgumentError import_external_gto_orbitals(result, wrong_metric_packet)
+    nonsymmetric_metric = copy(S_GG)
+    nonsymmetric_metric[1, 2] += 1.0e-3
+    nonsymmetric_packet = ExternalGTOOrbitalPacket(
+        probes, nonsymmetric_metric, source_block;
+        S_GG_fingerprint = external_gto_overlap_fingerprint(nonsymmetric_metric))
+    @test_throws ArgumentError import_external_gto_orbitals(result, nonsymmetric_packet)
+
+    beta_only = ExternalGTOOrbitalSpinBlock(:beta, coefficients[:, 2:2], [1.0])
+    @test_throws ArgumentError ExternalGTOOrbitalPacket(probes, S_GG, beta_only)
+    @test_throws ArgumentError ExternalGTOOrbitalPacket(
+        probes, S_GG, source_block; beta)
+    wrong_beta = ExternalGTOOrbitalSpinBlock(:alpha, coefficients[:, 2:2], [1.0])
+    @test_throws ArgumentError ExternalGTOOrbitalPacket(probes, S_GG, alpha; beta = wrong_beta)
+
+    nonorthogonal = ExternalGTOOrbitalSpinBlock(
+        :restricted, 2.0 .* coefficients, [1.0, 1.0])
+    nonorthogonal_packet = ExternalGTOOrbitalPacket(probes, S_GG, nonorthogonal)
+    @test_throws ArgumentError import_external_gto_orbitals(result, nonorthogonal_packet)
 
     @test_throws ArgumentError cartesian_residual_gto_mwg_system(
         merge(system, (; extra = true)); basis, supplement)
