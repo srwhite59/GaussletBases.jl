@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_sur
 sha256 = "9c05113de4ae5313e9d77e7fbd3a740727e6cf7de399ddfbe74a9c49c94b682e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
-sha256 = "8c3cd1bace1018865a451ac4ada0bc3f0f500454982a4283eb58d44d71d78049"
+sha256 = "6a32a31442314319e277cbd9c3a553c299dac8c5d35977ce3bceb46b204d53a6"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "803063ecdc263c9767f08b41b0c20a736482d8dfe44a97d0720e6e3b19f3e91f"
@@ -4856,10 +4856,10 @@ title = "represented multicenter mixed-density Hartree validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-REP-PQS-RG-WORKING-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-REP-PQS-RG-WORKING-CI-FN-01"
-lifecycle = "approved"
-scope = "Add exactly one include for the planned public residual-GTO/MWG system owner to the existing :cartesian group in test/runtests.jl. The Julia 1.10 Supported-floor row must own the regression through the unchanged cartesian selection. Add no CI row, workflow edit, group, example smoke, nested-suite wiring, fixture, helper, or source/API behavior; do not alter the separately named PQS and screening paper gates."
+lifecycle = "implemented"
+scope = "Maintain exactly one include for test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl in the existing :cartesian group in test/runtests.jl, as accepted in 50b5ee9a1fd77bbcf7b8e8e95b3f0a79a53d11bc. The Julia 1.10 Supported-floor row owns the regression through the unchanged cartesian selection. Add no CI row, workflow edit, group, example smoke, nested-suite wiring, fixture, helper, or source/API behavior; do not alter the separately named PQS and screening paper gates."
 surfaces = ["tests"]
 title = "PQS residual-GTO public Cartesian CI wiring"
 
@@ -4875,8 +4875,14 @@ title = "PQS residual-GTO public Cartesian CI wiring"
     kind = "git_commit"
     value = "0adac132c213efc712d27347b043dd57c204d745"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "50b5ee9a1fd77bbcf7b8e8e95b3f0a79a53d11bc"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "506"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "507"
 
     [[records.paths]]
     kind = "test"
@@ -4884,10 +4890,10 @@ title = "PQS residual-GTO public Cartesian CI wiring"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-REP-PQS-RG-WORKING-CI-FN-01", "HP-REP-PQS-RG-WORKING-TEST-01", "HP-REP-XGTO-IMPORT-TEST-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-REP-PQS-RG-WORKING-CI-TEST-01"
-lifecycle = "approved"
-scope = "Create only test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl and extract the duplicated public-facade coverage from the unwired R3A owner. Through public APIs, construct the accepted H2 residual-GTO/MWG system; treat the result as opaque except for .hamiltonian; validate 487 + 18 = 505 dimensions, finite symmetric matrices, sector/nuclei, the 0.4574161883692301 self-Coulomb fingerprint, full/indexed GTO overlap, one normalized public-only external packet, restricted or alpha/beta import capture/orthogonality, stale-fingerprint rejection, and a bounded malformed system/basis/supplement set. Do not call private overlap helpers or inspect private result fields. Preserve unique private exact-formula, assembly-boundary, artifact/provenance, and due-diligence checks in the old suite. Preferred/hard new-owner budget is 100/140 lines; delete at least the owner-plus-runner addition from the old public section so total tracked test LOC is non-increasing. Add no fixture, helper, production source, workflow, API, numerical policy, or other nested-suite wiring."
+lifecycle = "completed"
+scope = "Maintain the accepted 68-line public owner and its 21 public-contract checks from 50b5ee9a1fd77bbcf7b8e8e95b3f0a79a53d11bc: opaque result except for .hamiltonian; 487 + 18 = 505 dimensions; finite symmetric matrices; sector/nuclei; the 0.4574161883692301 self-Coulomb fingerprint; full/indexed GTO overlap; normalized restricted packet import, capture, orthogonality, stale-fingerprint rejection; and three bounded malformed public inputs. Keep private overlap helpers and result fields out of this owner. Preserve unique private exact-formula, assembly-boundary, artifact/provenance, and due-diligence checks in the unwired R3A suite without restoring the 75 removed public lines. Add no fixture, helper, production source, workflow, API, numerical policy, duplicate coverage, or other nested-suite wiring."
 surfaces = ["tests"]
 title = "PQS residual-GTO public Cartesian validation"
 
@@ -4903,13 +4909,19 @@ title = "PQS residual-GTO public Cartesian validation"
     kind = "git_commit"
     value = "0adac132c213efc712d27347b043dd57c204d745"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "50b5ee9a1fd77bbcf7b8e8e95b3f0a79a53d11bc"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "506"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "507"
 
     [[records.paths]]
     kind = "test"
     path = "test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl"
-    state = "planned"
+    state = "existing"
     [[records.paths]]
     kind = "test"
     path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
