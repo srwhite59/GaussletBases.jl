@@ -143,6 +143,10 @@ ID or subsystem.
   its isolated Julia `1.12.6` candidate replay and bounded dependency
   compatibility declaration are accepted, and the RC1 tag and package-centered
   GitHub prerelease are published and validated; final release remains separate
+- [External Cartesian GTO interchange](external_cartesian_gto_interchange.md)
+  for the approved versioned packet bundle, optional checkpoint-only PySCF
+  exporter, exact AO-convention reconciliation, and explicit closest-
+  determinant operation
 - [External GTO orbital import](external_gto_orbital_import.md)
   for the representation-transfer facility that imports explicit external AO
   orbitals into an orthonormal final basis by `C_F = <F|G> C_G`, including the

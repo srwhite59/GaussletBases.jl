@@ -147,6 +147,14 @@ and account for what it replaces. The repaired ordinary-QW diatomic front doors
 remain supported; the broader endpoint/correction audit remains a deferred
 retirement map.
 
+**MT7 - External Cartesian GTO interchange (active).** Replace paper-local AO
+permutation and normalization scripts with one strict, versioned interchange
+that constructs the existing external-GTO packet, reuses the exact overlap
+kernel and importer, and keeps determinant cleanup explicit. The first gate is
+a frozen small PySCF fixture followed by a read-only C2 replay; no solver,
+Hamiltonian payload, mandatory PySCF dependency, or release action belongs to
+this goal.
+
 ## Manager Guardrails
 
 - `authority.toml` grants execution; this ledger records interpretation only.
@@ -1881,3 +1889,61 @@ Carrying-cost accounting:
 - exact remaining caller/blocker: none for this lifecycle; added/deleted `src`
   lines `0/0`; new tests and metadata fields none; validation: authority render,
   docs tests, Documenter, manager-log bound, scoped diff, and remote Docs/CI.
+
+## Cartesian Hamiltonian Producer Pass 515 - Authorize External Cartesian GTO Interchange
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Added separate implementation authority for a strict versioned Cartesian-GTO
+  bundle reader, one optional checkpoint-only PySCF exporter, and explicit
+  closest-orthonormal-determinant cleanup. The reader preserves source AO order,
+  reconciles only positive per-AO normalization factors, requires full exported
+  overlap parity, and then reuses the existing packet and `S_FG*C_G` importer.
+- A bounded QCSchema review found no standard source-overlap field or exact
+  PySCF per-AO normalization/order contract. Version 1 therefore uses one
+  `.toml` manifest plus a deterministic same-stem `.f64` payload; this is not
+  general QCSchema support. Spherical PySCF states must use the direct documented
+  `cart2sph_coeff(normalized="sp")` map, never the historical global solve.
+
+Goal advancement / guardrail:
+- MT7 is created as an active reusable consumer boundary rather than a C2-only
+  repair. The first implementation must pass a frozen two-center d-shell
+  fixture and then reproduce the accepted C2 occupied subspace without a
+  runtime permutation ledger. Raw projected coefficients remain unchanged;
+  determinant cleanup is caller-thresholded and fails on rank, occupation,
+  sector, geometry, or supported-Hamiltonian mismatch.
+- This facility is post-RC1. Inclusion in v0.2 requires a separately authorized
+  release candidate; version, tag, release, registration, and citation actions
+  remain forbidden.
+
+Carrying-cost accounting:
+- deleted: no code in this docs-only pass; simplified: one interchange replaces
+  recurring consumer convention scripts and reuses both overlap and import
+  owners; quarantined: the old C2 permutation ledger remains evidence only;
+  not deleted because: the existing packet/import API remains the canonical
+  transfer boundary.
+- exact remaining caller/blocker: implement within one Julia owner, one Python
+  exporter, one logical fixture, and one existing public-test extension, then
+  pass the read-only C2 replay; added/deleted `src` lines `0/0`; new tests none;
+  new metadata/status fields: four authority records only.
+- validation: source/evidence reconciliation, official QCSchema and PySCF fit
+  checks, authority render/check/self-test, generated views, docs tests,
+  Documenter, manager-log bound, docs-only scope review, and `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 515
+
+- **MT1 - active:** continue narrow conformance repairs separately from this
+  new facility.
+- **MT2 - completed:** controlled Cr2 source migration remains closed.
+- **MT3 - active:** pending producer facilities and paper-oracle interpretation
+  are unchanged; the C2 replay here validates interchange, not physics.
+- **MT4 - active:** residual/protected and consumer-owned PRF work is unchanged.
+- **MT5 - maintenance:** RC1/release state is immutable; any v0.2 inclusion
+  requires a new candidate decision.
+- **MT6 - active:** the scheduled internal gate is closed; evidence-led cleanup
+  continues independently.
+- **MT7 - active/new:** implement the bounded interchange and stop on any need
+  for a permutation ledger, duplicated overlap math, mandatory Julia
+  dependency, or failed direct-PySCF C2 subspace reproduction.

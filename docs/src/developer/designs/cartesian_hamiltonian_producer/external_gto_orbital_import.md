@@ -11,6 +11,11 @@ Hamiltonian correction, solver state, or physics endpoint.
 importer landed in `0452ab581`; protected composition and the sidecar landed in
 `702aa4a62`. Manager-log Passes 337, 363, and 365 record acceptance.
 
+The separately approved [external Cartesian GTO interchange](external_cartesian_gto_interchange.md)
+owns the pending versioned bundle reader, optional thin PySCF exporter, and
+explicit closest-determinant operation. Those new records do not widen this
+implemented importer or protected-sidecar maintenance authority.
+
 ## Transfer Convention
 
 For an orthonormal final working basis `F` and explicit external Gaussian AO
@@ -55,8 +60,10 @@ final-basis convention but is not called by this implementation.
 protected member shape and commit helper; no ladder accessor or schema was
 added.
 
-There is no external packet file reader, PySCF parser, or external-file format
-in this facility. Callers construct the explicit packet in memory.
+There is no implemented external packet file reader, PySCF parser, or
+external-file format in this maintenance owner. Callers currently construct
+the explicit packet in memory. The separately authorized interchange must
+reuse this packet/import operation rather than add another transfer path.
 
 ## External Packet
 
@@ -298,9 +305,10 @@ packet/member/artifact validation, relocated-artifact acceptance, and payload
 tampering. Shared helpers needed by that retained testset remain. Both owners
 use synthetic repo-owned packets and no PySCF dependency or molecular endpoint.
 
-The facility must not add or perform:
+Under the implemented `HP-REP-XGTO-IMPORT-*` and protected-sidecar maintenance
+records, this facility must not add or perform:
 
-- packet-file or PySCF readers;
+- packet-file or PySCF readers outside the separately approved interchange;
 - solver-ready orbital orthonormalization or HF state management;
 - Hamiltonian, source-Hamiltonian, or `Vee` transforms;
 - direct `C' V C` or a generalized final-basis metric workflow;
