@@ -173,14 +173,14 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "35aed833d035c55efe8e80ceeb12d00b1e84dbfe70e8e3df3d7f9f9ab66cd397"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
-sha256 = "7f8b0419bfb9623f368dd6133f575363dafea50744e8e3e8259d1bce5baad150"
+sha256 = "cc7fb918aca02a10f6a6b760a28e7a69f553c0aeeaf206e34319753a36a4b67c"
 
 [[records]]
 dependency_ids = ["HP-PQS-ATOMREF-PACKET-TEST-01", "HP-PQS-SCREEN-HARTREE-CORR-TEST-01", "HP-R3-TEST-01", "HP-REP-XGTO-PROTECT-SIDECAR-TEST-01"]
 grant = "implementation"
 id = "HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01"
 lifecycle = "approved"
-scope = "Create only `.github/workflows/cartesian-internal-maintenance.yml`: Julia 1.12, weekly cron `17 10 * * 3` plus `workflow_dispatch`, no push/PR/main/tag trigger, one sequential job with job-level `contents: read`, one instantiate and package-load check, then the atomic-packet, protected-sidecar, R3A, and screened-Hartree nested files in that exact order as four separate Julia processes. Use `timeout-minutes: 10`; an operational timeout requires a separate amendment. Upload no artifacts and add no helper, framework, payload, or dependency. Preferred/hard workflow budget is 30/40 lines. Manually dispatch once after push and require success before closeout. Preserve `.github/workflows/ci.yml`, all public gates, RC1, and release state."
+scope = "Edit only existing `.github/workflows/cartesian-internal-maintenance.yml`, replacing `timeout-minutes: 10` with `timeout-minutes: 15`. Commit `1f550899ffac6b682081595b482e1bdfb2e65da2` otherwise implements the accepted Julia 1.12 weekly/manual, read-only, sequential four-process workflow exactly. Change no command, test, cadence, trigger, permission, Julia version, cache, ordering, workflow name, helper, payload, dependency, public gate, RC1, or release state. Manually dispatch after push and require all four suites to pass before lifecycle closeout. If 15 minutes also times out, make no further edit and report the evidence."
 surfaces = ["tools"]
 title = "scheduled Cartesian internal numerical-maintenance workflow"
 
@@ -190,19 +190,25 @@ title = "scheduled Cartesian internal numerical-maintenance workflow"
     path = "docs/src/developer/test_suite_reorganization_plan.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1f550899ffac6b682081595b482e1bdfb2e65da2"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "510"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "512"
 
     [[records.paths]]
     kind = "tool"
     path = ".github/workflows/cartesian-internal-maintenance.yml"
-    state = "planned"
+    state = "existing"
 [[records]]
 dependency_ids = ["HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01", "HP-PQS-ATOMREF-PACKET-TEST-01", "HP-PQS-PUBLIC-SCREEN-TEST-01", "HP-PQS-SCREEN-HARTREE-CORR-TEST-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-TEST-01"
-lifecycle = "approved"
-scope = "Edit only `test/nested/cartesian_screened_hartree_correction_runtests.jl`. Delete only generic supplied-field malformed-input assertions already protected by the 22-check public screening owner and packet readback/schema failures already protected by the 117-check atomic-packet owner; run both stronger owners before and after. Preserve packet correction, occupied embedding, additive P0/q0 and self/cross accounting, translated density fields, GG/GA/AA checks, fitted-field validation, and consumer-specific rejection. Add no assertion, fixture, file, runner, workflow row, or other nested-suite edit. Expected deletion is 45-70 lines, but proof of duplication controls. Combined workflow/test delta must be net non-positive; otherwise stop without commit and report the exact overlap obstacle. Occupied-first injection and represented molecular Hartree remain unscheduled and unclassified."
+lifecycle = "completed"
+scope = "Maintain the completed screening deduplication from commit `1f550899ffac6b682081595b482e1bdfb2e65da2`: 47 duplicate lines were removed while the remaining screened-Hartree owner passes 85 checks. Generic supplied-field malformed cases remain owned by the 22-check public screening test, and packet readback/schema failures remain owned by the 117-check atomic-packet test. Preserve packet correction, occupied embedding, additive P0/q0 and self/cross accounting, translated density fields, GG/GA/AA checks, fitted-field validation, and consumer-specific rejection. The timeout repair authorizes no test edit, assertion, fixture, file, runner row, or other nested-suite change. Occupied-first injection and represented molecular Hartree remain unscheduled and unclassified."
 surfaces = ["tests"]
 title = "scheduled internal gate and screening deduplication validation"
 
@@ -212,8 +218,14 @@ title = "scheduled internal gate and screening deduplication validation"
     path = "docs/src/developer/test_suite_reorganization_plan.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1f550899ffac6b682081595b482e1bdfb2e65da2"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "510"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "512"
 
     [[records.paths]]
     kind = "test"
