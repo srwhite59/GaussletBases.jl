@@ -57,6 +57,8 @@ export AbstractFunction1D,
        external_gto_overlap_fingerprint,
        external_gto_ordering_fingerprint,
        import_external_gto_orbitals,
+       read_external_cartesian_gto_packet,
+       closest_external_gto_determinant,
        basis_projector,
        transfer_orbitals,
        gaussian_coulomb_pair_index,
@@ -666,6 +668,7 @@ include("cartesian_representation_transfer.jl")
 include("cartesian_protected_ladder_bundle.jl")
 include("cartesian_gto_probes.jl")
 include("cartesian_external_gto_import.jl")
+include("cartesian_external_gto_interchange.jl")
 include("cartesian_qw_hybrid_representation.jl")
 include("gaussian_coulomb_reference.jl")
 include("hamiltonian_corrections.jl")

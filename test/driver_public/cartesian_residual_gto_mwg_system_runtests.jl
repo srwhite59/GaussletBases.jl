@@ -1,6 +1,8 @@
 using GaussletBases
 using LinearAlgebra
+using SHA
 using Test
+using TOML
 
 @testset "Public residual-GTO/MWG system" begin
     nuclei = NTuple{3,Float64}[(0.0, 0.0, -2.0), (0.0, 0.0, 2.0)]
@@ -94,6 +96,96 @@ using Test
     @test spin_import.beta.spin == :beta
     @test spin_import.alpha.imported_coefficients == overlap[:, 1:1]
     @test spin_import.beta.imported_coefficients == overlap[:, 2:2]
+
+    fixture_manifest = joinpath(@__DIR__, "external_cartesian_gto_h2_ccpvtz_v1.toml")
+    fixture_payload = splitext(fixture_manifest)[1] * ".f64"
+    fixture_packet = read_external_cartesian_gto_packet(fixture_manifest)
+    @test length(fixture_packet.ao_labels) == 30
+    @test any(sum(powers) == 2 for powers in fixture_packet.angular_powers)
+    @test fixture_packet.alpha.spin == :restricted
+    @test fixture_packet.alpha.occupations == [2.0]
+    @test fixture_packet.beta === nothing
+    @test norm(transpose(fixture_packet.alpha.coefficients) * fixture_packet.S_GG *
+        fixture_packet.alpha.coefficients - I, Inf) <= 1.0e-12
+
+    fixture_overlap = gto_overlap_matrix(result, fixture_packet.probes)
+    fixture_expected = fixture_overlap * fixture_packet.alpha.coefficients
+    fixture_import = import_external_gto_orbitals(result, fixture_packet)
+    @test fixture_import.alpha.imported_coefficients == fixture_expected
+    @test fixture_import.ordering_fingerprint_valid
+    @test fixture_import.S_GG_fingerprint_valid
+    closest = closest_external_gto_determinant(
+        result, fixture_packet; minimum_gram_eigenvalue = 0.99)
+    @test closest.imported.alpha.imported_coefficients == fixture_expected
+    @test closest.alpha.minimum_gram_eigenvalue >= 0.99
+    @test closest.alpha.gram_eigenvalues ≈
+        eigvals(Symmetric(transpose(fixture_expected) * fixture_expected))
+    @test closest.alpha.principal_angles_radians ≈
+        acos.(sqrt.(clamp.(closest.alpha.gram_eigenvalues, 0.0, 1.0)))
+    @test closest.alpha.maximum_principal_angle_radians ==
+        maximum(closest.alpha.principal_angles_radians)
+    @test closest.alpha.orthonormality_error <= 1.0e-10
+    @test norm(transpose(closest.alpha.coefficients) * closest.alpha.coefficients - I, Inf) <= 1.0e-10
+    @test_throws ArgumentError closest_external_gto_determinant(
+        result, fixture_packet; minimum_gram_eigenvalue = 0.0)
+    @test_throws ArgumentError closest_external_gto_determinant(
+        result, fixture_packet; minimum_gram_eigenvalue = 1.0)
+
+    fixture_identity = fixture_packet.provenance.external_cartesian_gto
+    packet_with = function (identity, alpha = fixture_packet.alpha)
+        return ExternalGTOOrbitalPacket(fixture_packet.probes, fixture_packet.S_GG, alpha;
+            ao_labels = fixture_packet.ao_labels,
+            provenance = (; external_cartesian_gto = identity))
+    end
+    wrong_positions = copy(fixture_identity.nuclear_positions)
+    wrong_positions[1, 3] += 0.01
+    @test_throws ArgumentError closest_external_gto_determinant(
+        result, packet_with(merge(fixture_identity, (; nuclear_positions = wrong_positions)));
+        minimum_gram_eigenvalue = 0.99)
+    @test_throws ArgumentError closest_external_gto_determinant(
+        result, packet_with(merge(fixture_identity, (; nalpha = 2)));
+        minimum_gram_eigenvalue = 0.99)
+    fractional = ExternalGTOOrbitalSpinBlock(
+        :restricted, fixture_packet.alpha.coefficients, [1.5])
+    @test_throws ArgumentError closest_external_gto_determinant(
+        result, packet_with(fixture_identity, fractional); minimum_gram_eigenvalue = 0.99)
+
+    with_fixture = function (edit)
+        mktempdir() do directory
+            manifest = joinpath(directory, basename(fixture_manifest))
+            payload = joinpath(directory, basename(fixture_payload))
+            cp(fixture_manifest, manifest)
+            cp(fixture_payload, payload)
+            edit(manifest, payload)
+            @test_throws ArgumentError read_external_cartesian_gto_packet(manifest)
+        end
+    end
+    replace_manifest = function (old, new)
+        with_fixture() do manifest, _
+            contents = read(manifest, String)
+            @test occursin(old, contents)
+            write(manifest, replace(contents, old => new; count = 1))
+        end
+    end
+    replace_manifest("exponent = \"bohr_inverse_square\"", "exponent = \"angstrom_inverse_square\"")
+    replace_manifest("shape = [30, 30]", "shape = [29, 30]")
+    replace_manifest("de579e9188f46d7e60cb6c7a0ad86263ad66edc22d5a905a64a4129d2669b0a1", repeat("0", 64))
+    replace_manifest("ao_index_1based = 1", "ao_index_1based = 2")
+    replace_manifest("0.025494863234680084", "0.12549486323468008")
+    with_fixture() do manifest, payload
+        bytes = read(payload)
+        values = collect(reinterpret(Float64, bytes))
+        values[2] += 1.0e-4
+        values[31] += 1.0e-4
+        changed = collect(reinterpret(UInt8, values))
+        write(payload, changed)
+        document = TOML.parsefile(manifest)
+        document["payload"]["sha256"] = bytes2hex(sha256(changed))
+        document["arrays"][1]["sha256"] = bytes2hex(sha256(changed[1:(30 * 30 * 8)]))
+        open(manifest, "w") do io
+            TOML.print(io, document; sorted = true)
+        end
+    end
 
     stale_order = ExternalGTOOrbitalPacket(
         probes, S_GG, source_block; ordering_fingerprint = "stale")

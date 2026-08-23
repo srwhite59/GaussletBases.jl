@@ -1,0 +1,410 @@
+[format]
+kind = "gaussletbases.external_cartesian_gto"
+version = 1
+
+[encoding]
+scalar_type = "ieee754_float64"
+byte_order = "little_endian"
+array_order = "column_major"
+
+[units]
+length = "bohr"
+exponent = "bohr_inverse_square"
+
+[producer]
+name = "PySCF"
+version = "2.13.1"
+python_version = "3.9.6"
+numpy_version = "2.0.2"
+exporter = "export_pyscf_cartesian_gto.py"
+exporter_version = "1.0.0-draft"
+
+[state]
+kind = "rhf"
+source_ao_representation = "spherical"
+exported_ao_representation = "cartesian"
+cartesian_normalization = "pyscf_libcint_sp"
+spherical_conversion = "mol.cart2sph_coeff(normalized=sp)"
+hamiltonian_kind = "all_electron_nuclear_coulomb"
+molecular_charge = 0
+spin_2s = 0
+electron_count = 2
+nalpha = 1
+nbeta = 1
+ao_count = 30
+
+[source]
+checkpoint_sha256 = "1ae3ee93c83c6097751e80c60f4486d08adfb3f46e2b57bc4110fd712edeb42b"
+
+[payload]
+basename = "external_cartesian_gto_h2_ccpvtz_v1.f64"
+byte_count = 7448
+sha256 = "de579e9188f46d7e60cb6c7a0ad86263ad66edc22d5a905a64a4129d2669b0a1"
+
+[[nuclei]]
+atom_index_1based = 1
+symbol = "H"
+nuclear_charge = 1.0
+center_bohr = [0.0, 0.0, -2.0]
+
+[[nuclei]]
+atom_index_1based = 2
+symbol = "H"
+nuclear_charge = 1.0
+center_bohr = [0.0, 0.0, 2.0]
+
+[[aos]]
+ao_index_1based = 1
+label = "0  H 1s    "
+atom_index_1based = 1
+shell_index_1based = 1
+contraction_index_1based = 1
+angular_powers = [0, 0, 0]
+center_bohr = [0.0, 0.0, -2.0]
+exponents_bohr_inverse_square = [33.87, 5.095, 1.159]
+contraction_coefficients = [0.025494863234680084, 0.190362765892697, 0.8521620222452678]
+
+[[aos]]
+ao_index_1based = 2
+label = "0  H 2s    "
+atom_index_1based = 1
+shell_index_1based = 2
+contraction_index_1based = 1
+angular_powers = [0, 0, 0]
+center_bohr = [0.0, 0.0, -2.0]
+exponents_bohr_inverse_square = [0.3258]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 3
+label = "0  H 3s    "
+atom_index_1based = 1
+shell_index_1based = 3
+contraction_index_1based = 1
+angular_powers = [0, 0, 0]
+center_bohr = [0.0, 0.0, -2.0]
+exponents_bohr_inverse_square = [0.1027]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 4
+label = "0  H 2px   "
+atom_index_1based = 1
+shell_index_1based = 4
+contraction_index_1based = 1
+angular_powers = [1, 0, 0]
+center_bohr = [0.0, 0.0, -2.0]
+exponents_bohr_inverse_square = [1.407]
+contraction_coefficients = [0.9999999999999999]
+
+[[aos]]
+ao_index_1based = 5
+label = "0  H 2py   "
+atom_index_1based = 1
+shell_index_1based = 4
+contraction_index_1based = 1
+angular_powers = [0, 1, 0]
+center_bohr = [0.0, 0.0, -2.0]
+exponents_bohr_inverse_square = [1.407]
+contraction_coefficients = [0.9999999999999999]
+
+[[aos]]
+ao_index_1based = 6
+label = "0  H 2pz   "
+atom_index_1based = 1
+shell_index_1based = 4
+contraction_index_1based = 1
+angular_powers = [0, 0, 1]
+center_bohr = [0.0, 0.0, -2.0]
+exponents_bohr_inverse_square = [1.407]
+contraction_coefficients = [0.9999999999999999]
+
+[[aos]]
+ao_index_1based = 7
+label = "0  H 3px   "
+atom_index_1based = 1
+shell_index_1based = 5
+contraction_index_1based = 1
+angular_powers = [1, 0, 0]
+center_bohr = [0.0, 0.0, -2.0]
+exponents_bohr_inverse_square = [0.388]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 8
+label = "0  H 3py   "
+atom_index_1based = 1
+shell_index_1based = 5
+contraction_index_1based = 1
+angular_powers = [0, 1, 0]
+center_bohr = [0.0, 0.0, -2.0]
+exponents_bohr_inverse_square = [0.388]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 9
+label = "0  H 3pz   "
+atom_index_1based = 1
+shell_index_1based = 5
+contraction_index_1based = 1
+angular_powers = [0, 0, 1]
+center_bohr = [0.0, 0.0, -2.0]
+exponents_bohr_inverse_square = [0.388]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 10
+label = "0  H 3dxx  "
+atom_index_1based = 1
+shell_index_1based = 6
+contraction_index_1based = 1
+angular_powers = [2, 0, 0]
+center_bohr = [0.0, 0.0, -2.0]
+exponents_bohr_inverse_square = [1.057]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 11
+label = "0  H 3dxy  "
+atom_index_1based = 1
+shell_index_1based = 6
+contraction_index_1based = 1
+angular_powers = [1, 1, 0]
+center_bohr = [0.0, 0.0, -2.0]
+exponents_bohr_inverse_square = [1.057]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 12
+label = "0  H 3dxz  "
+atom_index_1based = 1
+shell_index_1based = 6
+contraction_index_1based = 1
+angular_powers = [1, 0, 1]
+center_bohr = [0.0, 0.0, -2.0]
+exponents_bohr_inverse_square = [1.057]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 13
+label = "0  H 3dyy  "
+atom_index_1based = 1
+shell_index_1based = 6
+contraction_index_1based = 1
+angular_powers = [0, 2, 0]
+center_bohr = [0.0, 0.0, -2.0]
+exponents_bohr_inverse_square = [1.057]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 14
+label = "0  H 3dyz  "
+atom_index_1based = 1
+shell_index_1based = 6
+contraction_index_1based = 1
+angular_powers = [0, 1, 1]
+center_bohr = [0.0, 0.0, -2.0]
+exponents_bohr_inverse_square = [1.057]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 15
+label = "0  H 3dzz  "
+atom_index_1based = 1
+shell_index_1based = 6
+contraction_index_1based = 1
+angular_powers = [0, 0, 2]
+center_bohr = [0.0, 0.0, -2.0]
+exponents_bohr_inverse_square = [1.057]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 16
+label = "1  H 1s    "
+atom_index_1based = 2
+shell_index_1based = 7
+contraction_index_1based = 1
+angular_powers = [0, 0, 0]
+center_bohr = [0.0, 0.0, 2.0]
+exponents_bohr_inverse_square = [33.87, 5.095, 1.159]
+contraction_coefficients = [0.025494863234680084, 0.190362765892697, 0.8521620222452678]
+
+[[aos]]
+ao_index_1based = 17
+label = "1  H 2s    "
+atom_index_1based = 2
+shell_index_1based = 8
+contraction_index_1based = 1
+angular_powers = [0, 0, 0]
+center_bohr = [0.0, 0.0, 2.0]
+exponents_bohr_inverse_square = [0.3258]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 18
+label = "1  H 3s    "
+atom_index_1based = 2
+shell_index_1based = 9
+contraction_index_1based = 1
+angular_powers = [0, 0, 0]
+center_bohr = [0.0, 0.0, 2.0]
+exponents_bohr_inverse_square = [0.1027]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 19
+label = "1  H 2px   "
+atom_index_1based = 2
+shell_index_1based = 10
+contraction_index_1based = 1
+angular_powers = [1, 0, 0]
+center_bohr = [0.0, 0.0, 2.0]
+exponents_bohr_inverse_square = [1.407]
+contraction_coefficients = [0.9999999999999999]
+
+[[aos]]
+ao_index_1based = 20
+label = "1  H 2py   "
+atom_index_1based = 2
+shell_index_1based = 10
+contraction_index_1based = 1
+angular_powers = [0, 1, 0]
+center_bohr = [0.0, 0.0, 2.0]
+exponents_bohr_inverse_square = [1.407]
+contraction_coefficients = [0.9999999999999999]
+
+[[aos]]
+ao_index_1based = 21
+label = "1  H 2pz   "
+atom_index_1based = 2
+shell_index_1based = 10
+contraction_index_1based = 1
+angular_powers = [0, 0, 1]
+center_bohr = [0.0, 0.0, 2.0]
+exponents_bohr_inverse_square = [1.407]
+contraction_coefficients = [0.9999999999999999]
+
+[[aos]]
+ao_index_1based = 22
+label = "1  H 3px   "
+atom_index_1based = 2
+shell_index_1based = 11
+contraction_index_1based = 1
+angular_powers = [1, 0, 0]
+center_bohr = [0.0, 0.0, 2.0]
+exponents_bohr_inverse_square = [0.388]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 23
+label = "1  H 3py   "
+atom_index_1based = 2
+shell_index_1based = 11
+contraction_index_1based = 1
+angular_powers = [0, 1, 0]
+center_bohr = [0.0, 0.0, 2.0]
+exponents_bohr_inverse_square = [0.388]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 24
+label = "1  H 3pz   "
+atom_index_1based = 2
+shell_index_1based = 11
+contraction_index_1based = 1
+angular_powers = [0, 0, 1]
+center_bohr = [0.0, 0.0, 2.0]
+exponents_bohr_inverse_square = [0.388]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 25
+label = "1  H 3dxx  "
+atom_index_1based = 2
+shell_index_1based = 12
+contraction_index_1based = 1
+angular_powers = [2, 0, 0]
+center_bohr = [0.0, 0.0, 2.0]
+exponents_bohr_inverse_square = [1.057]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 26
+label = "1  H 3dxy  "
+atom_index_1based = 2
+shell_index_1based = 12
+contraction_index_1based = 1
+angular_powers = [1, 1, 0]
+center_bohr = [0.0, 0.0, 2.0]
+exponents_bohr_inverse_square = [1.057]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 27
+label = "1  H 3dxz  "
+atom_index_1based = 2
+shell_index_1based = 12
+contraction_index_1based = 1
+angular_powers = [1, 0, 1]
+center_bohr = [0.0, 0.0, 2.0]
+exponents_bohr_inverse_square = [1.057]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 28
+label = "1  H 3dyy  "
+atom_index_1based = 2
+shell_index_1based = 12
+contraction_index_1based = 1
+angular_powers = [0, 2, 0]
+center_bohr = [0.0, 0.0, 2.0]
+exponents_bohr_inverse_square = [1.057]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 29
+label = "1  H 3dyz  "
+atom_index_1based = 2
+shell_index_1based = 12
+contraction_index_1based = 1
+angular_powers = [0, 1, 1]
+center_bohr = [0.0, 0.0, 2.0]
+exponents_bohr_inverse_square = [1.057]
+contraction_coefficients = [1.0]
+
+[[aos]]
+ao_index_1based = 30
+label = "1  H 3dzz  "
+atom_index_1based = 2
+shell_index_1based = 12
+contraction_index_1based = 1
+angular_powers = [0, 0, 2]
+center_bohr = [0.0, 0.0, 2.0]
+exponents_bohr_inverse_square = [1.057]
+contraction_coefficients = [1.0]
+
+[[orbital_blocks]]
+spin = "restricted"
+mo_indices_1based = [1]
+metric_error_inf = 5.551115123125783e-16
+
+[[arrays]]
+name = "source_overlap"
+shape = [30, 30]
+byte_offset = 0
+element_count = 900
+sha256 = "4dc30bc78348b1cbfc2d14f8374d6656d2815af8ae55ce6b32375aed786ec952"
+
+[[arrays]]
+name = "alpha_coefficients"
+shape = [30, 1]
+byte_offset = 7200
+element_count = 30
+sha256 = "49b6db4c6b9972375b254527e4c3aab72df1c1704fb42f7751633494191140a6"
+
+[[arrays]]
+name = "alpha_occupations"
+shape = [1]
+byte_offset = 7440
+element_count = 1
+sha256 = "3f710ac088db33363087de2b9a657541fe5447821debaa9fe5cbd538eb1a5f29"
