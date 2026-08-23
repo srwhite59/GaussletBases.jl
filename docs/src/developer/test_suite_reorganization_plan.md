@@ -288,12 +288,17 @@ test/nested/cartesian_screened_hartree_correction_runtests.jl
 ```
 
 Separate processes are mandatory because the standalone files have overlapping
-constants and helper names. The initial job timeout is `10` minutes. If the
-first manual dispatch reaches only that operational limit, preserve the
-failure evidence and request a separate bounded timeout amendment; do not
-change it speculatively. Upload no artifact and add no helper script, test
-framework, status payload, or coverage dependency. The workflow is preferred
-at no more than `30` added lines and hard-stopped at `40`.
+constants and helper names. Commit `1f550899f` implemented the exact workflow
+in `29` lines. Its first manual dispatch passed setup, package load, and the
+first three suites before the final screened-Hartree step was canceled at the
+initial `10`-minute job limit. Local execution completed all four suites in
+about `197.3` seconds, so this is operational timeout evidence rather than a
+numerical failure. The only approved repair is
+`timeout-minutes: 10 -> 15`; no command, test, cadence, trigger, permission,
+Julia version, cache, ordering, or workflow-name change accompanies it. If the
+`15`-minute run also times out, preserve that evidence and request a separate
+decision. Upload no artifact and add no helper script, test framework, status
+payload, or coverage dependency.
 
 The workflow record owns only the new workflow. The validation record owns
 edits only to
@@ -327,14 +332,14 @@ or schedule either suite. Do not edit `test/runtests.jl`, the existing
 three-row public CI workflow, production source, APIs, dependencies, manifests,
 examples, versions, tags, releases, or immutable RC1 state.
 
-Implementation acceptance requires one successful manual dispatch after the
-workflow reaches `main`. Report the check count and runtime of each scheduled
-file and their combined runtime, plus screening checks and lines before/after
-with the stronger owner named for each deleted cluster. Run the public and
-atomic owners, all three existing public CI gates, Docs, authority
+Final acceptance still requires one successful manual dispatch after the
+`15`-minute repair reaches `main`. Report the check count and runtime of each
+scheduled file and their combined runtime, plus screening checks and lines
+before/after with the stronger owner named for each deleted cluster. Run the
+public and atomic owners, all three existing public CI gates, Docs, authority
 check/self-test, docs tests, package load, Documenter, manager-log bound, YAML
-inspection, and diff checks. The implementation pass stops after handback;
-planned-path and lifecycle closeout remain a separate docs-only pass.
+inspection, and diff checks. The timeout implementation stops after handback;
+lifecycle closeout remains a separate docs-only pass.
 
 ## Planned phases
 

@@ -1762,3 +1762,71 @@ Carrying-cost accounting:
 - **MT6 - active/refined:** implement and manually accept the four-suite
   scheduled gate, then continue the evidence-backed disposition of
   occupied-first injection and represented molecular Hartree separately.
+
+## Cartesian Hamiltonian Producer Pass 511 - Implement Scheduled Internal Maintenance Gate
+
+Commit(s):
+- `1f550899ffac6b682081595b482e1bdfb2e65da2` - workflow and screening
+  deduplication.
+
+Summary:
+- Added the exact `29`-line weekly/manual Julia `1.12` read-only workflow and
+  kept all four internal owners in separate sequential processes. Removed
+  `47` duplicate screening-test lines, for a combined net reduction of `18`
+  lines and no source, API, runner, dependency, or public-CI change.
+- Local execution passed atomic packet `117/117`, protected sidecar `49/49`,
+  R3A `464/464 + 64/64`, and screened Hartree `85/85` in about `197.3`
+  seconds. The stronger public screening `22/22` and atomic packet `117/117`
+  owners passed before and after deletion.
+
+Goal advancement / guardrail:
+- MT6 now has a concrete low-cadence owner. The first manual GitHub run passed
+  setup, package load, atomic packet, sidecar, and R3A, then canceled the final
+  screened-Hartree step at the exact `10`-minute job limit. This is accepted as
+  an operational timeout, not final gate acceptance or a numerical failure.
+
+Carrying-cost accounting:
+- deleted: eight duplicated failure assertions, `47` test lines total.
+- simplified: four internal owners share one scheduled lane.
+- quarantined: occupied-first injection and represented molecular Hartree
+  remain unscheduled and unclassified.
+- not deleted because: the retained `85` screening checks own unique packet
+  correction, embedding, additive, translated-field, mixed-block, fitted-field,
+  and consumer rejection behavior.
+- exact remaining caller/blocker: one timeout-only repair and successful manual
+  replay; added/deleted `src` lines `0/0`; new tests and metadata fields none.
+- validation: implementation diff and YAML review, local owner results, remote
+  run `32647096775`, public CI `32644674430`, docs failure classification,
+  authority preflight, docs tests, package load, Documenter, and diff checks.
+
+## Cartesian Hamiltonian Producer Pass 512 - Authorize Fifteen-Minute Maintenance Timeout
+
+Commit(s):
+- this docs-only timeout amendment.
+
+Summary:
+- Reconciled the tracked workflow path to `existing` and closed the screening
+  deduplication test record as completed maintenance. The only remaining
+  implementation grant is the literal workflow replacement
+  `timeout-minutes: 10 -> 15`.
+- The first manual run spent about `7m19s` through R3A and then ran screened
+  Hartree for `2m46s` before the job limit canceled it. A `15`-minute ceiling
+  is a bounded operational allowance; it changes no test or numerical policy.
+
+Goal advancement / guardrail:
+- MT6 remains active until all four existing processes pass in one manual run.
+  Commands, ordering, weekly cadence, manual trigger, Julia version,
+  permissions, public CI, RC1, and release state are frozen. A second timeout
+  requires another evidence-backed decision rather than an automatic increase.
+
+Carrying-cost accounting:
+- deleted: no additional implementation in this docs pass.
+- simplified: test-edit authority is closed; only one workflow scalar remains
+  editable.
+- quarantined: occupied-first and represented Hartree remain unchanged.
+- not deleted because: all four scheduled suites retain unique live contracts.
+- exact remaining caller/blocker: repo-manager must make the one-line timeout
+  change, manually dispatch, and hand back for final lifecycle closeout.
+- added/deleted `src` lines `0/0`; new tests and metadata fields none;
+  validation: authority/render checks, docs tests, Documenter, log bound,
+  docs-only scope review, and `git diff --check`.
