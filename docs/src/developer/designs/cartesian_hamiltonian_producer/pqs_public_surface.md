@@ -886,17 +886,18 @@ same design manager.
 
 ## v0.2.0-rc2 Reader Front Door And Candidate Preparation
 
-`HP-PQS-PUBLIC-RC2-FN-01` and `HP-PQS-PUBLIC-RC2-TEST-01` authorize one
-bounded candidate-preparation pass from accepted `main` commit
-`de8991a75d5565e65dcabb9d80c5626a5b86905d`. RC2 is required because the
-public residual-GTO/MWG working-system facade and external Cartesian-GTO/PySCF
-transfer were added after immutable RC1. This is candidate preparation only;
-it does not authorize a tag, GitHub release, registration, citation record,
-stable documentation, or final `v0.2.0`.
+`HP-PQS-PUBLIC-RC2-FN-01` owns maintenance of the exact candidate prepared by
+commit `2b3c23970144aa030ae52b875a5cf01b32886b6e`.
+`HP-PQS-PUBLIC-RC2-TEST-01` owns completed acceptance evidence and grants no
+further execution. RC2 is required because the public residual-GTO/MWG
+working-system facade and external Cartesian-GTO/PySCF transfer were added
+after immutable RC1. The prepared candidate does not authorize a tag, GitHub
+release, registration, citation record, stable documentation, or final
+`v0.2.0`.
 
 ### Reader Front Door
 
-The root `README.md` may add short links naming three distinct capabilities:
+The root `README.md` names three distinct capabilities:
 
 - Projected q-shells;
 - reference-density Hartree screening; and
@@ -911,7 +912,7 @@ report budget is `14` preferred and `20` hard added lines.
 
 ### Candidate Files
 
-The same implementation pass may make only these candidate changes:
+The accepted candidate contains only these changes:
 
 1. change the root `Project.toml` version from `0.2.0-rc1` to
    `0.2.0-rc2`;
@@ -920,8 +921,15 @@ The same implementation pass may make only these candidate changes:
 3. add the exact `v0.2.0-rc2 => v0.2.0-rc2` selector beside the retained RC1
    selector and `dev` in `docs/make.jl`;
 4. make the existing deployment contract describe that exact selector; and
-5. extend only the existing focused docs tests for the RC2/version-selector
-   contract.
+5. focused existing docs tests for the RC2/version-selector contract.
+
+The implementation changed five existing files by `+48/-2`: `8` README
+lines, an `18`-line RC2 changelog section, one version replacement, one
+selector line, and `20/1` focused docs-test lines. The RC1 section is
+byte-identical to its accepted predecessor; its section SHA-256 remains
+`0c92db23146e520ff0365e7724eb9b9fa1fb4e8d453c1544be4f7cdaa6a3a42d`.
+No source, API, numerical, dependency, example, workflow, fixture-format, or
+manifest-policy behavior changed.
 
 The RC2 changelog section may summarize only the public residual-GTO/MWG
 working-system constructor, strict version-1 external Cartesian-GTO reader,
@@ -944,8 +952,7 @@ repeated because this pass changes no implementation.
 
 ### Candidate Acceptance
 
-Before acceptance, repo-manager must preserve one exact candidate commit and
-report:
+Acceptance preserved the exact candidate commit and established:
 
 - clean installation and package load on Julia `1.10` and the verified Julia
   `1.12` line;
@@ -960,9 +967,15 @@ report:
 - RC2, RC1, and `dev` selector simulation with no `stable` entry, alias, or
   path.
 
-The RC2 selector must coexist with RC1 and `dev`; it does not publish an RC2
-folder before a separately authorized tag. If any required result needs a
-source, numerical, test-owner, workflow, dependency, fixture-format, or
-manifest-policy change, make no candidate commit and return the exact blocker
-to repo-design-manager. Successful preparation and replay grant no authority
+Local docs passed `99/99` and `10/10`; the residual-GTO/external-transfer owner
+passed `80/80`, H2+ passed `18/18`, and screening passed `22/22`. Remote Docs
+run `32780718822` passed. CI run `32780718923` passed Supported floor in
+`5m57s`, PQS paper in `17m09s`, and Screening paper in `1m43s`. The clean
+archive contains `676` entries in `9,994,240` bytes, has SHA-256
+`6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac`,
+and contains neither a root Manifest nor either handoff.
+
+The RC2 selector coexists with RC1 and `dev`; it publishes no RC2 folder before
+a separately authorized tag. `/dev/` remains live while `/v0.2.0-rc2/` and
+`/stable/` remain absent. Successful preparation and replay grant no authority
 to tag or publish the candidate.

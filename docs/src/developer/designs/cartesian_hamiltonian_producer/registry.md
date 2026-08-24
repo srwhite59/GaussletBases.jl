@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `708618e2e3f65d4d364c425e2fa7dc78e971dd30eb846e343f0351cdad7ac096`.
+> [authority.toml](authority.toml), SHA-256 `d721a02fffdbc1ebb64d58bfa78fb049b19637c3f0ace12f5b02b84df159408f`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1477,6 +1477,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `tool` / `existing`: `.github/workflows/docs.yml`
   - `tool` / `existing`: `docs/make.jl`
 - **Evidence:**
+  - `git_commit`: `2b3c23970144aa030ae52b875a5cf01b32886b6e`
   - `git_commit`: `31caa87d3b83599de7f7295678ee599209113552`
   - `git_commit`: `abee269eed7028c864fa18ae44b4b946af63dfcf`
   - `manager_pass`: `490`
@@ -1484,8 +1485,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `495`
   - `manager_pass`: `496`
   - `manager_pass`: `519`
+  - `manager_pass`: `520`
 - **Dependencies:** `HP-PQS-PUBLIC-DOC-01`, `HP-PQS-PUBLIC-DOC-PARITY-FN-01`
-- **Scope:** Maintain only the implemented tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior, main-to-dev deployment, exact canonical full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tag folders without build metadata, fail-closed rejection before deploydocs, and Documenter's standard exclusion of prereleases from the real stable alias. Retain the existing v0.2.0-rc1 folder through its exact self-mapping and authorize exactly one v0.2.0-rc2 self-mapping for HP-PQS-PUBLIC-RC2-FN-01 candidate preparation; RC2 publishes no folder before a separately authorized tag. Neither mapping creates an alias. No other prerelease entry or custom stable policy is authorized. GITHUB\_TOKEN and GAUSSLETBASES\_DOCS\_DEPLOY remain deployment-step-only under the contents:write deployment job. No new file, workflow change, tag mutation, release, source/API/example/scientific-doc/dependency/citation change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, dynamic version index, or release framework.
+- **Scope:** Maintain only the implemented tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior, main-to-dev deployment, exact canonical full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tag folders without build metadata, fail-closed rejection before deploydocs, and Documenter's standard exclusion of prereleases from the real stable alias. Retain the existing v0.2.0-rc1 folder and the prepared v0.2.0-rc2 candidate through their exact self-mappings; RC2 publishes no folder before a separately authorized tag. Neither mapping creates an alias. No other prerelease entry or custom stable policy is authorized. GITHUB\_TOKEN and GAUSSLETBASES\_DOCS\_DEPLOY remain deployment-step-only under the contents:write deployment job. No new file, workflow change, tag mutation, release, source/API/example/scientific-doc/dependency/citation change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, dynamic version index, or release framework.
 
 ### HP-PQS-DOCS-TAGDEPLOY-TEST-01 - tag-aware documentation deployment validation
 
@@ -1498,6 +1500,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `2b3c23970144aa030ae52b875a5cf01b32886b6e`
   - `git_commit`: `31caa87d3b83599de7f7295678ee599209113552`
   - `git_commit`: `abee269eed7028c864fa18ae44b4b946af63dfcf`
   - `manager_pass`: `490`
@@ -1505,6 +1508,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `495`
   - `manager_pass`: `496`
   - `manager_pass`: `519`
+  - `manager_pass`: `520`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`
 - **Scope:** Maintain only the focused existing docs-test assertions for PR/main/prerelease/final/malformed-tag classification, exact main and tag canonical paths, semantic-version rejection, unchanged least-privilege workflow boundaries, exact v0.2.0-rc1 and v0.2.0-rc2 selector retention, and standard prerelease exclusion from stable. Use an isolated Documenter version-expansion fixture to require RC2, RC1, and dev entries, no self-symlink, and no stable alias without a final release. Add no test file, parser framework, actual tag/deployment, numerical gate, source test, or release behavior.
 
@@ -2036,39 +2040,40 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-PUBLIC-RC2-FN-01 - v0.2.0-rc2 reader front door and candidate preparation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `docs`, `source`, `tools`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
+- **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0-rc2 Reader Front Door And Candidate Preparation`
 - **Owned paths:**
   - `docs` / `existing`: `CHANGELOG.md`
   - `docs` / `existing`: `README.md`
-  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md`
   - `source` / `existing`: `Project.toml`
-  - `tool` / `existing`: `docs/make.jl`
 - **Evidence:**
+  - `git_commit`: `2b3c23970144aa030ae52b875a5cf01b32886b6e`
   - `git_commit`: `de8991a75d5565e65dcabb9d80c5626a5b86905d`
   - `manager_pass`: `519`
+  - `manager_pass`: `520`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-RC1-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-PUBLIC-PAPER-CI-FN-01`, `HP-REP-PQS-RG-WORKING-FN-01`, `HP-REP-XGTO-CLOSESTDET-FN-01`, `HP-REP-XGTO-INTERCHANGE-FN-01`, `HP-REP-XGTO-PYSCF-EXPORT-FN-01`, `HP-REP-XGTO-READER-DOC-01`
-- **Scope:** Prepare exactly one v0.2.0-rc2 candidate from accepted main de8991a75: add at most 14 preferred/20 hard root-README lines linking distinct Projected q-shells, reference-density Hartree screening, and external Cartesian GTO transfer while keeping radial first and describing the exporter as checkpoint-only; change only Project.toml version 0.2.0-rc1 to 0.2.0-rc2; prepend one 28 preferred/40 hard line post-RC1 changelog section without editing RC1; add the exact RC2 self-mapping within 3 lines beside RC1/dev; and reconcile at most 18 preferred/28 hard deployment-contract lines. PySCF/NumPy remain optional external-command dependencies. No new file, production source/API/export/numerical/dependency/example/workflow/fixture-format/manifest-policy/test-owner change, tutorial duplication, manuscript or benchmark claim, paper status, DOI, stable alias, tag, release, registration, citation, or final-v0.2 action. Stop without a candidate commit if any forbidden change is required.
+- **Scope:** Maintain the exact v0.2.0-rc2 candidate identity implemented by commit 2b3c23970144aa030ae52b875a5cf01b32886b6e: root Project.toml version 0.2.0-rc2, the concise post-RC1 CHANGELOG section above a byte-unchanged RC1 section, and the three distinct root-README capability links with the radial beginner route retained and the external exporter described as checkpoint-only. PySCF and NumPy remain optional external-command dependencies. Exact RC2/RC1/dev selector maintenance belongs to HP-PQS-DOCS-TAGDEPLOY-FN-01. No production source/API/export/numerical/dependency/example/workflow/fixture-format/manifest-policy/test-owner change, tutorial duplication, manuscript or benchmark claim, paper status, DOI, stable alias, tag, release, registration, citation, or final-v0.2 action is authorized.
 
 ### HP-PQS-PUBLIC-RC2-TEST-01 - v0.2.0-rc2 candidate validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0-rc2 Reader Front Door And Candidate Preparation`
-- **Owned paths:**
-  - `test` / `existing`: `test/docs/runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
+  - `git_commit`: `2b3c23970144aa030ae52b875a5cf01b32886b6e`
   - `git_commit`: `de8991a75d5565e65dcabb9d80c5626a5b86905d`
   - `manager_pass`: `519`
+  - `manager_pass`: `520`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-RC2-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-PAPER-CI-TEST-01`, `HP-REP-PQS-RG-WORKING-CI-TEST-01`, `HP-REP-XGTO-INTERCHANGE-TEST-01`, `HP-REP-XGTO-READER-DOC-TEST-01`
-- **Scope:** Extend only test/docs/runtests.jl by 20 preferred/35 hard lines for exact README capability links, Project version/changelog identity, RC2/RC1/dev selector expansion, exact RC2 canonical classification, and absent stable alias. Add no test owner, fixture, numerical assertion, workflow, source test, parser framework, tag, or deployment. Candidate acceptance must additionally run unchanged Julia 1.10 and verified Julia 1.12 installs, all three public CI gates, export integrity, residual-GTO/external-transfer plus frozen H2/cc-pVTZ checks, examples 01/39/40/41, focused H2+ 18/18, Docs, and an archive/install replay excluding a root Manifest and both handoffs. The accepted C2 replay is not repeated without implementation change.
+- **Scope:** Completed v0.2.0-rc2 candidate-acceptance evidence only; this record grants no test, workflow, source, docs, tag, or release edit. Commit 2b3c23970144aa030ae52b875a5cf01b32886b6e passed clean Julia 1.10.12 and 1.12.6 package loads, the three public CI gates, export integrity, public residual-GTO/external-transfer and frozen H2/cc-pVTZ coverage, public examples 01/39/40/41, focused H2+ 18/18, screening 22/22, docs 99/99 and 10/10, and an archive/install replay excluding a root Manifest and both handoffs. The candidate archive contains 676 entries, is 9994240 bytes, and has SHA-256 6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac. RC2/RC1/dev selector simulation retained no stable alias or path. The accepted C2 replay remains canonical and was not repeated because implementation was unchanged. Tagging, GitHub release publication, registration, citation, stable documentation, and final v0.2 require separate authority.
 
 ### HP-PQS-PUBLIC-SCREEN-FN-01 - public supplied-field screened-Hartree assembly
 

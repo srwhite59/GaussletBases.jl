@@ -49,9 +49,10 @@ explicit prerelease selector entries:
 ```
 
 The RC1 self-mapping keeps its existing folder in `versions.js` across both
-tag and later `main` deployments. The RC2 self-mapping is approved for the
-bounded RC2 candidate-preparation pass; until a separate tag decision it is a
-selector-policy fixture and publishes no folder. Neither entry creates an
+tag and later `main` deployments. Commit
+`2b3c23970144aa030ae52b875a5cf01b32886b6e` implemented the RC2 self-mapping;
+until a separate tag decision it is a selector-policy fixture and publishes no
+folder. Neither entry creates an
 alias. Documenter still
 excludes prerelease folders from the release set used to create or advance
 `stable`. A later final `v0.2.0` tag may become `stable` under the standard

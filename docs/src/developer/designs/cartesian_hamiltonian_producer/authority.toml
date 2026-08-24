@@ -44,10 +44,10 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accura
 sha256 = "68cfa9dcc5b5fa59f553f22251e81fcbe5b54bec4bef627b2907cf81db492a36"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
-sha256 = "a12104bb64cd816396b8e0dc4c6baea4b819927dfaaeb9b75bf84a565f27a1ee"
+sha256 = "568ab5749c1fa6fff70d6f153323af0a20d59aa91a37e3ecb89252ccc7161216"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_cartesian_gto_interchange.md"
-sha256 = "e9adfafc69f4efa40d0c8d9cb8506df341474489d6efb22b0b9b6b7205b22302"
+sha256 = "c004c7ceeb748e0b51a310c695d46a5185895c69adec5102f68c347e707b0930"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_orbital_import.md"
 sha256 = "b1395e5c33d63eb8e0517e4cdc3e602400fa6d9dbe134e8cda5107963960f9da"
@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "500d309be6752556c53893d0974719815fe69c92f1709f7c4746f0c7d58b51c2"
+sha256 = "48d834294942ffc4b7d1eb42169145405182eae13066fb341253a8ebd440bd5b"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -2407,7 +2407,7 @@ dependency_ids = ["HP-PQS-PUBLIC-DOC-01", "HP-PQS-PUBLIC-DOC-PARITY-FN-01"]
 grant = "maintenance"
 id = "HP-PQS-DOCS-TAGDEPLOY-FN-01"
 lifecycle = "implemented"
-scope = "Maintain only the implemented tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior, main-to-dev deployment, exact canonical full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tag folders without build metadata, fail-closed rejection before deploydocs, and Documenter's standard exclusion of prereleases from the real stable alias. Retain the existing v0.2.0-rc1 folder through its exact self-mapping and authorize exactly one v0.2.0-rc2 self-mapping for HP-PQS-PUBLIC-RC2-FN-01 candidate preparation; RC2 publishes no folder before a separately authorized tag. Neither mapping creates an alias. No other prerelease entry or custom stable policy is authorized. GITHUB_TOKEN and GAUSSLETBASES_DOCS_DEPLOY remain deployment-step-only under the contents:write deployment job. No new file, workflow change, tag mutation, release, source/API/example/scientific-doc/dependency/citation change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, dynamic version index, or release framework."
+scope = "Maintain only the implemented tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior, main-to-dev deployment, exact canonical full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tag folders without build metadata, fail-closed rejection before deploydocs, and Documenter's standard exclusion of prereleases from the real stable alias. Retain the existing v0.2.0-rc1 folder and the prepared v0.2.0-rc2 candidate through their exact self-mappings; RC2 publishes no folder before a separately authorized tag. Neither mapping creates an alias. No other prerelease entry or custom stable policy is authorized. GITHUB_TOKEN and GAUSSLETBASES_DOCS_DEPLOY remain deployment-step-only under the contents:write deployment job. No new file, workflow change, tag mutation, release, source/API/example/scientific-doc/dependency/citation change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, dynamic version index, or release framework."
 surfaces = ["docs", "tools"]
 title = "tag-aware versioned documentation deployment"
 
@@ -2416,6 +2416,9 @@ title = "tag-aware versioned documentation deployment"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
 
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "2b3c23970144aa030ae52b875a5cf01b32886b6e"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "31caa87d3b83599de7f7295678ee599209113552"
@@ -2437,6 +2440,9 @@ title = "tag-aware versioned documentation deployment"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "519"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "520"
 
     [[records.paths]]
     kind = "docs"
@@ -2470,6 +2476,9 @@ title = "tag-aware documentation deployment validation"
 
     [[records.evidence_refs]]
     kind = "git_commit"
+    value = "2b3c23970144aa030ae52b875a5cf01b32886b6e"
+    [[records.evidence_refs]]
+    kind = "git_commit"
     value = "31caa87d3b83599de7f7295678ee599209113552"
     [[records.evidence_refs]]
     kind = "git_commit"
@@ -2489,6 +2498,9 @@ title = "tag-aware documentation deployment validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "519"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "520"
 
     [[records.paths]]
     kind = "test"
@@ -3499,11 +3511,11 @@ title = "v0.2.0-rc1 candidate-preparation validation"
     value = "493"
 [[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PUBLIC-RC1-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-FN-01", "HP-PUBLIC-PAPER-CI-FN-01", "HP-REP-PQS-RG-WORKING-FN-01", "HP-REP-XGTO-CLOSESTDET-FN-01", "HP-REP-XGTO-INTERCHANGE-FN-01", "HP-REP-XGTO-PYSCF-EXPORT-FN-01", "HP-REP-XGTO-READER-DOC-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-PUBLIC-RC2-FN-01"
-lifecycle = "approved"
-scope = "Prepare exactly one v0.2.0-rc2 candidate from accepted main de8991a75: add at most 14 preferred/20 hard root-README lines linking distinct Projected q-shells, reference-density Hartree screening, and external Cartesian GTO transfer while keeping radial first and describing the exporter as checkpoint-only; change only Project.toml version 0.2.0-rc1 to 0.2.0-rc2; prepend one 28 preferred/40 hard line post-RC1 changelog section without editing RC1; add the exact RC2 self-mapping within 3 lines beside RC1/dev; and reconcile at most 18 preferred/28 hard deployment-contract lines. PySCF/NumPy remain optional external-command dependencies. No new file, production source/API/export/numerical/dependency/example/workflow/fixture-format/manifest-policy/test-owner change, tutorial duplication, manuscript or benchmark claim, paper status, DOI, stable alias, tag, release, registration, citation, or final-v0.2 action. Stop without a candidate commit if any forbidden change is required."
-surfaces = ["docs", "source", "tools"]
+lifecycle = "implemented"
+scope = "Maintain the exact v0.2.0-rc2 candidate identity implemented by commit 2b3c23970144aa030ae52b875a5cf01b32886b6e: root Project.toml version 0.2.0-rc2, the concise post-RC1 CHANGELOG section above a byte-unchanged RC1 section, and the three distinct root-README capability links with the radial beginner route retained and the external exporter described as checkpoint-only. PySCF and NumPy remain optional external-command dependencies. Exact RC2/RC1/dev selector maintenance belongs to HP-PQS-DOCS-TAGDEPLOY-FN-01. No production source/API/export/numerical/dependency/example/workflow/fixture-format/manifest-policy/test-owner change, tutorial duplication, manuscript or benchmark claim, paper status, DOI, stable alias, tag, release, registration, citation, or final-v0.2 action is authorized."
+surfaces = ["docs", "source"]
 title = "v0.2.0-rc2 reader front door and candidate preparation"
 
     [[records.document_refs]]
@@ -3513,10 +3525,16 @@ title = "v0.2.0-rc2 reader front door and candidate preparation"
 
     [[records.evidence_refs]]
     kind = "git_commit"
+    value = "2b3c23970144aa030ae52b875a5cf01b32886b6e"
+    [[records.evidence_refs]]
+    kind = "git_commit"
     value = "de8991a75d5565e65dcabb9d80c5626a5b86905d"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "519"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "520"
 
     [[records.paths]]
     kind = "docs"
@@ -3527,24 +3545,17 @@ title = "v0.2.0-rc2 reader front door and candidate preparation"
     path = "README.md"
     state = "existing"
     [[records.paths]]
-    kind = "docs"
-    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
-    state = "existing"
-    [[records.paths]]
     kind = "source"
     path = "Project.toml"
     state = "existing"
-    [[records.paths]]
-    kind = "tool"
-    path = "docs/make.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-TEST-01", "HP-PQS-PUBLIC-RC2-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-TEST-01", "HP-PUBLIC-PAPER-CI-TEST-01", "HP-REP-PQS-RG-WORKING-CI-TEST-01", "HP-REP-XGTO-INTERCHANGE-TEST-01", "HP-REP-XGTO-READER-DOC-TEST-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-PQS-PUBLIC-RC2-TEST-01"
-lifecycle = "approved"
-scope = "Extend only test/docs/runtests.jl by 20 preferred/35 hard lines for exact README capability links, Project version/changelog identity, RC2/RC1/dev selector expansion, exact RC2 canonical classification, and absent stable alias. Add no test owner, fixture, numerical assertion, workflow, source test, parser framework, tag, or deployment. Candidate acceptance must additionally run unchanged Julia 1.10 and verified Julia 1.12 installs, all three public CI gates, export integrity, residual-GTO/external-transfer plus frozen H2/cc-pVTZ checks, examples 01/39/40/41, focused H2+ 18/18, Docs, and an archive/install replay excluding a root Manifest and both handoffs. The accepted C2 replay is not repeated without implementation change."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Completed v0.2.0-rc2 candidate-acceptance evidence only; this record grants no test, workflow, source, docs, tag, or release edit. Commit 2b3c23970144aa030ae52b875a5cf01b32886b6e passed clean Julia 1.10.12 and 1.12.6 package loads, the three public CI gates, export integrity, public residual-GTO/external-transfer and frozen H2/cc-pVTZ coverage, public examples 01/39/40/41, focused H2+ 18/18, screening 22/22, docs 99/99 and 10/10, and an archive/install replay excluding a root Manifest and both handoffs. The candidate archive contains 676 entries, is 9994240 bytes, and has SHA-256 6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac. RC2/RC1/dev selector simulation retained no stable alias or path. The accepted C2 replay remains canonical and was not repeated because implementation was unchanged. Tagging, GitHub release publication, registration, citation, stable documentation, and final v0.2 require separate authority."
+surfaces = []
 title = "v0.2.0-rc2 candidate validation"
 
     [[records.document_refs]]
@@ -3554,15 +3565,16 @@ title = "v0.2.0-rc2 candidate validation"
 
     [[records.evidence_refs]]
     kind = "git_commit"
+    value = "2b3c23970144aa030ae52b875a5cf01b32886b6e"
+    [[records.evidence_refs]]
+    kind = "git_commit"
     value = "de8991a75d5565e65dcabb9d80c5626a5b86905d"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "519"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/docs/runtests.jl"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "520"
 [[records]]
 dependency_ids = ["HP-PQS-SCREEN-HARTREE-CORR-FN-01"]
 grant = "maintenance"

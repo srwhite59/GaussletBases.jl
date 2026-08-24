@@ -77,6 +77,11 @@ archaeology and are not normal startup reading.
   uploaded assets or latest-final status; archive, clean-install, and docs
   verification passed. PQS and reference-density screening remain distinct
   method and future citation surfaces. Release acceptance is closed.
+- The exact `v0.2.0-rc2` candidate is prepared at commit `2b3c23970`. It adds
+  the post-RC1 public residual-GTO/interchange surface, three reader-front-door
+  links, and explicit RC2 selector retention without changing implementation,
+  dependencies, workflows, or scientific policy. Tagging, GitHub publication,
+  registration, citation, stable documentation, and final v0.2 remain separate.
 - Production defaults, public workflows, corrected artifacts, and Cr2 endpoint
   claims remain unchanged unless separately authorized.
 
@@ -1178,3 +1183,56 @@ Carrying-cost accounting:
   with no schema field or broader path class. Validation: authority
   render/check/self-test, docs tests, Documenter, manager-log bound, scoped
   docs-only review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 520 - Accept RC2 Candidate Preparation
+
+Commit(s):
+- `2b3c23970144aa030ae52b875a5cf01b32886b6e` - exact RC2 candidate.
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted version `0.2.0-rc2`, the concise post-RC1 changelog, three distinct
+  README capability links, the exact RC2 selector, and focused docs checks.
+  The five-file delta was `+48/-2`; the RC1 changelog section remained
+  byte-identical and no source, API, numerical, dependency, example, workflow,
+  fixture-format, or manifest policy changed.
+- Julia `1.10.12` and `1.12.6` package loads passed. The residual-GTO/external
+  transfer owner passed `80/80`, H2+ `18/18`, screening `22/22`, and local docs
+  `99/99` plus `10/10`. Remote Docs `32780718822` and all three CI rows in
+  `32780718923` passed. The clean `676`-entry archive excludes a root Manifest
+  and both handoffs and has SHA-256
+  `6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac`.
+
+Goal advancement / guardrail:
+- MT5 moves to completed/maintenance for candidate preparation. RC1 remains
+  immutable and MT7 remains completed/maintenance. RC2 tagging, GitHub release
+  publication, registration, citation, `/stable/`, and final v0.2 require
+  separate decisions; the accepted C2 replay remains canonical and was not
+  repeated because implementation did not change.
+
+Carrying-cost accounting:
+- deleted: stale approved-pending lifecycle text; simplified: selector
+  maintenance returns to the existing tag-deployment owner; quarantined: tag,
+  publication, citation, registration, and final-release operations remain
+  outside this candidate.
+- not deleted because: RC1 remains immutable evidence and both candidate
+  sections are reader history; exact remaining caller/blocker: none for RC2
+  preparation, with tagging as the next optional decision; added/deleted `src`
+  lines `0/0`; new tests: no new owner, only `20/1` focused docs-test lines;
+  new metadata/status fields none; validation: exact diff and RC1 hash review,
+  package/public gates, clean archive, remote Docs/CI, authority checks, docs
+  tests, Documenter, manager-log bound, scoped diff, and `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 520
+
+- **MT1 - active:** continue narrow conformance repairs separately from release
+  work.
+- **MT2 - completed:** controlled Cr2 source migration remains closed.
+- **MT3 - active:** pending producer facilities and corrected paper-oracle
+  interpretation are unchanged.
+- **MT4 - active:** residual/protected and consumer-owned PRF work is unchanged.
+- **MT5 - completed/maintenance:** RC2 candidate preparation is accepted;
+  tagging and publication are separate decisions.
+- **MT6 - active:** evidence-led internal-test cleanup continues independently.
+- **MT7 - completed/maintenance:** external Cartesian-GTO interchange and its
+  reader front door are implemented, validated, and included in RC2.

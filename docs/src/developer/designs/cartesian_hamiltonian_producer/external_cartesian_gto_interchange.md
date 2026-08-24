@@ -502,8 +502,8 @@ v0.2 requires a separately authorized new release candidate, with its own
 clean replay and reader-facing review. This design grants no version change,
 tag, GitHub release, registration, citation, or final-release action.
 
-A reader-facing manual entry is now accepted. The separate RC2 candidate-
-preparation review is approved under `HP-PQS-PUBLIC-RC2-FN-01/TEST-01`;
+A reader-facing manual entry is now accepted. The separate RC2 candidate is
+prepared and accepted under `HP-PQS-PUBLIC-RC2-FN-01/TEST-01`;
 tagging and release publication remain unauthorized.
 Basis-only export and export from a live PySCF mean-field object remain outside
 v1, which requires a checkpoint. Once a packet exists, consumers may obtain
