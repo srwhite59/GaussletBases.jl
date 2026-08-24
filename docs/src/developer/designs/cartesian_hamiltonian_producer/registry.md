@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `d08b157b30654a80ed15bcf6b8efa0cfa226a451b9825840fca4e4d1cc676a61`.
+> [authority.toml](authority.toml), SHA-256 `be9ed7a34477567d4d0dd6e7a2771180cb1e6cdda7bd184a1283feef7032082d`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -3137,6 +3137,38 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `516`
 - **Dependencies:** `HP-REP-XGTO-INTERCHANGE-FN-01`
 - **Scope:** Maintain the optional checkpoint-to-v1-bundle command \`bin/export\_pyscf\_cartesian\_gto.py\` accepted in bd1d11cec71c2257b311054bb064e361bb533042 and fixture-regenerated in 0ca4e18c7ff550ec6f254f63b9f075193094ccd0. Preserve exact PySCF Cartesian AO order and explicit primitive data; for real spherical RHF/UHF states use only \`mol.cart2sph\_coeff(normalized="sp")\` and \`C\_cart = X\*C\_sph\`, use \`mol.bas\_ctr\_coeff\` or its exact normalization-equivalent, validate the Cartesian source overlap/MO metric, and emit deterministic hashes. PySCF and NumPy remain external command dependencies. Add no PySCF calculation driver, basis-only or live-mean-field mode, global metric solve, Julia dependency, general format framework, basis lookup, GHF/spinor/complex/periodic/ECP/ROHF claim, Hamiltonian/Fock/ERI payload, or extra output file.
+
+### HP-REP-XGTO-READER-DOC-01 - external Cartesian GTO reader manual
+
+- **Lifecycle:** `approved`
+- **Grant:** `design`
+- **Surfaces:** `docs`
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [external\_cartesian\_gto\_interchange.md](external_cartesian_gto_interchange.md); heading `Reader-Facing Manual Authority`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/external_cartesian_gto_interchange.md`
+  - `docs` / `existing`: `docs/src/manual/index.md`
+  - `docs` / `existing`: `docs/src/reference/export.md`
+- **Evidence:**
+  - `manager_pass`: `517`
+- **Dependencies:** `HP-REP-XGTO-CLOSESTDET-FN-01`, `HP-REP-XGTO-IMPORT-FN-01`, `HP-REP-XGTO-INTERCHANGE-FN-01`, `HP-REP-XGTO-PYSCF-EXPORT-FN-01`
+- **Scope:** Create one bounded reader-facing external Cartesian-GTO transfer manual page and only its Manual navigation, manual-index link, and curated seven-binding API section. Present checkpoint-only PySCF export, same-geometry working construction, final-by-source overlap inspection, unchanged raw projection, and separately thresholded closest-determinant preparation. Preserve explicit capture diagnostics, Hamiltonian attestation, optional external PySCF/NumPy dependencies, and all unsupported-case boundaries. Limits are 140/200 new-page lines and 24/36 combined existing-document lines, with exactly one new file. Add no README promotion, heavy example, source/API/fixture/format/workflow/dependency/version/tag/release/registration/citation/paper change, basis-only/live-mean-field exporter, universal capture threshold, solver state, private name, paper identifier, C2 production number, or duplicate gto\_overlap\_matrix reference entry.
+
+### HP-REP-XGTO-READER-DOC-TEST-01 - external Cartesian GTO reader documentation validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [external\_cartesian\_gto\_interchange.md](external_cartesian_gto_interchange.md); heading `Reader-Facing Manual Authority`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `517`
+- **Dependencies:** `HP-REP-XGTO-READER-DOC-01`
+- **Scope:** Add only 20/30 preferred/hard focused lines to the existing documentation owner. Check manual navigation and index linkage, resolution and curated-reference presence of ExternalGTOOrbitalSpinBlock, ExternalGTOOrbitalPacket, ExternalGTOOrbitalSpinImport, ExternalGTOOrbitalImportResult, import\_external\_gto\_orbitals, read\_external\_cartesian\_gto\_packet, and closest\_external\_gto\_determinant, raw projection versus determinant cleanup, checkpoint-only export, explicit minimum-Gram threshold, Hamiltonian attestation, and absence of personal/Dropbox paths, request identifiers, C2 production numbers, and private names. Add no test file, executable example, numerical assertion, PySCF installation, broad docs scan, runner/workflow change, or duplicate gto\_overlap\_matrix ownership.
 
 ### HP-RES-01 - terminal basis build result — rejected
 

@@ -416,6 +416,79 @@ Do not split helpers or tests into extra files to evade a limit. If a readable,
 validated implementation exceeds a hard bound, make no implementation commit
 and report the smallest justified adjustment.
 
+## Reader-Facing Manual Authority
+
+Reader discoverability is approved under:
+
+- `HP-REP-XGTO-READER-DOC-01` for one bounded manual page, Manual navigation,
+  a manual-index link, and a curated API section; and
+- `HP-REP-XGTO-READER-DOC-TEST-01` for focused checks in the existing
+  documentation-test owner.
+
+The reader page must present this sequence without introducing another helper:
+
+1. run an ordinary real molecular RHF or collinear UHF calculation in PySCF
+   and save its checkpoint;
+2. invoke `bin/export_pyscf_cartesian_gto.py` with `--checkpoint` and
+   `--output` to create a same-stem `.toml`/`.f64` bundle;
+3. construct a supported same-geometry GaussletBases working object;
+4. read the bundle with `read_external_cartesian_gto_packet`;
+5. inspect the final-by-source overlap with
+   `gto_overlap_matrix(working, packet.probes)`;
+6. retain the unchanged raw projection from
+   `import_external_gto_orbitals(working, packet)`; and
+7. optionally call `closest_external_gto_determinant` with an explicit
+   caller-selected `minimum_gram_eigenvalue`, then inspect its Gram
+   eigenvalues, principal angles, and orthonormality error before solver use.
+
+The page must distinguish projection from determinant preparation. Raw
+projection may lose norm. Closest-determinant cleanup orthonormalizes only the
+captured occupied subspace and cannot recover a missing direction. The minimum
+Gram eigenvalue is the invariant capture criterion, and this package supplies
+no universal threshold. Restricted determinant occupations must be two;
+alpha/beta determinant occupations must be one.
+
+The checkpoint exporter runs no SCF calculation. Invoking it attests that the
+checkpoint represents the supported ordinary all-electron Hartree-Fock
+Hamiltonian; checkpoint data alone cannot prove that DFT or a custom one-body
+operator was absent. PySCF and NumPy remain optional dependencies of that
+external command, not Julia dependencies. Basis-only and live-mean-field
+export remain outside v1. GHF, spinors, complex orbitals, periodic systems,
+ECP/pseudopotential states, ROHF determinant semantics, and arbitrary
+Hamiltonian transfer remain unsupported. The result prepares orbitals, not
+HFDMRG or other solver state.
+
+The curated reference may add exactly these existing bindings without
+duplicating the separately owned `gto_overlap_matrix` entry:
+
+```text
+ExternalGTOOrbitalSpinBlock
+ExternalGTOOrbitalPacket
+ExternalGTOOrbitalSpinImport
+ExternalGTOOrbitalImportResult
+import_external_gto_orbitals
+read_external_cartesian_gto_packet
+closest_external_gto_determinant
+```
+
+Implementation is limited to one planned
+`docs/src/manual/external_cartesian_gto_transfer.md` page, one entry in
+`docs/make.jl`, one concise link in `docs/src/manual/index.md`, one curated
+section in `docs/src/reference/export.md`, and focused additions to
+`test/docs/runtests.jl`. Limits are `140/200` lines for the new page,
+`24/36` combined lines in existing documentation, and `20/30` documentation-
+test lines, stated as preferred/hard stop-and-report bounds. Exactly one new
+file is allowed. README promotion, a heavy example, PySCF in Julia CI, source,
+API, fixture, format, workflow, dependency, version, tag, release,
+registration, citation, and paper-claim changes are excluded.
+
+The documentation checks must enforce navigation and manual-index visibility,
+resolution and curated-reference presence of the seven bindings, the raw-
+projection versus cleanup distinction, and the checkpoint-only,
+explicit-threshold, and Hamiltonian-attestation boundaries. They must also
+reject personal absolute or Dropbox paths, paper request identifiers, C2
+production numbers, and private names on the reader page.
+
 ## Release Boundary
 
 This public facility is not present in immutable `v0.2.0-rc1`. Including it in

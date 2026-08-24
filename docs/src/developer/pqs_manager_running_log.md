@@ -1070,3 +1070,39 @@ Carrying-cost accounting:
   C2 replay, package load, bounded local groups and public Cartesian `232/232`,
   remote CI `32685392062`, authority render/check/self-test, docs tests,
   Documenter, manager-log bound, docs-only scope review, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 517 - Authorize External GTO Reader Manual
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Approved one reader-facing external Cartesian-GTO transfer page, its Manual
+  and index links, one curated seven-binding API section, and focused checks in
+  the existing docs owner. The page must show the checkpoint-only PySCF export,
+  same-geometry working construction, overlap inspection, unchanged raw
+  projection, and separately thresholded closest-determinant preparation.
+- The bounds are `140/200` new-page lines, `24/36` combined existing-doc lines,
+  and `20/30` docs-test lines, with exactly one new file and no source, example,
+  fixture, dependency, workflow, binding, or release change.
+
+Goal advancement / guardrail:
+- MT7 remains completed/maintenance. This pass closes the authority gap for
+  discoverability without reopening interchange numerics. The manual must say
+  that capture loss is not repaired, no universal Gram threshold exists, and
+  exporter invocation is an ordinary-HF Hamiltonian attestation rather than a
+  fact provable from checkpoint fields. Basis-only/live-mean-field export and
+  unsupported state classes remain outside v1. RC2 review is the next separate
+  decision after reader acceptance.
+
+Carrying-cost accounting:
+- deleted: no code in this docs-only pass; simplified: one bounded page will
+  replace developer-contract archaeology for ordinary use; quarantined: C2
+  production evidence and paper identifiers remain outside reader docs; not
+  deleted because: the developer contract remains the normative convention
+  owner.
+- exact remaining caller/blocker: implement and review the five authorized
+  documentation surfaces; added/deleted `src` lines `0/0`; new tests none in
+  this pass; new metadata/status fields: two authority records only;
+  validation: public-surface/docstring/CLI reconciliation, authority rendering,
+  docs tests, Documenter, manager-log bound, scoped diff, and remote Docs/CI.
