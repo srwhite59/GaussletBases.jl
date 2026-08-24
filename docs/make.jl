@@ -4,6 +4,7 @@ const _DOCS_VERSION_TAG =
 const _DOCS_VERSIONS = [
     "stable" => "v^",
     "v#.#",
+    "v0.2.0-rc2" => "v0.2.0-rc2",
     "v0.2.0-rc1" => "v0.2.0-rc1",
     "dev" => "dev",
 ]

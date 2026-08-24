@@ -11,6 +11,8 @@
 
     design = read_doc("DESIGN.md")
     readme = read_doc("README.md")
+    root_project = read_doc("Project.toml")
+    changelog = read_doc("CHANGELOG.md")
     status = read_doc("STATUS.md")
     roadmap = read_doc("ROADMAP.md")
 
@@ -79,14 +81,25 @@
             "https://srwhite59.github.io/GaussletBases.jl/dev/manual/",
             "https://srwhite59.github.io/GaussletBases.jl/dev/reference/",
             "https://srwhite59.github.io/GaussletBases.jl/dev/developer/",
+            "[Projected q-shells](https://srwhite59.github.io/GaussletBases.jl/dev/manual/projected_q_shells/)",
+            "[Reference-density Hartree screening](https://srwhite59.github.io/GaussletBases.jl/dev/manual/reference_density_hartree_screening/)",
+            "[External Cartesian GTO transfer](https://srwhite59.github.io/GaussletBases.jl/dev/manual/external_cartesian_gto_transfer/)",
         )
         @test contains_all_lower(
             readme,
             "ordinary cartesian workflow",
             "bond-aligned diatomic nested fixed-source / fixed-block",
             "geometry payload support",
+            "checkpoint-only exporter",
+            "pyscf and numpy are optional dependencies",
         )
         @test !occursin("Gausslets.jl", readme)
+        @test occursin("version = \"0.2.0-rc2\"", root_project)
+        @test startswith(changelog, "# Changelog\n\n## v0.2.0-rc2")
+        @test contains_all(changelog, "cartesian_residual_gto_mwg_system",
+            "strict reader", "checkpoint-only PySCF exporter",
+            "caller-thresholded closest-determinant", "Supported-floor, PQS, and Screening",
+            "invalid package exports", "## v0.2.0-rc1")
 
         @test contains_all(
             status,
@@ -390,12 +403,16 @@
         @test _documentation_target("push", "refs/heads/main") == (:dev, "dev")
         @test _documentation_target("push", "refs/tags/v0.2.0-rc1") ==
               (:tag, "v0.2.0-rc1")
+        @test _documentation_target("push", "refs/tags/v0.2.0-rc2") ==
+              (:tag, "v0.2.0-rc2")
         @test _documentation_target("push", "refs/tags/v0.2.0") ==
               (:tag, "v0.2.0")
         @test "$(_DOCS_SITE)/$(_documentation_target("push", "refs/heads/main")[2])/" ==
               "https://srwhite59.github.io/GaussletBases.jl/dev/"
         @test "$(_DOCS_SITE)/$(_documentation_target("push", "refs/tags/v0.2.0-rc1")[2])/" ==
               "https://srwhite59.github.io/GaussletBases.jl/v0.2.0-rc1/"
+        @test "$(_DOCS_SITE)/$(_documentation_target("push", "refs/tags/v0.2.0-rc2")[2])/" ==
+              "https://srwhite59.github.io/GaussletBases.jl/v0.2.0-rc2/"
         for ref in ("refs/tags/v0.2", "refs/tags/release-v0.2.0",
                     "refs/tags/v0.2.0+build", "refs/tags/v01.2.3")
             @test_throws ErrorException _documentation_target("push", ref)
@@ -413,18 +430,20 @@
         @test _DOCS_VERSIONS == Any[
             "stable" => "v^",
             "v#.#",
+            "v0.2.0-rc2" => "v0.2.0-rc2",
             "v0.2.0-rc1" => "v0.2.0-rc1",
             "dev" => "dev",
         ]
         @test occursin("versions = _DOCS_VERSIONS", docs_make)
         mktempdir() do directory
             mkpath(joinpath(directory, "dev"))
+            mkpath(joinpath(directory, "v0.2.0-rc2"))
             mkpath(joinpath(directory, "v0.2.0-rc1"))
             script = """
                 using Documenter
                 entries, symlinks = Documenter.Writers.HTMLWriter.expand_versions(
                     $(repr(directory)), $(repr(_DOCS_VERSIONS)))
-                @assert entries == ["v0.2.0-rc1", "dev"]
+                @assert entries == ["v0.2.0-rc2", "v0.2.0-rc1", "dev"]
                 @assert !any(pair -> pair.first == pair.second, symlinks)
                 @assert !any(pair -> pair.first == "stable", symlinks)
                 """

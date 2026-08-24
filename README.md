@@ -39,6 +39,14 @@ published line in the repo: the radial gausslet paper is now posted on arXiv,
 
 Documentation: <https://srwhite59.github.io/GaussletBases.jl/dev/>
 
+Current public capability guides:
+
+- [Projected q-shells](https://srwhite59.github.io/GaussletBases.jl/dev/manual/projected_q_shells/)
+- [Reference-density Hartree screening](https://srwhite59.github.io/GaussletBases.jl/dev/manual/reference_density_hartree_screening/)
+- [External Cartesian GTO transfer](https://srwhite59.github.io/GaussletBases.jl/dev/manual/external_cartesian_gto_transfer/),
+  using a checkpoint-only exporter; PySCF and NumPy are optional dependencies
+  of that external command
+
 The rendered docs are now organized into a small set of primary sections:
 Manual, Algorithms, Examples, Reference, and Developer Notes.
 

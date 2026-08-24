@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.2.0-rc2
+
+### Added
+
+- A public residual-GTO/MWG working-system constructor through
+  `cartesian_residual_gto_mwg_system`.
+- Version-1 external Cartesian-GTO transfer with a strict reader, a
+  checkpoint-only PySCF exporter, and caller-thresholded closest-determinant
+  preparation.
+
+### Changed
+
+- Split public CI into separate Supported-floor, PQS, and Screening gates.
+
+### Fixed
+
+- Removed invalid package exports that did not name usable bindings.
+
 ## v0.2.0-rc1
 
 ### Added
