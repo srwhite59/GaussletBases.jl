@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `be9ed7a34477567d4d0dd6e7a2771180cb1e6cdda7bd184a1283feef7032082d`.
+> [authority.toml](authority.toml), SHA-256 `0ba6edecfd93691a41a2932bc0672239b5329f3d65fc56d671836cbaed1f7084`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -3140,25 +3140,28 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-REP-XGTO-READER-DOC-01 - external Cartesian GTO reader manual
 
-- **Lifecycle:** `approved`
-- **Grant:** `design`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`
 - **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [external\_cartesian\_gto\_interchange.md](external_cartesian_gto_interchange.md); heading `Reader-Facing Manual Authority`
 - **Owned paths:**
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/external_cartesian_gto_interchange.md`
+  - `docs` / `existing`: `docs/src/manual/external_cartesian_gto_transfer.md`
   - `docs` / `existing`: `docs/src/manual/index.md`
   - `docs` / `existing`: `docs/src/reference/export.md`
 - **Evidence:**
+  - `git_commit`: `a746038f0528c791314f273313e2f7142f3a03b0`
   - `manager_pass`: `517`
+  - `manager_pass`: `518`
 - **Dependencies:** `HP-REP-XGTO-CLOSESTDET-FN-01`, `HP-REP-XGTO-IMPORT-FN-01`, `HP-REP-XGTO-INTERCHANGE-FN-01`, `HP-REP-XGTO-PYSCF-EXPORT-FN-01`
-- **Scope:** Create one bounded reader-facing external Cartesian-GTO transfer manual page and only its Manual navigation, manual-index link, and curated seven-binding API section. Present checkpoint-only PySCF export, same-geometry working construction, final-by-source overlap inspection, unchanged raw projection, and separately thresholded closest-determinant preparation. Preserve explicit capture diagnostics, Hamiltonian attestation, optional external PySCF/NumPy dependencies, and all unsupported-case boundaries. Limits are 140/200 new-page lines and 24/36 combined existing-document lines, with exactly one new file. Add no README promotion, heavy example, source/API/fixture/format/workflow/dependency/version/tag/release/registration/citation/paper change, basis-only/live-mean-field exporter, universal capture threshold, solver state, private name, paper identifier, C2 production number, or duplicate gto\_overlap\_matrix reference entry.
+- **Scope:** Maintain only the accepted reader-facing external Cartesian-GTO transfer manual, its Manual navigation and index link, and its curated seven-binding API section from a746038f0528c791314f273313e2f7142f3a03b0. Preserve checkpoint-only PySCF export, same-geometry working construction, final-by-source overlap inspection, unchanged raw projection, separately thresholded closest-determinant preparation, explicit capture diagnostics, Hamiltonian attestation, optional external PySCF/NumPy dependencies, and all unsupported-case boundaries. Add no README promotion, heavy example, source/API/fixture/format/workflow/dependency/version/tag/release/registration/citation/paper change, basis-only/live-mean-field exporter, universal capture threshold, solver state, private name, paper identifier, C2 production number, or duplicate gto\_overlap\_matrix reference entry.
 
 ### HP-REP-XGTO-READER-DOC-TEST-01 - external Cartesian GTO reader documentation validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -3166,9 +3169,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `a746038f0528c791314f273313e2f7142f3a03b0`
   - `manager_pass`: `517`
+  - `manager_pass`: `518`
 - **Dependencies:** `HP-REP-XGTO-READER-DOC-01`
-- **Scope:** Add only 20/30 preferred/hard focused lines to the existing documentation owner. Check manual navigation and index linkage, resolution and curated-reference presence of ExternalGTOOrbitalSpinBlock, ExternalGTOOrbitalPacket, ExternalGTOOrbitalSpinImport, ExternalGTOOrbitalImportResult, import\_external\_gto\_orbitals, read\_external\_cartesian\_gto\_packet, and closest\_external\_gto\_determinant, raw projection versus determinant cleanup, checkpoint-only export, explicit minimum-Gram threshold, Hamiltonian attestation, and absence of personal/Dropbox paths, request identifiers, C2 production numbers, and private names. Add no test file, executable example, numerical assertion, PySCF installation, broad docs scan, runner/workflow change, or duplicate gto\_overlap\_matrix ownership.
+- **Scope:** Maintain only the accepted focused documentation checks from a746038f0528c791314f273313e2f7142f3a03b0: manual navigation and index linkage, resolution and curated-reference presence of the seven owned bindings, raw projection versus determinant cleanup, checkpoint-only export, explicit minimum-Gram threshold, Hamiltonian attestation, and absence of personal/Dropbox paths, request identifiers, C2 production numbers, and private names. Add no test file, executable example, numerical assertion, PySCF installation, broad docs scan, runner/workflow change, or duplicate gto\_overlap\_matrix ownership.
 
 ### HP-RES-01 - terminal basis build result — rejected
 

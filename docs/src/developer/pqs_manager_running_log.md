@@ -1106,3 +1106,39 @@ Carrying-cost accounting:
   this pass; new metadata/status fields: two authority records only;
   validation: public-surface/docstring/CLI reconciliation, authority rendering,
   docs tests, Documenter, manager-log bound, scoped diff, and remote Docs/CI.
+
+## Cartesian Hamiltonian Producer Pass 518 - Accept External GTO Reader Manual
+
+Commit(s):
+- `a746038f0528c791314f273313e2f7142f3a03b0` - reader manual, navigation,
+  curated reference, and focused documentation checks.
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the checkpoint-to-bundle reader workflow, same-geometry working
+  construction, final-by-source overlap inspection, unchanged raw projection,
+  and explicitly thresholded closest-determinant preparation as reader-facing
+  documentation. The page preserves capture-loss, occupation, Hamiltonian-
+  attestation, unsupported-state, and no-universal-threshold boundaries.
+- Actual additions were `126` manual lines, `18` existing-documentation lines,
+  and `18` docs-test lines, all within preferred bounds. All seven curated
+  bindings resolved; no source, API, fixture, workflow, or numerical behavior
+  changed.
+
+Goal advancement / guardrail:
+- MT7 remains completed/maintenance, now with its discoverability prerequisite
+  closed. RC2 review is the next separate decision; this pass grants no version,
+  tag, release, registration, citation, basis-only/live-mean-field export, or
+  solver-state work.
+
+Carrying-cost accounting:
+- deleted: stale approved-pending wording; simplified: ordinary users now have
+  one bounded workflow page; quarantined: C2 production evidence and paper
+  identifiers remain outside reader docs; not deleted because: the canonical
+  developer contract remains the normative convention owner.
+- exact remaining caller/blocker: none for reader documentation; RC2 requires
+  separate authority; added/deleted `src` lines `0/0`; new tests: no new owner,
+  only `18` focused existing-owner lines; new metadata/status fields none;
+  validation: docs `94/94` and `10/10`, all seven bindings, authority
+  check/self-test, package load, Documenter, live `/dev/` review, remote Docs
+  `32748563028`, remote CI `32748562921`, and `git diff --check`.

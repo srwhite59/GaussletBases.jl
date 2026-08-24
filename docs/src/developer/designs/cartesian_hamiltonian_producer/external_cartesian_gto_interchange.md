@@ -418,7 +418,7 @@ and report the smallest justified adjustment.
 
 ## Reader-Facing Manual Authority
 
-Reader discoverability is approved under:
+Reader discoverability is implemented and maintained under:
 
 - `HP-REP-XGTO-READER-DOC-01` for one bounded manual page, Manual navigation,
   a manual-index link, and a curated API section; and
@@ -471,7 +471,7 @@ read_external_cartesian_gto_packet
 closest_external_gto_determinant
 ```
 
-Implementation is limited to one planned
+The accepted implementation is limited to one
 `docs/src/manual/external_cartesian_gto_transfer.md` page, one entry in
 `docs/make.jl`, one concise link in `docs/src/manual/index.md`, one curated
 section in `docs/src/reference/export.md`, and focused additions to
@@ -489,6 +489,12 @@ explicit-threshold, and Hamiltonian-attestation boundaries. They must also
 reject personal absolute or Dropbox paths, paper request identifiers, C2
 production numbers, and private names on the reader page.
 
+Commit `a746038f0528c791314f273313e2f7142f3a03b0` implemented the page in
+`126` lines, added `18` lines across existing documentation, and added `18`
+focused documentation-test lines. All seven curated bindings resolved, and the
+live `/dev/` page passed reader review. No source, API, fixture, workflow, or
+numerical behavior changed.
+
 ## Release Boundary
 
 This public facility is not present in immutable `v0.2.0-rc1`. Including it in
@@ -496,11 +502,11 @@ v0.2 requires a separately authorized new release candidate, with its own
 clean replay and reader-facing review. This design grants no version change,
 tag, GitHub release, registration, citation, or final-release action.
 
-A reader-facing manual entry is still required before any RC2 decision; the
-developer contract and docstrings alone are not sufficient release
-documentation. Basis-only export and export from a live PySCF mean-field
-object remain outside v1, which requires a checkpoint. Once a packet exists,
-consumers may obtain the general final-by-source overlap through
+A reader-facing manual entry is now accepted, satisfying the discoverability
+prerequisite for a separate RC2 review without authorizing that release.
+Basis-only export and export from a live PySCF mean-field object remain outside
+v1, which requires a checkpoint. Once a packet exists, consumers may obtain
+the general final-by-source overlap through
 `gto_overlap_matrix(working, packet.probes)`; no additional overlap API is
 needed.
 
