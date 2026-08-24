@@ -41,18 +41,23 @@ fails before `deploydocs`; it never falls back to `dev` or another
 release folder.
 
 Deployment uses Documenter's standard final-release selectors together with
-one explicit prerelease selector entry:
+explicit prerelease selector entries:
 
 ```julia
+"v0.2.0-rc2" => "v0.2.0-rc2"
 "v0.2.0-rc1" => "v0.2.0-rc1"
 ```
 
-This self-mapping keeps the existing RC1 folder in `versions.js` across both
-tag and later `main` deployments; it creates no alias. Documenter still
+The RC1 self-mapping keeps its existing folder in `versions.js` across both
+tag and later `main` deployments. The RC2 self-mapping is approved for the
+bounded RC2 candidate-preparation pass; until a separate tag decision it is a
+selector-policy fixture and publishes no folder. Neither entry creates an
+alias. Documenter still
 excludes prerelease folders from the release set used to create or advance
 `stable`. A later final `v0.2.0` tag may become `stable` under the standard
 policy. No other prerelease entry, custom `stable` alias, or dynamic release
-index is authorized. These semantics follow
+index is authorized. RC2 tagging and release publication remain separate and
+unauthorized. These semantics follow
 [Documenter's deployment criteria](https://documenter.juliadocs.org/stable/lib/public/#Documenter.deploy_folder)
 and [versioned deployment policy](https://documenter.juliadocs.org/stable/man/hosting/#Documentation-Versions).
 
@@ -79,14 +84,15 @@ lines. `_DOCS_VERSIONS` is now the single explicit selector policy passed to
 `deploydocs`; the workflow and credential model did not change.
 
 Validation must simulate, without creating or pushing a tag, pull-request,
-`main`, `v0.2.0-rc1`, final `v0.2.0`, and malformed-tag contexts. It must:
+`main`, `v0.2.0-rc1`, `v0.2.0-rc2`, final `v0.2.0`, and malformed-tag
+contexts. It must:
 
 - inspect the exact deployment classification for each context;
-- build locally under simulated `main` and `v0.2.0-rc1` environments and
-  inspect the generated canonical links;
-- demonstrate with an isolated folder fixture that the explicit RC1
-  self-mapping lists `v0.2.0-rc1`, creates no self-symlink, and does not select
-  `stable`, while a later final release may;
+- build locally under simulated `main` and `v0.2.0-rc2` environments, retain
+  exact RC1 classification, and inspect the generated canonical links;
+- demonstrate with an isolated folder fixture that the explicit RC1 and RC2
+  self-mappings list both prereleases with `dev`, create no self-symlink, and
+  do not select `stable`, while a later final release may;
 - retain the current job- and step-level credential boundaries;
 - pass authority check/self-test, generated-view parity, docs tests,
   manager-log bound, package load, Documenter, YAML/workflow inspection, and

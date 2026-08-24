@@ -883,3 +883,86 @@ If either example requires a new scientific approximation, public stage
 schema, general field-construction engine, or paper-local data dependency,
 stop without a source commit and report the exact missing operation to this
 same design manager.
+
+## v0.2.0-rc2 Reader Front Door And Candidate Preparation
+
+`HP-PQS-PUBLIC-RC2-FN-01` and `HP-PQS-PUBLIC-RC2-TEST-01` authorize one
+bounded candidate-preparation pass from accepted `main` commit
+`de8991a75d5565e65dcabb9d80c5626a5b86905d`. RC2 is required because the
+public residual-GTO/MWG working-system facade and external Cartesian-GTO/PySCF
+transfer were added after immutable RC1. This is candidate preparation only;
+it does not authorize a tag, GitHub release, registration, citation record,
+stable documentation, or final `v0.2.0`.
+
+### Reader Front Door
+
+The root `README.md` may add short links naming three distinct capabilities:
+
+- Projected q-shells;
+- reference-density Hartree screening; and
+- external Cartesian GTO transfer.
+
+The radial workflow remains the recommended beginner route. PQS and screening
+must remain separate method surfaces. The external exporter must be described
+only as a checkpoint reader; PySCF and NumPy remain optional external-command
+dependencies. The README may add no tutorial duplication, benchmark or
+manuscript claim, paper status, DOI, or publication promise. Its stop-and-
+report budget is `14` preferred and `20` hard added lines.
+
+### Candidate Files
+
+The same implementation pass may make only these candidate changes:
+
+1. change the root `Project.toml` version from `0.2.0-rc1` to
+   `0.2.0-rc2`;
+2. add one concise `v0.2.0-rc2` section above the byte-unchanged RC1 section
+   in `CHANGELOG.md`;
+3. add the exact `v0.2.0-rc2 => v0.2.0-rc2` selector beside the retained RC1
+   selector and `dev` in `docs/make.jl`;
+4. make the existing deployment contract describe that exact selector; and
+5. extend only the existing focused docs tests for the RC2/version-selector
+   contract.
+
+The RC2 changelog section may summarize only the public residual-GTO/MWG
+working-system constructor, strict version-1 external Cartesian-GTO reader,
+checkpoint-only PySCF exporter, caller-thresholded closest-determinant
+operation, separate Supported-floor/PQS/Screening CI gates, and removal of
+invalid package exports. Keep it grouped and reader-facing, within `28`
+preferred and `40` hard added lines. Do not alter the RC1 section.
+
+The exact RC2 selector is one added `docs/make.jl` entry; the hard bound is
+`3` added lines. Deployment-contract additions are bounded at `18` preferred
+and `28` hard lines. Existing docs-test additions are bounded at `20`
+preferred and `35` hard lines. No new file is allowed. Readability and exact
+policy checks take precedence over compressing to a limit.
+
+No production source, API, export, numerical rule, dependency, example,
+workflow, fixture format, manifest policy, or test owner may change. The two
+established untracked handoffs remain outside the candidate and its archive.
+The accepted C2/aug-cc-pV6Z replay remains canonical evidence and need not be
+repeated because this pass changes no implementation.
+
+### Candidate Acceptance
+
+Before acceptance, repo-manager must preserve one exact candidate commit and
+report:
+
+- clean installation and package load on Julia `1.10` and the verified Julia
+  `1.12` line;
+- all three public CI gates and Docs passing, including the dynamic export-
+  integrity regression;
+- the public residual-GTO/external-transfer owner and frozen H2/cc-pVTZ
+  fixture checks;
+- public examples 01, 39, 40, and 41 plus the focused H2+ `18/18` release
+  gate;
+- an archive/install replay containing no root `Manifest.toml` or untracked
+  handoff; and
+- RC2, RC1, and `dev` selector simulation with no `stable` entry, alias, or
+  path.
+
+The RC2 selector must coexist with RC1 and `dev`; it does not publish an RC2
+folder before a separately authorized tag. If any required result needs a
+source, numerical, test-owner, workflow, dependency, fixture-format, or
+manifest-policy change, make no candidate commit and return the exact blocker
+to repo-design-manager. Successful preparation and replay grant no authority
+to tag or publish the candidate.

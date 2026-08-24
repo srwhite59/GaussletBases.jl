@@ -1142,3 +1142,39 @@ Carrying-cost accounting:
   validation: docs `94/94` and `10/10`, all seven bindings, authority
   check/self-test, package load, Documenter, live `/dev/` review, remote Docs
   `32748563028`, remote CI `32748562921`, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 519 - Authorize RC2 Candidate Preparation
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Approved one bounded RC2 candidate-preparation pass because the public
+  residual-GTO working-system facade and external Cartesian-GTO/PySCF transfer
+  were added after immutable RC1. The pass may add three concise root-README
+  links, bump only `0.2.0-rc1 -> 0.2.0-rc2`, prepend one post-RC1 changelog
+  section, and retain exact RC2/RC1/dev documentation selectors with no
+  `stable` alias.
+- Candidate validation reuses the Julia 1.10 floor and Julia 1.12 paper gates,
+  export-integrity regression, residual-GTO/interchange frozen fixture,
+  examples 01/39/40/41, focused H2+ gate, and clean archive/install replay.
+
+Goal advancement / guardrail:
+- MT5 becomes active for RC2 preparation; MT7 remains completed/maintenance.
+  The accepted C2 replay remains evidence and is not rerun without source
+  change. Candidate preparation grants no tag, release, registration,
+  citation, stable-doc, or final-v0.2 authority.
+
+Carrying-cost accounting:
+- deleted: no code; simplified: the root reader front door will name the three
+  distinct public capabilities without duplicating tutorials; quarantined:
+  tag/publication and final-release work remain separate; not deleted because:
+  RC1 remains immutable release evidence.
+- exact remaining caller/blocker: implement within existing files and stop on
+  any source, numerical, test-owner, workflow, dependency, fixture-format, or
+  manifest-policy change; added/deleted `src` lines `0/0`; new tests none in
+  this pass; new metadata/status fields: two authority records. The authority
+  checker gained only the exact existing-root-README docs-path case (`+2/-1`),
+  with no schema field or broader path class. Validation: authority
+  render/check/self-test, docs tests, Documenter, manager-log bound, scoped
+  docs-only review, and `git diff --check`.
