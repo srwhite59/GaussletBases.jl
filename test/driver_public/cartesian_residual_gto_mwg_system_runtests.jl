@@ -100,6 +100,7 @@ using TOML
     fixture_manifest = joinpath(@__DIR__, "external_cartesian_gto_h2_ccpvtz_v1.toml")
     fixture_payload = splitext(fixture_manifest)[1] * ".f64"
     fixture_packet = read_external_cartesian_gto_packet(fixture_manifest)
+    @test fixture_packet.provenance.external_cartesian_gto.producer.exporter_version == "1.0.0"
     @test length(fixture_packet.ao_labels) == 30
     @test any(sum(powers) == 2 for powers in fixture_packet.angular_powers)
     @test fixture_packet.alpha.spin == :restricted

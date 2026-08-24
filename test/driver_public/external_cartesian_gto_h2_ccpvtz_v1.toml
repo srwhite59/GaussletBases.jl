@@ -17,7 +17,7 @@ version = "2.13.1"
 python_version = "3.9.6"
 numpy_version = "2.0.2"
 exporter = "export_pyscf_cartesian_gto.py"
-exporter_version = "1.0.0-draft"
+exporter_version = "1.0.0"
 
 [state]
 kind = "rhf"
