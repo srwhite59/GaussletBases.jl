@@ -47,7 +47,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_
 sha256 = "006cf3d692f971c467e2e28a50a752a72bc6db9df103b8842e91afa551c0ed02"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_cartesian_gto_interchange.md"
-sha256 = "43385ece1cda809af6382d85e886f7d72115b871335acd7bcb2286e936867bff"
+sha256 = "68f8ca75dc8f9531e84f585eedf5151a04cc9ca68d256e08cdbbd78107664218"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_orbital_import.md"
 sha256 = "b1395e5c33d63eb8e0517e4cdc3e602400fa6d9dbe134e8cda5107963960f9da"
@@ -5083,10 +5083,10 @@ title = "PQS residual-GTO working-basis validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-REP-PQS-RG-WORKING-FN-01", "HP-REP-XGTO-INTERCHANGE-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-REP-XGTO-CLOSESTDET-FN-01"
-lifecycle = "approved"
-scope = "Implement only `closest_external_gto_determinant(working, packet; minimum_gram_eigenvalue)` in the shared interchange owner and one root export. Preserve the existing raw `S_FG*C_G` import unchanged; form the separate full-rank closest orthonormal determinant with the standard symmetric matrix square root, expose Gram eigenvalues/principal angles/orthonormality, and fail on caller-threshold, determinant-occupation, geometry, electron-sector, supported-Hamiltonian, or rank mismatch. Accept only a same-construction working object exposing its Hamiltonian; add no solver state, detached-coefficient overload, separately supplied Hamiltonian, public type, flooring, dropping, appending, fractional determinant semantics, or automatic low-capture acceptance. Shared Julia source/root additions across this and HP-REP-XGTO-INTERCHANGE-FN-01 are 340 preferred/400 hard lines."
+lifecycle = "implemented"
+scope = "Maintain the accepted `closest_external_gto_determinant(working, packet; minimum_gram_eigenvalue)` operation from bd1d11cec71c2257b311054bb064e361bb533042. Preserve the existing raw `S_FG*C_G` import unchanged, the separate full-rank symmetric-Lowdin determinant, Gram/principal-angle/orthonormality diagnostics, explicit caller threshold, and failures on determinant occupation, geometry, electron sector, supported Hamiltonian, or rank mismatch. Accept only a same-construction working object exposing its Hamiltonian; add no solver state, detached-coefficient overload, separately supplied Hamiltonian, public type, flooring, dropping, appending, fractional determinant semantics, or automatic low-capture acceptance."
 surfaces = ["source"]
 title = "external Cartesian GTO closest determinant"
 
@@ -5096,8 +5096,14 @@ title = "external Cartesian GTO closest determinant"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_cartesian_gto_interchange.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "bd1d11cec71c2257b311054bb064e361bb533042"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "515"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "516"
 
     [[records.paths]]
     kind = "source"
@@ -5106,7 +5112,7 @@ title = "external Cartesian GTO closest determinant"
     [[records.paths]]
     kind = "source"
     path = "src/cartesian_external_gto_interchange.jl"
-    state = "planned"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "maintenance"
@@ -5164,10 +5170,10 @@ title = "external GTO orbital import validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-REP-XGTO-IMPORT-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-REP-XGTO-INTERCHANGE-FN-01"
-lifecycle = "approved"
-scope = "Implement only `read_external_cartesian_gto_packet(path; overlap_atol, overlap_rtol)` in one new Julia owner plus one root export. Read the strict version-1 same-stem `.toml` manifest and little-endian column-major `.f64` payload, build ordered explicit Cartesian probes with existing public representation objects, derive positive diagonal AO normalization factors, scale probe contractions, require complete source-overlap parity through the existing overlap kernel, and return the existing `ExternalGTOOrbitalPacket` with unchanged MO coefficients. Add no second overlap implementation, metric solve, runtime permutation ledger, label sorting, basis lookup, public type, mandatory dependency, alternate packet/import path, Hamiltonian payload, checkpoint/HDF5/Molden/QCSchema parser, or artifact schema. Shared Julia source/root additions across this and HP-REP-XGTO-CLOSESTDET-FN-01 are 340 preferred/400 hard lines."
+lifecycle = "implemented"
+scope = "Maintain the strict version-1 `read_external_cartesian_gto_packet(path; overlap_atol, overlap_rtol)` reader accepted in bd1d11cec71c2257b311054bb064e361bb533042. Preserve the same-stem TOML/little-endian column-major Float64 bundle, ordered explicit Cartesian probes, positive diagonal AO normalization reconciliation, complete source-overlap parity through the existing overlap kernel, unchanged MO coefficients, and reuse of `ExternalGTOOrbitalPacket`. Add no second overlap implementation, metric solve, runtime permutation ledger, label sorting, basis lookup, public type, mandatory dependency, alternate packet/import path, Hamiltonian payload, checkpoint/HDF5/Molden/QCSchema parser, or artifact schema."
 surfaces = ["source"]
 title = "external Cartesian GTO interchange reader"
 
@@ -5177,8 +5183,14 @@ title = "external Cartesian GTO interchange reader"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_cartesian_gto_interchange.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "bd1d11cec71c2257b311054bb064e361bb533042"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "515"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "516"
 
     [[records.paths]]
     kind = "source"
@@ -5187,13 +5199,13 @@ title = "external Cartesian GTO interchange reader"
     [[records.paths]]
     kind = "source"
     path = "src/cartesian_external_gto_interchange.jl"
-    state = "planned"
+    state = "existing"
 [[records]]
 dependency_ids = ["HP-REP-XGTO-CLOSESTDET-FN-01", "HP-REP-XGTO-INTERCHANGE-FN-01", "HP-REP-XGTO-PYSCF-EXPORT-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-REP-XGTO-INTERCHANGE-TEST-01"
-lifecycle = "approved"
-scope = "Extend only `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl` by 180 preferred/240 hard lines and add one logical two-file fixture under 256 KiB. Reuse its paid H2 working basis and validate a frozen two-center H2/cc-pVTZ Cartesian d-shell bundle with no Python installation: payload/AO integrity, full source-overlap parity, source MO metric identity, exact existing-import reconstruction, occupied capture, closest-determinant orthogonality with unchanged raw projection, malformed bundle/metric/order/occupation/geometry/sector/threshold rejection, and one multi-column rotation-covariance identity. After this bounded gate, require a read-only C2/aug-cc-pV6Z acceptance replay using existing external artifacts without copying its packet, NWChem snapshot, or permutation ledger. Add no new test owner, workflow, scheduled regeneration, private-helper call, large fixture, paper identifier, or production/release claim."
+lifecycle = "completed"
+scope = "Maintain the accepted frozen two-center H2/cc-pVTZ Cartesian d-shell bundle and its wired public validation from bd1d11cec71c2257b311054bb064e361bb533042 and 0ca4e18c7ff550ec6f254f63b9f075193094ccd0. Preserve payload/AO integrity, full source-overlap parity, source MO metric identity, exact existing-import reconstruction, occupied capture, closest-determinant orthogonality with unchanged raw projection, malformed bundle/metric/order/occupation/geometry/sector/threshold rejection, multi-column rotation covariance, and exporter-version identity. The accepted read-only C2/aug-cc-pV6Z replay remains external evidence summarized in the canonical contract; add no large packet, NWChem snapshot, permutation ledger, new test owner, workflow, scheduled regeneration, private-helper call, paper identifier, or production/release claim."
 surfaces = ["tests"]
 title = "external Cartesian GTO interchange validation"
 
@@ -5202,6 +5214,12 @@ title = "external Cartesian GTO interchange validation"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_cartesian_gto_interchange.md"
 
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "0ca4e18c7ff550ec6f254f63b9f075193094ccd0"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "bd1d11cec71c2257b311054bb064e361bb533042"
     [[records.evidence_refs]]
     kind = "external_path"
     value = "/Users/srw/Dropbox/Papers/PQS/validation/work/REQ-101/hfdmrg_seed_viability_resume/run_single_pass_case.jl"
@@ -5214,6 +5232,9 @@ title = "external Cartesian GTO interchange validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "515"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "516"
 
     [[records.paths]]
     kind = "test"
@@ -5222,11 +5243,11 @@ title = "external Cartesian GTO interchange validation"
     [[records.paths]]
     kind = "test"
     path = "test/driver_public/external_cartesian_gto_h2_ccpvtz_v1.f64"
-    state = "planned"
+    state = "existing"
     [[records.paths]]
     kind = "test"
     path = "test/driver_public/external_cartesian_gto_h2_ccpvtz_v1.toml"
-    state = "planned"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "maintenance"
@@ -5270,10 +5291,10 @@ title = "protected external-GTO sidecar validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-REP-XGTO-INTERCHANGE-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-REP-XGTO-PYSCF-EXPORT-FN-01"
-lifecycle = "approved"
-scope = "Implement only `bin/export_pyscf_cartesian_gto.py` as an optional checkpoint-to-v1-bundle command, within 220 preferred/280 hard lines. Preserve exact PySCF Cartesian AO order and explicit primitive data; for real spherical RHF/UHF states use only `mol.cart2sph_coeff(normalized=\"sp\")` and `C_cart = X*C_sph`, use `mol.bas_ctr_coeff` or its exact normalization-equivalent for contraction data, compute and validate the Cartesian source overlap/MO metric, and emit deterministic hashes. PySCF and NumPy remain external command dependencies. Add no PySCF calculation driver, global metric solve, Julia dependency, general format framework, basis lookup, GHF/spinor/complex/periodic/ECP/ROHF claim, Hamiltonian/Fock/ERI payload, or extra output file."
+lifecycle = "implemented"
+scope = "Maintain the optional checkpoint-to-v1-bundle command `bin/export_pyscf_cartesian_gto.py` accepted in bd1d11cec71c2257b311054bb064e361bb533042 and fixture-regenerated in 0ca4e18c7ff550ec6f254f63b9f075193094ccd0. Preserve exact PySCF Cartesian AO order and explicit primitive data; for real spherical RHF/UHF states use only `mol.cart2sph_coeff(normalized=\"sp\")` and `C_cart = X*C_sph`, use `mol.bas_ctr_coeff` or its exact normalization-equivalent, validate the Cartesian source overlap/MO metric, and emit deterministic hashes. PySCF and NumPy remain external command dependencies. Add no PySCF calculation driver, basis-only or live-mean-field mode, global metric solve, Julia dependency, general format framework, basis lookup, GHF/spinor/complex/periodic/ECP/ROHF claim, Hamiltonian/Fock/ERI payload, or extra output file."
 surfaces = ["driver"]
 title = "PySCF external Cartesian GTO exporter"
 
@@ -5283,13 +5304,22 @@ title = "PySCF external Cartesian GTO exporter"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_cartesian_gto_interchange.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "0ca4e18c7ff550ec6f254f63b9f075193094ccd0"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "bd1d11cec71c2257b311054bb064e361bb533042"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "515"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "516"
 
     [[records.paths]]
     kind = "driver"
     path = "bin/export_pyscf_cartesian_gto.py"
-    state = "planned"
+    state = "existing"
 [[records]]
 dependency_ids = []
 evidence_refs = []

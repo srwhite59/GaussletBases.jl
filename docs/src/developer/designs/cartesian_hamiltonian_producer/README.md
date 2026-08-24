@@ -144,7 +144,7 @@ ID or subsystem.
   compatibility declaration are accepted, and the RC1 tag and package-centered
   GitHub prerelease are published and validated; final release remains separate
 - [External Cartesian GTO interchange](external_cartesian_gto_interchange.md)
-  for the approved versioned packet bundle, optional checkpoint-only PySCF
+  for the implemented versioned packet bundle, optional checkpoint-only PySCF
   exporter, exact AO-convention reconciliation, and explicit closest-
   determinant operation
 - [External GTO orbital import](external_gto_orbital_import.md)

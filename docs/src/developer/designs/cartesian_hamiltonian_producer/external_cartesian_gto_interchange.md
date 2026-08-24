@@ -8,7 +8,7 @@ Gaussian overlap implementation or a quantum-chemistry driver.
 
 ## Lifecycle And Ownership
 
-The implementation is approved and pending under:
+The accepted implementation is maintained under:
 
 - `HP-REP-XGTO-INTERCHANGE-FN-01` for the versioned bundle reader and
   convention reconciliation;
@@ -62,7 +62,7 @@ default capture threshold is provided.
 
 ## Public Julia Surface
 
-Implementation may add exactly these two root exports:
+The public Julia surface consists of exactly these two root exports:
 
 ```julia
 read_external_cartesian_gto_packet(path; overlap_atol=1e-10,
@@ -354,19 +354,42 @@ The public test may use only root-public interfaces and ordinary Julia/stdlib
 operations. It must not call `_cartesian_supplement_cross_overlap` or another
 private overlap helper to establish expected results.
 
-After the bounded fixture passes, acceptance requires one read-only replay of
-the existing C2/aug-cc-pV6Z paper artifacts. It must reproduce the accepted
-occupied subspace using the direct PySCF Cartesian transformation and the new
-reader, without copying the large packet, NWChem snapshot, or historical
-permutation ledger into the repository. If this direct path disagrees, stop
-and report the exact AO order or normalization mismatch.
+Acceptance also required one read-only replay of the existing C2/aug-cc-pV6Z
+paper artifacts. It reproduced the accepted occupied subspace using the direct
+PySCF Cartesian transformation and the new reader, without copying the large
+packet, NWChem snapshot, or historical permutation ledger into the repository.
+Future changes must stop and report an exact AO-order or normalization mismatch
+if that direct path ceases to agree.
 
 Optional scheduled PySCF regeneration is a later lifecycle decision. The
-initial implementation adds no workflow.
+accepted implementation adds no workflow.
+
+## Accepted Numerical Evidence
+
+Implementation commit `bd1d11cec71c2257b311054bb064e361bb533042` added the
+reader, closest-determinant operation, exporter, and bounded fixture gate.
+Commit `0ca4e18c7ff550ec6f254f63b9f075193094ccd0` regenerated the committed
+H2/cc-pVTZ fixture with exporter version `1.0.0`. Its checkpoint SHA-256 is
+`1ae3ee93c83c6097751e80c60f4486d08adfb3f46e2b57bc4110fd712edeb42b`;
+the `.f64` payload remained byte-identical at SHA-256
+`de579e9188f46d7e60cb6c7a0ad86263ad66edc22d5a905a64a4129d2669b0a1`.
+AO records, source overlap, MO data, and manifest structure were unchanged
+apart from the corrected exporter-version field.
+
+The read-only C2 `R=2.35` aug-cc-pV6Z replay used a real spherical PySCF RHF
+state transformed directly to `588` Cartesian AOs and six occupied orbitals.
+The PQS construction had axis counts `29 x 29 x 47`, terminal dimension
+`2071`, residual rank `48`, and final dimension `2119`. The source occupied-
+metric error was `1.7763568394002505e-15`; the projected occupied Gram spectrum
+ranged from `0.9999727179464206` to `0.9999999974932495`. Its extrema agreed
+with the previously accepted consumer result within
+`3.552713678800501e-15`, and closest-determinant orthonormality error was
+`3.774758283725532e-15`. This is interchange acceptance, not a C2 energy,
+solver, basis-default, or production claim.
 
 ## Implementation Surfaces And Budgets
 
-Approved implementation is limited to:
+Implemented ownership is limited to:
 
 ```text
 src/cartesian_external_gto_interchange.jl
@@ -385,7 +408,7 @@ Limits are stop-and-report bounds, not compression targets:
 - frozen two-file fixture: `256 KiB` hard total;
 - exactly one new Julia source file, one Python exporter, one logical frozen
   fixture, and one existing public test owner;
-- exactly two planned root exports and no planned public type;
+- exactly two root exports and no public result type;
 - zero `Project.toml`, dependency, workflow, artifact, release, or existing
   packet/import source changes unless a demonstrated blocker returns here.
 
@@ -399,6 +422,14 @@ This public facility is not present in immutable `v0.2.0-rc1`. Including it in
 v0.2 requires a separately authorized new release candidate, with its own
 clean replay and reader-facing review. This design grants no version change,
 tag, GitHub release, registration, citation, or final-release action.
+
+A reader-facing manual entry is still required before any RC2 decision; the
+developer contract and docstrings alone are not sufficient release
+documentation. Basis-only export and export from a live PySCF mean-field
+object remain outside v1, which requires a checkpoint. Once a packet exists,
+consumers may obtain the general final-by-source overlap through
+`gto_overlap_matrix(working, packet.probes)`; no additional overlap API is
+needed.
 
 ## Failure Rule
 
