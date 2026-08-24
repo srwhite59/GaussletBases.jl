@@ -64,6 +64,7 @@ makedocs(
             "Overview" => "manual/index.md",
             "Projected q-shells (PQS)" => "manual/projected_q_shells.md",
             "Reference-density Hartree screening" => "manual/reference_density_hartree_screening.md",
+            "External Cartesian GTO transfer" => "manual/external_cartesian_gto_transfer.md",
         ],
         "Algorithms" => [
             "Overview" => "algorithms/index.md",

@@ -154,10 +154,24 @@ For the narrative explanation of the current producer-side story, see:
 - [Current atomic branch](../explanations/current_atomic_branch.md)
 - [Example guide](../howto/example_guide.md)
 
+## External Cartesian GTO Transfer
+
+The packet, import, and determinant-preparation bindings used by the
+[manual workflow](../manual/external_cartesian_gto_transfer.md) are included in
+the curated reference below. The overlap operation is documented separately
+with the ordinary Cartesian probe API.
+
 ```@docs
 atomic_ida_density_interaction_matrix
 CartesianIDAHamiltonian
 cartesian_residual_gto_mwg_system
+ExternalGTOOrbitalSpinBlock
+ExternalGTOOrbitalPacket
+ExternalGTOOrbitalSpinImport
+ExternalGTOOrbitalImportResult
+import_external_gto_orbitals
+read_external_cartesian_gto_packet
+closest_external_gto_determinant
 PQSH2PlusRow
 PQSH2PlusComparison
 pqs_h2plus_comparison

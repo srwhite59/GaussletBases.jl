@@ -35,6 +35,7 @@
     docs_flat_examples = read_doc("docs", "example_guide.md")
     docs_site_examples_landing = read_doc("docs", "src", "examples", "index.md")
     docs_site_pqs = read_doc("docs", "src", "manual", "projected_q_shells.md")
+    docs_site_external_gto = read_doc("docs", "src", "manual", "external_cartesian_gto_transfer.md")
     docs_site_diatomic_box = read_doc(
         "docs", "src", "algorithms", "cartesian_nested_diatomic_box_policy.md")
     docs_site_diatomic_distortion = read_doc(
@@ -52,6 +53,12 @@
         :screened_hartree_delta_one_body, :screened_hartree_energy_constant,
         :screened_hartree_consistency_error, :screened_hartree_field_kind,
         :cartesian_residual_gto_mwg_system,
+    )
+    external_gto_exports = (
+        :ExternalGTOOrbitalSpinBlock, :ExternalGTOOrbitalPacket,
+        :ExternalGTOOrbitalSpinImport, :ExternalGTOOrbitalImportResult,
+        :import_external_gto_orbitals, :read_external_cartesian_gto_packet,
+        :closest_external_gto_determinant,
     )
     docs_site_developer = read_doc("docs", "src", "developer", "index.md")
     docs_site_developer_notes = read_doc("docs", "src", "developer", "supporting_notes.md")
@@ -202,6 +209,17 @@
         )
         @test contains_all(docs_site_pqs, "# Projected q-shells (PQS)",
             "PQS shell construction", "examples/39_pqs_h2plus.jl")
+        @test occursin("\"External Cartesian GTO transfer\" => \"manual/external_cartesian_gto_transfer.md\"", docs_make)
+        @test occursin("[External Cartesian GTO transfer](external_cartesian_gto_transfer.md)", docs_site_manual)
+        @test all(name -> name in names(GaussletBases), external_gto_exports)
+        @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_export)\n"),
+            external_gto_exports)
+        @test !occursin("\ngto_overlap_matrix\n", "\n$(docs_site_reference_export)\n")
+        @test contains_all(docs_site_external_gto, "checkpoint-only exporter",
+            "unchanged raw projection", "minimum_gram_eigenvalue",
+            "producer attestation", "cannot recover", "missing direction")
+        @test all(term -> !occursin(term, docs_site_external_gto),
+            ("/Users/", "Dropbox", "CloudStorage", "REQ-", "C2", "GaussletBases._"))
         @test contains_all(docs_site_examples_landing, "39_pqs_h2plus.jl",
             "Projected q-shells (PQS)")
         @test contains_all(pqs_example, "cartesian_base_hamiltonian",
