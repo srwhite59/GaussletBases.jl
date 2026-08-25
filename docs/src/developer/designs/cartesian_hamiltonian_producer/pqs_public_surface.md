@@ -773,43 +773,104 @@ one runner assertion that executes
 Do not duplicate the public testset or substitute the `481`-line nested
 screening owner.
 
-The workflow must run all three named gates for pull requests, pushes to
-`main`, and `v*` tag pushes. Use one compact matrix, retain job-level
-`contents: read`, keep slow tests disabled, and keep the current package
-instantiate/load boundary. The tag trigger changes CI behavior only; it does
-not authorize a version, tag, GitHub release, registration, citation, or docs
-deployment action. RC1 tag object, frozen candidate, and release `373460389`
-remain immutable.
+Pass 525 reopens these records only for a path-aware routing repair. The three
+matrix rows, job names, Julia versions, test groups, `30`-minute timeout,
+job-level `contents: read`, package instantiate/load boundary, disabled slow
+tests, and pull-request behavior remain exact. Pull requests always run all
+three rows. The performance audit and any possible duplicate H2+ example
+execution change remain separate and grant no work here.
+
+For a push to `main`, the classifier must begin with `scope=full`. It may emit
+`scope=docs_only` only when all of these conditions hold:
+
+1. checkout used `fetch-depth: 0`, or an equally narrow explicit fetch made
+   the exact `github.event.before` object available;
+2. `github.event.before` is nonzero and both it and `github.sha` resolve as
+   commit objects;
+3. `git diff --name-only --no-renames <before> <sha> --` succeeds and returns
+   at least one path; and
+4. every changed path is in this exact allowlist:
+
+```text
+AGENTS.md
+docs/**
+test/docs/**
+.github/workflows/docs.yml
+```
+
+Missing, zero, unfetchable, malformed, empty, renamed-to-hidden, or unknown
+state remains full-matrix. In particular, `Project.toml`, root `README.md`,
+root `CHANGELOG.md`, `.github/workflows/ci.yml`, source, ordinary tests,
+examples, and every unlisted path are full-matrix. The implementation must not
+use workflow-level path filters or add a second workflow.
+
+Classifier errors must not suppress numerical validation through ordinary
+dependency skipping. The matrix job must retain its three existing names and
+use an `always()`-aware condition equivalent to: for every non-tag event, run
+when the classifier did not succeed or its output is anything other than the
+single explicit `docs_only` value. The lightweight job runs only after an
+explicit successful `docs_only` result and performs package load plus the
+existing docs test group. An absent or invalid classifier output is not a
+third lane.
+
+`v*` pushes use a separate tag-CI lane and do not rerun the numerical matrix.
+That lane must explicitly fetch the remote tag ref and prove that
+`refs/tags/<tag>^{tag}` exists as an annotated tag object. It may only then
+check the `^{commit}` peel, tree, canonical semantic-version and
+`Project.toml` agreement, fresh installation from the remote tag, and package
+load. Checkout `HEAD` and the event SHA are not substitutes for preserving or
+verifying the tag object. Malformed or lightweight tags fail.
+
+Tag CI does not own deployed-documentation acceptance. After tag CI succeeds,
+repo-manager must independently wait for the already-triggered Docs/Pages
+workflow and inspect the versioned canonical URL, `versions.js`, `/dev/`, and
+the exact prerelease/final `stable` policy before any separately authorized
+publication. Add no workflow chaining, `workflow_run` trigger, polling action,
+or checked release helper. This CI amendment authorizes no tag, release,
+registration, citation, stable alias, or final-v0.2 operation.
 
 The identified `481`-line screening owner and five related research/internal
 suites under `test/nested` remain unwired. Their classification as maintained
 scheduled coverage, quarantine, or deletion is a separate bloat-review
 decision. No claim about their value or lifecycle is made here.
 
-Implementation ownership is limited to:
+Implementation ownership for the path-aware repair is limited to:
 
 ```text
 .github/workflows/ci.yml
-test/runtests.jl
-test/ida/runtests.jl
-test/driver_public/screened_hartree_runtests.jl
+test/docs/runtests.jl
 ```
 
-Production source is zero. Test assertions are net zero except the two example
-smoke assertions. Added runner/workflow lines are preferred at most `45` and
-hard-stopped at `65`; the mechanically relocated testset is net-zero test
-content and does not justify assertion or tolerance churn. One new narrow test
-owner is allowed. Add no helper, fixture, data file, status vocabulary,
-dependency, manifest, API, or compatibility layer.
+Production source and numerical-test changes are zero. Added workflow lines are
+preferred at most `55` and hard-stopped at `80`; focused additions to the
+existing docs test are preferred at most `25` and hard-stopped at `40`. Add no
+file, action dependency, script, helper, fixture, test group, numerical
+assertion, status vocabulary, manifest, API, compatibility layer, or release
+framework. Readability and fail-closed behavior take precedence over reaching
+a line limit; stop and report if the contract cannot fit honestly.
 
-Acceptance must report each gate name, Julia version, group, test count, and
-runtime separately. Run all three locally or in equivalent isolated Julia
-`1.10`/`1.12` environments, then require remote CI and Docs, package load,
-authority check/self-test, docs tests, Documenter, manager-log bound, workflow
-syntax inspection, and `git diff --check`. If the exact relocation or compact
-matrix cannot fit the hard bound, make no implementation commit and report the
-smallest missing reusable operation. Do not compress, drop, or weaken a
-scientific assertion to meet the budget.
+Transition acceptance is intentionally staged:
+
+1. this docs-only authority commit still runs the legacy full matrix;
+2. the workflow implementation commit changes `.github/workflows/ci.yml`, must
+   classify itself as full, and must pass all three unchanged named jobs;
+3. the subsequent docs-only lifecycle closeout must exercise the new
+   `docs_only` route, pass its lightweight package/docs checks, leave all three
+   named numerical jobs visibly skipped-success, and pass the independent Docs
+   workflow; and
+4. before closeout, rehearse the tag-lane commands locally against immutable
+   `v0.2.0-rc2`, including the annotated-object check, peel/tree/version, and
+   installation command, without moving, deleting, recreating, or pushing a
+   tag.
+
+Acceptance also requires YAML parsing, exact allowlist and synthetic
+classification checks, authority check/self-test, generated-view parity, docs
+tests, package load, Documenter, manager-log bound, remote CI and Docs at the
+stages above, and `git diff --check`. No new tag is authorized. The accepted
+release-efficiency process reduces future candidate publication to three
+design-manager lifecycle passes, but each exact tag/publication transaction
+still requires separate version-specific authority with frozen candidate and
+release identities.
 
 ## Compatibility
 

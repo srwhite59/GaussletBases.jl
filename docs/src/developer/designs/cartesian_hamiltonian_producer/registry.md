@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `855a5c5bcbccbf62c9d76029fb43153b5856d735b7fa77e3d8b3c190094e967c`.
+> [authority.toml](authority.toml), SHA-256 `4c3c5d843e4493c96fd9e3cc757c5b4af521dae3fb97952d4bc6d3de2c141dac`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2386,8 +2386,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-PAPER-CI-FN-01 - paper-aligned PQS and screening CI workflow
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tools`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2401,20 +2401,20 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `503`
   - `manager_pass`: `504`
   - `manager_pass`: `505`
-- **Dependencies:** `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`
-- **Scope:** Maintain exactly the implemented three-row matrix: Supported floor on Julia 1.10 with the core,ida,cartesian,examples selection; PQS paper on Julia 1.12 with pqs\_release; and Screening paper on Julia 1.12 with screening\_release. Run all rows for pull requests, main pushes, and v\* tag pushes with timeout-minutes = 30, contents:read, package instantiate/load, and disabled slow tests. Preserve the independently named gates and do not merge the two paper surfaces. This maintenance grant permits no version, tag, release, registration, citation, docs deployment, dependency, compat, manifest, source, API, example-content, numerical, nested-suite, matrix-expansion, or Julia-version action. Preserve immutable RC1 tag/release state.
+  - `manager_pass`: `525`
+- **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`
+- **Scope:** Implement only the approved fail-closed event/path routing inside the existing CI workflow. Preserve the exact Supported floor, PQS paper, and Screening paper names, matrix rows, Julia versions, groups, 30-minute timeout, permissions, package instantiate/load, disabled slow tests, and pull-request behavior. For main pushes, default to the full matrix and classify documentation-only only after fetching and proving the exact nonzero github.event.before commit, a successful nonempty git diff --name-only --no-renames to github.sha, and exclusive membership in the canonical four-path allowlist. Use always()-aware dependent-job conditions so classifier failure, missing output, or any value other than an explicit successful documentation-only result runs all three numerical gates. Add one separate v\* tag lane for canonical semantic-version syntax, the fetched annotated refs/tags/\<tag\>^{tag} object, commit peel, tree/version agreement, remote-tag installation, and package load; it must not run the numerical matrix or verify deployed documentation. Add no workflow chaining, polling infrastructure, helper file, action dependency, release/tag operation, docs deployment change, numerical/test-owner change, H2+ rewiring, version, registration, citation, source, API, example, dependency, compat, manifest, or release framework.
 
 ### HP-PUBLIC-PAPER-CI-TEST-01 - paper-aligned PQS and screening release validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Paper-Aligned CI Boundary`
 - **Owned paths:**
-  - `test` / `existing`: `test/driver_public/screened_hartree_runtests.jl`
-  - `test` / `existing`: `test/runtests.jl`
+  - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
   - `git_commit`: `409bc41b46afced92e3e711b8a55760869ac5d3d`
   - `git_commit`: `a4e85e820fd4056e985a18e20da87180f370ef66`
@@ -2422,8 +2422,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `503`
   - `manager_pass`: `504`
   - `manager_pass`: `505`
-- **Dependencies:** `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PUBLIC-PAPER-CI-FN-01`
-- **Scope:** Maintain exactly two public release groups. pqs\_release includes the unchanged 18-test Table I owner and one example-41 smoke. screening\_release owns the mechanically relocated 22-test Public supplied-field screened Hartree testset with every assertion and tolerance unchanged plus one example-40 smoke. Preserve separate gate reporting by name, Julia version, group, count, and runtime. Add no fixture, reference data, helper, tolerance, numerical policy, replacement test, duplicate IDA-owner copy, nested-suite wiring, or new paper gate.
+  - `manager_pass`: `525`
+- **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PUBLIC-PAPER-CI-FN-01`
+- **Scope:** Extend only the existing focused docs test for the path-aware CI contract: exact documentation allowlist, full-matrix defaults, pull-request preservation, before-object fetch/proof, --no-renames diff, always()-aware fail-closed job conditions, unchanged numerical job names, and a separate annotated-tag identity/install lane. Require the tag command contract to fetch and prove refs/tags/\<tag\>^{tag} before its commit peel, tree, version, and remote installation. Preserve the existing pqs\_release 18-test owner/example-41 smoke and screening\_release 22-test owner/example-40 smoke byte-for-policy unchanged; do not edit either numerical owner or add a numerical assertion, fixture, helper, tolerance, group, runner, workflow row, test file, or H2+ execution change.
 
 ### HP-QW-NESTED-DIAT-FN-01 - repair exported ordinary-QW nested diatomic front doors
 

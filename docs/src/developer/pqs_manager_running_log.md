@@ -81,8 +81,8 @@ archaeology and are not normal startup reading.
   the post-RC1 public residual-GTO/interchange surface, three reader-front-door
   links, and explicit RC2 selector retention without changing implementation,
   dependencies, workflows, or scientific policy. Its immutable annotated tag
-  is accepted at object `7c8a21b99`. One exact package-centered GitHub
-  prerelease is approved pending publication; registration, citation, stable
+  is accepted at object `7c8a21b99`, and package-centered GitHub prerelease
+  `376503169` is published and validated. Registration, citation, stable
   documentation, and final v0.2 remain separate.
 - Production defaults, public workflows, corrected artifacts, and Cr2 endpoint
   claims remain unchanged unless separately authorized.
@@ -147,10 +147,10 @@ questions.
 reorganization and cutover are complete. The RC1 candidate, immutable tag,
 versioned folder, explicit selector entry, and package-centered GitHub
 prerelease are accepted. The RC2 candidate, immutable tag, versioned folder,
-and selector entry are also accepted. One exact RC2 GitHub prerelease is
-approved pending publication. Keep PQS and screening as separate method and
-citation surfaces. Final release, registration, and citation metadata remain
-separate decisions.
+selector entry, and exact GitHub prerelease are also accepted. Path-aware CI is
+approved as a bounded release-efficiency refinement before final v0.2. Keep
+PQS and screening as separate method and citation surfaces. Final release,
+registration, and citation metadata remain separate decisions.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
 metadata, unsupported exports, and development-era tests as conformance work
@@ -1385,3 +1385,65 @@ Carrying-cost accounting:
   clean install, live documentation and selector checks, authority
   render/check/self-test, docs tests, Documenter, manager-log bound, docs-only
   scope review, remote Docs/CI, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 525 - Authorize Path-Aware Release CI
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Reopened `HP-PUBLIC-PAPER-CI-FN-01/TEST-01` only to implement one fail-closed
+  classifier in the existing CI workflow and focused policy checks in the
+  existing docs test. Pull requests and all three numerical job names remain
+  unchanged. Main pushes default to the full matrix; only an exact fetched
+  `github.event.before` object, successful nonempty `--no-renames` diff, and
+  the four-path allowlist may select lightweight package/docs validation.
+- The separate tag lane must fetch and prove the annotated
+  `refs/tags/<tag>^{tag}` object before checking its commit peel, tree/version,
+  remote installation, and package load. Deployed documentation remains an
+  independent Docs/Pages verification by repo-manager before any separately
+  authorized publication.
+
+Goal advancement / guardrail:
+- MT5 remains active but is refined: future candidate acceptance may combine
+  exact candidate closeout with one version-specific conditional
+  tag/publication grant, followed by one final closeout. This pass grants no
+  tag, release, final-v0.2, stable, registration, citation, workflow chaining,
+  or release framework. The parallel performance audit and possible duplicate
+  H2+ example execution change remain separate.
+- Transition validation is explicit: this authority commit incurs the legacy
+  full matrix; the workflow implementation changes `ci.yml` and must run the
+  full matrix; the docs-only closeout must show lightweight checks plus three
+  visibly skipped-success numerical jobs and independent Docs success; the tag
+  commands are rehearsed read-only against immutable RC2.
+
+Carrying-cost accounting:
+- deleted: future duplicate tag/release authorization ceremony from the
+  accepted process model, but no current record or implementation; simplified:
+  one existing workflow and authority pair own the routing repair;
+  quarantined: performance/H2+ rewiring and all release operations remain
+  separate; not deleted because: the three scientific gates remain the exact
+  candidate/code acceptance boundary.
+- exact remaining caller/blocker: repo-manager must implement within
+  `.github/workflows/ci.yml` and `test/docs/runtests.jl`, then return staged
+  transition evidence for lifecycle closeout; added/deleted `src` lines `0/0`;
+  new tests: no file or numerical assertion, focused docs-policy additions
+  only; new metadata/status fields none; validation: authority
+  render/check/self-test, docs tests, Documenter, manager-log bound, scoped
+  docs-only review, remote legacy CI/Docs, and `git diff --check`.
+
+### Medium-Term Goal Checkpoint After Pass 525
+
+- **MT1 - active:** continue bounded conformance repairs independently of
+  release mechanics.
+- **MT2 - completed:** controlled Cr2 source migration remains closed.
+- **MT3 - active:** represented-Hartree scaling and external same-density
+  interpretation remain separate producer/scientific work.
+- **MT4 - active:** residual/protected and consumer-owned PRF evidence is
+  unchanged.
+- **MT5 - active, refined:** RC2 is fully published; implement and close the
+  path-aware CI repair before a separately authorized final-v0.2 candidate.
+- **MT6 - active:** carrying-cost and performance audits remain independent;
+  no duplicate H2+ test-wiring decision is made here.
+- **MT7 - completed/maintenance:** external Cartesian-GTO interchange remains
+  included in immutable RC2 with no numerical or release-scope change.
