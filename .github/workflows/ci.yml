@@ -37,7 +37,7 @@ jobs:
 
   test:
     needs: classify
-    if: ${{ always() && !startsWith(github.ref, 'refs/tags/') && (github.event_name != 'push' || github.ref != 'refs/heads/main' || needs.classify.result != 'success' || needs.classify.outputs.scope != 'docs_only') }}
+    if: ${{ always() && !startsWith(github.ref, 'refs/tags/') }}
     name: ${{ matrix.gate }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -58,24 +58,34 @@ jobs:
             groups: screening_release
 
     steps:
+      - name: Documentation-only marker
+        if: ${{ needs.classify.result == 'success' && needs.classify.outputs.scope == 'docs_only' }}
+        run: echo "Documentation-only change; numerical gate skipped."
+
       - name: Check out repository
+        if: ${{ needs.classify.result != 'success' || needs.classify.outputs.scope != 'docs_only' }}
         uses: actions/checkout@v4
 
       - name: Set up Julia
+        if: ${{ needs.classify.result != 'success' || needs.classify.outputs.scope != 'docs_only' }}
         uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.julia }}
 
       - name: Cache Julia artifacts
+        if: ${{ needs.classify.result != 'success' || needs.classify.outputs.scope != 'docs_only' }}
         uses: julia-actions/cache@v2
 
       - name: Instantiate package
+        if: ${{ needs.classify.result != 'success' || needs.classify.outputs.scope != 'docs_only' }}
         run: julia --project=. -e 'using Pkg; Pkg.instantiate()'
 
       - name: Check package load
+        if: ${{ needs.classify.result != 'success' || needs.classify.outputs.scope != 'docs_only' }}
         run: julia --project=. -e 'using GaussletBases'
 
       - name: Run selected tests
+        if: ${{ needs.classify.result != 'success' || needs.classify.outputs.scope != 'docs_only' }}
         env:
           GAUSSLETBASES_TEST_GROUPS: ${{ matrix.groups }}
           GAUSSLETBASES_SLOW_TESTS: "0"
@@ -94,6 +104,8 @@ jobs:
           version: "1.12"
       - name: Instantiate and load package
         run: julia --project=. -e 'using Pkg; Pkg.instantiate(); using GaussletBases'
+      - name: Instantiate docs environment
+        run: julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
       - name: Run documentation tests
         env:
           GAUSSLETBASES_TEST_GROUPS: docs

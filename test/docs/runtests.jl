@@ -443,6 +443,15 @@
             "needs.classify.outputs.scope != 'docs_only'",
             "needs.classify.result == 'success'",
             "needs.classify.outputs.scope == 'docs_only'")
+        @test occursin("if: \${{ always() && !startsWith(github.ref, 'refs/tags/') }}",
+            ci_workflow)
+        full_step_condition =
+            "if: \${{ needs.classify.result != 'success' || needs.classify.outputs.scope != 'docs_only' }}"
+        @test length(findall(full_step_condition, ci_workflow)) == 6
+        @test contains_all(ci_workflow, "Documentation-only marker",
+            "Documentation-only change; numerical gate skipped.")
+        @test occursin("julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'",
+            ci_workflow)
         @test all(gate -> length(findall("gate: $gate", ci_workflow)) == 1,
             ("Supported floor", "PQS paper", "Screening paper"))
         @test contains_all(ci_workflow, "tag-identity-install:",
