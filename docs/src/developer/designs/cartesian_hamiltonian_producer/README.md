@@ -141,8 +141,9 @@ ID or subsystem.
 - [PQS v0.2 public surface](pqs_public_surface.md) for the implemented bounded
   matched-H2+ comparison and typed supplied-field screened-Hartree assembly;
   its isolated Julia `1.12.6` candidate replay and bounded dependency
-  compatibility declaration are accepted, and the RC1 tag and package-centered
-  GitHub prerelease are published and validated; final release remains separate
+  compatibility declaration are accepted, and the RC1 and RC2 tags and
+  package-centered GitHub prereleases are published and validated; final release
+  remains separate
 - [External Cartesian GTO interchange](external_cartesian_gto_interchange.md)
   for the implemented versioned packet bundle, optional checkpoint-only PySCF
   exporter, exact AO-convention reconciliation, and explicit closest-

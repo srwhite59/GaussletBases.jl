@@ -1348,3 +1348,40 @@ Carrying-cost accounting:
   synchronized-state/release-absence preflight, exact tag identity, body
   byte/hash check, authority render/check/self-test, docs tests, Documenter,
   manager-log bound, docs-only scope review, remote Docs/CI, and diff checks.
+
+## Cartesian Hamiltonian Producer Pass 524 - Close RC2 GitHub Prerelease Lifecycle
+
+Commit(s):
+- GitHub release `376503169` at immutable tag `v0.2.0-rc2`;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the package-centered RC2 prerelease with exact title and tag,
+  `draft=false`, `prerelease=true`, no latest final release, and zero uploaded
+  assets. Its `2,200`-byte body is byte-identical to the canonical notes and has
+  SHA-256 `a2cbaaa2a349857e897d6d58fb728c6ccd9d731c7371bb39997bfc0360f3653a`.
+- Tag object `7c8a21b99` still peels to candidate `2b3c23970` and tree
+  `7a4b51aec`. The `2,564,018`-byte tarball and `2,957,570`-byte zipball have
+  recorded SHA-256 identities and both reconstruct that tree. A fresh isolated
+  Julia `1.12.6` installation loaded GaussletBases `0.2.0-rc2` with the same
+  manifest tree. RC2, RC1, and `dev` remain live; `/stable/` remains absent.
+
+Goal advancement / guardrail:
+- MT5 returns to completed/maintenance. Both RC2 release records are
+  completed/no-grant. Preserve the immutable release and tag without editing,
+  deletion, recreation, retargeting, asset upload, or narrative change. Final
+  `v0.2.0`, registration, citation metadata, and stable documentation remain
+  separate decisions.
+
+Carrying-cost accounting:
+- deleted: temporary publication permission and pending status; simplified:
+  immutable release, archive, install, and documentation evidence now replace
+  execution instructions; quarantined: final release, registration, citation,
+  stable, and repository-metadata work; not deleted because: the exact body is
+  durable reader and release evidence.
+- exact remaining caller/blocker: none for RC2 prerelease publication;
+  added/deleted `src` lines `0/0`; new tests and metadata/status fields none;
+  validation: GitHub API/page state, tag peel/tree, archive reconstruction,
+  clean install, live documentation and selector checks, authority
+  render/check/self-test, docs tests, Documenter, manager-log bound, docs-only
+  scope review, remote Docs/CI, and `git diff --check`.

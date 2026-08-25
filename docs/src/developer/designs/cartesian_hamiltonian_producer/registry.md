@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `feed60c45fb10c2d2d67ab85fd991591c243f4bc28a40e41c0c0d7f968b241c2`.
+> [authority.toml](authority.toml), SHA-256 `855a5c5bcbccbf62c9d76029fb43153b5856d735b7fa77e3d8b3c190094e967c`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2062,24 +2062,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-PUBLIC-RC2-RELEASE-FN-01 - v0.2.0-rc2 GitHub prerelease publication
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tools`
-- **Execution whitelist:** `true`
-- **Documents:**
-  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0-rc2 GitHub Prerelease Lifecycle`
-- **Owned paths:**
-  - `tool` / `existing`: `.github/workflows/docs.yml`
-- **Evidence:**
-  - `git_commit`: `2b3c23970144aa030ae52b875a5cf01b32886b6e`
-  - `git_commit`: `69e11242809be85f4d892d082d25ac66467ae373`
-  - `manager_pass`: `523`
-- **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-RC2-FN-01`
-- **Scope:** Create exactly one published GitHub prerelease for the existing immutable v0.2.0-rc2 tag. Require no existing RC2 release, synchronized main with only the two established untracked handoffs, remote tag object 7c8a21b998a838d245e0b5a7f4915910e2a091bc peeling to commit 2b3c23970144aa030ae52b875a5cf01b32886b6e and tree 7a4b51aec25f62436620f4ff938262d0f6b2fd62, and exact local identity before publication. Use gh release create with --verify-tag, exact title GaussletBases v0.2.0-rc2, --prerelease, --latest=false, and the exact canonical 2200-byte ASCII notes body including its final newline and SHA-256 a2cbaaa2a349857e897d6d58fb728c6ccd9d731c7371bb39997bfc0360f3653a. Upload no assets and create no draft, discussion, tag, target, generated notes, custom archive, binary, manifest, paper workspace, validation log, or data bundle. The owned Docs workflow path is a read-only versioned-documentation verification surface and must not be edited or invoked anew. Do not mutate either RC tag, alter RC1, mark RC2 latest, create stable, register, add citation metadata, authorize final v0.2.0, edit repository files or metadata, or broaden release machinery. If preflight fails, make no release. If publication succeeds but verification differs, preserve the release and tag and report without editing, deleting, recreating, retargeting, adding assets, or silently retrying.
-
-### HP-PQS-PUBLIC-RC2-RELEASE-TEST-01 - v0.2.0-rc2 GitHub prerelease validation
-
-- **Lifecycle:** `approved`
+- **Lifecycle:** `completed`
 - **Grant:** `none`
 - **Surfaces:** none
 - **Execution whitelist:** `false`
@@ -2089,9 +2072,29 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `git_commit`: `2b3c23970144aa030ae52b875a5cf01b32886b6e`
   - `git_commit`: `69e11242809be85f4d892d082d25ac66467ae373`
+  - `git_commit`: `b341be8814e654eb6039e18d1033c3a71936019b`
   - `manager_pass`: `523`
+  - `manager_pass`: `524`
+- **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-RC2-FN-01`
+- **Scope:** Completed GitHub prerelease publication only; this record grants no further release, tag, file, workflow, repository-metadata, or asset mutation. Release 376503169 is visible at the exact v0.2.0-rc2 tag with title GaussletBases v0.2.0-rc2, prerelease=true, draft=false, no uploaded assets, no latest final release, and the exact 2200-byte ASCII body with SHA-256 a2cbaaa2a349857e897d6d58fb728c6ccd9d731c7371bb39997bfc0360f3653a. Annotated tag object 7c8a21b998a838d245e0b5a7f4915910e2a091bc still peels to frozen commit 2b3c23970144aa030ae52b875a5cf01b32886b6e and tree 7a4b51aec25f62436620f4ff938262d0f6b2fd62. The 2564018-byte tarball and 2957570-byte zipball reconstruct that tree; a fresh isolated Julia 1.12.6 installation loaded GaussletBases 0.2.0-rc2 with the same manifest tree. RC2, RC1, and dev documentation remain live, and /stable/ remains absent. Preserve the published release without editing, deleting, recreating, retargeting, adding assets, or changing its narrative. Final v0.2.0, registration, citation metadata, stable documentation, repository metadata, and source/API/test/example/dependency/workflow/numerical changes require separate authority.
+
+### HP-PQS-PUBLIC-RC2-RELEASE-TEST-01 - v0.2.0-rc2 GitHub prerelease validation
+
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0-rc2 GitHub Prerelease Lifecycle`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `2b3c23970144aa030ae52b875a5cf01b32886b6e`
+  - `git_commit`: `69e11242809be85f4d892d082d25ac66467ae373`
+  - `git_commit`: `b341be8814e654eb6039e18d1033c3a71936019b`
+  - `manager_pass`: `523`
+  - `manager_pass`: `524`
 - **Dependencies:** `HP-PQS-PUBLIC-RC2-RELEASE-FN-01`
-- **Scope:** Required post-publication evidence only; this record grants no file, release, tag, workflow, repository-metadata, or asset mutation. Verify through the GitHub API and rendered page the exact existing tag v0.2.0-rc2, title GaussletBases v0.2.0-rc2, exact 2200-byte canonical body including its final newline, draft=false, prerelease=true, latest=false, and zero uploaded assets. Reverify tag object 7c8a21b998a838d245e0b5a7f4915910e2a091bc, peeled commit 2b3c23970144aa030ae52b875a5cf01b32886b6e, and tree 7a4b51aec25f62436620f4ff938262d0f6b2fd62. Require both automatic source archives to reproduce the accepted tagged tree, a fresh isolated Julia 1.12.6 installation from the published command to load GaussletBases, RC2 and dev documentation to remain live, versions.js to list RC2, RC1, and dev, /stable/ to remain absent, and main/origin main to remain unchanged. Preserve any published release and tag on failure; do not edit, delete, recreate, retarget, add assets, or silently retry.
+- **Scope:** Completed post-publication evidence only; this record grants no file, release, tag, workflow, repository-metadata, or asset mutation. GitHub API and rendered-page checks confirm release 376503169 has exact tag v0.2.0-rc2, title GaussletBases v0.2.0-rc2, 2200-byte canonical body with SHA-256 a2cbaaa2a349857e897d6d58fb728c6ccd9d731c7371bb39997bfc0360f3653a, draft=false, prerelease=true, no uploaded assets, and no latest final release. The automatic tarball has 2564018 bytes and SHA-256 5e92245b92350865415facf1350ba186b58052f0befb6380a5397d1eadaef445; the zipball has 2957570 bytes and SHA-256 84a5619ab679650ceb6e7c0ab0e728d078cb0785d1b26d4f83f6e81471b24d30; both reconstruct tree 7a4b51aec25f62436620f4ff938262d0f6b2fd62. A fresh isolated Julia 1.12.6 tag installation loaded GaussletBases 0.2.0-rc2 with that manifest tree. RC2, RC1, and dev documentation remain live, versions.js lists all three, and /stable/ remains absent. Preserve the accepted release and immutable tag without edit, deletion, recreation, retargeting, asset upload, or silent retry.
 
 ### HP-PQS-PUBLIC-RC2-TAG-FN-01 - v0.2.0-rc2 annotated tag publication
 

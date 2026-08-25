@@ -1000,13 +1000,15 @@ and `origin/main` remained at `707e5bcbb35f375a09c663cfd949f40377d37e19`,
 with both handoffs untouched.
 
 The tag lifecycle is closed. Never move, replace, delete, recreate, force, or
-silently retry the immutable tag. The exact RC2 GitHub prerelease operation is
-separately bounded below.
+silently retry the immutable tag. The corresponding GitHub prerelease
+lifecycle is also closed below.
 
 ## v0.2.0-rc2 GitHub Prerelease Lifecycle
 
-`HP-PQS-PUBLIC-RC2-RELEASE-FN-01` authorizes one published GitHub prerelease
-for the existing immutable `v0.2.0-rc2` tag. The release must have:
+`HP-PQS-PUBLIC-RC2-RELEASE-FN-01` records the completed GitHub prerelease for
+the existing immutable `v0.2.0-rc2` tag. Published release
+[`376503169`](https://github.com/srwhite59/GaussletBases.jl/releases/tag/v0.2.0-rc2)
+has:
 
 - tag `v0.2.0-rc2`, verified rather than created by the release operation;
 - title `GaussletBases v0.2.0-rc2`;
@@ -1070,10 +1072,9 @@ Pkg.add(url = "https://github.com/srwhite59/GaussletBases.jl", rev = "v0.2.0-rc2
 - [Changelog at the immutable tag](https://github.com/srwhite59/GaussletBases.jl/blob/v0.2.0-rc2/CHANGELOG.md)
 ~~~~
 
-Because the body contains an inner Julia fence, repo-manager must copy the
-text between the outer fence markers into a temporary notes file outside the
-repository and verify `2,200` bytes before publication. The noninteractive
-operation is:
+Because the body contains an inner Julia fence, the text between the outer
+fence markers was copied into a temporary notes file outside the repository.
+The completed noninteractive operation was:
 
 ```bash
 gh release create v0.2.0-rc2 \
@@ -1085,26 +1086,32 @@ gh release create v0.2.0-rc2 \
   --notes-file /private/tmp/gaussletbases_v0.2.0-rc2_release_notes.md
 ```
 
-Do not pass a filename or pattern after the tag, generate notes, start a
-discussion, create a draft, or supply `--target`. Before publication, require
-synchronized `main`, only the two established untracked handoffs, no existing
-release for RC2, exact local and remote tag object, peeled commit, and tree,
-and no moving-main link where an immutable tagged link exists. If a release
-appears first or any identity differs, stop without mutation.
+No filename or pattern followed the tag; no generated notes, discussion,
+draft, `--target`, or asset was supplied. Preflight verified synchronized
+`main`, only the two established untracked handoffs, release absence, and the
+exact local and remote tag object, peeled commit, and tree. The published body
+is byte-identical to the canonical `2,200` bytes and has SHA-256
+`a2cbaaa2a349857e897d6d58fb728c6ccd9d731c7371bb39997bfc0360f3653a`.
 
-`HP-PQS-PUBLIC-RC2-RELEASE-TEST-01` grants no edit or publication authority.
-After creation, the GitHub API and rendered page must show the exact tag,
-title, `2,200`-byte body, `draft=false`, `prerelease=true`, latest status
-`false`, and zero uploaded assets. Both automatic source archives must
-reproduce the accepted tagged tree, and a fresh isolated Julia `1.12.6`
-installation using the published command must load the package. RC2 and
-`/dev/` must remain live, `versions.js` must retain RC2, RC1, and `dev`, and
-`/stable/` must remain absent. `main` and `origin/main` must remain unchanged.
+`HP-PQS-PUBLIC-RC2-RELEASE-TEST-01` is completed and grants no edit or
+publication authority. GitHub API and rendered-page checks confirmed the
+exact tag and title, `draft=false`, `prerelease=true`, no latest final release,
+and zero uploaded assets. The automatic tarball is `2,564,018` bytes with
+SHA-256 `5e92245b92350865415facf1350ba186b58052f0befb6380a5397d1eadaef445`;
+the zipball is `2,957,570` bytes with SHA-256
+`84a5619ab679650ceb6e7c0ab0e728d078cb0785d1b26d4f83f6e81471b24d30`.
+Both reconstruct tree `7a4b51aec25f62436620f4ff938262d0f6b2fd62`. A fresh
+isolated Julia `1.12.6` installation from the immutable tag loaded
+GaussletBases `0.2.0-rc2` and recorded that same tree in its manifest.
 
-If publication succeeds but a later check differs, preserve the release and
-tag and report the exact state; do not edit, delete, recreate, retarget, add
-assets, or silently retry. Successful publication returns to
-repo-design-manager for a docs-only lifecycle closeout on `main`.
+RC2, RC1, and `/dev/` remain live, `versions.js` lists RC2, RC1, and `dev`,
+and `/stable/` remains absent. `main` and `origin/main` remained at
+`b341be8814e654eb6039e18d1033c3a71936019b`, with both handoffs untouched.
+
+The release lifecycle is closed. Preserve the accepted release and immutable
+tag without editing, deleting, recreating, retargeting, adding assets, changing
+the narrative, or silently retrying either operation. Publication changed no
+tracked file.
 
 No RC tag mutation, RC1 release edit, custom asset, registration, citation,
 stable alias, final `v0.2.0`, repository-metadata change, or tracked source,
