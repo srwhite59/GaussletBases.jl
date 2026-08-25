@@ -44,7 +44,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accura
 sha256 = "68cfa9dcc5b5fa59f553f22251e81fcbe5b54bec4bef627b2907cf81db492a36"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
-sha256 = "568ab5749c1fa6fff70d6f153323af0a20d59aa91a37e3ecb89252ccc7161216"
+sha256 = "672a0c24c3f147dc90d440a8366d5f00ed6cb86aad637766fc238e230f2d3fd3"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_cartesian_gto_interchange.md"
 sha256 = "c004c7ceeb748e0b51a310c695d46a5185895c69adec5102f68c347e707b0930"
@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "48d834294942ffc4b7d1eb42169145405182eae13066fb341253a8ebd440bd5b"
+sha256 = "2c00ec1327d58f38bbdfa845475bf96a344e0b29d5d418bd5ecf35dc27a11e08"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -3514,7 +3514,7 @@ dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PUBLIC-RC1-FN-01", "HP-
 grant = "maintenance"
 id = "HP-PQS-PUBLIC-RC2-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the exact v0.2.0-rc2 candidate identity implemented by commit 2b3c23970144aa030ae52b875a5cf01b32886b6e: root Project.toml version 0.2.0-rc2, the concise post-RC1 CHANGELOG section above a byte-unchanged RC1 section, and the three distinct root-README capability links with the radial beginner route retained and the external exporter described as checkpoint-only. PySCF and NumPy remain optional external-command dependencies. Exact RC2/RC1/dev selector maintenance belongs to HP-PQS-DOCS-TAGDEPLOY-FN-01. No production source/API/export/numerical/dependency/example/workflow/fixture-format/manifest-policy/test-owner change, tutorial duplication, manuscript or benchmark claim, paper status, DOI, stable alias, tag, release, registration, citation, or final-v0.2 action is authorized."
+scope = "Maintain the exact v0.2.0-rc2 candidate identity implemented by commit 2b3c23970144aa030ae52b875a5cf01b32886b6e: root Project.toml version 0.2.0-rc2, the concise post-RC1 CHANGELOG section above a byte-unchanged RC1 section, and the three distinct root-README capability links with the radial beginner route retained and the external exporter described as checkpoint-only. PySCF and NumPy remain optional external-command dependencies. Exact RC2/RC1/dev selector maintenance belongs to HP-PQS-DOCS-TAGDEPLOY-FN-01. This record itself authorizes no tag; the exact annotated RC2 tag operation is separately owned by HP-PQS-PUBLIC-RC2-TAG-FN-01. No production source/API/export/numerical/dependency/example/workflow/fixture-format/manifest-policy/test-owner change, tutorial duplication, manuscript or benchmark claim, paper status, DOI, stable alias, GitHub release, registration, citation, or final-v0.2 action is authorized."
 surfaces = ["docs", "source"]
 title = "v0.2.0-rc2 reader front door and candidate preparation"
 
@@ -3549,12 +3549,62 @@ title = "v0.2.0-rc2 reader front door and candidate preparation"
     path = "Project.toml"
     state = "existing"
 [[records]]
+dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PUBLIC-RC2-FN-01", "HP-PUBLIC-PAPER-CI-FN-01"]
+grant = "implementation"
+id = "HP-PQS-PUBLIC-RC2-TAG-FN-01"
+lifecycle = "approved"
+scope = "Create and push exactly one immutable annotated git tag named v0.2.0-rc2 with message GaussletBases v0.2.0-rc2, explicitly targeting frozen candidate 2b3c23970144aa030ae52b875a5cf01b32886b6e with tree 7a4b51aec25f62436620f4ff938262d0f6b2fd62 and accepted 676-entry, 9994240-byte archive SHA-256 6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac. Never target current main or lifecycle-closeout commit 05c35fcea02835c3495897b0940a0b4b43df1b5c. Push only refs/tags/v0.2.0-rc2; the existing Docs and three-gate CI workflows are invocation surfaces and must not be edited. Require synchronized main, only the two established untracked handoffs, absent local and remote tag, exact target/tree/version/archive identity, and applicable candidate evidence before creation. After push, never move, replace, delete, or recreate the tag; on any post-push failure preserve it and report. No branch push or commit, file edit, force, GitHub release, asset upload, registration, citation, stable alias, final v0.2.0, or source/API/dependency/workflow/numerical/manuscript mutation."
+surfaces = ["tools"]
+title = "v0.2.0-rc2 annotated tag publication"
+
+    [[records.document_refs]]
+    heading = "v0.2.0-rc2 Annotated Tag Lifecycle"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "2b3c23970144aa030ae52b875a5cf01b32886b6e"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "521"
+
+    [[records.paths]]
+    kind = "tool"
+    path = ".github/workflows/ci.yml"
+    state = "existing"
+    [[records.paths]]
+    kind = "tool"
+    path = ".github/workflows/docs.yml"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-TEST-01", "HP-PQS-PUBLIC-RC2-TAG-FN-01", "HP-PUBLIC-PAPER-CI-TEST-01"]
+grant = "none"
+id = "HP-PQS-PUBLIC-RC2-TAG-TEST-01"
+lifecycle = "approved"
+paths = []
+scope = "Required tag-acceptance evidence only; this record grants no file, workflow, tag-repair, or release edit. Verify the local and remote annotated tag object peels exactly to frozen target 2b3c23970144aa030ae52b875a5cf01b32886b6e and tree 7a4b51aec25f62436620f4ff938262d0f6b2fd62; tag-triggered Docs and all three public CI gates pass; /v0.2.0-rc2/ exists with its exact canonical URL; versions.js lists RC2, RC1, and dev; /stable/ remains absent; /dev/ remains intact; main and origin/main remain unchanged; and both established handoffs remain untouched. Record the tag-object hash, peeled target/tree, workflow run IDs, documentation state, and archive verification before closeout. Any post-push failure preserves the immutable tag and is reported without movement, replacement, deletion, recreation, or silent retry. GitHub prerelease publication remains separately unauthorized."
+surfaces = []
+title = "v0.2.0-rc2 annotated tag validation"
+
+    [[records.document_refs]]
+    heading = "v0.2.0-rc2 Annotated Tag Lifecycle"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "2b3c23970144aa030ae52b875a5cf01b32886b6e"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "521"
+[[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-TEST-01", "HP-PQS-PUBLIC-RC2-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-TEST-01", "HP-PUBLIC-PAPER-CI-TEST-01", "HP-REP-PQS-RG-WORKING-CI-TEST-01", "HP-REP-XGTO-INTERCHANGE-TEST-01", "HP-REP-XGTO-READER-DOC-TEST-01"]
 grant = "none"
 id = "HP-PQS-PUBLIC-RC2-TEST-01"
 lifecycle = "completed"
 paths = []
-scope = "Completed v0.2.0-rc2 candidate-acceptance evidence only; this record grants no test, workflow, source, docs, tag, or release edit. Commit 2b3c23970144aa030ae52b875a5cf01b32886b6e passed clean Julia 1.10.12 and 1.12.6 package loads, the three public CI gates, export integrity, public residual-GTO/external-transfer and frozen H2/cc-pVTZ coverage, public examples 01/39/40/41, focused H2+ 18/18, screening 22/22, docs 99/99 and 10/10, and an archive/install replay excluding a root Manifest and both handoffs. The candidate archive contains 676 entries, is 9994240 bytes, and has SHA-256 6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac. RC2/RC1/dev selector simulation retained no stable alias or path. The accepted C2 replay remains canonical and was not repeated because implementation was unchanged. Tagging, GitHub release publication, registration, citation, stable documentation, and final v0.2 require separate authority."
+scope = "Completed v0.2.0-rc2 candidate-acceptance evidence only; this record grants no test, workflow, source, docs, tag, or release edit. Commit 2b3c23970144aa030ae52b875a5cf01b32886b6e passed clean Julia 1.10.12 and 1.12.6 package loads, the three public CI gates, export integrity, public residual-GTO/external-transfer and frozen H2/cc-pVTZ coverage, public examples 01/39/40/41, focused H2+ 18/18, screening 22/22, docs 99/99 and 10/10, and an archive/install replay excluding a root Manifest and both handoffs. The candidate archive contains 676 entries, is 9994240 bytes, and has SHA-256 6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac. RC2/RC1/dev selector simulation retained no stable alias or path. The accepted C2 replay remains canonical and was not repeated because implementation was unchanged. The exact annotated tag operation is separately owned by HP-PQS-PUBLIC-RC2-TAG-FN-01; GitHub release publication, registration, citation, stable documentation, and final v0.2 remain unauthorized."
 surfaces = []
 title = "v0.2.0-rc2 candidate validation"
 
