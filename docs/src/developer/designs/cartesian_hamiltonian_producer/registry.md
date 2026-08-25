@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `91a34dde26a148c191daf43ae3200a04f761749853a8b44f693c524b4a223718`.
+> [authority.toml](authority.toml), SHA-256 `24a2ed0b85210fb965c8edabb31bab24d7a3d131b0980ce10091666b90a951dc`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -955,8 +955,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-FN-00 - block-local terminal shell realization
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -964,9 +964,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
 - **Evidence:**
+  - `git_commit`: `e1d5ca2ddb3a39134fddb476d00029ec590c431f`
   - `manager_pass`: `526`
 - **Dependencies:** none
-- **Scope:** Replace and delete \`\_shell\_seed\_full\_coefficients\_from\_axis\_facts\` and \`\_shell\_seed\_full\_coefficients\` only in \`pqs\_terminal\_basis\_realization.jl\`. \`\_shell\_seed\` must assemble exactly \`support.support\_states\` by retained boundary modes in existing order for ordinary and carried-axis-fact inputs, with the existing Float64 conversion points, literal \`0.0\` for skipped zero products, and exact \`vx \* vy \* vz\` arithmetic. Preserve every support/index, retained mode, column range, Gram/Lowdin input, topology, provenance, due-diligence fact, and public result. Added source is preferred at most 35 and hard-stopped at 50 lines, net source must not increase, and no test edit, helper outside the existing owner, fallback, workspace, cache, type, API, metadata, dependency, or validation-policy change is authorized. Any bit difference or need for another construction path stops without an implementation commit.
+- **Scope:** Maintain the implemented direct support-local shell-seed assembly in \`pqs\_terminal\_basis\_realization.jl\`. \`\_shell\_seed\` must assemble exactly \`support.support\_states\` by retained boundary modes in existing order for ordinary and carried-axis-fact inputs, with the established Float64 conversion points, literal \`0.0\` for skipped zero products, and exact \`vx \* vy \* vz\` arithmetic. Preserve every support/index, retained mode, column range, Gram/Lowdin input, topology, provenance, due-diligence fact, and public result. Do not restore \`\_shell\_seed\_full\_coefficients\_from\_axis\_facts\` or \`\_shell\_seed\_full\_coefficients\`, add a second construction path, or add a fallback, workspace, cache, type, API, metadata, dependency, or validation-policy change. Cold-compilation specialization, terminal nuclear/product buffers, Gram-policy changes, and compatibility cleanup require separate authority.
 
 ### HP-FN-01 - terminal basis realizer
 
@@ -1196,8 +1197,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-MCOMX-TERM-FN-01 - terminal shell-seed consumption
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1205,9 +1206,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
 - **Evidence:**
+  - `git_commit`: `e1d5ca2ddb3a39134fddb476d00029ec590c431f`
   - `manager_pass`: `526`
 - **Dependencies:** none
-- **Scope:** Within the same direct support-local replacement authorized by \`HP-FN-00\`, validate and consume the three materialized carried axis matrices without global parent-row/source-column materialization. Preserve carried and ordinary byte-exact coefficients, interval/shape validation, retained boundary order, support restriction, Gram/Lowdin, canonicalization, provenance, and all mapped-COMX behavior. This grants only \`pqs\_terminal\_basis\_realization.jl\`; no mapped-source construction, module wiring, second branch, fallback, test edit, or source-span policy change is authorized.
+- **Scope:** Maintain consumption of the three validated materialized carried axis matrices through the same direct support-local shell-seed loop as ordinary source matrices. Preserve carried and ordinary byte-exact coefficients, interval/shape validation, retained boundary order, support restriction, Gram/Lowdin, canonicalization, provenance, and all mapped-COMX behavior. This grants only \`pqs\_terminal\_basis\_realization.jl\`; do not restore global parent-row/source-column materialization or add mapped-source construction, module wiring, a second branch, fallback, test edit, or source-span policy change.
 
 ### HP-MCOMX-TERM-TEST-01 - terminal seam validation
 

@@ -2,9 +2,8 @@
 
 Status: implemented internal producer infrastructure under `HP-OBJ-01`,
 `HP-OBJ-02`, `HP-FILE-01`, `HP-FN-00`, `HP-FN-01`, `HP-FN-02`,
-`HP-WIRE-01`, `HP-FN-03`, `HP-FN-04`, and `HP-FN-05`. Pass 526 reopens
-`HP-FN-00` only for the approved direct support-local shell-seed replacement;
-the source replacement remains pending implementation.
+`HP-WIRE-01`, `HP-FN-03`, `HP-FN-04`, and `HP-FN-05`. Pass 526 completed the
+direct support-local shell-seed replacement; `HP-FN-00` is in maintenance.
 
 This page is the canonical contract for the terminal-basis objects, PQS
 terminal realization, blockwise exact one-body assembly, localized IDA matrix,
@@ -146,44 +145,35 @@ the coefficient is literal `0.0`; otherwise it is evaluated exactly as
 `support.support_indices`.
 
 No parent-row by complete-source-mode coefficient matrix is part of terminal
-realization. Pass 526 therefore authorizes deletion of
+realization. Pass 526 replaced that global sparse tensor-product construction
+and restriction with direct allocation of only the final support-row by
+retained-mode seed inside `_shell_seed`. It deleted
 `_shell_seed_full_coefficients_from_axis_facts` and
-`_shell_seed_full_coefficients`, followed by direct allocation of only the
-final support-row by retained-mode seed inside `_shell_seed`. It does not
-authorize changing `_nested_product_coefficients`, `_realize_shell`,
-`_support_action`, the retained-rule validator, Lowdin, sign canonicalization,
-or the independent post-Lowdin metric check.
+`_shell_seed_full_coefficients` without changing `_nested_product_coefficients`,
+`_realize_shell`, `_support_action`, the retained-rule validator, Lowdin, sign
+canonicalization, or the independent post-Lowdin metric check.
 
-Acceptance requires byte-identical pre-Lowdin block coefficients, support
-indices/states, unit keys, and column ranges for one-center and bond-aligned
-diatomic ordinary and carried-axis-fact PQS. The matched H2+ dimensions,
-fingerprints, energies, captures, residuals, symmetry, provenance, and complete
-due diligence must remain unchanged. The retired global algorithm may be used
-from a clean baseline for the one-time comparison but must not become a
-permanent test oracle.
+Accepted clean comparisons covered ordinary and mapped source paths for both
+one-center and bond-aligned diatomic block sets. Every coefficient matrix was
+byte-identical. Supports, retained modes, unit keys, column ranges,
+fingerprints, topology, dimensions, captures, energies, warnings, and column
+accounting were unchanged.
 
-Performance acceptance uses Julia `1.12.6` with one Julia thread and eight
-BLAS threads. Run fresh PQS-only and WL-only processes, then WL followed by PQS
-in one process, followed by two warm WL/PQS repetitions. Report elapsed time,
-cumulative allocation, GC, and compile time, plus the isolated eight-shell seed
-measurement. The isolated seed should remain near the measured `14 MB` rather
-than roughly `1 GB`, and warm full-PQS allocation should fall by roughly
-`0.95--1.01 GB`; timing improvement is expected but is not a hard
-cross-machine threshold.
+Under the order-controlled Julia `1.12.6` protocol, eight shell seeds improved
+from `134--216 ms` and `969--1,028 MB` to `2.56--2.61 ms` and
+`13.26--13.51 MB`. Warm PQS construction improved from `0.622--0.729 s` and
+`1.756--1.764 GiB` to `0.280--0.384 s` and `0.874 GiB`. Fresh-process and
+post-White-Lindsey allocations also fell substantially, while the smaller
+fresh-process wall-time reduction confirms that cold-compilation specialization
+is an independent optimization question.
 
-Run the existing public Cartesian base, focused H2+ release, mapped-COMX, and
-source-q owners unchanged, together with the normal bounded
-`core,ida,cartesian,examples` groups and repository authority/documentation
-gates. No permanent baseline helper or committed performance fixture is
-authorized.
-
-Implementation is confined to
-`src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`, with
-at most `35` preferred and `50` hard added source lines and a net source delta
-of zero or less. No test edit, new file, helper outside the owner, type, field,
-metadata, cache, dependency, workspace, or fallback is approved. Any
-coefficient-bit difference, endpoint difference, second construction path, or
-net source growth stops the implementation without a commit.
+The accepted validation used the unchanged public Cartesian base, focused H2+
+release, mapped-COMX, and source-q owners; the bounded
+`core,ida,cartesian,examples` groups; authority check/self-test; documentation
+tests and build; and all three remote numerical gates. No permanent baseline
+helper, committed performance fixture, test, API, metadata, cache, or file was
+added. Cold-compilation specialization, terminal nuclear/product buffers,
+Gram-policy changes, and compatibility cleanup require separate authority.
 
 The shell-local Gram must produce an identity overlap within `identity_atol`.
 Each final column must have a finite nonzero product weight so its sign can be

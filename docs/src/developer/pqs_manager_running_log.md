@@ -1621,3 +1621,38 @@ Carrying-cost accounting:
   render/check/self-test, docs `110/110` and `10/10`, package load, YAML,
   Documenter, manager-log bound, scoped diff, corrected transition CI/Docs, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 526 Closeout - Direct Local PQS Shell Seeds
+
+Commit(s):
+- `e1d5ca2ddb3a39134fddb476d00029ec590c431f` - replace global sparse
+  shell-seed materialization with direct support-local assembly.
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the one-file `+20/-47` implementation and returned `HP-FN-00` and
+  `HP-MCOMX-TERM-FN-01` to implemented maintenance. All four ordinary/mapped
+  and atomic/diatomic block sets are byte-identical; fingerprints, topology,
+  dimensions, captures, energies, warnings, and column accounting are
+  unchanged. Eight seeds improved from `134--216 ms` and `969--1,028 MB` to
+  `2.56--2.61 ms` and `13.26--13.51 MB`; warm PQS improved from
+  `0.622--0.729 s` and `1.756--1.764 GiB` to `0.280--0.384 s` and `0.874 GiB`.
+  Fresh and post-WL allocations also fell substantially.
+
+Goal advancement / guardrail:
+- MT6 advances a measured production simplification without changing physics.
+  The limited fresh-process time reduction leaves cold specialization,
+  terminal nuclear/product buffers, Gram-policy changes, and compatibility
+  cleanup as independent, unauthorized questions.
+
+Carrying-cost accounting:
+- deleted: two obsolete global-full helpers; simplified: one direct local loop
+  now serves ordinary and carried axis matrices; quarantined: the four later
+  optimization questions above; not deleted because: Lowdin and independent
+  post-Lowdin validation remain required numerical checks.
+- exact remaining caller/blocker: none for direct local seed assembly; added/
+  deleted `src` lines `20/47`; new tests none; new metadata/status fields none;
+  validation: exact four-route comparisons, public Cartesian `232/232`, H2+
+  `18/18`, mapped/source-q `528/528`, bounded groups, authority/self-test,
+  docs `110/110` and `10/10`, Documenter, diff checks, CI run `32909315394`,
+  and Docs run `32909315469`.
