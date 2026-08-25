@@ -869,16 +869,25 @@ reasons:
    isolated Documenter version-expansion fixture failed at `105/106` because
    the docs environment had not been instantiated.
 
-Pass 528 reopens only the same two records for this exact repair. The matrix
-job must expand on every non-tag event. On an explicit successful `docs_only`
+Pass 528 reopened only the same two records for this exact repair. Commit
+`9ddc689c1bc806c7ec899cac7a39d77cb7fad3bf` implemented it with `13` added
+and one deleted workflow line plus `9` focused policy-test lines. The matrix
+now expands on every non-tag event. On an explicit successful `docs_only`
 classification, each of its three named rows runs one visible no-op marker and
 skips checkout, Julia setup/cache, root instantiation/load, and numerical test
-execution; the three jobs therefore succeed without numerical work. Every
-other non-tag state runs the unchanged full steps. The separate lightweight
-job must instantiate the existing docs environment with the same local-package
-develop/instantiate operation already used by `.github/workflows/docs.yml`
-before invoking the existing docs test group. No fourth gate, workflow, group,
-or numerical command is authorized.
+execution; every other non-tag state runs the unchanged full steps. The
+separate lightweight job instantiates the existing docs environment with the
+same local-package develop/instantiate operation used by
+`.github/workflows/docs.yml` before invoking the existing docs test group. No
+fourth gate, workflow, group, or numerical command was added.
+
+Because the repair commit changed `.github/workflows/ci.yml`, it correctly took
+the full path. CI run `32901325992` passed `Screening paper` in `50s`,
+`Supported floor` in `6m`, and `PQS paper` in `17m01s`; Docs run `32901326008`
+passed. Local policy checks passed `110/110` and `10/10` together with YAML,
+package load, authority check/self-test, Documenter, manager-log, and diff
+checks. Both records return to maintenance after the corrected docs-only
+transition below succeeds.
 
 The corrected transition remains staged:
 
@@ -886,9 +895,10 @@ The corrected transition remains staged:
 2. workflow implementation commit `3cce96d40` changed
    `.github/workflows/ci.yml`, classified itself as full, and passed all three
    unchanged named jobs;
-3. repair implementation changes `.github/workflows/ci.yml`, must classify
-   itself full, and must pass all three unchanged numerical jobs plus Docs;
-4. the subsequent docs-only lifecycle closeout must pass its lightweight
+3. repair implementation commit `9ddc689c1` changed
+   `.github/workflows/ci.yml`, classified itself full, and passed all three
+   unchanged numerical jobs plus Docs;
+4. this docs-only lifecycle closeout must pass its lightweight
    package/docs checks, show `Supported floor`, `PQS paper`, and `Screening
    paper` as successful jobs whose numerical steps are visibly skipped, and
    pass the independent Docs workflow; and

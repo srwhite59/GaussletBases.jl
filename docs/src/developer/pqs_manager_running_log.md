@@ -1580,3 +1580,44 @@ Carrying-cost accounting:
   fields none; validation: authority render/check/self-test, docs tests,
   Documenter, manager-log bound, scoped diff, YAML inspection, full repair
   CI/Docs, subsequent docs-only CI/Docs, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 529 - Close Corrected Path-Aware CI
+
+Commit(s):
+- `9ddc689c1bc806c7ec899cac7a39d77cb7fad3bf` - preserve the three named
+  documentation-only gates and instantiate the docs environment.
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the exact Pass 528 repair and returned
+  `HP-PUBLIC-PAPER-CI-FN-01` to implemented maintenance and
+  `HP-PUBLIC-PAPER-CI-TEST-01` to completed maintenance. Every non-tag event now
+  expands the existing matrix. A proven documentation-only main push runs one
+  visible marker per named gate and skips all numerical steps; every other
+  non-tag state remains full. The lightweight job now instantiates both the
+  root and docs environments before running the existing docs group.
+- The repair used `+13/-1` workflow lines and `+9` focused policy-test lines,
+  within both preferred budgets. Because it changed the CI workflow, run
+  `32901325992` correctly took the full path and passed Screening in `50s`, the
+  Supported floor in `6m`, and PQS in `17m01s`; Docs run `32901326008` passed.
+  This closeout push remains the final live transition proof: its lightweight
+  lane and Docs must pass, and all three named jobs must succeed through their
+  marker while numerical steps remain skipped.
+
+Goal advancement / guardrail:
+- MT5 closes the path-aware routing repair while preserving exact candidate and
+  code validation. Final-v0.2 authority remains separate. MT6 performance and
+  duplicate H2+ execution remain untouched.
+
+Carrying-cost accounting:
+- deleted: one pre-expansion matrix-suppression condition; simplified: the same
+  three jobs now cover full and marker-only paths; quarantined: release,
+  performance, and H2+ rewiring remain separate; not deleted because: all three
+  scientific gate identities remain stable checks.
+- exact remaining caller/blocker: only the live docs-only closeout evidence;
+  added/deleted `src` lines `0/0`; new tests: no file or numerical assertion,
+  `9` focused policy-test lines; new metadata/status fields none; validation:
+  implementation diff/budget review, full CI/Docs, authority
+  render/check/self-test, docs `110/110` and `10/10`, package load, YAML,
+  Documenter, manager-log bound, scoped diff, corrected transition CI/Docs, and
+  `git diff --check`.
