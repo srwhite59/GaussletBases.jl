@@ -1447,3 +1447,46 @@ Carrying-cost accounting:
   no duplicate H2+ test-wiring decision is made here.
 - **MT7 - completed/maintenance:** external Cartesian-GTO interchange remains
   included in immutable RC2 with no numerical or release-scope change.
+
+## Cartesian Hamiltonian Producer Pass 526 - Authorize Direct Local PQS Shell Seeds
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Reopened `HP-FN-00` and `HP-MCOMX-TERM-FN-01` only to replace the terminal
+  PQS shell seed's global parent-row/source-column materialization with direct
+  construction of the final support-row by retained-boundary-mode matrix. The
+  accepted R=2 H2+ audit found eight shell seeds allocating roughly
+  `969--1,028 MB`; the direct-local prototype allocated `13.75 MB` and produced
+  byte-identical coefficients. The replacement must delete both global-full
+  helpers, retain exact ordinary and carried-axis-fact arithmetic/order, and
+  keep all Lowdin, metric, topology, provenance, due-diligence, and public
+  physics behavior unchanged.
+- Source authority is exactly one existing file, with `35/50` preferred/hard
+  added-line limits and required net source nonincrease. No test edit, new ID,
+  helper owner, fallback, workspace, cache, API, type, metadata, dependency, or
+  validation-policy change is granted. Four clean-baseline/candidate block
+  comparisons and the matched H2+ endpoint are mandatory; any one-bit
+  difference or need for a second path stops without an implementation commit.
+
+Goal advancement / guardrail:
+- MT6 advances a measured carrying-cost/performance target without changing the
+  PQS construction. Path-aware CI implementation remains a disjoint release
+  lane. The compile-specialization breakdown, terminal Gaussian-sum nuclear
+  loop, buffer presizing, workspace reuse, Gram policy, compatibility planning,
+  and parent caching remain separately unauthorized.
+
+Carrying-cost accounting:
+- deleted: approved implementation must remove the two global-full seed
+  helpers; simplified: ordinary and carried source matrices feed one direct
+  local loop; quarantined: compile and nuclear optimization targets remain
+  separate; not deleted because: `_nested_product_coefficients` remains a live
+  general donor outside this shell-seed use.
+- exact remaining caller/blocker: repo-manager must implement the one-file
+  bitwise replacement and return four-route parity, endpoint, due-diligence,
+  order-controlled performance, and CI evidence; added/deleted `src` lines in
+  this authority pass `0/0`; new tests none; new metadata/status fields none;
+  validation: source/authority review, render/check/self-test, docs tests,
+  Documenter, manager-log bound, scoped diff, remote Docs/CI, and
+  `git diff --check`.

@@ -2,7 +2,9 @@
 
 Status: implemented internal producer infrastructure under `HP-OBJ-01`,
 `HP-OBJ-02`, `HP-FILE-01`, `HP-FN-00`, `HP-FN-01`, `HP-FN-02`,
-`HP-WIRE-01`, `HP-FN-03`, `HP-FN-04`, and `HP-FN-05`.
+`HP-WIRE-01`, `HP-FN-03`, `HP-FN-04`, and `HP-FN-05`. Pass 526 reopens
+`HP-FN-00` only for the approved direct support-local shell-seed replacement;
+the source replacement remains pending implementation.
 
 This page is the canonical contract for the terminal-basis objects, PQS
 terminal realization, blockwise exact one-body assembly, localized IDA matrix,
@@ -124,20 +126,64 @@ identity on exactly its owned rows.
 For a PQS shell, the durable sequence is:
 
 ```text
-construct full source-box product coefficients
-    -> generate boundary COMX product-mode columns
-    -> validate retained/source ordering and dimensions
-    -> restrict rows to support_indices/support_states
+resolve ordinary or carried source-axis coefficient matrices
+    -> generate and validate retained boundary COMX modes
+    -> assemble support_states x retained_modes directly
     -> form the shell-local Gram matrix
     -> apply inv(sqrt(Symmetric(Gram)))
     -> canonicalize column signs from final product weights
     -> append the block on unchanged owned support
 ```
 
-Full source-box coefficients may come from carried materialized axis facts or
-the established projected-shell product construction. In either case, they
-only generate source columns before restriction to owned rows. They do not
-enlarge terminal support.
+The three axis coefficient matrices may come from carried materialized axis
+facts or the established ordinary projected-shell side construction. They are
+consumed by one local loop: retained modes remain in
+`modes.mode_indices`/`modes.column_indices` order, rows remain in
+`support.support_states` order, and each selected axis entry is converted to
+`Float64` at the existing route boundary. If any selected axis entry is zero,
+the coefficient is literal `0.0`; otherwise it is evaluated exactly as
+`vx * vy * vz`. The state order must continue to match
+`support.support_indices`.
+
+No parent-row by complete-source-mode coefficient matrix is part of terminal
+realization. Pass 526 therefore authorizes deletion of
+`_shell_seed_full_coefficients_from_axis_facts` and
+`_shell_seed_full_coefficients`, followed by direct allocation of only the
+final support-row by retained-mode seed inside `_shell_seed`. It does not
+authorize changing `_nested_product_coefficients`, `_realize_shell`,
+`_support_action`, the retained-rule validator, Lowdin, sign canonicalization,
+or the independent post-Lowdin metric check.
+
+Acceptance requires byte-identical pre-Lowdin block coefficients, support
+indices/states, unit keys, and column ranges for one-center and bond-aligned
+diatomic ordinary and carried-axis-fact PQS. The matched H2+ dimensions,
+fingerprints, energies, captures, residuals, symmetry, provenance, and complete
+due diligence must remain unchanged. The retired global algorithm may be used
+from a clean baseline for the one-time comparison but must not become a
+permanent test oracle.
+
+Performance acceptance uses Julia `1.12.6` with one Julia thread and eight
+BLAS threads. Run fresh PQS-only and WL-only processes, then WL followed by PQS
+in one process, followed by two warm WL/PQS repetitions. Report elapsed time,
+cumulative allocation, GC, and compile time, plus the isolated eight-shell seed
+measurement. The isolated seed should remain near the measured `14 MB` rather
+than roughly `1 GB`, and warm full-PQS allocation should fall by roughly
+`0.95--1.01 GB`; timing improvement is expected but is not a hard
+cross-machine threshold.
+
+Run the existing public Cartesian base, focused H2+ release, mapped-COMX, and
+source-q owners unchanged, together with the normal bounded
+`core,ida,cartesian,examples` groups and repository authority/documentation
+gates. No permanent baseline helper or committed performance fixture is
+authorized.
+
+Implementation is confined to
+`src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`, with
+at most `35` preferred and `50` hard added source lines and a net source delta
+of zero or less. No test edit, new file, helper outside the owner, type, field,
+metadata, cache, dependency, workspace, or fallback is approved. Any
+coefficient-bit difference, endpoint difference, second construction path, or
+net source growth stops the implementation without a commit.
 
 The shell-local Gram must produce an identity overlap within `identity_atol`.
 Each final column must have a finite nonzero product weight so its sign can be

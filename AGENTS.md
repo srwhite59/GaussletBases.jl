@@ -540,7 +540,7 @@ execution whitelist even when their historical ID stays in the registry.
 <!-- BEGIN CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST -->
 > **Generated authority view. Do not edit this block.**
 > Source: `docs/src/developer/designs/cartesian_hamiltonian_producer/authority.toml`.
-> Authority SHA-256: `4c3c5d843e4493c96fd9e3cc757c5b4af521dae3fb97952d4bc6d3de2c141dac`.
+> Authority SHA-256: `96ac04eff95f0f1a9590d214f027d07b51e882ef36013e9dbbdeec1539f84600`.
 
 Cartesian Hamiltonian producer source work is currently authorized only for
 these approved design IDs:

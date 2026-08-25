@@ -53,7 +53,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_o
 sha256 = "b1395e5c33d63eb8e0517e4cdc3e602400fa6d9dbe134e8cda5107963960f9da"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md"
-sha256 = "51b8c888b36ee2c37db99d2ae90fc458134517173c7421bc85a95876ebf37fe8"
+sha256 = "1ec90763f069a6469f0e25ab0c2877342bce26075532086130c44d30e080418a"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/nesting_supplement_composition_plan.md"
 sha256 = "2a5f0d4551f439a2cab5f71f28ce980f1accb48258cdda525e0d95631f66dc61"
@@ -167,7 +167,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/sliced_hydroge
 sha256 = "20513d784bfbc63edb1f81a52c901e8566903c0d64c222213054c4fe8f2d5221"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
-sha256 = "c996ca54fb0b2ba73f0c21373343fe11f5831a2c577a5fb1783c717915c49eea"
+sha256 = "f1d8bbde3fa67756cc3d330ea60ee62fd5816eb4d20d45c67aecf2982e43f4ed"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_shellification_due_diligence.md"
 sha256 = "1c43546e75bf25199ba12065a1f6bf34a58f7c02ab4c7116f1b93e9edbda2cd8"
@@ -1570,11 +1570,10 @@ title = "terminal realization file"
     state = "existing"
 [[records]]
 dependency_ids = []
-evidence_refs = []
-grant = "maintenance"
+grant = "implementation"
 id = "HP-FN-00"
-lifecycle = "implemented"
-scope = "maintain support-local shell seed, Gram/Lowdin realization, and deterministic sign canonicalization."
+lifecycle = "approved"
+scope = "Replace and delete `_shell_seed_full_coefficients_from_axis_facts` and `_shell_seed_full_coefficients` only in `pqs_terminal_basis_realization.jl`. `_shell_seed` must assemble exactly `support.support_states` by retained boundary modes in existing order for ordinary and carried-axis-fact inputs, with the existing Float64 conversion points, literal `0.0` for skipped zero products, and exact `vx * vy * vz` arithmetic. Preserve every support/index, retained mode, column range, Gram/Lowdin input, topology, provenance, due-diligence fact, and public result. Added source is preferred at most 35 and hard-stopped at 50 lines, net source must not increase, and no test edit, helper outside the existing owner, fallback, workspace, cache, type, API, metadata, dependency, or validation-policy change is authorized. Any bit difference or need for another construction path stops without an implementation commit."
 surfaces = ["source"]
 title = "block-local terminal shell realization"
 
@@ -1582,6 +1581,10 @@ title = "block-local terminal shell realization"
     heading = "Terminal Basis And Base Assembly"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "526"
 
     [[records.paths]]
     kind = "source"
@@ -1965,11 +1968,10 @@ title = "mapped source specification"
     state = "existing"
 [[records]]
 dependency_ids = []
-evidence_refs = []
-grant = "maintenance"
+grant = "implementation"
 id = "HP-MCOMX-TERM-FN-01"
-lifecycle = "implemented"
-scope = "validate and consume materialized carried axis facts as the PQS shell seed while preserving ordinary fallback, boundary selection, support restriction, Lowdin, and canonicalization."
+lifecycle = "approved"
+scope = "Within the same direct support-local replacement authorized by `HP-FN-00`, validate and consume the three materialized carried axis matrices without global parent-row/source-column materialization. Preserve carried and ordinary byte-exact coefficients, interval/shape validation, retained boundary order, support restriction, Gram/Lowdin, canonicalization, provenance, and all mapped-COMX behavior. This grants only `pqs_terminal_basis_realization.jl`; no mapped-source construction, module wiring, second branch, fallback, test edit, or source-span policy change is authorized."
 surfaces = ["source"]
 title = "terminal shell-seed consumption"
 
@@ -1978,10 +1980,10 @@ title = "terminal shell-seed consumption"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md"
 
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "526"
+
     [[records.paths]]
     kind = "source"
     path = "src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl"

@@ -1,7 +1,9 @@
 # Mapped-COMX Source Span
 
 Status: implemented opt-in source-span, terminal-consumption, and canonical
-driver facility under the six `HP-MCOMX` source IDs. The three corresponding
+driver facility under the six `HP-MCOMX` source IDs. Pass 526 reopens only
+`HP-MCOMX-TERM-FN-01` for the direct support-local terminal-seed replacement;
+the source replacement remains pending implementation. The three corresponding
 test IDs are completed evidence with no continuing permission.
 
 This page is the canonical numerical and workflow contract. The registry owns
@@ -78,10 +80,20 @@ PQS terminal `_shell_seed(...)` prefers carried materialized
 - source dimensions and coefficient matrix shapes;
 - consistency with the contract source shape.
 
-It then forms full source coefficients from the carried axis matrices and
-continues through the existing boundary-mode selection, owned-support
-restriction, shell-local Lowdin, sign canonicalization, and support checks.
-When carried facts are absent, the ordinary projected-q fallback remains.
+It then uses those axis matrices in the same direct local loop as the ordinary
+route. Only `support.support_states` by retained boundary modes are assembled,
+in their existing orders. Selected entries keep the existing `Float64`
+conversion point; a zero factor produces literal `0.0`, and every nonzero entry
+uses exactly `vx * vy * vz`. No global parent-row by complete-source-mode
+matrix is constructed. Boundary selection, owned support, shell-local Lowdin,
+sign canonicalization, and support checks remain unchanged. When carried facts
+are absent, the ordinary projected-q source sides feed that same local loop.
+
+The replacement deletes the two current global-full shell-seed helpers and is
+confined to `pqs_terminal_basis_realization.jl`. It does not change mapped-COMX
+source construction, module wiring, the ordinary default, source-span policy,
+or any terminal output. Until the Pass 526 implementation is accepted, the
+live source still uses the older full-materialization path.
 
 The Hamiltonian, one-body, IDA/MWG, residual, and artifact layers consume the
 same terminal basis and do not branch on source-span family.
