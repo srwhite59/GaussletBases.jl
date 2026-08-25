@@ -81,8 +81,9 @@ archaeology and are not normal startup reading.
   the post-RC1 public residual-GTO/interchange surface, three reader-front-door
   links, and explicit RC2 selector retention without changing implementation,
   dependencies, workflows, or scientific policy. Its immutable annotated tag
-  is accepted at object `7c8a21b99`; GitHub publication, registration,
-  citation, stable documentation, and final v0.2 remain separate.
+  is accepted at object `7c8a21b99`. One exact package-centered GitHub
+  prerelease is approved pending publication; registration, citation, stable
+  documentation, and final v0.2 remain separate.
 - Production defaults, public workflows, corrected artifacts, and Cr2 endpoint
   claims remain unchanged unless separately authorized.
 
@@ -142,13 +143,14 @@ Hooke owns the first Be `1s/2s` target study. Selection, transition-density
 exchange, and PRF-to-GTO-residual interactions remain consumer or measurement
 questions.
 
-**MT5 - Documentation and authority maintenance (maintenance).** The broad
+**MT5 - Documentation and authority maintenance (active).** The broad
 reorganization and cutover are complete. The RC1 candidate, immutable tag,
 versioned folder, explicit selector entry, and package-centered GitHub
 prerelease are accepted. The RC2 candidate, immutable tag, versioned folder,
-and selector entry are also accepted. Keep PQS and screening as separate method
-and citation surfaces. RC2 GitHub publication, final release,
-registration, and citation metadata remain separate decisions.
+and selector entry are also accepted. One exact RC2 GitHub prerelease is
+approved pending publication. Keep PQS and screening as separate method and
+citation surfaces. Final release, registration, and citation metadata remain
+separate decisions.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
 metadata, unsupported exports, and development-era tests as conformance work
@@ -1308,4 +1310,41 @@ Carrying-cost accounting:
   lines `0/0`; new tests and metadata/status fields none; validation: local and
   remote tag identity, archive hash/size, workflow records, live canonical and
   selector checks, authority render/check/self-test, docs tests, Documenter,
+  manager-log bound, docs-only scope review, remote Docs/CI, and diff checks.
+
+## Cartesian Hamiltonian Producer Pass 523 - Authorize RC2 GitHub Prerelease
+
+Commit(s):
+- this docs-only publication authority amendment.
+
+Summary:
+- Added `HP-PQS-PUBLIC-RC2-RELEASE-FN-01/TEST-01` for one GitHub prerelease
+  attached to the existing immutable RC2 tag. Preflight found no release for
+  that tag; remote object `7c8a21b99` still peels to candidate `2b3c23970` and
+  tree `7a4b51aec`.
+- Froze the exact `2,200`-byte ASCII body, including its final newline, with
+  SHA-256 `a2cbaaa2a349857e897d6d58fb728c6ccd9d731c7371bb39997bfc0360f3653a`.
+  The body adds the external Cartesian-GTO transfer surface while retaining
+  separate PQS and screening sections and package/solver boundaries.
+- Publication requires `--verify-tag --prerelease --latest=false`, no uploaded
+  assets, and no tracked mutation. Failed preflight makes no release; a
+  post-publication discrepancy preserves and reports both release and tag.
+
+Goal advancement / guardrail:
+- MT5 permits exactly one RC2 GitHub prerelease publication. Final `v0.2.0`,
+  registration, citation metadata, stable documentation, repository metadata,
+  tag mutation, and broader release machinery remain unauthorized.
+
+Carrying-cost accounting:
+- deleted: the blanket RC2-release prohibition; simplified: one exact tag,
+  title, body, command, and acceptance contract; quarantined: custom assets,
+  RC1 edits, final release, registration, citation, and stable policy; not
+  deleted because: candidate, tag, changelog, and versioned docs remain the
+  immutable release identity and reader sources.
+- exact remaining caller/blocker: repo-manager must publish once and return
+  GitHub API/page, source-archive, clean-install, docs-selector, stable-absence,
+  and unchanged-branch evidence; added/deleted `src` lines `0/0`; new tests
+  none; new metadata/status fields: two authority records only; validation:
+  synchronized-state/release-absence preflight, exact tag identity, body
+  byte/hash check, authority render/check/self-test, docs tests, Documenter,
   manager-log bound, docs-only scope review, remote Docs/CI, and diff checks.

@@ -12,7 +12,7 @@ Implementation commit: `058ee54f45c759949f70b54a699ccc318476f8ac`.
 Clean replay candidate: `72c46f9ea0dd6b2da7a6a302d34ea1c501d18647`.
 
 This page owns the narrow supported interface intended for GaussletBases
-v0.2.0. Exact candidate-tag and RC1 GitHub-prerelease authority are isolated
+v0.2.0. Exact candidate, tag, and GitHub-prerelease authority are isolated
 below; final-release publication remains separate. The existing numerical
 contracts remain in [R1 public base producer](r1_public_base_producer.md),
 [matched PQS/White-Lindsey aspect modes](pqs_complete_shell_aspect_source_modes.md),
@@ -999,10 +999,114 @@ RC1, and `dev`, `/stable/` remains absent, and `/dev/` remains intact. `main`
 and `origin/main` remained at `707e5bcbb35f375a09c663cfd949f40377d37e19`,
 with both handoffs untouched.
 
-The lifecycle is closed. Never move, replace, delete, recreate, force, or
-silently retry the immutable tag.
+The tag lifecycle is closed. Never move, replace, delete, recreate, force, or
+silently retry the immutable tag. The exact RC2 GitHub prerelease operation is
+separately bounded below.
 
-No GitHub release, asset upload, registration, citation, stable alias, final
-`v0.2.0`, repository-metadata change, or tracked source, API, dependency,
-workflow, numerical, or manuscript mutation is authorized. GitHub prerelease
-publication remains a separate decision after this tag acceptance.
+## v0.2.0-rc2 GitHub Prerelease Lifecycle
+
+`HP-PQS-PUBLIC-RC2-RELEASE-FN-01` authorizes one published GitHub prerelease
+for the existing immutable `v0.2.0-rc2` tag. The release must have:
+
+- tag `v0.2.0-rc2`, verified rather than created by the release operation;
+- title `GaussletBases v0.2.0-rc2`;
+- prerelease status `true`, draft status `false`, and latest status `false`;
+- no uploaded assets, so only GitHub's automatic source archives appear; and
+- the exact `2,200`-byte ASCII release body below, including its final newline.
+
+~~~~markdown
+GaussletBases v0.2.0-rc2 is a public-testing prerelease of the GaussletBases
+v0.2 package surface. It retains the RC1 PQS and screening surfaces and adds a
+supported external Cartesian-GTO orbital-transfer path.
+
+## New in RC2
+
+- A public `cartesian_residual_gto_mwg_system` constructor for the supported
+  residual-GTO/MWG working object.
+- Strict version-1 external Cartesian-GTO packet reading and validation.
+- A checkpoint-only PySCF exporter using explicit Cartesian AOs.
+- Optional caller-thresholded closest-determinant preparation, while preserving
+  the unchanged raw projection and its capture diagnostics.
+- Separate Supported-floor, PQS, and Screening CI gates.
+- Removal of invalid package exports that did not name usable bindings.
+
+The exporter runs no SCF calculation. PySCF and NumPy are optional dependencies
+of that external command, not Julia package dependencies. External transfer
+produces orbitals and diagnostics, not another solver's restart or a transformed
+Hamiltonian.
+
+## Projected q-shells (PQS)
+
+- Bounded public PQS/White-Lindsey H2+ comparison types and constructor.
+- Public examples 39 and 41 cover the supported PQS construction and comparison.
+
+## Reference-density Hartree screening
+
+- Supplied-field correction assembly with stable public result accessors.
+- Public example 40 demonstrates the bounded screening algebra.
+
+PQS and reference-density Hartree screening remain distinct method surfaces.
+This prerelease does not present them as one combined method or one
+combined-paper validation.
+
+## Compatibility and scope
+
+- Julia 1.10 is the supported minimum; RC2 was replayed on Julia 1.10.12 and
+  1.12.6.
+- GaussletBases supplies basis/operator construction, orbital transfer, and
+  bounded screening algebra; it is not a complete SCF or correlated molecular
+  solver.
+
+## Install
+
+Install this prerelease directly from its immutable tag:
+
+```julia
+using Pkg
+Pkg.add(url = "https://github.com/srwhite59/GaussletBases.jl", rev = "v0.2.0-rc2")
+```
+
+- [Versioned v0.2.0-rc2 documentation](https://srwhite59.github.io/GaussletBases.jl/v0.2.0-rc2/)
+- [Changelog at the immutable tag](https://github.com/srwhite59/GaussletBases.jl/blob/v0.2.0-rc2/CHANGELOG.md)
+~~~~
+
+Because the body contains an inner Julia fence, repo-manager must copy the
+text between the outer fence markers into a temporary notes file outside the
+repository and verify `2,200` bytes before publication. The noninteractive
+operation is:
+
+```bash
+gh release create v0.2.0-rc2 \
+  --repo srwhite59/GaussletBases.jl \
+  --verify-tag \
+  --title "GaussletBases v0.2.0-rc2" \
+  --prerelease \
+  --latest=false \
+  --notes-file /private/tmp/gaussletbases_v0.2.0-rc2_release_notes.md
+```
+
+Do not pass a filename or pattern after the tag, generate notes, start a
+discussion, create a draft, or supply `--target`. Before publication, require
+synchronized `main`, only the two established untracked handoffs, no existing
+release for RC2, exact local and remote tag object, peeled commit, and tree,
+and no moving-main link where an immutable tagged link exists. If a release
+appears first or any identity differs, stop without mutation.
+
+`HP-PQS-PUBLIC-RC2-RELEASE-TEST-01` grants no edit or publication authority.
+After creation, the GitHub API and rendered page must show the exact tag,
+title, `2,200`-byte body, `draft=false`, `prerelease=true`, latest status
+`false`, and zero uploaded assets. Both automatic source archives must
+reproduce the accepted tagged tree, and a fresh isolated Julia `1.12.6`
+installation using the published command must load the package. RC2 and
+`/dev/` must remain live, `versions.js` must retain RC2, RC1, and `dev`, and
+`/stable/` must remain absent. `main` and `origin/main` must remain unchanged.
+
+If publication succeeds but a later check differs, preserve the release and
+tag and report the exact state; do not edit, delete, recreate, retarget, add
+assets, or silently retry. Successful publication returns to
+repo-design-manager for a docs-only lifecycle closeout on `main`.
+
+No RC tag mutation, RC1 release edit, custom asset, registration, citation,
+stable alias, final `v0.2.0`, repository-metadata change, or tracked source,
+API, test, example, dependency, workflow, numerical, or manuscript mutation
+is authorized.
