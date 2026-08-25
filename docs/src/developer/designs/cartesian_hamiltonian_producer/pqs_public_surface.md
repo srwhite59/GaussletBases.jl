@@ -773,12 +773,20 @@ one runner assertion that executes
 Do not duplicate the public testset or substitute the `481`-line nested
 screening owner.
 
-Pass 525 reopens these records only for a path-aware routing repair. The three
-matrix rows, job names, Julia versions, test groups, `30`-minute timeout,
-job-level `contents: read`, package instantiate/load boundary, disabled slow
-tests, and pull-request behavior remain exact. Pull requests always run all
-three rows. The performance audit and any possible duplicate H2+ example
-execution change remain separate and grant no work here.
+Pass 525 reopened these records only for a path-aware routing repair. Commit
+`3cce96d40f9e4f06f23a190f782834271fca884b` implemented that repair with
+`74` workflow lines and `22` focused documentation-test lines. It changed no
+source, numerical test owner, dependency, helper, or lifecycle vocabulary. The
+implementation commit changed `.github/workflows/ci.yml`, correctly classified
+itself as full, and passed the three unchanged jobs in CI run `32895536531`:
+`Supported floor` in `5m58s`, `PQS paper` in `17m52s`, and `Screening paper`
+in `45s`. Independent Docs run `32895536562` passed.
+
+The three matrix rows, job names, Julia versions, test groups, `30`-minute
+timeout, job-level `contents: read`, package instantiate/load boundary,
+disabled slow tests, and pull-request behavior remain exact. Pull requests
+always run all three rows. The performance audit and any possible duplicate
+H2+ example execution change remain separate and grant no work here.
 
 For a push to `main`, the classifier must begin with `scope=full`. It may emit
 `scope=docs_only` only when all of these conditions hold:
@@ -834,34 +842,36 @@ suites under `test/nested` remain unwired. Their classification as maintained
 scheduled coverage, quarantine, or deletion is a separate bloat-review
 decision. No claim about their value or lifecycle is made here.
 
-Implementation ownership for the path-aware repair is limited to:
+Maintenance ownership for the path-aware routing is limited to:
 
 ```text
 .github/workflows/ci.yml
 test/docs/runtests.jl
 ```
 
-Production source and numerical-test changes are zero. Added workflow lines are
-preferred at most `55` and hard-stopped at `80`; focused additions to the
-existing docs test are preferred at most `25` and hard-stopped at `40`. Add no
+Production source and numerical-test changes are zero. Maintenance may preserve
+or correct only this routing contract and its focused policy checks. Add no
 file, action dependency, script, helper, fixture, test group, numerical
 assertion, status vocabulary, manifest, API, compatibility layer, or release
-framework. Readability and fail-closed behavior take precedence over reaching
-a line limit; stop and report if the contract cannot fit honestly.
+framework. Any scope expansion or change to the three scientific gates requires
+new design authority.
 
-Transition acceptance is intentionally staged:
+Transition acceptance was intentionally staged:
 
-1. this docs-only authority commit still runs the legacy full matrix;
-2. the workflow implementation commit changes `.github/workflows/ci.yml`, must
-   classify itself as full, and must pass all three unchanged named jobs;
-3. the subsequent docs-only lifecycle closeout must exercise the new
+1. the docs-only authority commit ran the legacy full matrix;
+2. workflow implementation commit `3cce96d40` changed
+   `.github/workflows/ci.yml`, classified itself as full, and passed all three
+   unchanged named jobs;
+3. this docs-only lifecycle closeout must exercise the new
    `docs_only` route, pass its lightweight package/docs checks, leave all three
    named numerical jobs visibly skipped-success, and pass the independent Docs
    workflow; and
-4. before closeout, rehearse the tag-lane commands locally against immutable
-   `v0.2.0-rc2`, including the annotated-object check, peel/tree/version, and
-   installation command, without moving, deleting, recreating, or pushing a
-   tag.
+4. the tag-lane commands were rehearsed read-only against immutable
+   `v0.2.0-rc2`: annotated object `7c8a21b998a838d245e0b5a7f4915910e2a091bc`
+   peeled to commit `2b3c23970144aa030ae52b875a5cf01b32886b6e` and tree
+   `7a4b51aec25f62436620f4ff938262d0f6b2fd62`, and a fresh remote-tag
+   installation loaded the package without moving, deleting, recreating, or
+   pushing a tag.
 
 Acceptance also requires YAML parsing, exact allowlist and synthetic
 classification checks, authority check/self-test, generated-view parity, docs

@@ -1490,3 +1490,50 @@ Carrying-cost accounting:
   validation: source/authority review, render/check/self-test, docs tests,
   Documenter, manager-log bound, scoped diff, remote Docs/CI, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 527 - Close Path-Aware Release CI
+
+Commit(s):
+- `3cce96d40f9e4f06f23a190f782834271fca884b` - implement fail-closed
+  path-aware main routing and the annotated-tag identity/install lane.
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the bounded Pass 525 implementation and returned
+  `HP-PUBLIC-PAPER-CI-FN-01` to implemented maintenance and
+  `HP-PUBLIC-PAPER-CI-TEST-01` to completed maintenance. Pull requests retain
+  the three scientific jobs. Main pushes default to the full matrix and may
+  take the lightweight package/docs lane only after the exact fetched base and
+  no-renames diff prove exclusive membership in the four-path documentation
+  allowlist. Unknown or failed classification remains full. Version tags use a
+  separate annotated-object, peel/tree/version, remote-install, and package-load
+  lane; deployed-documentation acceptance remains in the independent Docs/Pages
+  workflow.
+- The implementation commit correctly classified itself full. CI run
+  `32895536531` passed `Supported floor` in `5m58s`, `PQS paper` in `17m52s`,
+  and `Screening paper` in `45s`; Docs run `32895536562` passed. Read-only RC2
+  rehearsal verified tag object `7c8a21b99`, frozen commit `2b3c23970`, tree
+  `7a4b51aec`, and a fresh remote-tag install. This closeout push is the required
+  first live `docs_only` transition gate; lifecycle acceptance requires its
+  lightweight job and independent Docs workflow to pass with the numerical
+  jobs visibly skipped.
+
+Goal advancement / guardrail:
+- MT5 advances the accepted three-pass release model without weakening exact
+  candidate/code validation. MT6 performance work and duplicate H2+ execution
+  remain separate. No tag, publication, stable alias, source, numerical owner,
+  or release authority is added.
+
+Carrying-cost accounting:
+- deleted: repeated numerical reruns for proven documentation-only main pushes;
+  simplified: one existing CI workflow now owns fail-closed main and tag
+  routing; quarantined: publication, performance, and H2+ wiring remain separate;
+  not deleted because: all three scientific jobs remain mandatory for PRs and
+  every non-proven main push.
+- exact remaining caller/blocker: only the live closeout transition evidence;
+  added/deleted `src` lines `0/0`; new tests: no numerical tests, `22` focused
+  documentation-policy lines in the implementation; new metadata/status fields
+  none; validation: implementation diff and budget review, full implementation
+  CI/Docs, local authority render/check/self-test, docs tests, Documenter,
+  manager-log bound, scoped docs-only review, transition CI/Docs, and
+  `git diff --check`.
