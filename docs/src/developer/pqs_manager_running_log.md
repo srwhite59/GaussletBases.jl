@@ -80,8 +80,9 @@ archaeology and are not normal startup reading.
 - The exact `v0.2.0-rc2` candidate is prepared at commit `2b3c23970`. It adds
   the post-RC1 public residual-GTO/interchange surface, three reader-front-door
   links, and explicit RC2 selector retention without changing implementation,
-  dependencies, workflows, or scientific policy. Tagging, GitHub publication,
-  registration, citation, stable documentation, and final v0.2 remain separate.
+  dependencies, workflows, or scientific policy. One immutable annotated tag
+  is approved against that frozen candidate; GitHub publication, registration,
+  citation, stable documentation, and final v0.2 remain separate.
 - Production defaults, public workflows, corrected artifacts, and Cr2 endpoint
   claims remain unchanged unless separately authorized.
 
@@ -144,8 +145,9 @@ questions.
 **MT5 - Documentation and authority maintenance (active).** The broad
 reorganization and cutover are complete. The RC1 candidate, immutable tag,
 versioned folder, explicit selector entry, and package-centered GitHub
-prerelease are accepted. This goal has returned to maintenance. Keep PQS and
-screening as separate method and citation surfaces. Final release,
+prerelease are accepted. The RC2 candidate is accepted and its one frozen
+annotated tag is approved pending execution. Keep PQS and screening as separate
+method and citation surfaces. RC2 GitHub publication, final release,
 registration, and citation metadata remain separate decisions.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
@@ -1236,3 +1238,41 @@ Carrying-cost accounting:
 - **MT6 - active:** evidence-led internal-test cleanup continues independently.
 - **MT7 - completed/maintenance:** external Cartesian-GTO interchange and its
   reader front door are implemented, validated, and included in RC2.
+
+## Cartesian Hamiltonian Producer Pass 521 - Authorize v0.2.0-rc2 Annotated Tag
+
+Commit(s):
+- this docs-only tag authority amendment.
+
+Summary:
+- Approved one annotated `v0.2.0-rc2` tag with message
+  `GaussletBases v0.2.0-rc2`, frozen to candidate
+  `2b3c23970144aa030ae52b875a5cf01b32886b6e`. Its tree is
+  `7a4b51aec25f62436620f4ff938262d0f6b2fd62`; its accepted `676`-entry,
+  `9,994,240`-byte archive has SHA-256
+  `6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac`.
+- The local and remote tag names were absent during authorization. The
+  candidate commit, tree, version, archive count, byte count, and hash matched
+  exactly. The tag must target the candidate rather than current `main` or the
+  Pass 520 lifecycle-closeout commit.
+
+Goal advancement / guardrail:
+- MT5 permits only immutable tag publication. Docs and all three public CI
+  gates must pass afterward. A post-push failure preserves the tag and is
+  reported; movement, deletion, recreation, or silent retry is forbidden.
+  GitHub prerelease publication remains a separate decision.
+
+Carrying-cost accounting:
+- deleted: the blanket statement that RC2 tagging remained unauthorized;
+  simplified: one exact target, tree, archive, tag name, message, and acceptance
+  contract replace discretionary release procedure; quarantined: GitHub
+  release, registration, citation, stable, final-v0.2, and tracked-file work;
+  not deleted because: the existing Docs and public-CI workflows remain the
+  validated tag-triggered invocation surfaces.
+- exact remaining caller/blocker: repo-manager must create and push only the
+  tag and return immutable-ref, workflow, and versioned-doc evidence for
+  lifecycle closeout; added/deleted `src` lines `0/0`; new tests none; new
+  metadata/status fields: two authority records only; validation: exact
+  candidate and tag-absence preflight, authority render/check/self-test, docs
+  tests, Documenter, manager-log bound, docs-only scope review, remote Docs/CI,
+  and `git diff --check`.

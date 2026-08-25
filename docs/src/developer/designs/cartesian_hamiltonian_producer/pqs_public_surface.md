@@ -891,9 +891,9 @@ commit `2b3c23970144aa030ae52b875a5cf01b32886b6e`.
 `HP-PQS-PUBLIC-RC2-TEST-01` owns completed acceptance evidence and grants no
 further execution. RC2 is required because the public residual-GTO/MWG
 working-system facade and external Cartesian-GTO/PySCF transfer were added
-after immutable RC1. The prepared candidate does not authorize a tag, GitHub
-release, registration, citation record, stable documentation, or final
-`v0.2.0`.
+after immutable RC1. This candidate record does not authorize a tag; the exact
+annotated operation is isolated below. GitHub release, registration, citation
+record, stable documentation, and final `v0.2.0` remain unauthorized.
 
 ### Reader Front Door
 
@@ -976,6 +976,51 @@ archive contains `676` entries in `9,994,240` bytes, has SHA-256
 and contains neither a root Manifest nor either handoff.
 
 The RC2 selector coexists with RC1 and `dev`; it publishes no RC2 folder before
-a separately authorized tag. `/dev/` remains live while `/v0.2.0-rc2/` and
-`/stable/` remain absent. Successful preparation and replay grant no authority
-to tag or publish the candidate.
+the separately authorized tag below is pushed. `/dev/` remains live while
+`/v0.2.0-rc2/` and `/stable/` remain absent. Successful preparation and replay
+do not grant any publication authority beyond that exact tag operation.
+
+## v0.2.0-rc2 Annotated Tag Lifecycle
+
+`HP-PQS-PUBLIC-RC2-TAG-FN-01` authorizes one tag-only publication operation.
+The immutable target is candidate commit
+`2b3c23970144aa030ae52b875a5cf01b32886b6e`, with tree
+`7a4b51aec25f62436620f4ff938262d0f6b2fd62`. Its accepted tracked archive
+contains `676` entries in `9,994,240` bytes and has SHA-256
+`6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac`.
+The tag must point explicitly to this candidate, never current `main` or
+lifecycle-closeout commit `05c35fcea02835c3495897b0940a0b4b43df1b5c`.
+
+Before creation, repo-manager must verify:
+
+- `main` equals `origin/main`, with only the two established untracked
+  successor handoffs;
+- neither local nor remote `v0.2.0-rc2` exists;
+- the target commit, tree, package version, archive entry count, byte count,
+  and archive hash match the frozen values; and
+- the accepted Julia `1.10` and `1.12` candidate evidence, authority and docs
+  checks, package load, and clean diff remain applicable.
+
+The only permitted mutation is an annotated tag named exactly
+`v0.2.0-rc2`, message `GaussletBases v0.2.0-rc2`, pointing to the frozen
+candidate, followed by a push of only `refs/tags/v0.2.0-rc2`. The existing
+Docs and three-gate CI workflows are invocation surfaces, not editable files.
+No branch commit or file edit accompanies the tag.
+
+`HP-PQS-PUBLIC-RC2-TAG-TEST-01` grants no edit. Acceptance requires the remote
+tag object to peel exactly to the frozen commit and tree; tag-triggered Docs
+and the Supported-floor, PQS-paper, and Screening-paper CI gates must all pass.
+`/v0.2.0-rc2/` must become live with its exact canonical URL, `versions.js`
+must list RC2, RC1, and `dev`, `/stable/` must remain absent, and `/dev/` must
+remain intact. `main` and `origin/main` must remain unchanged and both handoffs
+must remain untouched.
+
+If a post-push check fails, preserve the immutable tag and report the evidence;
+never move, replace, delete, recreate, force, or silently retry it. Lifecycle
+closeout must record the tag-object hash, peeled target and tree, workflow run
+IDs, documentation state, and archive verification.
+
+No GitHub release, asset upload, registration, citation, stable alias, final
+`v0.2.0`, repository-metadata change, or tracked source, API, dependency,
+workflow, numerical, or manuscript mutation is authorized. GitHub prerelease
+publication remains a separate decision after tag acceptance.

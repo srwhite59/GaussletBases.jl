@@ -50,15 +50,16 @@ explicit prerelease selector entries:
 
 The RC1 self-mapping keeps its existing folder in `versions.js` across both
 tag and later `main` deployments. Commit
-`2b3c23970144aa030ae52b875a5cf01b32886b6e` implemented the RC2 self-mapping;
-until a separate tag decision it is a selector-policy fixture and publishes no
-folder. Neither entry creates an
-alias. Documenter still
+`2b3c23970144aa030ae52b875a5cf01b32886b6e` implemented the RC2 self-mapping.
+It remains a selector-policy fixture and publishes no folder until the exact
+tag operation separately owned by `HP-PQS-PUBLIC-RC2-TAG-FN-01` is completed.
+Neither entry creates an alias. Documenter still
 excludes prerelease folders from the release set used to create or advance
 `stable`. A later final `v0.2.0` tag may become `stable` under the standard
 policy. No other prerelease entry, custom `stable` alias, or dynamic release
-index is authorized. RC2 tagging and release publication remain separate and
-unauthorized. These semantics follow
+index is authorized. Only the frozen RC2 annotated-tag operation is separately
+authorized; GitHub release publication remains unauthorized. These semantics
+follow
 [Documenter's deployment criteria](https://documenter.juliadocs.org/stable/lib/public/#Documenter.deploy_folder)
 and [versioned deployment policy](https://documenter.juliadocs.org/stable/man/hosting/#Documentation-Versions).
 
