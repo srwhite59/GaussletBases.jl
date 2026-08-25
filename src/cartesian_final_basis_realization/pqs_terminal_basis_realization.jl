@@ -691,59 +691,32 @@ function _validate_shell_seed_axis_fact(fact, axis, interval, source_dim)
         throw(ArgumentError("terminal PQS seed source-axis transform fact coefficient shape mismatch"))
     return Matrix{Float64}(fact.coefficient_matrix)
 end
-function _shell_seed_full_coefficients_from_axis_facts(facts, support, source_shape, dims)
-    matrices = ntuple(
-        axis -> _validate_shell_seed_axis_fact(
-            facts[axis],
-            axis,
-            support.outer_box[axis],
-            source_shape[axis],
-        ),
-        3,
-    )
-    ncols = prod(source_shape)
-    row_indices = Int[]
-    col_indices = Int[]
-    values = Float64[]
-    column = 0
-    for ixcol in 1:source_shape[1], iycol in 1:source_shape[2], izcol in 1:source_shape[3]
-        column += 1
-        for (ix_local, ix) in enumerate(support.outer_box[1])
-            vx = matrices[1][ix_local, ixcol]
-            iszero(vx) && continue
-            for (iy_local, iy) in enumerate(support.outer_box[2])
-                vy = matrices[2][iy_local, iycol]
-                iszero(vy) && continue
-                for (iz_local, iz) in enumerate(support.outer_box[3])
-                    vz = matrices[3][iz_local, izcol]
-                    iszero(vz) && continue
-                    push!(row_indices, _cartesian_flat_index(ix, iy, iz, dims))
-                    push!(col_indices, column)
-                    push!(values, vx * vy * vz)
-                end
-            end
-        end
-    end
-    return SparseArrays.sparse(row_indices, col_indices, values, prod(dims), ncols)
-end
-function _shell_seed_full_coefficients(record, contract, bundles, source_shape, dims)
-    support = record.support_record
-    facts = _shell_seed_axis_facts(contract)
-    if !isnothing(facts)
-        return _shell_seed_full_coefficients_from_axis_facts(facts, support, source_shape, dims)
-    end
-    full_sides = _nested_projected_q_shell_full_sides(bundles, support.outer_box, source_shape)
-    return _nested_product_coefficients(full_sides..., dims)
-end
 function _shell_seed(record, contract, bundles)
     support = record.support_record
     source_shape = Tuple(Int(value) for value in support.source_mode_shape)
-    dims = _nested_axis_lengths(bundles)
-    full_coefficients = _shell_seed_full_coefficients(record, contract, bundles, source_shape, dims)
     modes = _nested_projected_q_shell_boundary_comx_product_modes(source_shape)
     indices = support.support_indices
     states = support.support_states
-    coefficients = Matrix{Float64}(full_coefficients[indices, modes.column_indices])
+    facts = _shell_seed_axis_facts(contract)
+    matrices::NTuple{3,Matrix{Float64}} = if isnothing(facts)
+        sides = _nested_projected_q_shell_full_sides(
+            bundles, support.outer_box, source_shape)
+        ntuple(axis -> sides[axis].local_coefficients, 3)
+    else
+        ntuple(axis -> _validate_shell_seed_axis_fact(
+            facts[axis], axis, support.outer_box[axis], source_shape[axis]), 3)
+    end
+    coefficients = zeros(Float64, length(states), length(modes.mode_indices))
+    for (column, mode) in pairs(modes.mode_indices), (row, state) in pairs(states)
+        lx = state[1] - first(support.outer_box[1]) + 1
+        ly = state[2] - first(support.outer_box[2]) + 1
+        lz = state[3] - first(support.outer_box[3]) + 1
+        vx = Float64(matrices[1][lx, mode[1]])
+        vy = Float64(matrices[2][ly, mode[2]])
+        vz = Float64(matrices[3][lz, mode[3]])
+        (iszero(vx) || iszero(vy) || iszero(vz)) && continue
+        coefficients[row, column] = vx * vy * vz
+    end
     rule = get(contract.metadata, :raw_product_source_retained_rule, nothing)
     raw_plan = get(contract.metadata, :raw_product_source_plan, nothing)
     _validate_shell_seed_contract(support, rule, raw_plan, modes, source_shape)
