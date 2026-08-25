@@ -9,7 +9,35 @@ on:
   pull_request:
 
 jobs:
+  classify:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      scope: ${{ steps.classify.outputs.scope }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: classify
+        shell: bash
+        run: |
+          set -euo pipefail
+          scope=full
+          before="${{ github.event.before }}"
+          after="${{ github.sha }}"
+          if [[ "$before" =~ ^[0-9a-f]{40}$ && "$before" != 0000000000000000000000000000000000000000 ]] &&
+             git cat-file -e "${before}^{commit}" && git cat-file -e "${after}^{commit}" &&
+             changed="$(git diff --name-only --no-renames "$before" "$after" --)" && [[ -n "$changed" ]] &&
+             ! grep -Eqv '^(AGENTS\.md|docs/.+|test/docs/.+|\.github/workflows/docs\.yml)$' <<< "$changed"; then
+            scope=docs_only
+          fi
+          echo "scope=$scope" >> "$GITHUB_OUTPUT"
+
   test:
+    needs: classify
+    if: ${{ always() && !startsWith(github.ref, 'refs/tags/') && (github.event_name != 'push' || github.ref != 'refs/heads/main' || needs.classify.result != 'success' || needs.classify.outputs.scope != 'docs_only') }}
     name: ${{ matrix.gate }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -52,3 +80,49 @@ jobs:
           GAUSSLETBASES_TEST_GROUPS: ${{ matrix.groups }}
           GAUSSLETBASES_SLOW_TESTS: "0"
         run: julia --project=. -e 'using Pkg; Pkg.test()'
+
+  docs-only:
+    needs: classify
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.classify.result == 'success' && needs.classify.outputs.scope == 'docs_only' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.12"
+      - name: Instantiate and load package
+        run: julia --project=. -e 'using Pkg; Pkg.instantiate(); using GaussletBases'
+      - name: Run documentation tests
+        env:
+          GAUSSLETBASES_TEST_GROUPS: docs
+          GAUSSLETBASES_SLOW_TESTS: "0"
+        run: julia --project=. -e 'using Pkg; Pkg.test()'
+
+  tag-identity-install:
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.12"
+      - name: Verify annotated tag identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="$GITHUB_REF_NAME"
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]
+          test "$tag" = "v$(julia --startup-file=no -e 'print(VersionNumber(ARGS[1]))' "${tag#v}")"
+          git fetch --no-tags origin "refs/tags/${tag}:refs/tags/${tag}"
+          tag_object="$(git rev-parse --verify "refs/tags/${tag}^{tag}")"
+          test "$(git cat-file -t "$tag_object")" = tag
+          commit="$(git rev-parse "refs/tags/${tag}^{commit}")"
+          test "$commit" = "$GITHUB_SHA"
+          test "$(git rev-parse "${commit}^{tree}")" = "$(git rev-parse 'HEAD^{tree}')"
+          test "$tag" = "v$(julia --project=. -e 'using TOML; print(TOML.parsefile("Project.toml")["version"])')"
+      - name: Install and load remote tag
+        run: julia --startup-file=no -e 'using Pkg; Pkg.activate(; temp=true); Pkg.add(url="https://github.com/srwhite59/GaussletBases.jl.git", rev=ENV["GITHUB_REF_NAME"]); using GaussletBases'

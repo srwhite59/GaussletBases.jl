@@ -29,6 +29,7 @@
     docs_project = read_doc("docs", "Project.toml")
     docs_make = read_doc("docs", "make.jl")
     docs_workflow = read_doc(".github", "workflows", "docs.yml")
+    ci_workflow = read_doc(".github", "workflows", "ci.yml")
     authority_check = read_doc("docs", "check_cartesian_authority.jl")
 
     docs_site_index = read_doc("docs", "src", "index.md")
@@ -427,6 +428,27 @@
         @test length(findall("GAUSSLETBASES_DOCS_DEPLOY", docs_workflow)) == 1
         @test length(findall("contents: write", docs_workflow)) == 1
         @test length(findall("contents: read", docs_workflow)) == 2
+        docs_only_path = path -> path == "AGENTS.md" || startswith(path, "docs/") ||
+                                   startswith(path, "test/docs/") ||
+                                   path == ".github/workflows/docs.yml"
+        @test all(docs_only_path, ("AGENTS.md", "docs/page.md", "test/docs/runtests.jl",
+                                  ".github/workflows/docs.yml"))
+        @test !any(docs_only_path, ("Project.toml", "README.md", "CHANGELOG.md",
+                                   ".github/workflows/ci.yml", "src/GaussletBases.jl"))
+        @test contains_all(ci_workflow, "pull_request:", "fetch-depth: 0",
+            "github.event.before", "git cat-file -e \"\${before}^{commit}\"",
+            "git diff --name-only --no-renames", "scope=full", "scope=docs_only",
+            "AGENTS\\.md|docs/.+|test/docs/.+|\\.github/workflows/docs\\.yml")
+        @test contains_all(ci_workflow, "always()", "needs.classify.result != 'success'",
+            "needs.classify.outputs.scope != 'docs_only'",
+            "needs.classify.result == 'success'",
+            "needs.classify.outputs.scope == 'docs_only'")
+        @test all(gate -> length(findall("gate: $gate", ci_workflow)) == 1,
+            ("Supported floor", "PQS paper", "Screening paper"))
+        @test contains_all(ci_workflow, "tag-identity-install:",
+            "refs/tags/\${tag}:refs/tags/\${tag}", "refs/tags/\${tag}^{tag}",
+            "refs/tags/\${tag}^{commit}", "Pkg.add(url=", "GITHUB_REF_NAME")
+        @test !occursin("workflow_run", ci_workflow)
         @test _DOCS_VERSIONS == Any[
             "stable" => "v^",
             "v#.#",
