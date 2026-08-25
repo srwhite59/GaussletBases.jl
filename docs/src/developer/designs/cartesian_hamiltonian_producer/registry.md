@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `e37f313b0fda23a4dec6e41c18f221a6997795b78bf73238265a9ce131c3ff95`.
+> [authority.toml](authority.toml), SHA-256 `f4c67536e5860ba811b1093911658b70e59e4a23851cf55d9cc98c2e958e17ac`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2387,8 +2387,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-PAPER-CI-FN-01 - paper-aligned PQS and screening CI workflow
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tools`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2400,18 +2400,20 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `a4e85e820fd4056e985a18e20da87180f370ef66`
   - `git_commit`: `e65764377bd4640916e80342071da754d80aca32`
   - `git_commit`: `3cce96d40f9e4f06f23a190f782834271fca884b`
+  - `git_commit`: `72446880603c7e554f6ae71b2de2dc6edf28b31b`
   - `manager_pass`: `503`
   - `manager_pass`: `504`
   - `manager_pass`: `505`
   - `manager_pass`: `525`
   - `manager_pass`: `527`
+  - `manager_pass`: `528`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`
-- **Scope:** Maintain the implemented fail-closed event/path routing inside the existing CI workflow. Preserve the exact Supported floor, PQS paper, and Screening paper names, matrix rows, Julia versions, groups, 30-minute timeout, permissions, package instantiate/load, disabled slow tests, and pull-request behavior. For main pushes, default to the full matrix and classify documentation-only only after fetching and proving the exact nonzero github.event.before commit, a successful nonempty git diff --name-only --no-renames to github.sha, and exclusive membership in the canonical four-path allowlist. Preserve always()-aware dependent-job conditions so classifier failure, missing output, or any value other than an explicit successful documentation-only result runs all three numerical gates. Maintain the separate v\* tag lane for canonical semantic-version syntax, the fetched annotated refs/tags/\<tag\>^{tag} object, commit peel, tree/version agreement, remote-tag installation, and package load; it must not run the numerical matrix or verify deployed documentation. Add no workflow chaining, polling infrastructure, helper file, action dependency, release/tag operation, docs deployment change, numerical/test-owner change, H2+ rewiring, version, registration, citation, source, API, example, dependency, compat, manifest, or release framework.
+- **Scope:** Repair only the rejected documentation-only transition inside the existing CI workflow. Preserve the exact classifier, four-path allowlist, Supported floor, PQS paper, and Screening paper names, matrix rows, Julia versions, groups, 30-minute timeout, permissions, numerical commands, disabled slow tests, pull-request behavior, and annotated-tag identity/install lane. On every non-tag event, expand the existing three-row matrix. For an explicit successful documentation-only main classification, run one visible no-op marker in each named matrix job and skip every numerical setup/execution step so all three gate names conclude success without numerical work; for every other non-tag state, including classifier failure or missing/unknown output, run the exact full numerical steps. In the separate docs-only job, instantiate the existing docs environment with the same local-package develop/instantiate operation used by the Docs workflow before running the existing docs test group. Add no workflow/job/group/row, workflow chaining, polling infrastructure, helper file, action dependency, release/tag operation, docs deployment change, numerical/test-owner change, H2+ rewiring, version, registration, citation, source, API, example, dependency, compat, manifest, or release framework. Preferred/hard workflow repair budget is 18/28 added lines.
 
 ### HP-PUBLIC-PAPER-CI-TEST-01 - paper-aligned PQS and screening release validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2423,13 +2425,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `a4e85e820fd4056e985a18e20da87180f370ef66`
   - `git_commit`: `e65764377bd4640916e80342071da754d80aca32`
   - `git_commit`: `3cce96d40f9e4f06f23a190f782834271fca884b`
+  - `git_commit`: `72446880603c7e554f6ae71b2de2dc6edf28b31b`
   - `manager_pass`: `503`
   - `manager_pass`: `504`
   - `manager_pass`: `505`
   - `manager_pass`: `525`
   - `manager_pass`: `527`
+  - `manager_pass`: `528`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PUBLIC-PAPER-CI-FN-01`
-- **Scope:** Maintain only the existing focused docs-policy checks for the path-aware CI contract: exact documentation allowlist, full-matrix defaults, pull-request preservation, before-object fetch/proof, --no-renames diff, always()-aware fail-closed job conditions, unchanged numerical job names, and the separate annotated-tag identity/install lane. Preserve proof that the tag command fetches and verifies refs/tags/\<tag\>^{tag} before its commit peel, tree, version, and remote installation. Preserve the existing pqs\_release 18-test owner/example-41 smoke and screening\_release 22-test owner/example-40 smoke byte-for-policy unchanged; do not edit either numerical owner or add a numerical assertion, fixture, helper, tolerance, group, runner, workflow row, test file, or H2+ execution change.
+- **Scope:** Amend only the existing focused docs-policy test to prove the rejected transition repairs: every non-tag event expands the existing matrix; explicit documentation-only classification runs a visible marker for all three unchanged gate names while numerical steps are skipped; every other non-tag state remains fail-closed full; and the lightweight job instantiates the existing docs environment before the docs test group. Preserve the exact allowlist, before-object/no-renames checks, annotated-tag object/peel/install checks, pqs\_release 18-test owner/example-41 smoke, and screening\_release 22-test owner/example-40 smoke. Do not edit a numerical owner or add a numerical assertion, fixture, helper, tolerance, group, row, workflow, test file, or H2+ execution change. Preferred/hard focused test-repair budget is 12/20 added lines.
 
 ### HP-QW-NESTED-DIAT-FN-01 - repair exported ordinary-QW nested diatomic front doors
 

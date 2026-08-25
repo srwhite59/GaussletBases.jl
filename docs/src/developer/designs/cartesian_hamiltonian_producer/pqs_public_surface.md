@@ -814,12 +814,12 @@ use workflow-level path filters or add a second workflow.
 
 Classifier errors must not suppress numerical validation through ordinary
 dependency skipping. The matrix job must retain its three existing names and
-use an `always()`-aware condition equivalent to: for every non-tag event, run
-when the classifier did not succeed or its output is anything other than the
-single explicit `docs_only` value. The lightweight job runs only after an
-explicit successful `docs_only` result and performs package load plus the
-existing docs test group. An absent or invalid classifier output is not a
-third lane.
+use an `always()`-aware job condition that expands all three rows for every
+non-tag event. A shared fail-closed step predicate skips numerical work only
+for the single explicit successful `docs_only` value; every other result runs
+the unchanged numerical steps. The lightweight job runs only after an explicit
+successful `docs_only` result and performs package load plus the existing docs
+test group. An absent or invalid classifier output is not a third lane.
 
 `v*` pushes use a separate tag-CI lane and do not rerun the numerical matrix.
 That lane must explicitly fetch the remote tag ref and prove that
@@ -856,17 +856,43 @@ assertion, status vocabulary, manifest, API, compatibility layer, or release
 framework. Any scope expansion or change to the three scientific gates requires
 new design authority.
 
-Transition acceptance was intentionally staged:
+Transition acceptance was intentionally staged. The first closeout probe,
+commit `72446880603c7e554f6ae71b2de2dc6edf28b31b`, correctly reached the
+documentation-only classification, and independent Docs run `32899962286`
+passed. CI run `32899962285` nevertheless rejected closure for two mechanical
+reasons:
+
+1. GitHub evaluated the matrix job's false job-level condition before matrix
+   expansion, yielding one skipped job named `matrix.gate` rather than the
+   three accepted gate names; and
+2. the lightweight job instantiated only the root environment, so the existing
+   isolated Documenter version-expansion fixture failed at `105/106` because
+   the docs environment had not been instantiated.
+
+Pass 528 reopens only the same two records for this exact repair. The matrix
+job must expand on every non-tag event. On an explicit successful `docs_only`
+classification, each of its three named rows runs one visible no-op marker and
+skips checkout, Julia setup/cache, root instantiation/load, and numerical test
+execution; the three jobs therefore succeed without numerical work. Every
+other non-tag state runs the unchanged full steps. The separate lightweight
+job must instantiate the existing docs environment with the same local-package
+develop/instantiate operation already used by `.github/workflows/docs.yml`
+before invoking the existing docs test group. No fourth gate, workflow, group,
+or numerical command is authorized.
+
+The corrected transition remains staged:
 
 1. the docs-only authority commit ran the legacy full matrix;
 2. workflow implementation commit `3cce96d40` changed
    `.github/workflows/ci.yml`, classified itself as full, and passed all three
    unchanged named jobs;
-3. this docs-only lifecycle closeout must exercise the new
-   `docs_only` route, pass its lightweight package/docs checks, leave all three
-   named numerical jobs visibly skipped-success, and pass the independent Docs
-   workflow; and
-4. the tag-lane commands were rehearsed read-only against immutable
+3. repair implementation changes `.github/workflows/ci.yml`, must classify
+   itself full, and must pass all three unchanged numerical jobs plus Docs;
+4. the subsequent docs-only lifecycle closeout must pass its lightweight
+   package/docs checks, show `Supported floor`, `PQS paper`, and `Screening
+   paper` as successful jobs whose numerical steps are visibly skipped, and
+   pass the independent Docs workflow; and
+5. the tag-lane commands were rehearsed read-only against immutable
    `v0.2.0-rc2`: annotated object `7c8a21b998a838d245e0b5a7f4915910e2a091bc`
    peeled to commit `2b3c23970144aa030ae52b875a5cf01b32886b6e` and tree
    `7a4b51aec25f62436620f4ff938262d0f6b2fd62`, and a fresh remote-tag

@@ -1491,7 +1491,7 @@ Carrying-cost accounting:
   Documenter, manager-log bound, scoped diff, remote Docs/CI, and
   `git diff --check`.
 
-## Cartesian Hamiltonian Producer Pass 527 - Close Path-Aware Release CI
+## Cartesian Hamiltonian Producer Pass 527 - Path-Aware CI Transition Probe Rejected
 
 Commit(s):
 - `3cce96d40f9e4f06f23a190f782834271fca884b` - implement fail-closed
@@ -1499,10 +1499,10 @@ Commit(s):
 - this docs-only lifecycle closeout.
 
 Summary:
-- Accepted the bounded Pass 525 implementation and returned
-  `HP-PUBLIC-PAPER-CI-FN-01` to implemented maintenance and
-  `HP-PUBLIC-PAPER-CI-TEST-01` to completed maintenance. Pull requests retain
-  the three scientific jobs. Main pushes default to the full matrix and may
+- Reviewed the bounded Pass 525 implementation and attempted to return
+  `HP-PUBLIC-PAPER-CI-FN-01` and `HP-PUBLIC-PAPER-CI-TEST-01` to maintenance.
+  Pull requests retain the three scientific jobs. Main pushes default to the
+  full matrix and may
   take the lightweight package/docs lane only after the exact fetched base and
   no-renames diff prove exclusive membership in the four-path documentation
   allowlist. Unknown or failed classification remains full. Version tags use a
@@ -1514,9 +1514,11 @@ Summary:
   and `Screening paper` in `45s`; Docs run `32895536562` passed. Read-only RC2
   rehearsal verified tag object `7c8a21b99`, frozen commit `2b3c23970`, tree
   `7a4b51aec`, and a fresh remote-tag install. This closeout push is the required
-  first live `docs_only` transition gate; lifecycle acceptance requires its
-  lightweight job and independent Docs workflow to pass with the numerical
-  jobs visibly skipped.
+  first live `docs_only` transition gate. Classifier and independent Docs run
+  `32899962286` passed, but CI run `32899962285` rejected lifecycle closure:
+  GitHub collapsed the unexpanded false matrix to one skipped `matrix.gate`,
+  and the lightweight docs test failed `105/106` because its isolated
+  Documenter fixture lacked an instantiated docs environment.
 
 Goal advancement / guardrail:
 - MT5 advances the accepted three-pass release model without weakening exact
@@ -1525,15 +1527,56 @@ Goal advancement / guardrail:
   or release authority is added.
 
 Carrying-cost accounting:
-- deleted: repeated numerical reruns for proven documentation-only main pushes;
-  simplified: one existing CI workflow now owns fail-closed main and tag
-  routing; quarantined: publication, performance, and H2+ wiring remain separate;
+- deleted: none because transition acceptance failed; simplified: the
+  classifier and tag lane remain valid while the job graph needs one bounded
+  repair; quarantined: publication, performance, and H2+ wiring remain separate;
   not deleted because: all three scientific jobs remain mandatory for PRs and
   every non-proven main push.
-- exact remaining caller/blocker: only the live closeout transition evidence;
+- exact remaining caller/blocker: expand three named no-op matrix rows on
+  explicit docs-only pushes and instantiate the docs environment in the
+  lightweight lane;
   added/deleted `src` lines `0/0`; new tests: no numerical tests, `22` focused
   documentation-policy lines in the implementation; new metadata/status fields
   none; validation: implementation diff and budget review, full implementation
   CI/Docs, local authority render/check/self-test, docs tests, Documenter,
   manager-log bound, scoped docs-only review, transition CI/Docs, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 528 - Authorize Path-Aware CI Transition Repair
+
+Commit(s):
+- this docs-only repair authority amendment.
+
+Summary:
+- Reopened `HP-PUBLIC-PAPER-CI-FN-01` and
+  `HP-PUBLIC-PAPER-CI-TEST-01` only for the two transition failures observed in
+  run `32899962285`. The existing three-row matrix must expand for every
+  non-tag event. A proven documentation-only push runs one visible marker in
+  each named row and skips all numerical steps; every unknown, failed, PR, or
+  non-documentation main state retains the full numerical path. The lightweight
+  lane must instantiate the existing docs environment before running the docs
+  group. The independent Docs workflow already passed as run `32899962286`.
+- Workflow and focused test repairs are bounded at `18/28` and `12/20` added
+  lines respectively. No new workflow, job, row, action, group, helper, test
+  file, numerical assertion, source, release operation, or tag change is
+  permitted. The immutable RC2 rehearsal and tag lane remain accepted and
+  untouched.
+
+Goal advancement / guardrail:
+- MT5 remains active until one full repair implementation run and one genuine
+  docs-only closeout run prove the intended job graph. The failed transition is
+  treated as evidence, not waived. MT6 performance and duplicate H2+ execution
+  remain separate.
+
+Carrying-cost accounting:
+- deleted: none in this authority pass; simplified: the approved repair uses
+  the existing matrix and Docs environment operation; quarantined: all release,
+  numerical, performance, and test-wiring work remains separate; not deleted
+  because: the three gate identities remain stable required checks.
+- exact remaining caller/blocker: repo-manager must implement the two bounded
+  workflow repairs and focused policy assertions, then return full-matrix and
+  docs-only transition evidence; added/deleted `src` lines `0/0`; new tests: no
+  file or numerical test, focused docs-policy edits only; new metadata/status
+  fields none; validation: authority render/check/self-test, docs tests,
+  Documenter, manager-log bound, scoped diff, YAML inspection, full repair
+  CI/Docs, subsequent docs-only CI/Docs, and `git diff --check`.
