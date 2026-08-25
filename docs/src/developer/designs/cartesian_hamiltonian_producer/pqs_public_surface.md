@@ -975,52 +975,34 @@ archive contains `676` entries in `9,994,240` bytes, has SHA-256
 `6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac`,
 and contains neither a root Manifest nor either handoff.
 
-The RC2 selector coexists with RC1 and `dev`; it publishes no RC2 folder before
-the separately authorized tag below is pushed. `/dev/` remains live while
-`/v0.2.0-rc2/` and `/stable/` remain absent. Successful preparation and replay
-do not grant any publication authority beyond that exact tag operation.
+The RC2 selector coexists with RC1 and `dev`. The completed tag lifecycle below
+publishes the canonical RC2 folder while `/dev/` remains live and `/stable/`
+remains absent. Candidate acceptance grants no further publication authority.
 
 ## v0.2.0-rc2 Annotated Tag Lifecycle
 
-`HP-PQS-PUBLIC-RC2-TAG-FN-01` authorizes one tag-only publication operation.
-The immutable target is candidate commit
+`HP-PQS-PUBLIC-RC2-TAG-FN-01` records the completed tag-only publication. The
+immutable target is candidate commit
 `2b3c23970144aa030ae52b875a5cf01b32886b6e`, with tree
 `7a4b51aec25f62436620f4ff938262d0f6b2fd62`. Its accepted tracked archive
 contains `676` entries in `9,994,240` bytes and has SHA-256
 `6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac`.
-The tag must point explicitly to this candidate, never current `main` or
-lifecycle-closeout commit `05c35fcea02835c3495897b0940a0b4b43df1b5c`.
+Annotated tag object `7c8a21b998a838d245e0b5a7f4915910e2a091bc` has
+message `GaussletBases v0.2.0-rc2` and peels exactly to that target and tree.
+Only `refs/tags/v0.2.0-rc2` was pushed; no branch commit, file, or asset changed.
 
-Before creation, repo-manager must verify:
+`HP-PQS-PUBLIC-RC2-TAG-TEST-01` is completed. Tag-triggered Docs run
+`32798625043` passed, and CI run `32798625045` passed the PQS, Supported-floor,
+and Screening gates. Pages deployment `32798719038` passed.
+`/v0.2.0-rc2/` is live with its exact canonical URL, `versions.js` lists RC2,
+RC1, and `dev`, `/stable/` remains absent, and `/dev/` remains intact. `main`
+and `origin/main` remained at `707e5bcbb35f375a09c663cfd949f40377d37e19`,
+with both handoffs untouched.
 
-- `main` equals `origin/main`, with only the two established untracked
-  successor handoffs;
-- neither local nor remote `v0.2.0-rc2` exists;
-- the target commit, tree, package version, archive entry count, byte count,
-  and archive hash match the frozen values; and
-- the accepted Julia `1.10` and `1.12` candidate evidence, authority and docs
-  checks, package load, and clean diff remain applicable.
-
-The only permitted mutation is an annotated tag named exactly
-`v0.2.0-rc2`, message `GaussletBases v0.2.0-rc2`, pointing to the frozen
-candidate, followed by a push of only `refs/tags/v0.2.0-rc2`. The existing
-Docs and three-gate CI workflows are invocation surfaces, not editable files.
-No branch commit or file edit accompanies the tag.
-
-`HP-PQS-PUBLIC-RC2-TAG-TEST-01` grants no edit. Acceptance requires the remote
-tag object to peel exactly to the frozen commit and tree; tag-triggered Docs
-and the Supported-floor, PQS-paper, and Screening-paper CI gates must all pass.
-`/v0.2.0-rc2/` must become live with its exact canonical URL, `versions.js`
-must list RC2, RC1, and `dev`, `/stable/` must remain absent, and `/dev/` must
-remain intact. `main` and `origin/main` must remain unchanged and both handoffs
-must remain untouched.
-
-If a post-push check fails, preserve the immutable tag and report the evidence;
-never move, replace, delete, recreate, force, or silently retry it. Lifecycle
-closeout must record the tag-object hash, peeled target and tree, workflow run
-IDs, documentation state, and archive verification.
+The lifecycle is closed. Never move, replace, delete, recreate, force, or
+silently retry the immutable tag.
 
 No GitHub release, asset upload, registration, citation, stable alias, final
 `v0.2.0`, repository-metadata change, or tracked source, API, dependency,
 workflow, numerical, or manuscript mutation is authorized. GitHub prerelease
-publication remains a separate decision after tag acceptance.
+publication remains a separate decision after this tag acceptance.

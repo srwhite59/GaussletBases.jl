@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `60f2946845ddf39b0bf0c3b54c70186cfdfb2b91e5d74d06750520b96c57ca1c`.
+> [authority.toml](authority.toml), SHA-256 `9b38a3ca2cdc0036c2db8cf09b7674be3af7984e5cac8c9a622431b719518afc`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1486,8 +1486,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `496`
   - `manager_pass`: `519`
   - `manager_pass`: `520`
+  - `manager_pass`: `522`
 - **Dependencies:** `HP-PQS-PUBLIC-DOC-01`, `HP-PQS-PUBLIC-DOC-PARITY-FN-01`
-- **Scope:** Maintain only the implemented tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior, main-to-dev deployment, exact canonical full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tag folders without build metadata, fail-closed rejection before deploydocs, and Documenter's standard exclusion of prereleases from the real stable alias. Retain the existing v0.2.0-rc1 folder and the prepared v0.2.0-rc2 candidate through their exact self-mappings; RC2 publishes no folder before a separately authorized tag. Neither mapping creates an alias. No other prerelease entry or custom stable policy is authorized. GITHUB\_TOKEN and GAUSSLETBASES\_DOCS\_DEPLOY remain deployment-step-only under the contents:write deployment job. No new file, workflow change, tag mutation, release, source/API/example/scientific-doc/dependency/citation change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, dynamic version index, or release framework.
+- **Scope:** Maintain only the implemented tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior, main-to-dev deployment, exact canonical full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tag folders without build metadata, fail-closed rejection before deploydocs, and Documenter's standard exclusion of prereleases from the real stable alias. Retain the existing v0.2.0-rc2 and v0.2.0-rc1 folders through their exact self-mappings; neither creates an alias. No other prerelease entry or custom stable policy is authorized. GITHUB\_TOKEN and GAUSSLETBASES\_DOCS\_DEPLOY remain deployment-step-only under the contents:write deployment job. No new file, workflow change, tag mutation, release, source/API/example/scientific-doc/dependency/citation change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, dynamic version index, or release framework.
 
 ### HP-PQS-DOCS-TAGDEPLOY-TEST-01 - tag-aware documentation deployment validation
 
@@ -1509,6 +1510,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `496`
   - `manager_pass`: `519`
   - `manager_pass`: `520`
+  - `manager_pass`: `522`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`
 - **Scope:** Maintain only the focused existing docs-test assertions for PR/main/prerelease/final/malformed-tag classification, exact main and tag canonical paths, semantic-version rejection, unchanged least-privilege workflow boundaries, exact v0.2.0-rc1 and v0.2.0-rc2 selector retention, and standard prerelease exclusion from stable. Use an isolated Documenter version-expansion fixture to require RC2, RC1, and dev entries, no self-symlink, and no stable alias without a final release. Add no test file, parser framework, actual tag/deployment, numerical gate, source test, or release behavior.
 
@@ -2056,28 +2058,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `519`
   - `manager_pass`: `520`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-RC1-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-PUBLIC-PAPER-CI-FN-01`, `HP-REP-PQS-RG-WORKING-FN-01`, `HP-REP-XGTO-CLOSESTDET-FN-01`, `HP-REP-XGTO-INTERCHANGE-FN-01`, `HP-REP-XGTO-PYSCF-EXPORT-FN-01`, `HP-REP-XGTO-READER-DOC-01`
-- **Scope:** Maintain the exact v0.2.0-rc2 candidate identity implemented by commit 2b3c23970144aa030ae52b875a5cf01b32886b6e: root Project.toml version 0.2.0-rc2, the concise post-RC1 CHANGELOG section above a byte-unchanged RC1 section, and the three distinct root-README capability links with the radial beginner route retained and the external exporter described as checkpoint-only. PySCF and NumPy remain optional external-command dependencies. Exact RC2/RC1/dev selector maintenance belongs to HP-PQS-DOCS-TAGDEPLOY-FN-01. This record itself authorizes no tag; the exact annotated RC2 tag operation is separately owned by HP-PQS-PUBLIC-RC2-TAG-FN-01. No production source/API/export/numerical/dependency/example/workflow/fixture-format/manifest-policy/test-owner change, tutorial duplication, manuscript or benchmark claim, paper status, DOI, stable alias, GitHub release, registration, citation, or final-v0.2 action is authorized.
+- **Scope:** Maintain the exact v0.2.0-rc2 candidate identity implemented by commit 2b3c23970144aa030ae52b875a5cf01b32886b6e: root Project.toml version 0.2.0-rc2, the concise post-RC1 CHANGELOG section above a byte-unchanged RC1 section, and the three distinct root-README capability links with the radial beginner route retained and the external exporter described as checkpoint-only. PySCF and NumPy remain optional external-command dependencies. Exact RC2/RC1/dev selector maintenance belongs to HP-PQS-DOCS-TAGDEPLOY-FN-01. This record authorizes no tag; the completed immutable annotated tag is recorded by HP-PQS-PUBLIC-RC2-TAG-FN-01. No production source/API/export/numerical/dependency/example/workflow/fixture-format/manifest-policy/test-owner change, tutorial duplication, manuscript or benchmark claim, paper status, DOI, stable alias, GitHub release, registration, citation, or final-v0.2 action is authorized.
 
 ### HP-PQS-PUBLIC-RC2-TAG-FN-01 - v0.2.0-rc2 annotated tag publication
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tools`
-- **Execution whitelist:** `true`
-- **Documents:**
-  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0-rc2 Annotated Tag Lifecycle`
-- **Owned paths:**
-  - `tool` / `existing`: `.github/workflows/ci.yml`
-  - `tool` / `existing`: `.github/workflows/docs.yml`
-- **Evidence:**
-  - `git_commit`: `2b3c23970144aa030ae52b875a5cf01b32886b6e`
-  - `manager_pass`: `521`
-- **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-RC2-FN-01`, `HP-PUBLIC-PAPER-CI-FN-01`
-- **Scope:** Create and push exactly one immutable annotated git tag named v0.2.0-rc2 with message GaussletBases v0.2.0-rc2, explicitly targeting frozen candidate 2b3c23970144aa030ae52b875a5cf01b32886b6e with tree 7a4b51aec25f62436620f4ff938262d0f6b2fd62 and accepted 676-entry, 9994240-byte archive SHA-256 6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac. Never target current main or lifecycle-closeout commit 05c35fcea02835c3495897b0940a0b4b43df1b5c. Push only refs/tags/v0.2.0-rc2; the existing Docs and three-gate CI workflows are invocation surfaces and must not be edited. Require synchronized main, only the two established untracked handoffs, absent local and remote tag, exact target/tree/version/archive identity, and applicable candidate evidence before creation. After push, never move, replace, delete, or recreate the tag; on any post-push failure preserve it and report. No branch push or commit, file edit, force, GitHub release, asset upload, registration, citation, stable alias, final v0.2.0, or source/API/dependency/workflow/numerical/manuscript mutation.
-
-### HP-PQS-PUBLIC-RC2-TAG-TEST-01 - v0.2.0-rc2 annotated tag validation
-
-- **Lifecycle:** `approved`
+- **Lifecycle:** `completed`
 - **Grant:** `none`
 - **Surfaces:** none
 - **Execution whitelist:** `false`
@@ -2087,8 +2072,25 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `git_commit`: `2b3c23970144aa030ae52b875a5cf01b32886b6e`
   - `manager_pass`: `521`
+  - `manager_pass`: `522`
+- **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-RC2-FN-01`, `HP-PUBLIC-PAPER-CI-FN-01`
+- **Scope:** Completed immutable annotated-tag publication only; this record grants no further tag, file, workflow, or release mutation. Local and remote tag object 7c8a21b998a838d245e0b5a7f4915910e2a091bc has message GaussletBases v0.2.0-rc2 and peels to frozen target 2b3c23970144aa030ae52b875a5cf01b32886b6e with tree 7a4b51aec25f62436620f4ff938262d0f6b2fd62. The accepted archive remains 676 entries and 9994240 bytes with SHA-256 6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac. Tag-triggered Docs run 32798625043 and CI run 32798625045 passed; Pages deployment 32798719038 passed. /v0.2.0-rc2/ and /dev/ are live, versions.js lists RC2, RC1, and dev, and /stable/ remains absent. Never move, replace, delete, or recreate the tag. This completed record grants no GitHub release, asset upload, registration, citation, stable alias, final v0.2.0, or tracked mutation.
+
+### HP-PQS-PUBLIC-RC2-TAG-TEST-01 - v0.2.0-rc2 annotated tag validation
+
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0-rc2 Annotated Tag Lifecycle`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `2b3c23970144aa030ae52b875a5cf01b32886b6e`
+  - `manager_pass`: `521`
+  - `manager_pass`: `522`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-RC2-TAG-FN-01`, `HP-PUBLIC-PAPER-CI-TEST-01`
-- **Scope:** Required tag-acceptance evidence only; this record grants no file, workflow, tag-repair, or release edit. Verify the local and remote annotated tag object peels exactly to frozen target 2b3c23970144aa030ae52b875a5cf01b32886b6e and tree 7a4b51aec25f62436620f4ff938262d0f6b2fd62; tag-triggered Docs and all three public CI gates pass; /v0.2.0-rc2/ exists with its exact canonical URL; versions.js lists RC2, RC1, and dev; /stable/ remains absent; /dev/ remains intact; main and origin/main remain unchanged; and both established handoffs remain untouched. Record the tag-object hash, peeled target/tree, workflow run IDs, documentation state, and archive verification before closeout. Any post-push failure preserves the immutable tag and is reported without movement, replacement, deletion, recreation, or silent retry. GitHub prerelease publication remains separately unauthorized.
+- **Scope:** Completed tag-acceptance evidence only; this record grants no file, workflow, tag-repair, or release edit. Local and remote annotated tag object 7c8a21b998a838d245e0b5a7f4915910e2a091bc peels to frozen target 2b3c23970144aa030ae52b875a5cf01b32886b6e and tree 7a4b51aec25f62436620f4ff938262d0f6b2fd62. Tag-triggered Docs run 32798625043 passed; CI run 32798625045 passed PQS, Supported floor, and Screening; Pages deployment 32798719038 passed. /v0.2.0-rc2/ has its exact canonical URL, versions.js lists RC2, RC1, and dev, /stable/ remains absent, and /dev/ remains intact. Only the tag ref changed; main and origin/main remained at 707e5bcbb35f375a09c663cfd949f40377d37e19 with both handoffs untouched. Preserve the immutable tag without movement, replacement, deletion, recreation, or silent retry. GitHub prerelease publication remains separately unauthorized.
 
 ### HP-PQS-PUBLIC-RC2-TEST-01 - v0.2.0-rc2 candidate validation
 
@@ -2105,7 +2107,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `519`
   - `manager_pass`: `520`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-RC2-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-PAPER-CI-TEST-01`, `HP-REP-PQS-RG-WORKING-CI-TEST-01`, `HP-REP-XGTO-INTERCHANGE-TEST-01`, `HP-REP-XGTO-READER-DOC-TEST-01`
-- **Scope:** Completed v0.2.0-rc2 candidate-acceptance evidence only; this record grants no test, workflow, source, docs, tag, or release edit. Commit 2b3c23970144aa030ae52b875a5cf01b32886b6e passed clean Julia 1.10.12 and 1.12.6 package loads, the three public CI gates, export integrity, public residual-GTO/external-transfer and frozen H2/cc-pVTZ coverage, public examples 01/39/40/41, focused H2+ 18/18, screening 22/22, docs 99/99 and 10/10, and an archive/install replay excluding a root Manifest and both handoffs. The candidate archive contains 676 entries, is 9994240 bytes, and has SHA-256 6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac. RC2/RC1/dev selector simulation retained no stable alias or path. The accepted C2 replay remains canonical and was not repeated because implementation was unchanged. The exact annotated tag operation is separately owned by HP-PQS-PUBLIC-RC2-TAG-FN-01; GitHub release publication, registration, citation, stable documentation, and final v0.2 remain unauthorized.
+- **Scope:** Completed v0.2.0-rc2 candidate-acceptance evidence only; this record grants no test, workflow, source, docs, tag, or release edit. Commit 2b3c23970144aa030ae52b875a5cf01b32886b6e passed clean Julia 1.10.12 and 1.12.6 package loads, the three public CI gates, export integrity, public residual-GTO/external-transfer and frozen H2/cc-pVTZ coverage, public examples 01/39/40/41, focused H2+ 18/18, screening 22/22, docs 99/99 and 10/10, and an archive/install replay excluding a root Manifest and both handoffs. The candidate archive contains 676 entries, is 9994240 bytes, and has SHA-256 6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac. RC2/RC1/dev selector simulation retained no stable alias or path. The accepted C2 replay remains canonical and was not repeated because implementation was unchanged. The completed immutable annotated tag is recorded by HP-PQS-PUBLIC-RC2-TAG-FN-01; GitHub release publication, registration, citation, stable documentation, and final v0.2 remain unauthorized.
 
 ### HP-PQS-PUBLIC-SCREEN-FN-01 - public supplied-field screened-Hartree assembly
 

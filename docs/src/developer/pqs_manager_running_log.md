@@ -80,8 +80,8 @@ archaeology and are not normal startup reading.
 - The exact `v0.2.0-rc2` candidate is prepared at commit `2b3c23970`. It adds
   the post-RC1 public residual-GTO/interchange surface, three reader-front-door
   links, and explicit RC2 selector retention without changing implementation,
-  dependencies, workflows, or scientific policy. One immutable annotated tag
-  is approved against that frozen candidate; GitHub publication, registration,
+  dependencies, workflows, or scientific policy. Its immutable annotated tag
+  is accepted at object `7c8a21b99`; GitHub publication, registration,
   citation, stable documentation, and final v0.2 remain separate.
 - Production defaults, public workflows, corrected artifacts, and Cr2 endpoint
   claims remain unchanged unless separately authorized.
@@ -142,12 +142,12 @@ Hooke owns the first Be `1s/2s` target study. Selection, transition-density
 exchange, and PRF-to-GTO-residual interactions remain consumer or measurement
 questions.
 
-**MT5 - Documentation and authority maintenance (active).** The broad
+**MT5 - Documentation and authority maintenance (maintenance).** The broad
 reorganization and cutover are complete. The RC1 candidate, immutable tag,
 versioned folder, explicit selector entry, and package-centered GitHub
-prerelease are accepted. The RC2 candidate is accepted and its one frozen
-annotated tag is approved pending execution. Keep PQS and screening as separate
-method and citation surfaces. RC2 GitHub publication, final release,
+prerelease are accepted. The RC2 candidate, immutable tag, versioned folder,
+and selector entry are also accepted. Keep PQS and screening as separate method
+and citation surfaces. RC2 GitHub publication, final release,
 registration, and citation metadata remain separate decisions.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
@@ -1276,3 +1276,36 @@ Carrying-cost accounting:
   candidate and tag-absence preflight, authority render/check/self-test, docs
   tests, Documenter, manager-log bound, docs-only scope review, remote Docs/CI,
   and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 522 - Close v0.2.0-rc2 Tag Lifecycle
+
+Commit(s):
+- immutable tag object `7c8a21b998a838d245e0b5a7f4915910e2a091bc`;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the exact annotated `v0.2.0-rc2` tag and message. It peels to frozen
+  candidate `2b3c23970144aa030ae52b875a5cf01b32886b6e` and tree
+  `7a4b51aec25f62436620f4ff938262d0f6b2fd62`; the `676`-entry,
+  `9,994,240`-byte archive retains SHA-256
+  `6728b80c1397f13b367c2d898fbdda3176c6cb87c39597817c590a0f41c1e2ac`.
+- Tag-triggered Docs `32798625043`, all three rows in CI `32798625045`, and
+  Pages `32798719038` passed. RC2 and `/dev/` are live, selector order is
+  RC2/RC1/dev, and `/stable/` remains absent. Only the tag ref was pushed.
+
+Goal advancement / guardrail:
+- MT5 returns to maintenance. The tag records are completed/no-grant. Preserve
+  the immutable tag without movement, deletion, replacement, or recreation.
+  GitHub prerelease publication remains a separate decision.
+
+Carrying-cost accounting:
+- deleted: the temporary tag execution grant and pending lifecycle language;
+  simplified: immutable object, target, workflow, and deployed-doc evidence now
+  replace creation instructions; quarantined: GitHub release, assets,
+  registration, citation, stable, final-v0.2, and all tracked implementation;
+  not deleted because: RC2/RC1 self-mappings remain live deployment policy.
+- exact remaining caller/blocker: none for tag acceptance; added/deleted `src`
+  lines `0/0`; new tests and metadata/status fields none; validation: local and
+  remote tag identity, archive hash/size, workflow records, live canonical and
+  selector checks, authority render/check/self-test, docs tests, Documenter,
+  manager-log bound, docs-only scope review, remote Docs/CI, and diff checks.
