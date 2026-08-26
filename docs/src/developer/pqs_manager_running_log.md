@@ -1794,3 +1794,40 @@ Carrying-cost accounting:
   tests none; new metadata/status fields none; validation: authority
   render/check/self-test, docs tests, package load, Documenter, manager-log
   bound, scoped docs-only diff, transition CI/Docs, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 533 Closeout - Call-Local Terminal Buffers
+
+Commit(s):
+- `3419da6132810d8c4454f5b013c6302ef7842cb3` - pre-size and reuse lexical
+  terminal operator buffers.
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the exact two-file `+25/-10` implementation and returned
+  `HP-FN-03` and `HP-DRV-STAGE-FN-01` to implemented maintenance. PQS and
+  White-Lindsey kinetic and both by-center nuclear matrices remained bitwise
+  identical; the exact 135-term scalar loop was untouched. Parent axes remain
+  `21 x 21 x 29`, terminal dimensions remain `1285/1285`, and column accounting
+  remains `275 + 960 + 50` across eight semantic shells and two slabs.
+- PQS kinetic allocation fell from `2.741 GB` to `0.140 GB`, unit-nuclear
+  allocation from `1.926 GB` to `0.267 GB`, and warmed complete-comparison
+  allocation from `6.816 GB` to `2.536 GB`. The combined stage reduction was
+  `3.968 GiB`; warmed time improved from `32.774` to `32.028 s`.
+
+Goal advancement / guardrail:
+- MT6 closes the measured terminal-buffer lane. Scalar-loop optimization,
+  cold-compilation cleanup, Gram policy, compatibility deletion, and release
+  work remain separate and unauthorized. No checkpoint is due.
+
+Carrying-cost accounting:
+- deleted: repeated zero-sized production-buffer initialization; simplified:
+  one pre-sized lexical buffer set serves three kinetic terms and another set
+  serves physical centers; quarantined: all excluded performance/release lanes;
+  not deleted because: blockwise kernels, 64 MiB tiling, and exact arithmetic
+  remain live numerical owners.
+- exact remaining caller/blocker: none for call-local terminal-buffer reuse;
+  added/deleted `src` lines `25/10`; new tests none; new metadata/status fields
+  none; validation: matrix parity, matched H2+ `18/18`, public Cartesian
+  `232/232`, residual-GTO `80/80`, bounded core/IDA/examples, due diligence,
+  authority/self-test, docs `110/110` and `10/10`, package load, Documenter,
+  diff checks, CI run `32944547034`, and Docs run `32944547012`.

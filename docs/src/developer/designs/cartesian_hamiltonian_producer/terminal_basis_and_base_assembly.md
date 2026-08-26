@@ -4,8 +4,8 @@ Status: implemented internal producer infrastructure under `HP-OBJ-01`,
 `HP-OBJ-02`, `HP-FILE-01`, `HP-FN-00`, `HP-FN-01`, `HP-FN-02`,
 `HP-WIRE-01`, `HP-FN-03`, `HP-FN-04`, and `HP-FN-05`. Pass 526 completed the
 direct support-local shell-seed replacement; `HP-FN-00` is in maintenance.
-Pass 532 temporarily reopens `HP-FN-03` only for the bounded call-local terminal
-buffer optimization below.
+Pass 532 completed the bounded call-local terminal-buffer optimization below;
+`HP-FN-03` is again in maintenance.
 
 This page is the canonical contract for the terminal-basis objects, PQS
 terminal realization, blockwise exact one-body assembly, localized IDA matrix,
@@ -174,8 +174,8 @@ release, mapped-COMX, and source-q owners; the bounded
 `core,ida,cartesian,examples` groups; authority check/self-test; documentation
 tests and build; and all three remote numerical gates. No permanent baseline
 helper, committed performance fixture, test, API, metadata, cache, or file was
-added. Cold-compilation specialization, terminal nuclear/product buffers,
-Gram-policy changes, and compatibility cleanup require separate authority.
+added. Cold-compilation specialization, scalar-loop optimization, Gram-policy
+changes, and compatibility cleanup require separate authority.
 
 The shell-local Gram must produce an identity overlap within `identity_atol`.
 Each final column must have a finite nonzero product weight so its sign can be
@@ -254,9 +254,9 @@ The destination and factors must have compatible dimensions. Factors and
 coefficients must be finite; one-dimensional factor matrices must be symmetric
 within their active numerical checks.
 
-### Approved Call-Local Terminal Buffer Reuse
+### Implemented Call-Local Terminal Buffer Reuse
 
-Pass 532 authorizes one storage-only optimization in
+Pass 532 implemented one storage-only optimization in
 `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` and its base
 caller in `src/pqs_source_box_low_order_materialization.jl`. The existing
 action, tile, and block buffers may be sized once from the live terminal blocks
@@ -281,17 +281,14 @@ constructions must own disjoint buffers. If safe reuse requires a public API,
 another source owner, persistent state, a new file, arithmetic reordering, or
 disproportionate machinery, implementation stops without a source commit.
 
-The controlled Julia `1.12.6` prototype preserved every matrix bit and reduced
-the two stages by `0.599 s / 3.942 GiB` combined: terminal unit-nuclear
-construction by `0.397 s / 1.550 GiB` and kinetic construction by
-`0.202 s / 2.392 GiB`. Acceptance must compare a clean source baseline with
-the candidate on the same machine and in the same order. It must report fresh
-and immediate-warm elapsed time, allocation, GC, and compilation for the full
-matched H2+ comparison, plus isolated warmed kinetic and unit-nuclear stage
-measurements. Allocation must fall in both stages and by at least `3.0 GiB`
-combined; repeated warmed complete-comparison time must not regress by more
-than `10%`. Wall-time improvement is reported rather than imposed as a tighter
-cross-machine threshold.
+The accepted Julia `1.12.6` implementation preserved every matrix bit. PQS
+kinetic construction changed from `0.637 s / 2.741 GB` to
+`0.435 s / 0.140 GB`; PQS unit-nuclear construction changed from
+`10.553 s / 1.926 GB` to `10.171 s / 0.267 GB`. Combined stage allocation fell
+by `3.968 GiB`. The warmed complete comparison changed from
+`32.774 s / 6.816 GB` to `32.028 s / 2.536 GB`, a `2.27%` wall-time
+improvement. These measurements are acceptance evidence, not cross-machine
+performance thresholds.
 
 Before performance interpretation, the old and candidate kinetic matrices and
 every by-center unit-nuclear matrix must be bitwise identical for the matched
@@ -302,11 +299,12 @@ remain unchanged. Validation uses transient comparison code only, package
 load, the existing public Cartesian and matched-H2+ owners, normal bounded CI,
 authority/docs gates, and explicit terminal due-diligence inspection.
 
-The combined implementation budget is at most `25` preferred and `35` hard
-added source lines across the two authorized files, with no test edit or new
-file. Scalar-loop optimization, cold-compilation/provenance cleanup, Gram
-policy, compatibility deletion, route construction, release work, and the
-duplicate-example question remain separate.
+The implementation changed the two authorized files by `+25/-10` lines, with
+no test, file, API, type, metadata, or cache addition. Repeated zero-sized
+buffer initialization was removed from the production paths. Scalar-loop
+optimization, cold-compilation/provenance cleanup, Gram policy, compatibility
+deletion, route construction, release work, and the duplicate-example question
+remain separate.
 
 ## Localized IDA Assembly
 

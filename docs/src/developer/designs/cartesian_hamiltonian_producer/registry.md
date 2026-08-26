@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `ce2a2484a7427bddfcfcab220d438cd7ea566b2754e948dc37c83d6ec4033dd7`.
+> [authority.toml](authority.toml), SHA-256 `5fbc2b12e8fa260f8a24d08ce3005a198671a4800b104def726354cecf766033`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -884,19 +884,24 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-DRV-STAGE-FN-01 - visible physics-stage producer surface
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [cartesian\_driver\_usability\_workflow.md](cartesian_driver_usability_workflow.md); heading `Cartesian Driver Usability Workflow`
 - **Owned paths:**
+  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
   - `source` / `existing`: `src/pqs_source_box_low_order_materialization.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/dmrgtmp/pqs_perf_audit_f9ca5a7b_20260825/compile_and_nuclear_followup.md`
+  - `git_commit`: `3419da6132810d8c4454f5b013c6302ef7842cb3`
   - `manager_pass`: `532`
+  - `manager_pass`: `533`
 - **Dependencies:** `HP-FN-03`
-- **Scope:** Within \`src/pqs\_source\_box\_low\_order\_materialization.jl\` only, reuse one call-local set of the existing terminal action/tile/block buffers across the three kinetic product terms and a separate call-local set across physical nuclear centers. Preserve exact matrices, term/block/center order, 64 MiB tiling, stage return shapes, all fingerprints/dimensions/energies/captures/topology/warnings/tolerances, and nonescaping disjoint ownership. This shares the combined 25/35 preferred/hard added-source budget with \`HP-FN-03\`; no test edit, stage/API/result/metadata change, public control, cache, workspace type, persistent state, new file, arithmetic reorder, or other staged-source edit is authorized. Stop without a source commit if either phase does not reduce allocation, combined reduction is below 3.0 GiB, warmed complete-comparison time regresses over 10%, or safe reuse requires broader machinery.
+- **Scope:** Maintain the separate non-exported working-basis, product/moment, unit-nuclear, IDA/MWG interaction, residual-augmentation, and Hamiltonian-assembly stages. The base kinetic and unit-nuclear stages must reuse their accepted pre-sized lexical terminal action/tile/block buffers across the three Cartesian product terms and physical centers while preserving exact matrices, term/block/center order, 64 MiB tiling, stage return shapes, and all endpoint facts. Facades remain wrappers over the same construction. Do not add a stage/API/result/metadata change, public control, workspace type, global/task-local/persistent cache, escaping scratch state, new source owner, or arithmetic reorder.
 
 ### HP-DRV-STAGE-TEST-01 - staged driver validation
 
@@ -966,7 +971,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `e1d5ca2ddb3a39134fddb476d00029ec590c431f`
   - `manager_pass`: `526`
 - **Dependencies:** none
-- **Scope:** Maintain the implemented direct support-local shell-seed assembly in \`pqs\_terminal\_basis\_realization.jl\`. \`\_shell\_seed\` must assemble exactly \`support.support\_states\` by retained boundary modes in existing order for ordinary and carried-axis-fact inputs, with the established Float64 conversion points, literal \`0.0\` for skipped zero products, and exact \`vx \* vy \* vz\` arithmetic. Preserve every support/index, retained mode, column range, Gram/Lowdin input, topology, provenance, due-diligence fact, and public result. Do not restore \`\_shell\_seed\_full\_coefficients\_from\_axis\_facts\` or \`\_shell\_seed\_full\_coefficients\`, add a second construction path, or add a fallback, workspace, cache, type, API, metadata, dependency, or validation-policy change. Cold-compilation specialization, terminal nuclear/product buffers, Gram-policy changes, and compatibility cleanup require separate authority.
+- **Scope:** Maintain the implemented direct support-local shell-seed assembly in \`pqs\_terminal\_basis\_realization.jl\`. \`\_shell\_seed\` must assemble exactly \`support.support\_states\` by retained boundary modes in existing order for ordinary and carried-axis-fact inputs, with the established Float64 conversion points, literal \`0.0\` for skipped zero products, and exact \`vx \* vy \* vz\` arithmetic. Preserve every support/index, retained mode, column range, Gram/Lowdin input, topology, provenance, due-diligence fact, and public result. Do not restore \`\_shell\_seed\_full\_coefficients\_from\_axis\_facts\` or \`\_shell\_seed\_full\_coefficients\`, add a second construction path, or add a fallback, workspace, cache, type, API, metadata, dependency, or validation-policy change. Cold-compilation specialization, scalar-loop optimization, Gram-policy changes, and compatibility cleanup require separate authority.
 
 ### HP-FN-01 - terminal basis realizer
 
@@ -999,8 +1004,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-FN-03 - blockwise one-body assembly
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1009,11 +1014,13 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/dmrgtmp/pqs_perf_audit_f9ca5a7b_20260825/compile_and_nuclear_followup.md`
+  - `git_commit`: `3419da6132810d8c4454f5b013c6302ef7842cb3`
   - `manager_pass`: `532`
+  - `manager_pass`: `533`
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Dependencies:** `HP-OBJ-01`, `HP-OBJ-02`
-- **Scope:** Within \`src/cartesian\_final\_basis\_realization/pqs\_terminal\_one\_body.jl\` only, pre-size and reuse the existing call-local action/tile/block matrices for blockwise product and Gaussian-sum assembly. Preserve exact kinetic and every by-center unit-nuclear matrix, 64 MiB tiling, block/mirror/mul\!/accumulation order, Float64 behavior, all endpoint facts and tolerances, and lexical nonescaping ownership. The 135-term scalar loop in \`\_fill\_terminal\_gaussian\_sum\_action\!\` must remain byte-for-byte unchanged. This shares the combined 25/35 preferred/hard added-source budget with \`HP-DRV-STAGE-FN-01\`; no test edit, public API, workspace type, global/task-local/persistent cache, field, metadata, dependency, new file, or arithmetic reorder is authorized. Stop without a source commit on any bit difference, ownership escape, broader machinery, less than 3.0 GiB combined allocation reduction, or more than 10% warmed complete-comparison time regression.
+- **Scope:** Maintain block-pair product assembly and the term-first Gaussian-sum accumulator with the accepted pre-sized call-local action/tile/block matrices. Preserve exact kinetic and every by-center unit-nuclear matrix, 64 MiB tiling, block/mirror/mul\!/accumulation order, Float64 behavior, lexical nonescaping ownership, and all endpoint facts and tolerances. The 135-term scalar loop in \`\_fill\_terminal\_gaussian\_sum\_action\!\` remains unchanged. Do not restore repeated zero-sized buffer initialization in the base production paths or add a public API, workspace type, global/task-local/persistent cache, escaping scratch state, field, metadata, dependency, new file, or arithmetic reorder.
 
 ### HP-FN-04 - localized IDA assembly
 
