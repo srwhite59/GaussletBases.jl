@@ -71,9 +71,9 @@ function _check_terminal_factor_terms(terms, nterms, n, name)
 end
 
 function _fill_terminal_gaussian_sum_action!(
-    action, left, right, coefficients, factor_terms, tile_buffer)
-    fx, fy, fz = factor_terms
-    nterms = length(coefficients)
+    action, left, right, weighted_fx, factor_terms, tile_buffer)
+    _, fy, fz = factor_terms
+    nterms = size(weighted_fx, 1)
     fill!(action, 0.0)
     maxcols = max(1, _TERMINAL_WORKSPACE_BYTES ÷ (8 * max(length(left.support_states), 1)))
     tile_buffer_view = _buffer_view!(
@@ -81,15 +81,41 @@ function _fill_terminal_gaussian_sum_action!(
     for firstcol in 1:maxcols:length(right.support_states)
         cols = firstcol:min(firstcol + maxcols - 1, length(right.support_states))
         tile = @view tile_buffer_view[:, 1:length(cols)]
-        @inbounds for (jj, j) in enumerate(cols), i in eachindex(left.support_states)
-            ix, iy, iz = left.support_states[i]
+        @inbounds for (jj, j) in enumerate(cols)
             jx, jy, jz = right.support_states[j]
-            value = 0.0
-            for term in 1:nterms
-                value += coefficients[term] * fx[term, ix, jx] *
-                    fy[term, iy, jy] * fz[term, iz, jz]
+            i = 1
+            while i <= length(left.support_states) - 3
+                ix1, iy1, iz1 = left.support_states[i]
+                ix2, iy2, iz2 = left.support_states[i + 1]
+                ix3, iy3, iz3 = left.support_states[i + 2]
+                ix4, iy4, iz4 = left.support_states[i + 3]
+                value1 = value2 = value3 = value4 = 0.0
+                for term in 1:nterms
+                    value1 += weighted_fx[term, ix1, jx] *
+                        fy[term, iy1, jy] * fz[term, iz1, jz]
+                    value2 += weighted_fx[term, ix2, jx] *
+                        fy[term, iy2, jy] * fz[term, iz2, jz]
+                    value3 += weighted_fx[term, ix3, jx] *
+                        fy[term, iy3, jy] * fz[term, iz3, jz]
+                    value4 += weighted_fx[term, ix4, jx] *
+                        fy[term, iy4, jy] * fz[term, iz4, jz]
+                end
+                tile[i, jj] = value1
+                tile[i + 1, jj] = value2
+                tile[i + 2, jj] = value3
+                tile[i + 3, jj] = value4
+                i += 4
             end
-            tile[i, jj] = value
+            while i <= length(left.support_states)
+                ix, iy, iz = left.support_states[i]
+                value = 0.0
+                for term in 1:nterms
+                    value += weighted_fx[term, ix, jx] *
+                        fy[term, iy, jy] * fz[term, iz, jz]
+                end
+                tile[i, jj] = value
+                i += 1
+            end
         end
         if isnothing(right.coefficients)
             @views action[:, cols] .+= tile
@@ -106,8 +132,13 @@ function _terminal_gaussian_sum_action(left, right, coefficients, factor_terms)
         size(right.coefficients, 2)
     action = zeros(Float64, length(left.support_states), ncols)
     tile_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    fx = first(factor_terms)
+    weighted_fx = Array{Float64}(undef, size(fx))
+    @inbounds for j in axes(fx, 3), i in axes(fx, 2), term in eachindex(coefficients)
+        weighted_fx[term, i, j] = coefficients[term] * fx[term, i, j]
+    end
     _fill_terminal_gaussian_sum_action!(
-        action, left, right, coefficients, factor_terms, tile_buffer)
+        action, left, right, weighted_fx, factor_terms, tile_buffer)
     if isnothing(left.coefficients)
         return action
     end
@@ -134,14 +165,14 @@ function _terminal_operator_buffers(basis::CartesianTerminalBasisRealization)
 end
 
 function _add_terminal_gaussian_sum_block!(
-    destination, left, right, coefficients, factor_terms, factor, mirror,
+    destination, left, right, weighted_fx, factor_terms, factor, mirror,
     action_buffer, tile_buffer, block_buffer)
     ncols = isnothing(right.coefficients) ?
         length(right.support_states) :
         size(right.coefficients, 2)
     action = _buffer_view!(action_buffer, length(left.support_states), ncols)
     _fill_terminal_gaussian_sum_action!(
-        action, left, right, coefficients, factor_terms, tile_buffer)
+        action, left, right, weighted_fx, factor_terms, tile_buffer)
     rows = left.column_range
     cols = right.column_range
     if isnothing(left.coefficients)
@@ -198,12 +229,17 @@ function _accumulate_terminal_gaussian_sum!(
         _check_terminal_factor_terms(_terminal_factor_terms(factors_y), nterms, max_state[2], "y"),
         _check_terminal_factor_terms(_terminal_factor_terms(factors_z), nterms, max_state[3], "z"),
     )
+    fx = first(factor_terms)
+    weighted_fx = Array{Float64}(undef, size(fx))
+    @inbounds for j in axes(fx, 3), i in axes(fx, 2), term in eachindex(coeffs)
+        weighted_fx[term, i, j] = coeffs[term] * fx[term, i, j]
+    end
     factor = Float64(scale)
     for right in eachindex(basis.blocks), left in 1:right
         left_block = basis.blocks[left]
         right_block = basis.blocks[right]
         _add_terminal_gaussian_sum_block!(
-            destination, left_block, right_block, coeffs, factor_terms, factor, left != right,
+            destination, left_block, right_block, weighted_fx, factor_terms, factor, left != right,
             action_buffer, tile_buffer, block_buffer)
     end
     return destination
