@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `24a2ed0b85210fb965c8edabb31bab24d7a3d131b0980ce10091666b90a951dc`.
+> [authority.toml](authority.toml), SHA-256 `16fbba321d91224c01d5a3b5dd2253ff451cb7185b6cc6970c3a953a861c30c0`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1898,23 +1898,24 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-PUBLIC-MATCHED-FN-01 - matched H2+ public comparison
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Matched H2+ Public Comparison`
 - **Owned paths:**
-  - `source` / `existing`: `src/GaussletBases.jl`
   - `source` / `existing`: `src/pqs_matched_h2plus.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/notes/assignments/repo_design_manager_pqs_v0p2_public_surface_2026-08-17.md`
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/reproduction/pqs_release_candidate_2026-08-17/data/table1_h2plus/table1_h2plus_matched_composite.tsv`
+  - `external_path`: `/Users/srw/dmrgtmp/pqs_perf_audit_f9ca5a7b_20260825/report.md`
   - `git_commit`: `058ee54f45c759949f70b54a699ccc318476f8ac`
   - `manager_pass`: `481`
   - `manager_pass`: `482`
+  - `manager_pass`: `530`
 - **Dependencies:** `HP-PQS-ASPECTSHELL-FN-01`, `HP-PQS-COULOMB-ACCURACY-FN-01`, `HP-R1-FN-01`
-- **Scope:** Maintain only \`PQSH2PlusRow\`, \`PQSH2PlusComparison\`, and \`pqs\_h2plus\_comparison(; independent\_reference\_total\_energy\_hartree)\` for the frozen R=2, ns=5, padding-10, tail-2.8, high135 parent/PQS-q5/matched-WL-q3 comparison. Preserve common parent and physical-shell facts, exact 12789/1285 dimensions and 275+960+50 accounting, matrix-free parent solution, and stable compact rows. No public stage object, Vee, solver, artifact, parser, scan, scalar-WL fallback, paper-driver schema, or adjustable construction policy.
+- **Scope:** Optimize only the private matrix-free parent action in \`src/pqs\_matched\_h2plus.jl\`: replace dimension-sized per-call temporaries in \`\_pqs\_h2plus\_product\_apply\` and \`raw\_nuclear\` with explicit output and scratch storage owned exclusively by each \`\_pqs\_h2plus\_parent\_solution\` invocation. Preserve axis/product/Gaussian-term arithmetic order, exact deterministic action parity, independent concurrent-call ownership, all dimensions/fingerprints/topology/energies/captures/residuals/symmetry/warnings, and existing release tolerances. No mutable global, task-local store, pool, cache, lock, hidden persistent state, escaping scratch view, public workspace/API/type, second source owner, test edit, dependency, metadata, workflow, example, fixture, or release change. Preferred/hard added-source limits are 40/60 lines with at most 30 net added lines. Stop without a source commit if safe reuse requires public expansion, another owner, callback/lifecycle changes, disproportionate machinery, less than 18 GiB paired complete-comparison allocation reduction, or more than 10% repeated warmed-time regression.
 
 ### HP-PQS-PUBLIC-MATCHED-TEST-01 - matched H2+ public release validation
 

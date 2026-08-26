@@ -112,6 +112,68 @@ The full parent solve remains matrix-free. The implementation may call the
 accepted staged and apply-based numerical owners internally, but those names
 do not become public. It constructs no `Vee`, artifact, or solver state.
 
+### Private Parent-Apply Workspace
+
+Pass 530 authorizes one allocation-focused replacement inside the private
+matrix-free parent solve. The accepted Julia `1.12.6` audit measured
+`_pqs_h2plus_product_apply` at `34,106` calls, `10.652` seconds, and
+`21.914 GiB` of cumulative allocation. The `248` `raw_nuclear` calls accounted
+for `10.589` seconds and `21.538 GiB` inclusively; their `33,480` nested product
+applications accounted for `21.512 GiB`. These figures overlap and must not be
+added.
+
+The allocating three-axis action may be replaced by a file-private mutating
+action with explicit caller-supplied output and scratch storage. One invocation
+of `_pqs_h2plus_parent_solution` must allocate and exclusively own its complete
+workspace. Every output and intermediate must be fully overwritten before use,
+active input, output, accumulator, and scratch arrays must not alias, and no
+view backed by scratch may escape. `raw_nuclear` may reuse one product output
+while accumulating all `135` terms into a distinct caller-owned result. The
+orthogonalization, kinetic, final callback, and capture callers may be adjusted
+only as needed to consume the same replacement without retaining a second
+allocating hot path.
+
+Workspace ownership is lexical and per comparison call. No mutable global or
+module constant, task-local store, pool, public workspace, retained result
+field, metadata entry, or hidden persistent state is permitted. Concurrent
+public comparison calls must own disjoint storage. The current Lanczos owner
+invokes its nonescaping callback synchronously; the implementation must not
+change that owner or rely on cross-call sharing. If safe reuse requires public
+API expansion, another source owner, callback/lifecycle changes, locking, a
+cache, or a reusable storage framework, implementation stops without a source
+commit and returns the exact obstacle.
+
+This is a storage-only optimization. Preserve the existing axis-product order,
+matrix order, Gaussian-term order and signs, Float64 behavior, and complete
+operator action. Deterministic old/new product-action probes must agree exactly.
+The parent/PQS/White-Lindsey dimensions, parent and terminal fingerprints,
+`275 + 960 + 50` accounting, shell/slab topology, bounds, captures, energies,
+eigen-residuals, symmetry checks, due-diligence warnings, and all release
+tolerances must remain unchanged.
+
+Performance acceptance uses Julia `1.12.6`, one Julia thread, and eight BLAS
+threads, with package loading excluded. After workspace creation and warmup,
+measure repeated isolated product actions and report elapsed time and allocated
+bytes per action; no allocation proportional to the parent vector or an axis
+product may remain. In a same-machine clean baseline and candidate, run one
+fresh complete comparison followed by an immediate warmed comparison and
+report time, allocation, GC, and compilation separately. The candidate must
+remove at least `18 GiB` of complete-comparison cumulative allocation relative
+to that paired baseline and must not regress repeated warmed elapsed time by
+more than `10%`. Separately, a transient probe run with at least two Julia
+threads must execute two tasks with independent workspaces and match the serial
+product actions exactly. No benchmark, baseline helper, or performance fixture
+is committed.
+
+Implementation is confined to `src/pqs_matched_h2plus.jl`, with at most `40`
+preferred and `60` hard added source lines and at most `30` net added source
+lines. Replace or delete the allocating private hot-path helpers rather than
+leaving parallel implementations. No test edit, new file, type, export, public
+binding, dependency, metadata, workflow, example, fixture, or release change is
+authorized. Package load, the unchanged `18/18` matched-H2+ owner, normal
+public CI, terminal due-diligence inspection, and repository authority/docs
+gates remain the acceptance owners.
+
 The supported example writes a TSV with exactly the stable row fields above.
 Additional timing, allocation, Git, path, shell-ledger, or report fields from
 the private paper driver are not part of this API.

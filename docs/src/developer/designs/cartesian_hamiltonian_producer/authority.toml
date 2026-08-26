@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "a122279206c7018d7b668207a90c384ed30e2025d1370753f374e30cc4e35650"
+sha256 = "e395a418cf0f89000036505c01d1f06ef40afb4477d63486d9db83d79918b0b4"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -3271,10 +3271,10 @@ title = "PQS v0.2 reader-document parity validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-ASPECTSHELL-FN-01", "HP-PQS-COULOMB-ACCURACY-FN-01", "HP-R1-FN-01"]
-grant = "maintenance"
+grant = "implementation"
 id = "HP-PQS-PUBLIC-MATCHED-FN-01"
-lifecycle = "implemented"
-scope = "Maintain only `PQSH2PlusRow`, `PQSH2PlusComparison`, and `pqs_h2plus_comparison(; independent_reference_total_energy_hartree)` for the frozen R=2, ns=5, padding-10, tail-2.8, high135 parent/PQS-q5/matched-WL-q3 comparison. Preserve common parent and physical-shell facts, exact 12789/1285 dimensions and 275+960+50 accounting, matrix-free parent solution, and stable compact rows. No public stage object, Vee, solver, artifact, parser, scan, scalar-WL fallback, paper-driver schema, or adjustable construction policy."
+lifecycle = "approved"
+scope = "Optimize only the private matrix-free parent action in `src/pqs_matched_h2plus.jl`: replace dimension-sized per-call temporaries in `_pqs_h2plus_product_apply` and `raw_nuclear` with explicit output and scratch storage owned exclusively by each `_pqs_h2plus_parent_solution` invocation. Preserve axis/product/Gaussian-term arithmetic order, exact deterministic action parity, independent concurrent-call ownership, all dimensions/fingerprints/topology/energies/captures/residuals/symmetry/warnings, and existing release tolerances. No mutable global, task-local store, pool, cache, lock, hidden persistent state, escaping scratch view, public workspace/API/type, second source owner, test edit, dependency, metadata, workflow, example, fixture, or release change. Preferred/hard added-source limits are 40/60 lines with at most 30 net added lines. Stop without a source commit if safe reuse requires public expansion, another owner, callback/lifecycle changes, disproportionate machinery, less than 18 GiB paired complete-comparison allocation reduction, or more than 10% repeated warmed-time regression."
 surfaces = ["source"]
 title = "matched H2+ public comparison"
 
@@ -3290,6 +3290,9 @@ title = "matched H2+ public comparison"
     kind = "external_path"
     value = "/Users/srw/Dropbox/Papers/PQS/reproduction/pqs_release_candidate_2026-08-17/data/table1_h2plus/table1_h2plus_matched_composite.tsv"
     [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/pqs_perf_audit_f9ca5a7b_20260825/report.md"
+    [[records.evidence_refs]]
     kind = "git_commit"
     value = "058ee54f45c759949f70b54a699ccc318476f8ac"
     [[records.evidence_refs]]
@@ -3298,11 +3301,10 @@ title = "matched H2+ public comparison"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "482"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "530"
 
-    [[records.paths]]
-    kind = "source"
-    path = "src/GaussletBases.jl"
-    state = "existing"
     [[records.paths]]
     kind = "source"
     path = "src/pqs_matched_h2plus.jl"

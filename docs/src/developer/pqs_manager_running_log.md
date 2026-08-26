@@ -148,7 +148,7 @@ reorganization and cutover are complete. The RC1 candidate, immutable tag,
 versioned folder, explicit selector entry, and package-centered GitHub
 prerelease are accepted. The RC2 candidate, immutable tag, versioned folder,
 selector entry, and exact GitHub prerelease are also accepted. Path-aware CI is
-approved as a bounded release-efficiency refinement before final v0.2. Keep
+implemented and accepted as a bounded release-efficiency refinement. Keep
 PQS and screening as separate method and citation surfaces. Final release,
 registration, and citation metadata remain separate decisions.
 
@@ -157,7 +157,9 @@ metadata, unsupported exports, and development-era tests as conformance work
 identifies them. New scaffolding must advance a live physics or module contract
 and account for what it replaces. The repaired ordinary-QW diatomic front doors
 remain supported; the broader endpoint/correction audit remains a deferred
-retirement map.
+retirement map. Direct support-local PQS shell seeds are implemented; the next
+bounded performance target is per-comparison scratch reuse in the matched-H2+
+matrix-free parent action, without a cache or public storage surface.
 
 **MT7 - External Cartesian GTO interchange (completed/maintenance).** The
 strict versioned reader, checkpoint-only PySCF exporter, frozen d-shell
@@ -165,7 +167,7 @@ fixture, and explicit determinant cleanup are implemented. The read-only C2
 replay reproduced the accepted occupied subspace without a permutation ledger.
 No solver, Hamiltonian payload, mandatory PySCF dependency, basis-only/live-mf
 export, or release action belongs to this goal. Reader-facing documentation is
-a separate prerequisite before any RC2 decision.
+implemented and included in the immutable RC2 surface.
 
 ## Manager Guardrails
 
@@ -1656,3 +1658,58 @@ Carrying-cost accounting:
   `18/18`, mapped/source-q `528/528`, bounded groups, authority/self-test,
   docs `110/110` and `10/10`, Documenter, diff checks, CI run `32909315394`,
   and Docs run `32909315469`.
+
+## Cartesian Hamiltonian Producer Pass 530 - Authorize Matched-H2+ Parent Workspace
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Reopened only `HP-PQS-PUBLIC-MATCHED-FN-01` for call-local reusable output
+  and scratch in the private matrix-free parent product action and its
+  high135 nuclear accumulation. The accepted audit measured `34,106` product
+  calls at `10.652 s / 21.914 GiB`; `raw_nuclear` accounted inclusively for
+  `21.538 GiB`, with `21.512 GiB` from its nested actions. Each comparison must
+  own disjoint lexical storage; global/task-local caches, shared pools, locks,
+  escaping scratch, public types, and callback-owner changes are forbidden.
+- Source authority is exactly `src/pqs_matched_h2plus.jl`, with `40/60`
+  preferred/hard added-line limits, at most `30` net added lines, and no test
+  edit. Deterministic action parity and every dimension, fingerprint, topology,
+  energy, capture, residual, symmetry, warning, and release tolerance remain
+  fixed. Paired baseline/candidate measurements must remove at least `18 GiB`
+  from the complete comparison without a greater than `10%` warmed-time
+  regression.
+
+Goal advancement / guardrail:
+- MT6 advances a measured allocation bottleneck after the direct-local seed
+  replacement. Terminal Gaussian-sum assembly, compilation/provenance cleanup,
+  Gram policy, compatibility planning, route construction, release work, and
+  duplicate-example policy remain independent and unauthorized.
+
+Medium-term checkpoint:
+- **MT1 - active:** continue only bounded evidence-led conformance repairs.
+- **MT2 - completed:** controlled Cr2 source migration remains closed.
+- **MT3 - active:** represented-Hartree scaling, corrected-WL interpretation,
+  and Standard60 remain separate pending work.
+- **MT4 - active:** residual/protected and consumer-owned PRF questions remain
+  unchanged.
+- **MT5 - active, refined:** RC2 and path-aware CI are accepted; final-v0.2,
+  registration, and citation decisions remain separate.
+- **MT6 - active:** direct-local shell seeds are closed; parent-action scratch
+  reuse is the sole newly opened performance lane.
+- **MT7 - completed/maintenance:** external Cartesian-GTO interchange and its
+  reader documentation remain accepted in RC2.
+
+Carrying-cost accounting:
+- deleted: implementation must remove the allocating private hot path rather
+  than preserve parallel actions; simplified: one per-comparison workspace
+  serves product and nuclear accumulation; quarantined: all excluded
+  performance/release lanes remain separate; not deleted because: the
+  matrix-free parent oracle and existing release owner remain live.
+- exact remaining caller/blocker: repo-manager must return exact parity,
+  independent-workspace concurrency, isolated warmed apply, paired complete-
+  comparison, due-diligence, owner, package, CI, and Docs evidence; added/
+  deleted `src` lines in this authority pass `0/0`; new tests none; new
+  metadata/status fields none; validation: authority render/check/self-test,
+  docs tests, Documenter, manager-log bound, scoped diff, remote Docs/CI, and
+  `git diff --check`.
