@@ -55,21 +55,25 @@ function _pqs_h2plus_parent_fingerprint(pgdg)
     return bytes2hex(sha256(bytes))
 end
 
-function _pqs_h2plus_mode_product(matrix, tensor, axis)
+function _pqs_h2plus_mode_product!(out, storage, matrix, tensor, axis)
     order = axis == 1 ? (1, 2, 3) : axis == 2 ? (2, 1, 3) : (3, 1, 2)
     moved = PermutedDimsArray(tensor, order)
-    product = matrix * reshape(moved, size(tensor, axis), :)
+    product = reshape(storage, size(matrix, 1), :)
+    mul!(product, matrix, reshape(moved, size(tensor, axis), :))
     shaped = reshape(product, size(matrix, 1), size(tensor, order[2]),
         size(tensor, order[3]))
-    return permutedims(shaped, invperm(order))
+    return permutedims!(out, shaped, invperm(order))
 end
 
-function _pqs_h2plus_product_apply(matrices, vector, dimensions)
-    tensor = reshape(vector, reverse(dimensions))
-    for axis in 1:3
-        tensor = _pqs_h2plus_mode_product(matrices[4 - axis], tensor, axis)
-    end
-    return vec(tensor)
+function _pqs_h2plus_product_apply!(out, matrices, vector, dimensions, storage)
+    shape = reverse(dimensions)
+    _pqs_h2plus_mode_product!(reshape(storage[1], shape), storage[3], matrices[3],
+        reshape(vector, shape), 1)
+    _pqs_h2plus_mode_product!(reshape(storage[2], shape), storage[3], matrices[2],
+        reshape(storage[1], shape), 2)
+    _pqs_h2plus_mode_product!(reshape(out, shape), storage[3], matrices[1],
+        reshape(storage[2], shape), 3)
+    return out
 end
 
 function _pqs_h2plus_inverse_sqrt(overlap)
@@ -106,27 +110,40 @@ function _pqs_h2plus_parent_solution(pgdg, expansion, nuclei)
         all(isfinite, matrix) && norm(matrix - transpose(matrix), Inf) <= 1.0e-10 ||
             throw(ArgumentError("matched H2+ parent nuclear factor is invalid"))
     end
-    orthogonalize(vector) = _pqs_h2plus_product_apply(roots, vector, dimensions)
-    raw_kinetic(vector) =
-        _pqs_h2plus_product_apply((kinetic[1], overlaps[2], overlaps[3]),
-            vector, dimensions) +
-        _pqs_h2plus_product_apply((overlaps[1], kinetic[2], overlaps[3]),
-            vector, dimensions) +
-        _pqs_h2plus_product_apply((overlaps[1], overlaps[2], kinetic[3]),
-            vector, dimensions)
-    function raw_nuclear(vector, center)
-        out = zeros(Float64, prod(dimensions))
-        for term in eachindex(expansion.coefficients)
-            out .-= expansion.coefficients[term] .* _pqs_h2plus_product_apply(
-                ntuple(axis -> _pqs_h2plus_factor_term(factors[center][axis], term), 3),
-                vector, dimensions)
+    n = prod(dimensions)
+    storage = ntuple(_ -> zeros(Float64, n), 3)
+    orthogonal, raw, nuclear, product = ntuple(_ -> zeros(Float64, n), 4)
+    product_apply!(out, matrices, vector) =
+        _pqs_h2plus_product_apply!(out, matrices, vector, dimensions, storage)
+    function raw_kinetic!(out, vector)
+        product_apply!(out, (kinetic[1], overlaps[2], overlaps[3]), vector)
+        for matrices in ((overlaps[1], kinetic[2], overlaps[3]),
+            (overlaps[1], overlaps[2], kinetic[3]))
+            product_apply!(product, matrices, vector)
+            out .+= product
         end
         return out
     end
-    component(raw, vector) = orthogonalize(raw(orthogonalize(vector)))
-    raw_h(vector) = raw_kinetic(vector) + raw_nuclear(vector, 1) +
-        raw_nuclear(vector, 2)
-    apply_h!(out, vector) = copyto!(out, component(raw_h, vector))
+    function raw_nuclear!(out, vector, center)
+        fill!(out, 0.0)
+        for term in eachindex(expansion.coefficients)
+            product_apply!(product, ntuple(axis ->
+                _pqs_h2plus_factor_term(factors[center][axis], term), 3), vector)
+            out .-= expansion.coefficients[term] .* product
+        end
+        return out
+    end
+    function apply_h!(out, vector)
+        Base.mightalias(out, vector) &&
+            throw(ArgumentError("matched H2+ parent action input and output alias"))
+        product_apply!(orthogonal, roots, vector)
+        raw_kinetic!(raw, orthogonal)
+        for center in 1:2
+            raw_nuclear!(nuclear, orthogonal, center)
+            raw .+= nuclear
+        end
+        return product_apply!(out, roots, raw)
+    end
     solved = _lanczos_ground_state_apply(apply_h!, prod(dimensions); tol = 1.0e-10)
     orbital = solved.vector
     reapplied = similar(orbital)
@@ -278,8 +295,12 @@ function _pqs_h2plus_capture(base, parent_orbital, overlaps, roots, dimensions)
     sort!(supports) == collect(1:prod(dimensions)) ||
         throw(ArgumentError("matched H2+ terminal supports do not partition the parent"))
     sqrt_factors = ntuple(axis -> overlaps[axis] * roots[axis], 3)
-    metric_orbital = _pqs_h2plus_product_apply(sqrt_factors, parent_orbital, dimensions)
-    parent_coefficients = zeros(Float64, prod(dimensions))
+    n = prod(dimensions)
+    storage = ntuple(_ -> zeros(Float64, n), 3)
+    metric_orbital = zeros(Float64, n)
+    _pqs_h2plus_product_apply!(metric_orbital, sqrt_factors, parent_orbital,
+        dimensions, storage)
+    parent_coefficients = zeros(Float64, n)
     capture = 0.0
     for block in blocks
         indices = block.support_indices
@@ -290,13 +311,15 @@ function _pqs_h2plus_capture(base, parent_orbital, overlaps, roots, dimensions)
         parent_coefficients[indices] .= isnothing(block.coefficients) ? amplitudes :
             block.coefficients * amplitudes
     end
-    residual = parent_orbital -
-        _pqs_h2plus_product_apply(sqrt_factors, parent_coefficients, dimensions)
-    residual_metric = _pqs_h2plus_product_apply(sqrt_factors, residual, dimensions)
+    _pqs_h2plus_product_apply!(metric_orbital, sqrt_factors, parent_coefficients,
+        dimensions, storage)
+    residual = parent_orbital - metric_orbital
+    _pqs_h2plus_product_apply!(metric_orbital, sqrt_factors, residual,
+        dimensions, storage)
     orthogonality = 0.0
     for block in blocks
         indices = block.support_indices
-        source = @view residual_metric[indices]
+        source = @view metric_orbital[indices]
         amplitudes = isnothing(block.coefficients) ? source :
             transpose(block.coefficients) * source
         orthogonality += sum(abs2, amplitudes)
