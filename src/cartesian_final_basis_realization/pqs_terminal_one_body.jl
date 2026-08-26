@@ -116,6 +116,23 @@ function _terminal_gaussian_sum_action(left, right, coefficients, factor_terms)
     return block
 end
 
+function _terminal_operator_buffers(basis::CartesianTerminalBasisRealization)
+    action = tile = block = (0, 0)
+    for right in eachindex(basis.blocks), left in 1:right
+        left_block, right_block = basis.blocks[left], basis.blocks[right]
+        nleft, nright = length(left_block.support_states), length(right_block.support_states)
+        ncols = isnothing(right_block.coefficients) ? nright : size(right_block.coefficients, 2)
+        maxcols = max(1, _TERMINAL_WORKSPACE_BYTES ÷ (8 * max(nleft, 1)))
+        action = max.(action, (nleft, ncols))
+        tile = max.(tile, (nleft, min(nright, maxcols)))
+        if !isnothing(left_block.coefficients)
+            block = max.(block, (size(left_block.coefficients, 2), ncols))
+        end
+    end
+    buffer(shape) = Ref(Matrix{Float64}(undef, shape...))
+    return buffer(action), buffer(tile), buffer(block)
+end
+
 function _add_terminal_gaussian_sum_block!(
     destination, left, right, coefficients, factor_terms, factor, mirror,
     action_buffer, tile_buffer, block_buffer)
@@ -148,9 +165,7 @@ function _accumulate_terminal_gaussian_sum!(
     factors_z;
     scale = -1.0,
 )
-    action_buffer = Ref(Matrix{Float64}(undef, 0, 0))
-    tile_buffer = Ref(Matrix{Float64}(undef, 0, 0))
-    block_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    action_buffer, tile_buffer, block_buffer = _terminal_operator_buffers(basis)
     return _accumulate_terminal_gaussian_sum!(
         destination, basis, coefficients, factors_x, factors_y, factors_z,
         action_buffer, tile_buffer, block_buffer; scale = scale)
@@ -202,9 +217,7 @@ function assemble_terminal_product_operator!(
     axis_z;
     scale = 1.0,
 )
-    action_buffer = Ref(Matrix{Float64}(undef, 0, 0))
-    tile_buffer = Ref(Matrix{Float64}(undef, 0, 0))
-    block_buffer = Ref(Matrix{Float64}(undef, 0, 0))
+    action_buffer, tile_buffer, block_buffer = _terminal_operator_buffers(basis)
     return _assemble_terminal_product_operator!(
         destination, basis, axis_x, axis_y, axis_z,
         action_buffer, tile_buffer, block_buffer; scale = scale)
