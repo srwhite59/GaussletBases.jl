@@ -17,7 +17,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driv
 sha256 = "7657ace602280e75cc254363dc5e1b86e47076114fb0732713526015647a79f9"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driver_usability_workflow.md"
-sha256 = "217ab75432a59e8f304b0c651914c095d7d89401a6cba139089093d32e276dfb"
+sha256 = "944af2c6c0a29e5acaac690851fd12752ad13edd24d620dbdb6156939e4033a0"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md"
 sha256 = "2ef4d41917a122ae2b07ad7e3402e3862c2764c7cf6731736424db0b1e0552d8"
@@ -167,7 +167,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/sliced_hydroge
 sha256 = "20513d784bfbc63edb1f81a52c901e8566903c0d64c222213054c4fe8f2d5221"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
-sha256 = "e33dc9f62ccc3ecc69e8a73b28481436567e912ec666baa231b8411f21c2dd91"
+sha256 = "97d9de92162d97ff4ae82254bbea32e73ee024e35d4654e61d3e43cb869ecf6b"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_shellification_due_diligence.md"
 sha256 = "1c43546e75bf25199ba12065a1f6bf34a58f7c02ab4c7116f1b93e9edbda2cd8"
@@ -1470,12 +1470,11 @@ title = "terminal shellification due-diligence validation"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_shellification_due_diligence.md"
     state = "existing"
 [[records]]
-dependency_ids = []
-evidence_refs = []
-grant = "maintenance"
+dependency_ids = ["HP-FN-03"]
+grant = "implementation"
 id = "HP-DRV-STAGE-FN-01"
-lifecycle = "implemented"
-scope = "maintain separate non-exported stages for working basis, product/moment, unit-nuclear, IDA/MWG interaction, residual augmentation, and Hamiltonian assembly so the driver can bind and time physical objects. Facades remain wrappers over the same construction."
+lifecycle = "approved"
+scope = "Within `src/pqs_source_box_low_order_materialization.jl` only, reuse one call-local set of the existing terminal action/tile/block buffers across the three kinetic product terms and a separate call-local set across physical nuclear centers. Preserve exact matrices, term/block/center order, 64 MiB tiling, stage return shapes, all fingerprints/dimensions/energies/captures/topology/warnings/tolerances, and nonescaping disjoint ownership. This shares the combined 25/35 preferred/hard added-source budget with `HP-FN-03`; no test edit, stage/API/result/metadata change, public control, cache, workspace type, persistent state, new file, arithmetic reorder, or other staged-source edit is authorized. Stop without a source commit if either phase does not reduce allocation, combined reduction is below 3.0 GiB, warmed complete-comparison time regresses over 10%, or safe reuse requires broader machinery."
 surfaces = ["source"]
 title = "visible physics-stage producer surface"
 
@@ -1484,18 +1483,13 @@ title = "visible physics-stage producer surface"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driver_usability_workflow.md"
 
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_base_hamiltonian.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_final_basis_realization/pqs_terminal_one_body.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/pqs_perf_audit_f9ca5a7b_20260825/compile_and_nuclear_followup.md"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "532"
+
     [[records.paths]]
     kind = "source"
     path = "src/pqs_source_box_low_order_materialization.jl"
@@ -1636,10 +1630,10 @@ title = "structural terminal support checks"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-OBJ-01", "HP-OBJ-02"]
-grant = "maintenance"
+grant = "implementation"
 id = "HP-FN-03"
-lifecycle = "implemented"
-scope = "maintain block-pair product assembly and the file-local term-first Gaussian-sum accumulator within the current workspace bound."
+lifecycle = "approved"
+scope = "Within `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` only, pre-size and reuse the existing call-local action/tile/block matrices for blockwise product and Gaussian-sum assembly. Preserve exact kinetic and every by-center unit-nuclear matrix, 64 MiB tiling, block/mirror/mul!/accumulation order, Float64 behavior, all endpoint facts and tolerances, and lexical nonescaping ownership. The 135-term scalar loop in `_fill_terminal_gaussian_sum_action!` must remain byte-for-byte unchanged. This shares the combined 25/35 preferred/hard added-source budget with `HP-DRV-STAGE-FN-01`; no test edit, public API, workspace type, global/task-local/persistent cache, field, metadata, dependency, new file, or arithmetic reorder is authorized. Stop without a source commit on any bit difference, ownership escape, broader machinery, less than 3.0 GiB combined allocation reduction, or more than 10% warmed complete-comparison time regression."
 surfaces = ["source"]
 title = "blockwise one-body assembly"
 
@@ -1648,6 +1642,12 @@ title = "blockwise one-body assembly"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
 
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/pqs_perf_audit_f9ca5a7b_20260825/compile_and_nuclear_followup.md"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "532"
     [[records.evidence_refs]]
     kind = "repo_path"
     value = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"

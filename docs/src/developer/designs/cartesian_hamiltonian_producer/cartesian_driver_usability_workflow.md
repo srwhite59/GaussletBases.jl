@@ -183,6 +183,23 @@ Artifact format and reader behavior remain with their canonical artifact
 owners. This workflow owns no other `bin`, `src`, `tools`, committed test, or
 committed input-fixture file.
 
+### Base-Operator Buffer Ownership
+
+Pass 532 temporarily narrows `HP-DRV-STAGE-FN-01` to
+`src/pqs_source_box_low_order_materialization.jl`. The base kinetic stage may
+reuse one call-local set of the existing terminal action/tile/block buffers
+across its three Cartesian product terms. The base unit-nuclear stage may
+reuse a separate call-local set across all physical centers. It must call the
+existing terminal workspace forms and return the same kinetic and by-center
+unit-nuclear matrices; no stage record, return field, timing field, driver
+control, or facade behavior changes.
+
+Sizing, arithmetic, ownership, parity, performance, validation, combined
+`25/35` added-source budget, and stop conditions are canonical in
+[terminal basis and base assembly](terminal_basis_and_base_assembly.md).
+This caller grant does not authorize changes in `cartesian_base_hamiltonian.jl`,
+the residual-GTO stages, the canonical driver, or any other staged surface.
+
 ## Failure Behavior
 
 The driver rejects unknown keys, `Natom` outside `1:2`, unsupported `nesting`

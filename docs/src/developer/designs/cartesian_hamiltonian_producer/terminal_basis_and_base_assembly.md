@@ -4,6 +4,8 @@ Status: implemented internal producer infrastructure under `HP-OBJ-01`,
 `HP-OBJ-02`, `HP-FILE-01`, `HP-FN-00`, `HP-FN-01`, `HP-FN-02`,
 `HP-WIRE-01`, `HP-FN-03`, `HP-FN-04`, and `HP-FN-05`. Pass 526 completed the
 direct support-local shell-seed replacement; `HP-FN-00` is in maintenance.
+Pass 532 temporarily reopens `HP-FN-03` only for the bounded call-local terminal
+buffer optimization below.
 
 This page is the canonical contract for the terminal-basis objects, PQS
 terminal realization, blockwise exact one-body assembly, localized IDA matrix,
@@ -251,6 +253,60 @@ of this contract.
 The destination and factors must have compatible dimensions. Factors and
 coefficients must be finite; one-dimensional factor matrices must be symmetric
 within their active numerical checks.
+
+### Approved Call-Local Terminal Buffer Reuse
+
+Pass 532 authorizes one storage-only optimization in
+`src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` and its base
+caller in `src/pqs_source_box_low_order_materialization.jl`. The existing
+action, tile, and block buffers may be sized once from the live terminal blocks
+and reused within one base-product or unit-nuclear construction. The three
+kinetic product terms may share one lexical buffer set, and all physical
+nuclear centers may share a separate lexical buffer set. Each buffer remains a
+plain call-local matrix held through the current internal buffer mechanism; it
+must be fully overwritten before use and must not alias a live input,
+destination, accumulator, or another simultaneously live scratch view.
+
+The existing 64 MiB tile bound, terminal-block order, three-term kinetic order,
+upper-triangle/mirroring behavior, `mul!` calls, scaling, and destination
+accumulation order are unchanged. In particular, the exact 135-term scalar loop
+in `_fill_terminal_gaussian_sum_action!` remains byte-for-byte outside this
+authority: term order, multiplication association, signs, and `Float64`
+conversion points may not change.
+
+Buffer ownership is lexical and nonescaping. No global or module-mutable
+storage, task-local state, pool, lock, retained stage/result field, metadata,
+cache, public workspace, or new workspace type is permitted. Independent
+constructions must own disjoint buffers. If safe reuse requires a public API,
+another source owner, persistent state, a new file, arithmetic reordering, or
+disproportionate machinery, implementation stops without a source commit.
+
+The controlled Julia `1.12.6` prototype preserved every matrix bit and reduced
+the two stages by `0.599 s / 3.942 GiB` combined: terminal unit-nuclear
+construction by `0.397 s / 1.550 GiB` and kinetic construction by
+`0.202 s / 2.392 GiB`. Acceptance must compare a clean source baseline with
+the candidate on the same machine and in the same order. It must report fresh
+and immediate-warm elapsed time, allocation, GC, and compilation for the full
+matched H2+ comparison, plus isolated warmed kinetic and unit-nuclear stage
+measurements. Allocation must fall in both stages and by at least `3.0 GiB`
+combined; repeated warmed complete-comparison time must not regress by more
+than `10%`. Wall-time improvement is reported rather than imposed as a tighter
+cross-machine threshold.
+
+Before performance interpretation, the old and candidate kinetic matrices and
+every by-center unit-nuclear matrix must be bitwise identical for the matched
+PQS and White-Lindsey constructions. Parent and terminal fingerprints,
+dimensions, `275 + 960 + 50` accounting, energies, captures, eigen-residuals,
+symmetry, topology, due-diligence warnings, and all release tolerances must
+remain unchanged. Validation uses transient comparison code only, package
+load, the existing public Cartesian and matched-H2+ owners, normal bounded CI,
+authority/docs gates, and explicit terminal due-diligence inspection.
+
+The combined implementation budget is at most `25` preferred and `35` hard
+added source lines across the two authorized files, with no test edit or new
+file. Scalar-loop optimization, cold-compilation/provenance cleanup, Gram
+policy, compatibility deletion, route construction, release work, and the
+duplicate-example question remain separate.
 
 ## Localized IDA Assembly
 

@@ -1750,3 +1750,47 @@ Carrying-cost accounting:
   validation: exact action parity, independent-task probe, H2+ `18/18`, due
   diligence, package load, authority/self-test, docs `110/110` and `10/10`,
   Documenter, diff checks, CI run `32916092379`, and Docs run `32916092431`.
+
+## Cartesian Hamiltonian Producer Pass 532 - Authorize Call-Local Terminal Buffers
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Reopened `HP-FN-03` and `HP-DRV-STAGE-FN-01` only for pre-sizing and reuse of
+  the existing call-local action, tile, and block buffers in terminal one-body
+  assembly and its base low-order caller. One lexical set may serve the three
+  kinetic terms and a separate lexical set may serve all nuclear centers.
+  Ownership must remain disjoint and nonescaping; the 64 MiB tile bound,
+  kinetic/block/center order, `mul!` and accumulation order, and exact 135-term
+  scalar loop are unchanged.
+- The controlled prototype preserved every matrix bit and reduced construction
+  by `0.599 s / 3.942 GiB` combined: `0.397 s / 1.550 GiB` in unit-nuclear and
+  `0.202 s / 2.392 GiB` in kinetic work. The implementation has a combined
+  `25/35` preferred/hard added-source budget across exactly two existing files,
+  with no test or file addition. Acceptance requires both phase allocations to
+  fall, at least `3.0 GiB` combined reduction, and no greater than `10%`
+  repeated-warm complete-comparison time regression.
+
+Goal advancement / guardrail:
+- MT6 reopens only this measured allocation lane after closing parent-action
+  scratch reuse. Exact kinetic and by-center nuclear matrices, matched-H2+
+  dimensions/fingerprints/energies/captures/residuals/topology/warnings, and
+  release tolerances are immutable. Scalar-loop optimization, cold compilation
+  and provenance cleanup, Gram policy, compatibility deletion, route work,
+  duplicate-example policy, and release work remain separate.
+
+Carrying-cost accounting:
+- deleted: implementation should eliminate repeated buffer growth rather than
+  retain parallel allocating call paths; simplified: existing lexical buffers
+  are sized once and reused through existing internal workspace forms;
+  quarantined: all excluded optimization and release lanes; not deleted because:
+  the blockwise terminal kernels, 64 MiB tiling, and exact arithmetic remain
+  live numerical owners.
+- exact remaining caller/blocker: repo-manager must return bitwise PQS/WL
+  kinetic and per-center nuclear parity, fresh/warm phase and complete-comparison
+  measurements, due diligence, package/owner/CI/Docs evidence, and the scoped
+  two-file diff; added/deleted `src` lines in this authority pass `0/0`; new
+  tests none; new metadata/status fields none; validation: authority
+  render/check/self-test, docs tests, package load, Documenter, manager-log
+  bound, scoped docs-only diff, transition CI/Docs, and `git diff --check`.
