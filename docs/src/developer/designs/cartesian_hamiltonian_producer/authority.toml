@@ -167,7 +167,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/sliced_hydroge
 sha256 = "20513d784bfbc63edb1f81a52c901e8566903c0d64c222213054c4fe8f2d5221"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
-sha256 = "88c0865a888e98d13aad6ca93b4fd6a93fc014065592b4198e5a6694ba80430a"
+sha256 = "dadf48672e9b6c1e2d1902df60c0e60e0e1c6744774e7f1037bf34df56aaa6e3"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_shellification_due_diligence.md"
 sha256 = "1c43546e75bf25199ba12065a1f6bf34a58f7c02ab4c7116f1b93e9edbda2cd8"
@@ -1648,10 +1648,10 @@ title = "structural terminal support checks"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-OBJ-01", "HP-OBJ-02"]
-grant = "maintenance"
+grant = "implementation"
 id = "HP-FN-03"
-lifecycle = "implemented"
-scope = "Maintain block-pair product assembly and the term-first Gaussian-sum accumulator with the accepted pre-sized call-local action/tile/block matrices. Preserve exact kinetic and every by-center unit-nuclear matrix, 64 MiB tiling, block/mirror/mul!/accumulation order, Float64 behavior, lexical nonescaping ownership, and all endpoint facts and tolerances. The 135-term scalar loop in `_fill_terminal_gaussian_sum_action!` remains unchanged. Do not restore repeated zero-sized buffer initialization in the base production paths or add a public API, workspace type, global/task-local/persistent cache, escaping scratch state, field, metadata, dependency, new file, or arithmetic reorder."
+lifecycle = "approved"
+scope = "Replace only the exact 135-term scalar reduction in `_fill_terminal_gaussian_sum_action!` within `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`. Precompute at most one call-local nonescaping Float64 `coefficients[term] * fx[term, ix, jx]` table per complete Gaussian-sum action/accumulation call and reuse it across existing block pairs. Process each complete group of exactly four independent support-pair elements with four explicit scalar accumulators and ordinary three-index array access; handle the zero-to-three-element remainder scalar-wise. For every output element preserve term order, addition order, and the exact left-associated `((coefficients * fx) * fy) * fz` Float64 arithmetic and conversion points. Replace the old inner scalar loop; do not retain a parallel fallback. Preferred/hard added-source limits are 45/50 lines while replacing 8--12 lines, with no test edit. Acceptance requires bitwise PQS and White-Lindsey parity for both nuclear centers; unchanged dimensions, fingerprints, energies, captures, eigen-residuals, symmetry, topology, warnings, due diligence, and release tolerances; at least 25% paired warmed isolated-loop speedup for each route; at least 5% paired warmed complete-comparison speedup; no greater than 0.5 s fresh-compilation increase; allocation-free warmed scalar accumulation after preweighting; and no more than 1 MiB incremental call-local allocation. Design evidence SHA-256 is `6c33a5d264c92a45cd2d66e419ceacca901259463a6515dc6cc0a7c8fc8b703a`. Do not add tuples, eight-lane batching, explicit full unrolling, term-major traversal, layout-dependent offsets, a helper, type, file, API, cache, persistent state, dependency, metadata, test, arithmetic reorder, or unrelated optimization/release work. Stop without a source commit if exact parity, safe lexical ownership, the line limits, or the speed/allocation gates fail."
 surfaces = ["source"]
 title = "blockwise one-body assembly"
 
@@ -1672,6 +1672,9 @@ title = "blockwise one-body assembly"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "533"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "534"
     [[records.evidence_refs]]
     kind = "repo_path"
     value = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"

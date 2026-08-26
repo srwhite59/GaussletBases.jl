@@ -157,9 +157,11 @@ metadata, unsupported exports, and development-era tests as conformance work
 identifies them. New scaffolding must advance a live physics or module contract
 and account for what it replaces. The repaired ordinary-QW diatomic front doors
 remain supported; the broader endpoint/correction audit remains a deferred
-retirement map. Direct support-local PQS shell seeds are implemented; the next
-bounded performance target is per-comparison scratch reuse in the matched-H2+
-matrix-free parent action, without a cache or public storage surface.
+retirement map. Direct support-local PQS shell seeds, matched-H2+ parent-action
+scratch reuse, and terminal buffer reuse are implemented. The sole open
+performance target is the exact-order four-element terminal Gaussian-sum
+reduction; compilation/provenance cleanup and every other optimization remain
+separate.
 
 **MT7 - External Cartesian GTO interchange (completed/maintenance).** The
 strict versioned reader, checkpoint-only PySCF exporter, frozen d-shell
@@ -1831,3 +1833,39 @@ Carrying-cost accounting:
   `232/232`, residual-GTO `80/80`, bounded core/IDA/examples, due diligence,
   authority/self-test, docs `110/110` and `10/10`, package load, Documenter,
   diff checks, CI run `32944547034`, and Docs run `32944547012`.
+
+## Cartesian Hamiltonian Producer Pass 534 - Authorize Exact-Order Four-Element Gaussian Sum
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Reopened only `HP-FN-03` for a one-file replacement of the 135-term scalar
+  reduction in `_fill_terminal_gaussian_sum_action!`. Complete groups contain
+  exactly four independent output elements with four explicit accumulators;
+  each element retains term order and the existing left-associated arithmetic.
+  A scalar remainder covers at most three elements. One call-local preweighted
+  `coefficients * fx` table may be reused across existing block pairs.
+- Scratch report SHA-256
+  `6c33a5d264c92a45cd2d66e419ceacca901259463a6515dc6cc0a7c8fc8b703a`
+  records bitwise parity and isolated improvements from `4.9875` to `2.7444 s`
+  for PQS and `4.1457` to `2.1969 s` for White-Lindsey, with `491,600` bytes of
+  call-local preweighting and about `0.15 s` additional fresh compilation.
+
+Goal advancement / guardrail:
+- MT6 opens only this measured scalar-loop target. Acceptance requires bitwise
+  PQS/WL matrices for both centers, every release and due-diligence invariant,
+  paired fresh/warm isolated and complete benchmarks, and bounded compile and
+  allocation cost. The `45/50` source budget replaces the old loop and permits
+  no helper, fallback, test, tuple, cache, API, type, file, or other lane.
+
+Carrying-cost accounting:
+- deleted: implementation must remove the old scalar inner loop; simplified:
+  one lexical preweight and four independent accumulators replace repeated
+  coefficient multiplication; quarantined: compilation, Gram, compatibility,
+  route, duplicate-example, and release work; not deleted because: blockwise
+  tiling, buffers, and exact termwise arithmetic remain live.
+- exact remaining caller/blocker: repo-manager must stop without commit if
+  parity, ownership, budget, isolated speed, complete speed, compilation, or
+  allocation gates fail; added/deleted `src` lines in this authority pass
+  `0/0`; new tests none; new metadata/status fields none.

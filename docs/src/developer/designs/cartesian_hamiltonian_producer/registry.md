@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `5fbc2b12e8fa260f8a24d08ce3005a198671a4800b104def726354cecf766033`.
+> [authority.toml](authority.toml), SHA-256 `9829d0c4cc36a92a8ff8351af912fc6d9b6e3dd4076846caf542f95d1791b0d7`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1004,8 +1004,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-FN-03 - blockwise one-body assembly
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1017,10 +1017,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `3419da6132810d8c4454f5b013c6302ef7842cb3`
   - `manager_pass`: `532`
   - `manager_pass`: `533`
+  - `manager_pass`: `534`
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Dependencies:** `HP-OBJ-01`, `HP-OBJ-02`
-- **Scope:** Maintain block-pair product assembly and the term-first Gaussian-sum accumulator with the accepted pre-sized call-local action/tile/block matrices. Preserve exact kinetic and every by-center unit-nuclear matrix, 64 MiB tiling, block/mirror/mul\!/accumulation order, Float64 behavior, lexical nonescaping ownership, and all endpoint facts and tolerances. The 135-term scalar loop in \`\_fill\_terminal\_gaussian\_sum\_action\!\` remains unchanged. Do not restore repeated zero-sized buffer initialization in the base production paths or add a public API, workspace type, global/task-local/persistent cache, escaping scratch state, field, metadata, dependency, new file, or arithmetic reorder.
+- **Scope:** Replace only the exact 135-term scalar reduction in \`\_fill\_terminal\_gaussian\_sum\_action\!\` within \`src/cartesian\_final\_basis\_realization/pqs\_terminal\_one\_body.jl\`. Precompute at most one call-local nonescaping Float64 \`coefficients\[term\] \* fx\[term, ix, jx\]\` table per complete Gaussian-sum action/accumulation call and reuse it across existing block pairs. Process each complete group of exactly four independent support-pair elements with four explicit scalar accumulators and ordinary three-index array access; handle the zero-to-three-element remainder scalar-wise. For every output element preserve term order, addition order, and the exact left-associated \`((coefficients \* fx) \* fy) \* fz\` Float64 arithmetic and conversion points. Replace the old inner scalar loop; do not retain a parallel fallback. Preferred/hard added-source limits are 45/50 lines while replacing 8--12 lines, with no test edit. Acceptance requires bitwise PQS and White-Lindsey parity for both nuclear centers; unchanged dimensions, fingerprints, energies, captures, eigen-residuals, symmetry, topology, warnings, due diligence, and release tolerances; at least 25% paired warmed isolated-loop speedup for each route; at least 5% paired warmed complete-comparison speedup; no greater than 0.5 s fresh-compilation increase; allocation-free warmed scalar accumulation after preweighting; and no more than 1 MiB incremental call-local allocation. Design evidence SHA-256 is \`6c33a5d264c92a45cd2d66e419ceacca901259463a6515dc6cc0a7c8fc8b703a\`. Do not add tuples, eight-lane batching, explicit full unrolling, term-major traversal, layout-dependent offsets, a helper, type, file, API, cache, persistent state, dependency, metadata, test, arithmetic reorder, or unrelated optimization/release work. Stop without a source commit if exact parity, safe lexical ownership, the line limits, or the speed/allocation gates fail.
 
 ### HP-FN-04 - localized IDA assembly
 

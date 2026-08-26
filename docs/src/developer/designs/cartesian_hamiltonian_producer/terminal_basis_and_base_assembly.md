@@ -301,10 +301,56 @@ authority/docs gates, and explicit terminal due-diligence inspection.
 
 The implementation changed the two authorized files by `+25/-10` lines, with
 no test, file, API, type, metadata, or cache addition. Repeated zero-sized
-buffer initialization was removed from the production paths. Scalar-loop
-optimization, cold-compilation/provenance cleanup, Gram policy, compatibility
-deletion, route construction, release work, and the duplicate-example question
-remain separate.
+buffer initialization was removed from the production paths. At that closeout,
+scalar-loop optimization, cold-compilation/provenance cleanup, Gram policy,
+compatibility deletion, route construction, release work, and the
+duplicate-example question remained separate.
+
+### Approved Four-Element Gaussian-Sum Reduction
+
+Pass 534 separately authorizes replacement of only the exact 135-term scalar
+hot loop in `_fill_terminal_gaussian_sum_action!`. The implementation may
+precompute at most one call-local `Float64` table containing
+`coefficients[term] * fx[term, ix, jx]` per complete Gaussian-sum action or
+accumulation call and reuse it across the existing block pairs. That table is
+plain lexical scratch: it does not escape, enter a stage result, or become a
+cache, field, metadata item, public workspace, or shared mutable object.
+
+Each complete batch processes exactly four independent support-pair output
+elements with four explicit scalar accumulators and ordinary three-index array
+access. A final zero-to-three-element remainder stays scalar. For each output
+element, terms remain in `1:nterms` order and each contribution retains the
+same left-associated `((coefficients * fx) * fy) * fz` `Float64` operations,
+conversion points, and addition order. Batching changes only when independent
+outputs are visited. It does not permit tuples, eight-lane batching, explicit
+full unrolling, term-major traversal, layout-dependent offsets, or another
+algorithm. The old scalar inner loop must be replaced rather than kept as a
+parallel fallback.
+
+The preferred/hard source budget is `45/50` added lines in
+`src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, replacing
+`8--12` lines, with no helper, type, file, API, test, dependency, or other
+owner edit. The design evidence is the transient report with SHA-256
+`6c33a5d264c92a45cd2d66e419ceacca901259463a6515dc6cc0a7c8fc8b703a`.
+Its controlled scratch measurements were bitwise exact and changed isolated
+PQS time from `4.9875` to `2.7444 s` and White-Lindsey time from `4.1457` to
+`2.1969 s`; preweighting added `491,600` call-local bytes and fresh compilation
+about `0.15 s`. These are design evidence, not accepted production results.
+
+Production acceptance requires bitwise equality of the PQS and White-Lindsey
+unit-nuclear matrices for both physical centers and unchanged dimensions,
+fingerprints, energies, captures, eigen-residuals, symmetry, topology,
+due-diligence warnings, and release tolerances. Paired Julia `1.12.6` fresh and
+warmed measurements must show at least `25%` isolated-loop improvement for
+each route and at least `5%` warmed complete-comparison improvement, no more
+than `0.5 s` additional fresh compilation, allocation-free warmed scalar
+accumulation after preweighting, and no more than `1 MiB` incremental call-local
+allocation. If exact parity, lexical ownership, source limits, or the measured
+speed/allocation gates fail, implementation stops without a source commit.
+
+Terminal Gaussian-sum assembly beyond this loop, cold-compilation/provenance
+cleanup, Gram policy, compatibility planning or deletion, route construction,
+release work, and duplicate-example policy remain separate.
 
 ## Localized IDA Assembly
 
