@@ -114,18 +114,19 @@ do not become public. It constructs no `Vee`, artifact, or solver state.
 
 ### Private Parent-Apply Workspace
 
-Pass 530 authorizes one allocation-focused replacement inside the private
-matrix-free parent solve. The accepted Julia `1.12.6` audit measured
+Pass 530 authorized and Pass 531 accepted one allocation-focused replacement
+inside the private matrix-free parent solve. The Julia `1.12.6` audit measured
 `_pqs_h2plus_product_apply` at `34,106` calls, `10.652` seconds, and
 `21.914 GiB` of cumulative allocation. The `248` `raw_nuclear` calls accounted
 for `10.589` seconds and `21.538 GiB` inclusively; their `33,480` nested product
 applications accounted for `21.512 GiB`. These figures overlap and must not be
 added.
 
-The allocating three-axis action may be replaced by a file-private mutating
-action with explicit caller-supplied output and scratch storage. One invocation
-of `_pqs_h2plus_parent_solution` must allocate and exclusively own its complete
-workspace. Every output and intermediate must be fully overwritten before use,
+Commit `fbef95e60ca3aadafe2082b4a63f8522a724e7be` replaced the allocating
+three-axis action with a file-private mutating action using explicit
+caller-supplied output and scratch storage. One invocation of
+`_pqs_h2plus_parent_solution` allocates and exclusively owns its complete
+workspace. Every output and intermediate is fully overwritten before use,
 active input, output, accumulator, and scratch arrays must not alias, and no
 view backed by scratch may escape. `raw_nuclear` may reuse one product output
 while accumulating all `135` terms into a distinct caller-owned result. The
@@ -151,28 +152,24 @@ The parent/PQS/White-Lindsey dimensions, parent and terminal fingerprints,
 eigen-residuals, symmetry checks, due-diligence warnings, and all release
 tolerances must remain unchanged.
 
-Performance acceptance uses Julia `1.12.6`, one Julia thread, and eight BLAS
-threads, with package loading excluded. After workspace creation and warmup,
-measure repeated isolated product actions and report elapsed time and allocated
-bytes per action; no allocation proportional to the parent vector or an axis
-product may remain. In a same-machine clean baseline and candidate, run one
-fresh complete comparison followed by an immediate warmed comparison and
-report time, allocation, GC, and compilation separately. The candidate must
-remove at least `18 GiB` of complete-comparison cumulative allocation relative
-to that paired baseline and must not regress repeated warmed elapsed time by
-more than `10%`. Separately, a transient probe run with at least two Julia
-threads must execute two tasks with independent workspaces and match the serial
-product actions exactly. No benchmark, baseline helper, or performance fixture
-is committed.
+Performance acceptance used Julia `1.12.6`, one Julia thread, and eight BLAS
+threads, with package loading excluded. The warmed isolated action allocated
+`1088` bytes per call and no parent-sized storage. Paired clean baseline and
+candidate comparisons reduced cumulative allocation by `21.606 GiB` fresh and
+`21.963 GiB` warm; warmed elapsed time improved from `33.074` to `32.795`
+seconds. A transient two-task probe used independent workspaces and matched the
+serial product actions exactly. No benchmark, baseline helper, or performance
+fixture is committed. Maintenance must preserve the absence of parent-sized
+per-action allocation and must not reintroduce cross-call storage.
 
-Implementation is confined to `src/pqs_matched_h2plus.jl`, with at most `40`
-preferred and `60` hard added source lines and at most `30` net added source
-lines. Replace or delete the allocating private hot-path helpers rather than
-leaving parallel implementations. No test edit, new file, type, export, public
-binding, dependency, metadata, workflow, example, fixture, or release change is
-authorized. Package load, the unchanged `18/18` matched-H2+ owner, normal
-public CI, terminal due-diligence inspection, and repository authority/docs
-gates remain the acceptance owners.
+Maintenance is confined to `src/pqs_matched_h2plus.jl`. The accepted
+implementation added/deleted `55/32` source lines, stayed within the `60`-line
+hard and `30`-line net limits, and removed the allocating private helpers rather
+than retaining parallel implementations. No test edit, new file, type, export,
+public binding, dependency, metadata, workflow, example, fixture, or release
+change is authorized. Package load, the unchanged `18/18` matched-H2+ owner,
+normal public CI, terminal due-diligence inspection, and repository
+authority/docs gates remain the maintenance owners.
 
 The supported example writes a TSV with exactly the stable row fields above.
 Additional timing, allocation, Git, path, shell-ledger, or report fields from

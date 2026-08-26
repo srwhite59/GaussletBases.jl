@@ -1713,3 +1713,40 @@ Carrying-cost accounting:
   metadata/status fields none; validation: authority render/check/self-test,
   docs tests, Documenter, manager-log bound, scoped diff, remote Docs/CI, and
   `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 531 Closeout - Matched-H2+ Parent Workspace
+
+Commit(s):
+- `fbef95e60ca3aadafe2082b4a63f8522a724e7be` - replace per-action
+  temporaries with one lexical workspace per comparison.
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the one-file `+55/-32` implementation and returned
+  `HP-PQS-PUBLIC-MATCHED-FN-01` to implemented maintenance. The old allocating
+  product helpers were removed. Product and complete parent actions matched
+  exactly (`max_abs = 0.0`), independent tasks used disjoint workspaces, and
+  the public rows remain exactly `12789/1285/1285` with unchanged energies,
+  captures, topology, residuals, symmetry, and warnings.
+- Paired Julia `1.12.6` comparisons reduced cumulative allocation by
+  `21.606 GiB` fresh and `21.963 GiB` warm. Warm time improved from `33.074`
+  to `32.795 s`; the isolated warmed action allocated `1088` bytes per call
+  with no parent-sized allocation.
+
+Goal advancement / guardrail:
+- MT6 closes this allocation target. Terminal Gaussian-sum assembly,
+  cold-compilation/provenance cleanup, Gram policy, compatibility planning,
+  route construction, release work, and duplicate-example policy remain
+  separate and unauthorized.
+
+Carrying-cost accounting:
+- deleted: allocating `_pqs_h2plus_mode_product` and
+  `_pqs_h2plus_product_apply`; simplified: parent and capture actions now use
+  explicit mutating storage; quarantined: all excluded optimization/release
+  lanes remain separate; not deleted because: the matrix-free parent oracle
+  and exact release comparison remain live.
+- exact remaining caller/blocker: none for parent-action scratch reuse; added/
+  deleted `src` lines `55/32`; new tests none; new metadata/status fields none;
+  validation: exact action parity, independent-task probe, H2+ `18/18`, due
+  diligence, package load, authority/self-test, docs `110/110` and `10/10`,
+  Documenter, diff checks, CI run `32916092379`, and Docs run `32916092431`.

@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "e395a418cf0f89000036505c01d1f06ef40afb4477d63486d9db83d79918b0b4"
+sha256 = "e127570de863a9293af07c906cd886aa417f97363b108f5a6826bc5b2f8ff62d"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -3271,10 +3271,10 @@ title = "PQS v0.2 reader-document parity validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-ASPECTSHELL-FN-01", "HP-PQS-COULOMB-ACCURACY-FN-01", "HP-R1-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-PUBLIC-MATCHED-FN-01"
-lifecycle = "approved"
-scope = "Optimize only the private matrix-free parent action in `src/pqs_matched_h2plus.jl`: replace dimension-sized per-call temporaries in `_pqs_h2plus_product_apply` and `raw_nuclear` with explicit output and scratch storage owned exclusively by each `_pqs_h2plus_parent_solution` invocation. Preserve axis/product/Gaussian-term arithmetic order, exact deterministic action parity, independent concurrent-call ownership, all dimensions/fingerprints/topology/energies/captures/residuals/symmetry/warnings, and existing release tolerances. No mutable global, task-local store, pool, cache, lock, hidden persistent state, escaping scratch view, public workspace/API/type, second source owner, test edit, dependency, metadata, workflow, example, fixture, or release change. Preferred/hard added-source limits are 40/60 lines with at most 30 net added lines. Stop without a source commit if safe reuse requires public expansion, another owner, callback/lifecycle changes, disproportionate machinery, less than 18 GiB paired complete-comparison allocation reduction, or more than 10% repeated warmed-time regression."
+lifecycle = "implemented"
+scope = "Maintain only the accepted call-local workspace implementation in `src/pqs_matched_h2plus.jl`: each `_pqs_h2plus_parent_solution` invocation owns disjoint output and scratch storage used by the mutating three-axis product action and `raw_nuclear` accumulation. Preserve exact deterministic action parity, axis/product/Gaussian-term arithmetic order, no parent-sized per-action allocation, independent concurrent-call ownership, and all dimensions/fingerprints/topology/energies/captures/residuals/symmetry/warnings and release tolerances. Do not restore the allocating helpers or add a mutable global, task-local store, pool, cache, lock, hidden persistent state, escaping scratch view, public workspace/API/type, second source owner, test edit, dependency, metadata, workflow, example, fixture, or release change."
 surfaces = ["source"]
 title = "matched H2+ public comparison"
 
@@ -3293,8 +3293,14 @@ title = "matched H2+ public comparison"
     kind = "external_path"
     value = "/Users/srw/dmrgtmp/pqs_perf_audit_f9ca5a7b_20260825/report.md"
     [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/pass530_parent_workspace_20260825/report.md"
+    [[records.evidence_refs]]
     kind = "git_commit"
     value = "058ee54f45c759949f70b54a699ccc318476f8ac"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "fbef95e60ca3aadafe2082b4a63f8522a724e7be"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "481"
@@ -3304,6 +3310,9 @@ title = "matched H2+ public comparison"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "530"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "531"
 
     [[records.paths]]
     kind = "source"
