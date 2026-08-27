@@ -158,9 +158,10 @@ identifies them. New scaffolding must advance a live physics or module contract
 and account for what it replaces. The repaired ordinary-QW diatomic front doors
 remain supported; the broader endpoint/correction audit remains a deferred
 retirement map. Direct support-local PQS shell seeds, matched-H2+ parent-action
-scratch reuse, and terminal buffer reuse are implemented. The sole open
-performance target is the exact-order four-element terminal Gaussian-sum
-reduction; compilation/provenance cleanup and every other optimization remain
+scratch reuse, terminal buffer reuse, and the exact-order four-element
+Gaussian-sum reduction are implemented. The next performance investigation is
+the cold reporting boundary; it has no implementation grant. Eight-lane batching,
+further loop restructuring, compatibility cleanup, and release work remain
 separate.
 
 **MT7 - External Cartesian GTO interchange (completed/maintenance).** The
@@ -1869,3 +1870,50 @@ Carrying-cost accounting:
   parity, ownership, budget, isolated speed, complete speed, compilation, or
   allocation gates fail; added/deleted `src` lines in this authority pass
   `0/0`; new tests none; new metadata/status fields none.
+
+## Cartesian Hamiltonian Producer Pass 535 Closeout - Exact-Order Four-Element Gaussian Sum
+
+Commit(s):
+- `94ec277d954b5435a04b0ad68ae352c95b0434c7` - batch exactly four
+  independent terminal Gaussian-sum outputs while preserving each element's
+  135-term arithmetic order.
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the one-file `+50/-14` implementation at, but not beyond, the hard
+  added-line limit and returned `HP-FN-03` to implemented maintenance. The old
+  scalar loop was deleted; no fallback, helper, tuple machinery, API, test,
+  cache, metadata, or file was added. Both nuclei's PQS and White-Lindsey
+  matrices matched their frozen hashes bitwise, and all endpoint facts stayed
+  unchanged.
+- Warm isolated time improved `46.50%` for PQS (`5.021 -> 2.687 s`) and
+  `47.09%` for White-Lindsey (`4.125 -> 2.182 s`). Warm complete time improved
+  `25.35--25.60%`; fresh complete time improved `12.85--14.58%`. Compilation
+  increased at most `0.134 s`; scalar accumulation remained allocation-free,
+  and call-local preweighting used `491,600` bytes.
+
+Medium-term checkpoint:
+- **MT1 active:** continue only bounded evidence-led conformance repairs.
+- **MT2 completed:** controlled Cr2 source migration remains closed.
+- **MT3 active:** represented-Hartree scaling, corrected-WL interpretation,
+  and Standard60 remain separate pending work.
+- **MT4 active:** residual/protected and consumer-owned PRF questions are
+  unchanged.
+- **MT5 active:** RC2 and path-aware CI remain accepted; final-v0.2,
+  registration, and citation decisions remain separate.
+- **MT6 active, refined:** direct shell seeds, parent scratch, terminal buffers,
+  and four-element reduction are closed. The next investigation is cold
+  reporting, not eight-lane batching; neither has source authority here.
+- **MT7 completed/maintenance:** external Cartesian-GTO interchange remains
+  accepted in RC2.
+
+Carrying-cost accounting:
+- deleted: old scalar inner loop; simplified: four explicit accumulators share
+  one lexical preweight; quarantined: eight-lane and all unrelated optimization
+  or release lanes; not deleted because: exact-order remainder handling,
+  blockwise tiling, and current buffers remain live.
+- exact remaining caller/blocker: none for Pass 534; added/deleted `src` lines
+  `50/14`; new tests none; new metadata/status fields none; validation:
+  augmented `464/464`, release `18/18`, public Cartesian `232/232`, residual-
+  GTO/MWG `80/80`, docs `110/110 + 10/10`, package load, authority/self-test,
+  Documenter, diff checks, CI `33023091521`, and Docs `33023091519`.

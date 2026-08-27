@@ -306,13 +306,14 @@ scalar-loop optimization, cold-compilation/provenance cleanup, Gram policy,
 compatibility deletion, route construction, release work, and the
 duplicate-example question remained separate.
 
-### Approved Four-Element Gaussian-Sum Reduction
+### Implemented Four-Element Gaussian-Sum Reduction
 
-Pass 534 separately authorizes replacement of only the exact 135-term scalar
-hot loop in `_fill_terminal_gaussian_sum_action!`. The implementation may
-precompute at most one call-local `Float64` table containing
+Pass 534 authorized, and commit `94ec277d954b5435a04b0ad68ae352c95b0434c7`
+implemented, replacement of only the exact 135-term scalar hot loop in
+`_fill_terminal_gaussian_sum_action!`. The implementation precomputes one
+call-local `Float64` table containing
 `coefficients[term] * fx[term, ix, jx]` per complete Gaussian-sum action or
-accumulation call and reuse it across the existing block pairs. That table is
+accumulation call and reuses it across the existing block pairs. That table is
 plain lexical scratch: it does not escape, enter a stage result, or become a
 cache, field, metadata item, public workspace, or shared mutable object.
 
@@ -324,33 +325,45 @@ same left-associated `((coefficients * fx) * fy) * fz` `Float64` operations,
 conversion points, and addition order. Batching changes only when independent
 outputs are visited. It does not permit tuples, eight-lane batching, explicit
 full unrolling, term-major traversal, layout-dependent offsets, or another
-algorithm. The old scalar inner loop must be replaced rather than kept as a
-parallel fallback.
+algorithm. The old scalar inner loop was deleted; no parallel fallback remains.
 
-The preferred/hard source budget is `45/50` added lines in
-`src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, replacing
-`8--12` lines, with no helper, type, file, API, test, dependency, or other
-owner edit. The design evidence is the transient report with SHA-256
+The exact implementation delta is `+50/-14` lines in
+`src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, reaching but
+not exceeding the authorized `50`-line hard limit. It added no helper, tuple
+machinery, type, file, API, test, cache, metadata, dependency, or other owner
+edit. The design evidence is the transient report with SHA-256
 `6c33a5d264c92a45cd2d66e419ceacca901259463a6515dc6cc0a7c8fc8b703a`.
 Its controlled scratch measurements were bitwise exact and changed isolated
 PQS time from `4.9875` to `2.7444 s` and White-Lindsey time from `4.1457` to
 `2.1969 s`; preweighting added `491,600` call-local bytes and fresh compilation
-about `0.15 s`. These are design evidence, not accepted production results.
-
-Production acceptance requires bitwise equality of the PQS and White-Lindsey
-unit-nuclear matrices for both physical centers and unchanged dimensions,
+about `0.15 s`. Production validation then matched the frozen SHA-256 hashes
+of both nuclei's PQS and White-Lindsey unit-nuclear matrices bitwise. Dimensions,
 fingerprints, energies, captures, eigen-residuals, symmetry, topology,
-due-diligence warnings, and release tolerances. Paired Julia `1.12.6` fresh and
-warmed measurements must show at least `25%` isolated-loop improvement for
-each route and at least `5%` warmed complete-comparison improvement, no more
-than `0.5 s` additional fresh compilation, allocation-free warmed scalar
-accumulation after preweighting, and no more than `1 MiB` incremental call-local
-allocation. If exact parity, lexical ownership, source limits, or the measured
-speed/allocation gates fail, implementation stops without a source commit.
+due-diligence warnings, column accounting, and release tolerances were
+unchanged.
 
-Terminal Gaussian-sum assembly beyond this loop, cold-compilation/provenance
-cleanup, Gram policy, compatibility planning or deletion, route construction,
-release work, and duplicate-example policy remain separate.
+Paired Julia `1.12.6` production measurements improved warmed isolated PQS
+from `5.021` to `2.687 s` (`46.50%`) and White-Lindsey from `4.125` to
+`2.182 s` (`47.09%`). The warmed complete comparison improved from `32.286`
+to `24.020--24.102 s` (`25.35--25.60%`), and fresh comparison improved from
+`60.770` to `51.911--52.961 s` (`12.85--14.58%`). Maximum additional fresh
+compilation was `0.134 s`. Scalar accumulation remained allocation-free;
+call-local preweighting used `491,600` bytes, below the `1 MiB` gate.
+
+Validation passed the augmented owner `464/464`, matched-H2+ release owner
+`18/18`, public Cartesian owner `232/232`, residual-GTO/MWG owner `80/80`,
+docs `110/110 + 10/10`, package load, authority check/self-test, Documenter,
+and diff checks. CI run `33023091521` and Docs run `33023091519` passed. The
+matched fixture retained `21 x 21 x 29` parent axes, dimension `12789`,
+terminal dimension `1285`, `10`-bohr padding, `275 + 960 + 50` columns, eight
+shells, and two slabs. The inspected augmented endpoint retained `9 x 9 x 15`
+axes, `4`-bohr padding, and terminal dimension `487`.
+
+Eight-lane batching and the measured no-more-than-`2%` remaining loop gain are
+not a follow-on target. Further loop restructuring, cold aggregate-wrapper
+compilation, compatibility cleanup, Gram changes, route work, release work,
+and duplicate-example policy remain separate. The next performance
+investigation should examine the cold reporting boundary under new authority.
 
 ## Localized IDA Assembly
 
