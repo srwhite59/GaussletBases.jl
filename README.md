@@ -1,6 +1,6 @@
 # GaussletBases.jl
 
-[![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://srwhite59.github.io/GaussletBases.jl/dev/)
+[![Docs](https://img.shields.io/badge/docs-stable-blue.svg)](https://srwhite59.github.io/GaussletBases.jl/stable/)
 
 Gausslets are localized, orthogonal basis functions constructed from short
 linear combinations of Gaussians.
@@ -37,13 +37,13 @@ If you are new, start with the radial path. It is also the most recent
 published line in the repo: the radial gausslet paper is now posted on arXiv,
 <https://doi.org/10.48550/arXiv.2603.22646>.
 
-Documentation: <https://srwhite59.github.io/GaussletBases.jl/dev/>
+Documentation: <https://srwhite59.github.io/GaussletBases.jl/stable/>
 
 Current public capability guides:
 
-- [Projected q-shells](https://srwhite59.github.io/GaussletBases.jl/dev/manual/projected_q_shells/)
-- [Reference-density Hartree screening](https://srwhite59.github.io/GaussletBases.jl/dev/manual/reference_density_hartree_screening/)
-- [External Cartesian GTO transfer](https://srwhite59.github.io/GaussletBases.jl/dev/manual/external_cartesian_gto_transfer/),
+- [Projected q-shells](https://srwhite59.github.io/GaussletBases.jl/stable/manual/projected_q_shells/)
+- [Reference-density Hartree screening](https://srwhite59.github.io/GaussletBases.jl/stable/manual/reference_density_hartree_screening/)
+- [External Cartesian GTO transfer](https://srwhite59.github.io/GaussletBases.jl/stable/manual/external_cartesian_gto_transfer/),
   using a checkpoint-only exporter; PySCF and NumPy are optional dependencies
   of that external command
 
@@ -75,7 +75,7 @@ At present, install the package directly from GitHub:
 
 ```julia
 using Pkg
-Pkg.add(url = "https://github.com/srwhite59/GaussletBases.jl")
+Pkg.add(url = "https://github.com/srwhite59/GaussletBases.jl", rev = "v0.2.0")
 ```
 
 Then load it with:
@@ -98,7 +98,7 @@ center of the last retained radial gausslet, so it is the main user-facing
 scientific extent. The library chooses the separate internal build and
 quadrature extents automatically. The fuller setup discussion lives in the
 rendered manual at
-[Recommended atomic setup](https://srwhite59.github.io/GaussletBases.jl/dev/howto/recommended_atomic_setup/).
+[Recommended atomic setup](https://srwhite59.github.io/GaussletBases.jl/stable/howto/recommended_atomic_setup/).
 
 The call
 
@@ -146,8 +146,8 @@ library normally owns the internal quadrature extent.
 If you want the same workflow explained more slowly, with diagnostics and
 setup discussion, go next to:
 
-- [First radial workflow](https://srwhite59.github.io/GaussletBases.jl/dev/manual/)
-- [Recommended atomic setup](https://srwhite59.github.io/GaussletBases.jl/dev/howto/recommended_atomic_setup/)
+- [First radial workflow](https://srwhite59.github.io/GaussletBases.jl/stable/manual/)
+- [Recommended atomic setup](https://srwhite59.github.io/GaussletBases.jl/stable/howto/recommended_atomic_setup/)
 
 ## What you usually do next
 
@@ -192,10 +192,10 @@ julia --project=. examples/04_hydrogen_ground_state.jl
 
 Then continue with:
 
-- [Documentation home](https://srwhite59.github.io/GaussletBases.jl/dev/)
-- [Manual](https://srwhite59.github.io/GaussletBases.jl/dev/manual/)
-- [Projected q-shells (PQS)](https://srwhite59.github.io/GaussletBases.jl/dev/manual/projected_q_shells/)
-- [Example guide](https://srwhite59.github.io/GaussletBases.jl/dev/howto/example_guide/)
+- [Documentation home](https://srwhite59.github.io/GaussletBases.jl/stable/)
+- [Manual](https://srwhite59.github.io/GaussletBases.jl/stable/manual/)
+- [Projected q-shells (PQS)](https://srwhite59.github.io/GaussletBases.jl/stable/manual/projected_q_shells/)
+- [Example guide](https://srwhite59.github.io/GaussletBases.jl/stable/howto/example_guide/)
 
 If you want the next atomic step after those four, run:
 
@@ -210,22 +210,22 @@ substrate.
 
 The main entry pages are:
 
-- [Documentation home](https://srwhite59.github.io/GaussletBases.jl/dev/)  
+- [Documentation home](https://srwhite59.github.io/GaussletBases.jl/stable/)
   The rendered docs home page.
-- [Manual](https://srwhite59.github.io/GaussletBases.jl/dev/manual/)  
+- [Manual](https://srwhite59.github.io/GaussletBases.jl/stable/manual/)
   The best first read after this README.
-- [Algorithms](https://srwhite59.github.io/GaussletBases.jl/dev/algorithms/)  
+- [Algorithms](https://srwhite59.github.io/GaussletBases.jl/stable/algorithms/)
   Basis-construction and operator-construction recipes with pseudocode, code
   pointers, and paper references.
-- [Examples](https://srwhite59.github.io/GaussletBases.jl/dev/examples/)  
+- [Examples](https://srwhite59.github.io/GaussletBases.jl/stable/examples/)
   The curated runnable-example entry point.
-- [Reference](https://srwhite59.github.io/GaussletBases.jl/dev/reference/)  
+- [Reference](https://srwhite59.github.io/GaussletBases.jl/stable/reference/)
   Curated API reference for the main exported entry points.
-- [Current atomic branch](https://srwhite59.github.io/GaussletBases.jl/dev/explanations/current_atomic_branch/)
+- [Current atomic branch](https://srwhite59.github.io/GaussletBases.jl/stable/explanations/current_atomic_branch/)
   The user-facing atomic status path.
-- [Current ordinary branch](https://srwhite59.github.io/GaussletBases.jl/dev/explanations/current_ordinary_branch/)
+- [Current ordinary branch](https://srwhite59.github.io/GaussletBases.jl/stable/explanations/current_ordinary_branch/)
   The user-facing ordinary-branch status path.
-- [Developer Notes](https://srwhite59.github.io/GaussletBases.jl/dev/developer/)
+- [Developer Notes](https://srwhite59.github.io/GaussletBases.jl/stable/developer/)
   Lower-priority architecture and supporting-note entry points.
 
 The narrower notes remain in the repository, but they should be read as
@@ -243,11 +243,11 @@ deliberately:
 
 For branch-specific current status, use:
 
-- [Current atomic branch](https://srwhite59.github.io/GaussletBases.jl/dev/explanations/current_atomic_branch/)
-- [Current ordinary branch](https://srwhite59.github.io/GaussletBases.jl/dev/explanations/current_ordinary_branch/)
+- [Current atomic branch](https://srwhite59.github.io/GaussletBases.jl/stable/explanations/current_atomic_branch/)
+- [Current ordinary branch](https://srwhite59.github.io/GaussletBases.jl/stable/explanations/current_ordinary_branch/)
 
 For path-specific construction details, use the rendered
-[Algorithms](https://srwhite59.github.io/GaussletBases.jl/dev/algorithms/)
+[Algorithms](https://srwhite59.github.io/GaussletBases.jl/stable/algorithms/)
 pages rather than older flat note-history files.
 
 ## Current scope and limits

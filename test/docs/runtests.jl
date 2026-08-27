@@ -79,12 +79,12 @@
             "integral-diagonal approximation (IDA)",
             "## Best first path through the repository",
             "## Documentation map",
-            "https://srwhite59.github.io/GaussletBases.jl/dev/manual/",
-            "https://srwhite59.github.io/GaussletBases.jl/dev/reference/",
-            "https://srwhite59.github.io/GaussletBases.jl/dev/developer/",
-            "[Projected q-shells](https://srwhite59.github.io/GaussletBases.jl/dev/manual/projected_q_shells/)",
-            "[Reference-density Hartree screening](https://srwhite59.github.io/GaussletBases.jl/dev/manual/reference_density_hartree_screening/)",
-            "[External Cartesian GTO transfer](https://srwhite59.github.io/GaussletBases.jl/dev/manual/external_cartesian_gto_transfer/)",
+            "https://srwhite59.github.io/GaussletBases.jl/stable/manual/",
+            "https://srwhite59.github.io/GaussletBases.jl/stable/reference/",
+            "https://srwhite59.github.io/GaussletBases.jl/stable/developer/",
+            "[Projected q-shells](https://srwhite59.github.io/GaussletBases.jl/stable/manual/projected_q_shells/)",
+            "[Reference-density Hartree screening](https://srwhite59.github.io/GaussletBases.jl/stable/manual/reference_density_hartree_screening/)",
+            "[External Cartesian GTO transfer](https://srwhite59.github.io/GaussletBases.jl/stable/manual/external_cartesian_gto_transfer/)",
         )
         @test contains_all_lower(
             readme,
@@ -95,12 +95,17 @@
             "pyscf and numpy are optional dependencies",
         )
         @test !occursin("Gausslets.jl", readme)
-        @test occursin("version = \"0.2.0-rc2\"", root_project)
-        @test startswith(changelog, "# Changelog\n\n## v0.2.0-rc2")
+        @test occursin("rev = \"v0.2.0\"", readme)
+        @test !occursin("https://srwhite59.github.io/GaussletBases.jl/dev/", readme)
+        @test occursin("version = \"0.2.0\"", root_project)
+        @test startswith(changelog, "# Changelog\n\n## v0.2.0")
         @test contains_all(changelog, "cartesian_residual_gto_mwg_system",
             "strict reader", "checkpoint-only PySCF exporter",
             "caller-thresholded closest-determinant", "Supported-floor, PQS, and Screening",
-            "invalid package exports", "## v0.2.0-rc1")
+            "invalid package exports", "support-local shell-seed construction",
+            "exact-order four-element", "path-aware CI fail closed",
+            "all unchanged release assertions", "preserve accepted public numerics",
+            "## v0.2.0-rc2", "## v0.2.0-rc1")
 
         @test contains_all(
             status,
@@ -414,6 +419,8 @@
               "https://srwhite59.github.io/GaussletBases.jl/v0.2.0-rc1/"
         @test "$(_DOCS_SITE)/$(_documentation_target("push", "refs/tags/v0.2.0-rc2")[2])/" ==
               "https://srwhite59.github.io/GaussletBases.jl/v0.2.0-rc2/"
+        @test "$(_DOCS_SITE)/$(_documentation_target("push", "refs/tags/v0.2.0")[2])/" ==
+              "https://srwhite59.github.io/GaussletBases.jl/v0.2.0/"
         for ref in ("refs/tags/v0.2", "refs/tags/release-v0.2.0",
                     "refs/tags/v0.2.0+build", "refs/tags/v01.2.3")
             @test_throws ErrorException _documentation_target("push", ref)
@@ -480,6 +487,19 @@
                 """
             docs_environment = joinpath(_PROJECT_ROOT, "docs")
             command = `$(Base.julia_cmd()) --project=$docs_environment --startup-file=no -e $script`
+            @test success(command)
+        end
+        mktempdir() do directory
+            foreach(entry -> mkpath(joinpath(directory, entry)),
+                ("dev", "v0.2.0", "v0.2.0-rc2", "v0.2.0-rc1"))
+            script = """
+                using Documenter
+                entries, symlinks = Documenter.Writers.HTMLWriter.expand_versions(
+                    $(repr(directory)), $(repr(_DOCS_VERSIONS)))
+                @assert entries == ["stable", "v0.2", "v0.2.0-rc2", "v0.2.0-rc1", "dev"]
+                @assert symlinks == ["stable" => "v0.2.0", "v0.2" => "v0.2.0"]
+                """
+            command = `$(Base.julia_cmd()) --project=$(joinpath(_PROJECT_ROOT, "docs")) --startup-file=no -e $script`
             @test success(command)
         end
         @test !occursin("check_cartesian_authority", docs_make)

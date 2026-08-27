@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.2.0
+
+### Changed
+
+- Reduced PQS construction cost through support-local shell-seed construction,
+  safe call-local workspace reuse, and terminal-buffer reuse.
+- Accelerated terminal Gaussian sums with an exact-order four-element path.
+- Made path-aware CI fail closed: candidate and code changes retain the full
+  numerical gates; proven docs-only main pushes use lightweight package/docs checks.
+- Example 41 output and all unchanged release assertions now share one matched H2+
+  comparison instead of executing the comparison twice.
+
+### Scope
+
+- These changes preserve accepted public numerics. v0.2.0 is the supported public
+  package version closest to software used in the separate PQS and reference-density
+  Hartree-screening work, not an exact archive of either paper's complete computational history.
+
 ## v0.2.0-rc2
 
 ### Added
