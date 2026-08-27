@@ -85,8 +85,10 @@ archaeology and are not normal startup reading.
   links, and explicit RC2 selector retention without changing implementation,
   dependencies, workflows, or scientific policy. Its immutable annotated tag
   is accepted at object `7c8a21b99`, and package-centered GitHub prerelease
-  `376503169` is published and validated. Registration, citation, stable
-  documentation, and final v0.2 remain separate.
+  `376503169` is published and validated. Direct final `v0.2.0` candidate
+  preparation is approved without RC3 under a modest package-nearest-software
+  claim. Exact candidate freeze, conditional tag/publication authority,
+  registration, and citation remain separate.
 - Production defaults, public workflows, corrected artifacts, and Cr2 endpoint
   claims remain unchanged unless separately authorized.
 
@@ -151,9 +153,10 @@ reorganization and cutover are complete. The RC1 candidate, immutable tag,
 versioned folder, explicit selector entry, and package-centered GitHub
 prerelease are accepted. The RC2 candidate, immutable tag, versioned folder,
 selector entry, and exact GitHub prerelease are also accepted. Path-aware CI is
-implemented and accepted as a bounded release-efficiency refinement. Keep
-PQS and screening as separate method and citation surfaces. Final release,
-registration, and citation metadata remain separate decisions.
+implemented and accepted as a bounded release-efficiency refinement. Direct
+final-candidate preparation is active; it must preserve separate PQS and
+screening surfaces and freeze exact identity before one later conditional
+tag/publication grant. Registration and citation metadata remain separate.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
 metadata, unsupported exports, and development-era tests as conformance work
@@ -1134,3 +1137,43 @@ Carrying-cost accounting:
   closed with exact numerical parity and lower measured cost.
 - Final v0.2, citation/registration, represented-Hartree scaling, corrected-WL
   interpretation, and any new cold-reporting work remain separate decisions.
+
+## Cartesian Hamiltonian Producer Pass 538 - Authorize Direct v0.2.0 Candidate
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Added `HP-PQS-PUBLIC-V020-FN-01/TEST-01` for one direct final candidate from
+  accepted post-RC2 `main`; no RC3 is required. The implementation may change
+  only the package version, prepend a concise post-RC2 changelog section, move
+  README installation/documentation links to the immutable final tag and
+  `/stable/`, and update focused docs tests. RC2/RC1 history, source, exports,
+  dependencies, examples, numerical policy, workflows, and `docs/make.jl`
+  remain exact.
+- The release claim is deliberately limited: v0.2.0 is the supported public
+  package version closest to software used during the separate PQS and
+  reference-density screening work, not an exact archive of either paper's
+  computational history. Changelog scope is post-RC2 performance, fail-closed
+  path-aware CI, and removal of duplicate release execution, with no manuscript
+  or benchmark narrative.
+
+Goal advancement / guardrail:
+- MT5 advances to final-candidate preparation. This pass grants no tag or
+  release. Candidate acceptance must freeze SHA, tree, archive, and an exact
+  unpublished release body before a second docs-only pass may open one
+  conditional tag-plus-publication transaction. The exact tag will use
+  identity/install and independent Docs/Pages checks rather than rerunning the
+  three numerical gates; a third docs-only pass closes the transaction.
+
+Carrying-cost accounting:
+- deleted: no code; simplified: no RC3 and one established three-pass release
+  process; quarantined: registration, citation, paper metadata, and all new
+  scientific/performance work; not deleted because: RC1/RC2 remain immutable
+  release evidence.
+- exact remaining caller/blocker: repo-manager must prepare and fully validate
+  the candidate, then return exact freeze and release-body identities; added/
+  deleted `src` lines `0/0`; new files none; new tests: focused existing docs
+  owner only; new metadata/status fields none; validation: authority
+  render/check/self-test, docs tests, Documenter, manager-log bound, scoped
+  docs-only review, remote CI/Docs, and `git diff --check`.

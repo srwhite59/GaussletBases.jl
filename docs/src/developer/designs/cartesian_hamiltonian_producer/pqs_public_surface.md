@@ -1304,3 +1304,142 @@ No RC tag mutation, RC1 release edit, custom asset, registration, citation,
 stable alias, final `v0.2.0`, repository-metadata change, or tracked source,
 API, test, example, dependency, workflow, numerical, or manuscript mutation
 is authorized.
+
+## v0.2.0 Final Candidate And Conditional Publication Process
+
+`HP-PQS-PUBLIC-V020-FN-01` and `HP-PQS-PUBLIC-V020-TEST-01` authorize one
+direct final-candidate preparation from the accepted post-RC2 `main`. No RC3
+is required. This is candidate authority only: it does not create, push, or
+publish `v0.2.0`.
+
+The final package claim is deliberately modest:
+
+> v0.2.0 is the supported public package version closest to the software used
+> during the PQS and reference-density Hartree-screening work. It is not an
+> exact archive of either paper's complete computational history.
+
+PQS and reference-density Hartree screening remain distinct method surfaces.
+The final release must not present them as one combined method, one combined
+paper, or an exact reproduction archive. External Cartesian-GTO transfer is a
+separate public interoperability surface. GaussletBases provides basis and
+operator construction, orbital transfer, and bounded screening algebra; it is
+not a complete SCF, correlated-solver, or paper-campaign package.
+
+### Candidate Edits
+
+The candidate implementation may make exactly these tracked changes:
+
+1. change the root `Project.toml` version from `0.2.0-rc2` to `0.2.0`;
+2. prepend one concise `v0.2.0` section to `CHANGELOG.md`, leaving the accepted
+   RC2 and RC1 sections byte-identical;
+3. change the README installation command to the immutable future tag
+   `rev = "v0.2.0"` and point its rendered-documentation links at `/stable/`
+   while retaining the radial workflow as the recommended beginner route; and
+4. update only the existing focused documentation tests for the final version,
+   changelog heading, README links, exact final-tag canonical path, and standard
+   Documenter final-release selector behavior.
+
+The changelog section must group, rather than narrate commit by commit, the
+post-RC2 changes:
+
+- support-local PQS shell-seed construction and safe call-local workspace and
+  terminal-buffer reuse;
+- the exact-order four-element terminal Gaussian-sum acceleration;
+- fail-closed path-aware CI that preserves full candidate/code gates while
+  using lightweight package/docs checks for proven docs-only main pushes; and
+- one matched-H2+ comparison shared by Example 41 output and all unchanged
+  release assertions instead of duplicate execution.
+
+The changelog must state that these changes preserve the accepted public
+numerics. It must not contain manager-pass history, detailed allocation or
+timing tables, manuscript headline numbers, private paper-validation history,
+paper titles or status, DOI invention, registration claims, or promises about
+paper publication.
+
+`docs/make.jl` already contains the standard `"stable" => "v^"` and `"v#.#"`
+policy plus exact RC2 and RC1 prerelease retention. The candidate must not edit
+that policy or the Docs workflow. Focused tests must retain the prerelease-only
+fixture proving that RC tags do not create `stable`, then add or update a
+bounded final-folder fixture proving that `v0.2.0` selects the real `stable`
+alias while RC2, RC1, and `dev` remain available.
+
+Stop-and-report budgets are:
+
+- `Project.toml`: exactly one version-line replacement;
+- `CHANGELOG.md`: preferred at most `18`, hard at most `24` added lines;
+- `README.md`: preferred at most `4`, hard at most `8` added lines, with URL
+  changes otherwise performed as replacements;
+- `test/docs/runtests.jl`: preferred at most `20`, hard at most `30` added
+  lines; and
+- no new file.
+
+These are review bounds, not reasons to obscure the release statement or test
+logic. If a truthful candidate requires source, API, dependency, numerical,
+example, workflow, fixture-format, manifest-policy, or other test-owner work,
+make no candidate commit and return the exact blocker.
+
+### Candidate Acceptance And Freeze
+
+The candidate commit changes non-documentation-only paths and therefore must
+take the full CI route exactly once. Acceptance requires:
+
+- synchronized `main` and `origin/main`, with only the two established
+  untracked handoffs and no tracked root `Manifest.toml`;
+- exact version `0.2.0`, concise changelog traceability, and unchanged public
+  exports, dependencies, examples, implementation, and numerical policy;
+- package installation and load on Julia `1.10` and Julia `1.12.6`;
+- all three named public CI gates, including export integrity, the public
+  residual-GTO/external-transfer owner and frozen H2/cc-pVTZ fixture, screening
+  coverage, and the single-execution H2+ `18/18` release owner;
+- public examples 01, 39, 40, and 41 without a second Example 41 comparison;
+- docs tests, local Documenter, authority checks, manager-log bound, and
+  `git diff --check`;
+- one clean candidate archive and fresh archive installation, excluding a root
+  Manifest, ignored state, and both handoffs; and
+- final/prerelease selector simulation proving `v0.2.0` may become `stable`,
+  RC tags alone cannot, and RC2, RC1, and `dev` remain represented.
+
+Candidate acceptance freezes the exact commit SHA, tree, archive entry count,
+archive byte count, and archive SHA-256. Repo-manager must also return a
+proposed exact ASCII GitHub release body, including its final newline, byte
+count, and SHA-256. That body must be package-centered, use the modest claim
+above, keep PQS and screening separate, summarize external transfer and the
+post-RC2 maintenance improvements, provide the exact-tag installation command,
+and link to immutable `v0.2.0` documentation and changelog locations. It must
+not be published during candidate preparation.
+
+### Conditional Final Transaction
+
+After candidate acceptance, repo-design-manager performs a second docs-only
+pass that closes candidate preparation and opens one version-specific,
+exact-hash conditional tag-plus-publication transaction. That later authority
+must freeze:
+
+- candidate commit, tree, and archive identity;
+- annotated tag `v0.2.0` with message `GaussletBases v0.2.0`;
+- exact release title and body identity;
+- `draft=false`, `prerelease=false`, latest-final status `true`, and zero
+  custom uploaded assets; and
+- the stop order between tag verification, documentation deployment, and
+  GitHub publication.
+
+The transaction must first prove local and remote tag absence, create and push
+only the annotated tag, and stop if its remote object, peel, tree, version, or
+clean remote installation differs. Repo-manager then waits for the independent
+Docs/Pages workflow and verifies `/v0.2.0/`, the real `/stable/` alias,
+`versions.js`, `/dev/`, RC2, and RC1 before publishing the exact GitHub release.
+No workflow chaining or polling framework is added.
+
+The exact final tag does not rerun the three numerical gates. Candidate SHA and
+tree identity make that redundant. The tag lane owns annotated-object
+identity, peel/tree/version agreement, remote-tag installation, and package
+load; independent Docs/Pages owns deployed documentation. Post-publication
+checks own release metadata, automatic archive reconstruction, and a fresh
+remote-tag installation. If an operation partially succeeds, preserve the
+immutable tag or release and report the exact state without moving, deleting,
+recreating, or silently editing it.
+
+A third and final docs-only pass records the accepted tag, release, archives,
+installation, selector, and stable-alias evidence. General registration,
+`CITATION.cff`, package/paper citations, paper titles or journal status, large
+reproduction bundles, and any later patch release remain separate decisions.

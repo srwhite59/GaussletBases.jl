@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "97be63fe8f457c7bed51cd37feb461f7c357f29c8e9d4a13a21cab57e8c69260"
+sha256 = "e52690b799e2e0c74d993a7eda5dc61f49c7f1e002a9bbe36326ccfeb4acccb1"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -3833,6 +3833,91 @@ title = "public screened-Hartree assembly validation"
     [[records.paths]]
     kind = "test"
     path = "test/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PUBLIC-MATCHED-FN-01", "HP-PQS-PUBLIC-RC2-FN-01", "HP-PQS-PUBLIC-SCREEN-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-FN-01", "HP-PUBLIC-PAPER-CI-FN-01", "HP-REP-PQS-RG-WORKING-FN-01", "HP-REP-XGTO-INTERCHANGE-FN-01"]
+grant = "implementation"
+id = "HP-PQS-PUBLIC-V020-FN-01"
+lifecycle = "approved"
+scope = "Prepare one direct final v0.2.0 candidate from accepted post-RC2 main without RC3. Change only Project.toml version 0.2.0-rc2 to 0.2.0; prepend one concise post-RC2 v0.2.0 CHANGELOG section while retaining RC2 and RC1 byte-identically; and change README installation to rev = \"v0.2.0\" plus stable documentation links while preserving radial-first onboarding and the three distinct public capability stories. The release claim is only that v0.2.0 is the supported public package version closest to the software used during the separate PQS and reference-density Hartree-screening work, not an exact archive of either paper's computational history. Group support-local shell seeds, safe call-local workspace/buffer reuse, exact-order four-element Gaussian-sum acceleration, fail-closed path-aware CI, and removal of duplicate Example 41 execution without detailed benchmarks or pass history. Preserve source, exports, APIs, dependencies/compat, examples, numerical behavior, workflows, docs/make.jl, fixture formats, manifest policy, and old changelog sections. Limits: one version-line replacement; CHANGELOG preferred/hard 18/24 added lines; README preferred/hard 4/8 added lines with URL changes otherwise replacements; no new file. Candidate preparation grants no tag, release, registration, citation, stable deployment, or final transaction. Stop if any forbidden implementation surface is required."
+surfaces = ["docs", "source"]
+title = "v0.2.0 final candidate preparation"
+
+    [[records.document_refs]]
+    heading = "v0.2.0 Final Candidate And Conditional Publication Process"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1ab36c04753e0adaa03dafbaea4850d99b05ecba"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "2b3c23970144aa030ae52b875a5cf01b32886b6e"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "3cce96d40f9e4f06f23a190f782834271fca884b"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "9ddc689c1bc806c7ec899cac7a39d77cb7fad3bf"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "e1d5ca2ddb3a39134fddb476d00029ec590c431f"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "fbef95e60ca3aadafe2082b4a63f8522a724e7be"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "3419da6132810d8c4454f5b013c6302ef7842cb3"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "94ec277d954b5435a04b0ad68ae352c95b0434c7"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "b0dbd9ea37317590334a24883ef0667bdb0195a5"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "538"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "CHANGELOG.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "README.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "Project.toml"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-TEST-01", "HP-PQS-PUBLIC-MATCHED-TEST-01", "HP-PQS-PUBLIC-SCREEN-TEST-01", "HP-PQS-PUBLIC-V020-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-TEST-01", "HP-PUBLIC-PAPER-CI-TEST-01", "HP-REP-PQS-RG-WORKING-CI-TEST-01", "HP-REP-XGTO-INTERCHANGE-TEST-01", "HP-REP-XGTO-READER-DOC-TEST-01"]
+grant = "implementation"
+id = "HP-PQS-PUBLIC-V020-TEST-01"
+lifecycle = "approved"
+scope = "Update only existing test/docs/runtests.jl for exact version 0.2.0, the leading v0.2.0 changelog section, the immutable-tag install command, README stable links, exact final-tag canonical URL, and standard Documenter selector behavior. Preserve the prerelease-only fixture proving RC1/RC2 cannot create stable, and add or update a bounded final-folder fixture proving v0.2.0 selects the real stable alias while RC2, RC1, and dev remain represented. Preferred/hard additions are 20/30 lines; add no test file, numerical assertion, source test, workflow test machinery, parser, fixture, or dependency. Candidate acceptance must run the full three-gate matrix once, Julia 1.10 and 1.12.6 install/load, examples 01/39/40/41, the single-execution H2+ 18/18 owner, screening, export integrity, residual-GTO/external-transfer and frozen H2/cc-pVTZ checks, docs/Documenter/authority/diff checks, and a clean archive installation excluding a root Manifest and both handoffs. Return exact candidate SHA/tree/archive identity and an unpublished exact ASCII release-body draft. This record grants no tag or release operation."
+surfaces = ["tests"]
+title = "v0.2.0 final candidate validation"
+
+    [[records.document_refs]]
+    heading = "v0.2.0 Final Candidate And Conditional Publication Process"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1ab36c04753e0adaa03dafbaea4850d99b05ecba"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "2b3c23970144aa030ae52b875a5cf01b32886b6e"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "538"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/docs/runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-ASPECTSHELL-FN-01", "HP-R1-FN-01"]
