@@ -167,7 +167,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/sliced_hydroge
 sha256 = "20513d784bfbc63edb1f81a52c901e8566903c0d64c222213054c4fe8f2d5221"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
-sha256 = "dadf48672e9b6c1e2d1902df60c0e60e0e1c6744774e7f1037bf34df56aaa6e3"
+sha256 = "77fb7dc85df9d6e0829b5b7fda732b11c546044ecae7cdc59af78972c9e821d6"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_shellification_due_diligence.md"
 sha256 = "1c43546e75bf25199ba12065a1f6bf34a58f7c02ab4c7116f1b93e9edbda2cd8"
@@ -1648,10 +1648,10 @@ title = "structural terminal support checks"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-OBJ-01", "HP-OBJ-02"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-FN-03"
-lifecycle = "approved"
-scope = "Replace only the exact 135-term scalar reduction in `_fill_terminal_gaussian_sum_action!` within `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`. Precompute at most one call-local nonescaping Float64 `coefficients[term] * fx[term, ix, jx]` table per complete Gaussian-sum action/accumulation call and reuse it across existing block pairs. Process each complete group of exactly four independent support-pair elements with four explicit scalar accumulators and ordinary three-index array access; handle the zero-to-three-element remainder scalar-wise. For every output element preserve term order, addition order, and the exact left-associated `((coefficients * fx) * fy) * fz` Float64 arithmetic and conversion points. Replace the old inner scalar loop; do not retain a parallel fallback. Preferred/hard added-source limits are 45/50 lines while replacing 8--12 lines, with no test edit. Acceptance requires bitwise PQS and White-Lindsey parity for both nuclear centers; unchanged dimensions, fingerprints, energies, captures, eigen-residuals, symmetry, topology, warnings, due diligence, and release tolerances; at least 25% paired warmed isolated-loop speedup for each route; at least 5% paired warmed complete-comparison speedup; no greater than 0.5 s fresh-compilation increase; allocation-free warmed scalar accumulation after preweighting; and no more than 1 MiB incremental call-local allocation. Design evidence SHA-256 is `6c33a5d264c92a45cd2d66e419ceacca901259463a6515dc6cc0a7c8fc8b703a`. Do not add tuples, eight-lane batching, explicit full unrolling, term-major traversal, layout-dependent offsets, a helper, type, file, API, cache, persistent state, dependency, metadata, test, arithmetic reorder, or unrelated optimization/release work. Stop without a source commit if exact parity, safe lexical ownership, the line limits, or the speed/allocation gates fail."
+lifecycle = "implemented"
+scope = "Maintain the accepted exact-order four-element reduction in `_fill_terminal_gaussian_sum_action!` from commit `94ec277d954b5435a04b0ad68ae352c95b0434c7`. One call-local nonescaping Float64 `coefficients[term] * fx[term, ix, jx]` table is reused across existing block pairs; each complete group contains exactly four independent support-pair outputs with four explicit scalar accumulators and ordinary three-index access; the zero-to-three-element remainder stays scalar. Preserve each output element's original 135-term order, addition order, left-associated `((coefficients * fx) * fy) * fz` Float64 arithmetic, conversion points, and bitwise PQS/White-Lindsey matrices for both nuclei. Preserve all dimensions, fingerprints, energies, captures, eigen-residuals, symmetry, topology, warnings, due diligence, release tolerances, call-local ownership, pre-sized buffers, and 64 MiB tiling. The accepted one-file source delta is `+50/-14`, exactly at the authorized hard added-line limit; the old scalar loop is deleted. Accepted measurements are PQS `5.021 -> 2.687 s`, White-Lindsey `4.125 -> 2.182 s`, warmed complete comparison `32.286 -> 24.020--24.102 s`, fresh complete comparison `60.770 -> 51.911--52.961 s`, maximum compilation increase `0.134 s`, allocation-free scalar accumulation, and `491,600` bytes of call-local preweighting. CI run `33023091521` and Docs run `33023091519` passed. Do not add a fallback, helper, tuple machinery, eight-lane batching, further loop restructuring, explicit full unrolling, term-major traversal, layout-dependent offsets, type, file, API, cache, persistent state, dependency, metadata, test, cold reporting/compilation change, compatibility cleanup, or release work."
 surfaces = ["source"]
 title = "blockwise one-body assembly"
 
@@ -1667,6 +1667,9 @@ title = "blockwise one-body assembly"
     kind = "git_commit"
     value = "3419da6132810d8c4454f5b013c6302ef7842cb3"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "94ec277d954b5435a04b0ad68ae352c95b0434c7"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "532"
     [[records.evidence_refs]]
@@ -1675,6 +1678,9 @@ title = "blockwise one-body assembly"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "534"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "535"
     [[records.evidence_refs]]
     kind = "repo_path"
     value = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"
