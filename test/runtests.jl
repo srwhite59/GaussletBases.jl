@@ -783,9 +783,6 @@ end
 
 if _test_group_enabled(:pqs_release)
     include(joinpath(@__DIR__, "pqs_h2plus_table1_release_runtests.jl"))
-    @testset "PQS paper example" begin
-        @test _run_example_script("41_pqs_h2plus_table1.jl")
-    end
 end
 
 if _test_group_enabled(:screening_release)

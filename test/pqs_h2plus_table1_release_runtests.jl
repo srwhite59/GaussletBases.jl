@@ -3,8 +3,8 @@ using Test
 
 @testset "PQS Table I matched H2+ comparison" begin
     reference = -0.6026342144949465
-    comparison = pqs_h2plus_comparison(
-        independent_reference_total_energy_hartree = reference)
+    comparison = include(joinpath(@__DIR__, "..", "examples",
+        "41_pqs_h2plus_table1.jl"))
     rows = comparison.rows
 
     @test comparison isa PQSH2PlusComparison

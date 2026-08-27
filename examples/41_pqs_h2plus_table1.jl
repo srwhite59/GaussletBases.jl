@@ -19,3 +19,5 @@ for row in comparison.rows
         ", total error=", row.total_error_hartree)
 end
 println("TSV: ", output_path)
+
+comparison
