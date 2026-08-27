@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `23063074a7c4dfcb6dcbedc020c6a652e9542112961df54401c247dbb7d1ecf0`.
+> [authority.toml](authority.toml), SHA-256 `25af0b167027250df760a05a2cd8d13a8cbfcf62decbc6894fbab811161e0eaf`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1933,8 +1933,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-PUBLIC-MATCHED-TEST-01 - matched H2+ public release validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1946,13 +1946,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/reproduction/pqs_release_candidate_2026-08-17/data/table1_h2plus/table1_h2plus_matched_composite.tsv`
   - `git_commit`: `058ee54f45c759949f70b54a699ccc318476f8ac`
   - `git_commit`: `72c46f9ea0dd6b2da7a6a302d34ea1c501d18647`
+  - `git_commit`: `b0dbd9ea37317590334a24883ef0667bdb0195a5`
   - `manager_pass`: `481`
   - `manager_pass`: `482`
   - `manager_pass`: `483`
   - `manager_pass`: `484`
   - `manager_pass`: `536`
+  - `manager_pass`: `537`
 - **Dependencies:** `HP-PQS-PUBLIC-MATCHED-FN-01`
-- **Scope:** Implement exactly one successful matched-H2+ comparison execution across the release owner and Example 41. Permit examples/41\_pqs\_h2plus\_table1.jl only to return its already-computed PQSH2PlusComparison as its final top-level value while remaining independently executable and writing the same three-row, eight-column TSV and concise summary. The release owner must include that example once and apply all existing 18 assertions to the returned comparison; test/runtests.jl must remove only the now-duplicate Example 41 subprocess smoke. Preserve result-type checks, exact common topology and 12789/1285/1285 dimensions, capture atol 2e-8, energy/error atol 1e-7 hartree, accounting checks, public API coverage, nonfinite-reference rejection, required-check identity, and documentation links. The ordinary successful pqs\_release path must execute the complete comparison exactly once. Expected fresh cost is approximately 55 seconds and 9.7 GiB rather than 110.56 seconds and 19.342 GiB; stop if execution counting or fresh measurement does not establish the duplicate removal. Prefer approximately +2/-5 lines; hard limit eight added lines with net tracked test/example reduction. Add no cache, fixture, artifact, helper, framework, file, API, numerical change, workflow, docs, release action, or weaker smoke-only deletion. The clean candidate replay rules remain unchanged.
+- **Scope:** Maintain the accepted single-execution matched-H2+ release arrangement from commit b0dbd9ea37317590334a24883ef0667bdb0195a5. Example 41 remains independently executable, writes the same three-row, eight-column TSV and concise summary, and returns its already-computed PQSH2PlusComparison. The release owner includes that example once and applies all existing 18 assertions to the returned comparison; test/runtests.jl must not restore the duplicate Example 41 subprocess. Preserve result-type checks, exact common topology and 12789/1285/1285 dimensions, capture atol 2e-8, energy/error atol 1e-7 hartree, accounting checks, public API coverage, nonfinite-reference rejection, required-check identity, and documentation links. The successful pqs\_release path constructs the complete comparison exactly once. Accepted fresh cost is 54.91 seconds and 9.716 GiB versus the former 110.56 seconds and 19.342 GiB. Preserve the +4/-5 three-file implementation without adding a cache, fixture, artifact, helper, framework, file, API, numerical change, workflow, docs, or release action. The clean candidate replay rules remain unchanged.
 
 ### HP-PQS-PUBLIC-RC1-FN-01 - v0.2.0-rc1 candidate preparation
 
@@ -2429,13 +2431,14 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `528`
   - `manager_pass`: `529`
   - `manager_pass`: `536`
+  - `manager_pass`: `537`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`
-- **Scope:** Maintain the implemented fail-closed event/path routing inside the existing CI workflow. Preserve the exact classifier and four-path allowlist; Supported floor, PQS paper, and Screening paper names, rows, Julia versions, groups, 30-minute timeout, permissions, numerical commands, disabled slow tests, and pull-request behavior; and the annotated-tag identity/install lane. Every non-tag event must expand the existing three-row matrix. An explicit successful documentation-only main classification must run one visible no-op marker in each named matrix job and skip every numerical setup/execution step; every other non-tag state, including classifier failure or missing/unknown output, must run the exact full numerical steps. The separate docs-only job must instantiate the root and existing docs environments before running the docs test group. Pass 536 may change only the separately owned pqs\_release test/example wiring so its unchanged release assertions consume Example 41's single comparison; it grants no workflow edit. Add no workflow/job/group/row, workflow chaining, polling infrastructure, helper file, action dependency, release/tag operation, docs deployment change, other numerical/test-owner change, version, registration, citation, source, API, dependency, compat, manifest, or release framework.
+- **Scope:** Maintain the implemented fail-closed event/path routing inside the existing CI workflow. Preserve the exact classifier and four-path allowlist; Supported floor, PQS paper, and Screening paper names, rows, Julia versions, groups, 30-minute timeout, permissions, numerical commands, disabled slow tests, and pull-request behavior; and the annotated-tag identity/install lane. Every non-tag event must expand the existing three-row matrix. An explicit successful documentation-only main classification must run one visible no-op marker in each named matrix job and skip every numerical setup/execution step; every other non-tag state, including classifier failure or missing/unknown output, must run the exact full numerical steps. The separate docs-only job must instantiate the root and existing docs environments before running the docs test group. The accepted pqs\_release single-execution arrangement is owned by its test records and changes no workflow behavior. Add no workflow/job/group/row, workflow chaining, polling infrastructure, helper file, action dependency, release/tag operation, docs deployment change, other numerical/test-owner change, version, registration, citation, source, API, dependency, compat, manifest, or release framework.
 
 ### HP-PUBLIC-PAPER-CI-TEST-01 - paper-aligned PQS and screening release validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2451,6 +2454,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `3cce96d40f9e4f06f23a190f782834271fca884b`
   - `git_commit`: `72446880603c7e554f6ae71b2de2dc6edf28b31b`
   - `git_commit`: `9ddc689c1bc806c7ec899cac7a39d77cb7fad3bf`
+  - `git_commit`: `b0dbd9ea37317590334a24883ef0667bdb0195a5`
   - `manager_pass`: `503`
   - `manager_pass`: `504`
   - `manager_pass`: `505`
@@ -2459,8 +2463,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `528`
   - `manager_pass`: `529`
   - `manager_pass`: `536`
+  - `manager_pass`: `537`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PUBLIC-PAPER-CI-FN-01`
-- **Scope:** Implement only the Pass 536 pqs\_release single-execution repair in examples/41\_pqs\_h2plus\_table1.jl, test/pqs\_h2plus\_table1\_release\_runtests.jl, and test/runtests.jl. Example 41 must remain standalone and return its already-computed comparison; the unchanged 18-test release contract must consume that value; and the runner must remove only the duplicate Example 41 subprocess. Preserve the pqs\_release group and required-check identity, all three CI names/rows, screening\_release and Example 40, path-aware routing, workflow contents, numerical assertions/tolerances/reference data, and documentation links. Require exactly one complete comparison, net line reduction, approximately 55 seconds and 9.7 GiB fresh cost, focused and full pqs\_release success, and all three unchanged remote gates. Hard limit eight added lines. Add no assertion, fixture, helper, cache, artifact, file, framework, group, row, workflow, source, API, dependency, docs, version, tag, or release change. If the shared execution cannot preserve independent Example 41 behavior and all 18 checks, make no implementation commit; do not fall back to deleting only the example smoke.
+- **Scope:** Maintain the accepted pqs\_release single-execution contract from b0dbd9ea37317590334a24883ef0667bdb0195a5: Example 41 remains standalone and returns its computed comparison; the unchanged 18-test release owner consumes that value; and the runner contains no duplicate Example 41 subprocess. Preserve the pqs\_release group and required-check identity, all three CI names/rows, screening\_release and Example 40, path-aware routing, workflow contents, numerical assertions/tolerances/reference data, and documentation links. The accepted gate passed 18/18 at 54.91 seconds and 9.716 GiB with three-file delta +4/-5. Add no assertion, fixture, helper, cache, artifact, file, framework, group, row, workflow, source, API, dependency, docs, version, tag, or release change, and do not restore duplicate execution.
 
 ### HP-QW-NESTED-DIAT-FN-01 - repair exported ordinary-QW nested diatomic front doors
 

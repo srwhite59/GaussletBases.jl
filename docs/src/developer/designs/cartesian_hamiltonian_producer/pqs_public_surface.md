@@ -434,12 +434,13 @@ A separate release/nightly test owns the full Table I comparison. It requires:
 - same-run symmetry at `1e-10`; and
 - no cross-platform raw-byte or matrix-fingerprint equality requirement.
 
-Pass 536 preserves this complete `18`-assertion contract while removing its
-duplicate Example 41 execution. The standalone example returns the same
-comparison it prints and writes, and the release owner applies these checks to
-that returned value. The successful release path therefore constructs the
-complete comparison exactly once; nonfinite-input rejection remains an early
-failure check rather than a second successful construction.
+Commit `b0dbd9ea37317590334a24883ef0667bdb0195a5` preserves this complete
+`18`-assertion contract while removing its duplicate Example 41 execution. The
+standalone example returns the same comparison it prints and writes, and the
+release owner applies these checks to that returned value. The successful
+release path therefore constructs the complete comparison exactly once;
+nonfinite-input rejection remains an early failure check rather than a second
+successful construction.
 
 The slower test is not part of every local edit gate. It is run by a focused
 read-only release/nightly workflow and manually before the candidate release
@@ -825,16 +826,20 @@ nightly, a new compatibility declaration, or a manifest policy.
 The `pqs_release` group originally ran the complete comparison twice: once in
 `test/pqs_h2plus_table1_release_runtests.jl` and once in an Example 41
 subprocess. The two executions together measured `110.56 s / 19.342 GiB`.
-Pass 536 authorizes one bounded replacement: Example 41 remains independently
-executable, writes the same three-row/eight-column TSV and concise summary, and
-returns its already-computed comparison as its final top-level value. The
-release owner includes that example exactly once and applies all existing `18`
-assertions to the returned comparison. The runner deletes only the duplicate
-Example 41 subprocess assertion. Result types, tolerances, topology, accounting,
-public API checks, nonfinite-reference rejection, required-check identity, and
-documentation links remain unchanged. Fresh validation should approach
-`55 s / 9.7 GiB` and must prove exactly one complete comparison. The preferred
-arrangement may not be weakened to simple smoke deletion.
+Commit `b0dbd9ea37317590334a24883ef0667bdb0195a5` implements the bounded
+replacement. Example 41 remains independently executable, writes the same
+three-row/eight-column TSV and concise summary, and returns its already-computed
+comparison as its final top-level value. The release owner includes that
+example exactly once and applies all existing `18` assertions to the returned
+comparison. The runner deletes only the duplicate Example 41 subprocess
+assertion. Result types, tolerances, topology, accounting, public API checks,
+nonfinite-reference rejection, required-check identity, and documentation links
+remain unchanged. The accepted gate passed `18/18` at `54.91 s / 9.716 GiB`,
+down from `110.56 s / 19.342 GiB`; the three-file delta is `+4/-5`.
+The emitted TSV has SHA-256
+`9a540cffff3b9ed87076063ed75626c55c2fda90457f4ac5a01e303ab3289d83`.
+All three remote gates passed in CI run `33079914157`, and Docs run
+`33079914164` passed.
 
 The `screening_release` group must move the complete existing
 `Public supplied-field screened Hartree` testset mechanically from
@@ -859,8 +864,9 @@ in `45s`. Independent Docs run `32895536562` passed.
 The three matrix rows, job names, Julia versions, test groups, `30`-minute
 timeout, job-level `contents: read`, package instantiate/load boundary,
 disabled slow tests, and pull-request behavior remain exact. Pull requests
-always run all three rows. Pass 536 changes only the bounded test/example
-composition above; no workflow or numerical contract changes with it.
+always run all three rows. The accepted single-execution change affects only
+the bounded test/example composition above; no workflow or numerical contract
+changes with it.
 
 For a push to `main`, the classifier must begin with `scope=full`. It may emit
 `scope=docs_only` only when all of these conditions hold:

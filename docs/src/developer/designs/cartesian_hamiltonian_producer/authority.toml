@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "2563b2be4b0f14066cf6782d03e973fc5a84240f76f5e2959c88bf1e73b8d70b"
+sha256 = "97be63fe8f457c7bed51cd37feb461f7c357f29c8e9d4a13a21cab57e8c69260"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -3353,10 +3353,10 @@ title = "matched H2+ public comparison"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-PUBLIC-MATCHED-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-PUBLIC-MATCHED-TEST-01"
-lifecycle = "approved"
-scope = "Implement exactly one successful matched-H2+ comparison execution across the release owner and Example 41. Permit examples/41_pqs_h2plus_table1.jl only to return its already-computed PQSH2PlusComparison as its final top-level value while remaining independently executable and writing the same three-row, eight-column TSV and concise summary. The release owner must include that example once and apply all existing 18 assertions to the returned comparison; test/runtests.jl must remove only the now-duplicate Example 41 subprocess smoke. Preserve result-type checks, exact common topology and 12789/1285/1285 dimensions, capture atol 2e-8, energy/error atol 1e-7 hartree, accounting checks, public API coverage, nonfinite-reference rejection, required-check identity, and documentation links. The ordinary successful pqs_release path must execute the complete comparison exactly once. Expected fresh cost is approximately 55 seconds and 9.7 GiB rather than 110.56 seconds and 19.342 GiB; stop if execution counting or fresh measurement does not establish the duplicate removal. Prefer approximately +2/-5 lines; hard limit eight added lines with net tracked test/example reduction. Add no cache, fixture, artifact, helper, framework, file, API, numerical change, workflow, docs, release action, or weaker smoke-only deletion. The clean candidate replay rules remain unchanged."
+lifecycle = "completed"
+scope = "Maintain the accepted single-execution matched-H2+ release arrangement from commit b0dbd9ea37317590334a24883ef0667bdb0195a5. Example 41 remains independently executable, writes the same three-row, eight-column TSV and concise summary, and returns its already-computed PQSH2PlusComparison. The release owner includes that example once and applies all existing 18 assertions to the returned comparison; test/runtests.jl must not restore the duplicate Example 41 subprocess. Preserve result-type checks, exact common topology and 12789/1285/1285 dimensions, capture atol 2e-8, energy/error atol 1e-7 hartree, accounting checks, public API coverage, nonfinite-reference rejection, required-check identity, and documentation links. The successful pqs_release path constructs the complete comparison exactly once. Accepted fresh cost is 54.91 seconds and 9.716 GiB versus the former 110.56 seconds and 19.342 GiB. Preserve the +4/-5 three-file implementation without adding a cache, fixture, artifact, helper, framework, file, API, numerical change, workflow, docs, or release action. The clean candidate replay rules remain unchanged."
 surfaces = ["tests"]
 title = "matched H2+ public release validation"
 
@@ -3375,6 +3375,9 @@ title = "matched H2+ public release validation"
     kind = "git_commit"
     value = "72c46f9ea0dd6b2da7a6a302d34ea1c501d18647"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "b0dbd9ea37317590334a24883ef0667bdb0195a5"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "481"
     [[records.evidence_refs]]
@@ -3389,6 +3392,9 @@ title = "matched H2+ public release validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "536"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "537"
 
     [[records.paths]]
     kind = "test"
@@ -4163,7 +4169,7 @@ dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PUBLIC-COMPAT-FN-01", "
 grant = "maintenance"
 id = "HP-PUBLIC-PAPER-CI-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the implemented fail-closed event/path routing inside the existing CI workflow. Preserve the exact classifier and four-path allowlist; Supported floor, PQS paper, and Screening paper names, rows, Julia versions, groups, 30-minute timeout, permissions, numerical commands, disabled slow tests, and pull-request behavior; and the annotated-tag identity/install lane. Every non-tag event must expand the existing three-row matrix. An explicit successful documentation-only main classification must run one visible no-op marker in each named matrix job and skip every numerical setup/execution step; every other non-tag state, including classifier failure or missing/unknown output, must run the exact full numerical steps. The separate docs-only job must instantiate the root and existing docs environments before running the docs test group. Pass 536 may change only the separately owned pqs_release test/example wiring so its unchanged release assertions consume Example 41's single comparison; it grants no workflow edit. Add no workflow/job/group/row, workflow chaining, polling infrastructure, helper file, action dependency, release/tag operation, docs deployment change, other numerical/test-owner change, version, registration, citation, source, API, dependency, compat, manifest, or release framework."
+scope = "Maintain the implemented fail-closed event/path routing inside the existing CI workflow. Preserve the exact classifier and four-path allowlist; Supported floor, PQS paper, and Screening paper names, rows, Julia versions, groups, 30-minute timeout, permissions, numerical commands, disabled slow tests, and pull-request behavior; and the annotated-tag identity/install lane. Every non-tag event must expand the existing three-row matrix. An explicit successful documentation-only main classification must run one visible no-op marker in each named matrix job and skip every numerical setup/execution step; every other non-tag state, including classifier failure or missing/unknown output, must run the exact full numerical steps. The separate docs-only job must instantiate the root and existing docs environments before running the docs test group. The accepted pqs_release single-execution arrangement is owned by its test records and changes no workflow behavior. Add no workflow/job/group/row, workflow chaining, polling infrastructure, helper file, action dependency, release/tag operation, docs deployment change, other numerical/test-owner change, version, registration, citation, source, API, dependency, compat, manifest, or release framework."
 surfaces = ["tools"]
 title = "paper-aligned PQS and screening CI workflow"
 
@@ -4214,6 +4220,9 @@ title = "paper-aligned PQS and screening CI workflow"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "536"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "537"
 
     [[records.paths]]
     kind = "tool"
@@ -4221,10 +4230,10 @@ title = "paper-aligned PQS and screening CI workflow"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-TEST-01", "HP-PQS-PUBLIC-MATCHED-TEST-01", "HP-PQS-PUBLIC-SCREEN-TEST-01", "HP-PUBLIC-PAPER-CI-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-PAPER-CI-TEST-01"
-lifecycle = "approved"
-scope = "Implement only the Pass 536 pqs_release single-execution repair in examples/41_pqs_h2plus_table1.jl, test/pqs_h2plus_table1_release_runtests.jl, and test/runtests.jl. Example 41 must remain standalone and return its already-computed comparison; the unchanged 18-test release contract must consume that value; and the runner must remove only the duplicate Example 41 subprocess. Preserve the pqs_release group and required-check identity, all three CI names/rows, screening_release and Example 40, path-aware routing, workflow contents, numerical assertions/tolerances/reference data, and documentation links. Require exactly one complete comparison, net line reduction, approximately 55 seconds and 9.7 GiB fresh cost, focused and full pqs_release success, and all three unchanged remote gates. Hard limit eight added lines. Add no assertion, fixture, helper, cache, artifact, file, framework, group, row, workflow, source, API, dependency, docs, version, tag, or release change. If the shared execution cannot preserve independent Example 41 behavior and all 18 checks, make no implementation commit; do not fall back to deleting only the example smoke."
+lifecycle = "completed"
+scope = "Maintain the accepted pqs_release single-execution contract from b0dbd9ea37317590334a24883ef0667bdb0195a5: Example 41 remains standalone and returns its computed comparison; the unchanged 18-test release owner consumes that value; and the runner contains no duplicate Example 41 subprocess. Preserve the pqs_release group and required-check identity, all three CI names/rows, screening_release and Example 40, path-aware routing, workflow contents, numerical assertions/tolerances/reference data, and documentation links. The accepted gate passed 18/18 at 54.91 seconds and 9.716 GiB with three-file delta +4/-5. Add no assertion, fixture, helper, cache, artifact, file, framework, group, row, workflow, source, API, dependency, docs, version, tag, or release change, and do not restore duplicate execution."
 surfaces = ["tests"]
 title = "paper-aligned PQS and screening release validation"
 
@@ -4252,6 +4261,9 @@ title = "paper-aligned PQS and screening release validation"
     kind = "git_commit"
     value = "9ddc689c1bc806c7ec899cac7a39d77cb7fad3bf"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "b0dbd9ea37317590334a24883ef0667bdb0195a5"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "503"
     [[records.evidence_refs]]
@@ -4275,6 +4287,9 @@ title = "paper-aligned PQS and screening release validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "536"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "537"
 
     [[records.paths]]
     kind = "test"
