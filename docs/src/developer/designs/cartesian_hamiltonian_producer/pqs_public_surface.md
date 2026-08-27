@@ -434,6 +434,13 @@ A separate release/nightly test owns the full Table I comparison. It requires:
 - same-run symmetry at `1e-10`; and
 - no cross-platform raw-byte or matrix-fingerprint equality requirement.
 
+Pass 536 preserves this complete `18`-assertion contract while removing its
+duplicate Example 41 execution. The standalone example returns the same
+comparison it prints and writes, and the release owner applies these checks to
+that returned value. The successful release path therefore constructs the
+complete comparison exactly once; nonfinite-input rejection remains an early
+failure check rather than a second successful construction.
+
 The slower test is not part of every local edit gate. It is run by a focused
 read-only release/nightly workflow and manually before the candidate release
 is frozen.
@@ -815,11 +822,19 @@ Julia `1.10` remains the declared compatibility-floor evidence. Julia `1.12`
 is the canonical paper-gate environment; this does not add Julia `1.11`,
 nightly, a new compatibility declaration, or a manifest policy.
 
-The `pqs_release` group must include the existing
-`test/pqs_h2plus_table1_release_runtests.jl` unchanged and add exactly one
-runner assertion that executes `examples/41_pqs_h2plus_table1.jl` through the
-existing example-script helper. The existing `18` numerical tests, fixtures,
-tolerances, and reference data remain unchanged.
+The `pqs_release` group originally ran the complete comparison twice: once in
+`test/pqs_h2plus_table1_release_runtests.jl` and once in an Example 41
+subprocess. The two executions together measured `110.56 s / 19.342 GiB`.
+Pass 536 authorizes one bounded replacement: Example 41 remains independently
+executable, writes the same three-row/eight-column TSV and concise summary, and
+returns its already-computed comparison as its final top-level value. The
+release owner includes that example exactly once and applies all existing `18`
+assertions to the returned comparison. The runner deletes only the duplicate
+Example 41 subprocess assertion. Result types, tolerances, topology, accounting,
+public API checks, nonfinite-reference rejection, required-check identity, and
+documentation links remain unchanged. Fresh validation should approach
+`55 s / 9.7 GiB` and must prove exactly one complete comparison. The preferred
+arrangement may not be weakened to simple smoke deletion.
 
 The `screening_release` group must move the complete existing
 `Public supplied-field screened Hartree` testset mechanically from
@@ -844,8 +859,8 @@ in `45s`. Independent Docs run `32895536562` passed.
 The three matrix rows, job names, Julia versions, test groups, `30`-minute
 timeout, job-level `contents: read`, package instantiate/load boundary,
 disabled slow tests, and pull-request behavior remain exact. Pull requests
-always run all three rows. The performance audit and any possible duplicate
-H2+ example execution change remain separate and grant no work here.
+always run all three rows. Pass 536 changes only the bounded test/example
+composition above; no workflow or numerical contract changes with it.
 
 For a push to `main`, the classifier must begin with `scope=full`. It may emit
 `scope=docs_only` only when all of these conditions hold:

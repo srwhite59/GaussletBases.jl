@@ -162,7 +162,8 @@ scratch reuse, terminal buffer reuse, and the exact-order four-element
 Gaussian-sum reduction are implemented. The next performance investigation is
 the cold reporting boundary; it has no implementation grant. Eight-lane batching,
 further loop restructuring, compatibility cleanup, and release work remain
-separate.
+separate. The duplicate matched-H2+ release/example execution is approved for
+one test-only replacement that preserves Example 41 and all release assertions.
 
 **MT7 - External Cartesian GTO interchange (completed/maintenance).** The
 strict versioned reader, checkpoint-only PySCF exporter, frozen d-shell
@@ -1917,3 +1918,45 @@ Carrying-cost accounting:
   augmented `464/464`, release `18/18`, public Cartesian `232/232`, residual-
   GTO/MWG `80/80`, docs `110/110 + 10/10`, package load, authority/self-test,
   Documenter, diff checks, CI `33023091521`, and Docs `33023091519`.
+
+## Cartesian Hamiltonian Producer Pass 536 - Authorize One Matched-H2+ Release Execution
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Reopened `HP-PQS-PUBLIC-MATCHED-TEST-01` and
+  `HP-PUBLIC-PAPER-CI-TEST-01` only to remove the duplicate complete H2+
+  comparison. The release owner and Example 41 currently execute the same
+  public comparison separately, costing `110.56 s / 19.342 GiB` together.
+  Example 41 may now return its already-computed comparison as its final value;
+  the release owner must apply all unchanged `18` assertions to that value, and
+  the runner may delete only the duplicate subprocess smoke.
+- Allowed implementation is exactly the existing Example 41, release owner,
+  and root test runner. Example output remains the same three-row,
+  eight-column TSV plus concise summary. Required-check identity, result types,
+  tolerances, accounting, public API coverage, and nonfinite rejection remain
+  exact. Fresh validation should approach `55 s / 9.7 GiB` and prove one full
+  comparison rather than merely deleting coverage.
+
+Goal advancement / guardrail:
+- MT6 advances test/runtime carrying-cost reduction without reopening numerical
+  performance work. No source, workflow, docs, API, release, fixture, cache,
+  helper, or framework is authorized. Cold-reporting specialization remains
+  closed after regressions; eight-lane batching and its measured at-most `2%`
+  opportunity remain out of scope.
+
+Carrying-cost accounting:
+- deleted: implementation must remove the duplicate Example 41 subprocess;
+  simplified: one public execution supplies both reader output and the release
+  assertions; quarantined: screening, workflow, numerical, cold-reporting, and
+  release lanes; not deleted because: standalone Example 41 and all `18`
+  release checks remain live contracts.
+- exact remaining caller/blocker: repo-manager must stop if the preferred
+  include/return arrangement changes output, drops an assertion, executes the
+  comparison more than once, fails to reduce fresh cost materially, or needs
+  more than eight added lines; source delta must remain `0/0`, test/example
+  delta net negative, new tests/files/metadata zero; validation: direct Example
+  41, focused release owner, complete `pqs_release`, all three unchanged remote
+  gates, authority/self-test, docs tests, package load, Documenter, manager-log
+  bound, and diff checks.

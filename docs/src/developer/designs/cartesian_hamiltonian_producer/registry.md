@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `c35c9c8569918deb47d8f1f73a72f094cbf3a976550edee367e145f1cde4eb9b`.
+> [authority.toml](authority.toml), SHA-256 `23063074a7c4dfcb6dcbedc020c6a652e9542112961df54401c247dbb7d1ecf0`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1933,14 +1933,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-PUBLIC-MATCHED-TEST-01 - matched H2+ public release validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Validation Contract`
 - **Owned paths:**
   - `test` / `existing`: `test/pqs_h2plus_table1_release_runtests.jl`
+  - `test` / `existing`: `test/runtests.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/reproduction/pqs_release_candidate_2026-08-17/data/table1_h2plus/table1_h2plus_matched_composite.tsv`
   - `git_commit`: `058ee54f45c759949f70b54a699ccc318476f8ac`
@@ -1949,8 +1950,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `482`
   - `manager_pass`: `483`
   - `manager_pass`: `484`
+  - `manager_pass`: `536`
 - **Dependencies:** `HP-PQS-PUBLIC-MATCHED-FN-01`
-- **Scope:** Maintain the focused release Table I parity gate and bounded public example. Preserve exact common topology and 12789/1285/1285 dimensions, capture atol 2e-8, energy/error atol 1e-7 hartree, same-run residual/capture closure 1e-9, and symmetry 1e-10. The clean candidate replay may freshly resolve the committed Project.toml in an empty isolated depot only if it archives the generated manifest, project/manifest hashes, runtime/registry identity, commands, logs, and tracked-clean state. No copied private or committed root manifest, raw-byte cross-platform gate, ordinary-PR slow run, Vee/solver assertion, general release framework, or historical composite-TSV byte identity.
+- **Scope:** Implement exactly one successful matched-H2+ comparison execution across the release owner and Example 41. Permit examples/41\_pqs\_h2plus\_table1.jl only to return its already-computed PQSH2PlusComparison as its final top-level value while remaining independently executable and writing the same three-row, eight-column TSV and concise summary. The release owner must include that example once and apply all existing 18 assertions to the returned comparison; test/runtests.jl must remove only the now-duplicate Example 41 subprocess smoke. Preserve result-type checks, exact common topology and 12789/1285/1285 dimensions, capture atol 2e-8, energy/error atol 1e-7 hartree, accounting checks, public API coverage, nonfinite-reference rejection, required-check identity, and documentation links. The ordinary successful pqs\_release path must execute the complete comparison exactly once. Expected fresh cost is approximately 55 seconds and 9.7 GiB rather than 110.56 seconds and 19.342 GiB; stop if execution counting or fresh measurement does not establish the duplicate removal. Prefer approximately +2/-5 lines; hard limit eight added lines with net tracked test/example reduction. Add no cache, fixture, artifact, helper, framework, file, API, numerical change, workflow, docs, release action, or weaker smoke-only deletion. The clean candidate replay rules remain unchanged.
 
 ### HP-PQS-PUBLIC-RC1-FN-01 - v0.2.0-rc1 candidate preparation
 
@@ -2426,19 +2428,22 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `527`
   - `manager_pass`: `528`
   - `manager_pass`: `529`
+  - `manager_pass`: `536`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`
-- **Scope:** Maintain the implemented fail-closed event/path routing inside the existing CI workflow. Preserve the exact classifier and four-path allowlist; Supported floor, PQS paper, and Screening paper names, rows, Julia versions, groups, 30-minute timeout, permissions, numerical commands, disabled slow tests, and pull-request behavior; and the annotated-tag identity/install lane. Every non-tag event must expand the existing three-row matrix. An explicit successful documentation-only main classification must run one visible no-op marker in each named matrix job and skip every numerical setup/execution step; every other non-tag state, including classifier failure or missing/unknown output, must run the exact full numerical steps. The separate docs-only job must instantiate the root and existing docs environments before running the docs test group. Add no workflow/job/group/row, workflow chaining, polling infrastructure, helper file, action dependency, release/tag operation, docs deployment change, numerical/test-owner change, H2+ rewiring, version, registration, citation, source, API, example, dependency, compat, manifest, or release framework.
+- **Scope:** Maintain the implemented fail-closed event/path routing inside the existing CI workflow. Preserve the exact classifier and four-path allowlist; Supported floor, PQS paper, and Screening paper names, rows, Julia versions, groups, 30-minute timeout, permissions, numerical commands, disabled slow tests, and pull-request behavior; and the annotated-tag identity/install lane. Every non-tag event must expand the existing three-row matrix. An explicit successful documentation-only main classification must run one visible no-op marker in each named matrix job and skip every numerical setup/execution step; every other non-tag state, including classifier failure or missing/unknown output, must run the exact full numerical steps. The separate docs-only job must instantiate the root and existing docs environments before running the docs test group. Pass 536 may change only the separately owned pqs\_release test/example wiring so its unchanged release assertions consume Example 41's single comparison; it grants no workflow edit. Add no workflow/job/group/row, workflow chaining, polling infrastructure, helper file, action dependency, release/tag operation, docs deployment change, other numerical/test-owner change, version, registration, citation, source, API, dependency, compat, manifest, or release framework.
 
 ### HP-PUBLIC-PAPER-CI-TEST-01 - paper-aligned PQS and screening release validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Paper-Aligned CI Boundary`
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
+  - `test` / `existing`: `test/pqs_h2plus_table1_release_runtests.jl`
+  - `test` / `existing`: `test/runtests.jl`
 - **Evidence:**
   - `git_commit`: `409bc41b46afced92e3e711b8a55760869ac5d3d`
   - `git_commit`: `a4e85e820fd4056e985a18e20da87180f370ef66`
@@ -2453,8 +2458,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `527`
   - `manager_pass`: `528`
   - `manager_pass`: `529`
+  - `manager_pass`: `536`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PUBLIC-PAPER-CI-FN-01`
-- **Scope:** Maintain only the existing focused docs-policy checks for the path-aware CI contract: every non-tag event expands the existing matrix; explicit documentation-only classification runs a visible marker for all three unchanged gate names while numerical steps are skipped; every other non-tag state remains fail-closed full; and the lightweight job instantiates the existing docs environment before the docs test group. Preserve the exact allowlist, before-object/no-renames checks, annotated-tag object/peel/install checks, pqs\_release 18-test owner/example-41 smoke, and screening\_release 22-test owner/example-40 smoke. Do not edit a numerical owner or add a numerical assertion, fixture, helper, tolerance, group, row, workflow, test file, or H2+ execution change.
+- **Scope:** Implement only the Pass 536 pqs\_release single-execution repair in examples/41\_pqs\_h2plus\_table1.jl, test/pqs\_h2plus\_table1\_release\_runtests.jl, and test/runtests.jl. Example 41 must remain standalone and return its already-computed comparison; the unchanged 18-test release contract must consume that value; and the runner must remove only the duplicate Example 41 subprocess. Preserve the pqs\_release group and required-check identity, all three CI names/rows, screening\_release and Example 40, path-aware routing, workflow contents, numerical assertions/tolerances/reference data, and documentation links. Require exactly one complete comparison, net line reduction, approximately 55 seconds and 9.7 GiB fresh cost, focused and full pqs\_release success, and all three unchanged remote gates. Hard limit eight added lines. Add no assertion, fixture, helper, cache, artifact, file, framework, group, row, workflow, source, API, dependency, docs, version, tag, or release change. If the shared execution cannot preserve independent Example 41 behavior and all 18 checks, make no implementation commit; do not fall back to deleting only the example smoke.
 
 ### HP-QW-NESTED-DIAT-FN-01 - repair exported ordinary-QW nested diatomic front doors
 
