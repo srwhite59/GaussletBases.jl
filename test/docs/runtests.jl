@@ -461,6 +461,7 @@
             ci_workflow)
         @test all(gate -> length(findall("gate: $gate", ci_workflow)) == 1,
             ("Supported floor", "PQS paper", "Screening paper"))
+        @test occursin("groups: core,ida,cartesian,examples,radial,misc", ci_workflow)
         @test contains_all(ci_workflow, "tag-identity-install:",
             "refs/tags/\${tag}:refs/tags/\${tag}", "refs/tags/\${tag}^{tag}",
             "refs/tags/\${tag}^{commit}", "Pkg.add(url=", "GITHUB_REF_NAME")

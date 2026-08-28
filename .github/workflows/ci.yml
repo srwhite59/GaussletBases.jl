@@ -49,7 +49,7 @@ jobs:
         include:
           - gate: Supported floor
             julia: "1.10"
-            groups: core,ida,cartesian,examples
+            groups: core,ida,cartesian,examples,radial,misc
           - gate: PQS paper
             julia: "1.12"
             groups: pqs_release
