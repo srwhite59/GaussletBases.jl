@@ -179,7 +179,10 @@ the cold reporting boundary; it has no implementation grant. Eight-lane batching
 further loop restructuring, compatibility cleanup, and release work remain
 separate. The duplicate matched-H2+ release/example execution is removed by an
 accepted test-only replacement that preserves Example 41 and all release
-assertions.
+assertions. One bounded post-v0.2 export cleanup is approved: delete the unused
+timed nested wrapper, de-promote two undocumented diagnostic/QW names, and keep
+the inexpensive qualified QW alias. The angular public surface remains a
+separate audit.
 
 **MT7 - External Cartesian GTO interchange (completed/maintenance).** The
 strict versioned reader, checkpoint-only PySCF exporter, frozen d-shell
@@ -1338,3 +1341,36 @@ Carrying-cost accounting:
   matrix, then return for closeout; production-source delta `0/0`, workflow
   expected `+1/-1`, focused test additions preferred `1`, hard `2`, new files
   and metadata fields none.
+
+## Cartesian Hamiltonian Producer Pass 543 - Authorize Post-v0.2 Nested/QW Export Cleanup
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Reopened only `HP-PUBLIC-EXPORT-INTEGRITY-FN-01` for a two-file, seven-line
+  source reduction. Implementation deletes the unused four-line
+  `TimedNestedFixedBlockBuild` and removes three root exports. The internal
+  `OneCenterAtomicNestedLayerStructure` type and one-line
+  `QiuWhiteResidualGaussianOperators` alias remain defined for qualified use.
+  The completed dynamic export-integrity test remains unchanged and supplies
+  the acceptance owner.
+
+Goal advancement / guardrail:
+- MT6 removes unsupported public vocabulary without changing ordinary/QW/
+  nested numerics. The deliberate alias retention avoids a needless qualified
+  compatibility break. `ShellLocalAngularProfileKey` and the angular audit,
+  all release objects, workflows, dependencies, and broader API classification
+  remain separate.
+
+Carrying-cost accounting:
+- authorized for deletion: one orphaned wrapper and three export entries;
+  simplified: the undocumented export backlog is expected to fall from `74`
+  to `71`;
+  quarantined: ignored historical probes and the later angular decision; not
+  deleted because: the QW alias is one line and retains cheap qualified
+  compatibility.
+- exact remaining caller/blocker: repo-manager must confirm no committed
+  caller, implement exact `+0/-7` scope, and return for lifecycle closeout;
+  no test, file, helper, metadata, numerical, workflow, or release addition is
+  authorized.

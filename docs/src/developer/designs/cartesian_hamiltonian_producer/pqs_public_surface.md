@@ -746,7 +746,7 @@ broader release framework is authorized. Future citation metadata must permit
 separate PQS-paper, screening-paper, and package-software citations; exact
 titles and preferred citations remain deferred.
 
-## Post-RC1 Export Integrity Repair
+## Package Export Integrity
 
 `HP-PUBLIC-EXPORT-INTEGRITY-FN-01/TEST-01` own the implemented bounded cleanup
 of package export declarations discovered after the RC1 release. At baseline
@@ -786,13 +786,32 @@ Package load, core, IDA, Cartesian, examples, docs `87/87` and `10/10`, the
 authority self-test, Documenter, and diff checks passed. GitHub CI run
 `32444750148` and Docs run `32444750177` passed on the implementation commit.
 
-This repair deliberately leaves `@timeg`, `CuratedSpherePointSet`,
-`LegacySGaussianData`, `QiuWhiteHybridOrbital3D`, and
-`QiuWhiteResidualGaussianOperators` unchanged. Their compatibility or use
-policy is not decided here. Package version, tags, GitHub releases, workflows,
-and the immutable RC1 tag/release state also remain unchanged. This lifecycle
-is closed to maintenance; paper-aligned PQS-versus-screening CI/release wiring
-is a separate design boundary, not a continuation of this cleanup.
+Pass 543 authorizes one post-v0.2 continuation under the same function record.
+Delete the unused four-line `TimedNestedFixedBlockBuild` definition and its root
+export. Remove `OneCenterAtomicNestedLayerStructure` from the root export while
+retaining its unchanged internal diagnostic-storage type. Remove
+`QiuWhiteResidualGaussianOperators` from the root export while retaining its
+one-line alias to `OrdinaryCartesianOperators3D` for inexpensive qualified
+compatibility. The root-surface reduction is the useful cleanup; deleting the
+alias would add compatibility risk without meaningful carrying-cost savings.
+Ignored historical probes and conflicted copies are not compatibility
+obligations and remain untouched.
+
+Implementation is confined to `src/GaussletBases.jl` and
+`src/cartesian_nested_faces.jl`, with expected production delta `+0/-7`.
+Add no shim, warning, replacement API, docstring, test, helper, metadata, file,
+or numerical behavior. `ShellLocalAngularProfileKey`, `@timeg`,
+`CuratedSpherePointSet`, `LegacySGaussianData`, and
+`QiuWhiteHybridOrbital3D` remain unchanged. Package versions, immutable v0.2.0
+tags/releases, workflows, and release state also remain unchanged.
+
+Acceptance uses the existing dynamic export-integrity regression unchanged.
+It must prove `TimedNestedFixedBlockBuild` absent; prove
+`OneCenterAtomicNestedLayerStructure` and
+`QiuWhiteResidualGaussianOperators` defined but unexported; and confirm the
+undocumented exported-binding backlog falls from `74` to `71`. Package load,
+the complete core and relevant existing QW/nested owners, docs, CI, and diff
+checks must pass. No new test or export snapshot is authorized.
 
 ## Paper-Aligned CI Boundary
 
