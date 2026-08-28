@@ -816,13 +816,33 @@ The CI matrix has exactly three rows:
 
 | Gate name | Julia | Test selection |
 | --- | --- | --- |
-| `Supported floor` | `1.10` | existing `core,ida,cartesian,examples` |
+| `Supported floor` | `1.10` | `core,ida,cartesian,examples,radial,misc` |
 | `PQS paper` | `1.12` | `pqs_release` group |
 | `Screening paper` | `1.12` | `screening_release` group |
 
 Julia `1.10` remains the declared compatibility-floor evidence. Julia `1.12`
 is the canonical paper-gate environment; this does not add Julia `1.11`,
 nightly, a new compatibility declaration, or a manifest policy.
+
+Pass 542 authorizes only the Supported-floor selection extension shown above.
+Clean Julia `1.10` evidence passed `radial` at `322/322`, `misc` at `59/59`,
+and the combined selection at `381/381`, with about `70` seconds of testset
+time beyond normal fresh-environment preparation. Implementation replaces the
+single existing group-list value in `.github/workflows/ci.yml` and may add one
+focused exact-selection assertion in `test/docs/runtests.jl`. All other
+workflow bytes, including the three job names and rows, Julia versions, timeout,
+commands, classifier,
+documentation-only markers, triggers, permissions, PQS and Screening groups,
+and tag lane remain byte-unchanged.
+
+`angular` is explicitly excluded. A Julia `1.12` audit reached its first
+package-owned angular one-body fixture and then spent `13m49s` without reaching
+an assertion. Fast-versus-acceptance ownership must be audited separately
+before any CI decision. The weekly Cartesian suite, occupied-first private
+owner, represented-Hartree blocked owner, HFDMRG portability, documentation
+triage, and export triage also remain outside this amendment. Add no CI row,
+job, workflow, dependency, source or numerical-policy change, or release
+action.
 
 The `pqs_release` group originally ran the complete comparison twice: once in
 `test/pqs_h2plus_table1_release_runtests.jl` and once in an Example 41

@@ -162,8 +162,10 @@ final candidate, immutable annotated tag, final/latest GitHub release,
 versioned/stable documentation, archives, and clean installation are accepted.
 The tag-lane local-ref collision was recovered through exact namespaced manual
 verification without a numerical rerun. Separate PQS and screening surfaces
-remain fixed. Future tag-lane repair, registration, citation metadata, and any
-later release are separate decisions.
+remain fixed. One bounded Julia `1.10` Supported-floor extension to the live
+`radial` and `misc` groups is approved; `angular` remains outside CI pending a
+separate runtime/ownership audit. Future tag-lane repair, registration,
+citation metadata, and any later release are separate decisions.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
 metadata, unsupported exports, and development-era tests as conformance work
@@ -1302,3 +1304,37 @@ Carrying-cost accounting:
   release, archive, installation, and documentation evidence remains live.
 - exact remaining caller/blocker: none for v0.2.0 publication; source/test/
   workflow delta `0/0`, new files and metadata fields none.
+
+## Cartesian Hamiltonian Producer Pass 542 - Authorize Supported-Floor Radial And Misc Coverage
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Reopened `HP-PUBLIC-PAPER-CI-FN-01/TEST-01` only to extend the existing Julia
+  `1.10` Supported-floor selection from `core,ida,cartesian,examples` to
+  `core,ida,cartesian,examples,radial,misc`. Clean evidence passed `radial`
+  `322/322`, `misc` `59/59`, and combined `381/381` in about `70` seconds of
+  testset time. Implementation owns one workflow-line replacement and one
+  focused exact-selection policy assertion, with at most one angular-absence
+  assertion.
+
+Goal advancement / guardrail:
+- MT5 improves compatibility-floor coverage without adding a CI row or changing
+  any job name, Julia version, timeout, command, trigger, permission, path
+  classifier, docs-only marker, PQS/Screening gate, or tag lane. `angular` is
+  excluded: its first package-owned one-body fixture ran `13m49s` without an
+  assertion and requires a separate fast-versus-acceptance audit. Weekly
+  Cartesian, private occupied-first, blocked represented-Hartree, HFDMRG, docs,
+  export, and release lanes remain separate.
+
+Carrying-cost accounting:
+- deleted: no code in this authority pass; simplified: existing live test
+  groups join the established floor row; quarantined: angular and all unrelated
+  owners; not deleted because: the three-row matrix and fail-closed routing are
+  accepted release infrastructure.
+- exact remaining caller/blocker: repo-manager must make only the two-file
+  bounded replacement, run the expanded Julia `1.10` floor and unchanged remote
+  matrix, then return for closeout; production-source delta `0/0`, workflow
+  expected `+1/-1`, focused test additions preferred `1`, hard `2`, new files
+  and metadata fields none.
