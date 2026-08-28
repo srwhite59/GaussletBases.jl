@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "446677e4462de7f70c92e66eb9ea5a4f2ed5ee1cf8a37eccef152dd293254f81"
+sha256 = "1268e0f628188685e642835f3eea1b06787f74912610fcb02e5acbfa57e859f3"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -4340,10 +4340,10 @@ title = "validate package export integrity"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-EXPORT-INTEGRITY-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-FOUNDATION-DOC-FN-01"
-lifecycle = "approved"
-scope = "Document exactly ten existing exported generics without changing behavior: uofx maps physical x to reference u; xofu is its inverse; dudx and du2dx2 are the first and second x-derivatives of u(x); basis_spec returns the construction specification associated with a basis-like object; family identifies its gausslet family; mapping identifies its physical/reference coordinate map; centers and reference_centers return physical and reference-coordinate centers; integral_weights returns basis-function integrals, not quadrature weights. Add concise docstrings only to the existing bare declarations in src/GaussletBases.jl and one compact evaluation/introspection @docs section in docs/src/reference/bases_and_mappings.md containing exactly these names. Preferred/hard budgets are 70/100 added source-docstring lines and 20/35 reference-page lines, with no new file. Require the undocumented exported-binding backlog to fall exactly from 71 to 61. Preserve every definition, method, signature, dispatch, export, return value, default, numerical behavior, compatibility floor, workflow, tag, and release artifact. Do not change Documenter checkdocs, add a global undocumented-name allowlist, or broaden into function evaluation, stencils, partitions, atomic operators, angular work, API reduction, source behavior, dependencies, examples, or release work. Budgets are stop-and-report bounds; stop without an implementation commit if truthful documentation requires any behavioral or public-surface change."
+lifecycle = "implemented"
+scope = "Maintain only the accepted foundational documentation from 03eb75c66e5cc8b24714d3769097ea81f0d74b15: concise docstrings on the ten existing exported generics uofx, xofu, dudx, du2dx2, basis_spec, family, mapping, centers, reference_centers, and integral_weights, plus their compact evaluation/introspection @docs section in docs/src/reference/bases_and_mappings.md. Preserve the documented physical-x to reference-u direction, inverse map, first/second x derivatives of u(x), construction-specification/family/mapping meanings, physical/reference center distinction, and basis-function-integral meaning of integral_weights. Preserve every definition, method, signature, dispatch, export, return value, default, numerical behavior, compatibility floor, workflow, tag, and release artifact. Do not change Documenter checkdocs, add a global undocumented-name allowlist, or broaden into function evaluation, stencils, partitions, atomic operators, angular work, API reduction, source behavior, dependencies, examples, or release work."
 surfaces = ["docs", "source"]
 title = "document foundational basis and mapping bindings"
 
@@ -4353,8 +4353,14 @@ title = "document foundational basis and mapping bindings"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "03eb75c66e5cc8b24714d3769097ea81f0d74b15"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "546"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "547"
 
     [[records.paths]]
     kind = "docs"
@@ -4366,10 +4372,10 @@ title = "document foundational basis and mapping bindings"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-EXPORT-INTEGRITY-TEST-01", "HP-PUBLIC-FOUNDATION-DOC-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-FOUNDATION-DOC-TEST-01"
-lifecycle = "approved"
-scope = "In the existing test/docs/runtests.jl owner, add only family-scoped checks that the exact ten foundational basis/mapping bindings are exported, carry Julia documentation, and appear in docs/src/reference/bases_and_mappings.md. Preserve Documenter as the executable @docs resolution gate. Preferred/hard additions are 12/20 test lines. Use implementation-time runtime inspection to confirm the undocumented export backlog is exactly 61, but add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan."
+lifecycle = "completed"
+scope = "Maintain only the accepted family-scoped checks from 03eb75c66e5cc8b24714d3769097ea81f0d74b15 that the exact ten foundational basis/mapping bindings remain exported, carry Julia documentation, and appear in docs/src/reference/bases_and_mappings.md. Preserve Documenter as the executable @docs resolution gate and the accepted undocumented-export count of 61. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan."
 surfaces = ["tests"]
 title = "validate foundational basis and mapping documentation"
 
@@ -4379,8 +4385,14 @@ title = "validate foundational basis and mapping documentation"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "03eb75c66e5cc8b24714d3769097ea81f0d74b15"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "546"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "547"
 
     [[records.paths]]
     kind = "test"
