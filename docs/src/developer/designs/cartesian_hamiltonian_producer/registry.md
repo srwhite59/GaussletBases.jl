@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `da28f6f9f15fdb79bac8ce0b4120351d8b3aa54d33fb458d6c3b11e7c37710ee`.
+> [authority.toml](authority.toml), SHA-256 `fe96f6ca5dad332e38d6403c43111ff1aefab98860321b6d6da90749feb3c340`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2494,6 +2494,37 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `545`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`
 - **Scope:** Maintain the compact dynamic regression in test/core/runtests.jl unchanged. It audits GaussletBases and every defined direct package-owned child module discovered with names(GaussletBases; all=true, imported=false) and parentmodule(child) === GaussletBases. For each name returned by names(module; all=false, imported=false), require the binding to be defined; when the value is a Function, require methods(value) to be nonempty. Commit 6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468 passed this owner while runtime inspection proved TimedNestedFixedBlockBuild absent, OneCenterAtomicNestedLayerStructure and QiuWhiteResidualGaussianOperators defined but unexported, and the undocumented export backlog reduced from 74 to 71. Preserve this invariant without editing tests, snapshotting an export list, classifying broader use, traversing external/imported modules, or adding numerical assertions. Add no test file, fixture, dependency, helper, compatibility assertion, version/release check, or broad architecture audit under this record.
+
+### HP-PUBLIC-FOUNDATION-DOC-FN-01 - document foundational basis and mapping bindings
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Foundational Basis And Mapping Documentation`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/reference/bases_and_mappings.md`
+  - `source` / `existing`: `src/GaussletBases.jl`
+- **Evidence:**
+  - `manager_pass`: `546`
+- **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`
+- **Scope:** Document exactly ten existing exported generics without changing behavior: uofx maps physical x to reference u; xofu is its inverse; dudx and du2dx2 are the first and second x-derivatives of u(x); basis\_spec returns the construction specification associated with a basis-like object; family identifies its gausslet family; mapping identifies its physical/reference coordinate map; centers and reference\_centers return physical and reference-coordinate centers; integral\_weights returns basis-function integrals, not quadrature weights. Add concise docstrings only to the existing bare declarations in src/GaussletBases.jl and one compact evaluation/introspection @docs section in docs/src/reference/bases\_and\_mappings.md containing exactly these names. Preferred/hard budgets are 70/100 added source-docstring lines and 20/35 reference-page lines, with no new file. Require the undocumented exported-binding backlog to fall exactly from 71 to 61. Preserve every definition, method, signature, dispatch, export, return value, default, numerical behavior, compatibility floor, workflow, tag, and release artifact. Do not change Documenter checkdocs, add a global undocumented-name allowlist, or broaden into function evaluation, stencils, partitions, atomic operators, angular work, API reduction, source behavior, dependencies, examples, or release work. Budgets are stop-and-report bounds; stop without an implementation commit if truthful documentation requires any behavioral or public-surface change.
+
+### HP-PUBLIC-FOUNDATION-DOC-TEST-01 - validate foundational basis and mapping documentation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Foundational Basis And Mapping Documentation`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `546`
+- **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-FOUNDATION-DOC-FN-01`
+- **Scope:** In the existing test/docs/runtests.jl owner, add only family-scoped checks that the exact ten foundational basis/mapping bindings are exported, carry Julia documentation, and appear in docs/src/reference/bases\_and\_mappings.md. Preserve Documenter as the executable @docs resolution gate. Preferred/hard additions are 12/20 test lines. Use implementation-time runtime inspection to confirm the undocumented export backlog is exactly 61, but add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan.
 
 ### HP-PUBLIC-PAPER-CI-FN-01 - paper-aligned PQS and screening CI workflow
 

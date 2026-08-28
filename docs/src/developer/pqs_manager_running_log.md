@@ -182,7 +182,9 @@ accepted test-only replacement that preserves Example 41 and all release
 assertions. The bounded post-v0.2 export cleanup is implemented: the unused
 timed nested wrapper is deleted, two undocumented diagnostic/QW names are
 unexported, and the inexpensive qualified QW alias remains. The angular public
-surface remains a separate audit.
+surface remains a separate audit. One bounded foundational documentation grant
+now owns ten existing basis/mapping generics without changing their behavior or
+the global documentation policy.
 
 **MT7 - External Cartesian GTO interchange (completed/maintenance).** The
 strict versioned reader, checkpoint-only PySCF exporter, frozen d-shell
@@ -1449,3 +1451,34 @@ Carrying-cost accounting:
   preserves qualified compatibility.
 - exact remaining caller/blocker: none for Pass 543; source delta `+0/-7`, test
   delta `0/0`, new files and metadata fields none.
+
+## Cartesian Hamiltonian Producer Pass 546 - Authorize Foundational Basis And Mapping Documentation
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Added `HP-PUBLIC-FOUNDATION-DOC-FN-01/TEST-01` for ten existing exported
+  basis/mapping generics. Implementation may add only declaration docstrings,
+  one compact section in the existing bases/mappings reference, and focused
+  checks in the existing docs owner. The map direction, derivatives, physical
+  versus reference centers, and basis-integral meaning of `integral_weights`
+  are explicit.
+
+Goal advancement / guardrail:
+- MT6 addresses a bounded reader-facing documentation deficit without adding
+  API or preserving unsupported vocabulary. Acceptance requires the
+  undocumented-export backlog to fall exactly from `71` to `61`, but forbids a
+  global allowlist or `checkdocs` change. Function evaluation, stencils,
+  partitions, atomic operators, angular work, and further API reduction remain
+  separate.
+
+Carrying-cost accounting:
+- deleted: no code in this authority pass; simplified: ten existing public
+  names receive one coherent reference family; quarantined: the remaining `61`
+  undocumented exports and all unrelated API classification; not deleted
+  because: these live bindings already have methods and supported semantics.
+- exact remaining caller/blocker: repo-manager must remain within source-doc
+  `70/100`, reference-page `20/35`, and docs-test `12/20` preferred/hard added
+  line budgets, make no new file or behavioral change, run package/radial/docs/
+  authority/Documenter/CI acceptance, and return for lifecycle closeout.
