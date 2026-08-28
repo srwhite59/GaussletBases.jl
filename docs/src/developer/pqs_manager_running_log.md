@@ -86,9 +86,9 @@ archaeology and are not normal startup reading.
   dependencies, workflows, or scientific policy. Its immutable annotated tag
   is accepted at object `7c8a21b99`, and package-centered GitHub prerelease
   `376503169` is published and validated. Direct final `v0.2.0` candidate
-  preparation is approved without RC3 under a modest package-nearest-software
-  claim. Exact candidate freeze, conditional tag/publication authority,
-  registration, and citation remain separate.
+  `adfcaba32` is accepted without RC3 under a modest package-nearest-software
+  claim. Its exact-hash conditional tag/publication transaction is approved;
+  registration and citation remain separate.
 - Production defaults, public workflows, corrected artifacts, and Cr2 endpoint
   claims remain unchanged unless separately authorized.
 
@@ -153,10 +153,11 @@ reorganization and cutover are complete. The RC1 candidate, immutable tag,
 versioned folder, explicit selector entry, and package-centered GitHub
 prerelease are accepted. The RC2 candidate, immutable tag, versioned folder,
 selector entry, and exact GitHub prerelease are also accepted. Path-aware CI is
-implemented and accepted as a bounded release-efficiency refinement. Direct
-final-candidate preparation is active; it must preserve separate PQS and
-screening surfaces and freeze exact identity before one later conditional
-tag/publication grant. Registration and citation metadata remain separate.
+implemented and accepted as a bounded release-efficiency refinement. The exact
+final candidate is frozen and one ordered annotated-tag, Docs/Pages, and final
+GitHub-release transaction is active. It must preserve separate PQS and
+screening surfaces and stop on any identity or deployment mismatch.
+Registration and citation metadata remain separate.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
 metadata, unsupported exports, and development-era tests as conformance work
@@ -1177,3 +1178,42 @@ Carrying-cost accounting:
   owner only; new metadata/status fields none; validation: authority
   render/check/self-test, docs tests, Documenter, manager-log bound, scoped
   docs-only review, remote CI/Docs, and `git diff --check`.
+
+## Cartesian Hamiltonian Producer Pass 539 - Accept Candidate And Authorize Final Transaction
+
+Commit(s):
+- `adfcaba32d4db06d9d796d947276433717bd2d89` - prepare the exact final
+  candidate.
+- this docs-only candidate closeout and conditional publication authority.
+
+Summary:
+- Accepted candidate tree `f64ba21e06ff57e2b5e78d91214398115afbe8de`
+  with version `0.2.0` and only the four authorized file changes. RC2/RC1
+  changelog history remains byte-identical. The clean archive has `677`
+  entries, `10,137,600` bytes, and SHA-256
+  `df09cc6fd7dc144daa168c9feb4a41be9b974ef450e1e81bf586787318ad1566`;
+  it excludes a root manifest and both handoffs.
+- Closed `HP-PQS-PUBLIC-V020-FN-01/TEST-01` to maintenance/completed and
+  opened `HP-PQS-PUBLIC-V020-RELEASE-FN-01/TEST-01` for one ordered exact-hash
+  transaction. The release body is frozen at `2,278` ASCII bytes including
+  its final newline, SHA-256
+  `e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2`.
+
+Goal advancement / guardrail:
+- MT5 advances from candidate preparation to final publication. The tag must
+  target `adfcaba32` explicitly; remote annotated-object/install checks and
+  independent Docs/Pages deployment must pass before the final/latest GitHub
+  release is created. The numerical matrix is not rerun at the identical tag.
+  Any partial tag or release is preserved and reported, never moved or edited.
+
+Carrying-cost accounting:
+- deleted: no code; simplified: candidate acceptance and publication opening
+  share one docs-only review; quarantined: registration, citation, paper
+  metadata, and all new source/performance work; not deleted because: RC1/RC2
+  remain immutable evidence.
+- exact remaining caller/blocker: repo-manager must execute and validate the
+  ordered transaction; source delta `0/0`, new files/tests/metadata zero;
+  candidate validation: Julia `1.10.12/1.12.6`, all three CI gates
+  `33126022579`, Docs `33126022531`, examples 01/39/40/41, H2+ `18/18`,
+  screening, export integrity, residual-GTO fixture, archive install,
+  authority/docs/Documenter, and diff checks.

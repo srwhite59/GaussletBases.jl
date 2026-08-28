@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `429d6c00e7fee1abed84ea9dc22b84dbb24672bba557b7ae8e013e4dd2351714`.
+> [authority.toml](authority.toml), SHA-256 `849e024cb340df261b5eddb8e25719c39cd7c9d396c9898329e59b743710b04e`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2208,10 +2208,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Dependencies:** `HP-PQS-PUBLIC-SCREEN-FN-01`, `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`
 - **Scope:** Maintain bounded public exact/fitted constructor, accessor, malformed-input, signed-consistency, energy/action-closure, and unchanged-physical-H1 tests plus the small one-center two-electron example. Obtain V\_IDA from a CartesianIDAHamiltonian and the accurate represented field from the existing two-orbital pure-GTO oracle. The candidate replay shares the archived fresh-resolution manifest and tracked-clean provenance required by HP-PQS-PUBLIC-MATCHED-TEST-01. No historical-He reproduction, packet fixture, external SCF, general four-index engine, exchange, solver, or mixed-basis field-construction claim.
 
-### HP-PQS-PUBLIC-V020-FN-01 - v0.2.0 final candidate preparation
+### HP-PQS-PUBLIC-V020-FN-01 - v0.2.0 final candidate maintenance
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2230,26 +2230,62 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `3419da6132810d8c4454f5b013c6302ef7842cb3`
   - `git_commit`: `94ec277d954b5435a04b0ad68ae352c95b0434c7`
   - `git_commit`: `b0dbd9ea37317590334a24883ef0667bdb0195a5`
+  - `git_commit`: `adfcaba32d4db06d9d796d947276433717bd2d89`
   - `manager_pass`: `538`
+  - `manager_pass`: `539`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-MATCHED-FN-01`, `HP-PQS-PUBLIC-RC2-FN-01`, `HP-PQS-PUBLIC-SCREEN-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-PUBLIC-PAPER-CI-FN-01`, `HP-REP-PQS-RG-WORKING-FN-01`, `HP-REP-XGTO-INTERCHANGE-FN-01`
-- **Scope:** Prepare one direct final v0.2.0 candidate from accepted post-RC2 main without RC3. Change only Project.toml version 0.2.0-rc2 to 0.2.0; prepend one concise post-RC2 v0.2.0 CHANGELOG section while retaining RC2 and RC1 byte-identically; and change README installation to rev = "v0.2.0" plus stable documentation links while preserving radial-first onboarding and the three distinct public capability stories. The release claim is only that v0.2.0 is the supported public package version closest to the software used during the separate PQS and reference-density Hartree-screening work, not an exact archive of either paper's computational history. Group support-local shell seeds, safe call-local workspace/buffer reuse, exact-order four-element Gaussian-sum acceleration, fail-closed path-aware CI, and removal of duplicate Example 41 execution without detailed benchmarks or pass history. Preserve source, exports, APIs, dependencies/compat, examples, numerical behavior, workflows, docs/make.jl, fixture formats, manifest policy, and old changelog sections. Limits: one version-line replacement; CHANGELOG preferred/hard 18/24 added lines; README preferred/hard 4/8 added lines with URL changes otherwise replacements; no new file. Candidate preparation grants no tag, release, registration, citation, stable deployment, or final transaction. Stop if any forbidden implementation surface is required.
+- **Scope:** Maintain only the exact accepted v0.2.0 candidate at commit adfcaba32d4db06d9d796d947276433717bd2d89 and tree f64ba21e06ff57e2b5e78d91214398115afbe8de: root version 0.2.0, concise post-RC2 CHANGELOG section above byte-identical RC2/RC1 history, README rev = "v0.2.0" installation and stable links with radial-first onboarding, and separate PQS, reference-density Hartree-screening, and external Cartesian-GTO stories. Preserve the modest package-nearest-software claim and accepted public numerics. The clean archive has 677 entries, 10137600 bytes, and SHA-256 df09cc6fd7dc144daa168c9feb4a41be9b974ef450e1e81bf586787318ad1566. The candidate itself authorizes no further edit, tag, release, registration, citation, or stable deployment. The exact conditional final transaction is separately owned by HP-PQS-PUBLIC-V020-RELEASE-FN-01. Preserve source, exports, APIs, dependencies/compat, examples, numerical behavior, workflows, docs/make.jl, fixture formats, manifest policy, and old changelog sections.
 
-### HP-PQS-PUBLIC-V020-TEST-01 - v0.2.0 final candidate validation
+### HP-PQS-PUBLIC-V020-RELEASE-FN-01 - v0.2.0 conditional final publication
 
 - **Lifecycle:** `approved`
 - **Grant:** `implementation`
-- **Surfaces:** `tests`
+- **Surfaces:** `tools`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0 Final Candidate And Conditional Publication Process`
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Conditional Final Transaction`
 - **Owned paths:**
-  - `test` / `existing`: `test/docs/runtests.jl`
+  - `tool` / `existing`: `.github/workflows/ci.yml`
+  - `tool` / `existing`: `.github/workflows/docs.yml`
+- **Evidence:**
+  - `git_commit`: `adfcaba32d4db06d9d796d947276433717bd2d89`
+  - `git_commit`: `d9e2189931039e039de0caafff5b18c6c696cec5`
+  - `manager_pass`: `539`
+- **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-V020-FN-01`, `HP-PUBLIC-PAPER-CI-FN-01`
+- **Scope:** Execute exactly one ordered final-v0.2.0 tag-and-publication transaction against frozen candidate adfcaba32d4db06d9d796d947276433717bd2d89, tree f64ba21e06ff57e2b5e78d91214398115afbe8de, and accepted archive identity 677 entries / 10137600 bytes / SHA-256 df09cc6fd7dc144daa168c9feb4a41be9b974ef450e1e81bf586787318ad1566. Preflight must prove synchronized main/origin main with only the two established handoffs, no local or remote v0.2.0 tag, no GitHub release for that tag, exact candidate version/tree/archive, and the exact canonical 2278-byte ASCII release body including final newline with SHA-256 e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2. Create one annotated tag named v0.2.0 with message GaussletBases v0.2.0 explicitly at the frozen candidate and push only that tag. Require the fetched remote refs/tags/v0.2.0^{tag} object, peel, tree, version, clean remote installation, and package load to agree before continuing; the exact tag does not rerun the three numerical gates. Wait for the independently triggered Docs/Pages workflow and require live exact /v0.2.0/, the real /stable/ alias, versions.js retaining stable/v0.2/RC2/RC1/dev, and intact /dev/, RC2, and RC1 before publication. Then create exactly one GitHub release with title GaussletBases v0.2.0, draft=false, prerelease=false, latest=true, zero uploaded assets, and the exact canonical body. Add no custom archives, binaries, manifests, paper workspaces, logs, data, discussion, generated notes, workflow chaining, polling framework, registration, citation, file edit, branch commit, metadata change, or additional tag/release. If tag verification or Docs/Pages fails, preserve the immutable tag and publish no release. If publication partially succeeds or postchecks differ, preserve tag and release and report without moving, deleting, recreating, editing, adding assets, or silently retrying.
+
+### HP-PQS-PUBLIC-V020-RELEASE-TEST-01 - v0.2.0 final publication validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Conditional Final Transaction`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `adfcaba32d4db06d9d796d947276433717bd2d89`
+  - `manager_pass`: `539`
+- **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-V020-RELEASE-FN-01`, `HP-PQS-PUBLIC-V020-TEST-01`, `HP-PUBLIC-PAPER-CI-TEST-01`
+- **Scope:** Required ordered transaction evidence only; this record grants no file, workflow, tag, release, repository-metadata, or asset mutation. Verify the fetched annotated remote tag object, exact peel adfcaba32d4db06d9d796d947276433717bd2d89, tree f64ba21e06ff57e2b5e78d91214398115afbe8de, version 0.2.0, archive identity, tag-lane remote installation and package load, independent Docs/Pages success, live /v0.2.0/ and real /stable/ canonical behavior, versions.js entries for stable/v0.2/RC2/RC1/dev, and intact /dev/, RC2, and RC1 before release publication. After publication verify via GitHub API and rendered page the exact tag/title, exact 2278-byte body and SHA-256 e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2, draft=false, prerelease=false, latest=true, and zero uploaded assets; require automatic source archives to reconstruct the frozen tree and a fresh isolated Julia 1.12.6 installation from rev = "v0.2.0" to load GaussletBases 0.2.0. Main/origin main and both handoffs remain unchanged. Preserve any published tag or release on failure and report without mutation or retry.
+
+### HP-PQS-PUBLIC-V020-TEST-01 - v0.2.0 final candidate acceptance
+
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `v0.2.0 Final Candidate And Conditional Publication Process`
+- **Owned paths:** none
 - **Evidence:**
   - `git_commit`: `1ab36c04753e0adaa03dafbaea4850d99b05ecba`
   - `git_commit`: `2b3c23970144aa030ae52b875a5cf01b32886b6e`
+  - `git_commit`: `adfcaba32d4db06d9d796d947276433717bd2d89`
   - `manager_pass`: `538`
+  - `manager_pass`: `539`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PQS-PUBLIC-V020-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-PAPER-CI-TEST-01`, `HP-REP-PQS-RG-WORKING-CI-TEST-01`, `HP-REP-XGTO-INTERCHANGE-TEST-01`, `HP-REP-XGTO-READER-DOC-TEST-01`
-- **Scope:** Update only existing test/docs/runtests.jl for exact version 0.2.0, the leading v0.2.0 changelog section, the immutable-tag install command, README stable links, exact final-tag canonical URL, and standard Documenter selector behavior. Preserve the prerelease-only fixture proving RC1/RC2 cannot create stable, and add or update a bounded final-folder fixture proving v0.2.0 selects the real stable alias while RC2, RC1, and dev remain represented. Preferred/hard additions are 20/30 lines; add no test file, numerical assertion, source test, workflow test machinery, parser, fixture, or dependency. Candidate acceptance must run the full three-gate matrix once, Julia 1.10 and 1.12.6 install/load, examples 01/39/40/41, the single-execution H2+ 18/18 owner, screening, export integrity, residual-GTO/external-transfer and frozen H2/cc-pVTZ checks, docs/Documenter/authority/diff checks, and a clean archive installation excluding a root Manifest and both handoffs. Return exact candidate SHA/tree/archive identity and an unpublished exact ASCII release-body draft. This record grants no tag or release operation.
+- **Scope:** Completed final-candidate acceptance evidence only; this record grants no test, workflow, source, docs, tag, or release edit. Candidate adfcaba32d4db06d9d796d947276433717bd2d89 and tree f64ba21e06ff57e2b5e78d91214398115afbe8de changed only Project.toml, CHANGELOG.md, README.md, and test/docs/runtests.jl. Direct GitHub install/load passed on Julia 1.10.12 and 1.12.6; fresh archive installation passed on 1.12.6; examples 01/39/40/41, H2+ 18/18, screening, export integrity, residual-GTO/external-transfer frozen fixture, authority, docs 114/114 + 10/10, Documenter, and diff checks passed. CI 33126022579 passed all three numerical gates and Docs 33126022531 passed. The clean archive has 677 entries, 10137600 bytes, SHA-256 df09cc6fd7dc144daa168c9feb4a41be9b974ef450e1e81bf586787318ad1566, no root Manifest, and neither handoff. The accepted exact ASCII release body has 2278 bytes including its final newline and SHA-256 e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2. The docs-test diff was +38/-9: nine one-for-one replacements and 29 substantive additions within the hard 30-line bound. The exact conditional final transaction is separately owned by HP-PQS-PUBLIC-V020-RELEASE-FN-01.
 
 ### HP-PQS-READER-DOC-01 - reader-facing PQS documentation entrance
 

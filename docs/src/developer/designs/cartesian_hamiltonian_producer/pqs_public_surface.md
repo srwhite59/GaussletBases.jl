@@ -12,8 +12,9 @@ Implementation commit: `058ee54f45c759949f70b54a699ccc318476f8ac`.
 Clean replay candidate: `72c46f9ea0dd6b2da7a6a302d34ea1c501d18647`.
 
 This page owns the narrow supported interface intended for GaussletBases
-v0.2.0. Exact candidate, tag, and GitHub-prerelease authority are isolated
-below; final-release publication remains separate. The existing numerical
+v0.2.0. Exact candidate and release authority are isolated below; the final
+conditional tag-and-publication transaction is approved but not yet executed.
+The existing numerical
 contracts remain in [R1 public base producer](r1_public_base_producer.md),
 [matched PQS/White-Lindsey aspect modes](pqs_complete_shell_aspect_source_modes.md),
 and [screened-Hartree correction assembly](screened_hartree_correction_assembly.md).
@@ -1408,24 +1409,112 @@ post-RC2 maintenance improvements, provide the exact-tag installation command,
 and link to immutable `v0.2.0` documentation and changelog locations. It must
 not be published during candidate preparation.
 
+### Accepted Final Candidate
+
+The final candidate is accepted at commit
+`adfcaba32d4db06d9d796d947276433717bd2d89` with tree
+`f64ba21e06ff57e2b5e78d91214398115afbe8de`. It changes only
+`Project.toml`, `CHANGELOG.md`, `README.md`, and `test/docs/runtests.jl` from
+the Pass 538 authority baseline. The RC2 and RC1 changelog content remains
+byte-identical with SHA-256
+`fa6b3c4a64921a78fe52469925a48cb2a8fecc3890bcfddf2e4588d5ebfa2380`.
+The documentation-test diff is `+38/-9`: nine additions are one-for-one
+version/link replacements and the remaining `29` are new validation lines,
+within the hard `30`-line substantive-addition bound.
+
+The clean candidate archive contains `677` entries, has `10,137,600` bytes,
+and has SHA-256
+`df09cc6fd7dc144daa168c9feb4a41be9b974ef450e1e81bf586787318ad1566`.
+It contains no root `Manifest.toml` and neither established handoff. Direct
+GitHub installation and package load passed on Julia `1.10.12` and `1.12.6`;
+fresh archive installation passed on Julia `1.12.6`; examples 01, 39, 40,
+and 41, the H2+ release owner `18/18`, screening, export integrity,
+residual-GTO/external-transfer fixture, docs `114/114 + 10/10`, Documenter,
+authority, and diff checks passed. CI run `33126022579` passed all three
+numerical gates and Docs run `33126022531` passed.
+
+The exact release body is ASCII, includes its final newline, contains `2,278`
+bytes, and has SHA-256
+`e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2`:
+
+````text
+# GaussletBases v0.2.0
+
+GaussletBases v0.2.0 is the supported public package version closest to the
+software used during the separate PQS and reference-density Hartree-screening
+work. It is not an exact archive of either paper's complete computational
+history.
+
+## Projected q-shells (PQS)
+
+- Provides the bounded public PQS and matched White-Lindsey H2+ construction.
+- Example 39 demonstrates a small public basis and one-body calculation.
+- Example 41 produces the matched three-row H2+ comparison and TSV used by the
+  package release gate.
+
+## Reference-density Hartree screening
+
+- Provides typed supplied-field screening assembly for exact represented and
+  explicitly fitted reference fields.
+- Example 40 demonstrates fixed-density energy and occupied-action closure.
+- Atomic fitting, packet placement, SCF, and correlated solvers remain outside
+  this public screening surface.
+
+## External Cartesian GTO transfer
+
+- Provides a strict versioned Cartesian-GTO packet reader, raw orbital import,
+  overlap diagnostics, and an explicit caller-thresholded closest-determinant
+  operation.
+- The optional PySCF checkpoint exporter records the Cartesian AO convention,
+  source overlap, occupations, and producer attestation needed by the reader.
+
+## Post-RC2 maintenance
+
+- Reduced PQS construction cost with support-local shell seeds and safe
+  call-local workspace and terminal-buffer reuse.
+- Accelerated terminal Gaussian sums with an exact-order four-element path.
+- Made path-aware CI fail closed while retaining lighter checks for proven
+  documentation-only main pushes.
+- Removed the duplicate matched-H2+ calculation from the Example 41 release
+  gate without removing its output or any of the 18 assertions.
+
+## Install
+
+```julia
+using Pkg
+Pkg.add(url = "https://github.com/srwhite59/GaussletBases.jl", rev = "v0.2.0")
+```
+
+Documentation: https://srwhite59.github.io/GaussletBases.jl/v0.2.0/
+
+Changelog: https://github.com/srwhite59/GaussletBases.jl/blob/v0.2.0/CHANGELOG.md
+
+GaussletBases provides basis and operator construction, orbital transfer, and
+bounded screening algebra. It is not a complete molecular SCF, correlated-
+solver, or paper-campaign package. The PQS and reference-density Hartree-
+screening work remain distinct method and citation lines.
+````
+
 ### Conditional Final Transaction
 
-After candidate acceptance, repo-design-manager performs a second docs-only
-pass that closes candidate preparation and opens one version-specific,
-exact-hash conditional tag-plus-publication transaction. That later authority
-must freeze:
+`HP-PQS-PUBLIC-V020-RELEASE-FN-01` authorizes one version-specific,
+exact-hash conditional tag-plus-publication transaction. It freezes:
 
 - candidate commit, tree, and archive identity;
 - annotated tag `v0.2.0` with message `GaussletBases v0.2.0`;
-- exact release title and body identity;
+- exact release title `GaussletBases v0.2.0` and the `2,278`-byte body above;
 - `draft=false`, `prerelease=false`, latest-final status `true`, and zero
   custom uploaded assets; and
 - the stop order between tag verification, documentation deployment, and
   GitHub publication.
 
-The transaction must first prove local and remote tag absence, create and push
-only the annotated tag, and stop if its remote object, peel, tree, version, or
-clean remote installation differs. Repo-manager then waits for the independent
+The transaction must first prove local and remote tag absence, GitHub-release
+absence, synchronized `main` and `origin/main`, and the exact candidate,
+tree, archive, version, and release-body identities above. It then creates one
+annotated tag explicitly at the frozen candidate and pushes only that tag. It
+must stop if the remote tag object is not annotated, cannot be dereferenced as
+`refs/tags/v0.2.0^{tag}`, or has a different peel, tree, version, or clean
+remote installation. Repo-manager then waits for the independently triggered
 Docs/Pages workflow and verifies `/v0.2.0/`, the real `/stable/` alias,
 `versions.js`, `/dev/`, RC2, and RC1 before publishing the exact GitHub release.
 No workflow chaining or polling framework is added.
@@ -1434,10 +1523,14 @@ The exact final tag does not rerun the three numerical gates. Candidate SHA and
 tree identity make that redundant. The tag lane owns annotated-object
 identity, peel/tree/version agreement, remote-tag installation, and package
 load; independent Docs/Pages owns deployed documentation. Post-publication
-checks own release metadata, automatic archive reconstruction, and a fresh
-remote-tag installation. If an operation partially succeeds, preserve the
-immutable tag or release and report the exact state without moving, deleting,
-recreating, or silently editing it.
+checks own exact title/tag/body bytes and hash, `draft=false`,
+`prerelease=false`, latest-final status, zero assets, automatic archive
+reconstruction to the frozen tree, and a fresh Julia `1.12.6` remote-tag
+installation. If tag verification or documentation deployment fails after the
+push, preserve the immutable tag, publish no release, and report. If release
+publication partially succeeds or any post-publication check differs, preserve
+the release and tag and report without moving, deleting, recreating, silently
+editing, adding assets, or retrying.
 
 A third and final docs-only pass records the accepted tag, release, archives,
 installation, selector, and stable-alias evidence. General registration,
