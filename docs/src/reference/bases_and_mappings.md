@@ -38,6 +38,25 @@ fit_asinh_mapping_for_extent
 fit_asinh_mapping_for_strength
 ```
 
+## Evaluation and introspection
+
+Mapping functions distinguish physical `x` from reference `u`; basis
+introspection likewise separates physical and reference centers.
+`integral_weights` returns basis-function integrals, not quadrature weights.
+
+```@docs
+uofx
+xofu
+dudx
+du2dx2
+basis_spec
+family
+mapping
+centers
+reference_centers
+integral_weights
+```
+
 For the one-center atomic White-Lindsey-style path, the repo now exposes
 `white_lindsey_atomic_mapping(Z=..., d=..., tail_spacing=...)` directly. This
 route is `d`-driven: choose the physical core spacing `d` first, then resolve

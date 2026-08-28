@@ -440,11 +440,46 @@ function box_children end
 function box_block end
 function box_coupling end
 
+"""
+    basis_spec(object)
+
+Return the construction specification associated with a supported basis-like object.
+"""
 function basis_spec end
+
+"""
+    family(object)
+
+Identify the gausslet family associated with a supported basis-like object.
+"""
 function family end
+
+"""
+    mapping(object)
+
+Return the map connecting the object's reference and physical coordinates.
+"""
 function mapping end
+
+"""
+    centers(object)
+
+Return the object's basis centers in physical coordinates.
+"""
 function centers end
+
+"""
+    reference_centers(object)
+
+Return the object's basis centers in reference coordinates.
+"""
 function reference_centers end
+
+"""
+    integral_weights(object)
+
+Return the integrals of the object's basis functions. These are not quadrature weights.
+"""
 function integral_weights end
 function contract_primitive_vector end
 function contract_primitive_diagonal end
@@ -556,9 +591,32 @@ function coefficients end
 function primitives end
 function terms end
 
+"""
+    uofx(mapping, x)
+
+Map physical coordinate `x` to reference coordinate `u`.
+"""
 function uofx end
+
+"""
+    xofu(mapping, u)
+
+Map reference coordinate `u` to physical coordinate `x`, the inverse of `uofx`.
+"""
 function xofu end
+
+"""
+    dudx(mapping, x)
+
+Evaluate the first derivative `du/dx` of the reference map `u(x)` at physical `x`.
+"""
 function dudx end
+
+"""
+    du2dx2(mapping, x)
+
+Evaluate the second derivative `d^2u/dx^2` of the reference map `u(x)` at physical `x`.
+"""
 function du2dx2 end
 function fit_asinh_mapping_for_extent end
 

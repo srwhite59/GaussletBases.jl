@@ -63,6 +63,10 @@
         :import_external_gto_orbitals, :read_external_cartesian_gto_packet,
         :closest_external_gto_determinant,
     )
+    foundation_exports = (
+        :uofx, :xofu, :dudx, :du2dx2, :basis_spec,
+        :family, :mapping, :centers, :reference_centers, :integral_weights,
+    )
     docs_site_developer = read_doc("docs", "src", "developer", "index.md")
     docs_site_developer_notes = read_doc("docs", "src", "developer", "supporting_notes.md")
     docs_site_architecture = read_doc("docs", "src", "developer", "architecture.md")
@@ -538,6 +542,10 @@
             "white_lindsey_atomic_mapping",
             "CombinedInvsqrtMapping",
         )
+        @test all(name -> name in names(GaussletBases), foundation_exports)
+        @test all(name -> Base.Docs.hasdoc(GaussletBases, name), foundation_exports)
+        @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_bases)\n"),
+            foundation_exports)
 
         @test contains_all(
             docs_site_reference_ops,
