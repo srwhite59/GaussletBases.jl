@@ -57,6 +57,24 @@ reference_centers
 integral_weights
 ```
 
+## Function evaluation and stencils
+
+Normal evaluation may use a specialized function method, while
+`direct_value` evaluates the stored stencil representation. Derivatives and
+centers use physical coordinates unless explicitly identified as reference.
+
+```@docs
+value
+direct_value
+derivative
+center
+reference_center
+integral_weight
+stencil
+coefficients
+terms
+```
+
 For the one-center atomic White-Lindsey-style path, the repo now exposes
 `white_lindsey_atomic_mapping(Z=..., d=..., tail_spacing=...)` directly. This
 route is `d`-driven: choose the physical core spacing `d` first, then resolve

@@ -67,6 +67,10 @@
         :uofx, :xofu, :dudx, :du2dx2, :basis_spec,
         :family, :mapping, :centers, :reference_centers, :integral_weights,
     )
+    function_stencil_exports = (
+        :value, :direct_value, :derivative, :center, :reference_center,
+        :integral_weight, :stencil, :coefficients, :terms,
+    )
     docs_site_developer = read_doc("docs", "src", "developer", "index.md")
     docs_site_developer_notes = read_doc("docs", "src", "developer", "supporting_notes.md")
     docs_site_architecture = read_doc("docs", "src", "developer", "architecture.md")
@@ -546,6 +550,10 @@
         @test all(name -> Base.Docs.hasdoc(GaussletBases, name), foundation_exports)
         @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_bases)\n"),
             foundation_exports)
+        @test all(name -> name in names(GaussletBases), function_stencil_exports)
+        @test all(name -> Base.Docs.hasdoc(GaussletBases, name), function_stencil_exports)
+        @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_bases)\n"),
+            function_stencil_exports)
 
         @test contains_all(
             docs_site_reference_ops,

@@ -402,13 +402,58 @@ electron-electron operator layer.
 """
 abstract type AbstractDiagonalApproximation end
 
+"""
+    value(f, x)
+
+Evaluate `f` at physical coordinate `x` through its normal evaluation route.
+Calling an `AbstractFunction1D` as `f(x)` delegates here.
+"""
 function value end
+
+"""
+    direct_value(f, x)
+
+Evaluate `f` at physical `x` directly from `stencil(f)`. This is exact for
+that representation, not an independent analytic oracle.
+"""
 function direct_value end
+
+"""
+    derivative(f, x; order=1)
+
+Evaluate the requested nonnegative derivative order of `f` with respect to
+physical coordinate `x`.
+"""
 function derivative end
+
+"""
+    center(f)
+
+Return the physical-coordinate center of `f`.
+"""
 function center end
+
+"""
+    reference_center(f)
+
+Return the pre-mapping, reference-coordinate center corresponding to `f`.
+"""
 function reference_center end
 function moment_center end
+
+"""
+    integral_weight(f)
+
+Return the integral of one function `f`. This is distinct from basis-level
+`integral_weights` and from quadrature weights.
+"""
 function integral_weight end
+
+"""
+    stencil(f)
+
+Return the ordered primitive expansion representing `f` as a `FunctionStencil`.
+"""
 function stencil end
 function stencil_matrix end
 function build_basis end
@@ -587,8 +632,20 @@ function atomic_operators end
 function centrifugal end
 function multipole end
 
+"""
+    coefficients(object)
+
+Return stored coefficient data. For a `FunctionStencil`, its order matches
+`primitives(stencil)`.
+"""
 function coefficients end
 function primitives end
+
+"""
+    terms(stencil)
+
+Materialize the ordered coefficient/primitive pairs as `StencilTerm` values.
+"""
 function terms end
 
 """
