@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `e89f3e82a3a55b9f6fbd61f7ea53af2f5d819f16944a05d10df1bd6015270bcf`.
+> [authority.toml](authority.toml), SHA-256 `42ce78329fc7971a1f202533ecbbacfbd0b2a8871722e8644eb68e94d04c45ad`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2493,8 +2493,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-PAPER-CI-FN-01 - paper-aligned PQS and screening CI workflow
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `tools`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2508,6 +2508,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `3cce96d40f9e4f06f23a190f782834271fca884b`
   - `git_commit`: `72446880603c7e554f6ae71b2de2dc6edf28b31b`
   - `git_commit`: `9ddc689c1bc806c7ec899cac7a39d77cb7fad3bf`
+  - `git_commit`: `15676153aec1569f5224ffa6ff5ed67b054c837f`
   - `manager_pass`: `503`
   - `manager_pass`: `504`
   - `manager_pass`: `505`
@@ -2518,13 +2519,14 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `536`
   - `manager_pass`: `537`
   - `manager_pass`: `542`
+  - `manager_pass`: `544`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`
-- **Scope:** Implement exactly one Supported-floor group-list replacement in the existing CI workflow: core,ida,cartesian,examples becomes core,ida,cartesian,examples,radial,misc. Clean Julia 1.10 evidence passed radial 322/322, misc 59/59, and combined 381/381 in about 70 seconds of testset time. Preserve the existing workflow file, three job names and rows, Julia versions, 30-minute timeout, path classifier and four-path allowlist, documentation-only markers and lightweight lane, commands, triggers, permissions, pull-request behavior, PQS and Screening groups, annotated-tag identity/install lane, disabled slow tests, and fail-closed behavior. Angular is explicitly excluded pending a separate fast-versus-acceptance audit after its first package-owned one-body fixture ran 13m49s without reaching an assertion. Add no row, job, workflow, action dependency, helper, command, trigger, permission, source, numerical policy, dependency, manifest, version, tag, release, registration, citation, or other test-owner change. Implementation scope is only .github/workflows/ci.yml with expected delta +1/-1; stop if any other workflow behavior must change.
+- **Scope:** Maintain the implemented three-gate workflow with the exact Julia 1.10 Supported-floor selection core,ida,cartesian,examples,radial,misc. Commit 15676153aec1569f5224ffa6ff5ed67b054c837f changed only that existing group list; preserve the workflow file, three job names and rows, Julia versions, 30-minute timeout, path classifier and four-path allowlist, documentation-only markers and lightweight lane, commands, triggers, permissions, pull-request behavior, PQS and Screening groups, annotated-tag identity/install lane, disabled slow tests, and fail-closed behavior. Angular remains explicitly excluded pending a separate fast-versus-acceptance audit after its first package-owned one-body fixture ran 13m49s without reaching an assertion. Add no row, job, workflow, action dependency, helper, command, trigger, permission, source, numerical policy, dependency, manifest, version, tag, release, registration, citation, or other test-owner change.
 
 ### HP-PUBLIC-PAPER-CI-TEST-01 - paper-aligned PQS and screening release validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2541,6 +2543,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `72446880603c7e554f6ae71b2de2dc6edf28b31b`
   - `git_commit`: `9ddc689c1bc806c7ec899cac7a39d77cb7fad3bf`
   - `git_commit`: `b0dbd9ea37317590334a24883ef0667bdb0195a5`
+  - `git_commit`: `15676153aec1569f5224ffa6ff5ed67b054c837f`
   - `manager_pass`: `503`
   - `manager_pass`: `504`
   - `manager_pass`: `505`
@@ -2551,8 +2554,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `536`
   - `manager_pass`: `537`
   - `manager_pass`: `542`
+  - `manager_pass`: `544`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PUBLIC-PAPER-CI-FN-01`
-- **Scope:** Implement only one focused policy assertion in test/docs/runtests.jl that requires the exact Supported-floor selection core,ida,cartesian,examples,radial,misc; at most one additional negative assertion may enforce angular absence. Preserve every numerical assertion, tolerance, fixture, pqs\_release single-execution contract, screening\_release contract, required-check identity, all three CI names/rows, path-aware routing, workflow command, and documentation link. Validate radial 322/322, misc 59/59, their combined 381/381, the complete expanded Supported-floor selection on Julia 1.10, unchanged PQS and Screening gates, and the workflow-changing implementation commit through the full remote matrix. Added test lines preferred one, hard two; no other test path may be edited. Add no numerical assertion, fixture, helper, cache, artifact, file, framework, group, row, workflow beyond the paired function-record replacement, source, API, dependency, docs, version, tag, or release change.
+- **Scope:** Maintain only the focused documentation-policy assertion requiring the exact Supported-floor selection core,ida,cartesian,examples,radial,misc. Commit 15676153aec1569f5224ffa6ff5ed67b054c837f added that assertion without changing numerical coverage. Preserve every numerical assertion, tolerance, fixture, pqs\_release single-execution contract, screening\_release contract, required-check identity, all three CI names/rows, path-aware routing, workflow command, and documentation link. Radial passed 322/322, misc passed 59/59, their combined selection passed 381/381, and remote CI run 33141930944 passed the expanded Julia 1.10 Supported-floor gate plus unchanged PQS and Screening gates. Add no numerical assertion, fixture, helper, cache, artifact, file, framework, group, row, workflow, source, API, dependency, docs, version, tag, or release change.
 
 ### HP-QW-NESTED-DIAT-FN-01 - repair exported ordinary-QW nested diatomic front doors
 

@@ -843,16 +843,17 @@ Julia `1.10` remains the declared compatibility-floor evidence. Julia `1.12`
 is the canonical paper-gate environment; this does not add Julia `1.11`,
 nightly, a new compatibility declaration, or a manifest policy.
 
-Pass 542 authorizes only the Supported-floor selection extension shown above.
+Pass 542 extended only the Supported-floor selection shown above. Commit
+`15676153aec1569f5224ffa6ff5ed67b054c837f` replaced the existing group-list
+value and added one exact workflow-policy assertion, for a total `+2/-1` delta.
 Clean Julia `1.10` evidence passed `radial` at `322/322`, `misc` at `59/59`,
 and the combined selection at `381/381`, with about `70` seconds of testset
-time beyond normal fresh-environment preparation. Implementation replaces the
-single existing group-list value in `.github/workflows/ci.yml` and may add one
-focused exact-selection assertion in `test/docs/runtests.jl`. All other
-workflow bytes, including the three job names and rows, Julia versions, timeout,
-commands, classifier,
+time beyond normal fresh-environment preparation. Remote CI run `33141930944`
+passed the expanded Supported-floor gate and the unchanged PQS and Screening
+gates; Docs run `33141930932` passed. All other workflow behavior, including
+the three job names and rows, Julia versions, timeout, commands, classifier,
 documentation-only markers, triggers, permissions, PQS and Screening groups,
-and tag lane remain byte-unchanged.
+and tag lane remains unchanged. Both records are back in maintenance.
 
 `angular` is explicitly excluded. A Julia `1.12` audit reached its first
 package-owned angular one-body fixture and then spent `13m49s` without reaching

@@ -1374,3 +1374,33 @@ Carrying-cost accounting:
   caller, implement exact `+0/-7` scope, and return for lifecycle closeout;
   no test, file, helper, metadata, numerical, workflow, or release addition is
   authorized.
+
+## Cartesian Hamiltonian Producer Pass 544 - Close Supported-Floor Radial And Misc Coverage
+
+Commit(s):
+- `15676153aec1569f5224ffa6ff5ed67b054c837f`
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the exact Supported-floor extension from
+  `core,ida,cartesian,examples` to
+  `core,ida,cartesian,examples,radial,misc`. The implementation changed one
+  workflow value and added one focused policy assertion, for `+2/-1` lines;
+  source and all other workflow behavior remained unchanged.
+- Julia `1.10` passed `radial` `322/322`, `misc` `59/59`, and their combined
+  `381/381`. Remote CI run `33141930944` passed Supported floor, PQS, and
+  Screening; Docs run `33141930932` passed. Authority/self-test, package load,
+  docs `115/115` plus `10/10`, Documenter, and diff checks also passed.
+
+Goal advancement / guardrail:
+- MT5 returns `HP-PUBLIC-PAPER-CI-FN-01/TEST-01` to maintenance after improving
+  compatibility-floor coverage. Preserve the three names/rows, path-aware
+  routing, Julia versions, and tag lane. `angular` remains excluded pending its
+  separate fast-versus-acceptance audit; no release or numerical policy follows.
+
+Carrying-cost accounting:
+- deleted: no owner or test; simplified: two live groups now run in the
+  existing floor gate; quarantined: angular and unrelated internal suites; not
+  deleted because: the three-gate public CI boundary remains live.
+- exact remaining caller/blocker: none for Pass 542; production-source delta
+  `0/0`, workflow/test delta `+2/-1`, new files and metadata fields none.
