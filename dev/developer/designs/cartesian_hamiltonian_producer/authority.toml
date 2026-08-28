@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "fc5bb131e79f0f900e95dc101cf9f18ea90998aac0a7e5f5ab4071db23e1c206"
+sha256 = "b147fe5cb73addf228b068b382192fcecf56a6af246cf45dde0f4f948cfe52c8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -4256,10 +4256,10 @@ title = "semantic source-q override validation"
     state = "existing"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-EXPORT-INTEGRITY-FN-01"
-lifecycle = "approved"
-scope = "Implement exactly one post-v0.2 export cleanup. Delete the unused four-line TimedNestedFixedBlockBuild struct from src/cartesian_nested_faces.jl and remove its root export. Remove OneCenterAtomicNestedLayerStructure and QiuWhiteResidualGaussianOperators from the root export list while retaining their definitions unchanged; in particular keep the one-line QiuWhiteResidualGaussianOperators alias to OrdinaryCartesianOperators3D for qualified compatibility. Expected production delta is +0/-7 across only src/GaussletBases.jl and src/cartesian_nested_faces.jl. Require TimedNestedFixedBlockBuild absent, both retained names defined but unexported, and the undocumented exported-binding backlog reduced from 74 to 71. Preserve CartesianBasisBundle3D and nested_fixed_block_timing_report absence, final_units and unit_keys internal-export absence, lowering_recipe, ShellLocalAngularProfileKey, @timeg, CuratedSpherePointSet, LegacySGaussianData, QiuWhiteHybridOrbital3D, every ordinary/QW/nested numerical result, and immutable v0.2.0 tags/releases. Add no shim, warning, replacement API, alias deletion, docstring, test, helper, metadata, file, dependency, numerical change, workflow, version, tag, release, registration, or citation change. Ignored historical probes and conflicted copies remain untouched. Stop if any committed caller exists or any retained definition/numerical behavior must change."
+lifecycle = "implemented"
+scope = "Maintain the post-v0.2 export cleanup implemented by commit 6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468. TimedNestedFixedBlockBuild and its root export remain absent. OneCenterAtomicNestedLayerStructure and QiuWhiteResidualGaussianOperators remain defined but unexported; retain the one-line QiuWhiteResidualGaussianOperators alias to OrdinaryCartesianOperators3D for qualified compatibility. The accepted production delta is +0/-7 across src/GaussletBases.jl and src/cartesian_nested_faces.jl, and the undocumented exported-binding backlog is 71. Preserve CartesianBasisBundle3D and nested_fixed_block_timing_report absence, final_units and unit_keys internal-export absence, lowering_recipe, ShellLocalAngularProfileKey, @timeg, CuratedSpherePointSet, LegacySGaussianData, QiuWhiteHybridOrbital3D, every ordinary/QW/nested numerical result, and immutable v0.2.0 tags/releases. Add no shim, warning, replacement API, alias deletion, docstring, test, helper, metadata, file, dependency, numerical change, workflow, version, tag, release, registration, or citation change. Ignored historical probes and conflicted copies remain untouched."
 surfaces = ["source"]
 title = "reduce unsupported package exports"
 
@@ -4275,6 +4275,9 @@ title = "reduce unsupported package exports"
     kind = "git_commit"
     value = "b72500f7e619db5875918e3290ed2b306be51f43"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "499"
     [[records.evidence_refs]]
@@ -4283,6 +4286,9 @@ title = "reduce unsupported package exports"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "543"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "545"
 
     [[records.paths]]
     kind = "source"
@@ -4297,7 +4303,7 @@ dependency_ids = ["HP-PUBLIC-EXPORT-INTEGRITY-FN-01"]
 grant = "maintenance"
 id = "HP-PUBLIC-EXPORT-INTEGRITY-TEST-01"
 lifecycle = "completed"
-scope = "Maintain the compact dynamic regression in test/core/runtests.jl unchanged. It audits GaussletBases and every defined direct package-owned child module discovered with names(GaussletBases; all=true, imported=false) and parentmodule(child) === GaussletBases. For each name returned by names(module; all=false, imported=false), require the binding to be defined; when the value is a Function, require methods(value) to be nonempty. For the paired post-v0.2 cleanup, use this existing owner plus runtime inspection to prove TimedNestedFixedBlockBuild absent, OneCenterAtomicNestedLayerStructure and QiuWhiteResidualGaussianOperators defined but unexported, and the undocumented export backlog reduced from 74 to 71. Preserve this invariant without editing tests, snapshotting an export list, classifying broader use, traversing external/imported modules, or adding numerical assertions. Add no test file, fixture, dependency, helper, compatibility assertion, version/release check, or broad architecture audit under this record."
+scope = "Maintain the compact dynamic regression in test/core/runtests.jl unchanged. It audits GaussletBases and every defined direct package-owned child module discovered with names(GaussletBases; all=true, imported=false) and parentmodule(child) === GaussletBases. For each name returned by names(module; all=false, imported=false), require the binding to be defined; when the value is a Function, require methods(value) to be nonempty. Commit 6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468 passed this owner while runtime inspection proved TimedNestedFixedBlockBuild absent, OneCenterAtomicNestedLayerStructure and QiuWhiteResidualGaussianOperators defined but unexported, and the undocumented export backlog reduced from 74 to 71. Preserve this invariant without editing tests, snapshotting an export list, classifying broader use, traversing external/imported modules, or adding numerical assertions. Add no test file, fixture, dependency, helper, compatibility assertion, version/release check, or broad architecture audit under this record."
 surfaces = ["tests"]
 title = "validate package export integrity"
 
@@ -4313,6 +4319,9 @@ title = "validate package export integrity"
     kind = "git_commit"
     value = "b72500f7e619db5875918e3290ed2b306be51f43"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "499"
     [[records.evidence_refs]]
@@ -4321,6 +4330,9 @@ title = "validate package export integrity"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "543"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "545"
 
     [[records.paths]]
     kind = "test"
