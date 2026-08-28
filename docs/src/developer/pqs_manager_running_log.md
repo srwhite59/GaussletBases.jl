@@ -87,11 +87,12 @@ archaeology and are not normal startup reading.
   is accepted at object `7c8a21b99`, and package-centered GitHub prerelease
   `376503169` is published and validated. Direct final `v0.2.0` candidate
   `adfcaba32` is accepted without RC3 under a modest package-nearest-software
-  claim. Its immutable annotated tag is now accepted at object `722e8e875`,
-  but tag CI `33130411193` hit an operational local lightweight-tag collision
-  before verification. One fresh-scratch namespaced-ref recovery lane is
-  active before the still-unpublished final GitHub release; registration and
-  citation remain separate.
+  claim. Its immutable annotated tag is accepted at object `722e8e875`, and
+  final GitHub release `378216554` is published as the latest non-prerelease
+  with zero uploaded assets. The fresh namespaced-ref recovery lane closed the
+  frozen tag workflow's local-ref collision without rerunning numerical gates.
+  Versioned and stable documentation, archives, and clean installation are
+  accepted; registration and citation remain separate.
 - Production defaults, public workflows, corrected artifacts, and Cr2 endpoint
   claims remain unchanged unless separately authorized.
 
@@ -157,12 +158,12 @@ versioned folder, explicit selector entry, and package-centered GitHub
 prerelease are accepted. The RC2 candidate, immutable tag, versioned folder,
 selector entry, and exact GitHub prerelease are also accepted. Path-aware CI is
 implemented and accepted as a bounded release-efficiency refinement. The exact
-final candidate and immutable annotated tag are frozen. Docs/Pages deployed
-the versioned folder and stable alias correctly, but the frozen tag lane failed
-on a local-ref collision. One namespaced fresh-scratch identity/install check
-must pass before the exact final GitHub release may be published. Separate PQS
-and screening surfaces remain fixed; any identity or deployment mismatch stops
-publication. Registration and citation metadata remain separate.
+final candidate, immutable annotated tag, final/latest GitHub release,
+versioned/stable documentation, archives, and clean installation are accepted.
+The tag-lane local-ref collision was recovered through exact namespaced manual
+verification without a numerical rerun. Separate PQS and screening surfaces
+remain fixed. Future tag-lane repair, registration, citation metadata, and any
+later release are separate decisions.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
 metadata, unsupported exports, and development-era tests as conformance work
@@ -1266,4 +1267,38 @@ Carrying-cost accounting:
   immutable tag and release identity checks remain mandatory.
 - exact remaining caller/blocker: repo-manager must pass the manual lane and
   publish/verify the exact release, or stop without mutation; source/test/
+  workflow delta `0/0`, new files and metadata fields none.
+
+## Cartesian Hamiltonian Producer Pass 541 - Close v0.2.0 Final Publication
+
+Commit(s):
+- immutable annotated tag object
+  `722e8e8752a9d23f45e95d2f88e1749f9f3002e4`, peeling to candidate
+  `adfcaba32d4db06d9d796d947276433717bd2d89` and tree `f64ba21e0`.
+- this docs-only publication lifecycle closeout.
+
+Summary:
+- Accepted final GitHub release `378216554` with exact tag/title, final and
+  latest status, zero uploaded assets, and the frozen `2,278`-byte body with
+  SHA-256 `e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2`.
+  Both automatic archives reconstruct the frozen tree, and a fresh Julia
+  `1.12.6` installation from `rev = "v0.2.0"` loaded GaussletBases `0.2.0`.
+- The manual namespaced-ref lane matched the tag object, message, peel, tree,
+  version, `git ls-remote`, and GitHub API. `/v0.2.0/` and `/stable/` remain
+  identical with the exact-version canonical URL; selectors retain stable,
+  `v0.2`, RC2, RC1, and `dev`. No numerical gate was rerun.
+
+Goal advancement / guardrail:
+- MT5 closes final-v0.2 publication and returns both release records to
+  completed/no-grant maintenance. The package claim remains modest and keeps
+  PQS, screening, and interchange distinct. Do not mutate the final tag or
+  release. Registration, citation, future tag-lane repair, and later releases
+  require separate authority.
+
+Carrying-cost accounting:
+- deleted: the active publication grant; simplified: one completed release
+  record now owns the durable evidence; quarantined: registration, citation,
+  workflow repair, and later-release work; not deleted because: immutable
+  release, archive, installation, and documentation evidence remains live.
+- exact remaining caller/blocker: none for v0.2.0 publication; source/test/
   workflow delta `0/0`, new files and metadata fields none.

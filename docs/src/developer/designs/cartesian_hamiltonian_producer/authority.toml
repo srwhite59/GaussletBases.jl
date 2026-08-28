@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "4d6da68670db9e47094c2e77b1580f4a66f48849aaef812273dd8c00753b3a63"
+sha256 = "78c6a42e5112167eaa99a2097c3a97082565301eb19444babfb5c4cb4ad1551c"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -3899,15 +3899,16 @@ title = "v0.2.0 final candidate maintenance"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PUBLIC-V020-FN-01", "HP-PUBLIC-PAPER-CI-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-PQS-PUBLIC-V020-RELEASE-FN-01"
-lifecycle = "approved"
-scope = "Continue exactly one final-v0.2.0 publication transaction after preserving the correctly created immutable annotated tag object 722e8e8752a9d23f45e95d2f88e1749f9f3002e4, message GaussletBases v0.2.0, peel adfcaba32d4db06d9d796d947276433717bd2d89, tree f64ba21e06ff57e2b5e78d91214398115afbe8de, and accepted archive identity 677 entries / 10137600 bytes / SHA-256 df09cc6fd7dc144daa168c9feb4a41be9b974ef450e1e81bf586787318ad1566. Tag CI 33130411193 failed only because checkout created a local lightweight tag and the verification fetch refused to clobber it; do not rerun, move, replace, delete, recreate, force-fetch, or otherwise mutate the immutable tag. In one fresh machine-local scratch repository, fetch remote refs/tags/v0.2.0 into a namespaced temporary ref and require ^{tag}, object type tag, exact object/message/peel/tree/version, matching git ls-remote and GitHub API identities, and a fresh isolated Julia 1.12.6 remote-tag installation loading GaussletBases 0.2.0 with the frozen tree. This manual lane replaces only the failed mechanical tag-CI verification and does not rerun the numerical gates or create a repository event. Docs 33130411176 and Pages 33130489319 passed; immediately before publication reverify exact /v0.2.0/, the real /stable/ alias, versions.js retaining stable/v0.2/RC2/RC1/dev, intact /dev/, RC2, and RC1, synchronized main/origin main with only the two handoffs, release absence, and the exact canonical 2278-byte ASCII body including final newline with SHA-256 e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2. If all checks pass, create exactly one GitHub release with title GaussletBases v0.2.0, draft=false, prerelease=false, latest=true, zero uploaded assets, and that exact body. Add no custom archives, binaries, manifests, paper workspaces, logs, data, discussion, generated notes, workflow change/chaining, polling framework, registration, citation, file edit, branch commit, metadata change, or additional tag/release. If manual verification or deployment recheck fails, preserve the tag and publish no release. If publication partially succeeds or postchecks differ, preserve tag and release and report without mutation or retry. Future main-branch tag-lane repair is separate."
-surfaces = ["tools"]
-title = "v0.2.0 conditional final publication"
+lifecycle = "completed"
+paths = []
+scope = "Completed final GitHub release publication only; this record grants no further release, tag, file, workflow, repository-metadata, or asset mutation. Release 378216554 is visible at the immutable v0.2.0 tag with title GaussletBases v0.2.0, draft=false, prerelease=false, latest-final status, zero uploaded assets, and the exact 2278-byte ASCII body including final newline with SHA-256 e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2. Annotated tag object 722e8e8752a9d23f45e95d2f88e1749f9f3002e4 has message GaussletBases v0.2.0 and still peels to frozen commit adfcaba32d4db06d9d796d947276433717bd2d89 and tree f64ba21e06ff57e2b5e78d91214398115afbe8de. The fresh-scratch namespaced-ref lane proved tag/message/peel/tree/version and ls-remote/API identity after tag CI 33130411193 encountered only its local lightweight-tag collision. Docs 33130411176 and Pages 33130489319 passed; /v0.2.0/ and the real /stable/ alias are identical and canonicalize to /v0.2.0/, versions.js retains stable/v0.2/RC2/RC1/dev, and prior folders remain intact. Both automatic archives reconstruct the frozen tree, and a fresh isolated Julia 1.12.6 installation from rev = \"v0.2.0\" loaded GaussletBases 0.2.0 with that tree. No numerical gate was rerun. Preserve the published release and tag without editing, deleting, recreating, retargeting, moving, adding assets, or silent retry. Main-branch tag-lane repair, registration, citation metadata, later releases, and any source/API/test/example/dependency/workflow/numerical change require separate authority."
+surfaces = []
+title = "v0.2.0 final GitHub release publication"
 
     [[records.document_refs]]
-    heading = "Conditional Final Transaction"
+    heading = "Final Publication Closeout"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
 
@@ -3918,32 +3919,29 @@ title = "v0.2.0 conditional final publication"
     kind = "git_commit"
     value = "d9e2189931039e039de0caafff5b18c6c696cec5"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "4323ed4dbc9199bfec92d522ddc870f336eeb6e8"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "539"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "540"
-
-    [[records.paths]]
-    kind = "tool"
-    path = ".github/workflows/ci.yml"
-    state = "existing"
-    [[records.paths]]
-    kind = "tool"
-    path = ".github/workflows/docs.yml"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "541"
 [[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-TEST-01", "HP-PQS-PUBLIC-V020-RELEASE-FN-01", "HP-PQS-PUBLIC-V020-TEST-01", "HP-PUBLIC-PAPER-CI-TEST-01"]
 grant = "none"
 id = "HP-PQS-PUBLIC-V020-RELEASE-TEST-01"
-lifecycle = "approved"
+lifecycle = "completed"
 paths = []
-scope = "Required recovery and post-publication evidence only; this record grants no file, workflow, tag, release, repository-metadata, or asset mutation. Record failed tag CI 33130411193 as an operational local-ref collision and require the fresh-scratch namespaced-ref lane to prove remote annotated object 722e8e8752a9d23f45e95d2f88e1749f9f3002e4, message GaussletBases v0.2.0, exact peel adfcaba32d4db06d9d796d947276433717bd2d89, tree f64ba21e06ff57e2b5e78d91214398115afbe8de, version 0.2.0, matching ls-remote/API identities, and clean Julia 1.12.6 installation/load. Accept Docs 33130411176 and Pages 33130489319 only after live recheck of /v0.2.0/, real /stable/, stable/v0.2/RC2/RC1/dev selectors, and prior folders. After publication verify via GitHub API and rendered page the exact tag/title, exact 2278-byte body and SHA-256 e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2, draft=false, prerelease=false, latest=true, and zero uploaded assets; require automatic source archives to reconstruct the frozen tree and a fresh isolated Julia 1.12.6 installation from rev = \"v0.2.0\" to load GaussletBases 0.2.0. Main/origin main and both handoffs remain unchanged. Preserve any published tag or release on failure and report without mutation or retry."
+scope = "Completed final-publication evidence only; this record grants no file, release, tag, workflow, repository-metadata, or asset mutation. GitHub API and rendered-page checks confirm release 378216554 has exact tag v0.2.0, title GaussletBases v0.2.0, 2278-byte canonical body with final newline and SHA-256 e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2, draft=false, prerelease=false, latest-final status, and zero uploaded assets. The fresh namespaced verification ref, git ls-remote, GitHub API, and local tag agree on annotated object 722e8e8752a9d23f45e95d2f88e1749f9f3002e4, message GaussletBases v0.2.0, peel adfcaba32d4db06d9d796d947276433717bd2d89, tree f64ba21e06ff57e2b5e78d91214398115afbe8de, and version 0.2.0. Both automatic source archives reconstruct that tree; a fresh isolated Julia 1.12.6 tag installation loaded GaussletBases 0.2.0 with the same tree. /v0.2.0/, /stable/, selector entries, /dev/, RC2, and RC1 remain correct. No numerical gate was rerun. Preserve the accepted release and immutable tag without edit, deletion, recreation, retargeting, movement, asset upload, or silent retry."
 surfaces = []
 title = "v0.2.0 final publication validation"
 
     [[records.document_refs]]
-    heading = "Conditional Final Transaction"
+    heading = "Final Publication Closeout"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
 
@@ -3951,11 +3949,17 @@ title = "v0.2.0 final publication validation"
     kind = "git_commit"
     value = "adfcaba32d4db06d9d796d947276433717bd2d89"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "4323ed4dbc9199bfec92d522ddc870f336eeb6e8"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "539"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "540"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "541"
 [[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-TEST-01", "HP-PQS-PUBLIC-MATCHED-TEST-01", "HP-PQS-PUBLIC-SCREEN-TEST-01", "HP-PQS-PUBLIC-V020-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-TEST-01", "HP-PUBLIC-PAPER-CI-TEST-01", "HP-REP-PQS-RG-WORKING-CI-TEST-01", "HP-REP-XGTO-INTERCHANGE-TEST-01", "HP-REP-XGTO-READER-DOC-TEST-01"]
 grant = "none"

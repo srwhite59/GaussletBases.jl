@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `7a3086fbb4da564dc005c7d65f372afb7a2243b2dfcff74262d2ac265e37192d`.
+> [authority.toml](authority.toml), SHA-256 `b0d8439792f6966a957e50bf1c60b1173be54899d36fb587ba74d2d5ee972d8e`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2236,40 +2236,42 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-MATCHED-FN-01`, `HP-PQS-PUBLIC-RC2-FN-01`, `HP-PQS-PUBLIC-SCREEN-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-PUBLIC-PAPER-CI-FN-01`, `HP-REP-PQS-RG-WORKING-FN-01`, `HP-REP-XGTO-INTERCHANGE-FN-01`
 - **Scope:** Maintain only the exact accepted v0.2.0 candidate at commit adfcaba32d4db06d9d796d947276433717bd2d89 and tree f64ba21e06ff57e2b5e78d91214398115afbe8de: root version 0.2.0, concise post-RC2 CHANGELOG section above byte-identical RC2/RC1 history, README rev = "v0.2.0" installation and stable links with radial-first onboarding, and separate PQS, reference-density Hartree-screening, and external Cartesian-GTO stories. Preserve the modest package-nearest-software claim and accepted public numerics. The clean archive has 677 entries, 10137600 bytes, and SHA-256 df09cc6fd7dc144daa168c9feb4a41be9b974ef450e1e81bf586787318ad1566. The candidate itself authorizes no further edit, tag, release, registration, citation, or stable deployment. The exact conditional final transaction is separately owned by HP-PQS-PUBLIC-V020-RELEASE-FN-01. Preserve source, exports, APIs, dependencies/compat, examples, numerical behavior, workflows, docs/make.jl, fixture formats, manifest policy, and old changelog sections.
 
-### HP-PQS-PUBLIC-V020-RELEASE-FN-01 - v0.2.0 conditional final publication
+### HP-PQS-PUBLIC-V020-RELEASE-FN-01 - v0.2.0 final GitHub release publication
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tools`
-- **Execution whitelist:** `true`
-- **Documents:**
-  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Conditional Final Transaction`
-- **Owned paths:**
-  - `tool` / `existing`: `.github/workflows/ci.yml`
-  - `tool` / `existing`: `.github/workflows/docs.yml`
-- **Evidence:**
-  - `git_commit`: `adfcaba32d4db06d9d796d947276433717bd2d89`
-  - `git_commit`: `d9e2189931039e039de0caafff5b18c6c696cec5`
-  - `manager_pass`: `539`
-  - `manager_pass`: `540`
-- **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-V020-FN-01`, `HP-PUBLIC-PAPER-CI-FN-01`
-- **Scope:** Continue exactly one final-v0.2.0 publication transaction after preserving the correctly created immutable annotated tag object 722e8e8752a9d23f45e95d2f88e1749f9f3002e4, message GaussletBases v0.2.0, peel adfcaba32d4db06d9d796d947276433717bd2d89, tree f64ba21e06ff57e2b5e78d91214398115afbe8de, and accepted archive identity 677 entries / 10137600 bytes / SHA-256 df09cc6fd7dc144daa168c9feb4a41be9b974ef450e1e81bf586787318ad1566. Tag CI 33130411193 failed only because checkout created a local lightweight tag and the verification fetch refused to clobber it; do not rerun, move, replace, delete, recreate, force-fetch, or otherwise mutate the immutable tag. In one fresh machine-local scratch repository, fetch remote refs/tags/v0.2.0 into a namespaced temporary ref and require ^{tag}, object type tag, exact object/message/peel/tree/version, matching git ls-remote and GitHub API identities, and a fresh isolated Julia 1.12.6 remote-tag installation loading GaussletBases 0.2.0 with the frozen tree. This manual lane replaces only the failed mechanical tag-CI verification and does not rerun the numerical gates or create a repository event. Docs 33130411176 and Pages 33130489319 passed; immediately before publication reverify exact /v0.2.0/, the real /stable/ alias, versions.js retaining stable/v0.2/RC2/RC1/dev, intact /dev/, RC2, and RC1, synchronized main/origin main with only the two handoffs, release absence, and the exact canonical 2278-byte ASCII body including final newline with SHA-256 e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2. If all checks pass, create exactly one GitHub release with title GaussletBases v0.2.0, draft=false, prerelease=false, latest=true, zero uploaded assets, and that exact body. Add no custom archives, binaries, manifests, paper workspaces, logs, data, discussion, generated notes, workflow change/chaining, polling framework, registration, citation, file edit, branch commit, metadata change, or additional tag/release. If manual verification or deployment recheck fails, preserve the tag and publish no release. If publication partially succeeds or postchecks differ, preserve tag and release and report without mutation or retry. Future main-branch tag-lane repair is separate.
-
-### HP-PQS-PUBLIC-V020-RELEASE-TEST-01 - v0.2.0 final publication validation
-
-- **Lifecycle:** `approved`
+- **Lifecycle:** `completed`
 - **Grant:** `none`
 - **Surfaces:** none
 - **Execution whitelist:** `false`
 - **Documents:**
-  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Conditional Final Transaction`
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Final Publication Closeout`
 - **Owned paths:** none
 - **Evidence:**
   - `git_commit`: `adfcaba32d4db06d9d796d947276433717bd2d89`
+  - `git_commit`: `d9e2189931039e039de0caafff5b18c6c696cec5`
+  - `git_commit`: `4323ed4dbc9199bfec92d522ddc870f336eeb6e8`
   - `manager_pass`: `539`
   - `manager_pass`: `540`
+  - `manager_pass`: `541`
+- **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-V020-FN-01`, `HP-PUBLIC-PAPER-CI-FN-01`
+- **Scope:** Completed final GitHub release publication only; this record grants no further release, tag, file, workflow, repository-metadata, or asset mutation. Release 378216554 is visible at the immutable v0.2.0 tag with title GaussletBases v0.2.0, draft=false, prerelease=false, latest-final status, zero uploaded assets, and the exact 2278-byte ASCII body including final newline with SHA-256 e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2. Annotated tag object 722e8e8752a9d23f45e95d2f88e1749f9f3002e4 has message GaussletBases v0.2.0 and still peels to frozen commit adfcaba32d4db06d9d796d947276433717bd2d89 and tree f64ba21e06ff57e2b5e78d91214398115afbe8de. The fresh-scratch namespaced-ref lane proved tag/message/peel/tree/version and ls-remote/API identity after tag CI 33130411193 encountered only its local lightweight-tag collision. Docs 33130411176 and Pages 33130489319 passed; /v0.2.0/ and the real /stable/ alias are identical and canonicalize to /v0.2.0/, versions.js retains stable/v0.2/RC2/RC1/dev, and prior folders remain intact. Both automatic archives reconstruct the frozen tree, and a fresh isolated Julia 1.12.6 installation from rev = "v0.2.0" loaded GaussletBases 0.2.0 with that tree. No numerical gate was rerun. Preserve the published release and tag without editing, deleting, recreating, retargeting, moving, adding assets, or silent retry. Main-branch tag-lane repair, registration, citation metadata, later releases, and any source/API/test/example/dependency/workflow/numerical change require separate authority.
+
+### HP-PQS-PUBLIC-V020-RELEASE-TEST-01 - v0.2.0 final publication validation
+
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Final Publication Closeout`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `adfcaba32d4db06d9d796d947276433717bd2d89`
+  - `git_commit`: `4323ed4dbc9199bfec92d522ddc870f336eeb6e8`
+  - `manager_pass`: `539`
+  - `manager_pass`: `540`
+  - `manager_pass`: `541`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-V020-RELEASE-FN-01`, `HP-PQS-PUBLIC-V020-TEST-01`, `HP-PUBLIC-PAPER-CI-TEST-01`
-- **Scope:** Required recovery and post-publication evidence only; this record grants no file, workflow, tag, release, repository-metadata, or asset mutation. Record failed tag CI 33130411193 as an operational local-ref collision and require the fresh-scratch namespaced-ref lane to prove remote annotated object 722e8e8752a9d23f45e95d2f88e1749f9f3002e4, message GaussletBases v0.2.0, exact peel adfcaba32d4db06d9d796d947276433717bd2d89, tree f64ba21e06ff57e2b5e78d91214398115afbe8de, version 0.2.0, matching ls-remote/API identities, and clean Julia 1.12.6 installation/load. Accept Docs 33130411176 and Pages 33130489319 only after live recheck of /v0.2.0/, real /stable/, stable/v0.2/RC2/RC1/dev selectors, and prior folders. After publication verify via GitHub API and rendered page the exact tag/title, exact 2278-byte body and SHA-256 e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2, draft=false, prerelease=false, latest=true, and zero uploaded assets; require automatic source archives to reconstruct the frozen tree and a fresh isolated Julia 1.12.6 installation from rev = "v0.2.0" to load GaussletBases 0.2.0. Main/origin main and both handoffs remain unchanged. Preserve any published tag or release on failure and report without mutation or retry.
+- **Scope:** Completed final-publication evidence only; this record grants no file, release, tag, workflow, repository-metadata, or asset mutation. GitHub API and rendered-page checks confirm release 378216554 has exact tag v0.2.0, title GaussletBases v0.2.0, 2278-byte canonical body with final newline and SHA-256 e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2, draft=false, prerelease=false, latest-final status, and zero uploaded assets. The fresh namespaced verification ref, git ls-remote, GitHub API, and local tag agree on annotated object 722e8e8752a9d23f45e95d2f88e1749f9f3002e4, message GaussletBases v0.2.0, peel adfcaba32d4db06d9d796d947276433717bd2d89, tree f64ba21e06ff57e2b5e78d91214398115afbe8de, and version 0.2.0. Both automatic source archives reconstruct that tree; a fresh isolated Julia 1.12.6 tag installation loaded GaussletBases 0.2.0 with the same tree. /v0.2.0/, /stable/, selector entries, /dev/, RC2, and RC1 remain correct. No numerical gate was rerun. Preserve the accepted release and immutable tag without edit, deletion, recreation, retargeting, movement, asset upload, or silent retry.
 
 ### HP-PQS-PUBLIC-V020-TEST-01 - v0.2.0 final candidate acceptance
 

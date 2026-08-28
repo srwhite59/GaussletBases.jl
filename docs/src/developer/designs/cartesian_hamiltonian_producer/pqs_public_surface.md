@@ -1550,8 +1550,8 @@ The immutable remote tag is preserved as object
 `rev = "v0.2.0"` loaded package version `0.2.0` with the frozen tree. Docs run
 `33130411176` and Pages run `33130489319` passed; `/v0.2.0/` and `/stable/`
 are identical with the exact-version canonical URL, `versions.js` retains
-stable, `v0.2`, RC2, RC1, and `dev`, and all prior folders remain intact. No
-GitHub final release exists.
+stable, `v0.2`, RC2, RC1, and `dev`, and all prior folders remain intact. At
+recovery authorization time, no GitHub final release existed.
 
 Because the tag cannot be changed or made to rerun corrected frozen workflow
 code, the transaction may recover through one bounded manual verification
@@ -1579,7 +1579,28 @@ published. If it fails, preserve the tag and stop. Repairing the main-branch
 tag lane for later releases is a separate workflow-maintenance decision and
 does not block this exact release.
 
-A third and final docs-only pass records the accepted tag, release, archives,
-installation, selector, and stable-alias evidence. General registration,
-`CITATION.cff`, package/paper citations, paper titles or journal status, large
-reproduction bundles, and any later patch release remain separate decisions.
+#### Final Publication Closeout
+
+The namespaced fresh-scratch lane passed. It independently resolved annotated
+tag object `722e8e8752a9d23f45e95d2f88e1749f9f3002e4`, exact message
+`GaussletBases v0.2.0`, candidate `adfcaba32d4db06d9d796d947276433717bd2d89`,
+tree `f64ba21e06ff57e2b5e78d91214398115afbe8de`, and package version `0.2.0`.
+`git ls-remote`, the GitHub API, and a fresh Julia `1.12.6` installation from
+`rev = "v0.2.0"` agreed. The install loaded GaussletBases `0.2.0` with the
+frozen tree. No numerical gate was rerun.
+
+GitHub release `378216554` is published at the immutable `v0.2.0` tag with
+title `GaussletBases v0.2.0`, `draft=false`, `prerelease=false`, latest-final
+status, zero uploaded assets, and the exact `2,278`-byte ASCII body above with
+final newline and SHA-256
+`e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2`.
+Both automatic source archives reconstruct the frozen tree. `/v0.2.0/` and
+the real `/stable/` alias are identical and canonicalize to `/v0.2.0/`;
+`versions.js` retains stable, `v0.2`, RC2, RC1, and `dev`, and all prior
+documentation folders remain intact.
+
+The final tag and release are now immutable maintenance evidence. Do not edit,
+delete, recreate, retarget, move, add assets to, or silently retry either one.
+General registration, `CITATION.cff`, package/paper citations, paper titles or
+journal status, large reproduction bundles, future tag-lane repair, and any
+later patch release remain separate decisions.
