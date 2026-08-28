@@ -972,10 +972,6 @@ struct CartesianNestedSequenceContractAudit
     ownership_multi_owned_row_count::Int
 end
 
-struct TimedNestedFixedBlockBuild{F}
-    fixed_block::F
-    timings::TimeG.TimingReport
-end
 
 struct _CartesianNestedSupportAxes3D
     x::Vector{Int}
