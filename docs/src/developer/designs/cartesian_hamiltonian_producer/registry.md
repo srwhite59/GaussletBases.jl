@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `4947720a236977bfc1704e480ae45fc71cb40127589cb609fe541a7d2cb45a1f`.
+> [authority.toml](authority.toml), SHA-256 `cb277163a96ffd58295877f8326e82fdbed499ed2afbf394ef15eaa46397a460`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2532,8 +2532,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-FUNCTION-STENCIL-DOC-FN-01 - document function evaluation and stencil bindings
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2542,14 +2542,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/reference/bases_and_mappings.md`
   - `source` / `existing`: `src/GaussletBases.jl`
 - **Evidence:**
+  - `git_commit`: `624718972627b5ebf74beaa57ad73b8725aac587`
   - `manager_pass`: `548`
+  - `manager_pass`: `549`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-PUBLIC-FOUNDATION-DOC-FN-01`
-- **Scope:** Document exactly nine existing exported generics without changing behavior: value is the normal function-evaluation route and f(x) delegates to it; direct\_value evaluates the object's stencil representation and is exact for that representation rather than an independent analytic oracle; derivative evaluates a caller-requested nonnegative derivative order with respect to physical x; center and reference\_center return physical and pre-mapping/reference-coordinate centers; integral\_weight is the integral of one function and is distinct from basis-level integral\_weights and quadrature weights; stencil exposes the ordered primitive expansion; coefficients returns stored coefficient data and for FunctionStencil follows primitives(stencil) order; terms materializes the ordered coefficient/primitive pairs as StencilTerm values. Add concise docstrings only to the existing bare declarations in src/GaussletBases.jl and one compact function-evaluation/stencil @docs section in docs/src/reference/bases\_and\_mappings.md containing exactly these names. Preferred/hard budgets are 60/90 added source-docstring lines and 18/30 reference-page lines, with no new file. Require the undocumented exported-binding backlog to fall exactly from 61 to 52. Preserve every definition, method, signature, dispatch, export, return value, numerical result, default, allocation policy, compatibility floor, workflow, tag, and release artifact. Do not change Documenter checkdocs, add a global undocumented-name allowlist, or broaden into basis metadata, partitions, operators, angular work, API reduction, source behavior, dependencies, examples, or release work. Budgets are stop-and-report bounds; stop without an implementation commit if truthful documentation requires any behavioral or public-surface change.
+- **Scope:** Maintain only the accepted function-evaluation/stencil documentation from 624718972627b5ebf74beaa57ad73b8725aac587: concise docstrings on the nine existing exported generics value, direct\_value, derivative, center, reference\_center, integral\_weight, stencil, coefficients, and terms, plus their compact @docs section in docs/src/reference/bases\_and\_mappings.md. Preserve normal f(x)-to-value delegation; direct stencil-representation evaluation without an independent-oracle claim; nonnegative physical-x derivative order; physical/reference center distinction; per-function integral meaning; and ordered primitive, coefficient, and StencilTerm semantics. Preserve every definition, method, signature, dispatch, export, return value, numerical result, default, allocation policy, compatibility floor, workflow, tag, and release artifact. Do not change Documenter checkdocs, add a global undocumented-name allowlist, or broaden into basis metadata, partitions, operators, angular work, API reduction, source behavior, dependencies, examples, or release work.
 
 ### HP-PUBLIC-FUNCTION-STENCIL-DOC-TEST-01 - validate function evaluation and stencil documentation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2557,9 +2559,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `624718972627b5ebf74beaa57ad73b8725aac587`
   - `manager_pass`: `548`
+  - `manager_pass`: `549`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-FOUNDATION-DOC-TEST-01`, `HP-PUBLIC-FUNCTION-STENCIL-DOC-FN-01`
-- **Scope:** In the existing test/docs/runtests.jl owner, add only family-scoped checks that the exact nine function-evaluation/stencil bindings are exported, carry Julia documentation, and appear in docs/src/reference/bases\_and\_mappings.md. Preserve Documenter as the executable @docs resolution gate. Preferred/hard additions are 10/16 test lines. Use implementation-time runtime inspection to confirm the undocumented export backlog is exactly 52, but add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan.
+- **Scope:** Maintain only the accepted family-scoped checks from 624718972627b5ebf74beaa57ad73b8725aac587 that the exact nine function-evaluation/stencil bindings remain exported, carry Julia documentation, and appear in docs/src/reference/bases\_and\_mappings.md. Preserve Documenter as the executable @docs resolution gate and the accepted undocumented-export count of 52. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan.
 
 ### HP-PUBLIC-PAPER-CI-FN-01 - paper-aligned PQS and screening CI workflow
 

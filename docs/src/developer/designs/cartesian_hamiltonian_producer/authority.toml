@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "85bac15297b389092f63b1f2c3a583105db75443d5e1a66af268cbc5cddf6616"
+sha256 = "abe37fb02cca68e5d00af1cf929f9d43fe6b16b6db99c35dcb6199857c406a1c"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -4400,10 +4400,10 @@ title = "validate foundational basis and mapping documentation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-EXPORT-INTEGRITY-FN-01", "HP-PUBLIC-FOUNDATION-DOC-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-FUNCTION-STENCIL-DOC-FN-01"
-lifecycle = "approved"
-scope = "Document exactly nine existing exported generics without changing behavior: value is the normal function-evaluation route and f(x) delegates to it; direct_value evaluates the object's stencil representation and is exact for that representation rather than an independent analytic oracle; derivative evaluates a caller-requested nonnegative derivative order with respect to physical x; center and reference_center return physical and pre-mapping/reference-coordinate centers; integral_weight is the integral of one function and is distinct from basis-level integral_weights and quadrature weights; stencil exposes the ordered primitive expansion; coefficients returns stored coefficient data and for FunctionStencil follows primitives(stencil) order; terms materializes the ordered coefficient/primitive pairs as StencilTerm values. Add concise docstrings only to the existing bare declarations in src/GaussletBases.jl and one compact function-evaluation/stencil @docs section in docs/src/reference/bases_and_mappings.md containing exactly these names. Preferred/hard budgets are 60/90 added source-docstring lines and 18/30 reference-page lines, with no new file. Require the undocumented exported-binding backlog to fall exactly from 61 to 52. Preserve every definition, method, signature, dispatch, export, return value, numerical result, default, allocation policy, compatibility floor, workflow, tag, and release artifact. Do not change Documenter checkdocs, add a global undocumented-name allowlist, or broaden into basis metadata, partitions, operators, angular work, API reduction, source behavior, dependencies, examples, or release work. Budgets are stop-and-report bounds; stop without an implementation commit if truthful documentation requires any behavioral or public-surface change."
+lifecycle = "implemented"
+scope = "Maintain only the accepted function-evaluation/stencil documentation from 624718972627b5ebf74beaa57ad73b8725aac587: concise docstrings on the nine existing exported generics value, direct_value, derivative, center, reference_center, integral_weight, stencil, coefficients, and terms, plus their compact @docs section in docs/src/reference/bases_and_mappings.md. Preserve normal f(x)-to-value delegation; direct stencil-representation evaluation without an independent-oracle claim; nonnegative physical-x derivative order; physical/reference center distinction; per-function integral meaning; and ordered primitive, coefficient, and StencilTerm semantics. Preserve every definition, method, signature, dispatch, export, return value, numerical result, default, allocation policy, compatibility floor, workflow, tag, and release artifact. Do not change Documenter checkdocs, add a global undocumented-name allowlist, or broaden into basis metadata, partitions, operators, angular work, API reduction, source behavior, dependencies, examples, or release work."
 surfaces = ["docs", "source"]
 title = "document function evaluation and stencil bindings"
 
@@ -4413,8 +4413,14 @@ title = "document function evaluation and stencil bindings"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "624718972627b5ebf74beaa57ad73b8725aac587"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "548"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "549"
 
     [[records.paths]]
     kind = "docs"
@@ -4426,10 +4432,10 @@ title = "document function evaluation and stencil bindings"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-EXPORT-INTEGRITY-TEST-01", "HP-PUBLIC-FOUNDATION-DOC-TEST-01", "HP-PUBLIC-FUNCTION-STENCIL-DOC-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-FUNCTION-STENCIL-DOC-TEST-01"
-lifecycle = "approved"
-scope = "In the existing test/docs/runtests.jl owner, add only family-scoped checks that the exact nine function-evaluation/stencil bindings are exported, carry Julia documentation, and appear in docs/src/reference/bases_and_mappings.md. Preserve Documenter as the executable @docs resolution gate. Preferred/hard additions are 10/16 test lines. Use implementation-time runtime inspection to confirm the undocumented export backlog is exactly 52, but add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan."
+lifecycle = "completed"
+scope = "Maintain only the accepted family-scoped checks from 624718972627b5ebf74beaa57ad73b8725aac587 that the exact nine function-evaluation/stencil bindings remain exported, carry Julia documentation, and appear in docs/src/reference/bases_and_mappings.md. Preserve Documenter as the executable @docs resolution gate and the accepted undocumented-export count of 52. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan."
 surfaces = ["tests"]
 title = "validate function evaluation and stencil documentation"
 
@@ -4439,8 +4445,14 @@ title = "validate function evaluation and stencil documentation"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "624718972627b5ebf74beaa57ad73b8725aac587"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "548"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "549"
 
     [[records.paths]]
     kind = "test"

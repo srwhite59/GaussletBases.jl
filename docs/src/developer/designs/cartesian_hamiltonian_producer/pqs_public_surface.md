@@ -853,9 +853,10 @@ reduction, dependencies, examples, or release work.
 ## Function Evaluation And Stencil Documentation
 
 `HP-PUBLIC-FUNCTION-STENCIL-DOC-FN-01` and
-`HP-PUBLIC-FUNCTION-STENCIL-DOC-TEST-01` authorize one bounded documentation
-repair for nine existing exported generic functions. They add no new binding
-or behavior. The required meanings are:
+`HP-PUBLIC-FUNCTION-STENCIL-DOC-TEST-01` maintain the implemented documentation
+for nine existing exported generic functions. Commit
+`624718972627b5ebf74beaa57ad73b8725aac587` added no binding or behavior. The
+maintained meanings are:
 
 | Binding | Public meaning |
 | --- | --- |
@@ -869,29 +870,22 @@ or behavior. The required meanings are:
 | `coefficients` | Return stored coefficient data; for `FunctionStencil`, order matches `primitives(stencil)`. |
 | `terms` | Materialize ordered coefficient/primitive pairs as `StencilTerm` values. |
 
-Implementation may add concise docstrings only to the existing bare generic
-declarations in `src/GaussletBases.jl`. One compact function-evaluation/stencil
-section in `docs/src/reference/bases_and_mappings.md` must contain `@docs`
-entries for exactly these nine bindings. Do not document another function
-under this grant or broaden the page into basis metadata, partitions,
-operators, or angular work.
+The implementation added `57` source-docstring lines, `18` reference lines,
+and `8` docs-test lines, all within the preferred limits. The existing
+function-evaluation/stencil section contains `@docs` entries for exactly these
+nine bindings. Family-scoped checks require every binding to remain exported,
+documented, and present in that page. The undocumented exported-binding
+backlog fell exactly from `61` to `52`; no global allowlist or `checkdocs`
+change was added.
 
-The existing docs owner may add family-scoped checks that all nine bindings
-have Julia documentation and appear in the intended reference page.
-Documenter remains the resolution gate. An implementation audit must show the
-undocumented exported-binding backlog falling exactly from `61` to `52`; do
-not implement that audit as a global allowlist or change `checkdocs` policy.
-
-Preferred/hard limits are `60/90` added source-docstring lines, `18/30`
-reference-page lines, and `10/16` docs-test lines, with no new file. These are
-stop-and-report bounds, not a reason to compress unclear documentation.
-Preserve every definition, method, signature, dispatch, export, numerical
-result, default, allocation policy, compatibility floor, workflow, tag, and
-release artifact. If truthful documentation requires any behavioral or
-public-surface change, implementation stops without a commit and reports the
-exact gap. Acceptance requires package load, focused core/radial tests, docs
-tests, a local Documenter build, authority check/self-test, generated-view
-parity, manager-log bound, `git diff --check`, and normal remote CI and Docs.
+Focused core/radial tests and radial `322/322` passed; docs tests passed
+`121/121` plus `10/10`. Package load, authority check/self-test, Documenter,
+and diff checks passed. Remote CI run `33213490510` and Docs run `33213490543`
+passed. Both records are in maintenance. Preserve every definition, method,
+signature, dispatch, export, numerical result, default, allocation policy,
+compatibility floor, workflow, tag, and release artifact. Do not broaden the
+page into basis metadata, partitions, operators, angular work, further API
+reduction, dependencies, examples, or release work.
 
 ## Paper-Aligned CI Boundary
 

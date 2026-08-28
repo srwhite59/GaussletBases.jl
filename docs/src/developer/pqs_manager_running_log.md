@@ -1548,3 +1548,36 @@ Carrying-cost accounting:
   `60/90`, reference-page `18/30`, and docs-test `10/16` preferred/hard added
   line budgets, make no new file or behavioral change, run package/core/radial/
   docs/authority/Documenter/CI acceptance, and return for lifecycle closeout.
+
+## Cartesian Hamiltonian Producer Pass 549 - Close Function Evaluation And Stencil Documentation
+
+Commit(s):
+- `624718972627b5ebf74beaa57ad73b8725aac587`
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted concise declaration docstrings and one compact reference family for
+  the nine function-evaluation and stencil generics. The exact implementation
+  delta was `+57` source-docstring lines, `+18` reference lines, and `+8`
+  docs-test lines, all within preferred limits. No definition, method,
+  dispatch, export, allocation policy, API, or numerical behavior changed.
+- The undocumented exported-binding backlog fell exactly from `61` to `52`.
+  Focused core/radial suites and radial `322/322` passed; docs passed `121/121`
+  plus `10/10`. Package load, authority check/self-test, Documenter, and diff
+  checks passed; remote CI run `33213490510` and Docs run `33213490543` passed.
+
+Goal advancement / guardrail:
+- MT6 returns `HP-PUBLIC-FUNCTION-STENCIL-DOC-FN-01/TEST-01` to maintenance
+  after closing this reader-facing documentation deficit. Preserve normal
+  evaluation versus represented-stencil evaluation, physical derivative and
+  center meanings, per-function integration, and ordered stencil data. The
+  remaining `52` undocumented exports, angular work, API reduction, and global
+  docs policy remain separate. No checkpoint is due.
+
+Carrying-cost accounting:
+- deleted: no implementation; simplified: nine existing public bindings now
+  form one coherent documented family; quarantined: the remaining export
+  backlog and unrelated classification; not deleted because: all nine bindings
+  remain live supported interfaces.
+- exact remaining caller/blocker: none for Pass 548; source-behavior delta
+  `0/0`, new files and metadata fields none.
