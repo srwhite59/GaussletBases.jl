@@ -1581,3 +1581,52 @@ Carrying-cost accounting:
   remain live supported interfaces.
 - exact remaining caller/blocker: none for Pass 548; source-behavior delta
   `0/0`, new files and metadata fields none.
+
+## Cartesian Hamiltonian Producer Pass 550 - Authorize Partition And Leaf-Local Documentation
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Added `HP-PUBLIC-PARTITION-LEAF-DOC-FN-01/TEST-01` for twelve existing
+  exported partition-hierarchy and leaf-local accessors. Implementation may
+  add only declaration docstrings, one compact section in the existing
+  bases/mappings reference, and focused checks in the existing docs owner.
+- The contract distinguishes copied `Float64` box blocks from stored ordered
+  vectors and records that callers must treat as read-only. It also gathers
+  the already-documented partition, hierarchy, leaf-PGDG, mapped-layer, and
+  contraction context without authorizing new prose or behavior.
+
+Goal advancement / guardrail:
+- MT6 addresses the next bounded reader-facing documentation deficit without
+  changing array ownership, indexing, API, or numerics. Acceptance requires
+  the established undocumented-export backlog, excluding the module self-
+  binding, to fall exactly from `52` to `40`; global allowlists and `checkdocs`
+  changes remain forbidden.
+
+Medium-term checkpoint:
+- **MT1 active:** continue only narrow evidence-led conformance repairs.
+- **MT2 completed:** controlled Cr2 source migration remains closed.
+- **MT3 active:** represented-Hartree scaling, corrected-WL interpretation,
+  and Standard60/canonical-driver exposure remain separate pending work.
+- **MT4 active:** residual/protected and consumer-owned PRF questions are
+  unchanged.
+- **MT5 active/maintenance:** final v0.2.0 and expanded Supported-floor
+  coverage remain accepted; registration, citation, and tag-lane repair are
+  separate.
+- **MT6 active, refined:** foundational and function/stencil documentation are
+  closed; this bounded partition/leaf family is approved next. The remaining
+  `40`-name backlog, angular classification, and API reduction remain separate.
+- **MT7 completed/maintenance:** external Cartesian-GTO interchange remains
+  accepted and unchanged.
+
+Carrying-cost accounting:
+- deleted: no code in this authority pass; simplified: twelve related accessors
+  and their existing context receive one coherent reference family;
+  quarantined: the remaining backlog and unrelated API classification; not
+  deleted because: these bindings remain live public partition/local-layer
+  interfaces.
+- exact remaining caller/blocker: repo-manager must remain within source-doc
+  `80/115`, reference-page `35/55`, and docs-test `10/18` preferred/hard added
+  line budgets, make no new file or behavioral change, run package/core/docs/
+  authority/Documenter/CI acceptance, and return for lifecycle closeout.

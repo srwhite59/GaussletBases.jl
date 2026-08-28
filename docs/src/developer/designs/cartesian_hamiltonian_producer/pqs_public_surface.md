@@ -887,6 +887,67 @@ compatibility floor, workflow, tag, and release artifact. Do not broaden the
 page into basis metadata, partitions, operators, angular work, further API
 reduction, dependencies, examples, or release work.
 
+## Partition Hierarchy And Leaf-Local Accessor Documentation
+
+`HP-PUBLIC-PARTITION-LEAF-DOC-FN-01` and
+`HP-PUBLIC-PARTITION-LEAF-DOC-TEST-01` authorize one bounded documentation
+repair for twelve existing exported partition-hierarchy and leaf-local
+accessors. They add no binding or behavior. The required meanings are:
+
+| Binding | Public meaning |
+| --- | --- |
+| `boxes` | Return stored ordered box records for a flat or hierarchical partition. |
+| `leaf_boxes` | Select hierarchy nodes with no children while retaining stored order. |
+| `box_indices` | Return basis indices owned by the selected box. |
+| `box_level` | Return the selected hierarchy node's level. |
+| `box_parent` | Return its parent identifier, with `nothing` for a root. |
+| `box_children` | Return its child identifiers. |
+| `box_block` | Materialize a `Float64` copy of one diagonal box block. |
+| `box_coupling` | Materialize a `Float64` copy of the rectangular block between two boxes. |
+| `leaf_primitive_indices` | Map a leaf-box identifier to its global primitive-index range. |
+| `primitive_origins` | Return primitive-aligned provenance labels. |
+| `primitive_leaf_boxes` | Return primitive-aligned leaf-box provenance. |
+| `leaf_contractions` | Return stored ordered `LeafBoxContraction1D` records. |
+
+The block accessors accept either a square matrix directly or a named operator
+from `BasisRepresentation1D`. Accessors exposing stored vectors or records must
+tell callers to treat those objects as read-only; this grant does not change
+them into copies or add mutation protection.
+
+Implementation may add concise docstrings only to the twelve existing bare
+generic declarations in `src/GaussletBases.jl`. One compact `Partitions and
+leaf-local layers` section in `docs/src/reference/bases_and_mappings.md` must
+include those accessors and this already-documented public context without
+duplicating prose:
+
+- `BasisBox1D`, `BasisPartition1D`, and `basis_partition`;
+- `HierarchicalBasisBox1D`, `HierarchicalBasisPartition1D`,
+  `hierarchical_partition`, and `refine_partition`;
+- `LeafGaussianSpec1D`, `LeafLocalPGDG1D`, `build_leaf_pgdg`, and
+  `augment_leaf_pgdg`;
+- `GlobalMappedPrimitiveLayer1D` and `build_global_mapped_primitive_layer`;
+- `LeafBoxContraction1D`, `LeafBoxContractionLayer1D`, and
+  `contract_leaf_boxes`.
+
+The existing docs owner may add family-scoped checks that all twelve accessors
+have Julia documentation and appear with that context in the intended section.
+Documenter remains the resolution gate. The established undocumented exported-
+binding audit excludes the module self-binding and must fall exactly from `52`
+to `40`; do not add that audit as a global allowlist or change `checkdocs`.
+
+Preferred/hard limits are `80/115` added source-docstring lines, `35/55`
+reference-page lines, and `10/18` docs-test lines, with no new file. These are
+stop-and-report bounds, not a reason to compress unclear documentation.
+Preserve every definition, method, signature, dispatch, export, array
+ownership, ordering, numerical result, default, compatibility floor, workflow,
+tag, and release artifact. Do not broaden into basis metadata, operators,
+angular work, API reduction, dependencies, examples, or release work. If
+truthful documentation requires a behavioral or public-surface change,
+implementation stops without a commit and reports the exact gap. Acceptance
+requires package load, focused core tests, docs tests, a local Documenter build,
+authority check/self-test, generated-view parity, manager-log bound,
+`git diff --check`, and normal remote CI and Docs.
+
 ## Paper-Aligned CI Boundary
 
 `HP-PUBLIC-PAPER-CI-FN-01` and `HP-PUBLIC-PAPER-CI-TEST-01` own one
