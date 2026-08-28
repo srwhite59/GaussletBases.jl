@@ -1482,3 +1482,36 @@ Carrying-cost accounting:
   `70/100`, reference-page `20/35`, and docs-test `12/20` preferred/hard added
   line budgets, make no new file or behavioral change, run package/radial/docs/
   authority/Documenter/CI acceptance, and return for lifecycle closeout.
+
+## Cartesian Hamiltonian Producer Pass 547 - Close Foundational Basis And Mapping Documentation
+
+Commit(s):
+- `03eb75c66e5cc8b24714d3769097ea81f0d74b15`
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted concise declaration docstrings and one compact reference family for
+  the ten foundational mapping/basis generics. The exact implementation delta
+  was `+58` source-docstring lines, `+19` reference lines, and `+8` docs-test
+  lines, all within preferred limits. No definition, method, dispatch, export,
+  return value, API, or numerical behavior changed.
+- The undocumented exported-binding backlog fell exactly from `71` to `61`.
+  Focused radial tests passed `322/322`; docs passed `118/118` plus `10/10`.
+  Package load, authority check/self-test, Documenter, and diff checks passed;
+  remote CI run `33181875262` and Docs run `33181875247` passed.
+
+Goal advancement / guardrail:
+- MT6 returns `HP-PUBLIC-FOUNDATION-DOC-FN-01/TEST-01` to maintenance after
+  closing this reader-facing documentation deficit. Preserve the physical-x to
+  reference-u convention, derivative meanings, physical/reference center
+  distinction, and basis-integral meaning of `integral_weights`. The remaining
+  `61` undocumented exports, angular work, API reduction, and global docs policy
+  remain separate. No checkpoint is due.
+
+Carrying-cost accounting:
+- deleted: no implementation; simplified: ten existing public bindings now
+  form one coherent documented family; quarantined: the remaining export
+  backlog and unrelated classification; not deleted because: all ten bindings
+  remain live supported interfaces.
+- exact remaining caller/blocker: none for Pass 546; source-behavior delta
+  `0/0`, new files and metadata fields none.

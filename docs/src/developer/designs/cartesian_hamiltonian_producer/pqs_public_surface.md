@@ -815,9 +815,10 @@ tags/releases, workflows, and release state also remain unchanged.
 ## Foundational Basis And Mapping Documentation
 
 `HP-PUBLIC-FOUNDATION-DOC-FN-01` and
-`HP-PUBLIC-FOUNDATION-DOC-TEST-01` authorize one bounded documentation repair
-for ten existing exported generic functions. They add no new binding or
-behavior. The required meanings are:
+`HP-PUBLIC-FOUNDATION-DOC-TEST-01` maintain the implemented documentation for
+ten existing exported generic functions. Commit
+`03eb75c66e5cc8b24714d3769097ea81f0d74b15` added no binding or behavior. The
+maintained meanings are:
 
 | Binding | Public meaning |
 | --- | --- |
@@ -832,29 +833,22 @@ behavior. The required meanings are:
 | `reference_centers` | Return reference-coordinate basis centers. |
 | `integral_weights` | Return basis-function integrals, not quadrature weights. |
 
-Implementation may add concise docstrings only to the existing bare generic
-declarations in `src/GaussletBases.jl`. One compact evaluation/introspection
-section in `docs/src/reference/bases_and_mappings.md` must contain `@docs`
-entries for exactly these ten bindings. Do not document another function under
-this grant or broaden the page into evaluation algorithms, stencils,
-partitions, atomic operators, or angular work.
+The implementation added `58` source-docstring lines, `19` reference lines,
+and `8` docs-test lines, all within the preferred limits. The existing
+evaluation/introspection section contains `@docs` entries for exactly these
+ten bindings. Family-scoped checks require every binding to remain exported,
+documented, and present in that page. The undocumented exported-binding
+backlog fell exactly from `71` to `61`; no global allowlist or `checkdocs`
+change was added.
 
-The existing docs owner may add family-scoped checks that all ten bindings
-have Julia documentation and appear in the intended reference page.
-Documenter remains the resolution gate. An implementation audit must show the
-undocumented exported-binding backlog falling exactly from `71` to `61`; do
-not implement that audit as a global allowlist or change `checkdocs` policy.
-
-Preferred/hard limits are `70/100` added source-docstring lines, `20/35`
-reference-page lines, and `12/20` docs-test lines, with no new file. These are
-stop-and-report bounds, not a reason to compress unclear documentation.
-Preserve every definition, method, signature, dispatch, export, return value,
-default, numerical result, compatibility floor, workflow, tag, and release
-artifact. If truthful documentation requires any behavioral or public-surface
-change, implementation stops without a commit and reports the exact gap.
-Acceptance requires package load, focused radial tests, docs tests, a local
-Documenter build, authority check/self-test, generated-view parity, manager-log
-bound, `git diff --check`, and the normal remote CI and Docs workflows.
+Focused radial tests passed `322/322`, docs tests passed `118/118` plus
+`10/10`, and package load, authority check/self-test, Documenter, and diff
+checks passed. Remote CI run `33181875262` and Docs run `33181875247` passed.
+Both records are in maintenance. Preserve every definition, method, signature,
+dispatch, export, return value, default, numerical result, compatibility floor,
+workflow, tag, and release artifact. Do not broaden the page into evaluation
+algorithms, stencils, partitions, atomic operators, angular work, further API
+reduction, dependencies, examples, or release work.
 
 ## Paper-Aligned CI Boundary
 

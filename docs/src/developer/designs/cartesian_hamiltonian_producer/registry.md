@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `fe96f6ca5dad332e38d6403c43111ff1aefab98860321b6d6da90749feb3c340`.
+> [authority.toml](authority.toml), SHA-256 `713a7f516b0b64b422a26b2c27443bee2b42b9e93810e670897e550fc2449cdc`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2497,8 +2497,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-FOUNDATION-DOC-FN-01 - document foundational basis and mapping bindings
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2507,14 +2507,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/reference/bases_and_mappings.md`
   - `source` / `existing`: `src/GaussletBases.jl`
 - **Evidence:**
+  - `git_commit`: `03eb75c66e5cc8b24714d3769097ea81f0d74b15`
   - `manager_pass`: `546`
+  - `manager_pass`: `547`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`
-- **Scope:** Document exactly ten existing exported generics without changing behavior: uofx maps physical x to reference u; xofu is its inverse; dudx and du2dx2 are the first and second x-derivatives of u(x); basis\_spec returns the construction specification associated with a basis-like object; family identifies its gausslet family; mapping identifies its physical/reference coordinate map; centers and reference\_centers return physical and reference-coordinate centers; integral\_weights returns basis-function integrals, not quadrature weights. Add concise docstrings only to the existing bare declarations in src/GaussletBases.jl and one compact evaluation/introspection @docs section in docs/src/reference/bases\_and\_mappings.md containing exactly these names. Preferred/hard budgets are 70/100 added source-docstring lines and 20/35 reference-page lines, with no new file. Require the undocumented exported-binding backlog to fall exactly from 71 to 61. Preserve every definition, method, signature, dispatch, export, return value, default, numerical behavior, compatibility floor, workflow, tag, and release artifact. Do not change Documenter checkdocs, add a global undocumented-name allowlist, or broaden into function evaluation, stencils, partitions, atomic operators, angular work, API reduction, source behavior, dependencies, examples, or release work. Budgets are stop-and-report bounds; stop without an implementation commit if truthful documentation requires any behavioral or public-surface change.
+- **Scope:** Maintain only the accepted foundational documentation from 03eb75c66e5cc8b24714d3769097ea81f0d74b15: concise docstrings on the ten existing exported generics uofx, xofu, dudx, du2dx2, basis\_spec, family, mapping, centers, reference\_centers, and integral\_weights, plus their compact evaluation/introspection @docs section in docs/src/reference/bases\_and\_mappings.md. Preserve the documented physical-x to reference-u direction, inverse map, first/second x derivatives of u(x), construction-specification/family/mapping meanings, physical/reference center distinction, and basis-function-integral meaning of integral\_weights. Preserve every definition, method, signature, dispatch, export, return value, default, numerical behavior, compatibility floor, workflow, tag, and release artifact. Do not change Documenter checkdocs, add a global undocumented-name allowlist, or broaden into function evaluation, stencils, partitions, atomic operators, angular work, API reduction, source behavior, dependencies, examples, or release work.
 
 ### HP-PUBLIC-FOUNDATION-DOC-TEST-01 - validate foundational basis and mapping documentation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2522,9 +2524,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `03eb75c66e5cc8b24714d3769097ea81f0d74b15`
   - `manager_pass`: `546`
+  - `manager_pass`: `547`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-FOUNDATION-DOC-FN-01`
-- **Scope:** In the existing test/docs/runtests.jl owner, add only family-scoped checks that the exact ten foundational basis/mapping bindings are exported, carry Julia documentation, and appear in docs/src/reference/bases\_and\_mappings.md. Preserve Documenter as the executable @docs resolution gate. Preferred/hard additions are 12/20 test lines. Use implementation-time runtime inspection to confirm the undocumented export backlog is exactly 61, but add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan.
+- **Scope:** Maintain only the accepted family-scoped checks from 03eb75c66e5cc8b24714d3769097ea81f0d74b15 that the exact ten foundational basis/mapping bindings remain exported, carry Julia documentation, and appear in docs/src/reference/bases\_and\_mappings.md. Preserve Documenter as the executable @docs resolution gate and the accepted undocumented-export count of 61. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan.
 
 ### HP-PUBLIC-PAPER-CI-FN-01 - paper-aligned PQS and screening CI workflow
 
