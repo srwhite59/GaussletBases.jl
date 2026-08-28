@@ -1532,6 +1532,53 @@ publication partially succeeds or any post-publication check differs, preserve
 the release and tag and report without moving, deleting, recreating, silently
 editing, adding assets, or retrying.
 
+#### Immutable-Tag Verification Recovery
+
+The final annotated tag was created correctly but the first tag CI run
+`33130411193` failed before verification. `actions/checkout` left a local
+lightweight `v0.2.0` ref at the peeled commit; the lane then attempted to fetch
+the remote annotated object into that same local tag name without force, and
+Git rejected the replacement as `would clobber existing tag`. This is an
+operational defect in the workflow frozen inside the immutable candidate, not
+a tag-identity mismatch.
+
+The immutable remote tag is preserved as object
+`722e8e8752a9d23f45e95d2f88e1749f9f3002e4`, peeling to candidate
+`adfcaba32d4db06d9d796d947276433717bd2d89` and tree
+`f64ba21e06ff57e2b5e78d91214398115afbe8de`, with message
+`GaussletBases v0.2.0`. A fresh Julia `1.12.6` installation from
+`rev = "v0.2.0"` loaded package version `0.2.0` with the frozen tree. Docs run
+`33130411176` and Pages run `33130489319` passed; `/v0.2.0/` and `/stable/`
+are identical with the exact-version canonical URL, `versions.js` retains
+stable, `v0.2`, RC2, RC1, and `dev`, and all prior folders remain intact. No
+GitHub final release exists.
+
+Because the tag cannot be changed or made to rerun corrected frozen workflow
+code, the transaction may recover through one bounded manual verification
+lane. It must use a fresh machine-local scratch repository, fetch the remote
+`refs/tags/v0.2.0` into a namespaced temporary ref such as
+`refs/verification/v0.2.0`, and prove all of:
+
+- the fetched ref resolves through `^{tag}` and has Git object type `tag`;
+- its object ID, exact message, `^{commit}` peel, `^{tree}`, and
+  `Project.toml` version match the frozen identities above;
+- `git ls-remote` and the GitHub API report the same remote object and peel;
+- a fresh isolated Julia `1.12.6` installation from the remote tag loads
+  GaussletBases `0.2.0` with the frozen tree; and
+- the verification scratch and any generated manifest remain outside the
+  repository, while shared `main`, the immutable tag, and both handoffs remain
+  unchanged.
+
+This manual lane replaces only the failed mechanical tag-CI verification. It
+does not waive any identity check, rerun the numerical matrix, create a new
+repository event, dispatch or alter a workflow, or authorize force-fetching,
+moving, deleting, or recreating the tag. Immediately before publication,
+repo-manager must recheck the accepted Docs/Pages state and release absence.
+If the manual lane passes, the exact GitHub release authorized above may be
+published. If it fails, preserve the tag and stop. Repairing the main-branch
+tag lane for later releases is a separate workflow-maintenance decision and
+does not block this exact release.
+
 A third and final docs-only pass records the accepted tag, release, archives,
 installation, selector, and stable-alias evidence. General registration,
 `CITATION.cff`, package/paper citations, paper titles or journal status, large

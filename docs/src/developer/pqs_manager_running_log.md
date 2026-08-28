@@ -87,8 +87,11 @@ archaeology and are not normal startup reading.
   is accepted at object `7c8a21b99`, and package-centered GitHub prerelease
   `376503169` is published and validated. Direct final `v0.2.0` candidate
   `adfcaba32` is accepted without RC3 under a modest package-nearest-software
-  claim. Its exact-hash conditional tag/publication transaction is approved;
-  registration and citation remain separate.
+  claim. Its immutable annotated tag is now accepted at object `722e8e875`,
+  but tag CI `33130411193` hit an operational local lightweight-tag collision
+  before verification. One fresh-scratch namespaced-ref recovery lane is
+  active before the still-unpublished final GitHub release; registration and
+  citation remain separate.
 - Production defaults, public workflows, corrected artifacts, and Cr2 endpoint
   claims remain unchanged unless separately authorized.
 
@@ -154,10 +157,12 @@ versioned folder, explicit selector entry, and package-centered GitHub
 prerelease are accepted. The RC2 candidate, immutable tag, versioned folder,
 selector entry, and exact GitHub prerelease are also accepted. Path-aware CI is
 implemented and accepted as a bounded release-efficiency refinement. The exact
-final candidate is frozen and one ordered annotated-tag, Docs/Pages, and final
-GitHub-release transaction is active. It must preserve separate PQS and
-screening surfaces and stop on any identity or deployment mismatch.
-Registration and citation metadata remain separate.
+final candidate and immutable annotated tag are frozen. Docs/Pages deployed
+the versioned folder and stable alias correctly, but the frozen tag lane failed
+on a local-ref collision. One namespaced fresh-scratch identity/install check
+must pass before the exact final GitHub release may be published. Separate PQS
+and screening surfaces remain fixed; any identity or deployment mismatch stops
+publication. Registration and citation metadata remain separate.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
 metadata, unsupported exports, and development-era tests as conformance work
@@ -1217,3 +1222,48 @@ Carrying-cost accounting:
   `33126022579`, Docs `33126022531`, examples 01/39/40/41, H2+ `18/18`,
   screening, export integrity, residual-GTO fixture, archive install,
   authority/docs/Documenter, and diff checks.
+
+## Cartesian Hamiltonian Producer Pass 540 - Authorize Immutable-Tag Verification Recovery
+
+Commit(s):
+- this docs-only recovery authority amendment.
+
+Summary:
+- Accepted annotated tag object `722e8e8752a9d23f45e95d2f88e1749f9f3002e4`,
+  message `GaussletBases v0.2.0`, peel `adfcaba32`, and tree `f64ba21e0` as
+  exact. Fresh Julia `1.12.6` installation from the remote tag loaded version
+  `0.2.0` with the frozen tree. Docs `33130411176` and Pages `33130489319`
+  passed, with exact `/v0.2.0/`, real `/stable/`, intact prior folders, and the
+  required selectors. The final GitHub release remains absent.
+- Tag CI `33130411193` failed only because checkout created a local lightweight
+  tag and the lane then fetched the annotated remote object to the same ref.
+  Git correctly refused to clobber it. One fresh machine-local scratch lane may
+  fetch the remote tag into a namespaced ref, prove annotated-object, message,
+  peel, tree, version, API/remote, and clean-install identity, then recheck
+  deployment before the already-frozen final release is published. No
+  numerical rerun, tag mutation, workflow event, or workflow edit is part of
+  this recovery.
+
+Medium-term checkpoint:
+- **MT1 active:** continue only bounded evidence-led conformance repairs.
+- **MT2 completed:** controlled Cr2 source migration remains closed.
+- **MT3 active:** represented-Hartree scaling, corrected-WL interpretation,
+  and Standard60 remain separate pending work.
+- **MT4 active:** residual/protected and consumer-owned PRF questions are
+  unchanged.
+- **MT5 active, refined:** the final candidate, tag, and documentation are
+  accepted; publication is blocked only on the namespaced manual verification
+  lane. Main-branch tag-lane repair is separate maintenance.
+- **MT6 active:** accepted performance and test-efficiency work remains closed;
+  this pass opens no optimization.
+- **MT7 completed/maintenance:** external Cartesian-GTO interchange remains
+  accepted in the final candidate.
+
+Carrying-cost accounting:
+- deleted: no code; simplified: one bounded manual lane replaces only the
+  failed mechanical tag check; quarantined: future workflow repair,
+  registration, citation, and all source/numerical work; not deleted because:
+  immutable tag and release identity checks remain mandatory.
+- exact remaining caller/blocker: repo-manager must pass the manual lane and
+  publish/verify the exact release, or stop without mutation; source/test/
+  workflow delta `0/0`, new files and metadata fields none.
