@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `713a7f516b0b64b422a26b2c27443bee2b42b9e93810e670897e550fc2449cdc`.
+> [authority.toml](authority.toml), SHA-256 `4947720a236977bfc1704e480ae45fc71cb40127589cb609fe541a7d2cb45a1f`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2529,6 +2529,37 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `547`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-FOUNDATION-DOC-FN-01`
 - **Scope:** Maintain only the accepted family-scoped checks from 03eb75c66e5cc8b24714d3769097ea81f0d74b15 that the exact ten foundational basis/mapping bindings remain exported, carry Julia documentation, and appear in docs/src/reference/bases\_and\_mappings.md. Preserve Documenter as the executable @docs resolution gate and the accepted undocumented-export count of 61. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan.
+
+### HP-PUBLIC-FUNCTION-STENCIL-DOC-FN-01 - document function evaluation and stencil bindings
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Function Evaluation And Stencil Documentation`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/reference/bases_and_mappings.md`
+  - `source` / `existing`: `src/GaussletBases.jl`
+- **Evidence:**
+  - `manager_pass`: `548`
+- **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-PUBLIC-FOUNDATION-DOC-FN-01`
+- **Scope:** Document exactly nine existing exported generics without changing behavior: value is the normal function-evaluation route and f(x) delegates to it; direct\_value evaluates the object's stencil representation and is exact for that representation rather than an independent analytic oracle; derivative evaluates a caller-requested nonnegative derivative order with respect to physical x; center and reference\_center return physical and pre-mapping/reference-coordinate centers; integral\_weight is the integral of one function and is distinct from basis-level integral\_weights and quadrature weights; stencil exposes the ordered primitive expansion; coefficients returns stored coefficient data and for FunctionStencil follows primitives(stencil) order; terms materializes the ordered coefficient/primitive pairs as StencilTerm values. Add concise docstrings only to the existing bare declarations in src/GaussletBases.jl and one compact function-evaluation/stencil @docs section in docs/src/reference/bases\_and\_mappings.md containing exactly these names. Preferred/hard budgets are 60/90 added source-docstring lines and 18/30 reference-page lines, with no new file. Require the undocumented exported-binding backlog to fall exactly from 61 to 52. Preserve every definition, method, signature, dispatch, export, return value, numerical result, default, allocation policy, compatibility floor, workflow, tag, and release artifact. Do not change Documenter checkdocs, add a global undocumented-name allowlist, or broaden into basis metadata, partitions, operators, angular work, API reduction, source behavior, dependencies, examples, or release work. Budgets are stop-and-report bounds; stop without an implementation commit if truthful documentation requires any behavioral or public-surface change.
+
+### HP-PUBLIC-FUNCTION-STENCIL-DOC-TEST-01 - validate function evaluation and stencil documentation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Function Evaluation And Stencil Documentation`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `548`
+- **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-FOUNDATION-DOC-TEST-01`, `HP-PUBLIC-FUNCTION-STENCIL-DOC-FN-01`
+- **Scope:** In the existing test/docs/runtests.jl owner, add only family-scoped checks that the exact nine function-evaluation/stencil bindings are exported, carry Julia documentation, and appear in docs/src/reference/bases\_and\_mappings.md. Preserve Documenter as the executable @docs resolution gate. Preferred/hard additions are 10/16 test lines. Use implementation-time runtime inspection to confirm the undocumented export backlog is exactly 52, but add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan.
 
 ### HP-PUBLIC-PAPER-CI-FN-01 - paper-aligned PQS and screening CI workflow
 

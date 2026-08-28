@@ -1515,3 +1515,36 @@ Carrying-cost accounting:
   remain live supported interfaces.
 - exact remaining caller/blocker: none for Pass 546; source-behavior delta
   `0/0`, new files and metadata fields none.
+
+## Cartesian Hamiltonian Producer Pass 548 - Authorize Function Evaluation And Stencil Documentation
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Added `HP-PUBLIC-FUNCTION-STENCIL-DOC-FN-01/TEST-01` for nine existing
+  exported function-evaluation and stencil generics. Implementation may add
+  only declaration docstrings, one compact section in the existing
+  bases/mappings reference, and focused checks in the existing docs owner.
+  Normal versus represented evaluation, derivative order, physical versus
+  reference centers, per-function integration, and ordered stencil data are
+  explicit.
+
+Goal advancement / guardrail:
+- MT6 addresses the next bounded reader-facing documentation deficit without
+  adding API or preserving unsupported vocabulary. Acceptance requires the
+  undocumented-export backlog to fall exactly from `61` to `52`, but forbids a
+  global allowlist or `checkdocs` change. Basis metadata, partitions,
+  operators, angular work, and further API reduction remain separate. No
+  checkpoint is due.
+
+Carrying-cost accounting:
+- deleted: no code in this authority pass; simplified: nine existing public
+  names receive one coherent function/stencil reference family; quarantined:
+  the remaining `52` undocumented exports and unrelated API classification;
+  not deleted because: these live bindings already have supported methods and
+  semantics.
+- exact remaining caller/blocker: repo-manager must remain within source-doc
+  `60/90`, reference-page `18/30`, and docs-test `10/16` preferred/hard added
+  line budgets, make no new file or behavioral change, run package/core/radial/
+  docs/authority/Documenter/CI acceptance, and return for lifecycle closeout.

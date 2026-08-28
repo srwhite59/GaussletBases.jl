@@ -850,6 +850,49 @@ workflow, tag, and release artifact. Do not broaden the page into evaluation
 algorithms, stencils, partitions, atomic operators, angular work, further API
 reduction, dependencies, examples, or release work.
 
+## Function Evaluation And Stencil Documentation
+
+`HP-PUBLIC-FUNCTION-STENCIL-DOC-FN-01` and
+`HP-PUBLIC-FUNCTION-STENCIL-DOC-TEST-01` authorize one bounded documentation
+repair for nine existing exported generic functions. They add no new binding
+or behavior. The required meanings are:
+
+| Binding | Public meaning |
+| --- | --- |
+| `value` | Normal function evaluation; calling `f(x)` delegates to this route. |
+| `direct_value` | Evaluate the object's stencil representation exactly as represented, not as an independent analytic oracle. |
+| `derivative` | Evaluate the requested nonnegative derivative order with respect to physical `x`. |
+| `center` | Return the function's physical center. |
+| `reference_center` | Return the corresponding pre-mapping/reference-coordinate center. |
+| `integral_weight` | Return one function's integral, distinct from basis-level `integral_weights` and quadrature weights. |
+| `stencil` | Expose the ordered primitive expansion. |
+| `coefficients` | Return stored coefficient data; for `FunctionStencil`, order matches `primitives(stencil)`. |
+| `terms` | Materialize ordered coefficient/primitive pairs as `StencilTerm` values. |
+
+Implementation may add concise docstrings only to the existing bare generic
+declarations in `src/GaussletBases.jl`. One compact function-evaluation/stencil
+section in `docs/src/reference/bases_and_mappings.md` must contain `@docs`
+entries for exactly these nine bindings. Do not document another function
+under this grant or broaden the page into basis metadata, partitions,
+operators, or angular work.
+
+The existing docs owner may add family-scoped checks that all nine bindings
+have Julia documentation and appear in the intended reference page.
+Documenter remains the resolution gate. An implementation audit must show the
+undocumented exported-binding backlog falling exactly from `61` to `52`; do
+not implement that audit as a global allowlist or change `checkdocs` policy.
+
+Preferred/hard limits are `60/90` added source-docstring lines, `18/30`
+reference-page lines, and `10/16` docs-test lines, with no new file. These are
+stop-and-report bounds, not a reason to compress unclear documentation.
+Preserve every definition, method, signature, dispatch, export, numerical
+result, default, allocation policy, compatibility floor, workflow, tag, and
+release artifact. If truthful documentation requires any behavioral or
+public-surface change, implementation stops without a commit and reports the
+exact gap. Acceptance requires package load, focused core/radial tests, docs
+tests, a local Documenter build, authority check/self-test, generated-view
+parity, manager-log bound, `git diff --check`, and normal remote CI and Docs.
+
 ## Paper-Aligned CI Boundary
 
 `HP-PUBLIC-PAPER-CI-FN-01` and `HP-PUBLIC-PAPER-CI-TEST-01` own one
