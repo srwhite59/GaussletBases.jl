@@ -786,32 +786,31 @@ Package load, core, IDA, Cartesian, examples, docs `87/87` and `10/10`, the
 authority self-test, Documenter, and diff checks passed. GitHub CI run
 `32444750148` and Docs run `32444750177` passed on the implementation commit.
 
-Pass 543 authorizes one post-v0.2 continuation under the same function record.
-Delete the unused four-line `TimedNestedFixedBlockBuild` definition and its root
-export. Remove `OneCenterAtomicNestedLayerStructure` from the root export while
-retaining its unchanged internal diagnostic-storage type. Remove
-`QiuWhiteResidualGaussianOperators` from the root export while retaining its
-one-line alias to `OrdinaryCartesianOperators3D` for inexpensive qualified
-compatibility. The root-surface reduction is the useful cleanup; deleting the
-alias would add compatibility risk without meaningful carrying-cost savings.
-Ignored historical probes and conflicted copies are not compatibility
-obligations and remain untouched.
+Commit `6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468` implements the bounded
+post-v0.2 continuation under the same function record. It deletes the unused
+four-line `TimedNestedFixedBlockBuild` definition and removes its root export.
+It also removes `OneCenterAtomicNestedLayerStructure` and
+`QiuWhiteResidualGaussianOperators` from the root export while retaining the
+unchanged internal diagnostic-storage type and one-line alias to
+`OrdinaryCartesianOperators3D`. The exact delta is `+0/-7` across
+`src/GaussletBases.jl` and `src/cartesian_nested_faces.jl`. The root-surface
+reduction is the useful cleanup; retaining the alias avoids compatibility risk
+without meaningful carrying cost. Ignored historical probes and conflicted
+copies remain untouched.
 
-Implementation is confined to `src/GaussletBases.jl` and
-`src/cartesian_nested_faces.jl`, with expected production delta `+0/-7`.
-Add no shim, warning, replacement API, docstring, test, helper, metadata, file,
-or numerical behavior. `ShellLocalAngularProfileKey`, `@timeg`,
-`CuratedSpherePointSet`, `LegacySGaussianData`, and
+The existing dynamic export-integrity regression remained unchanged. It proved
+`TimedNestedFixedBlockBuild` absent, both retained names defined but
+unexported, and the undocumented exported-binding backlog reduced from `74` to
+`71`. The complete core owner, including existing nested/QW regressions,
+passed. Docs passed `115/115` plus `10/10`; CI run `33143556046` passed all
+three gates and Docs run `33143556067` passed. Package load, authority
+check/self-test, Documenter, and diff checks also passed.
+
+Maintenance adds no shim, warning, replacement API, alias deletion, docstring,
+test, helper, metadata, file, or numerical behavior. `ShellLocalAngularProfileKey`,
+`@timeg`, `CuratedSpherePointSet`, `LegacySGaussianData`, and
 `QiuWhiteHybridOrbital3D` remain unchanged. Package versions, immutable v0.2.0
 tags/releases, workflows, and release state also remain unchanged.
-
-Acceptance uses the existing dynamic export-integrity regression unchanged.
-It must prove `TimedNestedFixedBlockBuild` absent; prove
-`OneCenterAtomicNestedLayerStructure` and
-`QiuWhiteResidualGaussianOperators` defined but unexported; and confirm the
-undocumented exported-binding backlog falls from `74` to `71`. Package load,
-the complete core and relevant existing QW/nested owners, docs, CI, and diff
-checks must pass. No new test or export snapshot is authorized.
 
 ## Paper-Aligned CI Boundary
 

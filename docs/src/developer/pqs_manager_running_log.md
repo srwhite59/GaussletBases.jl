@@ -162,10 +162,10 @@ final candidate, immutable annotated tag, final/latest GitHub release,
 versioned/stable documentation, archives, and clean installation are accepted.
 The tag-lane local-ref collision was recovered through exact namespaced manual
 verification without a numerical rerun. Separate PQS and screening surfaces
-remain fixed. One bounded Julia `1.10` Supported-floor extension to the live
-`radial` and `misc` groups is approved; `angular` remains outside CI pending a
-separate runtime/ownership audit. Future tag-lane repair, registration,
-citation metadata, and any later release are separate decisions.
+remain fixed. The bounded Julia `1.10` Supported-floor extension to the live
+`radial` and `misc` groups is implemented and accepted; `angular` remains
+outside CI pending a separate runtime/ownership audit. Future tag-lane repair,
+registration, citation metadata, and any later release are separate decisions.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
 metadata, unsupported exports, and development-era tests as conformance work
@@ -179,10 +179,10 @@ the cold reporting boundary; it has no implementation grant. Eight-lane batching
 further loop restructuring, compatibility cleanup, and release work remain
 separate. The duplicate matched-H2+ release/example execution is removed by an
 accepted test-only replacement that preserves Example 41 and all release
-assertions. One bounded post-v0.2 export cleanup is approved: delete the unused
-timed nested wrapper, de-promote two undocumented diagnostic/QW names, and keep
-the inexpensive qualified QW alias. The angular public surface remains a
-separate audit.
+assertions. The bounded post-v0.2 export cleanup is implemented: the unused
+timed nested wrapper is deleted, two undocumented diagnostic/QW names are
+unexported, and the inexpensive qualified QW alias remains. The angular public
+surface remains a separate audit.
 
 **MT7 - External Cartesian GTO interchange (completed/maintenance).** The
 strict versioned reader, checkpoint-only PySCF exporter, frozen d-shell
@@ -1404,3 +1404,48 @@ Carrying-cost accounting:
   deleted because: the three-gate public CI boundary remains live.
 - exact remaining caller/blocker: none for Pass 542; production-source delta
   `0/0`, workflow/test delta `+2/-1`, new files and metadata fields none.
+
+## Cartesian Hamiltonian Producer Pass 545 - Close Post-v0.2 Nested/QW Export Cleanup
+
+Commit(s):
+- `6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468`
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted exact `+0/-7` source reduction across the two authorized files.
+  `TimedNestedFixedBlockBuild` is deleted. `OneCenterAtomicNestedLayerStructure`
+  and `QiuWhiteResidualGaussianOperators` remain defined but unexported, with
+  the one-line QW alias retained for qualified compatibility.
+- The undocumented-export count fell from `74` to `71`. Complete core,
+  export-integrity, and nested/QW regressions passed; docs passed `115/115`
+  plus `10/10`. CI run `33143556046`, Docs run `33143556067`, authority
+  check/self-test, package load, Documenter, and diff checks passed.
+
+Goal advancement / guardrail:
+- MT6 closes this evidence-led surface reduction without changing numerics or
+  mutating v0.2.0. `ShellLocalAngularProfileKey` and the angular public-surface
+  audit remain separate. No alias deletion, shim, warning, or replacement API
+  follows from this pass.
+
+Medium-term checkpoint:
+- **MT1 active:** continue only narrow evidence-led conformance repairs.
+- **MT2 completed:** controlled Cr2 source migration remains closed.
+- **MT3 active:** represented-Hartree scaling, corrected-WL interpretation,
+  and Standard60/canonical-driver exposure remain separate pending work.
+- **MT4 active:** residual/protected and consumer-owned PRF questions are
+  unchanged.
+- **MT5 active/maintenance:** final v0.2.0 and expanded Supported-floor
+  coverage are accepted; registration, citation, and future tag-lane repair
+  remain separate.
+- **MT6 active:** this export cleanup is closed; angular classification and any
+  further carrying-cost work require their own evidence and authority.
+- **MT7 completed/maintenance:** external Cartesian-GTO interchange remains
+  accepted and unchanged.
+
+Carrying-cost accounting:
+- deleted: one orphaned wrapper and three export entries; simplified: the root
+  surface and undocumented-export backlog; quarantined: angular and ignored
+  historical probes; not deleted because: the one-line QW alias cheaply
+  preserves qualified compatibility.
+- exact remaining caller/blocker: none for Pass 543; source delta `+0/-7`, test
+  delta `0/0`, new files and metadata fields none.

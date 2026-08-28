@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `42ce78329fc7971a1f202533ecbbacfbd0b2a8871722e8644eb68e94d04c45ad`.
+> [authority.toml](authority.toml), SHA-256 `da28f6f9f15fdb79bac8ce0b4120351d8b3aa54d33fb458d6c3b11e7c37710ee`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2454,8 +2454,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-EXPORT-INTEGRITY-FN-01 - reduce unsupported package exports
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2466,11 +2466,13 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `git_commit`: `41ab3e13121f5af1e145775500e91f9ac61c9760`
   - `git_commit`: `b72500f7e619db5875918e3290ed2b306be51f43`
+  - `git_commit`: `6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468`
   - `manager_pass`: `499`
   - `manager_pass`: `500`
   - `manager_pass`: `543`
+  - `manager_pass`: `545`
 - **Dependencies:** none
-- **Scope:** Implement exactly one post-v0.2 export cleanup. Delete the unused four-line TimedNestedFixedBlockBuild struct from src/cartesian\_nested\_faces.jl and remove its root export. Remove OneCenterAtomicNestedLayerStructure and QiuWhiteResidualGaussianOperators from the root export list while retaining their definitions unchanged; in particular keep the one-line QiuWhiteResidualGaussianOperators alias to OrdinaryCartesianOperators3D for qualified compatibility. Expected production delta is +0/-7 across only src/GaussletBases.jl and src/cartesian\_nested\_faces.jl. Require TimedNestedFixedBlockBuild absent, both retained names defined but unexported, and the undocumented exported-binding backlog reduced from 74 to 71. Preserve CartesianBasisBundle3D and nested\_fixed\_block\_timing\_report absence, final\_units and unit\_keys internal-export absence, lowering\_recipe, ShellLocalAngularProfileKey, @timeg, CuratedSpherePointSet, LegacySGaussianData, QiuWhiteHybridOrbital3D, every ordinary/QW/nested numerical result, and immutable v0.2.0 tags/releases. Add no shim, warning, replacement API, alias deletion, docstring, test, helper, metadata, file, dependency, numerical change, workflow, version, tag, release, registration, or citation change. Ignored historical probes and conflicted copies remain untouched. Stop if any committed caller exists or any retained definition/numerical behavior must change.
+- **Scope:** Maintain the post-v0.2 export cleanup implemented by commit 6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468. TimedNestedFixedBlockBuild and its root export remain absent. OneCenterAtomicNestedLayerStructure and QiuWhiteResidualGaussianOperators remain defined but unexported; retain the one-line QiuWhiteResidualGaussianOperators alias to OrdinaryCartesianOperators3D for qualified compatibility. The accepted production delta is +0/-7 across src/GaussletBases.jl and src/cartesian\_nested\_faces.jl, and the undocumented exported-binding backlog is 71. Preserve CartesianBasisBundle3D and nested\_fixed\_block\_timing\_report absence, final\_units and unit\_keys internal-export absence, lowering\_recipe, ShellLocalAngularProfileKey, @timeg, CuratedSpherePointSet, LegacySGaussianData, QiuWhiteHybridOrbital3D, every ordinary/QW/nested numerical result, and immutable v0.2.0 tags/releases. Add no shim, warning, replacement API, alias deletion, docstring, test, helper, metadata, file, dependency, numerical change, workflow, version, tag, release, registration, or citation change. Ignored historical probes and conflicted copies remain untouched.
 
 ### HP-PUBLIC-EXPORT-INTEGRITY-TEST-01 - validate package export integrity
 
@@ -2485,11 +2487,13 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `git_commit`: `41ab3e13121f5af1e145775500e91f9ac61c9760`
   - `git_commit`: `b72500f7e619db5875918e3290ed2b306be51f43`
+  - `git_commit`: `6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468`
   - `manager_pass`: `499`
   - `manager_pass`: `500`
   - `manager_pass`: `543`
+  - `manager_pass`: `545`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`
-- **Scope:** Maintain the compact dynamic regression in test/core/runtests.jl unchanged. It audits GaussletBases and every defined direct package-owned child module discovered with names(GaussletBases; all=true, imported=false) and parentmodule(child) === GaussletBases. For each name returned by names(module; all=false, imported=false), require the binding to be defined; when the value is a Function, require methods(value) to be nonempty. For the paired post-v0.2 cleanup, use this existing owner plus runtime inspection to prove TimedNestedFixedBlockBuild absent, OneCenterAtomicNestedLayerStructure and QiuWhiteResidualGaussianOperators defined but unexported, and the undocumented export backlog reduced from 74 to 71. Preserve this invariant without editing tests, snapshotting an export list, classifying broader use, traversing external/imported modules, or adding numerical assertions. Add no test file, fixture, dependency, helper, compatibility assertion, version/release check, or broad architecture audit under this record.
+- **Scope:** Maintain the compact dynamic regression in test/core/runtests.jl unchanged. It audits GaussletBases and every defined direct package-owned child module discovered with names(GaussletBases; all=true, imported=false) and parentmodule(child) === GaussletBases. For each name returned by names(module; all=false, imported=false), require the binding to be defined; when the value is a Function, require methods(value) to be nonempty. Commit 6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468 passed this owner while runtime inspection proved TimedNestedFixedBlockBuild absent, OneCenterAtomicNestedLayerStructure and QiuWhiteResidualGaussianOperators defined but unexported, and the undocumented export backlog reduced from 74 to 71. Preserve this invariant without editing tests, snapshotting an export list, classifying broader use, traversing external/imported modules, or adding numerical assertions. Add no test file, fixture, dependency, helper, compatibility assertion, version/release check, or broad architecture audit under this record.
 
 ### HP-PUBLIC-PAPER-CI-FN-01 - paper-aligned PQS and screening CI workflow
 
