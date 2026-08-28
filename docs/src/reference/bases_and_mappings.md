@@ -75,6 +75,41 @@ coefficients
 terms
 ```
 
+## Partitions and leaf-local layers
+
+Treat returned vectors and records as read-only; block accessors instead return fresh `Float64` matrices.
+
+```@docs
+BasisBox1D
+BasisPartition1D
+basis_partition
+boxes
+box_indices
+box_block
+box_coupling
+HierarchicalBasisBox1D
+HierarchicalBasisPartition1D
+hierarchical_partition
+refine_partition
+leaf_boxes
+box_level
+box_parent
+box_children
+LeafGaussianSpec1D
+LeafLocalPGDG1D
+build_leaf_pgdg
+augment_leaf_pgdg
+leaf_primitive_indices
+primitive_origins
+primitive_leaf_boxes
+GlobalMappedPrimitiveLayer1D
+build_global_mapped_primitive_layer
+LeafBoxContraction1D
+LeafBoxContractionLayer1D
+contract_leaf_boxes
+leaf_contractions
+```
+
 For the one-center atomic White-Lindsey-style path, the repo now exposes
 `white_lindsey_atomic_mapping(Z=..., d=..., tail_spacing=...)` directly. This
 route is `d`-driven: choose the physical core spacing `d` first, then resolve

@@ -71,6 +71,16 @@
         :value, :direct_value, :derivative, :center, :reference_center,
         :integral_weight, :stencil, :coefficients, :terms,
     )
+    partition_leaf_exports = (
+        :boxes, :leaf_boxes, :box_indices, :box_level, :box_parent, :box_children,
+        :box_block, :box_coupling, :leaf_primitive_indices, :primitive_origins,
+        :primitive_leaf_boxes, :leaf_contractions)
+    partition_leaf_context = (
+        :BasisBox1D, :BasisPartition1D, :basis_partition, :HierarchicalBasisBox1D,
+        :HierarchicalBasisPartition1D, :hierarchical_partition, :refine_partition,
+        :LeafGaussianSpec1D, :LeafLocalPGDG1D, :build_leaf_pgdg, :augment_leaf_pgdg,
+        :GlobalMappedPrimitiveLayer1D, :build_global_mapped_primitive_layer,
+        :LeafBoxContraction1D, :LeafBoxContractionLayer1D, :contract_leaf_boxes)
     docs_site_developer = read_doc("docs", "src", "developer", "index.md")
     docs_site_developer_notes = read_doc("docs", "src", "developer", "supporting_notes.md")
     docs_site_architecture = read_doc("docs", "src", "developer", "architecture.md")
@@ -554,6 +564,11 @@
         @test all(name -> Base.Docs.hasdoc(GaussletBases, name), function_stencil_exports)
         @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_bases)\n"),
             function_stencil_exports)
+        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name),
+            partition_leaf_exports)
+        @test occursin("## Partitions and leaf-local layers", docs_site_reference_bases) &&
+              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_bases)\n"),
+            (partition_leaf_exports..., partition_leaf_context...))
 
         @test contains_all(
             docs_site_reference_ops,

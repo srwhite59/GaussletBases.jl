@@ -472,17 +472,97 @@ function build_global_mapped_primitive_layer end
 function contract_leaf_boxes end
 function refine_partition end
 function primitive_set end
+
+"""
+    boxes(partition)
+
+Return stored box records in partition order; treat the vector and records as read-only.
+"""
 function boxes end
+
+"""
+    leaf_boxes(hierarchy)
+
+Select hierarchy nodes with no children, preserving stored order. Treat the
+returned records and their contained vectors as read-only.
+"""
 function leaf_boxes end
+
+"""
+    leaf_contractions(layer)
+
+Return stored `LeafBoxContraction1D` records in order; treat them as read-only.
+"""
 function leaf_contractions end
+
+"""
+    leaf_primitive_indices(generator, leaf_box_index)
+
+Return the global primitive-index range owned by the selected leaf box.
+"""
 function leaf_primitive_indices end
+
+"""
+    primitive_origins(generator)
+
+Return the stored primitive-aligned provenance labels. Treat the returned
+vector as read-only.
+"""
 function primitive_origins end
+
+"""
+    primitive_leaf_boxes(generator)
+
+Return the stored primitive-aligned leaf-box provenance. Treat the returned
+vector as read-only.
+"""
 function primitive_leaf_boxes end
+
+"""
+    box_indices(partition, box_index)
+
+Return the selected box's stored basis-index vector; treat it as read-only.
+"""
 function box_indices end
+
+"""
+    box_level(hierarchy, box_index)
+
+Return the selected hierarchy node's level.
+"""
 function box_level end
+
+"""
+    box_parent(hierarchy, box_index)
+
+Return the parent identifier, or `nothing` when the selected node is a root.
+"""
 function box_parent end
+
+"""
+    box_children(hierarchy, box_index)
+
+Return the selected node's stored child identifiers. Treat the returned vector
+as read-only.
+"""
 function box_children end
+
+"""
+    box_block(matrix, partition, box_index)
+    box_block(representation, partition, operator_name, box_index)
+
+Materialize a fresh `Matrix{Float64}` copy of one diagonal box block. A
+`BasisRepresentation1D` call selects the named operator.
+"""
 function box_block end
+
+"""
+    box_coupling(matrix, partition, box_i, box_j)
+    box_coupling(representation, partition, operator_name, box_i, box_j)
+
+Materialize a fresh `Matrix{Float64}` copy of the rectangular block between
+two boxes. A `BasisRepresentation1D` call selects the named operator.
+"""
 function box_coupling end
 
 """
