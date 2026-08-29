@@ -1017,8 +1017,9 @@ work, source behavior, dependency, example, API reduction, or release work.
 ## Supported Public Surface Documentation
 
 `HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01` and
-`HP-PUBLIC-SUPPORTED-SURFACE-DOC-TEST-01` authorize documentation only for the
-six supported-public bindings separated from the remaining export backlog:
+`HP-PUBLIC-SUPPORTED-SURFACE-DOC-TEST-01` maintain documentation for the six
+supported-public bindings separated from the remaining export backlog,
+implemented by commit `8161f131aa962fef979f8ef09c14d23231eb14e4`:
 
 | Binding | Required public meaning |
 | --- | --- |
@@ -1029,22 +1030,29 @@ six supported-public bindings separated from the remaining export backlog:
 | `external_gto_ordering_fingerprint` | Provide a strict packet-integrity hash over ordered AO labels and stored angular powers, centers, primitive data, and normalization convention. It is not permutation-, tolerance-, or convention-invariant. |
 | `external_gto_overlap_fingerprint` | Provide a strict packet-integrity hash over column-major `Matrix{Float64}` values. Dimensions and scientific consistency are validated elsewhere; the hash is not a numerical-equivalence, tolerance-invariant, permutation-invariant, or convention-invariant test. |
 
-Implementation may edit only the existing docstring locations in
+Maintenance is limited to the accepted docstrings in
 `src/ordinary_qw_types_and_bases.jl`, `src/ordinary_coulomb.jl`,
 `src/GaussletBases.jl`, `src/cartesian_base_hamiltonian.jl`, and
-`src/cartesian_external_gto_import.jl`. Curated entries or short limiting prose
-may be added only to `docs/src/reference/bases_and_mappings.md`,
+`src/cartesian_external_gto_import.jl`, and their curated entries or short
+limiting prose in `docs/src/reference/bases_and_mappings.md`,
 `docs/src/reference/operators_and_diagnostics.md`, and
-`docs/src/reference/export.md`. Preferred/hard additions are `65/95` source-
-docstring lines and `20/35` reader-documentation lines, with no new file.
+`docs/src/reference/export.md`. The implementation added `52` and removed `10`
+source-docstring lines, added `20` reader-documentation lines, and added no
+file or executable behavior. The misplaced abstract-type docstring was removed
+rather than duplicated.
 
-Family-scoped checks in `test/docs/runtests.jl` may add `10/18` preferred/hard
-lines to require all six names to remain exported, documented, and present on
-their intended reference pages with the geometry, finite-expansion, owner-
-specific metadata, narrow facade, and strict fingerprint limits above.
-Documenter remains the executable `@docs` resolution gate. The undocumented-
-export count, excluding the module self-binding, must fall exactly from `30`
-to `24`, then stop.
+The accepted `18`-line family-scoped check addition in
+`test/docs/runtests.jl` requires all six names to remain exported, documented,
+and present on their intended reference pages with the geometry, finite-
+expansion, owner-specific metadata, narrow facade, and strict fingerprint
+limits above. Documenter remains the executable `@docs` resolution gate. The
+undocumented-export count, excluding the module self-binding, fell exactly
+from `30` to `24`.
+
+Docs tests passed `134/134` plus `10/10`; package load, authority check/self-
+test, Documenter, and diff checks also passed. Remote CI run `33235720583`
+passed all three numerical gates and Docs run `33235720615` passed. Both
+records are in maintenance.
 
 Preserve every implementation, constructor, field, method, signature,
 dispatch, export, numerical behavior, artifact, hashing algorithm,
@@ -1052,9 +1060,7 @@ compatibility floor, workflow, tag, and release artifact. Add no global
 `checkdocs` policy or allowlist, source behavior, test outside the docs family,
 dependency, example, schema, API reduction, or release work. The nineteen
 expert/experimental bindings and five future de-export candidates are outside
-this packet and must not be documented or removed automatically. If truthful
-documentation requires a behavior or interface change, stop without an
-implementation commit and report the exact gap.
+this maintenance record and must not be documented or removed automatically.
 
 ## Paper-Aligned CI Boundary
 

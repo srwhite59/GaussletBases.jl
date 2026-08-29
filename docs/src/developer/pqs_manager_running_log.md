@@ -183,8 +183,13 @@ assertions. The bounded post-v0.2 export cleanup is implemented: the unused
 timed nested wrapper is deleted, two undocumented diagnostic/QW names are
 unexported, and the inexpensive qualified QW alias remains. The angular public
 surface remains a separate audit. One bounded foundational documentation grant
-now owns ten existing basis/mapping generics without changing their behavior or
-the global documentation policy.
+and four successor packets now document the supported basis/mapping,
+function/stencil, partition/leaf, atomic-IDA reference, and final six
+supported-public families without changing behavior or global documentation
+policy. Their bounded sequence reduced the undocumented-export backlog from
+`71` to `24`. The remaining nineteen expert/experimental bindings and five
+future de-export candidates require separate classification or caller-audit
+authority rather than automatic documentation or removal.
 
 **MT7 - External Cartesian GTO interchange (completed/maintenance).** The
 strict versioned reader, checkpoint-only PySCF exporter, frozen d-shell
@@ -1773,3 +1778,57 @@ Carrying-cost accounting:
   source/docs/test budgets, preserve every implementation and hash algorithm,
   run package/docs/authority/Documenter/CI acceptance, and return for
   lifecycle closeout.
+
+## Cartesian Hamiltonian Producer Pass 555 - Close Supported Public Surface Documentation
+
+Commit(s):
+- `8161f131aa962fef979f8ef09c14d23231eb14e4`
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted accurate docstrings and curated placement for the final six
+  classified supported-public bindings. The QW documentation moved from the
+  unexported abstract parent to `BondAlignedDiatomicQWBasis3D` without
+  duplication; the Coulomb expansion, owner-specific metadata, narrow H/H2
+  facade, and strict non-invariant external-GTO fingerprints retain their
+  authorized limits.
+- Exact changes were `+52/-10` source-docstring lines, `+20` reader-doc lines,
+  and `+18` focused docs-test lines, with no new file or executable behavior.
+  All hard limits were met; the test addition used its hard ceiling exactly.
+  The undocumented-export backlog fell exactly from `30` to `24`.
+
+Validation / goal advancement:
+- Docs passed `134/134` plus `10/10`; package load, authority check/self-test,
+  Documenter, and diff checks passed. Remote CI run `33235720583` ran and
+  passed Supported floor, PQS paper, and Screening paper; Docs run
+  `33235720615` passed.
+- MT6 returns `HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01/TEST-01` to maintenance.
+  The automatic supported-public documentation sequence is complete. The
+  remaining nineteen expert/experimental bindings and five future de-export
+  candidates remain classified but untouched; neither documentation nor
+  removal follows without separate authority.
+
+Medium-term checkpoint:
+- **MT1 active:** continue only narrow evidence-led conformance repairs.
+- **MT2 completed:** controlled Cr2 source migration remains closed.
+- **MT3 active:** represented-Hartree scaling, corrected-WL interpretation,
+  and Standard60/canonical-driver exposure remain separate pending work.
+- **MT4 active:** residual/protected and consumer-owned PRF questions are
+  unchanged.
+- **MT5 active/maintenance:** final v0.2.0, documentation deployment, and the
+  expanded Supported-floor gate remain accepted; registration, citation, and
+  future tag-lane repair remain separate.
+- **MT6 active, refined:** five bounded public-documentation families are
+  closed at an undocumented-export count of `24`; expert labeling, de-export
+  audits, angular classification, and further carrying-cost work each require
+  separate evidence and authority.
+- **MT7 completed/maintenance:** external Cartesian-GTO interchange remains
+  accepted and unchanged.
+
+Carrying-cost accounting:
+- deleted: the misplaced abstract-type docstring; simplified: six live
+  bindings now complete the supported-public reference set; quarantined: the
+  remaining nineteen expert/experimental and five audit candidates; not
+  deleted because: all six in-scope bindings remain supported public APIs.
+- exact remaining caller/blocker: none for Pass 554; source-behavior delta
+  `0/0`, new files and metadata fields none.
