@@ -89,6 +89,10 @@
         :AtomicOrbital, :AtomicIDAOperators, :atomic_ida_operators,
         :AtomicIDATwoElectronState, :AtomicIDATwoElectronProblem,
         :atomic_ida_two_electron_problem)
+    supported_surface_exports = (
+        :BondAlignedDiatomicQWBasis3D, :CoulombGaussianExpansion, :basis_metadata,
+        :cartesian_base_hamiltonian, :external_gto_ordering_fingerprint,
+        :external_gto_overlap_fingerprint)
     docs_site_developer = read_doc("docs", "src", "developer", "index.md")
     docs_site_developer_notes = read_doc("docs", "src", "developer", "supporting_notes.md")
     docs_site_architecture = read_doc("docs", "src", "developer", "architecture.md")
@@ -602,6 +606,20 @@
         @test contains_all_lower(docs_site_reference_atomic, "read-only", "construction order",
             "rebuilt on demand", "not cached", "stored dense matrices", "fully reorthogonalized",
             "krylovdim", "value", "one-up/one-down", "not a production solver")
+        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name),
+            supported_surface_exports)
+        @test !Base.Docs.hasdoc(GaussletBases, :AbstractBondAlignedOrdinaryQWBasis3D)
+        @test occursin("\nbasis_metadata\n", "\n$(docs_site_reference_bases)\n")
+        @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_ops)\n"),
+            (:BondAlignedDiatomicQWBasis3D, :CoulombGaussianExpansion))
+        @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_export)\n"),
+            supported_surface_exports[4:6])
+        @test contains_all_lower(docs_site_reference_bases, "owner-specific",
+            "no universal field schema", "copy behavior")
+        @test contains_all_lower(docs_site_reference_ops, "bond-aligned mapped-product", "homonuclear",
+            "heteronuclear", "finite gaussian expansion", "not an exact operator", "universal-interval")
+        @test contains_all_lower(docs_site_reference_export, "origin-centered hydrogen", "z axis",
+            "strict packet-integrity", "not numerical", "permutation", "tolerance", "convention")
 
         @test contains_all(
             docs_site_reference_export,

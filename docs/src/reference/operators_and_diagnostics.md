@@ -22,6 +22,18 @@ This tiny doctest uses `xgaussian_count = 0` to keep the reference example
 lightweight. The recommended public atomic setup still uses the default
 `xgaussian` supplement unless you have a specific reason to turn it off.
 
+## Bond-aligned QW and Coulomb resources
+
+The QW container is a bond-aligned mapped-product basis built through the
+public homonuclear or heteronuclear constructors, not a general geometry type.
+Its Coulomb resource is a finite Gaussian expansion, not an exact operator or
+a universal-interval accuracy claim.
+
+```@docs
+BondAlignedDiatomicQWBasis3D
+CoulombGaussianExpansion
+```
+
 ## Diagnostics and quadrature
 
 ```@docs

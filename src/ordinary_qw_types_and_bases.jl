@@ -279,21 +279,19 @@ function Base.show(io::IO, diagnostics::QWRGResidualSpaceDiagnostics)
     )
 end
 
+abstract type AbstractBondAlignedOrdinaryQWBasis3D end
+
 """
     BondAlignedDiatomicQWBasis3D
 
-Narrow mixed-axis basis container for the first bond-aligned diatomic QW
-reference route.
+Container for a mapped Cartesian product basis whose distinguished axis follows
+one diatomic bond. Construct it with `bond_aligned_homonuclear_qw_basis` or
+`bond_aligned_heteronuclear_qw_basis`.
 
-The first supported geometry family is a bond-aligned homonuclear diatomic:
-
-- one combined multi-center mapping on the distinguished bond axis
-- one shared single-center mapping on the two transverse axes
-- one rectangular 3D product basis built from those three one-dimensional
-  mapped bases
+The bond axis uses a combined two-center mapping, while the transverse axes
+share one single-center mapping. This is not a general molecular-geometry
+container.
 """
-abstract type AbstractBondAlignedOrdinaryQWBasis3D end
-
 struct BondAlignedDiatomicQWBasis3D{B<:MappedUniformBasis} <: AbstractBondAlignedOrdinaryQWBasis3D
     bond_axis::Symbol
     basis_x::B

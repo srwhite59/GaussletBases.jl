@@ -43,6 +43,8 @@ fit_asinh_mapping_for_strength
 Mapping functions distinguish physical `x` from reference `u`; basis
 introspection likewise separates physical and reference centers.
 `integral_weights` returns basis-function integrals, not quadrature weights.
+`basis_metadata` is owner-specific; it promises no universal field schema,
+concrete type, ownership, or copy behavior.
 
 ```@docs
 uofx
@@ -55,6 +57,7 @@ mapping
 centers
 reference_centers
 integral_weights
+basis_metadata
 ```
 
 ## Function evaluation and stencils

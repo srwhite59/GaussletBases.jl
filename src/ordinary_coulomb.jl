@@ -1,3 +1,14 @@
+"""
+    CoulombGaussianExpansion(coefficients, exponents; del, s, c, maxu)
+
+Finite callable representation
+`sum_i coefficients[i] * exp(-exponents[i] * r^2)`. The constructor requires
+matching counts and positive exponents, copies both inputs into `Float64`
+vectors, and records the generator parameters `del`, `s`, `c`, and `maxu`.
+
+This is a finite Coulomb approximation, not an exact operator or a claim of
+uniform accuracy on every interval.
+"""
 struct CoulombGaussianExpansion
     coefficients::Vector{Float64}
     exponents::Vector{Float64}

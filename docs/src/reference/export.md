@@ -160,8 +160,11 @@ The packet, import, and determinant-preparation bindings used by the
 [manual workflow](../manual/external_cartesian_gto_transfer.md) are included in
 the curated reference below. The overlap operation is documented separately
 with the ordinary Cartesian probe API.
+External-GTO fingerprints are strict packet-integrity hashes, not numerical-
+equivalence, permutation-, tolerance-, or convention-invariant comparisons.
 
 ```@docs
+cartesian_base_hamiltonian
 atomic_ida_density_interaction_matrix
 CartesianIDAHamiltonian
 cartesian_residual_gto_mwg_system
@@ -172,6 +175,8 @@ ExternalGTOOrbitalImportResult
 import_external_gto_orbitals
 read_external_cartesian_gto_packet
 closest_external_gto_determinant
+external_gto_ordering_fingerprint
+external_gto_overlap_fingerprint
 PQSH2PlusRow
 PQSH2PlusComparison
 pqs_h2plus_comparison

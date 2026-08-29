@@ -993,6 +993,16 @@ function _cartesian_base_write_hamiltonian(path, ham, base)
     return path
 end
 
+"""
+    cartesian_base_hamiltonian(system; basis, hamfile=nothing)
+
+Construct and return a `CartesianIDAHamiltonian{Float64}` for the supported
+base routes: origin-centered hydrogen and z-aligned H2. When `hamfile` is
+provided, also write the existing Cartesian IDA Hamiltonian artifact.
+
+This facade does not provide general molecular geometry, supplements,
+corrections, route controls, or solver behavior.
+"""
 function cartesian_base_hamiltonian(
     system::NamedTuple;
     basis::NamedTuple,

@@ -158,11 +158,26 @@ struct ExternalGTOOrbitalImportResult
     beta::Union{Nothing,ExternalGTOOrbitalSpinImport}
 end
 
+"""
+    external_gto_overlap_fingerprint(S)
+
+Return a strict packet-integrity hash of the column-major values of
+`Matrix{Float64}(S)`. Dimensions and scientific consistency are validated
+separately. This is not a numerical-equivalence, tolerance-invariant,
+permutation-invariant, or convention-invariant test.
+"""
 function external_gto_overlap_fingerprint(S::AbstractMatrix{<:Real})
     data = Matrix{Float64}(S)
     return bytes2hex(sha256(reinterpret(UInt8, vec(data))))
 end
 
+"""
+    external_gto_ordering_fingerprint(probes; ao_labels)
+
+Return a strict packet-integrity hash over ordered AO labels and stored angular
+powers, centers, primitive exponents and coefficients, and normalization
+conventions. It is not permutation-, tolerance-, or convention-invariant.
+"""
 function external_gto_ordering_fingerprint(
     probes::CartesianGaussianShellSupplementRepresentation3D;
     ao_labels::AbstractVector{<:AbstractString} = [orbital.label for orbital in probes.orbitals],

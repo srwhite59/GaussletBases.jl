@@ -457,6 +457,14 @@ Return the ordered primitive expansion representing `f` as a `FunctionStencil`.
 function stencil end
 function stencil_matrix end
 function build_basis end
+
+"""
+    basis_metadata(object)
+
+Return metadata associated with a supported basis, layer, representation, or
+supplement. Its concrete type, fields, ownership, and copy behavior are defined
+by the owning object; no universal metadata schema is promised.
+"""
 function basis_metadata end
 function basis_representation end
 function cross_overlap end
