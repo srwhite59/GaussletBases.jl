@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `d626ea1746b2676b9c768c5aee370e515d28977cb73f2dbd025f7fa8f5d723f5`.
+> [authority.toml](authority.toml), SHA-256 `5fcf0752272b321a7b1487b8cf3dadff5bfc05ca15f314a73b2b98966bcd6721`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2701,6 +2701,43 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `551`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-FUNCTION-STENCIL-DOC-TEST-01`, `HP-PUBLIC-PARTITION-LEAF-DOC-FN-01`
 - **Scope:** Maintain only the accepted family-scoped checks from b24c0dbeeb0a6b5526fde9004cbc7319c1395ec4 that the exact twelve partition-hierarchy and leaf-local accessors remain exported, carry Julia documentation, and appear with the canonical already-documented public context in the Partitions and leaf-local layers section of docs/src/reference/bases\_and\_mappings.md. Preserve Documenter as the executable @docs resolution gate and the accepted undocumented-export count of 40, excluding the module self-binding. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan.
+
+### HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01 - document six supported public surface bindings
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Supported Public Surface Documentation`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/reference/bases_and_mappings.md`
+  - `docs` / `existing`: `docs/src/reference/export.md`
+  - `docs` / `existing`: `docs/src/reference/operators_and_diagnostics.md`
+  - `source` / `existing`: `src/GaussletBases.jl`
+  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian_external_gto_import.jl`
+  - `source` / `existing`: `src/ordinary_coulomb.jl`
+  - `source` / `existing`: `src/ordinary_qw_types_and_bases.jl`
+- **Evidence:**
+  - `manager_pass`: `554`
+- **Dependencies:** `HP-PUBLIC-ATOMIC-IDA-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`
+- **Scope:** Document only the six existing supported-public bindings BondAlignedDiatomicQWBasis3D, CoulombGaussianExpansion, basis\_metadata, cartesian\_base\_hamiltonian, external\_gto\_ordering\_fingerprint, and external\_gto\_overlap\_fingerprint. Move and revise the currently misattached BondAlignedDiatomicQWBasis3D docstring from the unexported AbstractBondAlignedOrdinaryQWBasis3D declaration to the concrete type without duplication; describe only its narrow bond-aligned mapped-product role and recommend the existing public homonuclear and heteronuclear builders. Document CoulombGaussianExpansion as the finite callable sum of coefficients\[i\] \* exp(-exponents\[i\] \* r^2), with matching counts, positive exponents, copied Float64 inputs, and recorded del/s/c/maxu generator parameters, without an exact-Coulomb or universal-accuracy-interval claim. Document basis\_metadata without a universal metadata schema, concrete type, field set, ownership, or copy guarantee. Document cartesian\_base\_hamiltonian as returning CartesianIDAHamiltonian{Float64} and optionally writing the existing artifact only for the stated origin-centered H and z-aligned H2 base routes, without general molecules, supplements, corrections, route controls, or solver behavior. Document both external-GTO hashes as strict packet-integrity fingerprints: ordering covers ordered AO labels plus stored angular powers, centers, primitive data, and normalization convention; overlap covers column-major Matrix{Float64} values while dimensions and scientific consistency remain separate validation. Neither hash is permutation-, tolerance-, or convention-invariant or a numerical-equivalence test. Edit docstrings only in src/ordinary\_qw\_types\_and\_bases.jl, src/ordinary\_coulomb.jl, src/GaussletBases.jl, src/cartesian\_base\_hamiltonian.jl, and src/cartesian\_external\_gto\_import.jl, and add only curated entries or short limiting prose to docs/src/reference/bases\_and\_mappings.md, docs/src/reference/operators\_and\_diagnostics.md, and docs/src/reference/export.md. Preferred/hard additions are 65/95 source-docstring lines and 20/35 reader-documentation lines; add no file. Preserve every implementation, constructor, field, method, signature, dispatch, export, numerical behavior, artifact, hash algorithm, compatibility floor, workflow, tag, and release artifact. Add no global checkdocs policy or allowlist, source behavior, dependency, example, schema, test outside the docs family, API reduction, or release work. The nineteen expert/experimental bindings and five future de-export candidates remain outside this grant. Stop and report if truthful documentation requires a behavior or interface change.
+
+### HP-PUBLIC-SUPPORTED-SURFACE-DOC-TEST-01 - validate six supported public surface bindings
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Supported Public Surface Documentation`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `554`
+- **Dependencies:** `HP-PUBLIC-ATOMIC-IDA-DOC-TEST-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01`
+- **Scope:** Add only family-scoped checks in test/docs/runtests.jl that the exact six supported-public bindings remain exported, carry Julia documentation, and appear on their intended existing reference pages. Require the concrete BondAlignedDiatomicQWBasis3D rather than its unexported abstract parent to own the docstring, and preserve the narrow geometry/builder, finite Gaussian expansion, owner-specific metadata, narrow H/H2 base facade, and strict non-invariant fingerprint limits. Require the undocumented exported-binding backlog, excluding the module self-binding, to fall exactly from 30 to 24, then stop. Preferred/hard additions are 10/18 docs-test lines. Use Documenter as the executable @docs resolution gate. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, test outside the docs family, or broader reference-page scan. The nineteen expert/experimental bindings and five future de-export candidates remain excluded.
 
 ### HP-QW-NESTED-DIAT-FN-01 - repair exported ordinary-QW nested diatomic front doors
 

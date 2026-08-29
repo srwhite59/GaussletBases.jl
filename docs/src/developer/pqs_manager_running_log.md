@@ -1738,3 +1738,38 @@ Carrying-cost accounting:
   interface.
 - exact remaining caller/blocker: none for Pass 552; source-behavior delta
   `0/0`, new files and metadata fields none.
+
+## Cartesian Hamiltonian Producer Pass 554 - Authorize Supported Public Surface Documentation
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Added `HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01/TEST-01` for the six
+  supported-public names isolated by Pass 553. The grant moves the
+  `BondAlignedDiatomicQWBasis3D` docstring from its unexported abstract parent,
+  documents the finite callable Coulomb Gaussian representation and owner-
+  specific metadata, keeps `cartesian_base_hamiltonian` limited to its stated
+  H/H2 routes, and defines both external-GTO hashes as strict packet-integrity
+  fingerprints rather than numerical-equivalence tests.
+- Implementation is limited to five existing source docstring locations,
+  three existing reference pages, and the existing docs-test family. Hard
+  limits are `95` source-docstring, `35` reader-doc, and `18` docs-test added
+  lines, with no new file or executable behavior.
+
+Goal advancement / guardrail:
+- MT6 authorizes the final supported-public documentation packet. Acceptance
+  requires the undocumented-export count to fall exactly from `30` to `24`,
+  then stop. The nineteen expert/experimental bindings and five future de-
+  export candidates remain unchanged and require separate classification or
+  audit authority. No checkpoint is due.
+
+Carrying-cost accounting:
+- deleted: no code in this authority pass; simplified: one misattached
+  docstring must move rather than duplicate; quarantined: the remaining `24`
+  classified names; not deleted because: all six in-scope names are live
+  supported bindings.
+- exact remaining caller/blocker: repo-manager must stay within the stated
+  source/docs/test budgets, preserve every implementation and hash algorithm,
+  run package/docs/authority/Documenter/CI acceptance, and return for
+  lifecycle closeout.
