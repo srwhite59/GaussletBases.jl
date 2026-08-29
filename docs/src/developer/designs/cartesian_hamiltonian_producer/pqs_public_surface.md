@@ -945,6 +945,54 @@ copies, add mutation protection, alter indexing, or broaden into basis
 metadata, operators, angular work, API reduction, dependencies, examples, or
 release work.
 
+## Atomic IDA Inspection And Tiny Two-Electron Reference Documentation
+
+`HP-PUBLIC-ATOMIC-IDA-DOC-FN-01` and
+`HP-PUBLIC-ATOMIC-IDA-DOC-TEST-01` authorize documentation only for ten
+existing exported inspection and tiny-reference functions:
+
+| Binding | Required public meaning |
+| --- | --- |
+| `orbitals` | Return an owning object's stored ordered orbital records; callers treat returned storage as read-only, and ordering is only the owning construction's documented ordering. |
+| `two_electron_states` | Return the tiny problem's stored ordered state records under the same read-only and owner-specific-order rule. |
+| `radial_multipole` | Access the requested radial multipole matrix from `AtomicIDAOperators`. |
+| `gaunt_coefficient` | Return one complex spherical-harmonic Gaunt coefficient. |
+| `gaunt_tensor` | Reconstruct the requested dense Gaunt tensor on demand from the internal sparse representation. |
+| `angular_kernel` | Reconstruct the requested dense angular kernel on demand from the internal sectorized representation. |
+| `apply_overlap` | Validate the coefficient dimension and apply the tiny problem's stored dense overlap matrix. |
+| `apply_hamiltonian` | Validate the coefficient dimension and apply its stored dense Hamiltonian matrix. |
+| `ground_state_energy` | Return the lowest energy from the stored dense Hermitian problem. |
+| `lanczos_ground_state` | Run the existing small fully reorthogonalized reference Lanczos routine with its current controls and return `value`, `vector`, `residual`, `iterations`, and `converged`. |
+
+The compact section in `docs/src/reference/atomic_and_ordinary.md` must place
+these functions with the already-documented `AtomicOrbital`,
+`AtomicIDAOperators`, `atomic_ida_operators`, `AtomicIDATwoElectronState`,
+`AtomicIDATwoElectronProblem`, and `atomic_ida_two_electron_problem` context.
+It must not duplicate explanatory prose. `gaunt_tensor` and `angular_kernel`
+promise neither retained dense storage nor caching or scalable
+large-angular-momentum use. `lanczos_ground_state` is a small reference
+routine, not a general many-electron or production eigensolver, and
+`AtomicIDATwoElectronProblem` remains only the tiny one-up/one-down consumer.
+
+Implementation may add at most `75/110` preferred/hard source-docstring lines,
+`28/45` reference-page lines, and `10/18` docs-test lines, with no new file.
+Family-scoped checks must require the exact ten names to remain exported,
+documented, and present in the intended section; they must also verify the
+read-only/order, on-demand reconstruction, dense-reference, and non-production
+limits. Documenter remains the executable `@docs` resolution gate. The
+undocumented exported-binding backlog, excluding the module self-binding,
+must fall exactly from `40` to `30`. After that result, stop for explicit
+classification of the remaining names rather than assuming they are
+documentation debt.
+
+Preserve every implementation, method, signature, dispatch, export, numerical
+behavior, solver policy, storage and cache choice, compatibility floor,
+workflow, and release artifact. Add no generalized solver, dense-tensor cache,
+global `checkdocs` policy or allowlist, ordinary-test change, angular-research
+work, source behavior, dependency, example, API reduction, or release work. If
+truthful reader documentation requires another public helper or implementation
+change, stop without implementation and return that exact usability gap.
+
 ## Paper-Aligned CI Boundary
 
 `HP-PUBLIC-PAPER-CI-FN-01` and `HP-PUBLIC-PAPER-CI-TEST-01` own one

@@ -1664,3 +1664,41 @@ Carrying-cost accounting:
   live supported interfaces.
 - exact remaining caller/blocker: none for Pass 550; source-behavior delta
   `0/0`, new files and metadata fields none.
+
+## Cartesian Hamiltonian Producer Pass 552 - Authorize Atomic IDA Inspection Documentation
+
+Commit(s):
+- this docs-only authority amendment.
+
+Summary:
+- Added `HP-PUBLIC-ATOMIC-IDA-DOC-FN-01/TEST-01` for ten existing exported
+  atomic-IDA inspection and tiny two-electron reference functions. The grant
+  permits only declaration docstrings, one compact section in the existing
+  atomic/ordinary reference page, and focused checks in the existing docs
+  owner. Existing carrier and builder docstrings provide the surrounding
+  context without a new page or API.
+- The contract distinguishes owner-specific stored ordering from a universal
+  order, on-demand dense Gaunt/kernel reconstruction from retained dense
+  storage, and the tiny dense one-up/one-down reference problem from a general
+  solver. The small fully reorthogonalized Lanczos routine must document its
+  controls and exact return fields without a production-eigensolver claim.
+
+Goal advancement / guardrail:
+- MT6 addresses one final coherent documentation family under the existing
+  public surface. Acceptance requires the undocumented-export backlog to fall
+  exactly from `40` to `30`, then stops for explicit classification rather
+  than automatically treating the remainder as documentation debt. Source
+  behavior, ordinary tests, angular research, storage/caching, generalized
+  solvers, global docs policy, and API reduction remain separate. No checkpoint
+  is due.
+
+Carrying-cost accounting:
+- deleted: no code in this authority pass; simplified: ten related bindings
+  and six already-documented context names receive one bounded reference
+  family; quarantined: the remaining `30` exports pending classification; not
+  deleted because: the ten functions are live public inspection/reference
+  interfaces.
+- exact remaining caller/blocker: repo-manager must remain within source-doc
+  `75/110`, reference-page `28/45`, and docs-test `10/18` preferred/hard added
+  line budgets, add no file or behavioral change, run core/IDA/docs/authority/
+  Documenter/CI acceptance, and return for lifecycle closeout.
