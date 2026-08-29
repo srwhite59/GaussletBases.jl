@@ -890,9 +890,10 @@ reduction, dependencies, examples, or release work.
 ## Partition Hierarchy And Leaf-Local Accessor Documentation
 
 `HP-PUBLIC-PARTITION-LEAF-DOC-FN-01` and
-`HP-PUBLIC-PARTITION-LEAF-DOC-TEST-01` authorize one bounded documentation
-repair for twelve existing exported partition-hierarchy and leaf-local
-accessors. They add no binding or behavior. The required meanings are:
+`HP-PUBLIC-PARTITION-LEAF-DOC-TEST-01` maintain the implemented documentation
+for twelve existing exported partition-hierarchy and leaf-local accessors.
+Commit `b24c0dbeeb0a6b5526fde9004cbc7319c1395ec4` added no binding or behavior.
+The maintained meanings are:
 
 | Binding | Public meaning |
 | --- | --- |
@@ -914,11 +915,9 @@ from `BasisRepresentation1D`. Accessors exposing stored vectors or records must
 tell callers to treat those objects as read-only; this grant does not change
 them into copies or add mutation protection.
 
-Implementation may add concise docstrings only to the twelve existing bare
-generic declarations in `src/GaussletBases.jl`. One compact `Partitions and
-leaf-local layers` section in `docs/src/reference/bases_and_mappings.md` must
-include those accessors and this already-documented public context without
-duplicating prose:
+The compact implemented `Partitions and leaf-local layers` section in
+`docs/src/reference/bases_and_mappings.md` includes those accessors and this
+already-documented public context without duplicating prose:
 
 - `BasisBox1D`, `BasisPartition1D`, and `basis_partition`;
 - `HierarchicalBasisBox1D`, `HierarchicalBasisPartition1D`,
@@ -929,24 +928,22 @@ duplicating prose:
 - `LeafBoxContraction1D`, `LeafBoxContractionLayer1D`, and
   `contract_leaf_boxes`.
 
-The existing docs owner may add family-scoped checks that all twelve accessors
-have Julia documentation and appear with that context in the intended section.
-Documenter remains the resolution gate. The established undocumented exported-
-binding audit excludes the module self-binding and must fall exactly from `52`
-to `40`; do not add that audit as a global allowlist or change `checkdocs`.
+The implementation added `80` source-docstring lines, `35` reference lines,
+and `15` docs-test lines, all within the authorized hard limits and with no new
+file. Family-scoped checks require all twelve accessors to remain exported,
+documented, and present with the listed context. The undocumented exported-
+binding backlog, excluding the module self-binding, fell exactly from `52` to
+`40`; no global allowlist or `checkdocs` change was added.
 
-Preferred/hard limits are `80/115` added source-docstring lines, `35/55`
-reference-page lines, and `10/18` docs-test lines, with no new file. These are
-stop-and-report bounds, not a reason to compress unclear documentation.
-Preserve every definition, method, signature, dispatch, export, array
-ownership, ordering, numerical result, default, compatibility floor, workflow,
-tag, and release artifact. Do not broaden into basis metadata, operators,
-angular work, API reduction, dependencies, examples, or release work. If
-truthful documentation requires a behavioral or public-surface change,
-implementation stops without a commit and reports the exact gap. Acceptance
-requires package load, focused core tests, docs tests, a local Documenter build,
-authority check/self-test, generated-view parity, manager-log bound,
-`git diff --check`, and normal remote CI and Docs.
+The focused core suite and docs tests `123/123` plus `10/10` passed. Package
+load, authority check/self-test, Documenter, and diff checks passed; remote CI
+run `33219963234` and Docs run `33219963250` passed. Both records are in
+maintenance. Preserve every definition, method, signature, dispatch, export,
+array ownership, ordering, numerical result, default, compatibility floor,
+workflow, tag, and release artifact. Do not change returned objects into
+copies, add mutation protection, alter indexing, or broaden into basis
+metadata, operators, angular work, API reduction, dependencies, examples, or
+release work.
 
 ## Paper-Aligned CI Boundary
 

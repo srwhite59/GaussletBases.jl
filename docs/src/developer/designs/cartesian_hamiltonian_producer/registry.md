@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `442008f632436415535a970e4bb119ef17cef466b710eaeb452d1f9d9c5e8ba2`.
+> [authority.toml](authority.toml), SHA-256 `0b2aca5e39b6b04c8b38205ea31870057e92241f624206c01735969fcd8ddfcc`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2634,8 +2634,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-PARTITION-LEAF-DOC-FN-01 - document partition hierarchy and leaf-local accessors
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2644,14 +2644,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/reference/bases_and_mappings.md`
   - `source` / `existing`: `src/GaussletBases.jl`
 - **Evidence:**
+  - `git_commit`: `b24c0dbeeb0a6b5526fde9004cbc7319c1395ec4`
   - `manager_pass`: `550`
+  - `manager_pass`: `551`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-PUBLIC-FUNCTION-STENCIL-DOC-FN-01`
-- **Scope:** Document exactly twelve existing exported partition-hierarchy and leaf-local accessors without changing behavior: boxes returns stored ordered box records for flat or hierarchical partitions; leaf\_boxes selects childless hierarchy nodes in stored order; box\_indices returns the selected box's owned basis indices; box\_level, box\_parent, and box\_children expose hierarchy relationships with nothing for root parents; box\_block and box\_coupling materialize Float64 copies of one diagonal or rectangular block from either a square matrix or a named BasisRepresentation1D operator; leaf\_primitive\_indices maps a leaf-box identifier to its global primitive-index range; primitive\_origins and primitive\_leaf\_boxes are primitive-aligned provenance vectors; and leaf\_contractions returns stored ordered LeafBoxContraction1D records. Docstrings must tell callers to treat exposed stored vectors and records as read-only. Add concise docstrings only to the existing bare declarations in src/GaussletBases.jl and one compact Partitions and leaf-local layers @docs section in docs/src/reference/bases\_and\_mappings.md. The section must include the twelve accessors plus the already-documented partition, hierarchy, leaf-PGDG, global-mapped-layer, and leaf-contraction public context named by the canonical contract, without duplicating prose. Preferred/hard budgets are 80/115 added source-docstring lines and 35/55 reference-page lines, with no new file. Require the established undocumented exported-binding backlog, excluding the module self-binding, to fall exactly from 52 to 40. Preserve every definition, method, signature, dispatch, export, array ownership, ordering, numerical result, default, compatibility floor, workflow, tag, and release artifact. Do not change returned objects into copies, add mutation protection, alter indexing, enable Documenter checkdocs, add a global undocumented-name allowlist, or broaden into basis metadata, operators, angular work, API reduction, source behavior, dependencies, examples, or release work. Budgets are stop-and-report bounds; stop without an implementation commit if truthful documentation requires any behavioral or public-surface change.
+- **Scope:** Maintain only the accepted partition-hierarchy and leaf-local documentation from b24c0dbeeb0a6b5526fde9004cbc7319c1395ec4: concise docstrings on the twelve existing exported generics boxes, leaf\_boxes, box\_indices, box\_level, box\_parent, box\_children, box\_block, box\_coupling, leaf\_primitive\_indices, primitive\_origins, primitive\_leaf\_boxes, and leaf\_contractions, plus their compact Partitions and leaf-local layers @docs section in docs/src/reference/bases\_and\_mappings.md. Preserve stored-order and hierarchy semantics, nothing for root parents, global primitive-index ranges, primitive-aligned provenance, and the distinction between fresh Float64 box-block copies and stored vectors or records that callers treat as read-only. Preserve direct square-matrix and named BasisRepresentation1D operator access. Preserve every definition, method, signature, dispatch, export, array ownership, ordering, numerical result, default, compatibility floor, workflow, tag, and release artifact. Do not change returned objects into copies, add mutation protection, alter indexing, enable Documenter checkdocs, add a global undocumented-name allowlist, or broaden into basis metadata, operators, angular work, API reduction, source behavior, dependencies, examples, or release work.
 
 ### HP-PUBLIC-PARTITION-LEAF-DOC-TEST-01 - validate partition hierarchy and leaf-local documentation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2659,9 +2661,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `b24c0dbeeb0a6b5526fde9004cbc7319c1395ec4`
   - `manager_pass`: `550`
+  - `manager_pass`: `551`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-FUNCTION-STENCIL-DOC-TEST-01`, `HP-PUBLIC-PARTITION-LEAF-DOC-FN-01`
-- **Scope:** In the existing test/docs/runtests.jl owner, add only family-scoped checks that the exact twelve partition-hierarchy/leaf-local accessors are exported, carry Julia documentation, and appear in the Partitions and leaf-local layers section of docs/src/reference/bases\_and\_mappings.md with the canonical already-documented public context. Preserve Documenter as the executable @docs resolution gate. Preferred/hard additions are 10/18 test lines. Use implementation-time runtime inspection to confirm the established undocumented export backlog, excluding the module self-binding, is exactly 40, but add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan.
+- **Scope:** Maintain only the accepted family-scoped checks from b24c0dbeeb0a6b5526fde9004cbc7319c1395ec4 that the exact twelve partition-hierarchy and leaf-local accessors remain exported, carry Julia documentation, and appear with the canonical already-documented public context in the Partitions and leaf-local layers section of docs/src/reference/bases\_and\_mappings.md. Preserve Documenter as the executable @docs resolution gate and the accepted undocumented-export count of 40, excluding the module self-binding. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan.
 
 ### HP-QW-NESTED-DIAT-FN-01 - repair exported ordinary-QW nested diatomic front doors
 

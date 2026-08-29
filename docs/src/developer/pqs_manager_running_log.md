@@ -1630,3 +1630,37 @@ Carrying-cost accounting:
   `80/115`, reference-page `35/55`, and docs-test `10/18` preferred/hard added
   line budgets, make no new file or behavioral change, run package/core/docs/
   authority/Documenter/CI acceptance, and return for lifecycle closeout.
+
+## Cartesian Hamiltonian Producer Pass 551 - Close Partition And Leaf-Local Documentation
+
+Commit(s):
+- `b24c0dbeeb0a6b5526fde9004cbc7319c1395ec4`
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted docstrings for all twelve partition-hierarchy and leaf-local
+  accessors plus their compact reference section and family-scoped checks.
+  Fresh `Float64` box-block copies remain distinct from stored vectors and
+  records that callers treat as read-only. No definition, indexing, ownership,
+  dispatch, export, or numerical behavior changed.
+- Exact additions were `80` source-docstring, `35` reference, and `15`
+  docs-test lines. These meet the preferred source/reference limits and the
+  hard `18`-line test limit, with no new file. The undocumented-export backlog,
+  excluding the module self-binding, fell exactly from `52` to `40`.
+
+Validation / goal advancement:
+- Focused core and docs `123/123` plus `10/10` passed. Package load, authority
+  check/self-test, Documenter, and diff checks passed; remote CI run
+  `33219963234` and Docs run `33219963250` passed.
+- MT6 returns `HP-PUBLIC-PARTITION-LEAF-DOC-FN-01/TEST-01` to maintenance.
+  Preserve ordering, hierarchy, ownership, and copy semantics. The remaining
+  `40` undocumented exports, angular classification, API reduction, and global
+  docs policy remain separate. No checkpoint is due.
+
+Carrying-cost accounting:
+- deleted: no implementation; simplified: twelve related public accessors now
+  form one documented family; quarantined: the remaining export backlog and
+  unrelated classification; not deleted because: all twelve bindings remain
+  live supported interfaces.
+- exact remaining caller/blocker: none for Pass 550; source-behavior delta
+  `0/0`, new files and metadata fields none.
