@@ -81,6 +81,14 @@
         :LeafGaussianSpec1D, :LeafLocalPGDG1D, :build_leaf_pgdg, :augment_leaf_pgdg,
         :GlobalMappedPrimitiveLayer1D, :build_global_mapped_primitive_layer,
         :LeafBoxContraction1D, :LeafBoxContractionLayer1D, :contract_leaf_boxes)
+    atomic_ida_reference_exports = (
+        :orbitals, :two_electron_states, :radial_multipole, :gaunt_coefficient,
+        :gaunt_tensor, :angular_kernel, :apply_overlap, :apply_hamiltonian,
+        :ground_state_energy, :lanczos_ground_state)
+    atomic_ida_reference_context = (
+        :AtomicOrbital, :AtomicIDAOperators, :atomic_ida_operators,
+        :AtomicIDATwoElectronState, :AtomicIDATwoElectronProblem,
+        :atomic_ida_two_electron_problem)
     docs_site_developer = read_doc("docs", "src", "developer", "index.md")
     docs_site_developer_notes = read_doc("docs", "src", "developer", "supporting_notes.md")
     docs_site_architecture = read_doc("docs", "src", "developer", "architecture.md")
@@ -587,6 +595,13 @@
             "ordinary_cartesian_qiu_white_operators",
             "ordinary_cartesian_vee_expectation",
         )
+        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name),
+            atomic_ida_reference_exports)
+        @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_atomic)\n"),
+            (atomic_ida_reference_exports..., atomic_ida_reference_context...))
+        @test contains_all_lower(docs_site_reference_atomic, "read-only", "construction order",
+            "rebuilt on demand", "not cached", "stored dense matrices", "fully reorthogonalized",
+            "krylovdim", "value", "one-up/one-down", "not a production solver")
 
         @test contains_all(
             docs_site_reference_export,

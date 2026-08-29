@@ -689,8 +689,29 @@ function atomic_ida_two_electron_problem end
 function channel_range end
 function channel_hamiltonian end
 function channel_overlap end
+
+"""
+    orbitals(owner)
+
+Return the owner's stored orbital records in its construction-defined order.
+Treat the returned storage and records as read-only; no universal ordering is implied.
+"""
 function orbitals end
+
+"""
+    two_electron_states(problem)
+
+Return the tiny problem's stored state records in its defined order. Treat the
+returned storage and records as read-only.
+"""
 function two_electron_states end
+
+"""
+    radial_multipole(operators, L)
+
+Return the requested stored radial multipole matrix from `AtomicIDAOperators`.
+Treat the matrix as read-only.
+"""
 function radial_multipole end
 function direct_matrix end
 function exchange_matrix end
@@ -701,12 +722,61 @@ function density_matrix end
 function uhf_energy end
 function uhf_step end
 function uhf_scf end
+
+"""
+    gaunt_tensor(operators, L)
+
+Reconstruct the requested dense Gaunt tensor on demand. The result is not a
+retained cache or a scalable large-angular-momentum representation.
+"""
 function gaunt_tensor end
+
+"""
+    gaunt_coefficient(operators, L, M, left, right)
+
+Return one complex spherical-harmonic Gaunt coefficient.
+"""
 function gaunt_coefficient end
+
+"""
+    angular_kernel(operators, L)
+
+Reconstruct the requested dense angular kernel on demand. The result is not a
+retained cache or a scalable large-angular-momentum representation.
+"""
 function angular_kernel end
+
+"""
+    apply_overlap(problem, coefficients)
+
+Validate the coefficient dimension and apply the tiny problem's stored dense
+overlap matrix.
+"""
 function apply_overlap end
+
+"""
+    apply_hamiltonian(problem, coefficients)
+
+Validate the coefficient dimension and apply the tiny problem's stored dense
+Hamiltonian matrix.
+"""
 function apply_hamiltonian end
+
+"""
+    ground_state_energy(problem)
+
+Return the lowest eigenvalue of the tiny problem's stored dense Hermitian
+Hamiltonian.
+"""
 function ground_state_energy end
+
+"""
+    lanczos_ground_state(problem; krylovdim=200, maxiter=200, tol=1e-10, v0=nothing)
+
+Run the small, fully reorthogonalized reference Lanczos routine. It returns
+`value`, `vector`, `residual`, `iterations`, and `converged` and is not a
+general many-electron or production eigensolver.
+"""
 function lanczos_ground_state end
 function atomic_operators end
 function centrifugal end

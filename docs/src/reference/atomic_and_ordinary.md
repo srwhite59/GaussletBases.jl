@@ -44,6 +44,32 @@ uhf_step
 uhf_scf
 ```
 
+## Atomic IDA inspection and tiny two-electron reference
+
+Stored orbital and state records are read-only and retain their owner's construction order.
+Gaunt tensors and angular kernels are rebuilt on demand, not cached dense large-`L` resources.
+Overlap and Hamiltonian actions validate dimensions before applying stored dense matrices.
+The fully reorthogonalized Lanczos reference accepts `krylovdim`, `maxiter`,
+`tol`, and `v0`; it returns `value`, `vector`, `residual`, `iterations`, and
+`converged` for the tiny one-up/one-down problem, not a production solver.
+
+```@docs
+AtomicOrbital
+orbitals
+radial_multipole
+gaunt_coefficient
+gaunt_tensor
+angular_kernel
+AtomicIDATwoElectronState
+AtomicIDATwoElectronProblem
+atomic_ida_two_electron_problem
+two_electron_states
+apply_overlap
+apply_hamiltonian
+ground_state_energy
+lanczos_ground_state
+```
+
 ## Ordinary mapped and hybrid line
 
 The public mapped PGDG backends use quadrature-free local-linear analytic
