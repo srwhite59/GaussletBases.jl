@@ -948,8 +948,9 @@ release work.
 ## Atomic IDA Inspection And Tiny Two-Electron Reference Documentation
 
 `HP-PUBLIC-ATOMIC-IDA-DOC-FN-01` and
-`HP-PUBLIC-ATOMIC-IDA-DOC-TEST-01` authorize documentation only for ten
-existing exported inspection and tiny-reference functions:
+`HP-PUBLIC-ATOMIC-IDA-DOC-TEST-01` maintain documentation for ten existing
+exported inspection and tiny-reference functions, implemented by commit
+`8f84afb491ff7cc0f818a6ed982eca638a509b65`:
 
 | Binding | Required public meaning |
 | --- | --- |
@@ -964,34 +965,54 @@ existing exported inspection and tiny-reference functions:
 | `ground_state_energy` | Return the lowest energy from the stored dense Hermitian problem. |
 | `lanczos_ground_state` | Run the existing small fully reorthogonalized reference Lanczos routine with its current controls and return `value`, `vector`, `residual`, `iterations`, and `converged`. |
 
-The compact section in `docs/src/reference/atomic_and_ordinary.md` must place
-these functions with the already-documented `AtomicOrbital`,
+The compact section in `docs/src/reference/atomic_and_ordinary.md` places these
+functions with the already-documented `AtomicOrbital`,
 `AtomicIDAOperators`, `atomic_ida_operators`, `AtomicIDATwoElectronState`,
 `AtomicIDATwoElectronProblem`, and `atomic_ida_two_electron_problem` context.
-It must not duplicate explanatory prose. `gaunt_tensor` and `angular_kernel`
-promise neither retained dense storage nor caching or scalable
-large-angular-momentum use. `lanczos_ground_state` is a small reference
-routine, not a general many-electron or production eigensolver, and
+It does not duplicate explanatory prose. `gaunt_tensor` and `angular_kernel`
+promise neither retained dense storage nor caching or scalable large-angular-
+momentum use. `lanczos_ground_state` is a small reference routine, not a
+general many-electron or production eigensolver, and
 `AtomicIDATwoElectronProblem` remains only the tiny one-up/one-down consumer.
 
-Implementation may add at most `75/110` preferred/hard source-docstring lines,
-`28/45` reference-page lines, and `10/18` docs-test lines, with no new file.
-Family-scoped checks must require the exact ten names to remain exported,
-documented, and present in the intended section; they must also verify the
-read-only/order, on-demand reconstruction, dense-reference, and non-production
-limits. Documenter remains the executable `@docs` resolution gate. The
-undocumented exported-binding backlog, excluding the module self-binding,
-must fall exactly from `40` to `30`. After that result, stop for explicit
-classification of the remaining names rather than assuming they are
-documentation debt.
+The implementation added `70` source-docstring lines, `26` reference lines,
+and `15` focused docs-test lines. These additions are within all hard limits,
+with no new file or executable change. Family-scoped checks require the exact
+ten names to remain exported, documented, and present in the intended section,
+and preserve the read-only/order, on-demand reconstruction, dense-reference,
+and non-production limits. Documenter remains the executable `@docs`
+resolution gate. The undocumented exported-binding backlog, excluding the
+module self-binding, fell exactly from `40` to `30`.
+
+The required classification stop produced this disposition for the remaining
+`30` names; it grants no follow-on implementation:
+
+- six supported-public documentation candidates:
+  `BondAlignedDiatomicQWBasis3D`, `CoulombGaussianExpansion`, `basis_metadata`,
+  `cartesian_base_hamiltonian`, `external_gto_ordering_fingerprint`, and
+  `external_gto_overlap_fingerprint`;
+- nineteen expert/experimental bindings to retain only with accurate labels:
+  the angular sequence/profile, radial-boundary, experimental geometry,
+  working-basis, and sliced-chain surfaces;
+- five future de-export-audit candidates:
+  `OneCenterAtomicNestedStructureDiagnostics`,
+  `one_center_atomic_nested_structure_diagnostics`,
+  `one_center_atomic_nested_structure_report`,
+  `bond_aligned_diatomic_geometry_payload`, and
+  `diagnose_qwrg_residual_space`;
+- no deletion-ready binding without a separate caller and authority audit.
+
+Docs tests passed `126/126` plus `10/10`; the focused core group, package load,
+authority check/self-test, Documenter, manager-log bound, and diff checks also
+passed. Remote CI run `33230195333` and Docs run `33230195291` passed. Both
+records are in maintenance. The remaining classification is not an automatic
+documentation-debt queue.
 
 Preserve every implementation, method, signature, dispatch, export, numerical
 behavior, solver policy, storage and cache choice, compatibility floor,
 workflow, and release artifact. Add no generalized solver, dense-tensor cache,
 global `checkdocs` policy or allowlist, ordinary-test change, angular-research
-work, source behavior, dependency, example, API reduction, or release work. If
-truthful reader documentation requires another public helper or implementation
-change, stop without implementation and return that exact usability gap.
+work, source behavior, dependency, example, API reduction, or release work.
 
 ## Paper-Aligned CI Boundary
 

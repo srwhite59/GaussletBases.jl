@@ -1702,3 +1702,39 @@ Carrying-cost accounting:
   `75/110`, reference-page `28/45`, and docs-test `10/18` preferred/hard added
   line budgets, add no file or behavioral change, run core/IDA/docs/authority/
   Documenter/CI acceptance, and return for lifecycle closeout.
+
+## Cartesian Hamiltonian Producer Pass 553 - Close Atomic IDA Inspection Documentation
+
+Commit(s):
+- `8f84afb491ff7cc0f818a6ed982eca638a509b65`
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted docstrings for the ten atomic-IDA inspection and tiny two-electron
+  reference functions, their compact atomic/ordinary reference section, and
+  focused documentation checks. Stored records remain read-only and owner-
+  ordered; dense angular tensors remain on-demand references; and the fully
+  reorthogonalized Lanczos path remains a tiny one-up/one-down reference
+  routine rather than a production solver.
+- Exact additions were `70` source-docstring, `26` reference, and `15` docs-
+  test lines, all within hard limits, with no new file or executable change.
+  The undocumented-export count fell exactly from `40` to `30`.
+
+Validation / goal advancement:
+- The focused core group and docs `126/126` plus `10/10` passed. Package load,
+  authority check/self-test, Documenter, manager-log bound, and diff checks
+  passed; remote CI run `33230195333` and Docs run `33230195291` passed.
+- MT6 returns `HP-PUBLIC-ATOMIC-IDA-DOC-FN-01/TEST-01` to maintenance and
+  stops the automatic documentation sequence. The remaining names are now
+  classified as six supported-public documentation candidates, nineteen
+  expert/experimental bindings requiring accurate labels, and five future
+  de-export-audit candidates; none is deletion-ready. No checkpoint is due.
+
+Carrying-cost accounting:
+- deleted: no implementation; simplified: ten related public functions now
+  form one coherent documented reference family; quarantined: the remaining
+  `30` names pending their separately approved classification work; not
+  deleted because: every in-scope function remains a live inspection/reference
+  interface.
+- exact remaining caller/blocker: none for Pass 552; source-behavior delta
+  `0/0`, new files and metadata fields none.

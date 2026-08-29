@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "928faa76ebe21eed508f06423a30a0f55a4a882e82fa68c897b964d7be218b05"
+sha256 = "8953126548a8e6c9aa6acc4442fcf1096208128c2fa647cde06358524caf5b7a"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -4256,10 +4256,10 @@ title = "semantic source-q override validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-EXPORT-INTEGRITY-FN-01", "HP-PUBLIC-PARTITION-LEAF-DOC-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-ATOMIC-IDA-DOC-FN-01"
-lifecycle = "approved"
-scope = "Add only concise docstrings on the ten existing exported generics orbitals, two_electron_states, radial_multipole, gaunt_coefficient, gaunt_tensor, angular_kernel, apply_overlap, apply_hamiltonian, ground_state_energy, and lanczos_ground_state in src/GaussletBases.jl, plus one compact Atomic IDA inspection and tiny two-electron reference section in docs/src/reference/atomic_and_ordinary.md. Preserve stored ordered-record/read-only semantics without claiming universal ordering; requested radial-multipole access; one complex spherical-harmonic Gaunt coefficient; on-demand dense gaunt_tensor/angular_kernel reconstruction without retained-storage, cache, or scalable-large-angular-momentum claims; dimension-validated application of stored dense overlap/Hamiltonian matrices; dense Hermitian ground-state evaluation; and the existing small fully reorthogonalized reference Lanczos controls and return fields. Keep AtomicIDATwoElectronProblem explicitly limited to the tiny one-up/one-down consumer. Incorporate the already-documented AtomicOrbital, AtomicIDAOperators, atomic_ida_operators, AtomicIDATwoElectronState, AtomicIDATwoElectronProblem, and atomic_ida_two_electron_problem context without duplicating prose. Preferred/hard additions are 75/110 source-docstring lines and 28/45 reference lines; add no file. Preserve every implementation, method, signature, dispatch, export, numerical behavior, solver policy, storage choice, cache behavior, compatibility floor, workflow, tag, and release artifact. Do not enable Documenter checkdocs, add a global undocumented-name allowlist, or broaden into generalized solvers, dense-tensor caches, ordinary tests, angular research, source behavior, dependencies, examples, API reduction, or release work. Stop and report if truthful documentation requires any source behavior or public-interface change."
+lifecycle = "implemented"
+scope = "Maintain only the accepted atomic-IDA inspection and tiny two-electron reference documentation from commit 8f84afb491ff7cc0f818a6ed982eca638a509b65: concise docstrings on the ten existing exported generics orbitals, two_electron_states, radial_multipole, gaunt_coefficient, gaunt_tensor, angular_kernel, apply_overlap, apply_hamiltonian, ground_state_energy, and lanczos_ground_state, plus their compact section in docs/src/reference/atomic_and_ordinary.md. Preserve stored ordered-record/read-only semantics without claiming universal ordering; requested radial-multipole access; one complex spherical-harmonic Gaunt coefficient; on-demand dense gaunt_tensor/angular_kernel reconstruction without retained-storage, cache, or scalable-large-angular-momentum claims; dimension-validated application of stored dense overlap/Hamiltonian matrices; dense Hermitian ground-state evaluation; and the existing small fully reorthogonalized reference Lanczos controls and return fields. Keep AtomicIDATwoElectronProblem explicitly limited to the tiny one-up/one-down consumer. The accepted additions are 70 source-docstring lines and 26 reference lines, with no new file or executable change. Preserve every implementation, method, signature, dispatch, export, numerical behavior, solver policy, storage choice, cache behavior, compatibility floor, workflow, tag, and release artifact. The remaining 30 undocumented exports are outside this grant: six supported-public documentation candidates, nineteen expert/experimental bindings requiring accurate classification, and five future de-export-audit candidates; none is deletion-ready without a separate caller and authority audit. Do not enable Documenter checkdocs, add a global undocumented-name allowlist, or broaden into generalized solvers, dense-tensor caches, ordinary tests, angular research, source behavior, dependencies, examples, API reduction, or release work."
 surfaces = ["docs", "source"]
 title = "document atomic IDA inspection and tiny two-electron reference bindings"
 
@@ -4269,8 +4269,14 @@ title = "document atomic IDA inspection and tiny two-electron reference bindings
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "8f84afb491ff7cc0f818a6ed982eca638a509b65"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "552"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "553"
 
     [[records.paths]]
     kind = "docs"
@@ -4282,10 +4288,10 @@ title = "document atomic IDA inspection and tiny two-electron reference bindings
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-ATOMIC-IDA-DOC-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-TEST-01", "HP-PUBLIC-PARTITION-LEAF-DOC-TEST-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-ATOMIC-IDA-DOC-TEST-01"
-lifecycle = "approved"
-scope = "Add only family-scoped checks in test/docs/runtests.jl that the exact ten atomic-IDA inspection and tiny two-electron bindings remain exported, carry Julia documentation, and appear in the intended compact section of docs/src/reference/atomic_and_ordinary.md with the read-only/order, on-demand dense reconstruction/no-cache, stored-dense application, tiny one-up/one-down, reference-Lanczos, controls/return-fields, and non-production-solver limits. Require the undocumented exported-binding backlog, excluding the module self-binding, to fall exactly from 40 to 30. Preferred/hard additions are 10/18 docs-test lines. Use Documenter as the executable @docs resolution gate. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, ordinary-test edit, or broader reference-page scan. After this family reaches 30, stop for explicit classification of the remaining exports rather than treating them automatically as documentation debt."
+lifecycle = "completed"
+scope = "Maintain only the accepted family-scoped checks from commit 8f84afb491ff7cc0f818a6ed982eca638a509b65 that the exact ten atomic-IDA inspection and tiny two-electron bindings remain exported, carry Julia documentation, and appear with the canonical context in the Atomic IDA inspection and tiny two-electron reference section of docs/src/reference/atomic_and_ordinary.md. Preserve the read-only/order, on-demand dense reconstruction/no-cache, stored-dense application, tiny one-up/one-down, reference-Lanczos controls/return-fields, and non-production-solver checks. Preserve Documenter as the executable @docs resolution gate and the accepted undocumented-export count of 30, excluding the module self-binding. The accepted test addition is 15 lines. The remaining names require their separately recorded public-documentation, expert/experimental-label, or de-export-audit decisions; do not treat them automatically as documentation debt. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, ordinary-test edit, or broader reference-page scan."
 surfaces = ["tests"]
 title = "validate atomic IDA inspection and tiny two-electron documentation"
 
@@ -4295,8 +4301,14 @@ title = "validate atomic IDA inspection and tiny two-electron documentation"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "8f84afb491ff7cc0f818a6ed982eca638a509b65"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "552"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "553"
 
     [[records.paths]]
     kind = "test"

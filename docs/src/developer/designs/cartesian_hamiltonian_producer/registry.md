@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `465db3eedd2e345ab640f01a421c4f13936e55a30ae78ce63ca70bc006cda866`.
+> [authority.toml](authority.toml), SHA-256 `d626ea1746b2676b9c768c5aee370e515d28977cb73f2dbd025f7fa8f5d723f5`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2454,8 +2454,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-ATOMIC-IDA-DOC-FN-01 - document atomic IDA inspection and tiny two-electron reference bindings
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2464,14 +2464,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/reference/atomic_and_ordinary.md`
   - `source` / `existing`: `src/GaussletBases.jl`
 - **Evidence:**
+  - `git_commit`: `8f84afb491ff7cc0f818a6ed982eca638a509b65`
   - `manager_pass`: `552`
+  - `manager_pass`: `553`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-PUBLIC-PARTITION-LEAF-DOC-FN-01`
-- **Scope:** Add only concise docstrings on the ten existing exported generics orbitals, two\_electron\_states, radial\_multipole, gaunt\_coefficient, gaunt\_tensor, angular\_kernel, apply\_overlap, apply\_hamiltonian, ground\_state\_energy, and lanczos\_ground\_state in src/GaussletBases.jl, plus one compact Atomic IDA inspection and tiny two-electron reference section in docs/src/reference/atomic\_and\_ordinary.md. Preserve stored ordered-record/read-only semantics without claiming universal ordering; requested radial-multipole access; one complex spherical-harmonic Gaunt coefficient; on-demand dense gaunt\_tensor/angular\_kernel reconstruction without retained-storage, cache, or scalable-large-angular-momentum claims; dimension-validated application of stored dense overlap/Hamiltonian matrices; dense Hermitian ground-state evaluation; and the existing small fully reorthogonalized reference Lanczos controls and return fields. Keep AtomicIDATwoElectronProblem explicitly limited to the tiny one-up/one-down consumer. Incorporate the already-documented AtomicOrbital, AtomicIDAOperators, atomic\_ida\_operators, AtomicIDATwoElectronState, AtomicIDATwoElectronProblem, and atomic\_ida\_two\_electron\_problem context without duplicating prose. Preferred/hard additions are 75/110 source-docstring lines and 28/45 reference lines; add no file. Preserve every implementation, method, signature, dispatch, export, numerical behavior, solver policy, storage choice, cache behavior, compatibility floor, workflow, tag, and release artifact. Do not enable Documenter checkdocs, add a global undocumented-name allowlist, or broaden into generalized solvers, dense-tensor caches, ordinary tests, angular research, source behavior, dependencies, examples, API reduction, or release work. Stop and report if truthful documentation requires any source behavior or public-interface change.
+- **Scope:** Maintain only the accepted atomic-IDA inspection and tiny two-electron reference documentation from commit 8f84afb491ff7cc0f818a6ed982eca638a509b65: concise docstrings on the ten existing exported generics orbitals, two\_electron\_states, radial\_multipole, gaunt\_coefficient, gaunt\_tensor, angular\_kernel, apply\_overlap, apply\_hamiltonian, ground\_state\_energy, and lanczos\_ground\_state, plus their compact section in docs/src/reference/atomic\_and\_ordinary.md. Preserve stored ordered-record/read-only semantics without claiming universal ordering; requested radial-multipole access; one complex spherical-harmonic Gaunt coefficient; on-demand dense gaunt\_tensor/angular\_kernel reconstruction without retained-storage, cache, or scalable-large-angular-momentum claims; dimension-validated application of stored dense overlap/Hamiltonian matrices; dense Hermitian ground-state evaluation; and the existing small fully reorthogonalized reference Lanczos controls and return fields. Keep AtomicIDATwoElectronProblem explicitly limited to the tiny one-up/one-down consumer. The accepted additions are 70 source-docstring lines and 26 reference lines, with no new file or executable change. Preserve every implementation, method, signature, dispatch, export, numerical behavior, solver policy, storage choice, cache behavior, compatibility floor, workflow, tag, and release artifact. The remaining 30 undocumented exports are outside this grant: six supported-public documentation candidates, nineteen expert/experimental bindings requiring accurate classification, and five future de-export-audit candidates; none is deletion-ready without a separate caller and authority audit. Do not enable Documenter checkdocs, add a global undocumented-name allowlist, or broaden into generalized solvers, dense-tensor caches, ordinary tests, angular research, source behavior, dependencies, examples, API reduction, or release work.
 
 ### HP-PUBLIC-ATOMIC-IDA-DOC-TEST-01 - validate atomic IDA inspection and tiny two-electron documentation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2479,9 +2481,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `8f84afb491ff7cc0f818a6ed982eca638a509b65`
   - `manager_pass`: `552`
+  - `manager_pass`: `553`
 - **Dependencies:** `HP-PUBLIC-ATOMIC-IDA-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-PARTITION-LEAF-DOC-TEST-01`
-- **Scope:** Add only family-scoped checks in test/docs/runtests.jl that the exact ten atomic-IDA inspection and tiny two-electron bindings remain exported, carry Julia documentation, and appear in the intended compact section of docs/src/reference/atomic\_and\_ordinary.md with the read-only/order, on-demand dense reconstruction/no-cache, stored-dense application, tiny one-up/one-down, reference-Lanczos, controls/return-fields, and non-production-solver limits. Require the undocumented exported-binding backlog, excluding the module self-binding, to fall exactly from 40 to 30. Preferred/hard additions are 10/18 docs-test lines. Use Documenter as the executable @docs resolution gate. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, ordinary-test edit, or broader reference-page scan. After this family reaches 30, stop for explicit classification of the remaining exports rather than treating them automatically as documentation debt.
+- **Scope:** Maintain only the accepted family-scoped checks from commit 8f84afb491ff7cc0f818a6ed982eca638a509b65 that the exact ten atomic-IDA inspection and tiny two-electron bindings remain exported, carry Julia documentation, and appear with the canonical context in the Atomic IDA inspection and tiny two-electron reference section of docs/src/reference/atomic\_and\_ordinary.md. Preserve the read-only/order, on-demand dense reconstruction/no-cache, stored-dense application, tiny one-up/one-down, reference-Lanczos controls/return-fields, and non-production-solver checks. Preserve Documenter as the executable @docs resolution gate and the accepted undocumented-export count of 30, excluding the module self-binding. The accepted test addition is 15 lines. The remaining names require their separately recorded public-documentation, expert/experimental-label, or de-export-audit decisions; do not treat them automatically as documentation debt. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, ordinary-test edit, or broader reference-page scan.
 
 ### HP-PUBLIC-EXPORT-INTEGRITY-FN-01 - reduce unsupported package exports
 
