@@ -187,9 +187,14 @@ and four successor packets now document the supported basis/mapping,
 function/stencil, partition/leaf, atomic-IDA reference, and final six
 supported-public families without changing behavior or global documentation
 policy. Their bounded sequence reduced the undocumented-export backlog from
-`71` to `24`. The remaining nineteen expert/experimental bindings and five
-future de-export candidates require separate classification or caller-audit
-authority rather than automatic documentation or removal.
+`71` to `24`. The read-only follow-up retains
+`bond_aligned_diatomic_geometry_payload` as expert/experimental and gives it a
+bounded documentation grant. Three one-center nested names form one reserved
+next-minor namespace transaction; `diagnose_qwrg_residual_space` and its
+already-documented `QWRGResidualSpaceDiagnostics` type form another. No export
+change is authorized. Accepted geometry documentation will leave nineteen
+undocumented expert/experimental bindings plus four original de-export
+candidates rather than an automatic documentation or removal queue.
 
 **MT7 - External Cartesian GTO interchange (completed/maintenance).** The
 strict versioned reader, checkpoint-only PySCF exporter, frozen d-shell
@@ -1832,3 +1837,43 @@ Carrying-cost accounting:
   deleted because: all six in-scope bindings remain supported public APIs.
 - exact remaining caller/blocker: none for Pass 554; source-behavior delta
   `0/0`, new files and metadata fields none.
+
+## Cartesian Hamiltonian Producer Pass 556 - Classify Remaining Surface And Authorize Expert Geometry Documentation
+
+Commit(s):
+- audit snapshot `0832bdce0f3ff9bdd07d8580bedcda0c47dadbe8`;
+- this docs-only authority amendment.
+
+Summary:
+- Accepted the read-only de-export audit without granting an export change.
+  `bond_aligned_diatomic_geometry_payload` remains an exported
+  expert/experimental interface because it is the central constructor for the
+  coherent bond-aligned geometry family with active high-order consumers.
+- Reserved two inseparable next-minor namespace transactions: the three one-
+  center nested diagnostic names, and `diagnose_qwrg_residual_space` together
+  with its already-documented `QWRGResidualSpaceDiagnostics` type. Every
+  implementation remains for qualified internal/research use. These
+  reservations are namespace reductions, not deletion, performance, v0.2.x,
+  release, or automatic v0.3 work.
+- Added `HP-PUBLIC-EXPERT-GEOMETRY-DOC-FN-01/TEST-01` for one declaration
+  docstring, one compact expert/experimental section in the existing bases and
+  mappings reference, and focused existing-owner checks. Hard limits are `36`
+  source-docstring, `28` reader-doc, and `14` docs-test added lines, with no
+  new file or behavioral change.
+
+Goal advancement / guardrail:
+- MT6 refines the remaining public-surface classification instead of treating
+  it as undifferentiated documentation debt. Acceptance must reduce the
+  undocumented-export count exactly from `24` to `23`, leaving nineteen
+  undocumented expert/experimental bindings and four original de-export
+  candidates; the associated documented QWRG type remains coupled to the
+  future residual transaction. No checkpoint is due.
+
+Carrying-cost accounting:
+- deleted: nothing; simplified: five formerly ambiguous candidates now have
+  explicit retain/reserve dispositions; quarantined: both future next-minor
+  namespace transactions; not deleted because: implementations remain active
+  internal/research machinery and geometry remains a coherent expert family.
+- exact remaining caller/blocker: repo-manager must remain within the stated
+  docs-only budgets, preserve exports and behavior, run package/docs/authority/
+  Documenter/CI acceptance, and return for lifecycle closeout.

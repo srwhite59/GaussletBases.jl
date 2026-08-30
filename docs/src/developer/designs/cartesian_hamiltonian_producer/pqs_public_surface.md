@@ -984,23 +984,15 @@ and non-production limits. Documenter remains the executable `@docs`
 resolution gate. The undocumented exported-binding backlog, excluding the
 module self-binding, fell exactly from `40` to `30`.
 
-The required classification stop produced this disposition for the remaining
-`30` names; it grants no follow-on implementation:
-
-- six supported-public documentation candidates:
-  `BondAlignedDiatomicQWBasis3D`, `CoulombGaussianExpansion`, `basis_metadata`,
-  `cartesian_base_hamiltonian`, `external_gto_ordering_fingerprint`, and
-  `external_gto_overlap_fingerprint`;
-- nineteen expert/experimental bindings to retain only with accurate labels:
-  the angular sequence/profile, radial-boundary, experimental geometry,
-  working-basis, and sliced-chain surfaces;
-- five future de-export-audit candidates:
-  `OneCenterAtomicNestedStructureDiagnostics`,
-  `one_center_atomic_nested_structure_diagnostics`,
-  `one_center_atomic_nested_structure_report`,
-  `bond_aligned_diatomic_geometry_payload`, and
-  `diagnose_qwrg_residual_space`;
-- no deletion-ready binding without a separate caller and authority audit.
+The required classification stop was refined by the bounded documentation and
+read-only caller audits that followed it. The six supported-public candidates
+are now documented under the next section. At snapshot
+`0832bdce0f3ff9bdd07d8580bedcda0c47dadbe8`, the remaining audit retains
+`bond_aligned_diatomic_geometry_payload` as expert/experimental and reserves
+four original de-export candidates in two next-minor transactions described
+below. The already-documented `QWRGResidualSpaceDiagnostics` type is coupled
+to the residual-diagnostics transaction. No name is deletion-ready, and this
+classification grants no export change.
 
 Docs tests passed `126/126` plus `10/10`; the focused core group, package load,
 authority check/self-test, Documenter, manager-log bound, and diff checks also
@@ -1058,9 +1050,82 @@ Preserve every implementation, constructor, field, method, signature,
 dispatch, export, numerical behavior, artifact, hashing algorithm,
 compatibility floor, workflow, tag, and release artifact. Add no global
 `checkdocs` policy or allowlist, source behavior, test outside the docs family,
-dependency, example, schema, API reduction, or release work. The nineteen
-expert/experimental bindings and five future de-export candidates are outside
-this maintenance record and must not be documented or removed automatically.
+dependency, example, schema, API reduction, or release work. The remaining
+classified bindings are outside this maintenance record; their refined
+disposition follows and grants no automatic documentation or removal.
+
+## Expert Geometry Documentation And Namespace Reservations
+
+The read-only de-export audit at snapshot
+`0832bdce0f3ff9bdd07d8580bedcda0c47dadbe8` refines the remaining public-
+surface classification without granting any export change.
+
+`bond_aligned_diatomic_geometry_payload` remains exported as an
+expert/experimental interface. It is the central constructor in a coherent
+bond-aligned geometry family with active high-order consumers, and owns
+overloads for the supported bond-aligned QW basis, ordinary operators, nested
+source and fixed-block combinations, and residual-augmented operators.
+Removing its export would split that family rather than remove an orphan.
+
+Two future next-minor namespace transactions are reserved but not authorized:
+
+1. `OneCenterAtomicNestedStructureDiagnostics`,
+   `one_center_atomic_nested_structure_diagnostics`, and
+   `one_center_atomic_nested_structure_report` must move together; and
+2. `diagnose_qwrg_residual_space` and its already-documented result type
+   `QWRGResidualSpaceDiagnostics` must move together.
+
+Every implementation remains available for qualified internal and research
+use. These are namespace reductions, not source-code deletion, numerical,
+performance, migration, or release work. They authorize no de-export, version
+change, changelog entry, v0.2.x compatibility change, or v0.3 development.
+
+`HP-PUBLIC-EXPERT-GEOMETRY-DOC-FN-01` authorizes one concise docstring on the
+existing `bond_aligned_diatomic_geometry_payload` generic declaration in
+`src/GaussletBases.jl` and one compact section titled "Expert/experimental
+bond-aligned geometry inspection" in
+`docs/src/reference/bases_and_mappings.md`. The section must curate the central
+function with its already-documented exported geometry records and companion
+operations, without duplicating their docstrings:
+
+- `BondAlignedDiatomicGeometryPoint3D`;
+- `BondAlignedDiatomicGeometryNucleus3D`;
+- `BondAlignedDiatomicGeometryBox3D`;
+- `BondAlignedDiatomicGeometryPayload3D`;
+- `BondAlignedDiatomicGeometryPlaneSlice3D`;
+- `bond_aligned_diatomic_source_geometry_payload`; and
+- `bond_aligned_diatomic_plane_slice`.
+
+The documentation must state that the function constructs inspection and
+visualization data without constructing or mutating a basis or Hamiltonian.
+Nested payloads show compressed fixed centers, while
+`bond_aligned_diatomic_source_geometry_payload` separately shows raw source-
+region points. Multi-object overloads require the same basis geometry where
+the current methods enforce it. The interface remains tied to current bond-
+aligned QW/nested geometry and provenance conventions; it is not a general
+molecular-geometry API, plotting framework, or stable serialization format.
+Returned records and contained vectors are inspection data, not mutable
+construction state.
+
+Preferred/hard additions are `24/36` source-docstring lines, `18/28` reader-
+documentation lines, and `8/14` focused docs-test lines, with no new file.
+`HP-PUBLIC-EXPERT-GEOMETRY-DOC-TEST-01` may add only documentation-presence,
+curated-placement, limiting-language, and expert/experimental-classification
+checks in `test/docs/runtests.jl`. Documenter remains the executable `@docs`
+resolution gate. Acceptance requires the undocumented-export count, excluding
+the module self-binding, to fall exactly from `24` to `23` and then stop. The
+accepted remaining state must be nineteen undocumented expert/experimental
+bindings plus the four original de-export candidates above, with the already-
+documented `QWRGResidualSpaceDiagnostics` joined to the future residual
+transaction.
+
+Preserve every method, dispatch, field, payload value, export, numerical
+behavior, plotting dependency, serialization behavior, ordinary test,
+example, compatibility floor, workflow, tag, and release artifact. Add no
+global documentation policy, implementation helper, metadata, file, export
+change, migration note, version change, changelog entry, or release work. If
+truthful documentation requires behavior or interface work, stop without an
+implementation commit and report the exact gap.
 
 ## Paper-Aligned CI Boundary
 
