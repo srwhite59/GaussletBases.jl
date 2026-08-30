@@ -633,6 +633,24 @@ function build_one_center_atomic_legacy_profile_shell_sequence end
 function one_center_atomic_legacy_profile_fixed_block end
 function one_center_atomic_nested_structure_diagnostics end
 function one_center_atomic_nested_structure_report end
+"""
+    bond_aligned_diatomic_geometry_payload(object...)
+
+Construct bond-aligned geometry records for inspection and visualization.
+
+Overloads cover supported bond-aligned QW bases, ordinary operators, nested
+sources and fixed blocks, and residual-augmented operators. Multi-object
+overloads require the same basis geometry where the corresponding method
+enforces it. Nested payloads contain compressed fixed centers; use
+[`bond_aligned_diatomic_source_geometry_payload`](@ref) to inspect raw
+source-region points separately.
+
+This operation neither constructs nor mutates a basis or Hamiltonian. Treat
+the returned records and their vectors as read-only inspection data. The
+interface follows the current bond-aligned QW/nested geometry and provenance
+conventions; it is not a general molecular-geometry API, plotting framework,
+or stable serialization format.
+"""
 function bond_aligned_diatomic_geometry_payload end
 function bond_aligned_diatomic_source_geometry_payload end
 function bond_aligned_diatomic_plane_slice end

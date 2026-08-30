@@ -621,6 +621,19 @@
         @test contains_all_lower(docs_site_reference_export, "origin-centered hydrogen", "z axis",
             "strict packet-integrity", "not numerical", "permutation", "tolerance", "convention")
 
+        geometry_inspection_exports = (
+            :bond_aligned_diatomic_geometry_payload, :BondAlignedDiatomicGeometryPoint3D,
+            :BondAlignedDiatomicGeometryNucleus3D, :BondAlignedDiatomicGeometryBox3D,
+            :BondAlignedDiatomicGeometryPayload3D, :BondAlignedDiatomicGeometryPlaneSlice3D,
+            :bond_aligned_diatomic_source_geometry_payload, :bond_aligned_diatomic_plane_slice)
+        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name), geometry_inspection_exports)
+        @test occursin("## Expert/experimental bond-aligned geometry inspection", docs_site_reference_bases) &&
+              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_bases)\n"), geometry_inspection_exports)
+        @test contains_all_lower(docs_site_reference_bases, "inspection and visualization", "does not construct or mutate",
+            "compressed fixed centers", "raw source-region points", "same basis geometry", "read-only inspection data",
+            "not as a general molecular-geometry api", "plotting framework", "stable serialization format")
+        @test length(filter(!=(:GaussletBases), Docs.undocumented_names(GaussletBases))) == 23
+
         @test contains_all(
             docs_site_reference_export,
             "atomic_ida_density_interaction_matrix",

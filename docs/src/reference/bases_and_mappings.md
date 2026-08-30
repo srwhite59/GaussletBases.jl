@@ -126,3 +126,24 @@ to `CombinedInvsqrtMapping`, not to the one-center atomic helper above.
 The old one-dimensional COMX-cleaned hybrid constructor is intentionally
 omitted from the public reference. It remains only as legacy/internal
 experimental code for surrogate comparisons and historical regression checks.
+
+## Expert/experimental bond-aligned geometry inspection
+
+This family provides inspection and visualization data for current bond-aligned
+QW/nested geometry and provenance conventions. It does not construct or mutate
+a basis or Hamiltonian. Nested payloads show compressed fixed centers; source
+payloads show raw source-region points separately. Multi-object methods require
+the same basis geometry where enforced. Treat returned records and vectors as
+read-only inspection data, not as a general molecular-geometry API. It is not a
+plotting framework or stable serialization format.
+
+```@docs
+bond_aligned_diatomic_geometry_payload
+BondAlignedDiatomicGeometryPoint3D
+BondAlignedDiatomicGeometryNucleus3D
+BondAlignedDiatomicGeometryBox3D
+BondAlignedDiatomicGeometryPayload3D
+BondAlignedDiatomicGeometryPlaneSlice3D
+bond_aligned_diatomic_source_geometry_payload
+bond_aligned_diatomic_plane_slice
+```
