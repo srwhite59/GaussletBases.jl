@@ -1080,13 +1080,14 @@ use. These are namespace reductions, not source-code deletion, numerical,
 performance, migration, or release work. They authorize no de-export, version
 change, changelog entry, v0.2.x compatibility change, or v0.3 development.
 
-`HP-PUBLIC-EXPERT-GEOMETRY-DOC-FN-01` authorizes one concise docstring on the
-existing `bond_aligned_diatomic_geometry_payload` generic declaration in
-`src/GaussletBases.jl` and one compact section titled "Expert/experimental
+Implementation commit `312f69a4b757e8d559387e0ef14450f031691039`
+added the accepted concise docstring on the existing
+`bond_aligned_diatomic_geometry_payload` generic declaration in
+`src/GaussletBases.jl` and the compact section titled "Expert/experimental
 bond-aligned geometry inspection" in
-`docs/src/reference/bases_and_mappings.md`. The section must curate the central
+`docs/src/reference/bases_and_mappings.md`. The section curates the central
 function with its already-documented exported geometry records and companion
-operations, without duplicating their docstrings:
+operations without duplicating their docstrings:
 
 - `BondAlignedDiatomicGeometryPoint3D`;
 - `BondAlignedDiatomicGeometryNucleus3D`;
@@ -1107,17 +1108,22 @@ molecular-geometry API, plotting framework, or stable serialization format.
 Returned records and contained vectors are inspection data, not mutable
 construction state.
 
-Preferred/hard additions are `24/36` source-docstring lines, `18/28` reader-
-documentation lines, and `8/14` focused docs-test lines, with no new file.
-`HP-PUBLIC-EXPERT-GEOMETRY-DOC-TEST-01` may add only documentation-presence,
-curated-placement, limiting-language, and expert/experimental-classification
-checks in `test/docs/runtests.jl`. Documenter remains the executable `@docs`
-resolution gate. Acceptance requires the undocumented-export count, excluding
-the module self-binding, to fall exactly from `24` to `23` and then stop. The
-accepted remaining state must be nineteen undocumented expert/experimental
-bindings plus the four original de-export candidates above, with the already-
-documented `QWRGResidualSpaceDiagnostics` joined to the future residual
-transaction.
+The implementation added `18` source-docstring, `21` reader-documentation,
+and `13` focused docs-test lines, all within preferred limits and with no new
+file. The focused checks cover documentation presence, curated placement,
+limiting language, and expert/experimental classification. Documenter remains
+the executable `@docs` resolution gate. The undocumented-export count,
+excluding the module self-binding, fell exactly from `24` to `23` and then
+stopped. The accepted remaining state is nineteen undocumented expert/
+experimental bindings plus the four original de-export candidates above,
+with the already-documented `QWRGResidualSpaceDiagnostics` joined to the
+future residual transaction.
+
+Docs tests passed `138/138` plus `10/10`; radial passed `322/322`; package
+load, authority check/self-test, Documenter, and diff checks passed. Remote CI
+run `33326473189` passed all three gates, Docs run `33326473214` passed, and
+the `/dev/` page was verified at the implementation commit. Both records are
+now in maintenance.
 
 Preserve every method, dispatch, field, payload value, export, numerical
 behavior, plotting dependency, serialization behavior, ordinary test,

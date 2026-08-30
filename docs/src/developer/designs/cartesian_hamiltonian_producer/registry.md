@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `d0b1b5946d5d09acb47e8b27c9165cde7d9aa2365e82710b966b54286cde96e3`.
+> [authority.toml](authority.toml), SHA-256 `00d4598c8f7305a09376fd3dbd99978bab1439c8c4665fc26681fbb48abc9aec`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2489,8 +2489,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-EXPERT-GEOMETRY-DOC-FN-01 - document expert bond-aligned geometry inspection
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2499,15 +2499,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/reference/bases_and_mappings.md`
   - `source` / `existing`: `src/GaussletBases.jl`
 - **Evidence:**
-  - `git_commit`: `0832bdce0f3ff9bdd07d8580bedcda0c47dadbe8`
+  - `git_commit`: `312f69a4b757e8d559387e0ef14450f031691039`
   - `manager_pass`: `556`
+  - `manager_pass`: `557`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01`, `HP-QW-NESTED-DIAT-FN-01`
-- **Scope:** Retain bond\_aligned\_diatomic\_geometry\_payload as an exported expert/experimental interface because it is the central constructor in a coherent exported geometry family with active high-order consumers, and authorize only one concise docstring on its existing generic declaration in src/GaussletBases.jl plus one compact Expert/experimental bond-aligned geometry inspection section in docs/src/reference/bases\_and\_mappings.md. Curate the central function with the already-documented exported BondAlignedDiatomicGeometryPoint3D, BondAlignedDiatomicGeometryNucleus3D, BondAlignedDiatomicGeometryBox3D, BondAlignedDiatomicGeometryPayload3D, and BondAlignedDiatomicGeometryPlaneSlice3D records plus bond\_aligned\_diatomic\_source\_geometry\_payload and bond\_aligned\_diatomic\_plane\_slice, without duplicating their docstrings. State that the function constructs inspection/visualization data and neither constructs nor mutates a basis or Hamiltonian; its overloads cover the supported bond-aligned basis, ordinary operators, nested source/fixed-block combinations, and residual-augmented operators; nested payloads describe compressed fixed centers while the source payload separately describes raw source-region points; multi-object inputs share one basis geometry where current methods require it; and returned records/vectors are inspection data rather than mutable construction state. Keep the interface tied to current bond-aligned QW/nested geometry and provenance conventions, not a general molecular-geometry API, plotting framework, or stable serialization format. Preferred/hard additions are 24/36 source-docstring lines and 18/28 reader-documentation lines, with no new file. Preserve every implementation, method, dispatch, field, payload value, export, numerical behavior, plotting dependency, serialization behavior, ordinary test, example, global documentation policy, compatibility floor, workflow, version, tag, and release artifact. Reserve but do not authorize two next-minor namespace transactions: OneCenterAtomicNestedStructureDiagnostics with one\_center\_atomic\_nested\_structure\_diagnostics and one\_center\_atomic\_nested\_structure\_report; and diagnose\_qwrg\_residual\_space with the already-documented QWRGResidualSpaceDiagnostics type. Retain every implementation for qualified internal and research use. These reservations are namespace reductions, not source deletion or performance work; they authorize no de-export, migration edit, v0.2.x compatibility change, version, changelog, release, or v0.3 development. Stop and report if truthful documentation requires behavior or interface work.
+- **Scope:** Maintain only the accepted expert/experimental bond-aligned geometry documentation from commit 312f69a4b757e8d559387e0ef14450f031691039: the 18-line docstring on the existing bond\_aligned\_diatomic\_geometry\_payload generic declaration in src/GaussletBases.jl and the 21-line Expert/experimental bond-aligned geometry inspection section in docs/src/reference/bases\_and\_mappings.md. Keep the central function curated with the already-documented exported BondAlignedDiatomicGeometryPoint3D, BondAlignedDiatomicGeometryNucleus3D, BondAlignedDiatomicGeometryBox3D, BondAlignedDiatomicGeometryPayload3D, and BondAlignedDiatomicGeometryPlaneSlice3D records plus bond\_aligned\_diatomic\_source\_geometry\_payload and bond\_aligned\_diatomic\_plane\_slice, without duplicating their docstrings. Preserve the inspection/visualization-only contract: the function neither constructs nor mutates a basis or Hamiltonian; overloads cover the supported bond-aligned basis, ordinary operators, nested source/fixed-block combinations, and residual-augmented operators; nested payloads describe compressed fixed centers while the source payload separately describes raw source-region points; multi-object inputs share one basis geometry where current methods require it; and returned records/vectors are read-only inspection data rather than mutable construction state. Keep the interface tied to current bond-aligned QW/nested geometry and provenance conventions, not a general molecular-geometry API, plotting framework, or stable serialization format. Preserve every implementation, method, dispatch, field, payload value, export, numerical behavior, plotting dependency, serialization behavior, ordinary test, example, global documentation policy, compatibility floor, workflow, version, tag, and release artifact. Reserve but do not authorize two next-minor namespace transactions: OneCenterAtomicNestedStructureDiagnostics with one\_center\_atomic\_nested\_structure\_diagnostics and one\_center\_atomic\_nested\_structure\_report; and diagnose\_qwrg\_residual\_space with the already-documented QWRGResidualSpaceDiagnostics type. Retain every implementation for qualified internal and research use. These reservations are namespace reductions, not source deletion or performance work; they authorize no de-export, migration edit, v0.2.x compatibility change, version, changelog, release, or v0.3 development.
 
 ### HP-PUBLIC-EXPERT-GEOMETRY-DOC-TEST-01 - validate expert bond-aligned geometry documentation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2515,10 +2516,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
-  - `git_commit`: `0832bdce0f3ff9bdd07d8580bedcda0c47dadbe8`
+  - `git_commit`: `312f69a4b757e8d559387e0ef14450f031691039`
   - `manager_pass`: `556`
+  - `manager_pass`: `557`
 - **Dependencies:** `HP-PUBLIC-EXPERT-GEOMETRY-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-SUPPORTED-SURFACE-DOC-TEST-01`
-- **Scope:** Add only focused checks in test/docs/runtests.jl that bond\_aligned\_diatomic\_geometry\_payload remains exported, carries Julia documentation, appears with the exact seven existing companion record/operation bindings in the Expert/experimental bond-aligned geometry inspection section of docs/src/reference/bases\_and\_mappings.md, and retains the inspection-only, overload-family, compressed-versus-raw-source, same-geometry, non-general-API, non-plotting-framework, non-serialization, and read-only-inspection-data limits. Require the undocumented exported-binding backlog, excluding the module self-binding, to fall exactly from 24 to 23, then stop. Record the accepted remaining state as nineteen undocumented expert/experimental bindings plus four original de-export candidates, with the already-documented QWRGResidualSpaceDiagnostics joined to the future diagnose\_qwrg\_residual\_space namespace transaction. Preferred/hard additions are 8/14 docs-test lines. Use Documenter as the executable @docs resolution gate. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, ordinary-test change, export change, migration edit, version, changelog, release, or broader reference-page scan.
+- **Scope:** Maintain only the accepted 13-line focused check addition from commit 312f69a4b757e8d559387e0ef14450f031691039 in test/docs/runtests.jl. Require bond\_aligned\_diatomic\_geometry\_payload and its exact seven existing companion record/operation bindings to remain exported, carry Julia documentation, and appear in the Expert/experimental bond-aligned geometry inspection section of docs/src/reference/bases\_and\_mappings.md. Preserve the inspection-only, overload-family, compressed-versus-raw-source, same-geometry, non-general-API, non-plotting-framework, non-serialization, and read-only-inspection-data limits. Preserve the accepted undocumented exported-binding backlog of 23, excluding the module self-binding, and the remaining classification as nineteen undocumented expert/experimental bindings plus four original de-export candidates, with the already-documented QWRGResidualSpaceDiagnostics joined to the future diagnose\_qwrg\_residual\_space namespace transaction. Use Documenter as the executable @docs resolution gate. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, ordinary-test change, export change, migration edit, version, changelog, release, or broader reference-page scan.
 
 ### HP-PUBLIC-EXPORT-INTEGRITY-FN-01 - reduce unsupported package exports
 

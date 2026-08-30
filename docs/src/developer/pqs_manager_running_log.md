@@ -1877,3 +1877,39 @@ Carrying-cost accounting:
 - exact remaining caller/blocker: repo-manager must remain within the stated
   docs-only budgets, preserve exports and behavior, run package/docs/authority/
   Documenter/CI acceptance, and return for lifecycle closeout.
+
+## Cartesian Hamiltonian Producer Pass 557 - Close Expert Geometry Documentation
+
+Commit(s):
+- `312f69a4b757e8d559387e0ef14450f031691039`;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the expert/experimental documentation for
+  `bond_aligned_diatomic_geometry_payload` and its seven already-documented
+  companion records/operations. The text preserves the inspection-only,
+  compressed-versus-source, same-geometry, read-only-data, and non-general-API
+  boundaries without changing exports or behavior.
+- Exact additions were `18` source-docstring, `21` reader-documentation, and
+  `13` focused docs-test lines, all within preferred limits and with no new
+  file. The undocumented-export count fell exactly from `24` to `23`.
+
+Validation / goal advancement:
+- Docs passed `138/138` plus `10/10`; radial passed `322/322`; package load,
+  authority check/self-test, Documenter, and diff checks passed. Remote CI
+  run `33326473189` passed all three gates, Docs run `33326473214` passed, and
+  the live `/dev/` page was verified at the implementation commit.
+- MT6 returns `HP-PUBLIC-EXPERT-GEOMETRY-DOC-FN-01/TEST-01` to maintenance.
+  The remaining state is nineteen undocumented expert/experimental bindings
+  plus four original next-minor de-export candidates. The two reserved
+  namespace transactions remain non-executable and do not imply source
+  deletion, v0.2.x compatibility work, or automatic v0.3 development. No
+  checkpoint is due.
+
+Carrying-cost accounting:
+- deleted: nothing; simplified: one coherent expert geometry family now has
+  one discoverable reader boundary; quarantined: both future namespace
+  transactions; not deleted because: geometry has active high-order consumers
+  and all reserved implementations remain useful for qualified research use.
+- exact remaining caller/blocker: none for Pass 556; executable source delta
+  `0/0`, new files and metadata fields none.
