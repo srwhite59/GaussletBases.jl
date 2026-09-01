@@ -1187,8 +1187,9 @@ amendment.
 ## Experimental Sliced Hydrogen-Chain Operator Documentation
 
 `HP-PUBLIC-SLICED-HCHAIN-DOC-FN-01` and
-`HP-PUBLIC-SLICED-HCHAIN-DOC-TEST-01` authorize documentation for exactly these
-three existing exported operator functions:
+`HP-PUBLIC-SLICED-HCHAIN-DOC-TEST-01` maintain the accepted documentation from
+commit `ec3b8fa12a68118c922ae87ec3cacae821633d5b` for exactly these three
+exported operator functions:
 
 - `sliced_h1`;
 - `sliced_vee`; and
@@ -1227,21 +1228,25 @@ Internal H1 bands, Coulomb blocks, longitudinal coefficients, transverse work
 arrays, and operator-view concrete types remain non-contractual. Documentation
 must not turn those internals into a storage, ownership, or mutation promise.
 
-Implementation authority is limited to concise docstrings in
+The accepted implementation is limited to concise docstrings in
 `src/sliced_hydrogen_chain.jl`, one compact section in
-`docs/src/reference/atomic_and_ordinary.md`, only if needed one concise
-discoverability sentence in
-`docs/src/explanations/current_ordinary_branch.md`, and focused checks in
-`test/docs/runtests.jl`. Preferred/hard additions are `40/55` source-docstring,
-`35/55` reader/reference, and `10/16` docs-test lines, with no new file.
+`docs/src/reference/atomic_and_ordinary.md`, and focused checks in
+`test/docs/runtests.jl`. It added `36` source-docstring and `32`
+reader-reference lines and changed docs tests by `+12/-1`, with no new file or
+executable change.
 
-Acceptance requires all six exports to appear as one coherent expert interface,
-the three previously undocumented functions to acquire docstrings, and the
-undocumented exported-binding count, excluding the module self-binding, to
-fall exactly from `9` to `6`. Existing sliced-chain numerical, allocation,
-bandwidth, finite-chain, periodic-template, singleton, and long-range behavior
-must remain unchanged. Existing IDA validation and unchanged Supported-floor CI
-remain the numerical owners; no new numerical assertion is authorized.
+All six exports now appear as one coherent expert interface, the three
+previously undocumented functions have docstrings, and the undocumented
+exported-binding count, excluding the module self-binding, is exactly `6`
+after the accepted `9 -> 6` reduction. Existing sliced-chain numerical,
+allocation, bandwidth, finite-chain, periodic-template, singleton, and
+long-range behavior remains unchanged. The minimal sliced hydrogen-chain owner
+passed `72/72`, docs passed `154/154` plus `10/10`, and package load,
+authority check/self-test,
+Documenter, and diff checks passed. Remote CI run `33565530332` passed all three
+gates; Docs run `33565530379` passed and deployed the verified live reference.
+Existing IDA validation and Supported-floor CI remain the numerical owners; no
+new numerical assertion is authorized.
 
 No type, field, definition, method, signature, dispatch, coefficient,
 tolerance, storage, allocation policy, export, workflow, dependency, version,

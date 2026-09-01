@@ -1396,3 +1396,36 @@ Guardrail / carrying cost:
   If truthful documentation requires behavior, storage, allocation, API, or
   excluded-surface changes, implementation must stop and report. No checkpoint
   is due.
+
+## Cartesian Hamiltonian Producer Pass 569 - Close Experimental Sliced Hydrogen-Chain Operator Documentation
+
+Commit(s):
+- `ec3b8fa12a68118c922ae87ec3cacae821633d5b`;
+- this docs-only lifecycle closeout.
+
+Summary / goal advancement:
+- Accepted one coherent expert reference for all six sliced hydrogen-chain
+  exports. The three operator functions now document lazy read-only H1 and
+  two-index density-density views, separate nuclear repulsion, represented-band
+  semantics, private concrete view types, caller-owned row overwrite/return,
+  and zero-allocation compatible-buffer behavior.
+- MT6 advances the classified experimental reader surface to maintenance. The
+  undocumented-export backlog fell exactly `9 -> 6` without reopening compact
+  storage, numerical algorithms, allocation policy, API, or workflow behavior.
+
+Validation / carrying cost:
+- Implementation commit `ec3b8fa12` passed the minimal sliced hydrogen-chain
+  owner `72/72`, docs `154/154` and `10/10`, package load, authority
+  check/self-test, Documenter, and diff checks. Remote CI `33565530332` passed
+  all three gates; Docs `33565530379` passed, deployed, and the live reference
+  was verified at the implementation commit.
+- added: `36` source-docstring and `32` reader-reference lines; changed: docs
+  tests `+12/-1`; deleted: no implementation; simplified: all six exports now
+  share one explicit expert operator boundary; quarantined: general molecular
+  Hamiltonians, solvers, MPOs, electron sectors, four-index ERIs, dense
+  production storage, private view types and internal work arrays, working-basis
+  work, and namespace reductions; new files and metadata none.
+- exact remaining blocker: none for this packet. The unused optional ordinary-
+  branch path is removed from ownership, the FN record returns to implemented
+  maintenance, and the TEST record to completed maintenance. No strategic-goal
+  change occurred, and no checkpoint is due.
