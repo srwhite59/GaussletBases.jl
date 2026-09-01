@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "c6b0ff1ee68841d13944a7bd066cea3e9773c68a83e45c5474d7ea6a19fa2b68"
+sha256 = "ab5519b3625fbab79f2b9c45cb2403bfb74a3fa15c803ea5c6d8de846db7b278"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -5018,6 +5018,68 @@ title = "validate partition hierarchy and leaf-local documentation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "551"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/docs/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PUBLIC-EXPERT-GEOMETRY-DOC-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-FN-01", "HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01", "HP-QW-NESTED-DIAT-FN-01"]
+grant = "implementation"
+id = "HP-PUBLIC-QW-GEOMETRY-DOC-FN-01"
+lifecycle = "approved"
+scope = "Document exactly the three existing exported experimental QW geometry-diagnostic entry points bond_aligned_diatomic_nested_geometry_diagnostics, bond_aligned_homonuclear_chain_geometry_diagnostics, and axis_aligned_homonuclear_square_lattice_geometry_diagnostics. Add only concise docstrings in src/ordinary_qw_nested_frontends.jl and src/ordinary_qw_types_and_bases.jl, one compact Experimental QW geometry diagnostics section in docs/src/reference/operators_and_diagnostics.md, and only if needed one short discoverability cross-reference in docs/src/explanations/current_ordinary_branch.md. These are route-specific expert diagnostics, not a general molecular-geometry API or stable serialization schema, and returned vectors and route-specific named records are read-only inspection data. The nested source overload preserves and inspects the exact supplied source without rebuilding; the basis overload constructs the normalized nested source through its documented frontend controls and is not a cheap geometry-only query. Document geometry, child/shared retention contracts, shell counts and dimensions, actual shared-shell provenance, fixed dimension, contract audit, and atom-growth anatomy while preserving forwarding of shared-shell policy, endcap/panel q and L, packet kernel, retention overrides, split guards, and protection controls without restating every signature default. The chain diagnostic only inspects an existing experimental homonuclear chain basis and reports chain coordinates, mapped centers, nucleus/midpoint spacings, mapping kinds, monotonicity, and axis-symmetry error. The square diagnostic only inspects an existing axis-aligned homonuclear square basis and reports x/y coordinates, Cartesian centers, nuclear/midpoint/plane-center spacings, mapping kinds, monotonicity and symmetry errors, and x-y center agreement. Chain and square construct no nested source, Hamiltonian, solver input, arbitrary-orientation model, or heteronuclear model. Preferred/hard added-line limits are 55/80 source-docstring and 25/40 combined reader/reference lines, with no new file. Preserve every returned field, definition, signature, default, method, dispatch, construction behavior, export, numerical result, ordinary test, workflow, dependency, numerical policy, compatibility floor, version, tag, and release artifact. Exclude cartesian_base_working_basis, sliced-chain operators, every next-minor de-export candidate, global documentation policy, API changes, and broader QW work. If truthful documentation requires an excluded change or exceeds a hard budget, make no implementation commit and report the mismatch."
+surfaces = ["docs", "source"]
+title = "document experimental QW geometry diagnostics"
+
+    [[records.document_refs]]
+    heading = "Experimental QW Geometry Diagnostics Documentation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "6569fbb75107cdc24fa4213eb44dcd2a47578b7f"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "566"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/explanations/current_ordinary_branch.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/reference/operators_and_diagnostics.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_qw_nested_frontends.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_qw_types_and_bases.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PUBLIC-EXPERT-GEOMETRY-DOC-TEST-01", "HP-PUBLIC-EXPORT-INTEGRITY-TEST-01", "HP-PUBLIC-QW-GEOMETRY-DOC-FN-01"]
+grant = "implementation"
+id = "HP-PUBLIC-QW-GEOMETRY-DOC-TEST-01"
+lifecycle = "approved"
+scope = "Add focused checks only in existing test/docs/runtests.jl, with a preferred limit of 10 and hard limit of 16 added lines. Require bond_aligned_diatomic_nested_geometry_diagnostics, bond_aligned_homonuclear_chain_geometry_diagnostics, and axis_aligned_homonuclear_square_lattice_geometry_diagnostics to remain exported, carry Julia documentation, and appear together in the Experimental QW geometry diagnostics section of docs/src/reference/operators_and_diagnostics.md. Require reader wording to distinguish exact nested-source reuse from basis-overload source construction and lightweight existing-basis chain/square inspection from normalized nested-source construction. Preserve the route-specific, read-only inspection, result-summary, frontend-control forwarding, non-general-geometry, non-serialization, non-Hamiltonian, non-solver, non-arbitrary-orientation, and non-heteronuclear boundaries from the canonical contract. The undocumented exported-binding count, excluding the module self-binding, must fall exactly from 12 to 9. Use Documenter as the executable @docs resolution gate and existing core tests plus unchanged Supported-floor CI as numerical acceptance. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, export change, API work, dependency, example, version, tag, release, sliced-chain, working-basis, or namespace-reduction work."
+surfaces = ["tests"]
+title = "validate experimental QW geometry diagnostics documentation"
+
+    [[records.document_refs]]
+    heading = "Experimental QW Geometry Diagnostics Documentation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "6569fbb75107cdc24fa4213eb44dcd2a47578b7f"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "566"
 
     [[records.paths]]
     kind = "test"
