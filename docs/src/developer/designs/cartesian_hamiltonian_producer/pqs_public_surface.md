@@ -1065,8 +1065,8 @@ versions, releases, and key de-export remain outside maintenance authority.
 ## Radial Paper-Parity Reproducibility Documentation
 
 `HP-PUBLIC-RADIAL-PARITY-DOC-FN-01` and
-`HP-PUBLIC-RADIAL-PARITY-DOC-TEST-01` authorize one bounded documentation
-packet for exactly these four exported bindings:
+`HP-PUBLIC-RADIAL-PARITY-DOC-TEST-01` maintain the accepted documentation for
+exactly these four exported bindings:
 
 - `RadialBoundaryPrototype`;
 - `radial_boundary_prototype`;
@@ -1098,27 +1098,27 @@ paper-parity extension when `rmax` is supplied. These routes support controlled
 paper-parity comparisons; they neither promise exact reproduction of an entire
 paper calculation nor replace the normal `RadialBasisSpec` front door.
 
-Implementation is limited to concise docstrings in
+The accepted implementation in commit `84ebdc5792c954b4c09f08b53ba86ef9332bf6b8`
+is limited to concise docstrings in
 `src/radial_boundary_prototypes.jl`, one compact expert/paper-parity section in
 `docs/src/reference/bases_and_mappings.md`, a short distinction from the normal
 recommended route in `docs/src/howto/recommended_atomic_setup.md`, and focused
-checks in `test/docs/runtests.jl`. Preferred/hard added-line limits are `50/70`
-source-docstring lines, `30/45` combined reader/reference lines, and `10/16`
-docs-test lines. Add no file.
+checks in `test/docs/runtests.jl`. It added `33` source-docstring lines, `32`
+combined reader/reference lines, and `14/-1` docs-test lines, with no new file
+or executable change.
 
-All four names must remain exported, gain source docstrings, and appear
-together in the curated expert/paper-parity reference section. The recommended
-setup page must retain `RadialBasisSpec` as the ordinary front door and explain
-the exact-versus-rounded width distinction. The undocumented exported-binding
-count, excluding the module self-binding, must fall exactly from `16` to `12`.
-Existing radial tests and the unchanged Supported-floor gate must pass.
+All four names remain exported, have source docstrings, and appear together in
+the curated expert/paper-parity reference section. The recommended setup page
+retains `RadialBasisSpec` as the ordinary front door and explains the
+exact-versus-rounded width distinction. The undocumented exported-binding
+count, excluding the module self-binding, is exactly `12` after the accepted
+`16 -> 12` reduction. Existing radial tests and the unchanged Supported-floor
+gate remain the numerical maintenance owners.
 
 Coefficients, artifacts, definitions, fields, methods, signatures, dispatch,
 defaults, cache behavior, numerical results, exports, dependencies, workflows,
 versions, and releases remain outside this packet. The remaining expert
-families and every next-minor de-export candidate are excluded. If truthful
-documentation or the exact count requires an excluded change, make no
-implementation commit and report the mismatch.
+families and every next-minor de-export candidate are excluded from maintenance.
 
 ## Supported Public Surface Documentation
 

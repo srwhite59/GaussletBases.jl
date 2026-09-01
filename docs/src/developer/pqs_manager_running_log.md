@@ -1248,3 +1248,53 @@ Guardrail / carrying cost:
 - exact remaining blocker: repo-manager implementation within the four listed
   files and budgets. Any required coefficient, artifact, cache, API, workflow,
   or numerical change is a stop-and-report outcome. No checkpoint is due.
+
+## Cartesian Hamiltonian Producer Pass 565 - Close Radial Paper-Parity Documentation
+
+Commit(s):
+- `84ebdc5792c954b4c09f08b53ba86ef9332bf6b8`;
+- this docs-only lifecycle closeout.
+
+Summary / goal advancement:
+- Accepted accurate documentation for all four radial paper-parity exports.
+  The reader boundary keeps `RadialBasisSpec` as the ordinary front door,
+  identifies the sole frozen prototype, distinguishes exact prototype widths
+  from rounded workflow presets, and treats cached records and arrays as
+  read-only inspection data rather than mutable construction state.
+- MT6 advances the classified expert reader surface to maintenance. The
+  undocumented-export backlog fell exactly `16 -> 12` without changing radial
+  behavior, coefficients, artifacts, defaults, exports, or cache semantics.
+
+Validation / carrying cost:
+- Implementation commit `84ebdc579` passed the radial owner `322/322`, docs
+  `148/148` and `10/10`, package load, authority check/self-test, Documenter,
+  log bound, and diff checks. Remote CI `33527681191` passed all three gates;
+  Docs `33527681116` passed, deployed, and the live reference was verified.
+- added: `33` source-docstring and `32` reader-documentation lines; changed:
+  docs tests `+14/-1`; deleted: no implementation; simplified: four related
+  exports now have one explicit expert reproducibility contract; quarantined:
+  all other expert families and namespace reductions; new files and metadata
+  fields none.
+- exact remaining blocker: none for this packet. The FN record returns to
+  implemented maintenance and the TEST record to completed maintenance. No
+  executable, workflow, dependency, version, release, or strategic-goal change
+  occurred.
+
+### Medium-Term Goal Checkpoint After Pass 565
+
+- **MT1 - active/maintenance:** public endpoint ownership and fail-closed test
+  selection remain accepted; no new numerical endpoint is opened here.
+- **MT2 - completed:** controlled Cr2 source migration remains closed.
+- **MT3 - active:** pending producer facilities and corrected paper-oracle
+  interpretation are unchanged.
+- **MT4 - active:** residual/protected and consumer-owned PRF questions remain
+  unchanged.
+- **MT5 - active/maintenance:** final v0.2 release state, three public CI
+  identities, and bounded `angular_public` compatibility-floor coverage remain
+  fixed.
+- **MT6 - active:** classified reader and namespace carrying-cost work advances
+  with the radial paper-parity family closed at twelve remaining undocumented
+  exports; other expert families and next-minor de-export candidates still
+  require separate decisions.
+- **MT7 - completed/maintenance:** external Cartesian-GTO interchange and its
+  reader front door remain accepted and unchanged.
