@@ -673,8 +673,9 @@ end
 
 @testset "Angular He legacy-trim HF payload anchors" begin
     hfdmrg = _local_hfdmrg_module()
-    hfdmrg === nothing && return
-
+    if isnothing(hfdmrg)
+        @test_skip "local HFDMRG checkout unavailable"
+    else
     he_anchor_reference = -2.861679990485
     anchor_settings = (
         nblockcenter = 2,
@@ -703,6 +704,7 @@ end
     @test result10.energy ≈ he_anchor_reference atol = 5.0e-6 rtol = 1.0e-6
     @test result15.energy ≈ he_anchor_reference atol = 5.0e-6 rtol = 1.0e-6
     @test abs(result15.energy - he_anchor_reference) ≤ abs(result10.energy - he_anchor_reference)
+    end
 end
 
 @testset "Angular Be legacy-trim one-body anchors" begin

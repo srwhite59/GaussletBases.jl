@@ -25,7 +25,6 @@ const _AVAILABLE_TEST_GROUPS = (
 const _FAST_TEST_GROUPS = Set((
     :radial,
     :core,
-    :angular,
     :ida,
     :docs,
 ))
@@ -518,12 +517,8 @@ function _local_hfdmrg_module()
         path = "/Users/srw/Dropbox/codexhome/work/hfdmrg/src"
         isdir(path) || return nothing
         path in LOAD_PATH || push!(LOAD_PATH, path)
-        try
-            @eval Main using HFDMRG
-            return Base.invokelatest(getfield, Main, :HFDMRG)
-        catch
-            return nothing
-        end
+        @eval Main using HFDMRG
+        return Base.invokelatest(getfield, Main, :HFDMRG)
     end)
 end
 
