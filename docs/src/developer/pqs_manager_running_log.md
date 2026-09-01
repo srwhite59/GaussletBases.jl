@@ -1940,3 +1940,30 @@ Guardrail / carrying cost:
   and the explicit group remain live.
 - exact remaining blocker: repo-manager implementation and acceptance evidence;
   source/API/workflow delta must remain `0/0`, with no new file or framework.
+
+## Cartesian Hamiltonian Producer Pass 559 - Close Angular Optional-Consumer Control-Flow Repair
+
+Commit(s):
+- `22d25e8c5061abafa5a37ea35d4a51adfa4b9a72`;
+- this docs-only lifecycle closeout.
+
+Summary / validation:
+- Accepted the two-file `+6/-9` repair. Missing HFDMRG now yields one visible
+  handshake skip, while an existing checkout loads without a catch-all and
+  therefore propagates failures. The file-level return is gone, explicit
+  `angular` selection remains, and only `angular` membership in `fast` was
+  removed. No numerical assertion, source, API, workflow, helper, file, or
+  docs-test changed.
+- The absent-checkout owner completed `61,907` passes and one skip in `929.68`
+  seconds, proving later tests ran. Package load, docs `138/138` plus `10/10`,
+  authority check/self-test, Documenter, and diff checks passed; remote CI
+  `33475472072` passed all three numerical gates and Docs `33475471987` passed.
+
+Goal / carrying cost:
+- MT1 returns `HP-ANGULAR-TEST-CONTROL-FN-01` to maintenance and completes the
+  optional TEST grant with no committed regression. The runner now fails closed
+  without assigning the research suite to fast CI. No strategic change and no
+  checkpoint is due.
+- deleted: early return, catch-all, and false fast membership; simplified:
+  absence is local; quarantined: all broader angular ownership/API work; exact
+  remaining blocker: none for Pass 558.

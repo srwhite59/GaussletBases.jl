@@ -302,6 +302,14 @@ boundary no longer truncates the suite. Fixed-radial extraction, documentation
 of angular exports, `ShellLocalAngularProfileKey` de-export, CI ownership, and
 all other angular classification remain separate.
 
+Implementation commit `22d25e8c5061abafa5a37ea35d4a51adfa4b9a72`
+closed this repair with `+6/-9` lines in the two runner files. Its
+absent-checkout run completed in `929.68` seconds with `61,907` passes and one
+visible skip, including tests after the handshake. Direct inspection confirms
+that an existing checkout now loads without a catch-all, `angular` remains
+explicitly selectable, and only its `fast` membership was removed. No focused
+docs regression was needed or added.
+
 ## Scheduled Cartesian Internal Maintenance Gate
 
 `HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01` and
