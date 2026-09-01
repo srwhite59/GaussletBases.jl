@@ -1120,6 +1120,68 @@ defaults, cache behavior, numerical results, exports, dependencies, workflows,
 versions, and releases remain outside this packet. The remaining expert
 families and every next-minor de-export candidate are excluded from maintenance.
 
+## Experimental QW Geometry Diagnostics Documentation
+
+`HP-PUBLIC-QW-GEOMETRY-DOC-FN-01` and
+`HP-PUBLIC-QW-GEOMETRY-DOC-TEST-01` authorize documentation for exactly these
+three exported route-specific expert diagnostics:
+
+- `bond_aligned_diatomic_nested_geometry_diagnostics`;
+- `bond_aligned_homonuclear_chain_geometry_diagnostics`; and
+- `axis_aligned_homonuclear_square_lattice_geometry_diagnostics`.
+
+These functions inspect the current QW and nested geometry conventions. They
+are not a general molecular-geometry API or a stable serialization schema.
+Returned vectors and route-specific named records are inspection data and must
+be treated as read-only.
+
+The nested-diatomic source overload inspects and preserves the exact supplied
+nested source; it must not rebuild or normalize another source. Its basis
+overload constructs the normalized nested source under the documented frontend
+controls and is therefore not a cheap geometry-only query. Documentation must
+identify its principal results: geometry, child and shared-shell retention
+contracts, shell counts and dimensions, actual shared-shell provenance, fixed
+dimension, contract audit, and atom-growth anatomy. The existing forwarding of
+shared-shell policy, endcap/panel `q` and `L`, packet kernel, retention
+overrides, split guards, and protection controls remains part of the signature
+contract. Reader prose need not duplicate every default already visible there.
+
+The chain diagnostic only inspects an existing experimental homonuclear chain
+basis. It reports chain coordinates, mapped-axis and transverse centers, local
+spacings at nuclei and midpoints, mapping kinds, monotonicity, and axis-center
+symmetry error. The square-lattice diagnostic only inspects an existing
+axis-aligned homonuclear square basis. It reports x/y coordinates, Cartesian
+basis centers, nuclear-coordinate, representative-midpoint, and plane-center
+spacings, mapping kinds, monotonicity and symmetry errors, and x-y center
+agreement. Neither route constructs a nested source, Hamiltonian, solver input,
+arbitrary-orientation model, or heteronuclear model.
+
+Implementation is limited to concise docstrings in
+`src/ordinary_qw_nested_frontends.jl` and
+`src/ordinary_qw_types_and_bases.jl`, one compact section titled
+"Experimental QW geometry diagnostics" in
+`docs/src/reference/operators_and_diagnostics.md`, an optional short
+discoverability cross-reference in
+`docs/src/explanations/current_ordinary_branch.md`, and focused checks in
+`test/docs/runtests.jl`. Preferred/hard additions are `55/80` source-docstring,
+`25/40` reader/reference, and `10/16` docs-test lines, with no new file.
+
+Acceptance requires all three names to remain exported, acquire Julia
+docstrings, and appear together in the curated reference. The checks must
+distinguish exact source reuse from basis-overload source construction and
+lightweight chain/square inspection from nested-diatomic construction. The
+undocumented exported-binding count, excluding the module self-binding, must
+fall exactly from `12` to `9`. Existing core tests and unchanged Supported-floor
+CI are the numerical acceptance owners.
+
+No returned field, definition, signature, default, method, dispatch,
+construction behavior, export, ordinary numerical test, workflow, dependency,
+numerical policy, version, tag, or release may change. This packet excludes
+`cartesian_base_working_basis`, sliced-chain operators, every next-minor
+de-export candidate, global documentation policy, and broader QW work. If
+truthful documentation requires any excluded change or exceeds a hard budget,
+make no implementation commit and report the exact mismatch.
+
 ## Supported Public Surface Documentation
 
 `HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01` and

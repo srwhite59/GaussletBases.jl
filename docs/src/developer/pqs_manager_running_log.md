@@ -1298,3 +1298,35 @@ Validation / carrying cost:
   require separate decisions.
 - **MT7 - completed/maintenance:** external Cartesian-GTO interchange and its
   reader front door remain accepted and unchanged.
+
+## Cartesian Hamiltonian Producer Pass 566 - Authorize Experimental QW Geometry Diagnostics Documentation
+
+Commit(s):
+- baseline `6569fbb75107cdc24fa4213eb44dcd2a47578b7f`;
+- this docs-only authority amendment.
+
+Summary / goal advancement:
+- Added `HP-PUBLIC-QW-GEOMETRY-DOC-FN-01/TEST-01` for exactly three exported
+  route-specific QW geometry diagnostics. The contract distinguishes exact
+  nested-source reuse from the basis overload's normalized source construction
+  and distinguishes lightweight existing-basis chain/square inspection from
+  nested-diatomic construction.
+- MT6 advances the classified expert reader surface without changing QW or
+  nested implementations, API, numerics, workflows, or namespace. Acceptance
+  requires the exact undocumented-export reduction `12 -> 9`; working-basis,
+  sliced-chain, and next-minor de-export work remain separate.
+
+Guardrail / carrying cost:
+- Preferred/hard additions are `55/80` source-docstring, `25/40` combined
+  reader/reference, and `10/16` docs-test lines, with no new file. Existing
+  core tests and unchanged Supported-floor CI remain the numerical acceptance
+  owners; no new numerical assertion or workflow change is authorized.
+- deleted: nothing in this authority pass; simplified: three related route
+  diagnostics receive one explicit experimental inspection boundary;
+  quarantined: general geometry, serialization, Hamiltonians, solver inputs,
+  arbitrary orientation, heteronuclear extensions, and namespace reductions;
+  not deleted because: all three are exported live expert diagnostics.
+- exact remaining blocker: repo-manager implementation within the five listed
+  paths and hard budgets. If truthful documentation requires behavior, API, or
+  excluded-surface work, implementation must stop and report. No checkpoint is
+  due.
