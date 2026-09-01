@@ -1175,14 +1175,18 @@ the three job names and rows, Julia versions, timeout, commands, classifier,
 documentation-only markers, triggers, permissions, PQS and Screening groups,
 and tag lane remains unchanged. Both records are back in maintenance.
 
-`angular` is explicitly excluded. A Julia `1.12` audit reached its first
-package-owned angular one-body fixture and then spent `13m49s` without reaching
-an assertion. Fast-versus-acceptance ownership must be audited separately
-before any CI decision. The weekly Cartesian suite, occupied-first private
-owner, represented-Hartree blocked owner, HFDMRG portability, documentation
-triage, and export triage also remain outside this amendment. Add no CI row,
-job, workflow, dependency, source or numerical-policy change, or release
-action.
+The complete `angular` research group remains explicitly excluded. A Julia
+`1.12` audit reached its first package-owned angular one-body fixture and then
+spent `13m49s` without reaching an assertion, so it is neither a fast group nor
+a per-push CI selection. Pass 560 separately authorizes only extraction of the
+bounded `[10, 15, 32]` fixed-radial sequence into a new `angular_public` group
+under `HP-ANGULAR-PUBLIC-CI-*`. Until that implementation is accepted, the
+table above remains the implemented selection; afterward only
+`angular_public` may be appended to the Supported-floor row. The weekly
+Cartesian suite, occupied-first private owner, represented-Hartree blocked
+owner, broader HFDMRG portability, documentation triage, and export triage
+remain outside this amendment. Add no CI row, job, dependency, source or
+numerical-policy change, or release action.
 
 The `pqs_release` group originally ran the complete comparison twice: once in
 `test/pqs_h2plus_table1_release_runtests.jl` and once in an Example 41

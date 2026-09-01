@@ -310,6 +310,51 @@ that an existing checkout now loads without a catch-all, `angular` remains
 explicitly selectable, and only its `fast` membership was removed. No focused
 docs regression was needed or added.
 
+## Fixed-Radial Angular Public CI Extraction
+
+`HP-ANGULAR-PUBLIC-CI-FN-01` and `HP-ANGULAR-PUBLIC-CI-TEST-01`
+authorize one separate extraction of the supported three-level fixed-radial
+angular sequence into the Julia `1.10` Supported-floor gate. The new group is
+named `angular_public`. It must be available through explicit selection and
+the existing `all` selection, but neither `angular_public` nor the complete
+`angular` research group belongs to the `fast` alias.
+
+The test change must move and condense, not duplicate, the existing `Atomic
+fixed-radial angular sequence` block from `test/angular/runtests.jl` into the
+single planned owner
+`test/driver_public/angular_fixed_radial_sequence_runtests.jl`. Its compact,
+preferably table-driven checks must preserve representative coverage of:
+
+- the `[10, 15, 32]` three-level construction and common radial-basis identity;
+- shell identifiers, centers, dimensions, and angular-profile identities;
+- both adjacent overlap sidecars and the direct `10 -> 32` sidecar;
+- dense level and overlap payload semantics; and
+- one representative serialization round trip with its sequence, level,
+  profile, gauge, labels, and pair-kind identity metadata.
+
+The focused owner should add `60-80` lines and must not exceed `95`; the whole
+superseded block must be deleted in the same commit, and total tracked test LOC
+must decrease. `test/runtests.jl` may add only the group symbol and one narrow
+include. `.github/workflows/ci.yml` may replace only the Supported-floor group
+list with
+`core,ida,cartesian,examples,radial,misc,angular_public`.
+`test/docs/runtests.jl` may add at most `6` focused lines requiring that exact
+selection and rejecting bare `angular`. No source, dependency, fixture
+framework, numerical policy, cache, example, workflow row/job, Julia version,
+timeout, trigger, permission, or other group may change.
+
+Acceptance requires the focused owner to pass on Julia `1.10` with reported
+runtime (about nine seconds expected), and the remote Supported-floor job must
+visibly execute it. One combined `angular,angular_public` run on one supported
+Julia version is sufficient to prove that extraction did not remove or
+duplicate coverage; do not repeat that expensive validation on another Julia
+line or during docs-only closeout. The full angular research group remains
+outside per-push CI. `all` must retain the new owner and `fast` must exclude
+both angular groups. Package load, authority/self-test, docs tests, Documenter,
+all three unchanged named CI gates, and diff checks must pass. Documentation of
+the seven angular exports and de-export of `ShellLocalAngularProfileKey` remain
+separate.
+
 ## Scheduled Cartesian Internal Maintenance Gate
 
 `HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01` and
