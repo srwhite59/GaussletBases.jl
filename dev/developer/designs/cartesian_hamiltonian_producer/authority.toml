@@ -176,14 +176,14 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "35aed833d035c55efe8e80ceeb12d00b1e84dbfe70e8e3df3d7f9f9ab66cd397"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
-sha256 = "ca581e88b900d81c7b71e94958236ed11749731cc3c7853de8f421d5fdda2b60"
+sha256 = "a4d3b11c75a34eb6a1f0b2b8d11a6138b6d31ec27721e8ca5f359e6af0ceae17"
 
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "maintenance"
 id = "HP-ANGULAR-TEST-CONTROL-FN-01"
-lifecycle = "approved"
-scope = "Repair only the optional HFDMRG handshake and angular test selection in `test/runtests.jl` and `test/angular/runtests.jl`. A missing checkout must produce one visible skip limited to the handshake; if the path exists, load/import errors must propagate as test failures. Remove the file-level early return and catch-all absence conflation, preserve execution of every later angular test, retain explicit `angular` selection and its complete owner, and remove only `angular` from `_FAST_TEST_GROUPS`. Prefer approximately +6/-4 control-flow lines and stop if more than 12 added control-flow lines are required. Preserve every numerical assertion, angular implementation, public API, dependency, workflow, and other group definition. Add no file, mock package, configuration/environment interface, helper abstraction, framework, fixed-radial extraction, angular-export documentation, ShellLocalAngularProfileKey de-export, CI ownership change, or release work."
+lifecycle = "implemented"
+scope = "Maintain only the accepted two-file control-flow repair from commit `22d25e8c5061abafa5a37ea35d4a51adfa4b9a72`: a missing optional HFDMRG checkout produces one visible skip limited to the handshake; if the configured path exists, load/import errors propagate as test failures; no file-level return truncates later angular tests; explicit `angular` selection retains the complete owner; and `angular` remains absent from `_FAST_TEST_GROUPS`. The exact implementation delta was +6/-9 with no numerical assertion, source, API, dependency, workflow, helper, file, or docs-test change. Preserve all other group definitions and every broader angular exclusion from the canonical contract; any behavioral or ownership change requires a new amendment."
 surfaces = ["tests"]
 title = "angular optional-consumer control-flow repair"
 
@@ -194,10 +194,16 @@ title = "angular optional-consumer control-flow repair"
 
     [[records.evidence_refs]]
     kind = "git_commit"
+    value = "22d25e8c5061abafa5a37ea35d4a51adfa4b9a72"
+    [[records.evidence_refs]]
+    kind = "git_commit"
     value = "5f1708d989269562d9182ed630336104c258da2e"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "558"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "559"
 
     [[records.paths]]
     kind = "test"
@@ -209,11 +215,12 @@ title = "angular optional-consumer control-flow repair"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-ANGULAR-TEST-CONTROL-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-ANGULAR-TEST-CONTROL-TEST-01"
-lifecycle = "approved"
-scope = "If direct acceptance evidence is insufficient, add at most 12 focused regression lines to `test/docs/runtests.jl` proving the angular group remains available, the fast alias excludes it, the file-level early return is absent, and an existing-checkout import failure is not swallowed. The committed regression may inspect only the bounded runner contract and must not duplicate angular numerics, add a fake package or helper, change another group, or create a file. Acceptance still requires an absent-checkout visible skip with a later test executing, equivalent present-checkout failure-propagation evidence, and one complete explicitly selected angular run on a supported Julia version."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "none. No focused docs regression was needed or added. Acceptance is frozen by commit `22d25e8c5061abafa5a37ea35d4a51adfa4b9a72`, the `61,907`-pass/one-skip complete absent-checkout angular run, direct failure-propagation inspection, and the package/docs/authority/CI evidence recorded in the canonical contract. Future test or runner behavior requires a new amendment."
+surfaces = []
 title = "angular optional-consumer control-flow validation"
 
     [[records.document_refs]]
@@ -223,15 +230,16 @@ title = "angular optional-consumer control-flow validation"
 
     [[records.evidence_refs]]
     kind = "git_commit"
+    value = "22d25e8c5061abafa5a37ea35d4a51adfa4b9a72"
+    [[records.evidence_refs]]
+    kind = "git_commit"
     value = "5f1708d989269562d9182ed630336104c258da2e"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "558"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/docs/runtests.jl"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "559"
 [[records]]
 dependency_ids = ["HP-PQS-ATOMREF-PACKET-TEST-01", "HP-PQS-SCREEN-HARTREE-CORR-TEST-01", "HP-R3-TEST-01", "HP-REP-XGTO-PROTECT-SIDECAR-TEST-01"]
 grant = "maintenance"
