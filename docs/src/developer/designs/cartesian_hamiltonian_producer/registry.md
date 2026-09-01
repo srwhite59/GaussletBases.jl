@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `f037512f24adb41c70d942e7e05c9f733192739287e4fbe39536e3c7f4452735`.
+> [authority.toml](authority.toml), SHA-256 `3a68fbfd413f3c519e48c22a4476080cd03775f9d26682f77fe842a8f6857bd8`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2856,6 +2856,40 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `551`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-FUNCTION-STENCIL-DOC-TEST-01`, `HP-PUBLIC-PARTITION-LEAF-DOC-FN-01`
 - **Scope:** Maintain only the accepted family-scoped checks from b24c0dbeeb0a6b5526fde9004cbc7319c1395ec4 that the exact twelve partition-hierarchy and leaf-local accessors remain exported, carry Julia documentation, and appear with the canonical already-documented public context in the Partitions and leaf-local layers section of docs/src/reference/bases\_and\_mappings.md. Preserve Documenter as the executable @docs resolution gate and the accepted undocumented-export count of 40, excluding the module self-binding. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan.
+
+### HP-PUBLIC-RADIAL-PARITY-DOC-FN-01 - document radial paper-parity reproducibility exports
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Radial Paper-Parity Reproducibility Documentation`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/howto/recommended_atomic_setup.md`
+  - `docs` / `existing`: `docs/src/reference/bases_and_mappings.md`
+  - `source` / `existing`: `src/radial_boundary_prototypes.jl`
+- **Evidence:**
+  - `git_commit`: `b845dea4cde4b58a9b4e8d8b4fc663c709402571`
+  - `manager_pass`: `564`
+- **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-PUBLIC-FOUNDATION-DOC-FN-01`
+- **Scope:** Document exactly the four existing exported expert radial paper-parity bindings RadialBoundaryPrototype, radial\_boundary\_prototype, radial\_boundary\_prototype\_names, and build\_paper\_parity\_radial\_basis. Add only concise docstrings in src/radial\_boundary\_prototypes.jl, one compact expert/paper-parity section in docs/src/reference/bases\_and\_mappings.md, and a short distinction from the normal recommended RadialBasisSpec route in docs/src/howto/recommended\_atomic\_setup.md. RadialBoundaryPrototype is a validated artifact-backed cached description of a frozen boundary construction; the only currently supported name is :paper\_parity\_g10\_k6\_x2, and returned records and contained arrays are shared cached inspection data that callers treat as read-only. Distinguish exact prototype widths 0.09358986806 and 0.02357750369 from rounded normal-workflow presets 0.0936 and 0.0236. radial\_boundary\_prototype\_names reports available frozen prototypes but is not a registry/plugin mechanism; radial\_boundary\_prototype returns the validated cached object and rejects unknown names. build\_paper\_parity\_radial\_basis keeps the frozen boundary fixed while extending to caller rmax and mapping with default rmax\_count\_policy=:legacy\_strict\_trim; explain the corresponding build\_basis(prototype; ...) route. This supports controlled paper-parity comparisons, not exact reproduction of an entire paper calculation or replacement of the normal RadialBasisSpec front door. Detailed high-precision coefficients, primitive storage, diagnostics, checksums, and provenance fields remain inspection data rather than mutable construction API. Hard added-line limits are 70 source-docstring and 45 combined reader/reference lines, with no new file. Preserve every coefficient, artifact, definition, field, method, signature, dispatch, default, cache behavior, numerical result, export, dependency, workflow, compatibility floor, version, tag, and release artifact. Exclude all remaining expert families, every next-minor de-export candidate, source behavior, tests outside the docs family, examples, fixtures, global documentation policy, and broader reference-page work. If truthful documentation requires any excluded change, make no implementation commit and report the mismatch.
+
+### HP-PUBLIC-RADIAL-PARITY-DOC-TEST-01 - validate radial paper-parity reproducibility documentation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Radial Paper-Parity Reproducibility Documentation`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `b845dea4cde4b58a9b4e8d8b4fc663c709402571`
+  - `manager_pass`: `564`
+- **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-FOUNDATION-DOC-TEST-01`, `HP-PUBLIC-RADIAL-PARITY-DOC-FN-01`
+- **Scope:** Add focused checks only in the existing test/docs/runtests.jl owner, with a preferred limit of 10 and hard limit of 16 added lines. Require RadialBoundaryPrototype, radial\_boundary\_prototype, radial\_boundary\_prototype\_names, and build\_paper\_parity\_radial\_basis to remain exported, carry Julia documentation, and appear together in the curated expert/paper-parity section of docs/src/reference/bases\_and\_mappings.md. Require the recommended setup page to retain RadialBasisSpec as the ordinary front door and distinguish exact frozen widths 0.09358986806 and 0.02357750369 from rounded presets 0.0936 and 0.0236. Preserve the artifact-backed cached/read-only, single supported name, non-registry, strict unknown-name rejection, frozen-boundary extension, legacy\_strict\_trim default, build\_basis(prototype; ...), controlled-comparison-only, and inspection-data boundaries from the canonical contract. The undocumented exported-binding count, excluding the module self-binding, must fall exactly from 16 to 12. Use Documenter as the executable @docs resolution gate and the existing radial owner plus unchanged Supported-floor CI as numerical acceptance. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, artifact or cache test, export change, dependency, example, version, tag, or release work.
 
 ### HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01 - document six supported public surface bindings
 

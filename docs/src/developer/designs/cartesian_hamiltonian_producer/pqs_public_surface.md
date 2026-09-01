@@ -1062,6 +1062,64 @@ campaigns, cache API, definition or field changes, signatures, dispatch,
 exports, cache behavior, numerical policy or results, workflows, dependencies,
 versions, releases, and key de-export remain outside maintenance authority.
 
+## Radial Paper-Parity Reproducibility Documentation
+
+`HP-PUBLIC-RADIAL-PARITY-DOC-FN-01` and
+`HP-PUBLIC-RADIAL-PARITY-DOC-TEST-01` authorize one bounded documentation
+packet for exactly these four exported bindings:
+
+- `RadialBoundaryPrototype`;
+- `radial_boundary_prototype`;
+- `radial_boundary_prototype_names`; and
+- `build_paper_parity_radial_basis`.
+
+This is an expert reproducibility and provenance surface, not the recommended
+beginner construction path. `RadialBoundaryPrototype` is a validated,
+artifact-backed, cached description of a frozen radial boundary construction.
+The only currently supported name is `:paper_parity_g10_k6_x2`. Prototype
+records and their contained arrays are shared cached data and must be treated
+as read-only inspection data. Detailed high-precision coefficients, primitive
+storage, diagnostics, checksums, and provenance fields do not form a general
+mutable construction API.
+
+The frozen prototype uses exact widths `0.09358986806` and `0.02357750369`;
+these are distinct from the rounded normal-workflow presets `0.0936` and
+`0.0236`. `radial_boundary_prototype_names()` reports the available frozen
+prototypes but is not a general registry or plugin mechanism.
+`radial_boundary_prototype(name)` returns the validated cached prototype and
+rejects unknown names.
+
+`build_paper_parity_radial_basis` holds the frozen boundary construction fixed
+while extending it to the caller's requested `rmax` and mapping. Its default
+count policy is `rmax_count_policy=:legacy_strict_trim`. Reader documentation
+must also explain the corresponding `build_basis(prototype; ...)` route,
+including the frozen mapped prototype when `rmax` is omitted and the same
+paper-parity extension when `rmax` is supplied. These routes support controlled
+paper-parity comparisons; they neither promise exact reproduction of an entire
+paper calculation nor replace the normal `RadialBasisSpec` front door.
+
+Implementation is limited to concise docstrings in
+`src/radial_boundary_prototypes.jl`, one compact expert/paper-parity section in
+`docs/src/reference/bases_and_mappings.md`, a short distinction from the normal
+recommended route in `docs/src/howto/recommended_atomic_setup.md`, and focused
+checks in `test/docs/runtests.jl`. Preferred/hard added-line limits are `50/70`
+source-docstring lines, `30/45` combined reader/reference lines, and `10/16`
+docs-test lines. Add no file.
+
+All four names must remain exported, gain source docstrings, and appear
+together in the curated expert/paper-parity reference section. The recommended
+setup page must retain `RadialBasisSpec` as the ordinary front door and explain
+the exact-versus-rounded width distinction. The undocumented exported-binding
+count, excluding the module self-binding, must fall exactly from `16` to `12`.
+Existing radial tests and the unchanged Supported-floor gate must pass.
+
+Coefficients, artifacts, definitions, fields, methods, signatures, dispatch,
+defaults, cache behavior, numerical results, exports, dependencies, workflows,
+versions, and releases remain outside this packet. The remaining expert
+families and every next-minor de-export candidate are excluded. If truthful
+documentation or the exact count requires an excluded change, make no
+implementation commit and report the mismatch.
+
 ## Supported Public Surface Documentation
 
 `HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01` and

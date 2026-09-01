@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "f3899baf59eba2895b9764278672c510b15fe46cf5c767eb691444f3e528c87a"
+sha256 = "d742c2c6f795a305a5f85b9de71010b1a336bbf6218091b948809a5a8d045c73"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -5018,6 +5018,64 @@ title = "validate partition hierarchy and leaf-local documentation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "551"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/docs/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PUBLIC-EXPORT-INTEGRITY-FN-01", "HP-PUBLIC-FOUNDATION-DOC-FN-01"]
+grant = "implementation"
+id = "HP-PUBLIC-RADIAL-PARITY-DOC-FN-01"
+lifecycle = "approved"
+scope = "Document exactly the four existing exported expert radial paper-parity bindings RadialBoundaryPrototype, radial_boundary_prototype, radial_boundary_prototype_names, and build_paper_parity_radial_basis. Add only concise docstrings in src/radial_boundary_prototypes.jl, one compact expert/paper-parity section in docs/src/reference/bases_and_mappings.md, and a short distinction from the normal recommended RadialBasisSpec route in docs/src/howto/recommended_atomic_setup.md. RadialBoundaryPrototype is a validated artifact-backed cached description of a frozen boundary construction; the only currently supported name is :paper_parity_g10_k6_x2, and returned records and contained arrays are shared cached inspection data that callers treat as read-only. Distinguish exact prototype widths 0.09358986806 and 0.02357750369 from rounded normal-workflow presets 0.0936 and 0.0236. radial_boundary_prototype_names reports available frozen prototypes but is not a registry/plugin mechanism; radial_boundary_prototype returns the validated cached object and rejects unknown names. build_paper_parity_radial_basis keeps the frozen boundary fixed while extending to caller rmax and mapping with default rmax_count_policy=:legacy_strict_trim; explain the corresponding build_basis(prototype; ...) route. This supports controlled paper-parity comparisons, not exact reproduction of an entire paper calculation or replacement of the normal RadialBasisSpec front door. Detailed high-precision coefficients, primitive storage, diagnostics, checksums, and provenance fields remain inspection data rather than mutable construction API. Hard added-line limits are 70 source-docstring and 45 combined reader/reference lines, with no new file. Preserve every coefficient, artifact, definition, field, method, signature, dispatch, default, cache behavior, numerical result, export, dependency, workflow, compatibility floor, version, tag, and release artifact. Exclude all remaining expert families, every next-minor de-export candidate, source behavior, tests outside the docs family, examples, fixtures, global documentation policy, and broader reference-page work. If truthful documentation requires any excluded change, make no implementation commit and report the mismatch."
+surfaces = ["docs", "source"]
+title = "document radial paper-parity reproducibility exports"
+
+    [[records.document_refs]]
+    heading = "Radial Paper-Parity Reproducibility Documentation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "b845dea4cde4b58a9b4e8d8b4fc663c709402571"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "564"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/howto/recommended_atomic_setup.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/reference/bases_and_mappings.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/radial_boundary_prototypes.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PUBLIC-EXPORT-INTEGRITY-TEST-01", "HP-PUBLIC-FOUNDATION-DOC-TEST-01", "HP-PUBLIC-RADIAL-PARITY-DOC-FN-01"]
+grant = "implementation"
+id = "HP-PUBLIC-RADIAL-PARITY-DOC-TEST-01"
+lifecycle = "approved"
+scope = "Add focused checks only in the existing test/docs/runtests.jl owner, with a preferred limit of 10 and hard limit of 16 added lines. Require RadialBoundaryPrototype, radial_boundary_prototype, radial_boundary_prototype_names, and build_paper_parity_radial_basis to remain exported, carry Julia documentation, and appear together in the curated expert/paper-parity section of docs/src/reference/bases_and_mappings.md. Require the recommended setup page to retain RadialBasisSpec as the ordinary front door and distinguish exact frozen widths 0.09358986806 and 0.02357750369 from rounded presets 0.0936 and 0.0236. Preserve the artifact-backed cached/read-only, single supported name, non-registry, strict unknown-name rejection, frozen-boundary extension, legacy_strict_trim default, build_basis(prototype; ...), controlled-comparison-only, and inspection-data boundaries from the canonical contract. The undocumented exported-binding count, excluding the module self-binding, must fall exactly from 16 to 12. Use Documenter as the executable @docs resolution gate and the existing radial owner plus unchanged Supported-floor CI as numerical acceptance. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, artifact or cache test, export change, dependency, example, version, tag, or release work."
+surfaces = ["tests"]
+title = "validate radial paper-parity reproducibility documentation"
+
+    [[records.document_refs]]
+    heading = "Radial Paper-Parity Reproducibility Documentation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "b845dea4cde4b58a9b4e8d8b4fc663c709402571"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "564"
 
     [[records.paths]]
     kind = "test"

@@ -1217,3 +1217,34 @@ Validation / carrying cost:
 - exact remaining blocker: none for this packet. Both IDs return to maintenance
   only; no workflow, cache, dependency, version, release, or strategic-goal
   change occurred. No checkpoint is due.
+
+## Cartesian Hamiltonian Producer Pass 564 - Authorize Radial Paper-Parity Documentation
+
+Commit(s):
+- baseline `b845dea4cde4b58a9b4e8d8b4fc663c709402571`;
+- this docs-only authority amendment.
+
+Summary / goal advancement:
+- Added `HP-PUBLIC-RADIAL-PARITY-DOC-FN-01/TEST-01` for the four coherent
+  `RadialBoundaryPrototype` paper-parity exports. The contract separates this
+  frozen expert reproducibility route from the recommended `RadialBasisSpec`
+  front door, requires read-only treatment of shared cached records, and
+  distinguishes the exact prototype widths from rounded workflow presets.
+- MT6 advances the classified expert reader surface without changing the
+  radial implementation, artifact, cache, API, tests, or Supported-floor
+  selection. Acceptance requires the exact undocumented-export reduction
+  `16 -> 12`; every other expert family and next-minor de-export candidate stays
+  outside this packet.
+
+Guardrail / carrying cost:
+- Preferred/hard additions are `50/70` source-docstring, `30/45` combined
+  reader/reference, and `10/16` docs-test lines, with no new file. Existing
+  radial tests and the unchanged Supported-floor gate remain the numerical
+  acceptance owners; no new assertion or artifact test is authorized.
+- deleted: nothing in this authority pass; simplified: four related exports
+  receive one coherent reproducibility boundary; quarantined: all other expert
+  surfaces and namespace reductions; not deleted because: the frozen prototype
+  remains live, artifact-backed reproducibility infrastructure.
+- exact remaining blocker: repo-manager implementation within the four listed
+  files and budgets. Any required coefficient, artifact, cache, API, workflow,
+  or numerical change is a stop-and-report outcome. No checkpoint is due.
