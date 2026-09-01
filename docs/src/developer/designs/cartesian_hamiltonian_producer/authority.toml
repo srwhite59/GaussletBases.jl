@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "fac64276af2eb071596754c1bd8a6b4fdc83be8076e76d8185985ff1015629c5"
+sha256 = "b1e5115254fa91925f6f35a6fe0b28af728b04c89e98e954675d5ae3a26ebc86"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -4389,6 +4389,68 @@ title = "semantic source-q override validation"
     [[records.paths]]
     kind = "test"
     path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-ANGULAR-PUBLIC-CI-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-FN-01"]
+grant = "implementation"
+id = "HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01"
+lifecycle = "approved"
+scope = "Document exactly the seven existing exported experimental angular producer bindings ShellLocalAngularProfile, ShellLocalAngularProfileOverlap, shell_local_angular_profile, adjacent_shell_local_angular_profile_overlap, AtomicFixedRadialAngularSequenceLevel, AtomicFixedRadialAngularSequenceOverlapSidecar, and AtomicFixedRadialAngularSequence. Add only concise docstrings in src/angular_shell_basis.jl and src/angular_sequence_export.jl, one compact reader explanation in docs/src/explanations/angular_research_track.md, and one curated seven-binding section in docs/src/reference/export.md. Clearly label this as experimental producer-side state rather than a completed angular application workflow; preserve exact injected-Ylm versus mixed-complement ordering, deterministic labels and gauge metadata, provenance/integrity-only profile/level/sequence IDs, shell-independent source-to-target profile overlaps, adjacent versus complete non-adjacent direct upper-triangle sidecars, and one common radial basis/shell inventory/shell-center set across levels with changing N_sph/profile. Final working bases remain intended orthonormal, so sidecars are continuation/transfer data rather than generalized-overlap authority. Direct consumers to documented IDs, labels, gauge metadata, diagnostics, and payload access without promoting ShellLocalAngularProfileKey or cache behavior as consumer API. Hard added-line limits are 95 source-docstring and 45 combined reader/reference lines, with no new file. Preserve every definition, field, signature, method, dispatch, export, cache behavior, numerical result, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude restart orchestration, common-target lifts, Givens transformations, downstream campaigns, key de-export, source behavior, API changes, examples, fixtures, and global documentation policy. If truthful documentation requires any excluded change, make no implementation commit and report the mismatch."
+surfaces = ["docs", "source"]
+title = "document experimental angular profile and sequence producers"
+
+    [[records.document_refs]]
+    heading = "Experimental Angular Producer Documentation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "628a46599dc7d1a85458a22a78fe095b7783b53a"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "562"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/explanations/angular_research_track.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/reference/export.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular_sequence_export.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular_shell_basis.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-ANGULAR-PUBLIC-CI-TEST-01", "HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-TEST-01"]
+grant = "implementation"
+id = "HP-PUBLIC-ANGULAR-PRODUCER-DOC-TEST-01"
+lifecycle = "approved"
+scope = "Add focused checks only in the existing test/docs/runtests.jl owner, with a preferred limit of 12 and hard limit of 18 added lines. Require the exact seven experimental angular producer bindings to remain exported, carry Julia documentation, and appear in the curated export reference with the producer-only, exact/mixed partition, deterministic label/gauge, provenance-identity, shell-independent overlap, adjacent/direct, shared-radial-substrate, orthonormal-final-basis, transfer-only, and excluded-campaign boundaries from the canonical contract. Require ShellLocalAngularProfileKey to remain exported temporarily while having no Julia docstring and no curated reference entry; it is the sole angular next-minor de-export candidate, but no de-export is authorized. The undocumented exported-binding count, excluding the module self-binding, must fall exactly from 23 to 16. Use Documenter as the executable @docs resolution gate and run the existing angular_public owner 83/83 without repeating the full roughly 930-second angular research suite. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, key documentation, export change, dependency, example, version, tag, or release work."
+surfaces = ["tests"]
+title = "validate experimental angular producer documentation"
+
+    [[records.document_refs]]
+    heading = "Experimental Angular Producer Documentation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "628a46599dc7d1a85458a22a78fe095b7783b53a"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "562"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/docs/runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-EXPORT-INTEGRITY-FN-01", "HP-PUBLIC-PARTITION-LEAF-DOC-FN-01"]

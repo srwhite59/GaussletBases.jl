@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `acf3e6f7b5f9a06c33dd2ec47bec07ecf31bbeba302c71734772fb8bb779a83d`.
+> [authority.toml](authority.toml), SHA-256 `d0c2bee4c7cc63bcd1d0e0fb293bc36134fc093f5b9aef0240ad21786c60a92c`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2526,6 +2526,41 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `414`
 - **Dependencies:** `HP-PQS-SHELLQ-OVERRIDE-FN-01`
 - **Scope:** Validate route-q 7 to source-q 6 and 5 coarsening, expected retained-count reduction, unchanged parent/support/ownership/cores/slabs/route metadata, orthonormal contraction columns, omitted/empty parity, finite symmetric full construction, and rejection of malformed, below-3, Boolean, equal-route, asymmetric, and unmatched requests. Preserve existing refinement, residual, packet-capture, \`J0/E0\`, correction, dimension, and due-diligence gates. No new accessor, dense baseline-to-variant overlap API, source-pass HF, endpoint energy assertion, or production claim is approved.
+
+### HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01 - document experimental angular profile and sequence producers
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Experimental Angular Producer Documentation`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/explanations/angular_research_track.md`
+  - `docs` / `existing`: `docs/src/reference/export.md`
+  - `source` / `existing`: `src/angular_sequence_export.jl`
+  - `source` / `existing`: `src/angular_shell_basis.jl`
+- **Evidence:**
+  - `git_commit`: `628a46599dc7d1a85458a22a78fe095b7783b53a`
+  - `manager_pass`: `562`
+- **Dependencies:** `HP-ANGULAR-PUBLIC-CI-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`
+- **Scope:** Document exactly the seven existing exported experimental angular producer bindings ShellLocalAngularProfile, ShellLocalAngularProfileOverlap, shell\_local\_angular\_profile, adjacent\_shell\_local\_angular\_profile\_overlap, AtomicFixedRadialAngularSequenceLevel, AtomicFixedRadialAngularSequenceOverlapSidecar, and AtomicFixedRadialAngularSequence. Add only concise docstrings in src/angular\_shell\_basis.jl and src/angular\_sequence\_export.jl, one compact reader explanation in docs/src/explanations/angular\_research\_track.md, and one curated seven-binding section in docs/src/reference/export.md. Clearly label this as experimental producer-side state rather than a completed angular application workflow; preserve exact injected-Ylm versus mixed-complement ordering, deterministic labels and gauge metadata, provenance/integrity-only profile/level/sequence IDs, shell-independent source-to-target profile overlaps, adjacent versus complete non-adjacent direct upper-triangle sidecars, and one common radial basis/shell inventory/shell-center set across levels with changing N\_sph/profile. Final working bases remain intended orthonormal, so sidecars are continuation/transfer data rather than generalized-overlap authority. Direct consumers to documented IDs, labels, gauge metadata, diagnostics, and payload access without promoting ShellLocalAngularProfileKey or cache behavior as consumer API. Hard added-line limits are 95 source-docstring and 45 combined reader/reference lines, with no new file. Preserve every definition, field, signature, method, dispatch, export, cache behavior, numerical result, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude restart orchestration, common-target lifts, Givens transformations, downstream campaigns, key de-export, source behavior, API changes, examples, fixtures, and global documentation policy. If truthful documentation requires any excluded change, make no implementation commit and report the mismatch.
+
+### HP-PUBLIC-ANGULAR-PRODUCER-DOC-TEST-01 - validate experimental angular producer documentation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Experimental Angular Producer Documentation`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `628a46599dc7d1a85458a22a78fe095b7783b53a`
+  - `manager_pass`: `562`
+- **Dependencies:** `HP-ANGULAR-PUBLIC-CI-TEST-01`, `HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`
+- **Scope:** Add focused checks only in the existing test/docs/runtests.jl owner, with a preferred limit of 12 and hard limit of 18 added lines. Require the exact seven experimental angular producer bindings to remain exported, carry Julia documentation, and appear in the curated export reference with the producer-only, exact/mixed partition, deterministic label/gauge, provenance-identity, shell-independent overlap, adjacent/direct, shared-radial-substrate, orthonormal-final-basis, transfer-only, and excluded-campaign boundaries from the canonical contract. Require ShellLocalAngularProfileKey to remain exported temporarily while having no Julia docstring and no curated reference entry; it is the sole angular next-minor de-export candidate, but no de-export is authorized. The undocumented exported-binding count, excluding the module self-binding, must fall exactly from 23 to 16. Use Documenter as the executable @docs resolution gate and run the existing angular\_public owner 83/83 without repeating the full roughly 930-second angular research suite. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, key documentation, export change, dependency, example, version, tag, or release work.
 
 ### HP-PUBLIC-ATOMIC-IDA-DOC-FN-01 - document atomic IDA inspection and tiny two-electron reference bindings
 

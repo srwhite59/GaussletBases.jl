@@ -190,8 +190,10 @@ documentation and shell-key de-export remain separate. The bounded post-v0.2
 export cleanup is implemented: the unused
 timed nested wrapper is deleted, two undocumented diagnostic/QW names are
 unexported, and the inexpensive qualified QW alias remains. The angular public
-surface remains a separate audit. One bounded foundational documentation grant
-and four successor packets now document the supported basis/mapping,
+surface audit now authorizes documentation of seven durable experimental
+profile/sequence bindings without treating the cache key as consumer API. One
+bounded foundational documentation grant and four successor packets document
+the supported basis/mapping,
 function/stencil, partition/leaf, atomic-IDA reference, and final six
 supported-public families without changing behavior or global documentation
 policy. Their bounded sequence reduced the undocumented-export backlog from
@@ -200,9 +202,12 @@ policy. Their bounded sequence reduced the undocumented-export backlog from
 bounded documentation grant. Three one-center nested names form one reserved
 next-minor namespace transaction; `diagnose_qwrg_residual_space` and its
 already-documented `QWRGResidualSpaceDiagnostics` type form another. No export
-change is authorized. Accepted geometry documentation will leave nineteen
-undocumented expert/experimental bindings plus four original de-export
-candidates rather than an automatic documentation or removal queue.
+change is authorized. Accepted geometry documentation left `23` undocumented
+exports. The angular packet must reduce that count exactly to `16` while
+leaving `ShellLocalAngularProfileKey` exported, undocumented, and unreferenced
+as the sole angular next-minor de-export candidate. That future namespace
+change remains separate from documentation and does not reopen v0.2 release
+work.
 
 **MT7 - External Cartesian GTO interchange (completed/maintenance).** The
 strict versioned reader, checkpoint-only PySCF exporter, frozen d-shell
@@ -1146,3 +1151,35 @@ Carrying-cost accounting:
 - exact remaining caller/blocker: none after the docs-only planned-to-existing
   reconciliation and passing Docs rerun; added/deleted production source lines
   `0/0`, new metadata fields none, and no numerical policy or release change.
+
+## Cartesian Hamiltonian Producer Pass 562 - Authorize Experimental Angular Producer Documentation
+
+Commit(s):
+- baseline `628a46599dc7d1a85458a22a78fe095b7783b53a`;
+- this docs-only authority amendment.
+
+Summary / goal advancement:
+- Added `HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01/TEST-01` for exactly seven
+  durable shell-profile and fixed-radial-sequence bindings. The reader contract
+  labels them experimental producer surfaces, documents exact-injected versus
+  mixed-complement ordering, deterministic labels/gauge data, provenance-only
+  identities, shell-independent source-target overlaps, adjacent versus direct
+  upper-triangle sidecars, and one shared radial substrate across levels.
+- MT6 advances the classified angular reader boundary without changing API or
+  numerics. Final-basis orthonormality remains the working contract; sidecars
+  are continuation/transfer data, not generalized-overlap authority.
+
+Guardrail / carrying cost:
+- Preferred/hard additions are `70/95` source-docstring, `30/45` combined
+  reader/reference, and `12/18` docs-test lines, with no new file. Acceptance
+  requires seven exported documented reference entries, exact undocumented-
+  export reduction `23 -> 16`, and `angular_public` `83/83`; the full roughly
+  `930`-second angular suite must not be repeated.
+- deleted: nothing in this authority pass; simplified: seven related names get
+  one coherent reader family; quarantined: restart orchestration, target lifts,
+  Givens transforms, campaigns, and key de-export; not deleted because:
+  `ShellLocalAngularProfileKey` remains live cache machinery.
+- exact remaining caller/blocker: repo-manager implementation within the five
+  listed files and budgets. The key must stay exported but undocumented and
+  absent from the reference; any required behavioral/export/cache change is a
+  stop-and-report outcome. No checkpoint is due.
