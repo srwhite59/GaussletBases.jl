@@ -625,6 +625,20 @@ function _nested_source_frontend_geometry_diagnostics(
     return _nested_source_geometry_diagnostics(_nested_source_frontend_source(context))
 end
 
+"""
+    bond_aligned_diatomic_nested_geometry_diagnostics(source)
+    bond_aligned_diatomic_nested_geometry_diagnostics(basis::BondAlignedDiatomicQWBasis3D; kwargs...)
+
+Inspect route-specific nested-diatomic geometry, child/shared-shell retention,
+shell counts and dimensions, actual shared-shell provenance, fixed dimension,
+contract audit, and atom-growth anatomy. The source overload preserves and
+inspects the exact supplied nested source. The basis overload first constructs
+the normalized source using its shared-shell, endcap/panel, packet, retention,
+split, and protection controls, so it is not a cheap geometry-only query.
+
+Treat the returned named record and vectors as read-only inspection data, not
+as a general molecular-geometry API or stable serialization schema.
+"""
 function bond_aligned_diatomic_nested_geometry_diagnostics(
     source::_CartesianNestedBondAlignedDiatomicSource3D,
 )

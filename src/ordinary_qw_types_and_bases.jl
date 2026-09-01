@@ -996,6 +996,14 @@ function _qwrg_bond_axis_order(
     return sortperm(coordinates), coordinates
 end
 
+"""
+    bond_aligned_homonuclear_chain_geometry_diagnostics(basis)
+
+Inspect an existing experimental homonuclear chain basis. The read-only result
+reports chain coordinates, mapped-axis and transverse centers, nucleus and
+midpoint spacings, mapping kinds, monotonicity, and axis-center symmetry error.
+This function constructs no nested source, Hamiltonian, or solver input.
+"""
 function bond_aligned_homonuclear_chain_geometry_diagnostics(
     basis::BondAlignedHomonuclearChainQWBasis3D,
 )
@@ -1027,6 +1035,15 @@ function bond_aligned_homonuclear_chain_geometry_diagnostics(
     )
 end
 
+"""
+    axis_aligned_homonuclear_square_lattice_geometry_diagnostics(basis)
+
+Inspect an existing axis-aligned homonuclear square basis. The read-only result
+reports x/y coordinates, Cartesian centers, nuclear, representative-midpoint,
+and plane-center spacings, mapping kinds, monotonicity and symmetry errors, and
+x-y center agreement. It constructs no nested source, Hamiltonian, solver
+input, arbitrary-orientation model, or heteronuclear model.
+"""
 function axis_aligned_homonuclear_square_lattice_geometry_diagnostics(
     basis::AxisAlignedHomonuclearSquareLatticeQWBasis3D,
 )

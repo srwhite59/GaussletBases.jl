@@ -34,6 +34,30 @@ BondAlignedDiatomicQWBasis3D
 CoulombGaussianExpansion
 ```
 
+## Experimental QW geometry diagnostics
+
+These route-specific expert functions return read-only inspection records;
+they are neither a general molecular-geometry API nor a stable serialization
+schema. For a nested-diatomic source, the diagnostic preserves and inspects
+that exact source. The basis overload instead
+constructs the normalized nested source through its shared-shell,
+endcap/panel, packet, retention, split, and protection controls, so it is
+not a lightweight geometry-only query. Its result summarizes geometry and
+retention contracts, shell counts and dimensions, actual shared-shell
+provenance, fixed dimension, contract audit, and atom-growth anatomy.
+
+The chain and square diagnostics only inspect existing experimental bases.
+They report their coordinates, mapped centers, local spacings, mapping kinds,
+monotonicity, and symmetry checks; the square also reports x-y center
+agreement. They construct no nested source, Hamiltonian, solver input,
+arbitrary-orientation model, or heteronuclear model.
+
+```@docs
+bond_aligned_diatomic_nested_geometry_diagnostics
+bond_aligned_homonuclear_chain_geometry_diagnostics
+axis_aligned_homonuclear_square_lattice_geometry_diagnostics
+```
+
 ## Diagnostics and quadrature
 
 ```@docs

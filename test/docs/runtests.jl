@@ -101,6 +101,10 @@
     radial_parity_exports = (
         :RadialBoundaryPrototype, :radial_boundary_prototype,
         :radial_boundary_prototype_names, :build_paper_parity_radial_basis)
+    qw_geometry_exports = (
+        :bond_aligned_diatomic_nested_geometry_diagnostics,
+        :bond_aligned_homonuclear_chain_geometry_diagnostics,
+        :axis_aligned_homonuclear_square_lattice_geometry_diagnostics)
     docs_site_developer = read_doc("docs", "src", "developer", "index.md")
     docs_site_developer_notes = read_doc("docs", "src", "developer", "supporting_notes.md")
     docs_site_architecture = read_doc("docs", "src", "developer", "architecture.md")
@@ -663,7 +667,15 @@
         @test contains_all(recommended_atomic_setup, "RadialBasisSpec", "0.09358986806", "0.02357750369", "0.0936", "0.0236")
         @test contains_all_lower(recommended_atomic_setup, "expert artifact-backed", "read-only",
             "ordinary front door", "entire paper calculation")
-        @test length(filter(!=(:GaussletBases), Docs.undocumented_names(GaussletBases))) == 12
+        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name), qw_geometry_exports)
+        @test occursin("## Experimental QW geometry diagnostics", docs_site_reference_ops) &&
+              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_ops)\n"), qw_geometry_exports)
+        @test contains_all_lower(docs_site_reference_ops, "route-specific expert", "read-only inspection",
+            "general molecular-geometry api", "stable serialization", "exact source", "basis overload",
+            "constructs the normalized nested source", "not a lightweight geometry-only query",
+            "shared-shell", "chain and square", "existing experimental bases", "no nested source",
+            "hamiltonian", "solver input", "arbitrary-orientation", "heteronuclear")
+        @test length(filter(!=(:GaussletBases), Docs.undocumented_names(GaussletBases))) == 9
 
         @test contains_all(
             docs_site_reference_export,
