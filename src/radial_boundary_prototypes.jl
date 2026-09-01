@@ -17,6 +17,15 @@ const _RADIAL_BOUNDARY_PROTOTYPE_RELAXED_EIG_FLOOR = 1.0e-40
 const _RADIAL_BOUNDARY_PROTOTYPE_CACHE =
     Ref{Union{Nothing, Dict{Symbol,Any}}}(nothing)
 
+"""
+    RadialBoundaryPrototype
+
+Validated, artifact-backed description of a frozen radial boundary
+construction for expert paper-parity comparisons. Instances returned by
+[`radial_boundary_prototype`](@ref) are shared cached records; treat the record
+and its contained arrays, coefficients, diagnostics, checksums, and provenance
+as read-only inspection data rather than a mutable construction API.
+"""
 struct RadialBoundaryPrototype
     name::Symbol
     family_value::GaussletFamily
@@ -50,6 +59,13 @@ function Base.show(io::IO, prototype::RadialBoundaryPrototype)
     )
 end
 
+"""
+    radial_boundary_prototype_names()
+
+Return the names of available frozen radial boundary prototypes. The sole
+currently supported name is `:paper_parity_g10_k6_x2`; this list is not a
+general registry or plugin mechanism.
+"""
 radial_boundary_prototype_names() = [_RADIAL_BOUNDARY_PROTOTYPE_NAME]
 
 function _paper_parity_xgaussians()
@@ -957,6 +973,13 @@ function _radial_boundary_prototype_cache()
     return cache
 end
 
+"""
+    radial_boundary_prototype(name::Symbol=:paper_parity_g10_k6_x2)
+
+Return the validated cached prototype named by `name`, rejecting unknown
+names. The frozen prototype uses exact X-Gaussian widths `0.09358986806` and
+`0.02357750369`, distinct from the rounded normal-workflow presets.
+"""
 function radial_boundary_prototype(name::Symbol = _RADIAL_BOUNDARY_PROTOTYPE_NAME)
     cache = _radial_boundary_prototype_cache()
     prototype = get(cache, name, nothing)
@@ -969,6 +992,16 @@ function radial_boundary_prototype(name::Symbol = _RADIAL_BOUNDARY_PROTOTYPE_NAM
     return prototype
 end
 
+"""
+    build_paper_parity_radial_basis(prototype; rmax, mapping=IdentityMapping(), rmax_count_policy=:legacy_strict_trim)
+    build_paper_parity_radial_basis(; rmax, mapping=IdentityMapping(), prototype_name=:paper_parity_g10_k6_x2, rmax_count_policy=:legacy_strict_trim)
+
+Extend the frozen boundary construction to the requested `rmax` and mapping.
+The boundary data remain fixed, and the default count policy preserves the
+legacy strict-trim convention. This expert route supports controlled
+paper-parity comparisons; it neither reproduces an entire paper calculation
+nor replaces the normal [`RadialBasisSpec`](@ref) construction path.
+"""
 function build_paper_parity_radial_basis(
     prototype::RadialBoundaryPrototype;
     rmax::Real,

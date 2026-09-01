@@ -69,6 +69,14 @@ without them for the problem you care about, it is also fine to leave them out.
 These are the published optimized widths for the `K = 6` radial-gausslet paper
 construction; they are not meant to imply a fresh per-run optimization.
 
+For controlled paper-parity work, the expert artifact-backed prototype uses
+the exact widths `0.09358986806` and `0.02357750369`, rather than the rounded
+normal-workflow presets `0.0936` and `0.0236`. Obtain it with
+`radial_boundary_prototype()` and use `build_basis(prototype; ...)` or
+`build_paper_parity_radial_basis(...)`. Treat its cached record and arrays as
+read-only. This does not replace `RadialBasisSpec` as the ordinary front door
+or reproduce an entire paper calculation.
+
 So the front-door interpretation is:
 
 - the default front-door behavior is the paper-style two-function supplement

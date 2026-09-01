@@ -98,12 +98,16 @@
         :shell_local_angular_profile, :adjacent_shell_local_angular_profile_overlap,
         :AtomicFixedRadialAngularSequenceLevel,
         :AtomicFixedRadialAngularSequenceOverlapSidecar, :AtomicFixedRadialAngularSequence)
+    radial_parity_exports = (
+        :RadialBoundaryPrototype, :radial_boundary_prototype,
+        :radial_boundary_prototype_names, :build_paper_parity_radial_basis)
     docs_site_developer = read_doc("docs", "src", "developer", "index.md")
     docs_site_developer_notes = read_doc("docs", "src", "developer", "supporting_notes.md")
     docs_site_architecture = read_doc("docs", "src", "developer", "architecture.md")
     docs_site_atomic = read_doc("docs", "src", "explanations", "current_atomic_branch.md")
     docs_site_ordinary = read_doc("docs", "src", "explanations", "current_ordinary_branch.md")
     docs_site_angular_track = read_doc("docs", "src", "explanations", "angular_research_track.md")
+    recommended_atomic_setup = read_doc("docs", "src", "howto", "recommended_atomic_setup.md")
 
     @testset "Root Docs Authority And Story" begin
         @test contains_all(
@@ -650,7 +654,16 @@
             "provenance identity", "one radial basis", "shell-independent", "continuation/transfer",
             "adjacent sidecars", "complete non-adjacent upper", "orthonormal", "generalized-overlap",
             "restart ladders", "givens transformations", "campaign", "orchestration remain external")
-        @test length(filter(!=(:GaussletBases), Docs.undocumented_names(GaussletBases))) == 16
+        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name), radial_parity_exports)
+        @test occursin("## Expert radial paper-parity prototype", docs_site_reference_bases) &&
+              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_bases)\n"), radial_parity_exports)
+        @test contains_all_lower(docs_site_reference_bases, "artifact-backed", ":paper_parity_g10_k6_x2",
+            "rejects any other", "not a registry/plugin", "shared cached inspection", "read-only",
+            "legacy_strict_trim", "ordinary radial front door", "complete paper-calculation")
+        @test contains_all(recommended_atomic_setup, "RadialBasisSpec", "0.09358986806", "0.02357750369", "0.0936", "0.0236")
+        @test contains_all_lower(recommended_atomic_setup, "expert artifact-backed", "read-only",
+            "ordinary front door", "entire paper calculation")
+        @test length(filter(!=(:GaussletBases), Docs.undocumented_names(GaussletBases))) == 12
 
         @test contains_all(
             docs_site_reference_export,

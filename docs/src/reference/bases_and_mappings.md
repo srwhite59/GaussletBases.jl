@@ -28,6 +28,30 @@ recommended_xgaussians
 build_basis
 ```
 
+## Expert radial paper-parity prototype
+
+The artifact-backed `RadialBoundaryPrototype` preserves one frozen boundary
+construction for controlled comparisons. Its sole supported name is
+`:paper_parity_g10_k6_x2`; `radial_boundary_prototype(name)` rejects any other
+name, and `radial_boundary_prototype_names()` is not a registry/plugin
+mechanism. Returned records and contained arrays are shared cached inspection
+data and must be treated as read-only. The exact prototype widths
+`0.09358986806` and `0.02357750369` differ from the rounded normal-route presets
+`0.0936` and `0.0236`.
+
+`build_basis(prototype; mapping=...)` realizes the frozen mapped prototype.
+Supplying `rmax` uses the same extension as
+`build_paper_parity_radial_basis`, whose default is
+`rmax_count_policy=:legacy_strict_trim`. This is not a plugin registry, the
+ordinary radial front door, or a complete paper-calculation reproduction.
+
+```@docs
+RadialBoundaryPrototype
+radial_boundary_prototype
+radial_boundary_prototype_names
+build_paper_parity_radial_basis
+```
+
 ## Coordinate mappings
 
 ```@docs
