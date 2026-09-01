@@ -1361,3 +1361,38 @@ Validation / carrying cost:
 - exact remaining blocker: none for this packet. The FN record returns to
   implemented maintenance and the TEST record to completed maintenance. No
   strategic-goal change occurred, and no checkpoint is due.
+
+## Cartesian Hamiltonian Producer Pass 568 - Authorize Experimental Sliced Hydrogen-Chain Operator Documentation
+
+Commit(s):
+- baseline `4dcb648d32d5368f19d0104b55425e582070cb3c`;
+- this docs-only authority amendment.
+
+Summary / goal advancement:
+- Added `HP-PUBLIC-SLICED-HCHAIN-DOC-FN-01/TEST-01` for exactly the three
+  undocumented sliced-chain operator functions `sliced_h1`, `sliced_vee`, and
+  `sliced_row!`, curated with the three already-documented companion exports.
+  The contract preserves lazy read-only H1 and two-index density-density views,
+  private concrete view types, represented H1 bandwidth semantics, caller-owned
+  row buffers, and bounded-only dense materialization.
+- MT6 advances the classified experimental reader surface without reopening the
+  accepted compact producer or numerical subsystem. Acceptance requires the
+  exact undocumented-export reduction `9 -> 6`; working-basis documentation and
+  every next-minor namespace transaction remain separate.
+
+Guardrail / carrying cost:
+- Preferred/hard additions are `40/55` source-docstring, `35/55` combined
+  reader/reference, and `10/16` docs-test lines, with no new file. Existing IDA
+  validation and unchanged Supported-floor CI remain the numerical owners; no
+  numerical assertion or workflow edit is authorized.
+- deleted: nothing in this authority pass; simplified: six related exports gain
+  one coherent expert operator boundary; quarantined: general Hamiltonians,
+  solvers, MPOs, electron sectors, four-index ERIs, dense production storage,
+  private view types, internal bands/work arrays, working-basis work, and
+  namespace reductions; not deleted because: all six names form the accepted
+  live expert producer interface.
+- exact remaining blocker: repo-manager implementation within the three listed
+  documentation/source paths, one existing docs-test owner, and hard budgets.
+  If truthful documentation requires behavior, storage, allocation, API, or
+  excluded-surface changes, implementation must stop and report. No checkpoint
+  is due.

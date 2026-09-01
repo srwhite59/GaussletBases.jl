@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `e4ff56641bb7ba1a1f93fd9afef06751b27c850283e7a063afae734204d92bc5`.
+> [authority.toml](authority.toml), SHA-256 `a9382b3c564b580a5344ac1a4bfee81bc5bf1ee18bd3804590133f443ad3a2bf`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2932,6 +2932,40 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `565`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-FOUNDATION-DOC-TEST-01`, `HP-PUBLIC-RADIAL-PARITY-DOC-FN-01`
 - **Scope:** Maintain only the accepted focused documentation checks in test/docs/runtests.jl from commit 84ebdc5792c954b4c09f08b53ba86ef9332bf6b8. They require RadialBoundaryPrototype, radial\_boundary\_prototype, radial\_boundary\_prototype\_names, and build\_paper\_parity\_radial\_basis to remain exported, documented, and colocated in the curated expert radial paper-parity section; require the recommended setup to retain RadialBasisSpec as the ordinary front door and distinguish exact widths 0.09358986806 and 0.02357750369 from rounded presets 0.0936 and 0.0236; and preserve the artifact-backed cached/read-only, sole supported name, non-registry, unknown-name rejection, frozen-boundary extension, legacy\_strict\_trim default, build\_basis(prototype; ...), controlled-comparison-only, and inspection-data boundaries. The undocumented exported-binding count, excluding the module self-binding, is exactly 12 after the accepted 16-to-12 reduction. The accepted docs-test delta is +14/-1. Documenter remains the executable @docs resolution gate; the existing radial owner passed 322/322 and Supported-floor CI remains unchanged. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, artifact or cache test, export change, dependency, example, version, tag, or release work.
+
+### HP-PUBLIC-SLICED-HCHAIN-DOC-FN-01 - document experimental sliced hydrogen-chain operators
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Experimental Sliced Hydrogen-Chain Operator Documentation`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/explanations/current_ordinary_branch.md`
+  - `docs` / `existing`: `docs/src/reference/atomic_and_ordinary.md`
+  - `source` / `existing`: `src/sliced_hydrogen_chain.jl`
+- **Evidence:**
+  - `git_commit`: `4dcb648d32d5368f19d0104b55425e582070cb3c`
+  - `manager_pass`: `568`
+- **Dependencies:** `HP-PUBLIC-ATOMIC-IDA-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-SLICE-HCHAIN-FN-01`
+- **Scope:** Document exactly the three existing exported sliced-chain operator functions sliced\_h1, sliced\_vee, and sliced\_row\!. Add only concise docstrings in src/sliced\_hydrogen\_chain.jl, one compact Experimental sliced hydrogen-chain operators section in docs/src/reference/atomic\_and\_ordinary.md, and only if needed one concise discoverability sentence in docs/src/explanations/current\_ordinary\_branch.md. Curate the three functions with the already-documented SlicedHydrogenChain, sliced\_hydrogen\_chain, and sliced\_h1\_bandwidth exports as one coherent compact expert interface. Preserve this as an experimental minimal hydrogen-chain producer rather than a general molecular Hamiltonian, solver, MPO, electron-sector framework, or sliced-basis framework. Document sliced\_h1 as a read-only lazy AbstractMatrix{Float64} view of the electronic one-body operator with nuclear repulsion separate in chain.nuclear\_repulsion; preserve the represented structural half-bandwidth query and exact represented zeros outside it without claiming omitted continuum matrix elements vanish physically. Document sliced\_vee as a read-only lazy two-index density-density interaction view rather than a four-index ERI tensor. Both views retain their chain owner and expose size, scalar indexing, and mul\! without owning an N-by-N dense matrix; their concrete types stay private and non-contractual, and explicit Matrix(view) is only for bounded diagnostics. Document sliced\_row\! as validating destination length and row bounds, completely overwriting and returning the caller-owned destination, preserving zero allocation for a compatible buffer, with H1 band-limited extraction and full-column Vee extraction. Stable fields and diagnostics remain read-only consumer data while internal bands, Coulomb blocks, coefficients, work arrays, and view types remain non-contractual. Preferred/hard added-line limits are 40/55 source-docstring and 35/55 combined reader/reference lines, with no new file. Preserve every type, field, definition, method, signature, dispatch, coefficient, tolerance, numerical result, storage choice, allocation policy, export, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude cartesian\_base\_working\_basis, every next-minor de-export candidate, source behavior, API reduction, new examples or fixtures, global documentation policy, and broader sliced-chain work. If truthful documentation requires an excluded change or exceeds a hard budget, make no implementation commit and report the mismatch.
+
+### HP-PUBLIC-SLICED-HCHAIN-DOC-TEST-01 - validate experimental sliced hydrogen-chain operator documentation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Experimental Sliced Hydrogen-Chain Operator Documentation`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `4dcb648d32d5368f19d0104b55425e582070cb3c`
+  - `manager_pass`: `568`
+- **Dependencies:** `HP-PUBLIC-ATOMIC-IDA-DOC-TEST-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-SLICED-HCHAIN-DOC-FN-01`, `HP-SLICE-HCHAIN-TEST-01`
+- **Scope:** Add focused checks only in existing test/docs/runtests.jl, with a preferred limit of 10 and hard limit of 16 added lines. Require sliced\_h1, sliced\_vee, and sliced\_row\! to remain exported, carry Julia documentation, and appear with SlicedHydrogenChain, sliced\_hydrogen\_chain, and sliced\_h1\_bandwidth in one Experimental sliced hydrogen-chain operators section of docs/src/reference/atomic\_and\_ordinary.md. Require reader wording to preserve the experimental non-general-producer boundary; lazy read-only H1 and two-index density-density views; separate nuclear repulsion; represented-band versus physical-continuum distinction; private concrete view types; owner retention; size/scalar/mul\! access without dense ownership; bounded-only explicit Matrix materialization; complete validating overwrite/return semantics for caller-owned rows; zero-allocation compatible-buffer behavior; band-limited H1 versus full-column Vee extraction; and read-only stable fields versus non-contractual internals. The undocumented exported-binding count, excluding the module self-binding, must fall exactly from 9 to 6. Use Documenter as the executable @docs resolution gate and existing sliced-chain IDA tests plus unchanged Supported-floor CI as numerical acceptance. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, type, field, signature, dispatch, coefficient, tolerance, allocation-policy, export, dependency, example, version, tag, release, working-basis, or namespace-reduction work.
 
 ### HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01 - document six supported public surface bindings
 

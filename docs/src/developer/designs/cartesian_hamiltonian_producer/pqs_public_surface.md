@@ -1184,6 +1184,73 @@ de-export candidate, global documentation policy, and broader QW work. If
 maintenance requires any excluded change, it needs a separate authority
 amendment.
 
+## Experimental Sliced Hydrogen-Chain Operator Documentation
+
+`HP-PUBLIC-SLICED-HCHAIN-DOC-FN-01` and
+`HP-PUBLIC-SLICED-HCHAIN-DOC-TEST-01` authorize documentation for exactly these
+three existing exported operator functions:
+
+- `sliced_h1`;
+- `sliced_vee`; and
+- `sliced_row!`.
+
+The compact expert-reference section must present them together with the
+already-documented companion exports `SlicedHydrogenChain`,
+`sliced_hydrogen_chain`, and `sliced_h1_bandwidth`. This is one experimental
+minimal hydrogen-chain producer, not a general molecular Hamiltonian, solver,
+MPO, electron-sector framework, or sliced-basis framework.
+
+`sliced_h1(chain)` returns a read-only, lazily evaluated
+`AbstractMatrix{Float64}` view of the electronic one-body operator. Nuclear
+repulsion remains the separate `chain.nuclear_repulsion` scalar. The
+represented structural half-bandwidth is returned by
+`sliced_h1_bandwidth(chain)`. Entries beyond that band are exactly zero in the
+accepted representation; this is not a claim that omitted continuum matrix
+elements vanish physically.
+
+`sliced_vee(chain)` returns a read-only, lazily evaluated two-index
+density-density interaction view, not a four-index ERI tensor. Both operator
+views retain their chain owner and expose matrix size, scalar indexing, and
+`mul!` without owning an `N x N` dense matrix. Their concrete view types remain
+private and non-contractual; consumers obtain them only through `sliced_h1`
+and `sliced_vee`. Explicit `Matrix(view)` materializes a dense matrix and is
+suitable only for bounded diagnostics.
+
+`sliced_row!(destination, view, row)` validates destination length and row
+bounds, completely overwrites the correctly sized caller-owned destination,
+and returns that destination. Preserve the existing zero-allocation path for a
+compatible caller buffer. H1 row extraction may use its represented stored
+band; Vee row extraction covers every column.
+
+Existing stable chain fields and diagnostics remain read-only consumer data.
+Internal H1 bands, Coulomb blocks, longitudinal coefficients, transverse work
+arrays, and operator-view concrete types remain non-contractual. Documentation
+must not turn those internals into a storage, ownership, or mutation promise.
+
+Implementation authority is limited to concise docstrings in
+`src/sliced_hydrogen_chain.jl`, one compact section in
+`docs/src/reference/atomic_and_ordinary.md`, only if needed one concise
+discoverability sentence in
+`docs/src/explanations/current_ordinary_branch.md`, and focused checks in
+`test/docs/runtests.jl`. Preferred/hard additions are `40/55` source-docstring,
+`35/55` reader/reference, and `10/16` docs-test lines, with no new file.
+
+Acceptance requires all six exports to appear as one coherent expert interface,
+the three previously undocumented functions to acquire docstrings, and the
+undocumented exported-binding count, excluding the module self-binding, to
+fall exactly from `9` to `6`. Existing sliced-chain numerical, allocation,
+bandwidth, finite-chain, periodic-template, singleton, and long-range behavior
+must remain unchanged. Existing IDA validation and unchanged Supported-floor CI
+remain the numerical owners; no new numerical assertion is authorized.
+
+No type, field, definition, method, signature, dispatch, coefficient,
+tolerance, storage, allocation policy, export, workflow, dependency, version,
+tag, or release may change. This packet excludes `cartesian_base_working_basis`,
+every next-minor de-export candidate, API reduction, global documentation
+policy, new examples or fixtures, and broader sliced-chain work. If truthful
+documentation requires an excluded change or exceeds a hard budget, make no
+implementation commit and report the exact mismatch.
+
 ## Supported Public Surface Documentation
 
 `HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01` and
