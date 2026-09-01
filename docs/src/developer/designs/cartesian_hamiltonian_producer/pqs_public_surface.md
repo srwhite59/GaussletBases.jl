@@ -1155,7 +1155,7 @@ The CI matrix has exactly three rows:
 
 | Gate name | Julia | Test selection |
 | --- | --- | --- |
-| `Supported floor` | `1.10` | `core,ida,cartesian,examples,radial,misc` |
+| `Supported floor` | `1.10` | `core,ida,cartesian,examples,radial,misc,angular_public` |
 | `PQS paper` | `1.12` | `pqs_release` group |
 | `Screening paper` | `1.12` | `screening_release` group |
 
@@ -1178,15 +1178,22 @@ and tag lane remains unchanged. Both records are back in maintenance.
 The complete `angular` research group remains explicitly excluded. A Julia
 `1.12` audit reached its first package-owned angular one-body fixture and then
 spent `13m49s` without reaching an assertion, so it is neither a fast group nor
-a per-push CI selection. Pass 560 separately authorizes only extraction of the
-bounded `[10, 15, 32]` fixed-radial sequence into a new `angular_public` group
-under `HP-ANGULAR-PUBLIC-CI-*`. Until that implementation is accepted, the
-table above remains the implemented selection; afterward only
-`angular_public` may be appended to the Supported-floor row. The weekly
-Cartesian suite, occupied-first private owner, represented-Hartree blocked
-owner, broader HFDMRG portability, documentation triage, and export triage
-remain outside this amendment. Add no CI row, job, dependency, source or
-numerical-policy change, or release action.
+a per-push CI selection. Commit
+`db156966a4a3a7bf2f685fa0f89312afca7b4280` implemented the separately
+authorized `[10, 15, 32]` fixed-radial extraction: an `80`-line,
+`83`-assertion `angular_public` owner replaced the `163`-line research-suite
+block. The complete test delta was `+88/-165`, net `-77` lines. The owner is
+explicitly selectable and included by `all`, while both `angular_public` and
+bare `angular` remain outside `fast`; only `angular_public` was appended to the
+Supported-floor row above. It passed `83/83` on Julia `1.10` in `11.17`
+seconds. The single accepted Julia `1.12` combined `angular,angular_public` run
+passed in `930.34` seconds and is not repeated during lifecycle closeout.
+Remote CI run `33509253422` passed all three named gates and visibly ran the
+focused owner `83/83` in Supported floor. The weekly Cartesian suite,
+occupied-first private owner, represented-Hartree blocked owner, broader
+HFDMRG portability, documentation triage, and export triage remain outside
+this amendment. Add no CI row, job, dependency, source or numerical-policy
+change, or release action.
 
 The `pqs_release` group originally ran the complete comparison twice: once in
 `test/pqs_h2plus_table1_release_runtests.jl` and once in an Example 41

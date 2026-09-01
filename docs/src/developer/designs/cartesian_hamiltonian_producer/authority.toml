@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "b2974af8b45ca136c14520aac772314e67abb3aab0362c1b8fb68fefa4acf0bd"
+sha256 = "fac64276af2eb071596754c1bd8a6b4fdc83be8076e76d8185985ff1015629c5"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -176,14 +176,14 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "35aed833d035c55efe8e80ceeb12d00b1e84dbfe70e8e3df3d7f9f9ab66cd397"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
-sha256 = "7d6873df78139ae7286086f132bdad1060a7059d6a4b2484c6668162e5f11cf9"
+sha256 = "2640fb2f701f158d1067ff7a74531fa60104561efeacf8a83443718a1bcdfe21"
 
 [[records]]
 dependency_ids = ["HP-ANGULAR-TEST-CONTROL-FN-01", "HP-PUBLIC-PAPER-CI-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-ANGULAR-PUBLIC-CI-FN-01"
-lifecycle = "approved"
-scope = "Implement only the bounded fixed-radial angular public-CI extraction in the canonical contract. Add `angular_public` as an explicitly selectable group and an `all` member in test/runtests.jl, while keeping it and the complete `angular` group out of `_FAST_TEST_GROUPS`; append only `angular_public` to the existing Julia 1.10 Supported-floor group list in .github/workflows/ci.yml. Preserve every CI job name and row, Julia version, timeout, classifier, marker, command, trigger, permission, PQS/Screening selection, tag lane, and all other group definitions. Add no workflow job or row, source, API, dependency, fixture framework, numerical policy, cache, example, version, tag, release, or unrelated angular work."
+lifecycle = "implemented"
+scope = "Maintain only the accepted fixed-radial angular public-CI wiring from commit db156966a4a3a7bf2f685fa0f89312afca7b4280: `angular_public` is explicitly selectable and included by `all`, while it and complete `angular` remain absent from `_FAST_TEST_GROUPS`; the Julia 1.10 Supported-floor selection is exactly core,ida,cartesian,examples,radial,misc,angular_public. Preserve every CI job name and row, Julia version, timeout, classifier, marker, command, trigger, permission, PQS/Screening selection, tag lane, and all other group definitions. Add no workflow job or row, source, API, dependency, fixture framework, numerical policy, cache, example, version, tag, release, or unrelated angular work."
 surfaces = ["tests", "tools"]
 title = "fixed-radial angular public CI wiring"
 
@@ -196,8 +196,14 @@ title = "fixed-radial angular public CI wiring"
     kind = "git_commit"
     value = "5d9befa246f38893449d28242ca242595a8f2695"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "db156966a4a3a7bf2f685fa0f89312afca7b4280"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "560"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "561"
 
     [[records.paths]]
     kind = "test"
@@ -209,10 +215,10 @@ title = "fixed-radial angular public CI wiring"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-ANGULAR-PUBLIC-CI-FN-01", "HP-PUBLIC-PAPER-CI-TEST-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-ANGULAR-PUBLIC-CI-TEST-01"
-lifecycle = "approved"
-scope = "Move and condense, without duplication, the complete existing `Atomic fixed-radial angular sequence` block from test/angular/runtests.jl into the single planned owner test/driver_public/angular_fixed_radial_sequence_runtests.jl. Preserve representative `[10,15,32]` construction/common-radial-basis identity, shell/center/dimension/profile identities, adjacent and direct overlap sidecars, dense level/overlap payload semantics, and one serialization round trip with identity metadata. Prefer table-driven checks; add 60-80 focused owner lines, hard 95, delete the superseded block in the same commit, and reduce total tracked test LOC. Add at most 6 focused test/docs/runtests.jl lines proving the exact Supported-floor selection contains `angular_public` and not bare `angular`. Acceptance is one Julia 1.10 focused run with reported runtime, one combined `angular,angular_public` run on one supported Julia version only, visible remote Supported-floor execution, `all` retention, both angular groups absent from `fast`, unchanged three named CI gates, and normal package/docs/authority/diff checks. Add no source, API, helper, extra fixture or test file, numerical assertion policy, workflow row/job, dependency, version, tag, release, export documentation, or ShellLocalAngularProfileKey change."
+lifecycle = "completed"
+scope = "Maintain only the accepted 80-line, 83-assertion public owner from commit db156966a4a3a7bf2f685fa0f89312afca7b4280. It preserves representative `[10,15,32]` construction/common-radial-basis identity, shell/center/dimension/profile identities, both adjacent and the direct overlap sidecars, dense level/overlap payload semantics, and one direct-sidecar serialization round trip with sequence/level/profile/gauge/label/pair-kind identity metadata. Keep the superseded 163-line research-suite block absent and preserve the exact +88/-165 total test delta, net -77. Maintain the focused Supported-floor positive assertion and bare-angular rejection. Julia 1.10 passed 83/83 in 11.17 seconds; the one authorized combined `angular,angular_public` Julia 1.12 run passed in 930.34 seconds and must not be repeated for lifecycle closeout. Remote CI 33509253422 passed all three gates and visibly ran angular_public 83/83. Add no source, API, helper, extra fixture or test file, numerical policy, workflow row/job, dependency, version, tag, release, export documentation, or ShellLocalAngularProfileKey change."
 surfaces = ["tests"]
 title = "fixed-radial angular public CI owner"
 
@@ -225,8 +231,14 @@ title = "fixed-radial angular public CI owner"
     kind = "git_commit"
     value = "5d9befa246f38893449d28242ca242595a8f2695"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "db156966a4a3a7bf2f685fa0f89312afca7b4280"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "560"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "561"
 
     [[records.paths]]
     kind = "test"
@@ -239,7 +251,7 @@ title = "fixed-radial angular public CI owner"
     [[records.paths]]
     kind = "test"
     path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
-    state = "planned"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "maintenance"
@@ -4707,7 +4719,7 @@ dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PUBLIC-COMPAT-FN-01", "
 grant = "maintenance"
 id = "HP-PUBLIC-PAPER-CI-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the implemented three-gate workflow with the current Julia 1.10 Supported-floor selection core,ida,cartesian,examples,radial,misc. Commit 15676153aec1569f5224ffa6ff5ed67b054c837f changed only that existing group list. HP-ANGULAR-PUBLIC-CI-FN-01 is the sole bounded exception: it may append only `angular_public` after extracting its focused owner; bare `angular` remains excluded. Preserve the workflow file, three job names and rows, Julia versions, 30-minute timeout, path classifier and four-path allowlist, documentation-only markers and lightweight lane, commands, triggers, permissions, pull-request behavior, PQS and Screening groups, annotated-tag identity/install lane, disabled slow tests, and fail-closed behavior. Add no other group, row, job, workflow, action dependency, helper, command, trigger, permission, source, numerical policy, dependency, manifest, version, tag, release, registration, citation, or test-owner change."
+scope = "Maintain the implemented three-gate workflow with the exact Julia 1.10 Supported-floor selection core,ida,cartesian,examples,radial,misc,angular_public. Commit db156966a4a3a7bf2f685fa0f89312afca7b4280 appended only the bounded public angular owner; bare `angular` remains excluded. Preserve the workflow file, three job names and rows, Julia versions, 30-minute timeout, path classifier and four-path allowlist, documentation-only markers and lightweight lane, commands, triggers, permissions, pull-request behavior, PQS and Screening groups, annotated-tag identity/install lane, disabled slow tests, and fail-closed behavior. Add no other group, row, job, workflow, action dependency, helper, command, trigger, permission, source, numerical policy, dependency, manifest, version, tag, release, registration, citation, or test-owner change."
 surfaces = ["tools"]
 title = "paper-aligned PQS and screening CI workflow"
 
@@ -4737,6 +4749,9 @@ title = "paper-aligned PQS and screening CI workflow"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "15676153aec1569f5224ffa6ff5ed67b054c837f"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "db156966a4a3a7bf2f685fa0f89312afca7b4280"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "503"
@@ -4773,6 +4788,9 @@ title = "paper-aligned PQS and screening CI workflow"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "560"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "561"
 
     [[records.paths]]
     kind = "tool"
@@ -4783,7 +4801,7 @@ dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-TEST-01", "HP-PQS-PUBLIC-MATCHED-TEST-0
 grant = "maintenance"
 id = "HP-PUBLIC-PAPER-CI-TEST-01"
 lifecycle = "completed"
-scope = "Maintain the focused documentation-policy assertion for the current Supported-floor selection core,ida,cartesian,examples,radial,misc. HP-ANGULAR-PUBLIC-CI-TEST-01 is the sole bounded exception: it may replace that assertion with the exact appended `angular_public` selection and an explicit rejection of bare `angular`. Preserve every numerical assertion, tolerance, fixture, pqs_release single-execution contract, screening_release contract, required-check identity, all three CI names/rows, path-aware routing, workflow command, and documentation link. Radial passed 322/322, misc passed 59/59, their combined selection passed 381/381, and remote CI run 33141930944 passed the expanded Julia 1.10 Supported-floor gate plus unchanged PQS and Screening gates. Add no other numerical assertion, fixture, helper, cache, artifact, file, framework, group, row, workflow, source, API, dependency, docs, version, tag, or release change."
+scope = "Maintain the focused documentation-policy assertions requiring the exact Supported-floor selection core,ida,cartesian,examples,radial,misc,angular_public and rejecting bare `angular`. Preserve every numerical assertion, tolerance, fixture, pqs_release single-execution contract, screening_release contract, required-check identity, all three CI names/rows, path-aware routing, workflow command, and documentation link. Radial passed 322/322, misc passed 59/59, the focused angular owner passed 83/83, and remote CI run 33509253422 passed the expanded Julia 1.10 Supported-floor gate plus unchanged PQS and Screening gates. Add no other numerical assertion, fixture, helper, cache, artifact, file, framework, group, row, workflow, source, API, dependency, docs, version, tag, or release change."
 surfaces = ["tests"]
 title = "paper-aligned PQS and screening release validation"
 
@@ -4817,6 +4835,9 @@ title = "paper-aligned PQS and screening release validation"
     kind = "git_commit"
     value = "15676153aec1569f5224ffa6ff5ed67b054c837f"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "db156966a4a3a7bf2f685fa0f89312afca7b4280"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "503"
     [[records.evidence_refs]]
@@ -4852,6 +4873,9 @@ title = "paper-aligned PQS and screening release validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "560"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "561"
 
     [[records.paths]]
     kind = "test"

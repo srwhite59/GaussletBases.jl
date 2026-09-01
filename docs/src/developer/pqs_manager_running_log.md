@@ -166,11 +166,10 @@ versioned/stable documentation, archives, and clean installation are accepted.
 The tag-lane local-ref collision was recovered through exact namespaced manual
 verification without a numerical rerun. Separate PQS and screening surfaces
 remain fixed. The bounded Julia `1.10` Supported-floor extension to the live
-`radial` and `misc` groups is implemented and accepted. A separate bounded
-`angular_public` extraction is approved for the fixed-radial sequence; the
-complete `angular` research group remains outside per-push CI. Future tag-lane
-repair, registration, citation metadata, and any later release are separate
-decisions.
+`radial`, `misc`, and fixed-radial `angular_public` groups is implemented and
+accepted. The complete `angular` research group remains outside per-push CI.
+Future tag-lane repair, registration, citation metadata, and any later release
+are separate decisions.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
 metadata, unsupported exports, and development-era tests as conformance work
@@ -184,9 +183,11 @@ the cold reporting boundary; it has no implementation grant. Eight-lane batching
 further loop restructuring, compatibility cleanup, and release work remain
 separate. The duplicate matched-H2+ release/example execution is removed by an
 accepted test-only replacement that preserves Example 41 and all release
-assertions. The fixed-radial angular public-owner extraction is approved as a
-net test reduction; angular export documentation and shell-key de-export remain
-separate. The bounded post-v0.2 export cleanup is implemented: the unused
+assertions. The fixed-radial angular public-owner extraction is implemented as
+an `80`-line, `83`-assertion owner replacing a `163`-line block, with total
+test delta `+88/-165` and net reduction of `77` lines; angular export
+documentation and shell-key de-export remain separate. The bounded post-v0.2
+export cleanup is implemented: the unused
 timed nested wrapper is deleted, two undocumented diagnostic/QW names are
 unexported, and the inexpensive qualified QW alias remains. The angular public
 surface remains a separate audit. One bounded foundational documentation grant
@@ -1110,3 +1111,38 @@ Carrying-cost accounting:
   this extraction must be net-negative and adds no implementation framework.
 - **MT7 - completed/maintenance:** external Cartesian-GTO interchange and its
   reader front door remain accepted and unchanged.
+
+## Cartesian Hamiltonian Producer Pass 561 - Close Fixed-Radial Angular Public CI Extraction
+
+Commit(s):
+- `db156966a4a3a7bf2f685fa0f89312afca7b4280`;
+- this docs-only lifecycle closeout.
+
+Summary:
+- Accepted the focused `[10,15,32]` fixed-radial sequence owner and its Julia
+  `1.10` Supported-floor wiring. The `80`-line, `83`-assertion public owner
+  replaced the complete `163`-line research-suite block; total tracked test
+  delta was `+88/-165`, net `-77`. It remains explicitly selectable and
+  included by `all`, while both `angular_public` and the complete `angular`
+  research group remain outside `fast`; bare `angular` is not in per-push CI.
+
+Validation / goal advancement:
+- The focused Julia `1.10` owner passed `83/83` in `11.17` seconds. The one
+  authorized combined Julia `1.12` `angular,angular_public` run passed in
+  `930.34` seconds and was accepted without repetition during closeout. Remote
+  CI run `33509253422` passed all three gates and visibly ran
+  `angular_public` `83/83`; the initial Docs run `33509253439` failed only on
+  the deliberately planned owner-path state.
+- MT1 returns `HP-ANGULAR-PUBLIC-CI-FN-01` to implemented maintenance and its
+  TEST record to completed maintenance. MT5 now includes the accepted bounded
+  angular owner in compatibility-floor coverage. MT6 records the net test
+  reduction without adding a framework. No checkpoint is due.
+
+Carrying-cost accounting:
+- deleted: the superseded `163`-line fixed-radial block; simplified: one
+  table-driven owner and one existing CI selection; quarantined: the complete
+  angular research suite remains direct-run only; not deleted because: its
+  remaining research contracts are outside this public endpoint.
+- exact remaining caller/blocker: none after the docs-only planned-to-existing
+  reconciliation and passing Docs rerun; added/deleted production source lines
+  `0/0`, new metadata fields none, and no numerical policy or release change.

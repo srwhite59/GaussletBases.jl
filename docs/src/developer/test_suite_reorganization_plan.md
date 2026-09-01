@@ -355,6 +355,20 @@ all three unchanged named CI gates, and diff checks must pass. Documentation of
 the seven angular exports and de-export of `ShellLocalAngularProfileKey` remain
 separate.
 
+Implementation commit `db156966a4a3a7bf2f685fa0f89312afca7b4280`
+closed the extraction. It replaced the `163`-line research-suite block with an
+`80`-line, `83`-assertion table-driven public owner, for a total test delta of
+`+88/-165` and net reduction of `77` lines. The owner is explicitly selectable,
+included by `all`, excluded from `fast`, and is the only angular group added to
+the Julia `1.10` Supported-floor selection. Its focused Julia `1.10` run passed
+`83/83` in `11.17` seconds. The single authorized combined
+`angular,angular_public` Julia `1.12` run passed in `930.34` seconds; it is
+accepted evidence and is not repeated during closeout. Remote CI run
+`33509253422` passed all three named gates and visibly ran `angular_public`
+`83/83`. Full `angular` remains direct-run research coverage outside `fast` and
+per-push CI. No source, API, numerical policy, fixture, dependency, job, or
+release behavior changed.
+
 ## Scheduled Cartesian Internal Maintenance Gate
 
 `HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01` and
