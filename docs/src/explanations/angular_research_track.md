@@ -203,21 +203,36 @@ For paper-facing direct scans, the intended split remains:
 That keeps the package on the producer/payload side without claiming that scan
 orchestration belongs in the repo itself.
 
-The same producer-side discipline now extends to a fixed-radial
-increasing-`N_sph` sequence line:
+## Experimental profile and sequence producers
 
+The same producer-side discipline extends to these fixed-radial angular
+objects and constructors:
+
+- `ShellLocalAngularProfile` and `ShellLocalAngularProfileOverlap`
+- `shell_local_angular_profile(...)`
+- `adjacent_shell_local_angular_profile_overlap(...)`
+- `AtomicFixedRadialAngularSequenceLevel`
+- `AtomicFixedRadialAngularSequenceOverlapSidecar`
+- `AtomicFixedRadialAngularSequence`
 - `build_atomic_fixed_radial_angular_sequence(...)`
 - `write_atomic_fixed_radial_angular_level_jld2(...)`
 - `write_atomic_fixed_radial_angular_overlap_sidecar_jld2(...)`
 
-This is a foundation contract for external continuation studies, not an
-application workflow. The package fixes one radial basis, builds one cached
-shell-local angular profile per `N_sph`, exports one native dense level
-artifact per level, exports one adjacent shell-local overlap sidecar per level
-pair, and also exports the full non-adjacent upper triangle of direct
-source-target shell-local overlaps inside the same sequence. The repo stops
-there: it does not implement restart ladders, Givens lifts, or atom-campaign
-orchestration.
+This remains experimental producer-side state for external continuation
+studies, not a completed angular application workflow. Each profile orders
+the exact injected-Ylm block before its mixed complement and records
+deterministic labels, gauge metadata, diagnostics, and a provenance identity. Profile,
+level, and sequence IDs are integrity records, not numerical-equivalence
+claims.
+
+Every sequence level shares one radial basis, shell inventory, and shell-center
+set while `N_sph` and the angular profile change. Adjacent sidecars cover
+neighboring levels; direct sidecars cover the complete non-adjacent upper
+triangle. Their profile overlaps are shell-independent continuation/transfer
+data. Because final working bases are intended to be orthonormal, these
+sidecars do not authorize generalized-overlap reinterpretation.
+Restart ladders, common-target lifts, Givens transformations, and campaign
+orchestration remain external.
 
 The intended post-whitening/injection working basis remains orthonormal.
 Accordingly, any residual nonidentity part of the final overlap matrix is to be

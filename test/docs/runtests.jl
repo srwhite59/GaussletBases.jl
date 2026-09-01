@@ -93,6 +93,11 @@
         :BondAlignedDiatomicQWBasis3D, :CoulombGaussianExpansion, :basis_metadata,
         :cartesian_base_hamiltonian, :external_gto_ordering_fingerprint,
         :external_gto_overlap_fingerprint)
+    angular_producer_exports = (
+        :ShellLocalAngularProfile, :ShellLocalAngularProfileOverlap,
+        :shell_local_angular_profile, :adjacent_shell_local_angular_profile_overlap,
+        :AtomicFixedRadialAngularSequenceLevel,
+        :AtomicFixedRadialAngularSequenceOverlapSidecar, :AtomicFixedRadialAngularSequence)
     docs_site_developer = read_doc("docs", "src", "developer", "index.md")
     docs_site_developer_notes = read_doc("docs", "src", "developer", "supporting_notes.md")
     docs_site_architecture = read_doc("docs", "src", "developer", "architecture.md")
@@ -633,7 +638,19 @@
         @test contains_all_lower(docs_site_reference_bases, "inspection and visualization", "does not construct or mutate",
             "compressed fixed centers", "raw source-region points", "same basis geometry", "read-only inspection data",
             "not as a general molecular-geometry api", "plotting framework", "stable serialization format")
-        @test length(filter(!=(:GaussletBases), Docs.undocumented_names(GaussletBases))) == 23
+        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name),
+            angular_producer_exports)
+        @test occursin("## Experimental Angular Profile And Sequence Producers", docs_site_reference_export) &&
+              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_export)\n"), angular_producer_exports)
+        @test :ShellLocalAngularProfileKey in names(GaussletBases) &&
+              !Base.Docs.hasdoc(GaussletBases, :ShellLocalAngularProfileKey) &&
+              !occursin("\nShellLocalAngularProfileKey\n", "\n$(docs_site_reference_export)\n")
+        @test contains_all_lower(docs_site_angular_track, "experimental producer-side state",
+            "exact injected-ylm block before its mixed complement", "deterministic labels", "gauge metadata",
+            "provenance identity", "one radial basis", "shell-independent", "continuation/transfer",
+            "adjacent sidecars", "complete non-adjacent upper", "orthonormal", "generalized-overlap",
+            "restart ladders", "givens transformations", "campaign", "orchestration remain external")
+        @test length(filter(!=(:GaussletBases), Docs.undocumented_names(GaussletBases))) == 16
 
         @test contains_all(
             docs_site_reference_export,

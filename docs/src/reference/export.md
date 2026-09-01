@@ -149,6 +149,23 @@ This is a producer-side contract for external continuation studies. It exports:
 It does not yet include the later common-target embedding/lift layer, and it
 does not claim compatibility with older dense consumer formats.
 
+## Experimental Angular Profile And Sequence Producers
+
+These bindings expose experimental producer-side profile, overlap, and
+fixed-radial sequence state. They support external continuation and transfer;
+they do not provide restart orchestration or a completed angular application
+workflow.
+
+```@docs
+ShellLocalAngularProfile
+ShellLocalAngularProfileOverlap
+shell_local_angular_profile
+adjacent_shell_local_angular_profile_overlap
+AtomicFixedRadialAngularSequenceLevel
+AtomicFixedRadialAngularSequenceOverlapSidecar
+AtomicFixedRadialAngularSequence
+```
+
 For the narrative explanation of the current producer-side story, see:
 
 - [Current atomic branch](../explanations/current_atomic_branch.md)

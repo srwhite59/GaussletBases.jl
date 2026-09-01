@@ -1,3 +1,11 @@
+"""
+    AtomicFixedRadialAngularSequenceLevel
+
+One angular-resolution level in an experimental fixed-radial sequence. Levels
+share the sequence's radial basis, shell inventory, and shell centers while
+`N_sph`, the angular profile, and dense `payload` change. Level and profile IDs
+are provenance/integrity identities rather than numerical-equivalence claims.
+"""
 struct AtomicFixedRadialAngularSequenceLevel
     sequence_id::String
     level_id::String
@@ -12,6 +20,14 @@ struct AtomicFixedRadialAngularSequenceLevel
     payload::AtomicInjectedAngularHFDMRGHFAdapter
 end
 
+"""
+    AtomicFixedRadialAngularSequenceOverlapSidecar
+
+Source-to-target angular overlap data for one level pair. `pair_kind`
+distinguishes adjacent from direct non-adjacent pairs; labels, gauge versions,
+profile IDs, partition counts, and diagnostics preserve transfer provenance.
+The overlap is shell-independent and is not generalized-overlap authority.
+"""
 struct AtomicFixedRadialAngularSequenceOverlapSidecar
     sequence_id::String
     source_level_index::Int
@@ -36,6 +52,15 @@ struct AtomicFixedRadialAngularSequenceOverlapSidecar
     diagnostics::NamedTuple
 end
 
+"""
+    AtomicFixedRadialAngularSequence
+
+Experimental producer result for increasing angular resolution on one fixed
+radial substrate. `levels` share the radial basis and shell geometry,
+`adjacent_overlaps` covers neighboring levels, and `direct_overlaps` covers the
+complete non-adjacent upper triangle. `sequence_id` is a provenance/integrity
+identity; restart orchestration and downstream campaigns remain external.
+"""
 struct AtomicFixedRadialAngularSequence
     sequence_id::String
     radial_basis_id::String

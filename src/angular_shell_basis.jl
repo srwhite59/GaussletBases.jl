@@ -45,6 +45,15 @@ struct ShellLocalAngularProfileKey
     gauge_version::Symbol
 end
 
+"""
+    ShellLocalAngularProfile
+
+Experimental shell-local angular profile. Its ordered basis places the exact
+injected-Ylm channels before the mixed complement. Use `labels`,
+`gauge_metadata`, `diagnostics`, and `profile_id` to inspect and identify the
+profile; the ID is provenance/integrity information, not a claim of numerical
+equivalence.
+"""
 struct ShellLocalAngularProfile
     key::ShellLocalAngularProfileKey
     basis::ShellLocalInjectedAngularBasis
@@ -57,6 +66,14 @@ struct ShellLocalAngularProfile
     profile_id::String
 end
 
+"""
+    ShellLocalAngularProfileOverlap
+
+Shell-independent source-to-target overlap between two shell-local angular
+profiles, with the associated IDs, labels, exact/mixed counts, and diagnostics.
+The final working bases are intended to be orthonormal, so this object supports
+continuation and transfer rather than a generalized-overlap interpretation.
+"""
 struct ShellLocalAngularProfileOverlap
     source_profile_id::String
     target_profile_id::String
@@ -712,6 +729,14 @@ function _build_shell_local_angular_profile_uncached(
     )
 end
 
+"""
+    shell_local_angular_profile(order::Int; beta=2.0, l_inject=:auto, tau=1e-12, whiten=:svd)
+    shell_local_angular_profile(point_set::SpherePointSet; beta=2.0, l_inject=:auto, tau=1e-12, whiten=:svd)
+
+Construct the experimental profile for one sphere-point set. The result records
+the exact injected-Ylm block followed by the mixed complement, deterministic
+labels and gauge metadata, diagnostics, and a provenance identity.
+"""
 function shell_local_angular_profile(
     order::Int;
     beta::Real = 2.0,
@@ -754,6 +779,14 @@ function shell_local_angular_profile(
     end
 end
 
+"""
+    adjacent_shell_local_angular_profile_overlap(source, target)
+    adjacent_shell_local_angular_profile_overlap(source_order, target_order; kwargs...)
+
+Construct the shell-independent overlap from a source angular profile to a
+target profile. Sequence producers retain neighboring overlaps as adjacent
+sidecars and classify complete non-adjacent upper-triangle overlaps separately.
+"""
 function adjacent_shell_local_angular_profile_overlap(
     source::ShellLocalAngularProfile,
     target::ShellLocalAngularProfile,
