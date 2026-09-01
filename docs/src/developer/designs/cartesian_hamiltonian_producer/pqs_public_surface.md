@@ -1123,8 +1123,9 @@ families and every next-minor de-export candidate are excluded from maintenance.
 ## Experimental QW Geometry Diagnostics Documentation
 
 `HP-PUBLIC-QW-GEOMETRY-DOC-FN-01` and
-`HP-PUBLIC-QW-GEOMETRY-DOC-TEST-01` authorize documentation for exactly these
-three exported route-specific expert diagnostics:
+`HP-PUBLIC-QW-GEOMETRY-DOC-TEST-01` maintain the accepted documentation from
+commit `c553c40c2a464f639c4385b6155d37963facdc3d` for exactly these three
+exported route-specific expert diagnostics:
 
 - `bond_aligned_diatomic_nested_geometry_diagnostics`;
 - `bond_aligned_homonuclear_chain_geometry_diagnostics`; and
@@ -1156,31 +1157,32 @@ spacings, mapping kinds, monotonicity and symmetry errors, and x-y center
 agreement. Neither route constructs a nested source, Hamiltonian, solver input,
 arbitrary-orientation model, or heteronuclear model.
 
-Implementation is limited to concise docstrings in
+The accepted implementation is limited to concise docstrings in
 `src/ordinary_qw_nested_frontends.jl` and
 `src/ordinary_qw_types_and_bases.jl`, one compact section titled
 "Experimental QW geometry diagnostics" in
-`docs/src/reference/operators_and_diagnostics.md`, an optional short
-discoverability cross-reference in
-`docs/src/explanations/current_ordinary_branch.md`, and focused checks in
-`test/docs/runtests.jl`. Preferred/hard additions are `55/80` source-docstring,
-`25/40` reader/reference, and `10/16` docs-test lines, with no new file.
+`docs/src/reference/operators_and_diagnostics.md`, and focused checks in
+`test/docs/runtests.jl`. It added `31` source-docstring and `24` reader-
+documentation lines and changed the docs tests by `+13/-1`, with no new file
+or executable change.
 
-Acceptance requires all three names to remain exported, acquire Julia
-docstrings, and appear together in the curated reference. The checks must
-distinguish exact source reuse from basis-overload source construction and
-lightweight chain/square inspection from nested-diatomic construction. The
-undocumented exported-binding count, excluding the module self-binding, must
-fall exactly from `12` to `9`. Existing core tests and unchanged Supported-floor
-CI are the numerical acceptance owners.
+All three names remain exported, carry Julia docstrings, and appear together
+in the curated reference. The checks distinguish exact source reuse from
+basis-overload source construction and lightweight chain/square inspection
+from nested-diatomic construction. The undocumented exported-binding count,
+excluding the module self-binding, is exactly `9` after the accepted
+`12 -> 9` reduction. Relevant core geometry testsets passed `6/6`, `14/14`,
+`14/14`, and `35/35`; docs passed `151/151` plus `10/10`. Remote CI run
+`33545468306` passed all three numerical gates, and Docs run `33545468193`
+passed and deployed the verified live reference.
 
 No returned field, definition, signature, default, method, dispatch,
 construction behavior, export, ordinary numerical test, workflow, dependency,
 numerical policy, version, tag, or release may change. This packet excludes
 `cartesian_base_working_basis`, sliced-chain operators, every next-minor
 de-export candidate, global documentation policy, and broader QW work. If
-truthful documentation requires any excluded change or exceeds a hard budget,
-make no implementation commit and report the exact mismatch.
+maintenance requires any excluded change, it needs a separate authority
+amendment.
 
 ## Supported Public Surface Documentation
 

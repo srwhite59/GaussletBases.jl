@@ -1330,3 +1330,34 @@ Guardrail / carrying cost:
   paths and hard budgets. If truthful documentation requires behavior, API, or
   excluded-surface work, implementation must stop and report. No checkpoint is
   due.
+
+## Cartesian Hamiltonian Producer Pass 567 - Close Experimental QW Geometry Diagnostics Documentation
+
+Commit(s):
+- `c553c40c2a464f639c4385b6155d37963facdc3d`;
+- this docs-only lifecycle closeout.
+
+Summary / goal advancement:
+- Accepted accurate expert-facing documentation for the nested diatomic,
+  homonuclear chain, and axis-aligned square QW geometry diagnostics. The
+  reader boundary distinguishes exact nested-source reuse from basis-overload
+  construction and lightweight existing-basis chain/square inspection from
+  nested construction while retaining read-only, route-specific semantics.
+- MT6 advances the classified expert reader surface to maintenance. The
+  undocumented-export backlog fell exactly `12 -> 9` without changing QW or
+  nested behavior, defaults, API, numerics, workflow, or namespace.
+
+Validation / carrying cost:
+- Implementation commit `c553c40c2` passed relevant core geometry testsets
+  `6/6`, `14/14`, `14/14`, and `35/35`, docs `151/151` and `10/10`, package
+  load, authority check/self-test, Documenter, and diff checks. Remote CI
+  `33545468306` passed all three gates; Docs `33545468193` passed, deployed,
+  and the live reference was verified at the implementation commit.
+- added: `31` source-docstring and `24` reader-documentation lines; changed:
+  docs tests `+13/-1`; deleted: no implementation; simplified: three related
+  diagnostics now share one explicit expert reference boundary; quarantined:
+  general geometry, serialization, Hamiltonians, solvers, working-basis,
+  sliced-chain, and namespace-reduction work; new files and metadata none.
+- exact remaining blocker: none for this packet. The FN record returns to
+  implemented maintenance and the TEST record to completed maintenance. No
+  strategic-goal change occurred, and no checkpoint is due.

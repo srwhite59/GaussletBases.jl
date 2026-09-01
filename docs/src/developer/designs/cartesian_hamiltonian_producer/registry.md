@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `5ece535a6245aa96ef0f476924d73747d3b5cd0adc5a016f32e598b1a3b425e6`.
+> [authority.toml](authority.toml), SHA-256 `e4ff56641bb7ba1a1f93fd9afef06751b27c850283e7a063afae734204d92bc5`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2859,27 +2859,28 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-QW-GEOMETRY-DOC-FN-01 - document experimental QW geometry diagnostics
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Experimental QW Geometry Diagnostics Documentation`
 - **Owned paths:**
-  - `docs` / `existing`: `docs/src/explanations/current_ordinary_branch.md`
   - `docs` / `existing`: `docs/src/reference/operators_and_diagnostics.md`
   - `source` / `existing`: `src/ordinary_qw_nested_frontends.jl`
   - `source` / `existing`: `src/ordinary_qw_types_and_bases.jl`
 - **Evidence:**
   - `git_commit`: `6569fbb75107cdc24fa4213eb44dcd2a47578b7f`
+  - `git_commit`: `c553c40c2a464f639c4385b6155d37963facdc3d`
   - `manager_pass`: `566`
+  - `manager_pass`: `567`
 - **Dependencies:** `HP-PUBLIC-EXPERT-GEOMETRY-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01`, `HP-QW-NESTED-DIAT-FN-01`
-- **Scope:** Document exactly the three existing exported experimental QW geometry-diagnostic entry points bond\_aligned\_diatomic\_nested\_geometry\_diagnostics, bond\_aligned\_homonuclear\_chain\_geometry\_diagnostics, and axis\_aligned\_homonuclear\_square\_lattice\_geometry\_diagnostics. Add only concise docstrings in src/ordinary\_qw\_nested\_frontends.jl and src/ordinary\_qw\_types\_and\_bases.jl, one compact Experimental QW geometry diagnostics section in docs/src/reference/operators\_and\_diagnostics.md, and only if needed one short discoverability cross-reference in docs/src/explanations/current\_ordinary\_branch.md. These are route-specific expert diagnostics, not a general molecular-geometry API or stable serialization schema, and returned vectors and route-specific named records are read-only inspection data. The nested source overload preserves and inspects the exact supplied source without rebuilding; the basis overload constructs the normalized nested source through its documented frontend controls and is not a cheap geometry-only query. Document geometry, child/shared retention contracts, shell counts and dimensions, actual shared-shell provenance, fixed dimension, contract audit, and atom-growth anatomy while preserving forwarding of shared-shell policy, endcap/panel q and L, packet kernel, retention overrides, split guards, and protection controls without restating every signature default. The chain diagnostic only inspects an existing experimental homonuclear chain basis and reports chain coordinates, mapped centers, nucleus/midpoint spacings, mapping kinds, monotonicity, and axis-symmetry error. The square diagnostic only inspects an existing axis-aligned homonuclear square basis and reports x/y coordinates, Cartesian centers, nuclear/midpoint/plane-center spacings, mapping kinds, monotonicity and symmetry errors, and x-y center agreement. Chain and square construct no nested source, Hamiltonian, solver input, arbitrary-orientation model, or heteronuclear model. Preferred/hard added-line limits are 55/80 source-docstring and 25/40 combined reader/reference lines, with no new file. Preserve every returned field, definition, signature, default, method, dispatch, construction behavior, export, numerical result, ordinary test, workflow, dependency, numerical policy, compatibility floor, version, tag, and release artifact. Exclude cartesian\_base\_working\_basis, sliced-chain operators, every next-minor de-export candidate, global documentation policy, API changes, and broader QW work. If truthful documentation requires an excluded change or exceeds a hard budget, make no implementation commit and report the mismatch.
+- **Scope:** Maintain only the accepted experimental QW geometry-diagnostics documentation from commit c553c40c2a464f639c4385b6155d37963facdc3d: docstrings for bond\_aligned\_diatomic\_nested\_geometry\_diagnostics in src/ordinary\_qw\_nested\_frontends.jl and for bond\_aligned\_homonuclear\_chain\_geometry\_diagnostics and axis\_aligned\_homonuclear\_square\_lattice\_geometry\_diagnostics in src/ordinary\_qw\_types\_and\_bases.jl, plus their compact shared section in docs/src/reference/operators\_and\_diagnostics.md. Preserve these as route-specific expert diagnostics rather than a general molecular-geometry API or stable serialization schema, with returned vectors and route-specific named records treated as read-only inspection data. The nested source overload preserves and inspects the exact supplied source without rebuilding; the basis overload constructs the normalized nested source through its documented frontend controls and is not a cheap geometry-only query. Preserve the documented geometry, child/shared retention, shell count/dimension, actual provenance, fixed-dimension, contract-audit, atom-growth, and shared-shell/endcap/panel/packet/retention/split/protection boundaries. The chain and square diagnostics inspect only their existing experimental homonuclear bases and retain the documented coordinate, mapped-center, spacing, mapping-kind, monotonicity, symmetry, and x-y agreement summaries without constructing nested sources, Hamiltonians, solver inputs, arbitrary-orientation models, or heteronuclear models. The accepted implementation added 31 source-docstring and 24 reader-documentation lines, with no new file or executable change. Preserve every returned field, definition, signature, default, method, dispatch, construction behavior, export, numerical result, ordinary test, workflow, dependency, numerical policy, compatibility floor, version, tag, and release artifact. Exclude cartesian\_base\_working\_basis, sliced-chain operators, every next-minor de-export candidate, global documentation policy, API changes, and broader QW work.
 
 ### HP-PUBLIC-QW-GEOMETRY-DOC-TEST-01 - validate experimental QW geometry diagnostics documentation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2888,9 +2889,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
   - `git_commit`: `6569fbb75107cdc24fa4213eb44dcd2a47578b7f`
+  - `git_commit`: `c553c40c2a464f639c4385b6155d37963facdc3d`
   - `manager_pass`: `566`
+  - `manager_pass`: `567`
 - **Dependencies:** `HP-PUBLIC-EXPERT-GEOMETRY-DOC-TEST-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-QW-GEOMETRY-DOC-FN-01`
-- **Scope:** Add focused checks only in existing test/docs/runtests.jl, with a preferred limit of 10 and hard limit of 16 added lines. Require bond\_aligned\_diatomic\_nested\_geometry\_diagnostics, bond\_aligned\_homonuclear\_chain\_geometry\_diagnostics, and axis\_aligned\_homonuclear\_square\_lattice\_geometry\_diagnostics to remain exported, carry Julia documentation, and appear together in the Experimental QW geometry diagnostics section of docs/src/reference/operators\_and\_diagnostics.md. Require reader wording to distinguish exact nested-source reuse from basis-overload source construction and lightweight existing-basis chain/square inspection from normalized nested-source construction. Preserve the route-specific, read-only inspection, result-summary, frontend-control forwarding, non-general-geometry, non-serialization, non-Hamiltonian, non-solver, non-arbitrary-orientation, and non-heteronuclear boundaries from the canonical contract. The undocumented exported-binding count, excluding the module self-binding, must fall exactly from 12 to 9. Use Documenter as the executable @docs resolution gate and existing core tests plus unchanged Supported-floor CI as numerical acceptance. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, export change, API work, dependency, example, version, tag, release, sliced-chain, working-basis, or namespace-reduction work.
+- **Scope:** Maintain only the accepted focused documentation checks in test/docs/runtests.jl from commit c553c40c2a464f639c4385b6155d37963facdc3d. They require bond\_aligned\_diatomic\_nested\_geometry\_diagnostics, bond\_aligned\_homonuclear\_chain\_geometry\_diagnostics, and axis\_aligned\_homonuclear\_square\_lattice\_geometry\_diagnostics to remain exported, carry Julia documentation, and appear together in the Experimental QW geometry diagnostics section of docs/src/reference/operators\_and\_diagnostics.md. Preserve the tested exact-source-reuse versus basis-overload construction distinction, lightweight existing-basis chain/square versus nested-source construction distinction, and route-specific read-only inspection, result-summary, frontend-control, non-general-geometry, non-serialization, non-Hamiltonian, non-solver, non-arbitrary-orientation, and non-heteronuclear limits. The undocumented exported-binding count, excluding the module self-binding, is exactly 9 after the accepted 12-to-9 reduction. The accepted docs-test delta is +13/-1. Documenter remains the executable @docs resolution gate; relevant core geometry testsets passed 6/6, 14/14, 14/14, and 35/35, and remote CI run 33545468306 passed all three gates. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, export change, API work, dependency, example, version, tag, release, sliced-chain, working-basis, or namespace-reduction work.
 
 ### HP-PUBLIC-RADIAL-PARITY-DOC-FN-01 - document radial paper-parity reproducibility exports
 
