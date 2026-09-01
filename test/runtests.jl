@@ -14,6 +14,7 @@ const _AVAILABLE_TEST_GROUPS = (
     :radial,
     :core,
     :angular,
+    :angular_public,
     :ida,
     :cartesian,
     :docs,
@@ -895,6 +896,10 @@ end
 
 if _test_group_enabled(:angular)
     include(joinpath(@__DIR__, "angular", "runtests.jl"))
+end
+
+if _test_group_enabled(:angular_public)
+    include(joinpath(@__DIR__, "driver_public", "angular_fixed_radial_sequence_runtests.jl"))
 end
 
 if _test_group_enabled(:ida)
