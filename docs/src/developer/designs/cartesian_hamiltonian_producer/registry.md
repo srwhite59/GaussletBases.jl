@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `d0c2bee4c7cc63bcd1d0e0fb293bc36134fc093f5b9aef0240ad21786c60a92c`.
+> [authority.toml](authority.toml), SHA-256 `f037512f24adb41c70d942e7e05c9f733192739287e4fbe39536e3c7f4452735`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2529,8 +2529,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01 - document experimental angular profile and sequence producers
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2542,14 +2542,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/angular_shell_basis.jl`
 - **Evidence:**
   - `git_commit`: `628a46599dc7d1a85458a22a78fe095b7783b53a`
+  - `git_commit`: `9b410ea14356cee6085ad2de51e73849695a0d97`
   - `manager_pass`: `562`
+  - `manager_pass`: `563`
 - **Dependencies:** `HP-ANGULAR-PUBLIC-CI-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`
-- **Scope:** Document exactly the seven existing exported experimental angular producer bindings ShellLocalAngularProfile, ShellLocalAngularProfileOverlap, shell\_local\_angular\_profile, adjacent\_shell\_local\_angular\_profile\_overlap, AtomicFixedRadialAngularSequenceLevel, AtomicFixedRadialAngularSequenceOverlapSidecar, and AtomicFixedRadialAngularSequence. Add only concise docstrings in src/angular\_shell\_basis.jl and src/angular\_sequence\_export.jl, one compact reader explanation in docs/src/explanations/angular\_research\_track.md, and one curated seven-binding section in docs/src/reference/export.md. Clearly label this as experimental producer-side state rather than a completed angular application workflow; preserve exact injected-Ylm versus mixed-complement ordering, deterministic labels and gauge metadata, provenance/integrity-only profile/level/sequence IDs, shell-independent source-to-target profile overlaps, adjacent versus complete non-adjacent direct upper-triangle sidecars, and one common radial basis/shell inventory/shell-center set across levels with changing N\_sph/profile. Final working bases remain intended orthonormal, so sidecars are continuation/transfer data rather than generalized-overlap authority. Direct consumers to documented IDs, labels, gauge metadata, diagnostics, and payload access without promoting ShellLocalAngularProfileKey or cache behavior as consumer API. Hard added-line limits are 95 source-docstring and 45 combined reader/reference lines, with no new file. Preserve every definition, field, signature, method, dispatch, export, cache behavior, numerical result, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude restart orchestration, common-target lifts, Givens transformations, downstream campaigns, key de-export, source behavior, API changes, examples, fixtures, and global documentation policy. If truthful documentation requires any excluded change, make no implementation commit and report the mismatch.
+- **Scope:** Maintain only the accepted experimental angular producer documentation from commit 9b410ea14356cee6085ad2de51e73849695a0d97: docstrings for the seven exported bindings ShellLocalAngularProfile, ShellLocalAngularProfileOverlap, shell\_local\_angular\_profile, adjacent\_shell\_local\_angular\_profile\_overlap, AtomicFixedRadialAngularSequenceLevel, AtomicFixedRadialAngularSequenceOverlapSidecar, and AtomicFixedRadialAngularSequence in src/angular\_shell\_basis.jl and src/angular\_sequence\_export.jl; the compact reader explanation in docs/src/explanations/angular\_research\_track.md; and the curated seven-binding section in docs/src/reference/export.md. Preserve the experimental producer-side classification, exact injected-Ylm versus mixed-complement ordering, deterministic labels and gauge metadata, provenance/integrity-only profile/level/sequence IDs, shell-independent source-to-target overlaps, adjacent versus complete non-adjacent direct upper-triangle sidecars, and one common radial basis/shell inventory/shell-center set across levels with changing N\_sph/profile. Final working bases remain intended orthonormal, so sidecars are continuation/transfer data rather than generalized-overlap authority. The accepted implementation added 58 source-docstring lines and changed reader/reference documentation by +42/-10, with no new file or executable change. ShellLocalAngularProfileKey remains exported but undocumented and absent from the curated reference; its possible next-minor de-export is outside this grant. Preserve every definition, field, signature, method, dispatch, export, cache behavior, numerical result, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude restart orchestration, common-target lifts, Givens transformations, downstream campaigns, key documentation or de-export, source behavior, API changes, examples, fixtures, and global documentation policy.
 
 ### HP-PUBLIC-ANGULAR-PRODUCER-DOC-TEST-01 - validate experimental angular producer documentation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2558,9 +2560,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
   - `git_commit`: `628a46599dc7d1a85458a22a78fe095b7783b53a`
+  - `git_commit`: `9b410ea14356cee6085ad2de51e73849695a0d97`
   - `manager_pass`: `562`
+  - `manager_pass`: `563`
 - **Dependencies:** `HP-ANGULAR-PUBLIC-CI-TEST-01`, `HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`
-- **Scope:** Add focused checks only in the existing test/docs/runtests.jl owner, with a preferred limit of 12 and hard limit of 18 added lines. Require the exact seven experimental angular producer bindings to remain exported, carry Julia documentation, and appear in the curated export reference with the producer-only, exact/mixed partition, deterministic label/gauge, provenance-identity, shell-independent overlap, adjacent/direct, shared-radial-substrate, orthonormal-final-basis, transfer-only, and excluded-campaign boundaries from the canonical contract. Require ShellLocalAngularProfileKey to remain exported temporarily while having no Julia docstring and no curated reference entry; it is the sole angular next-minor de-export candidate, but no de-export is authorized. The undocumented exported-binding count, excluding the module self-binding, must fall exactly from 23 to 16. Use Documenter as the executable @docs resolution gate and run the existing angular\_public owner 83/83 without repeating the full roughly 930-second angular research suite. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, key documentation, export change, dependency, example, version, tag, or release work.
+- **Scope:** Maintain only the accepted focused documentation checks in test/docs/runtests.jl from commit 9b410ea14356cee6085ad2de51e73849695a0d97. They require the exact seven experimental angular producer bindings to remain exported, documented, and present in the curated export reference with the producer-only, exact/mixed partition, deterministic label/gauge, provenance-identity, shell-independent overlap, adjacent/direct, shared-radial-substrate, orthonormal-final-basis, transfer-only, and excluded-campaign boundaries from the canonical contract. ShellLocalAngularProfileKey must remain exported temporarily while having no Julia docstring and no curated reference entry; its possible next-minor de-export is outside this grant. The undocumented exported-binding count, excluding the module self-binding, is exactly 16 after the accepted 23-to-16 reduction. The accepted docs-test delta is +18/-1. Documenter remains the executable @docs resolution gate; the existing angular\_public owner passed 83/83, while the roughly 930-second full angular research suite was correctly not repeated and is not required for routine maintenance here. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, key documentation, export change, dependency, example, version, tag, or release work.
 
 ### HP-PUBLIC-ATOMIC-IDA-DOC-FN-01 - document atomic IDA inspection and tiny two-electron reference bindings
 

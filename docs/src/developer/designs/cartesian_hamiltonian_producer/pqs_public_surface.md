@@ -1009,8 +1009,9 @@ work, source behavior, dependency, example, API reduction, or release work.
 ## Experimental Angular Producer Documentation
 
 `HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01` and
-`HP-PUBLIC-ANGULAR-PRODUCER-DOC-TEST-01` authorize one bounded documentation
-packet for exactly these seven durable experimental producer bindings:
+`HP-PUBLIC-ANGULAR-PRODUCER-DOC-TEST-01` maintain the accepted documentation
+for exactly these seven durable experimental producer bindings, implemented by
+commit `9b410ea14356cee6085ad2de51e73849695a0d97`:
 
 - `ShellLocalAngularProfile`;
 - `ShellLocalAngularProfileOverlap`;
@@ -1039,29 +1040,27 @@ reinterpretation. Reader documentation must direct consumers to the documented
 IDs, labels, gauge metadata, diagnostics, and existing payload access rather
 than to the profile cache key.
 
-Implementation is limited to concise docstrings in
+Maintenance is limited to the accepted concise docstrings in
 `src/angular_shell_basis.jl` and `src/angular_sequence_export.jl`, one compact
 reader-facing addition in `docs/src/explanations/angular_research_track.md`,
 one curated seven-binding section in `docs/src/reference/export.md`, and
-focused checks in `test/docs/runtests.jl`. Preferred/hard added-line limits are
-`70/95` source-docstring lines, `30/45` combined reader/reference lines, and
-`12/18` docs-test lines. Add no file.
+focused checks in `test/docs/runtests.jl`. The accepted implementation added
+`58` source-docstring lines, changed reader/reference documentation by
+`+42/-10`, and changed the docs tests by `+18/-1`, with no new file.
 
-The implementation must keep all seven names exported, documented, and in the
-curated reference. `ShellLocalAngularProfileKey` must remain exported
-temporarily but have neither a docstring nor a reference entry. The
-undocumented exported-binding count, excluding the module self-binding, must
-fall exactly from `23` to `16`. The remaining state includes this key as the
-sole angular next-minor de-export candidate; no de-export is authorized here.
-The existing `angular_public` owner must pass `83/83`. Do not repeat the
-roughly `930`-second full angular suite.
+All seven names remain exported, documented, and in the curated reference.
+`ShellLocalAngularProfileKey` remains exported temporarily but has neither a
+docstring nor a reference entry. The undocumented exported-binding count,
+excluding the module self-binding, is exactly `16`, reduced from `23`. The key
+remains the sole angular next-minor de-export candidate; no de-export is
+authorized here. The focused `angular_public` owner passed `83/83`; the roughly
+`930`-second full angular suite was not repeated and is not a routine
+maintenance gate for this documentation.
 
 Restart orchestration, common-target lifts, Givens transformations, downstream
 campaigns, cache API, definition or field changes, signatures, dispatch,
 exports, cache behavior, numerical policy or results, workflows, dependencies,
-versions, and releases remain outside this packet. If truthful documentation
-or the exact count requires any such change, make no implementation commit and
-report the mismatch.
+versions, releases, and key de-export remain outside maintenance authority.
 
 ## Supported Public Surface Documentation
 

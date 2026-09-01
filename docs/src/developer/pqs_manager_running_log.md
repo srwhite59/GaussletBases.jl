@@ -1183,3 +1183,37 @@ Guardrail / carrying cost:
   listed files and budgets. The key must stay exported but undocumented and
   absent from the reference; any required behavioral/export/cache change is a
   stop-and-report outcome. No checkpoint is due.
+
+## Cartesian Hamiltonian Producer Pass 563 - Close Experimental Angular Producer Documentation
+
+Commit(s):
+- `9b410ea14356cee6085ad2de51e73849695a0d97`;
+- this docs-only lifecycle closeout.
+
+Summary / goal advancement:
+- Accepted documentation for all seven durable experimental shell-profile and
+  fixed-radial-sequence producer bindings. The implementation added accurate
+  docstrings, a curated export section, and a compact research-track reader
+  explanation while preserving the producer-only boundary, exact/mixed mode
+  ordering, deterministic labels and gauge data, provenance-only identities,
+  shell-independent overlaps, adjacent/direct sidecars, and common radial
+  substrate semantics.
+- MT6 advances the classified angular reader surface to maintenance. The
+  undocumented-export backlog fell exactly `23 -> 16` without an API or
+  numerical change. `ShellLocalAngularProfileKey` remains exported,
+  undocumented, and unlisted; its possible next-minor de-export stays separate.
+
+Validation / carrying cost:
+- Implementation commit `9b410ea14` passed `angular_public` `83/83` in `11.9`
+  seconds, docs `143/143` and `10/10`, package load, authority check/self-test,
+  Documenter, log bound, and diff checks. Remote CI `33520726731` passed all
+  three gates; Docs `33520726763` passed and deployed. The full roughly
+  `930`-second angular suite was intentionally not repeated.
+- added: `58` source-docstring lines; changed: reader/reference `+42/-10` and
+  docs tests `+18/-1`; deleted: no implementation; simplified: seven related
+  exports now form one coherent documented family; quarantined: restart
+  orchestration, target lifts, Givens transformations, campaigns, and key
+  de-export; new files and metadata fields none.
+- exact remaining blocker: none for this packet. Both IDs return to maintenance
+  only; no workflow, cache, dependency, version, release, or strategic-goal
+  change occurred. No checkpoint is due.
