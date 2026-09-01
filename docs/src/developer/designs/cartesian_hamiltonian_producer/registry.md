@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `00d4598c8f7305a09376fd3dbd99978bab1439c8c4665fc26681fbb48abc9aec`.
+> [authority.toml](authority.toml), SHA-256 `e13880f11ed59b9fcce558df5f868205e835cd23c0a6a2360dd1b3dec8aa522d`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -9,6 +9,39 @@ owned paths, scope, `current.md`, `invariants.md`, and canonical contract.
 Lifecycle never grants work by itself. Any missing or conflicting fact fails closed.
 
 ## Records
+
+### HP-ANGULAR-TEST-CONTROL-FN-01 - angular optional-consumer control-flow repair
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [test\_suite\_reorganization\_plan.md](../../test_suite_reorganization_plan.md); heading `Angular Optional-Consumer Control Flow`
+- **Owned paths:**
+  - `test` / `existing`: `test/angular/runtests.jl`
+  - `test` / `existing`: `test/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `5f1708d989269562d9182ed630336104c258da2e`
+  - `manager_pass`: `558`
+- **Dependencies:** none
+- **Scope:** Repair only the optional HFDMRG handshake and angular test selection in \`test/runtests.jl\` and \`test/angular/runtests.jl\`. A missing checkout must produce one visible skip limited to the handshake; if the path exists, load/import errors must propagate as test failures. Remove the file-level early return and catch-all absence conflation, preserve execution of every later angular test, retain explicit \`angular\` selection and its complete owner, and remove only \`angular\` from \`\_FAST\_TEST\_GROUPS\`. Prefer approximately +6/-4 control-flow lines and stop if more than 12 added control-flow lines are required. Preserve every numerical assertion, angular implementation, public API, dependency, workflow, and other group definition. Add no file, mock package, configuration/environment interface, helper abstraction, framework, fixed-radial extraction, angular-export documentation, ShellLocalAngularProfileKey de-export, CI ownership change, or release work.
+
+### HP-ANGULAR-TEST-CONTROL-TEST-01 - angular optional-consumer control-flow validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [test\_suite\_reorganization\_plan.md](../../test_suite_reorganization_plan.md); heading `Angular Optional-Consumer Control Flow`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `5f1708d989269562d9182ed630336104c258da2e`
+  - `manager_pass`: `558`
+- **Dependencies:** `HP-ANGULAR-TEST-CONTROL-FN-01`
+- **Scope:** If direct acceptance evidence is insufficient, add at most 12 focused regression lines to \`test/docs/runtests.jl\` proving the angular group remains available, the fast alias excludes it, the file-level early return is absent, and an existing-checkout import failure is not swallowed. The committed regression may inspect only the bounded runner contract and must not duplicate angular numerics, add a fake package or helper, change another group, or create a file. Acceptance still requires an absent-checkout visible skip with a later test executing, equivalent present-checkout failure-propagation evidence, and one complete explicitly selected angular run on a supported Julia version.
 
 ### HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01 - scheduled Cartesian internal numerical-maintenance workflow
 

@@ -1913,3 +1913,30 @@ Carrying-cost accounting:
   and all reserved implementations remain useful for qualified research use.
 - exact remaining caller/blocker: none for Pass 556; executable source delta
   `0/0`, new files and metadata fields none.
+
+## Cartesian Hamiltonian Producer Pass 558 - Authorize Angular Optional-Consumer Control-Flow Repair
+
+Commit(s):
+- baseline `5f1708d989269562d9182ed630336104c258da2e`;
+- this docs-only authority amendment.
+
+Summary / goal advancement:
+- Added `HP-ANGULAR-TEST-CONTROL-FN-01/TEST-01` for one test-runner-only
+  correctness repair. A missing optional HFDMRG checkout may visibly skip only
+  its handshake; an existing checkout that fails to load/import must fail; the
+  angular file may not return early; and explicit `angular` selection must run
+  the complete owner after removal from the misleading `fast` set.
+- MT1 advances a narrow fail-closed conformance repair. The implementation is
+  limited to two existing runner files, about `+6/-4` lines with `12` added
+  control-flow lines hard, plus at most `12` focused lines in the existing docs
+  test. The complete roughly 16-minute angular owner is required once because
+  it is the only acceptance proof that all tests after the former return run.
+
+Guardrail / carrying cost:
+- deleted: the early return, catch-all absence conflation, and `angular` fast
+  membership; simplified: optional-consumer absence becomes local and visible;
+  quarantined: fixed-radial extraction, seven angular exports, shell-key
+  de-export, and CI ownership; not deleted because: all numerical angular tests
+  and the explicit group remain live.
+- exact remaining blocker: repo-manager implementation and acceptance evidence;
+  source/API/workflow delta must remain `0/0`, with no new file or framework.

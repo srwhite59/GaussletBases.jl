@@ -40,6 +40,7 @@ claim.
 
 | Lane | State | Exact next boundary |
 | --- | --- | --- |
+| `HP-ANGULAR-TEST-CONTROL-*` | Optional-consumer control-flow repair approved, not implemented | Limit absence to one visible handshake skip, propagate failures from an existing HFDMRG checkout, remove the file-level early return, and keep explicit `angular` selection complete while removing it from `fast`; no numerical, CI, API, or broader angular change |
 | `HP-PQS-ASPECTSHELL-*` | Implemented/completed maintenance; eligible PQS/WL shells share `(ns,ns,L)` and equal aggregate dimensions | Preserve parent/PQS parity and fail on missing shape, axis-count, aggregate-column, or Gram inconsistencies |
 | `HP-FN-00` / `HP-MCOMX-TERM-FN-01` | Direct support-local PQS shell-seed assembly implemented; maintenance | Preserve byte-identical ordinary/mapped atomic/diatomic coefficients and all public endpoints without restoring global-full helpers; cold compilation, scalar-loop optimization, Gram policy, and compatibility cleanup remain separate |
 | `HP-FN-03` / `HP-DRV-STAGE-FN-01` | Exact-order four-element terminal Gaussian-sum reduction implemented; call-local buffers and staged producer remain maintenance | Preserve four explicit accumulators, each element's original 135-term order, bitwise PQS/WL matrices, and all endpoint facts; eight-lane batching and further loop restructuring remain unauthorized, while the next separate performance investigation is the cold reporting boundary |

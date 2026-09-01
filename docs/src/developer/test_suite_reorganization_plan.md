@@ -261,6 +261,47 @@ Repo-specific classification:
 - `test/nested/cartesian_pair_stage_low_order_policy_runtests.jl` is an
   integration gate, not a per-pass gate
 
+## Angular Optional-Consumer Control Flow
+
+`HP-ANGULAR-TEST-CONTROL-FN-01` and
+`HP-ANGULAR-TEST-CONTROL-TEST-01` authorize one bounded repair to the angular
+runner's optional HFDMRG handshake. The current file-level early return is not
+an acceptable absence policy: it can stop the included angular owner after
+`507` of `61,930` assertions and silently omit the remaining `61,423`.
+
+The repair must preserve these boundaries:
+
+- a missing optional HFDMRG checkout produces one visible skip limited to the
+  handshake testset;
+- if the configured checkout path exists, loading or importing HFDMRG must
+  succeed or fail the test normally; no catch-all may reinterpret an import or
+  load failure as absence;
+- the angular owner contains no file-level early return, and every test after
+  the optional handshake continues to execute;
+- `angular` remains an explicitly selectable group and continues to include
+  `test/angular/runtests.jl`, but it is removed from `_FAST_TEST_GROUPS` because
+  the complete research suite takes roughly 16 minutes;
+- all numerical assertions, angular implementations, public APIs,
+  dependencies, workflows, and other group definitions remain unchanged.
+
+Implementation is limited to `test/runtests.jl` and
+`test/angular/runtests.jl`. The direct control-flow repair should be about
+`+6/-4` lines and may add at most `12` control-flow lines. If needed, at most
+`12` focused regression lines may be added to the existing
+`test/docs/runtests.jl`; no new test file, mock package, configuration or
+environment interface, helper abstraction, or framework is authorized.
+
+Acceptance requires an absent-checkout run with a visible handshake skip and
+proof that a later angular test executed; a present-checkout run or equivalent
+focused evidence showing that import failures propagate; one complete explicit
+`angular` run on a supported Julia version; exact confirmation that `fast` no
+longer selects `angular`; and package-load, authority, documentation, and diff
+checks. The roughly 16-minute complete run is justified once at implementation
+acceptance because only the full owner proves that the former early-return
+boundary no longer truncates the suite. Fixed-radial extraction, documentation
+of angular exports, `ShellLocalAngularProfileKey` de-export, CI ownership, and
+all other angular classification remain separate.
+
 ## Scheduled Cartesian Internal Maintenance Gate
 
 `HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01` and
