@@ -105,6 +105,9 @@
         :bond_aligned_diatomic_nested_geometry_diagnostics,
         :bond_aligned_homonuclear_chain_geometry_diagnostics,
         :axis_aligned_homonuclear_square_lattice_geometry_diagnostics)
+    sliced_chain_exports = (
+        :SlicedHydrogenChain, :sliced_hydrogen_chain, :sliced_h1,
+        :sliced_h1_bandwidth, :sliced_vee, Symbol("sliced_row!"))
     docs_site_developer = read_doc("docs", "src", "developer", "index.md")
     docs_site_developer_notes = read_doc("docs", "src", "developer", "supporting_notes.md")
     docs_site_architecture = read_doc("docs", "src", "developer", "architecture.md")
@@ -675,7 +678,15 @@
             "constructs the normalized nested source", "not a lightweight geometry-only query",
             "shared-shell", "chain and square", "existing experimental bases", "no nested source",
             "hamiltonian", "solver input", "arbitrary-orientation", "heteronuclear")
-        @test length(filter(!=(:GaussletBases), Docs.undocumented_names(GaussletBases))) == 9
+        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name), sliced_chain_exports)
+        @test occursin("## Experimental sliced hydrogen-chain operators", docs_site_reference_atomic) &&
+              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_atomic)\n"), sliced_chain_exports)
+        @test contains_all_lower(docs_site_reference_atomic, "experimental minimal hydrogen-chain producer",
+            "not a general molecular hamiltonian", "lazy, read-only", "separate", "represented structural half-bandwidth",
+            "physical continuum", "two-index density-density", "four-index eri", "retain their chain owner", "mul!",
+            "without owning", "private and non-contractual", "bounded diagnostics", "completely overwrites and returns",
+            "zero allocation", "band-limited", "covers every column", "read-only consumer data", "non-contractual")
+        @test length(filter(!=(:GaussletBases), Docs.undocumented_names(GaussletBases))) == 6
 
         @test contains_all(
             docs_site_reference_export,

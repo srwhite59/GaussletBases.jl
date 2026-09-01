@@ -166,6 +166,38 @@ and
 [High-order endcap/panel H2 chemistry reproduction](../developer/high_order_endcap_panel_h2_chemistry_reproduction_2026-05-16.md)
 for the current validation boundary.
 
+## Experimental sliced hydrogen-chain operators
+
+These six exports form one experimental minimal hydrogen-chain producer. This
+is not a general molecular Hamiltonian, solver, MPO, electron-sector framework,
+or sliced-basis framework. `sliced_hydrogen_chain` returns a
+`SlicedHydrogenChain`. Its stable fields and diagnostics are read-only consumer data.
+Electronic H1 excludes the separate
+`chain.nuclear_repulsion` scalar.
+
+`sliced_h1` and `sliced_vee` return lazy, read-only matrix views. Both retain their chain owner.
+They support `size`, scalar indexing, and `mul!` without owning an `N x N` dense matrix. H1 has
+the represented structural half-bandwidth
+reported by `sliced_h1_bandwidth`; entries beyond it are exactly zero in the
+accepted representation, not necessarily in the physical continuum operator.
+Vee is a two-index density-density interaction, not a four-index ERI tensor.
+The concrete view types are private and non-contractual, and explicit `Matrix`
+materialization is appropriate only for bounded diagnostics.
+
+`sliced_row!` validates the row and caller-owned destination. It completely overwrites and returns
+that destination and preserves zero allocation for a compatible buffer. H1 extraction is
+band-limited; Vee extraction covers every column. Internal bands, Coulomb blocks, coefficients,
+and work arrays remain non-contractual.
+
+```@docs
+SlicedHydrogenChain
+sliced_hydrogen_chain
+sliced_h1
+sliced_h1_bandwidth
+sliced_vee
+sliced_row!
+```
+
 ## Dense Gaussian Coulomb reference
 
 `gaussian_coulomb_pair_matrix` builds a dense pure-Gaussian Coulomb reference

@@ -771,7 +771,32 @@ function sliced_hydrogen_chain(natoms::Integer; R::Real, spacing = nothing,
 end
 
 Base.length(chain::SlicedHydrogenChain) = length(chain.longitudinal.centers)
+
+"""
+    sliced_h1(chain::SlicedHydrogenChain)
+
+Return a read-only, lazily evaluated `AbstractMatrix{Float64}` view of the
+electronic one-body operator. The view retains `chain` and supports matrix
+size, scalar indexing, and `mul!` without owning an `N x N` dense matrix;
+`chain.nuclear_repulsion` remains a separate scalar.
+
+Use `sliced_h1_bandwidth(chain)` for the represented structural
+half-bandwidth. Entries outside it are exactly zero in this representation,
+not necessarily in the unrepresented continuum operator. The concrete view
+type is private; materialize `Matrix(sliced_h1(chain))` only for bounded
+diagnostics.
+"""
 sliced_h1(chain::SlicedHydrogenChain) = _SlicedH1View(chain)
+
+"""
+    sliced_vee(chain::SlicedHydrogenChain)
+
+Return a read-only, lazily evaluated two-index density-density interaction
+view, not a four-index electron-repulsion tensor. The view retains `chain` and
+supports matrix size, scalar indexing, and `mul!` without owning an `N x N`
+dense matrix. Its concrete type is private; explicit `Matrix` materialization
+is intended only for bounded diagnostics.
+"""
 sliced_vee(chain::SlicedHydrogenChain) = _SlicedVeeView(chain)
 
 """
@@ -823,6 +848,17 @@ function Base.getindex(view::_SlicedVeeView, i::Int, j::Int)
     return value_out / longitudinal.integral_weight^2
 end
 
+"""
+    sliced_row!(destination, view, row)
+
+Validate `destination` length and `row`, completely overwrite the
+caller-owned destination, and return it. A compatible buffer follows the
+zero-allocation path. H1 extraction evaluates only its represented band and
+writes zeros elsewhere; Vee extraction evaluates every column.
+
+Obtain supported views from `sliced_h1` or `sliced_vee`; their concrete types
+are private.
+"""
 function sliced_row!(destination::AbstractVector, view::_SlicedH1View, row::Integer)
     length(destination) == size(view, 2) ||
         throw(DimensionMismatch("sliced row destination has wrong length"))
