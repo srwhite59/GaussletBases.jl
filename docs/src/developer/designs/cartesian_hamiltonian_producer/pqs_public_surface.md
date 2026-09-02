@@ -812,6 +812,62 @@ test, helper, metadata, file, or numerical behavior. `ShellLocalAngularProfileKe
 `QiuWhiteHybridOrbital3D` remain unchanged. Package versions, immutable v0.2.0
 tags/releases, workflows, and release state also remain unchanged.
 
+## Package-Root Data And Include Indirection
+
+`HP-PACKAGE-ROOT-PATH-FN-01/TEST-01` authorize only the source-layout Step 0
+needed to make package data and one nested include independent of the directory
+containing their current source file. The 2026-09-02 external follow-up review
+and metrics ledger are audit evidence, not authority. A fresh audit at
+`5b844e619b317633d6747974af54d8893df653f7` corrects their count to five data
+paths plus one nested include.
+
+The implementation adds exactly one private package-root constant in
+`GaussletBases` and one small private data-path helper:
+
+```julia
+const _PACKAGE_ROOT = normpath(joinpath(@__DIR__, ".."))
+_package_data_path(parts...) = normpath(joinpath(_PACKAGE_ROOT, "data", parts...))
+```
+
+The five existing radial, angular, and legacy path functions must use that
+helper without changing their signatures or callers. The nested
+`_RadialPrototypeHighPrecFamilies` module does not inherit private parent
+bindings. Its `families_high_prec.jl` include must therefore refer to the same
+root through an explicit parent-qualified expression such as
+`parentmodule(@__MODULE__)._PACKAGE_ROOT`, not through an assumed unqualified
+binding. Include order remains unchanged.
+
+All six targets and their baseline SHA-256 values are fixed:
+
+| Target | SHA-256 |
+| --- | --- |
+| `data/radial/paper_parity_g10_k6_x2.jld2` | `8821715de3b4490049295afa25aaf4cd340b37e95a90d71da00e48fe99abe462` |
+| `data/angular/SpherePoints.jld2` | `c73392f970fdb42b0e250ce5f5beb9281e1cc0352434de24905fb17137dad7fe` |
+| `data/angular/SpherePoints_manifest.toml` | `afc39d4a34b4171bbdaecf52cc4f5dfe0c4f583d1ff4eb8e72252054fb2fedb2` |
+| `data/angular/curated_sphere_points.toml` | `4666e89fa2f68397bad8d031817afe460094e7fde94fa1f7cfeb110f48f30f71` |
+| `data/legacy/BasisSets` | `6796d34f2c813e5b627b03d003ddd29e0701cfd18e1b4c2ee7d263ce671dbede` |
+| `src/internal/families_high_prec.jl` | `4c7ee5dee90cfb3296b392a41ba3cbd30423bd30aaea84935bb60ebd23608877` |
+
+Source changes are confined to `src/GaussletBases.jl`,
+`src/radial_boundary_prototypes.jl`, `src/angular_point_sets.jl`, and
+`src/legacy_basis_adapter.jl`. Only two lines may introduce new declarations.
+Because Git counts each of the six one-line substitutions as an addition, the
+expected raw diff is approximately `+8/-6`; raw additions have a hard limit of
+`10`, and net source growth has a hard limit of `5` lines. No test edit, new
+file, data/fixture change, file or directory move, include reorder, source-body
+refactor, export, API, dependency, metadata framework, cache, numerical policy,
+workflow, release action, or Step 1 work is authorized.
+
+Validation must record the six resolved package-relative targets and compare
+their hashes with the table above; load both full and curated angular point
+sets directly; load the package; and run unchanged `core`, `radial`,
+`angular_public`, and `misc` groups plus authority, docs, Documenter, and diff
+checks. The implementation commit must receive the normal full CI matrix
+because it changes source. If any target or byte changes, a test needs editing,
+the nested-module reference requires more machinery, the raw/net line limits
+are exceeded, or a file move or later source-layout step becomes necessary,
+make no implementation commit and report the obstacle.
+
 ## Foundational Basis And Mapping Documentation
 
 `HP-PUBLIC-FOUNDATION-DOC-FN-01` and

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `780859d29fbfaf326b974d3baac7045c0ece04aa62deeef66b210b29d3e6acbe`.
+> [authority.toml](authority.toml), SHA-256 `f1840c4106444c3e998abd15d142f545c22731adbb717111a7f3c62120bfaa75`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1412,6 +1412,45 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** generic build-result wrapper — rejected.
+
+### HP-PACKAGE-ROOT-PATH-FN-01 - package-root data and nested-include path indirection
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Package-Root Data And Include Indirection`
+- **Owned paths:**
+  - `source` / `existing`: `src/GaussletBases.jl`
+  - `source` / `existing`: `src/angular_point_sets.jl`
+  - `source` / `existing`: `src/legacy_basis_adapter.jl`
+  - `source` / `existing`: `src/radial_boundary_prototypes.jl`
+- **Evidence:**
+  - `git_commit`: `5b844e619b317633d6747974af54d8893df653f7`
+  - `manager_pass`: `578`
+- **Dependencies:** none
+- **Scope:** Add one private package-root constant and one private package-data path helper in GaussletBases, replace exactly five containing-file-relative data paths, and make the radial high-precision nested include use an explicit parent-qualified package root. Preserve the six exact targets and bytes, include order, callers, and behavior. Raw source additions are limited to 10 and net growth to 5 lines. Add no move, new file, test edit, API, export, dependency, cache, framework, numerical change, workflow, release action, or later source-layout step; stop on any mismatch or elaborate scope workaround.
+
+### HP-PACKAGE-ROOT-PATH-TEST-01 - validate package-root data and nested-include path indirection
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Package-Root Data And Include Indirection`
+- **Owned paths:**
+  - `test` / `existing`: `test/core/runtests.jl`
+  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
+  - `test` / `existing`: `test/misc/runtests.jl`
+  - `test` / `existing`: `test/radial/runtests.jl`
+  - `test` / `existing`: `test/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `5b844e619b317633d6747974af54d8893df653f7`
+  - `manager_pass`: `578`
+- **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`
+- **Scope:** Run unchanged core, radial, angular\_public, and misc owners plus a transient external baseline/candidate probe that compares all six package-relative resolved targets and SHA-256 values and directly loads full and curated angular data. Add or edit no committed test, assertion, fixture, runner, workflow, helper, or probe. Require package load, authority/docs checks, Documenter, diff checks, and the normal full CI matrix on the source implementation.
 
 ### HP-PQS-ASPECTSHELL-FN-01 - matched PQS/WL aspect-aware shell modes
 

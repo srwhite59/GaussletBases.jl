@@ -1747,3 +1747,38 @@ Guardrail / next step:
   product-staged and factorized paths serve current endpoints; exact remaining
   blocker: none for this retirement. The archived high-order worktree remains
   physically untouched until its separate evidence-preservation gate closes.
+
+## Cartesian Hamiltonian Producer Pass 578 - Authorize Package-Root Path Indirection
+
+Commit(s):
+- audit/authority baseline `5b844e619b317633d6747974af54d8893df653f7`;
+- this docs-only authority amendment.
+
+Summary / goal advancement:
+- Read the complete 2026-09-02 external follow-up review and its 87-row metrics
+  ledger as audit evidence, not authority. Independent source inspection
+  corrects Step 0 to five containing-file-relative data paths plus one nested
+  include, all confined to the four assigned source files. No additional path
+  construction belongs in this transaction.
+- Runtime inspection resolved all five data paths to their tracked package
+  targets, loaded `122` full angular orders and curated orders `[15,32,51]`,
+  and confirmed the radial high-precision family table is loaded. SHA-256
+  baselines are fixed in the canonical contract. A separate Julia scope probe
+  confirmed that explicit `parentmodule(@__MODULE__)._PACKAGE_ROOT` access is
+  valid; the nested module may not assume inheritance of a private parent name.
+- `HP-PACKAGE-ROOT-PATH-FN-01/TEST-01` authorize only one private root constant,
+  one private data helper, six substitutions, and unchanged validation owners.
+  This reduces relocation coupling without authorizing any relocation or a
+  broader source-layout program; no new medium-term goal is opened.
+
+Guardrail / next step:
+- Raw source additions are capped at `10` because Git counts the six replacement
+  lines; only two new declaration lines are permitted, and net growth is capped
+  at `5`. Tests, files, include order, APIs, data, dependencies, workflows,
+  numerics, releases, and Steps 1-4 remain unchanged.
+- deleted: nothing in this authority pass; simplified: one future source-root
+  dependency boundary; quarantined: every other review recommendation and all
+  file moves; not deleted because: existing path functions and nested module
+  remain live; exact blocker: implementation must prove identical paths and
+  bytes. Any mismatch, test edit, elaborate scope workaround, or need for a
+  move stops the pass without an implementation commit.
