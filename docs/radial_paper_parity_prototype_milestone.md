@@ -21,7 +21,7 @@ Before this milestone, paper parity on the radial side was expressed mainly as:
 After this milestone, the repo owns a first-class paper-parity radial prototype:
 
 - prototype name: `:paper_parity_g10_k6_x2`
-- implementation surface: `src/radial_boundary_prototypes.jl`
+- implementation surface: `src/radial/radial_boundary_prototypes.jl`
 - vendored cache artifact: `data/radial/paper_parity_g10_k6_x2.jld2`
 - public loader: `radial_boundary_prototype(:paper_parity_g10_k6_x2)`
 - runtime realization path: `build_basis(prototype; mapping = ...)`

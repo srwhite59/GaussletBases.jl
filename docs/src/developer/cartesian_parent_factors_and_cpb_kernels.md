@@ -329,7 +329,7 @@ These are oracle/reference surfaces for supplement pair Coulomb behavior. They
 are not a large-system CPB kernel, but they define useful polynomial-Gaussian
 pair conventions.
 
-`src/radial_ylm_gto_bridge.jl` is an input-record bridge, not an operator
+`src/radial/radial_ylm_gto_bridge.jl` is an input-record bridge, not an operator
 kernel. `radial_ylm_fit_cartesian_gto_adapter` converts centered radial/Ylm
 fits into `CartesianGaussianShellSupplementRepresentation3D` plus a coefficient
 map using the same axiswise normalized Cartesian primitive convention.

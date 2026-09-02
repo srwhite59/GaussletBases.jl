@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `3633b8628f32feddc8dfda50338d023487a7aaa5958984e1e9774abd1b301659`.
+> [authority.toml](authority.toml), SHA-256 `25b9f4364ff72347f79c9d0e7a6e9b051f49db38a37acd970911e68610a065f3`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1425,7 +1425,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/GaussletBases.jl`
   - `source` / `existing`: `src/angular_point_sets.jl`
   - `source` / `existing`: `src/legacy_basis_adapter.jl`
-  - `source` / `existing`: `src/radial_boundary_prototypes.jl`
+  - `source` / `existing`: `src/radial/radial_boundary_prototypes.jl`
 - **Evidence:**
   - `git_commit`: `5b844e619b317633d6747974af54d8893df653f7`
   - `git_commit`: `cadf02f7c6785fdf8fa792358837c5e83010376b`
@@ -2981,14 +2981,14 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `docs` / `existing`: `docs/src/howto/recommended_atomic_setup.md`
   - `docs` / `existing`: `docs/src/reference/bases_and_mappings.md`
-  - `source` / `existing`: `src/radial_boundary_prototypes.jl`
+  - `source` / `existing`: `src/radial/radial_boundary_prototypes.jl`
 - **Evidence:**
   - `git_commit`: `b845dea4cde4b58a9b4e8d8b4fc663c709402571`
   - `git_commit`: `84ebdc5792c954b4c09f08b53ba86ef9332bf6b8`
   - `manager_pass`: `564`
   - `manager_pass`: `565`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-PUBLIC-FOUNDATION-DOC-FN-01`
-- **Scope:** Maintain only the accepted expert radial paper-parity documentation from commit 84ebdc5792c954b4c09f08b53ba86ef9332bf6b8: docstrings for RadialBoundaryPrototype, radial\_boundary\_prototype, radial\_boundary\_prototype\_names, and build\_paper\_parity\_radial\_basis in src/radial\_boundary\_prototypes.jl; the compact expert section in docs/src/reference/bases\_and\_mappings.md; and the distinction from the ordinary RadialBasisSpec route in docs/src/howto/recommended\_atomic\_setup.md. Preserve RadialBoundaryPrototype as a validated artifact-backed cached description of the frozen :paper\_parity\_g10\_k6\_x2 construction, with returned records and contained arrays treated as shared read-only inspection data. Preserve exact prototype widths 0.09358986806 and 0.02357750369 as distinct from rounded normal-workflow presets 0.0936 and 0.0236. radial\_boundary\_prototype\_names remains a bounded available-name query rather than a registry/plugin mechanism; radial\_boundary\_prototype remains the validating cached lookup with unknown-name rejection. Preserve build\_paper\_parity\_radial\_basis and build\_basis(prototype; ...) as frozen-boundary controlled-comparison routes, including default rmax\_count\_policy=:legacy\_strict\_trim, without an entire-paper reproduction or replacement-front-door claim. Detailed coefficients, primitive storage, diagnostics, checksums, and provenance fields remain inspection data rather than mutable construction API. The accepted implementation added 33 source-docstring and 32 reader-documentation lines, with no new file or executable change. Preserve every coefficient, artifact, definition, field, method, signature, dispatch, default, cache behavior, numerical result, export, dependency, workflow, compatibility floor, version, tag, and release artifact. Exclude all remaining expert families, every next-minor de-export candidate, source behavior, tests outside the docs family, examples, fixtures, global documentation policy, and broader reference-page work.
+- **Scope:** Maintain only the accepted expert radial paper-parity documentation from commit 84ebdc5792c954b4c09f08b53ba86ef9332bf6b8: docstrings for RadialBoundaryPrototype, radial\_boundary\_prototype, radial\_boundary\_prototype\_names, and build\_paper\_parity\_radial\_basis in src/radial/radial\_boundary\_prototypes.jl; the compact expert section in docs/src/reference/bases\_and\_mappings.md; and the distinction from the ordinary RadialBasisSpec route in docs/src/howto/recommended\_atomic\_setup.md. Preserve RadialBoundaryPrototype as a validated artifact-backed cached description of the frozen :paper\_parity\_g10\_k6\_x2 construction, with returned records and contained arrays treated as shared read-only inspection data. Preserve exact prototype widths 0.09358986806 and 0.02357750369 as distinct from rounded normal-workflow presets 0.0936 and 0.0236. radial\_boundary\_prototype\_names remains a bounded available-name query rather than a registry/plugin mechanism; radial\_boundary\_prototype remains the validating cached lookup with unknown-name rejection. Preserve build\_paper\_parity\_radial\_basis and build\_basis(prototype; ...) as frozen-boundary controlled-comparison routes, including default rmax\_count\_policy=:legacy\_strict\_trim, without an entire-paper reproduction or replacement-front-door claim. Detailed coefficients, primitive storage, diagnostics, checksums, and provenance fields remain inspection data rather than mutable construction API. The accepted implementation added 33 source-docstring and 32 reader-documentation lines, with no new file or executable change. Preserve every coefficient, artifact, definition, field, method, signature, dispatch, default, cache behavior, numerical result, export, dependency, workflow, compatibility floor, version, tag, and release artifact. Exclude all remaining expert families, every next-minor de-export candidate, source behavior, tests outside the docs family, examples, fixtures, global documentation policy, and broader reference-page work.
 
 ### HP-PUBLIC-RADIAL-PARITY-DOC-TEST-01 - validate radial paper-parity reproducibility documentation
 
@@ -5345,20 +5345,20 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md`
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/sliced_hydrogen_chain.md`
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/atomic_angular_sectors.jl`
-  - `source` / `existing`: `src/atomic_ida.jl`
-  - `source` / `existing`: `src/atomic_ida_direct.jl`
-  - `source` / `existing`: `src/atomic_ida_exchange.jl`
-  - `source` / `existing`: `src/atomic_ida_fock.jl`
-  - `source` / `existing`: `src/atomic_ida_two_electron.jl`
-  - `source` / `existing`: `src/atomic_ida_uhf.jl`
-  - `source` / `existing`: `src/atomic_ylm.jl`
-  - `source` / `existing`: `src/fullida_dense_export.jl`
-  - `source` / `existing`: `src/gaunt_tables.jl`
-  - `source` / `existing`: `src/operators.jl`
-  - `source` / `existing`: `src/radial_boundary_prototypes.jl`
-  - `source` / `existing`: `src/radial_ylm_gto_bridge.jl`
-  - `source` / `existing`: `src/sliced_ham_export.jl`
+  - `source` / `existing`: `src/atomic/atomic_angular_sectors.jl`
+  - `source` / `existing`: `src/atomic/atomic_ida.jl`
+  - `source` / `existing`: `src/atomic/atomic_ida_direct.jl`
+  - `source` / `existing`: `src/atomic/atomic_ida_exchange.jl`
+  - `source` / `existing`: `src/atomic/atomic_ida_fock.jl`
+  - `source` / `existing`: `src/atomic/atomic_ida_two_electron.jl`
+  - `source` / `existing`: `src/atomic/atomic_ida_uhf.jl`
+  - `source` / `existing`: `src/atomic/atomic_ylm.jl`
+  - `source` / `existing`: `src/atomic/fullida_dense_export.jl`
+  - `source` / `existing`: `src/atomic/gaunt_tables.jl`
+  - `source` / `existing`: `src/radial/operators.jl`
+  - `source` / `existing`: `src/radial/radial_boundary_prototypes.jl`
+  - `source` / `existing`: `src/radial/radial_ylm_gto_bridge.jl`
+  - `source` / `existing`: `src/atomic/sliced_ham_export.jl`
 - **Evidence:**
   - `git_commit`: `5643e3376bd9f8a1a17ded24f05c4d2c363f89cc`
   - `manager_pass`: `580`

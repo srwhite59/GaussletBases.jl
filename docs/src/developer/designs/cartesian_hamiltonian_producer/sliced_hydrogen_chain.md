@@ -339,7 +339,7 @@ This authority does not permit:
 - multiple transverse functions per site;
 - Cartesian/PQS shellification, PRFs, residual Gaussians, screening, or EGOI;
 - use or expansion of `bond_aligned_homonuclear_chain_qw_basis`;
-- use or expansion of `sliced_ham_export.jl`; or
+- use or expansion of `src/atomic/sliced_ham_export.jl`; or
 - an H1000/H10000 energy or publication claim.
 
 ## References

@@ -5,7 +5,7 @@ This note explains the next small angular-structure correction in the atomic lin
 The goal is not to port the old Ylm/Coulomb stack wholesale. The goal is narrower:
 
 - keep the present radial and atomic public objects
-- replace the current hand-built dense Gaunt construction in `src/atomic_ida.jl`
+- replace the current hand-built dense Gaunt construction in `src/atomic/atomic_ida.jl`
 - use a cleaner sparse/block Gaunt backend underneath
 
 ## 1. What should be ported from `GauntTables`
@@ -40,7 +40,7 @@ but:
 So the result is best understood as a lightly adapted internal equivalent of
 `GauntTables`, not a wholesale transplant.
 
-## 3. What should be replaced in `src/atomic_ida.jl`
+## 3. What should be replaced in `src/atomic/atomic_ida.jl`
 
 The present file builds Gaunt tensors by:
 
@@ -52,7 +52,7 @@ The part that should be replaced is the first step:
 
 - the direct dense construction of Gaunt tensors from channel-pair loops
 
-Instead, `src/atomic_ida.jl` should:
+Instead, `src/atomic/atomic_ida.jl` should:
 
 1. build a sparse/block Gaunt table once
 2. form the current dense `gaunt_tensor` output from that table

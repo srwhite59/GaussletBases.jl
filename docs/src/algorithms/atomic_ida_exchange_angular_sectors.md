@@ -54,11 +54,11 @@ algorithm and not a complete Hartree-Fock workflow.
 ## Code Pointers
 
 - Public exchange entry point:
-  - `src/atomic_ida_fock.jl:exchange_matrix`
+  - `src/atomic/atomic_ida_fock.jl:exchange_matrix`
 - Sectorized angular kernels:
   - `src/atomic_angular_coulomb.jl`
 - Atomic IDA operator payload:
-  - `src/atomic_ida.jl:AtomicIDAOperators`
+  - `src/atomic/atomic_ida.jl:AtomicIDAOperators`
 - Current examples:
   - `examples/20_atomic_ida_exchange.jl`
 

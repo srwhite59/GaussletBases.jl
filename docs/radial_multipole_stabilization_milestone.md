@@ -7,7 +7,7 @@ milestone`).
 This is not another prototype milestone. The prototype milestone was
 `53a16a4`, which introduced the named cached paper-parity radial prototype.
 This follow-on milestone is about the downstream radial multipole / `Vee`
-builder in `src/operators.jl`.
+builder in `src/radial/operators.jl`.
 
 ## Problem before the patch
 
@@ -22,7 +22,7 @@ radial ranges. In those regimes, the raw-power path could lose stability and
 produce non-finite intermediate or final data, allowing `Inf` or `NaN` values
 to leak into downstream radial multipoles.
 
-## Fix in `src/operators.jl`
+## Fix in `src/radial/operators.jl`
 
 The current builder keeps the same prefix/suffix integral structure, but the
 power handling is now stabilized.

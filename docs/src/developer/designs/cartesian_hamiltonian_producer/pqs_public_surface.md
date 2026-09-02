@@ -850,7 +850,7 @@ All six targets and their baseline SHA-256 values are fixed:
 | `src/internal/families_high_prec.jl` | `4c7ee5dee90cfb3296b392a41ba3cbd30423bd30aaea84935bb60ebd23608877` |
 
 The accepted source change was confined to `src/GaussletBases.jl`,
-`src/radial_boundary_prototypes.jl`, `src/angular_point_sets.jl`, and
+`src/radial/radial_boundary_prototypes.jl`, `src/angular_point_sets.jl`, and
 `src/legacy_basis_adapter.jl`: exactly two private declarations and six direct
 substitutions produced a `+8/-8` diff. No test, file, data/fixture, include
 order, export, API, dependency, metadata framework, cache, numerical policy,
@@ -1233,7 +1233,7 @@ paper calculation nor replace the normal `RadialBasisSpec` front door.
 
 The accepted implementation in commit `84ebdc5792c954b4c09f08b53ba86ef9332bf6b8`
 is limited to concise docstrings in
-`src/radial_boundary_prototypes.jl`, one compact expert/paper-parity section in
+`src/radial/radial_boundary_prototypes.jl`, one compact expert/paper-parity section in
 `docs/src/reference/bases_and_mappings.md`, a short distinction from the normal
 recommended route in `docs/src/howto/recommended_atomic_setup.md`, and focused
 checks in `test/docs/runtests.jl`. It added `33` source-docstring lines, `32`
