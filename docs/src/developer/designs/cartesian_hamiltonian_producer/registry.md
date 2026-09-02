@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `e6b7a0ee866c15a365ec4d9f1d0dcea65666d280e1cbd162a06edc93e8bd581f`.
+> [authority.toml](authority.toml), SHA-256 `775326e5e2b636734dffc887153976f7ade12f56e405f4c7b0535a4b39248406`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -3924,39 +3924,50 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Dependencies:** none
 - **Scope:** terminal basis build result — rejected.
 
-### HP-RETIRE-BYCENTER-SIDECAR-FN-01 - evaluate generic staged by-center sidecar retirement
+### HP-RETIRE-BYCENTER-SIDECAR-FN-01 - retire unused generic staged by-center sidecar
 
-- **Lifecycle:** `deferred`
-- **Grant:** `none`
-- **Surfaces:** none
-- **Execution whitelist:** `false`
+- **Lifecycle:** `approved`
+- **Grant:** `retirement`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Generic Staged By-Center Sidecar Retirement`
-- **Owned paths:** none
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_endcap_panel_shared_shell.md`
+  - `docs` / `existing`: `docs/src/developer/cartesian_parent_factors_and_cpb_kernels.md`
+  - `source` / `existing`: `src/cartesian_nested_faces.jl`
+  - `source` / `existing`: `src/ordinary_qw_raw_blocks.jl`
 - **Evidence:**
   - `git_commit`: `01ad223d3c822c54289d5d8843b3d71adbf4c520`
   - `git_commit`: `ed43ff241b16d1e95ea258843017c6638166a940`
+  - `git_commit`: `b4e632f1417f15e7b03b4b9a165ebf519302ce22`
   - `manager_pass`: `574`
   - `manager_pass`: `575`
+  - `manager_pass`: `576`
 - **Dependencies:** none
-- **Scope:** Retain the generic staged by-center carrier, builder/attach closure, selector/path branches, nuclear overload, and current documentation because active high-order/manager-lane commit ed43ff241 installs and validates them as intended future general-q mainline import machinery. Retirement has no execution grant and may be reconsidered only after a separately authorized high-order owner or migration decision removes the sibling dependency, followed by a fresh cross-worktree caller audit.
+- **Scope:** Delete only the now-orphaned generic staged by-center sidecar carrier, default-range/builder/attach helpers, generic selector and :staged\_factorized path branches, matching generic nuclear overload, and two directly stale current documentation claims. The high-order owner has archived high-order/manager-lane and released its compatibility claim; do not edit, move, or delete that retained worktree or its ignored evidence. Preserve fixed-block storage/cache, every product-staged owner and method, nonzero-row and contraction kernels, factorized-final and dense routes, all current PQS behavior, and all numerical results. Add zero source lines and no replacement, API, cache, metadata, helper, test, file, dependency, workflow, version, or release change; stop without a commit on any non-archived caller, parity loss, or replacement need.
 
 ### HP-RETIRE-BYCENTER-SIDECAR-TEST-01 - validate generic staged by-center sidecar retirement
 
-- **Lifecycle:** `completed`
-- **Grant:** `none`
-- **Surfaces:** none
-- **Execution whitelist:** `false`
+- **Lifecycle:** `approved`
+- **Grant:** `retirement`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Generic Staged By-Center Sidecar Retirement`
-- **Owned paths:** none
+- **Owned paths:**
+  - `test` / `existing`: `test/core/runtests.jl`
+  - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
+  - `test` / `existing`: `test/pqs_h2plus_table1_release_runtests.jl`
 - **Evidence:**
   - `git_commit`: `01ad223d3c822c54289d5d8843b3d71adbf4c520`
   - `git_commit`: `ed43ff241b16d1e95ea258843017c6638166a940`
+  - `git_commit`: `b4e632f1417f15e7b03b4b9a165ebf519302ce22`
   - `manager_pass`: `574`
   - `manager_pass`: `575`
-- **Dependencies:** none
-- **Scope:** Preflight completed without source or test edits: the main-only scan found no installer, but the required sibling scan found four reachable high-order integrated-recipe call paths plus diatomic construction, parity, route, and malformed-input coverage at ed43ff241. Validation stopped under the authorized failure rule; no numerical retirement result exists and no continuing test grant remains.
+  - `manager_pass`: `576`
+- **Dependencies:** `HP-RETIRE-BYCENTER-SIDECAR-FN-01`
+- **Scope:** Validate retirement with unchanged core, public Cartesian, projected-q-shell/nested, and matched-H2+ release owners plus one uncommitted baseline/candidate probe outside the repository. Require exact ordinary factorized-final and product-staged endcap-panel per-center, summed, and complete H1 parity; unchanged route identities; and product-staged dense-oracle agreement at the existing tolerance. Add or edit no committed test, assertion, fixture, runner, workflow, helper, or probe, and do not run or modify the archived high-order worktree.
 
 ### HP-RETIRE-CARRIED-SPACE-FN-01 - retire orphaned Cartesian carried-space adapter
 

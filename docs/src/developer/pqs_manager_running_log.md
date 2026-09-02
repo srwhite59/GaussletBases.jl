@@ -1680,3 +1680,37 @@ Guardrail / next step:
   exactly five reserved namespace candidates.
 - **MT7 - completed/maintenance:** external Cartesian-GTO interchange remains
   accepted and unchanged.
+
+## Cartesian Hamiltonian Producer Pass 576 - Reauthorize Generic By-Center Sidecar Retirement
+
+Commit(s):
+- current-main audit baseline `b4e632f1417f15e7b03b4b9a165ebf519302ce22`;
+- archived high-order snapshot `ed43ff241b16d1e95ea258843017c6638166a940`;
+- this docs-only authority amendment.
+
+Summary / goal advancement:
+- Accepted the high-order owner closure in
+  `chatarchive/reports/software_reviews/high_order_lane_closure_and_generic_sidecar_release_2026-09-02.md`.
+  The old lane is archived, is not a future merge target, and releases its
+  claim on the generic sidecar. Its worktree remains physically preserved only
+  because `523 MB` of ignored scratch, including July AddNest evidence, has a
+  separate archive gate.
+- A fresh caller audit found no current-main installer and no active paper,
+  external-work, test, driver, tool, or non-archived worktree consumer. The one
+  current CR2 script using the general path reporter exercises preserved
+  factorized/product-staged behavior. Old detached/release copies and stale
+  refs are evidence snapshots, not compatibility owners.
+- `HP-RETIRE-BYCENTER-SIDECAR-FN-01/TEST-01` are reactivated for the original
+  narrow deletion. LT5 may advance by approximately `214` source lines without
+  changing current PQS or high-order scientific policy.
+
+Guardrail / next step:
+- Source remains confined to the two existing owners, with zero added source
+  lines; two stale current-doc claims may be corrected, and committed tests may
+  not change. Product-staged support, factorized-final and dense routes, exact
+  by-center/complete H1 parity, and all public endpoints remain mandatory.
+- deleted: nothing in this authority pass; simplified: archived worktree
+  retention is separated from source compatibility; quarantined: all high-order
+  and AddNest evidence plus replacement design; exact blocker: repo-manager
+  implementation under the two temporary grants. Any newly found non-archived
+  caller, source addition, replacement need, or parity loss stops the pass.
