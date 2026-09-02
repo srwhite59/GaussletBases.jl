@@ -1633,3 +1633,50 @@ Guardrail / carrying cost:
   is designated for deletion; quarantined: high-order/deferred milestones,
   performance, namespace, workflow, release, and all replacement machinery;
   exact remaining blocker: repo-manager implementation under these two grants.
+
+## Cartesian Hamiltonian Producer Pass 575 - Defer Generic By-Center Sidecar Retirement
+
+Commit(s):
+- authorization `9cd74a86c893b83ddcdd49e2adbefdeda28d577e`;
+- sibling consumer `ed43ff241b16d1e95ea258843017c6638166a940`;
+- this docs-only corrective decision.
+
+Summary / goal advancement:
+- Repo-manager correctly stopped before editing. The Pass 574 main-only caller
+  proof omitted the active `high-order/manager-lane` worktree, where four
+  integrated-recipe paths install the generic sidecar and the diatomic owner
+  validates its carrier, route, parity, and malformed inputs.
+- The high-order contract identifies generic staged units as part of intended
+  general-q mainline import. Classifying that lane as historical would be
+  false. `HP-RETIRE-BYCENTER-SIDECAR-FN-01` is therefore deferred/no-grant and
+  its TEST record is completed/no-grant. Main retains the approximately
+  `214`-line closure and current documentation unchanged.
+
+Guardrail / next step:
+- LT5 does not advance through this candidate. A separate high-order owner must
+  either accept the generic carrier as maintained import machinery or authorize
+  complete migration of its installers, call paths, and tests. Only then may a
+  fresh cross-worktree caller audit reopen retirement. No source, test,
+  high-order worktree, API, numerical, workflow, namespace, or release change
+  is granted here.
+- deleted: no implementation; simplified: the false caller-free claim is
+  withdrawn; quarantined: all migration/replacement design; exact blocker: the
+  active high-order non-product consumer. The original failure rule remains
+  effective rather than being weakened after discovery.
+
+### Medium-Term Goal Checkpoint After Pass 575
+
+- **MT1 - active/maintenance:** public endpoint ownership and fail-closed test
+  selection remain unchanged.
+- **MT2 - completed:** controlled Cr2 source migration remains closed.
+- **MT3 - active:** pending producer facilities and paper-oracle interpretation
+  are unchanged.
+- **MT4 - active:** residual/protected and high-order research machinery remain
+  internal where classified; the newly confirmed sidecar dependency requires
+  its own owner decision.
+- **MT5 - active/maintenance:** final v0.2 release state, path-aware CI, and the
+  three public gate identities remain fixed.
+- **MT6 - completed/maintenance:** reader classification remains closed with
+  exactly five reserved namespace candidates.
+- **MT7 - completed/maintenance:** external Cartesian-GTO interchange remains
+  accepted and unchanged.
