@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "0bdbfe202c72bebe4e94c563cd671230c335bedc5dd44875cc87ad293f00d4d7"
+sha256 = "5bede23e3090ffef97db986789c4b91b03eaa5b34e4951986515beebdc6a2201"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -164,7 +164,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartr
 sha256 = "a26a5760c108cd8aa97f5a92519741361f6591c4ce90b7251e825b1f64a0f9c5"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/sliced_hydrogen_chain.md"
-sha256 = "20513d784bfbc63edb1f81a52c901e8566903c0d64c222213054c4fe8f2d5221"
+sha256 = "eecba95db9d4b7f627dfcf5e7ddf513e2f84f753616d253e3c401d473b2edd9e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
 sha256 = "77fb7dc85df9d6e0829b5b7fda732b11c546044ecae7cdc59af78972c9e821d6"
@@ -2367,7 +2367,7 @@ title = "package-root data and nested-include path indirection"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/radial_boundary_prototypes.jl"
+    path = "src/radial/radial_boundary_prototypes.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01"]
@@ -5234,7 +5234,7 @@ dependency_ids = ["HP-PUBLIC-EXPORT-INTEGRITY-FN-01", "HP-PUBLIC-FOUNDATION-DOC-
 grant = "maintenance"
 id = "HP-PUBLIC-RADIAL-PARITY-DOC-FN-01"
 lifecycle = "implemented"
-scope = "Maintain only the accepted expert radial paper-parity documentation from commit 84ebdc5792c954b4c09f08b53ba86ef9332bf6b8: docstrings for RadialBoundaryPrototype, radial_boundary_prototype, radial_boundary_prototype_names, and build_paper_parity_radial_basis in src/radial_boundary_prototypes.jl; the compact expert section in docs/src/reference/bases_and_mappings.md; and the distinction from the ordinary RadialBasisSpec route in docs/src/howto/recommended_atomic_setup.md. Preserve RadialBoundaryPrototype as a validated artifact-backed cached description of the frozen :paper_parity_g10_k6_x2 construction, with returned records and contained arrays treated as shared read-only inspection data. Preserve exact prototype widths 0.09358986806 and 0.02357750369 as distinct from rounded normal-workflow presets 0.0936 and 0.0236. radial_boundary_prototype_names remains a bounded available-name query rather than a registry/plugin mechanism; radial_boundary_prototype remains the validating cached lookup with unknown-name rejection. Preserve build_paper_parity_radial_basis and build_basis(prototype; ...) as frozen-boundary controlled-comparison routes, including default rmax_count_policy=:legacy_strict_trim, without an entire-paper reproduction or replacement-front-door claim. Detailed coefficients, primitive storage, diagnostics, checksums, and provenance fields remain inspection data rather than mutable construction API. The accepted implementation added 33 source-docstring and 32 reader-documentation lines, with no new file or executable change. Preserve every coefficient, artifact, definition, field, method, signature, dispatch, default, cache behavior, numerical result, export, dependency, workflow, compatibility floor, version, tag, and release artifact. Exclude all remaining expert families, every next-minor de-export candidate, source behavior, tests outside the docs family, examples, fixtures, global documentation policy, and broader reference-page work."
+scope = "Maintain only the accepted expert radial paper-parity documentation from commit 84ebdc5792c954b4c09f08b53ba86ef9332bf6b8: docstrings for RadialBoundaryPrototype, radial_boundary_prototype, radial_boundary_prototype_names, and build_paper_parity_radial_basis in src/radial/radial_boundary_prototypes.jl; the compact expert section in docs/src/reference/bases_and_mappings.md; and the distinction from the ordinary RadialBasisSpec route in docs/src/howto/recommended_atomic_setup.md. Preserve RadialBoundaryPrototype as a validated artifact-backed cached description of the frozen :paper_parity_g10_k6_x2 construction, with returned records and contained arrays treated as shared read-only inspection data. Preserve exact prototype widths 0.09358986806 and 0.02357750369 as distinct from rounded normal-workflow presets 0.0936 and 0.0236. radial_boundary_prototype_names remains a bounded available-name query rather than a registry/plugin mechanism; radial_boundary_prototype remains the validating cached lookup with unknown-name rejection. Preserve build_paper_parity_radial_basis and build_basis(prototype; ...) as frozen-boundary controlled-comparison routes, including default rmax_count_policy=:legacy_strict_trim, without an entire-paper reproduction or replacement-front-door claim. Detailed coefficients, primitive storage, diagnostics, checksums, and provenance fields remain inspection data rather than mutable construction API. The accepted implementation added 33 source-docstring and 32 reader-documentation lines, with no new file or executable change. Preserve every coefficient, artifact, definition, field, method, signature, dispatch, default, cache behavior, numerical result, export, dependency, workflow, compatibility floor, version, tag, and release artifact. Exclude all remaining expert families, every next-minor de-export candidate, source behavior, tests outside the docs family, examples, fixtures, global documentation policy, and broader reference-page work."
 surfaces = ["docs", "source"]
 title = "document radial paper-parity reproducibility exports"
 
@@ -5266,7 +5266,7 @@ title = "document radial paper-parity reproducibility exports"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/radial_boundary_prototypes.jl"
+    path = "src/radial/radial_boundary_prototypes.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-EXPORT-INTEGRITY-TEST-01", "HP-PUBLIC-FOUNDATION-DOC-TEST-01", "HP-PUBLIC-RADIAL-PARITY-DOC-FN-01"]
@@ -8823,59 +8823,59 @@ title = "relocate radial and atomic source files"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/atomic_angular_sectors.jl"
+    path = "src/atomic/atomic_angular_sectors.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/atomic_ida.jl"
+    path = "src/atomic/atomic_ida.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/atomic_ida_direct.jl"
+    path = "src/atomic/atomic_ida_direct.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/atomic_ida_exchange.jl"
+    path = "src/atomic/atomic_ida_exchange.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/atomic_ida_fock.jl"
+    path = "src/atomic/atomic_ida_fock.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/atomic_ida_two_electron.jl"
+    path = "src/atomic/atomic_ida_two_electron.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/atomic_ida_uhf.jl"
+    path = "src/atomic/atomic_ida_uhf.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/atomic_ylm.jl"
+    path = "src/atomic/atomic_ylm.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/fullida_dense_export.jl"
+    path = "src/atomic/fullida_dense_export.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/gaunt_tables.jl"
+    path = "src/atomic/gaunt_tables.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/operators.jl"
+    path = "src/radial/operators.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/radial_boundary_prototypes.jl"
+    path = "src/radial/radial_boundary_prototypes.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/radial_ylm_gto_bridge.jl"
+    path = "src/radial/radial_ylm_gto_bridge.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/sliced_ham_export.jl"
+    path = "src/atomic/sliced_ham_export.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01"]
