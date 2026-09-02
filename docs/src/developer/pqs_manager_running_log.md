@@ -1526,3 +1526,41 @@ Validation / carrying cost:
   schemas, PRF promotion, namespace transactions, and v0.3; exact remaining
   blocker: none for this packet. FN is implemented/maintenance and TEST is
   completed/maintenance.
+
+## Cartesian Hamiltonian Producer Pass 572 - Authorize Projected-Q-Shell Staged Descriptor Retirement
+
+Commit(s):
+- baseline `1e8e31377efb5778df8e48c9d06c4e2237fd8a81`;
+- this docs-only authority amendment.
+
+Summary / goal advancement:
+- Added `HP-RETIRE-PQS-STAGED-DESCRIPTOR-FN-01/TEST-01` for one bounded
+  deletion of the inert projected-q-shell staged descriptor, prototype
+  contractions, duplicate stored construction facts, and false descriptor
+  consumption/status fields. The actual boundary-mode projection, symmetric
+  Lowdin cleanup, coefficient matrix, supports, metric packet, layer,
+  numerical diagnostics, and consumed provenance remain authoritative.
+- The live tracked closure is confined to `src/cartesian_nested_faces.jl` and
+  two propagation lines in `src/cartesian_nested_diatomic.jl`. No tracked
+  test, driver, tool, example, or current contract calls it. A completed
+  REQ-094 worker log is historical evidence; its retained executable replay
+  does not call the accessor.
+
+Guardrail / carrying cost:
+- The source pass is expected to delete approximately `597` lines and may add
+  at most `12` direct-control-flow lines, with net source decrease required.
+  No replacement object, tuple, alias, compatibility surface, copied
+  diagnostic, test edit, helper, cache, metadata vocabulary, or new file is
+  permitted. The generic by-center sidecar and active product/factorized
+  machinery remain out of scope.
+- Existing owners plus transient baseline/candidate probes must establish
+  exact coefficient, packet, and fingerprint parity; unchanged ordinary H2
+  and matched H2+ endpoints; and before/after allocation/time evidence. Any
+  live executable caller, parity loss, material performance regression, test
+  change, or budget overrun stops implementation without a commit.
+- deleted: nothing in this authority pass; simplified: one future-sidecar
+  experiment is designated for complete removal; quarantined: all adjacent
+  sidecars, kernels, high-order work, API, numerical policy, workflow, and
+  release work; exact remaining blocker: repo-manager implementation and
+  review under these two records. No medium-term goal changes and no
+  checkpoint is due.

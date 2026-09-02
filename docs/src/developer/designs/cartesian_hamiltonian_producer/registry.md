@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `60d4c34694344917119e47018fba69440b9f100e50ada7bd6a97b62a6239d024`.
+> [authority.toml](authority.toml), SHA-256 `4a8b6995f1bde8cec5fe5ab13bc0cbe848908f58052d1151869bc45db7bfb921`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -4143,6 +4143,41 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `470`
 - **Dependencies:** none
 - **Scope:** Run the existing core, ida, and Cartesian endpoint tests unchanged plus one transient before/after mapped-COMX terminal parity construction; add or edit no committed test or probe, and stop for a separate amendment if validation requires test changes.
+
+### HP-RETIRE-PQS-STAGED-DESCRIPTOR-FN-01 - retire inert projected-q-shell staged descriptor
+
+- **Lifecycle:** `approved`
+- **Grant:** `retirement`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Projected-Q-Shell Staged Descriptor Retirement`
+- **Owned paths:**
+  - `source` / `existing`: `src/cartesian_nested_diatomic.jl`
+  - `source` / `existing`: `src/cartesian_nested_faces.jl`
+- **Evidence:**
+  - `git_commit`: `1e8e31377efb5778df8e48c9d06c4e2237fd8a81`
+  - `manager_pass`: `572`
+- **Dependencies:** none
+- **Scope:** Delete only the inert projected-q-shell staged descriptor closure named in the canonical contract, its construction and descriptor-only diagnostics/provenance in \_nested\_projected\_q\_shell\_layer, and the two-line pqs\_staged\_unit\_descriptor propagation in cartesian\_nested\_diatomic.jl. Retain byte-exact boundary-mode selection, raw-boundary projection, symmetric Lowdin cleanup, coefficient matrix, support indices/states, metric packet, actual layer, consumed diagnostics/provenance, ordinary and mapped behavior, and all public results. The audited edit is expected to delete approximately 597 source lines and may add at most 12 source lines for direct control-flow simplification, with net source decrease required. Add no replacement carrier, NamedTuple, accessor, alias, deprecation, serialization, copied diagnostic, status vocabulary, helper, test, file, API, cache, dependency, workflow, numerical policy, version, or release change. Exclude the generic by-center sidecar, old XY/shell-plus-core/hierarchical milestones, active product-staged sidecars, factorized/support-reference kernels, and high-order branch. Repeat tracked and known paper-workspace caller scans; if any current non-ignored production, test, executable paper, or downstream consumer exists, or if exact parity fails or the budget is exceeded, make no implementation commit and report the obstacle.
+
+### HP-RETIRE-PQS-STAGED-DESCRIPTOR-TEST-01 - validate projected-q-shell staged descriptor retirement
+
+- **Lifecycle:** `approved`
+- **Grant:** `retirement`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Projected-Q-Shell Staged Descriptor Retirement`
+- **Owned paths:**
+  - `test` / `existing`: `test/core/runtests.jl`
+  - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
+  - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
+  - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
+  - `test` / `existing`: `test/pqs_h2plus_table1_release_runtests.jl`
+- **Evidence:** none
+- **Dependencies:** `HP-RETIRE-PQS-STAGED-DESCRIPTOR-FN-01`
+- **Scope:** Run the listed existing owners unchanged plus transient exact baseline/candidate parity and allocation/timing probes. Require exact projected-q-shell coefficient matrices and metric packets, unchanged packet/basis fingerprints, unchanged default ordinary-QW H2 fixed-block geometry/dimensions/coefficients/overlap/kinetic result, and unchanged matched H2+ dimensions/topology/energies/captures/residuals/warnings/fingerprints. Record before/after allocation and elapsed time for one representative projected-q-shell layer and the complete matched H2+ comparison with the same order-controlled Julia 1.12.6 protocol. Add or edit no test, fixture, golden value, assertion, runner, workflow, helper, or committed probe; performance improvement is evidence only, and a material regression or need for test change must stop the implementation for review.
 
 ### HP-RETIRE-QW-DONOR-FN-01 - retire obsolete QW and high-order experimental source cluster
 
