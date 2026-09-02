@@ -218,6 +218,29 @@ history.
 Do not duplicate the doer response. Use the running log to preserve strategic
 interpretation and prevent drift.
 
+## Lifecycle transition economy
+
+- A repo-design-manager commit may close accepted pass N and authorize
+  independently reviewed pass N+1 together only when N already has complete
+  implementation and validation evidence and N+1 has a separate explicit
+  target, boundary, budget, validation plan, exclusions, and failure rule.
+  Repo-manager must wait for the combined commit and its required checks before
+  acting on N+1.
+- Never delay a ready closeout to wait for another task. Keep transitions
+  separate after a failure, deviation, or unresolved blocker, and for tagging,
+  publication, release, public-API, compatibility, or numerical-policy
+  decisions.
+- For mechanical documentation, 100% relocation, or pure-deletion work with
+  unchanged behavior and tests, closeout should update only lifecycle state,
+  accepted evidence, affected paths, required generated views, and a compact
+  manager-ledger entry. Do not restate the implementation report or an
+  unchanged canonical contract.
+- New or materially rewritten authority scopes should normally fit within
+  about 60 words: identify files or symbols, the change class, the governing
+  canonical heading, and exclusions. Put durable behavior in the canonical
+  contract and evidence in the ledger. This is a review guideline, not a hard
+  checker limit; do not bulk-rewrite historical scopes.
+
 ## Cartesian Hamiltonian producer startup
 
 For Cartesian Hamiltonian producer work, normal startup reading is:

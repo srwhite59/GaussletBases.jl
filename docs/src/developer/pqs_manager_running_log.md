@@ -1892,3 +1892,29 @@ Guardrail / next step:
 - deleted: no code; simplified: radial and atomic source discovery;
   quarantined: all later review moves and refactors; not deleted because: every
   relocated owner remains live; exact remaining blocker: none for Step 1.
+
+## Cartesian Hamiltonian Producer Pass 582 - Clarify Lifecycle Transition Economy
+
+Commit(s):
+- baseline `dbfd701a773997b6400803642a6d71d0a1b176e4`;
+- this policy-only clarification.
+
+Summary / guardrail:
+- Independent review of G1/G2 and the 55-commit ledger confirmed substantial
+  transition overhead, while current atomic authority maintenance already
+  permits multiple lifecycle changes in one commit; Pass 556 supplies the
+  working precedent. `AGENTS.md` now states the bounded operating rule without
+  changing deny-by-default authority, independent review, budgets, validation,
+  the two-role division, schema, checkers, generated views, or canonical
+  contracts.
+- A fully evidenced closeout may share a commit with a separately explicit and
+  independently reviewed next authorization, but a ready closeout is never
+  delayed for that opportunity. Failures, deviations, blockers, tags, releases,
+  public API, compatibility, and numerical policy retain separate decisions.
+  Mechanical closeouts stay factual and compact; new or rewritten scopes
+  normally stay near 60 words without a hard enforcement mechanism.
+- MT6 remains active with no strategic or source-layout grant. The next angular
+  relocation may use a combined transition only if its own review is complete
+  when a prior pass is ready to close; otherwise that pass closes immediately
+  and angular relocation receives separate authority. Review Step 2 remains
+  unauthorized here.
