@@ -32,7 +32,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pair
 sha256 = "62578861400c82d1521aa1d17df6ca4dc2831d3877e6630c792882e10f4b43e8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
-sha256 = "28882b0681709f2644f499c6c74f2981c94760224a04329a06b223191ffb7a53"
+sha256 = "ab77cdc4552b24ffef1acfe59bc1e952cb3f30bd477f44bc4a522ea34bf90e6b"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/complete_core_shell_rhf_retirement.md"
 sha256 = "99520abb40f2d828f9cd80fb56517259fb20c37310a58924380d3d6c2e00f4be"
@@ -7079,6 +7079,70 @@ title = "validate Cartesian pair-ladder retirement"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "470"
+[[records]]
+dependency_ids = []
+grant = "retirement"
+id = "HP-RETIRE-PQS-STAGED-DESCRIPTOR-FN-01"
+lifecycle = "approved"
+scope = "Delete only the inert projected-q-shell staged descriptor closure named in the canonical contract, its construction and descriptor-only diagnostics/provenance in _nested_projected_q_shell_layer, and the two-line pqs_staged_unit_descriptor propagation in cartesian_nested_diatomic.jl. Retain byte-exact boundary-mode selection, raw-boundary projection, symmetric Lowdin cleanup, coefficient matrix, support indices/states, metric packet, actual layer, consumed diagnostics/provenance, ordinary and mapped behavior, and all public results. The audited edit is expected to delete approximately 597 source lines and may add at most 12 source lines for direct control-flow simplification, with net source decrease required. Add no replacement carrier, NamedTuple, accessor, alias, deprecation, serialization, copied diagnostic, status vocabulary, helper, test, file, API, cache, dependency, workflow, numerical policy, version, or release change. Exclude the generic by-center sidecar, old XY/shell-plus-core/hierarchical milestones, active product-staged sidecars, factorized/support-reference kernels, and high-order branch. Repeat tracked and known paper-workspace caller scans; if any current non-ignored production, test, executable paper, or downstream consumer exists, or if exact parity fails or the budget is exceeded, make no implementation commit and report the obstacle."
+surfaces = ["source"]
+title = "retire inert projected-q-shell staged descriptor"
+
+    [[records.document_refs]]
+    heading = "Projected-Q-Shell Staged Descriptor Retirement"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1e8e31377efb5778df8e48c9d06c4e2237fd8a81"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "572"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_nested_diatomic.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_nested_faces.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-RETIRE-PQS-STAGED-DESCRIPTOR-FN-01"]
+evidence_refs = []
+grant = "retirement"
+id = "HP-RETIRE-PQS-STAGED-DESCRIPTOR-TEST-01"
+lifecycle = "approved"
+scope = "Run the listed existing owners unchanged plus transient exact baseline/candidate parity and allocation/timing probes. Require exact projected-q-shell coefficient matrices and metric packets, unchanged packet/basis fingerprints, unchanged default ordinary-QW H2 fixed-block geometry/dimensions/coefficients/overlap/kinetic result, and unchanged matched H2+ dimensions/topology/energies/captures/residuals/warnings/fingerprints. Record before/after allocation and elapsed time for one representative projected-q-shell layer and the complete matched H2+ comparison with the same order-controlled Julia 1.12.6 protocol. Add or edit no test, fixture, golden value, assertion, runner, workflow, helper, or committed probe; performance improvement is evidence only, and a material regression or need for test change must stop the implementation for review."
+surfaces = ["tests"]
+title = "validate projected-q-shell staged descriptor retirement"
+
+    [[records.document_refs]]
+    heading = "Projected-Q-Shell Staged Descriptor Retirement"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/core/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/pqs_h2plus_table1_release_runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 evidence_refs = []
