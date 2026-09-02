@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "623b4942399905c317aed45ce4642d15c310f4f49d086bde3253cb608eb5e114"
+sha256 = "452a597132e11afbddfd7614f557b7e49294604bead46ff8c25bb3216aeb9cb4"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -2326,6 +2326,84 @@ title = "generic build-result wrapper — rejected"
     heading = "Terminal Basis And Base Assembly"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-PACKAGE-ROOT-PATH-FN-01"
+lifecycle = "approved"
+scope = "Add one private package-root constant and one private package-data path helper in GaussletBases, replace exactly five containing-file-relative data paths, and make the radial high-precision nested include use an explicit parent-qualified package root. Preserve the six exact targets and bytes, include order, callers, and behavior. Raw source additions are limited to 10 and net growth to 5 lines. Add no move, new file, test edit, API, export, dependency, cache, framework, numerical change, workflow, release action, or later source-layout step; stop on any mismatch or elaborate scope workaround."
+surfaces = ["source"]
+title = "package-root data and nested-include path indirection"
+
+    [[records.document_refs]]
+    heading = "Package-Root Data And Include Indirection"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "5b844e619b317633d6747974af54d8893df653f7"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "578"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular_point_sets.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/legacy_basis_adapter.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/radial_boundary_prototypes.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01"]
+grant = "implementation"
+id = "HP-PACKAGE-ROOT-PATH-TEST-01"
+lifecycle = "approved"
+scope = "Run unchanged core, radial, angular_public, and misc owners plus a transient external baseline/candidate probe that compares all six package-relative resolved targets and SHA-256 values and directly loads full and curated angular data. Add or edit no committed test, assertion, fixture, runner, workflow, helper, or probe. Require package load, authority/docs checks, Documenter, diff checks, and the normal full CI matrix on the source implementation."
+surfaces = ["tests"]
+title = "validate package-root data and nested-include path indirection"
+
+    [[records.document_refs]]
+    heading = "Package-Root Data And Include Indirection"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "5b844e619b317633d6747974af54d8893df653f7"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "578"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/core/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/misc/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/radial/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = ["HP-COMP-SHELLGEOM-DIAT-FN-01", "HP-WLDIAT-COMPACT-FN-01", "HP-WLDIAT-PARITY-FN-01", "HP-WLTERM-FN-01"]
 grant = "maintenance"
