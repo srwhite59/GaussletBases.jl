@@ -108,6 +108,10 @@
     sliced_chain_exports = (
         :SlicedHydrogenChain, :sliced_hydrogen_chain, :sliced_h1,
         :sliced_h1_bandwidth, :sliced_vee, Symbol("sliced_row!"))
+    reserved_undocumented_exports = Set((
+        :OneCenterAtomicNestedStructureDiagnostics, :one_center_atomic_nested_structure_diagnostics,
+        :one_center_atomic_nested_structure_report, :diagnose_qwrg_residual_space,
+        :ShellLocalAngularProfileKey))
     docs_site_developer = read_doc("docs", "src", "developer", "index.md")
     docs_site_developer_notes = read_doc("docs", "src", "developer", "supporting_notes.md")
     docs_site_architecture = read_doc("docs", "src", "developer", "architecture.md")
@@ -686,7 +690,15 @@
             "physical continuum", "two-index density-density", "four-index eri", "retain their chain owner", "mul!",
             "without owning", "private and non-contractual", "bounded diagnostics", "completely overwrites and returns",
             "zero allocation", "band-limited", "covers every column", "read-only consumer data", "non-contractual")
-        @test length(filter(!=(:GaussletBases), Docs.undocumented_names(GaussletBases))) == 6
+        @test :cartesian_base_working_basis in names(GaussletBases) &&
+              Base.Docs.hasdoc(GaussletBases, :cartesian_base_working_basis)
+        @test occursin("\ncartesian_base_working_basis\n", "\n$(docs_site_reference_export)\n")
+        @test contains_all_lower(docs_site_reference_export, "expert/unstable", "staged-construction",
+            "not a second hamiltonian facade", "stable result schema", "ordinary users", "complete one-body",
+            "nuclear operator", "vee", "cartesianidahamiltonian", "artifact", "solver", "correction",
+            "prf wrapper", "paper workflow", "source_mode_overrides", "private and unexported")
+        @test Set(filter(!=(:GaussletBases), Docs.undocumented_names(GaussletBases))) ==
+              reserved_undocumented_exports
 
         @test contains_all(
             docs_site_reference_export,

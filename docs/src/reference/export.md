@@ -41,6 +41,23 @@ It does not support arbitrary molecular orientation, x/y-aligned H2, other
 atoms, supplements, corrections, solver controls, or public route-stage
 selection.
 
+### Expert staged Cartesian construction
+
+`cartesian_base_working_basis` is an expert/unstable staged-construction
+boundary, not a second Hamiltonian facade or a stable result schema.
+Ordinary users should call `cartesian_base_hamiltonian`. The staged constructor
+validates its system and basis descriptions, resolves the Coulomb expansion,
+and builds the parent and terminal realization in memory. Its current input, parent,
+terminal, provenance, inventory, and due-diligence fields are expert/unstable,
+non-schema inspection state rather than compatibility promises; inventory and
+due diligence may be `nothing` when no terminal basis is realized.
+
+This constructor does not assemble the complete one-body or nuclear operator,
+`Vee`, or `CartesianIDAHamiltonian`; write an artifact; run a solver or
+correction; provide a PRF wrapper; or automate a paper workflow. Its
+`source_mode_overrides` layout remains research-only, and PRF definitions
+remain private and unexported.
+
 One-center H:
 
 ```julia
@@ -182,6 +199,7 @@ equivalence, permutation-, tolerance-, or convention-invariant comparisons.
 
 ```@docs
 cartesian_base_hamiltonian
+cartesian_base_working_basis
 atomic_ida_density_interaction_matrix
 CartesianIDAHamiltonian
 cartesian_residual_gto_mwg_system

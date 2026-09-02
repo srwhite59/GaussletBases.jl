@@ -1024,6 +1024,27 @@ function _cartesian_base_terminal_basis(base)
     throw(ArgumentError("nesting=$(repr(nesting)) base Hamiltonian path is not yet wired to a terminal basis"))
 end
 
+"""
+    cartesian_base_working_basis(system; basis, supplemented=false, source_mode_overrides=())
+
+Construct expert/unstable staged Cartesian inspection and composition state.
+Ordinary users should call `cartesian_base_hamiltonian` instead.
+
+The function validates the `system::NamedTuple` and `basis::NamedTuple`, applies
+the existing expert supplement and source-mode controls, resolves the inputs
+and Coulomb expansion, and constructs the parent and terminal realization in
+memory. It does not assemble the complete one-body or nuclear operator, `Vee`,
+or `CartesianIDAHamiltonian`, and it writes no artifact or paper workflow. It
+also provides no solver, correction, or PRF wrapper.
+
+The current return carries `input`, `parent`, `terminal_basis`,
+`coulomb_expansion`, `source_mode_provenance`, `terminal_inventory`, and
+`terminal_due_diligence`. This staged result is not a stable schema: its fields,
+nested private types, source-mode records, inventory rows, report layouts, and
+the `source_mode_overrides` layout are expert/unstable compatibility details.
+The inventory and due-diligence fields may be `nothing` when no terminal basis
+is realized. PRF-specific definitions remain unexported and private.
+"""
 function cartesian_base_working_basis(system::NamedTuple; basis::NamedTuple,
     supplemented::Bool = false, source_mode_overrides = ())
     input = supplemented ? _cartesian_supplemented_inputs(system, basis) :
