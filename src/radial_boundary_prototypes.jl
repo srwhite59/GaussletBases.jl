@@ -1,5 +1,5 @@
 module _RadialPrototypeHighPrecFamilies
-include(joinpath(@__DIR__, "internal", "families_high_prec.jl"))
+include(joinpath(parentmodule(@__MODULE__)._PACKAGE_ROOT, "src", "internal", "families_high_prec.jl"))
 end
 
 const _RADIAL_BOUNDARY_PROTOTYPE_NAME = :paper_parity_g10_k6_x2
@@ -113,9 +113,7 @@ function _radial_boundary_prototype_path(name::Symbol)
                 "no cached radial boundary prototype is available for $(repr(name)); available names are $(join(string.(radial_boundary_prototype_names()), ", "))",
             ),
         )
-    return normpath(
-        joinpath(@__DIR__, "..", "data", "radial", "paper_parity_g10_k6_x2.jld2"),
-    )
+    return _package_data_path("radial", "paper_parity_g10_k6_x2.jld2")
 end
 
 function _prototype_digest_float_vector(values::AbstractVector{<:Real})

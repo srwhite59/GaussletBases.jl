@@ -362,11 +362,11 @@ function _optimized_sphere_point_coordinates(
 end
 
 _sphere_point_sets_path() =
-    normpath(joinpath(@__DIR__, "..", "data", "angular", "SpherePoints.jld2"))
+    _package_data_path("angular", "SpherePoints.jld2")
 _sphere_point_sets_manifest_path() =
-    normpath(joinpath(@__DIR__, "..", "data", "angular", "SpherePoints_manifest.toml"))
+    _package_data_path("angular", "SpherePoints_manifest.toml")
 _curated_sphere_point_sets_path() =
-    normpath(joinpath(@__DIR__, "..", "data", "angular", "curated_sphere_points.toml"))
+    _package_data_path("angular", "curated_sphere_points.toml")
 
 const _SPHERE_POINT_SET_CACHE =
     Ref{Union{Nothing,NamedTuple{(:orders, :sets),Tuple{Vector{Int},Dict{Int,SpherePointSet}}}}}(nothing)

@@ -6,6 +6,8 @@ using SHA
 using SparseArrays
 using SpecialFunctions
 using TOML
+const _PACKAGE_ROOT = normpath(joinpath(@__DIR__, ".."))
+_package_data_path(parts...) = normpath(joinpath(_PACKAGE_ROOT, "data", parts...))
 
 export AbstractFunction1D,
        AbstractPrimitiveFunction1D,

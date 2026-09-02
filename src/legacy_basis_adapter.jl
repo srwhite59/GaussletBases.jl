@@ -462,7 +462,7 @@ function Base.show(io::IO, data::LegacyBondAlignedHeteronuclearGaussianSupplemen
 end
 
 function _vendored_legacy_basisfile_path()
-    return normpath(joinpath(@__DIR__, "..", "data", "legacy", "BasisSets"))
+    return _package_data_path("legacy", "BasisSets")
 end
 
 function _legacy_basisfile_path(; basisfile::Union{Nothing, AbstractString} = nothing)
