@@ -1256,6 +1256,81 @@ policy, new examples or fixtures, and broader sliced-chain work. If truthful
 documentation requires an excluded change or exceeds a hard budget, make no
 implementation commit and report the exact mismatch.
 
+## Expert Staged Cartesian Construction Documentation
+
+`HP-PUBLIC-BASE-WORKING-DOC-FN-01` and
+`HP-PUBLIC-BASE-WORKING-DOC-TEST-01` authorize final documentation of the
+existing exported `cartesian_base_working_basis` function. The export remains
+expert/unstable. It is a staged inspection and composition boundary, not a
+second supported Hamiltonian facade; ordinary users should call
+`cartesian_base_hamiltonian`.
+
+The function accepts the same validated `system::NamedTuple` and
+`basis::NamedTuple` descriptions used by the current Cartesian base producer,
+plus its existing expert `supplemented` and `source_mode_overrides` controls.
+It resolves those inputs and the Coulomb expansion, constructs the parent, and
+realizes the terminal basis in memory. It does not itself assemble the complete
+one-body operator, nuclear attraction, `Vee`, or
+`CartesianIDAHamiltonian{Float64}`.
+
+The current staged return carries these fields:
+
+- `input`;
+- `parent`;
+- `terminal_basis`;
+- `coulomb_expansion`;
+- `source_mode_provenance`;
+- `terminal_inventory`; and
+- `terminal_due_diligence`.
+
+This list describes present inspection/composition state, not a stable public
+schema. Field names, nested private types, source-mode records, terminal
+inventory rows, and due-diligence report layouts are expert/unstable and are
+not compatibility promises. `terminal_inventory` and
+`terminal_due_diligence` may be `nothing` when the selected expert route has
+no terminal realization. The `source_mode_overrides` hook remains
+expert/research-only; documenting the constructor does not promote its current
+record layout into public policy.
+
+The constructor writes no Hamiltonian artifact and provides no solver,
+correction, PRF wrapper, automatic paper workflow, or complete operator
+assembly. PRF-specific definitions remain unexported and receive no public
+status through this staged constructor.
+
+Implementation is limited to one concise docstring in
+`src/cartesian_base_hamiltonian.jl`, one compact paragraph and curated entry
+beside `cartesian_base_hamiltonian` in `docs/src/reference/export.md`, and
+focused checks in `test/docs/runtests.jl`. Preferred/hard additions are
+`24/36` source-docstring, `20/32` reader/reference, and `10/16` docs-test lines,
+with no new file.
+
+The documentation check must replace the current count-only assertion with
+exact equality between `Docs.undocumented_names(GaussletBases)`, excluding the
+module self-binding, and this temporary five-name set:
+
+- `OneCenterAtomicNestedStructureDiagnostics`;
+- `one_center_atomic_nested_structure_diagnostics`;
+- `one_center_atomic_nested_structure_report`;
+- `diagnose_qwrg_residual_space`; and
+- `ShellLocalAngularProfileKey`.
+
+Exact set equality must reject substitution by any newly undocumented export.
+This is a temporary regression boundary pending explicitly authorized
+next-minor namespace transactions, not a general allowlist or de-export grant.
+All five implementations remain available for qualified internal and research
+use, and none may be de-exported by this packet. This namespace state does not
+begin v0.3 development.
+
+Acceptance requires `cartesian_base_working_basis` to remain exported, gain a
+Julia docstring, and appear in the curated reference with repeated,
+unambiguous expert/unstable and non-schema wording. Existing public Cartesian,
+PQS, Screening, export-integrity, package, docs, and Documenter checks remain
+the execution gates. No definition, signature, field, route, default, method,
+dispatch, staged result, PRF status, numerical result, test owner, workflow,
+dependency, version, tag, or release may change. If truthful documentation
+requires an excluded change or exceeds a hard budget, make no implementation
+commit and report the exact mismatch.
+
 ## Supported Public Surface Documentation
 
 `HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01` and

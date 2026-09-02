@@ -1429,3 +1429,69 @@ Validation / carrying cost:
   branch path is removed from ownership, the FN record returns to implemented
   maintenance, and the TEST record to completed maintenance. No strategic-goal
   change occurred, and no checkpoint is due.
+
+## Cartesian Hamiltonian Producer Pass 570 - Authorize Expert Staged Cartesian Construction Documentation
+
+Commit(s):
+- baseline `83db3f50d8f3e44a0d3d31a6742648db99e2c575`;
+- this docs-only authority amendment.
+
+Summary / goal advancement:
+- Added `HP-PUBLIC-BASE-WORKING-DOC-FN-01/TEST-01` for the retained exported
+  `cartesian_base_working_basis` constructor. The contract documents its
+  resolved-input, Coulomb, parent, terminal, provenance, inventory, and due-
+  diligence stage while keeping the complete Hamiltonian facade, artifacts,
+  solvers, corrections, and PRF wrappers separate.
+- MT6 advances the final retained undocumented expert export without making
+  its staged return a compatibility schema. The current six-name runtime audit
+  is exact: this constructor plus five reserved namespace candidates.
+
+Guardrail / carrying cost:
+- Preferred/hard additions are `24/36` source-docstring, `20/32` reader/
+  reference, and `10/16` docs-test lines, with no new file. The count-only test
+  must become exact equality to the five reserved names, preventing a newly
+  undocumented export from silently substituting for an intended candidate.
+- deleted: nothing in this authority pass; simplified: the last retained expert
+  export receives one explicit unstable staged-construction boundary;
+  quarantined: return-field compatibility, PRF promotion, complete operators,
+  artifacts, solvers, paper workflows, all namespace transactions, and v0.3;
+  not deleted because: active drivers, source consumers, and validation use the
+  staged constructor.
+- exact remaining blocker: repo-manager implementation within the three listed
+  source/docs/test paths and hard budgets. If truthful documentation requires
+  behavior or API changes, implementation must stop without a commit and report
+  the mismatch.
+
+### Medium-Term Goal Checkpoint After Pass 570
+
+- **MT1 - active/maintenance:** public endpoint ownership and fail-closed test
+  selection remain accepted; no numerical endpoint or test owner changes here.
+- **MT2 - completed:** controlled Cr2 source migration remains closed.
+- **MT3 - active:** pending producer facilities and corrected paper-oracle
+  interpretation are unchanged.
+- **MT4 - active:** residual/protected machinery remains internal where
+  classified; PRF-specific wrappers stay unexported.
+- **MT5 - active/maintenance:** final v0.2 release state, path-aware CI, and the
+  three public gate identities remain fixed.
+- **MT6 - active:** reader classification reaches the last retained expert
+  export. After implementation, only the exact five reserved namespace names
+  may remain undocumented; their next-minor transactions require separate
+  authority and do not independently begin v0.3.
+- **MT7 - completed/maintenance:** external Cartesian-GTO interchange and its
+  reader front door remain accepted and unchanged.
+
+### Strategic Compression After Pass 570
+
+- The broad undocumented-export count is no longer an actionable backlog.
+  Supported and retained expert surfaces have bounded reader contracts; the
+  remaining names are explicit namespace-policy reservations.
+- Public Hamiltonian construction stays centered on
+  `cartesian_base_hamiltonian`. The working-basis constructor is retained only
+  as expert staged inspection/composition state, with no stable field schema.
+- PRF de-promotion remains durable: internal provenance and diagnostics survive,
+  but no later expert constructor silently restores their public status.
+- Final v0.2 tags/releases, public numerical gates, and path-aware docs-only CI
+  are stable maintenance infrastructure rather than active release work.
+- The next lane after implementation closeout is an explicit next-minor
+  namespace decision, not automatic documentation, source deletion,
+  performance work, or v0.3 development.

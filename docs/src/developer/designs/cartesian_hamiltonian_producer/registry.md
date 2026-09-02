@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `c778e121d50fe8a41680fde7d913bb459e1b7f2f3f4611b73dbbb9c1110b092d`.
+> [authority.toml](authority.toml), SHA-256 `046623616f07d39d7d05442d2ac9b2f82eecba1e01426ce85e90b3402d392afc`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2600,6 +2600,39 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `553`
 - **Dependencies:** `HP-PUBLIC-ATOMIC-IDA-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-PARTITION-LEAF-DOC-TEST-01`
 - **Scope:** Maintain only the accepted family-scoped checks from commit 8f84afb491ff7cc0f818a6ed982eca638a509b65 that the exact ten atomic-IDA inspection and tiny two-electron bindings remain exported, carry Julia documentation, and appear with the canonical context in the Atomic IDA inspection and tiny two-electron reference section of docs/src/reference/atomic\_and\_ordinary.md. Preserve the read-only/order, on-demand dense reconstruction/no-cache, stored-dense application, tiny one-up/one-down, reference-Lanczos controls/return-fields, and non-production-solver checks. Preserve Documenter as the executable @docs resolution gate and the accepted undocumented-export count of 30, excluding the module self-binding. The accepted test addition is 15 lines. The remaining names require their separately recorded public-documentation, expert/experimental-label, or de-export-audit decisions; do not treat them automatically as documentation debt. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, ordinary-test edit, or broader reference-page scan.
+
+### HP-PUBLIC-BASE-WORKING-DOC-FN-01 - document expert staged Cartesian construction
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Expert Staged Cartesian Construction Documentation`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/reference/export.md`
+  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+- **Evidence:**
+  - `git_commit`: `83db3f50d8f3e44a0d3d31a6742648db99e2c575`
+  - `manager_pass`: `570`
+- **Dependencies:** `HP-PQS-PRF-CONSUMER-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01`, `HP-R1-FILE-01`
+- **Scope:** Document only the existing exported expert/unstable cartesian\_base\_working\_basis function. Add one concise docstring immediately before its existing definition in src/cartesian\_base\_hamiltonian.jl and one compact Expert staged Cartesian construction paragraph beside cartesian\_base\_hamiltonian in docs/src/reference/export.md, including a curated @docs entry. Preserve the existing system::NamedTuple and basis::NamedTuple validation boundary and the existing supplemented and source\_mode\_overrides expert controls. State that the function resolves inputs and the Coulomb expansion and constructs the parent plus terminal-basis realization in memory, but does not itself assemble the complete one-body, nuclear, Vee, CartesianIDAHamiltonian, artifact, solver, correction, PRF wrapper, or paper workflow; ordinary users call cartesian\_base\_hamiltonian. The current staged return carries input, parent, terminal\_basis, coulomb\_expansion, source\_mode\_provenance, terminal\_inventory, and terminal\_due\_diligence, but its fields, nested private types, inventory rows, report layouts, and source\_mode\_overrides record layout remain explicitly expert/unstable, non-schema, and non-compatibility promises. terminal\_inventory and terminal\_due\_diligence may be nothing when the selected expert route has no terminal realization. PRF-specific definitions remain unexported and gain no public status. Preferred/hard added-line limits are 24/36 source-docstring and 20/32 reader/reference lines, with no new file. Preserve every definition, signature, field, route, default, method, dispatch, staged result, export, PRF status, numerical result, test owner, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude all five reserved undocumented names, namespace reduction, v0.3 work, new examples or fixtures, source behavior, API expansion, and global documentation policy. If truthful documentation requires any excluded change or exceeds a hard budget, make no implementation commit and report the exact mismatch.
+
+### HP-PUBLIC-BASE-WORKING-DOC-TEST-01 - validate expert staged Cartesian construction documentation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Expert Staged Cartesian Construction Documentation`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `83db3f50d8f3e44a0d3d31a6742648db99e2c575`
+  - `manager_pass`: `570`
+- **Dependencies:** `HP-PQS-PRF-CONSUMER-TEST-01`, `HP-PUBLIC-BASE-WORKING-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-SUPPORTED-SURFACE-DOC-TEST-01`
+- **Scope:** Add focused checks only in existing test/docs/runtests.jl, with a preferred limit of 10 and hard limit of 16 added lines. Require cartesian\_base\_working\_basis to remain exported, gain Julia documentation, and appear in the curated Export reference beside cartesian\_base\_hamiltonian. Require repeated unambiguous expert/unstable, staged-construction, non-second-facade, no-complete-operator, no-artifact, no-solver, no-correction, no-PRF-wrapper, and non-stable-result-schema wording from the canonical contract. Replace the current undocumented-export count assertion with exact set equality, excluding only the GaussletBases module self-binding, for exactly OneCenterAtomicNestedStructureDiagnostics, one\_center\_atomic\_nested\_structure\_diagnostics, one\_center\_atomic\_nested\_structure\_report, diagnose\_qwrg\_residual\_space, and ShellLocalAngularProfileKey. This temporary exact-set regression must reject substitution by any newly undocumented export and remains pending an explicitly authorized next-minor namespace transaction; it is not a general allowlist and grants no de-export. Use Documenter as the executable @docs resolution gate and existing public Cartesian, PQS, Screening, export-integrity, and package checks as unchanged acceptance. Add no test file, numerical assertion, fixture, parser framework, checkdocs change, workflow, source behavior, definition, signature, field, route, default, dispatch, staged result, PRF-status change, export change, dependency, example, version, tag, release, namespace transaction, or v0.3 work.
 
 ### HP-PUBLIC-EXPERT-GEOMETRY-DOC-FN-01 - document expert bond-aligned geometry inspection
 
