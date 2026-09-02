@@ -176,6 +176,103 @@ changed from `2.197 ms / 9.082 MB` to `2.154 ms / 8.986 MB`; warm complete
 matched-comparison cost changed from `22.573 s / 2.535 GB` to
 `22.570 s / 2.534 GB`. No material cold or warm regression was observed.
 
+## Generic Staged By-Center Sidecar Retirement
+
+`HP-RETIRE-BYCENTER-SIDECAR-FN-01` authorizes one bounded deletion of the
+unused generic staged by-center sidecar. `HP-RETIRE-BYCENTER-SIDECAR-TEST-01`
+authorizes unchanged existing owners and a transient baseline/candidate parity
+probe. Both grants are temporary and close after accepted implementation.
+
+At baseline `01ad223d3c822c54289d5d8843b3d71adbf4c520`, the tracked source
+defines a generic sidecar carrier, range selection, construction and attachment
+helpers, one selector branch, one path-reporting branch, and one nuclear
+contraction overload. No tracked constructor or caller installs that carrier.
+The only live polymorphic consumer resolves through the separately owned
+product-staged carrier. Ignored May 2026 scratch probes and one completed paper
+worker log are historical evidence, not current executable or compatibility
+consumers.
+
+### Authorized Deletion
+
+Remove exactly this private closure:
+
+```text
+_CartesianNestedStagedByCenterSidecar3D
+_nested_default_staged_sidecar_column_ranges
+_nested_build_staged_by_center_sidecar
+_nested_attach_staged_by_center_sidecar!
+the generic carrier branch in _nested_staged_by_center_sidecar
+the :staged_factorized branch in _nested_by_center_sidecar_path
+the _CartesianNestedStagedByCenterSidecar3D overload of
+  _qwrg_bond_aligned_staged_by_center_nuclear_one_body_by_center
+```
+
+Correct only the directly stale current documentation that presents
+`:staged_factorized` as an available route or says that the nuclear method has
+both generic staged and product-staged implementations. Historical archived
+design text may retain the retired vocabulary.
+
+The retirement must preserve unchanged:
+
+- fixed-block sidecar storage and `_nested_staged_by_center_sidecar_cache`;
+- `_CartesianNestedProductStagedByCenterSidecar3D`, all product-staged
+  builders and dispatch, and the active product-staged nuclear method;
+- `_nested_nonzero_coefficient_rows` and
+  `_qwrg_contract_staged_nuclear_block`;
+- the factorized-final route and general dense fallback;
+- ordinary-QW, projected-q-shell, nested, and high-order numerical behavior;
+- the deferred XY, shell-plus-core, and hierarchical material.
+
+Do not replace the deleted carrier with another type, tuple, named tuple,
+adapter, alias, deprecation, cache, metadata field, status vocabulary, helper,
+or compatibility path. Git history is the archive.
+
+### Ownership And Budget
+
+Implementation source is confined to:
+
+```text
+src/cartesian_nested_faces.jl
+src/ordinary_qw_raw_blocks.jl
+```
+
+Direct stale-document correction is confined to:
+
+```text
+docs/src/algorithms/cartesian_nested_endcap_panel_shared_shell.md
+docs/src/developer/cartesian_parent_factors_and_cpb_kernels.md
+```
+
+The expected source reduction is approximately `214` lines. Added source lines
+have a hard limit of zero, and the net source delta must be negative. Current
+documentation may add at most `2` preferred or `4` hard lines while removing
+the stale claims. No committed test, fixture, probe, new source file, API,
+export, dependency, workflow, version, or release artifact may be added or
+edited.
+
+### Required Validation And Failure Rule
+
+Repeat the caller scan before editing. Use a transient probe outside the
+repository to freeze the baseline and compare the candidate for:
+
+- ordinary-QW factorized-final by-center H1;
+- product-staged endcap-panel by-center H1;
+- every per-center matrix, their sum, and the complete one-body matrix;
+- unchanged route selection as `:factorized_final` and
+  `:product_staged_factorized`, respectively;
+- product-staged agreement with the general dense oracle at the existing
+  accepted tolerance.
+
+Baseline-to-candidate matrices must agree exactly. Existing core, public
+Cartesian, and matched-H2+ release owners run unchanged; no committed test is
+authorized. Record representative before/after elapsed time and allocation as
+carrying-cost evidence, but performance is not permission to alter arithmetic.
+
+If a current non-ignored production, test, paper, or downstream constructor or
+sibling dependency is found; if exact parity or existing tests fail; if any
+source line must be added; or if deletion requires a replacement path, make no
+implementation commit and report the exact obstacle.
+
 ## Angular-Balanced Diatomic Geometry
 
 For each shared z-axis diatomic shell step, shellification computes the target

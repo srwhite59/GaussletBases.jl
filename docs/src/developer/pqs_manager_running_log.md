@@ -1600,3 +1600,36 @@ Validation / carrying cost:
   exact remaining blocker: none. FN is retired/no-grant and TEST is
   completed/no-grant. The separately audited by-center retirement requires its
   own authority, and no checkpoint is due.
+
+## Cartesian Hamiltonian Producer Pass 574 - Authorize Generic By-Center Sidecar Retirement
+
+Commit(s):
+- baseline `01ad223d3c822c54289d5d8843b3d71adbf4c520`;
+- this docs-only authority amendment.
+
+Summary / goal advancement:
+- Added `HP-RETIRE-BYCENTER-SIDECAR-FN-01/TEST-01` for complete removal of the
+  uninstalled generic staged by-center carrier, its builder/attach closure,
+  selector/path branches, generic nuclear overload, and two stale current-doc
+  claims. Tracked source has no installer or direct caller; active polymorphic
+  consumption resolves through the separately preserved product-staged owner.
+- LT5 advances through another bounded carrying-cost deletion without changing
+  the ordinary factorized-final path, product-staged endcap-panel path, dense
+  fallback, fixed-block cache/storage, or any numerical contract. No medium-
+  term goal changes, and the next checkpoint remains Pass 575.
+
+Guardrail / carrying cost:
+- The expected reduction is approximately `214` source lines. Added source is
+  capped at zero, no test edit or new file is permitted, and current-doc repair
+  is limited to the two exact stale claims. Ignored old probes and a completed
+  paper log remain historical evidence, not compatibility obligations.
+- Existing owners plus a transient external probe must establish exact
+  baseline/candidate by-center, summed, and complete H1 parity for ordinary
+  factorized-final and product-staged endcap-panel routes, while retaining the
+  existing product-staged dense-oracle tolerance. Any live constructor, sibling
+  dependency, parity loss, source addition, replacement carrier, or test change
+  stops implementation without a commit.
+- deleted: nothing in this authority pass; simplified: one inert sidecar route
+  is designated for deletion; quarantined: high-order/deferred milestones,
+  performance, namespace, workflow, release, and all replacement machinery;
+  exact remaining blocker: repo-manager implementation under these two grants.
