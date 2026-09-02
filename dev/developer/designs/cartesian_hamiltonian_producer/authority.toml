@@ -32,7 +32,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pair
 sha256 = "62578861400c82d1521aa1d17df6ca4dc2831d3877e6630c792882e10f4b43e8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
-sha256 = "db2e6ef8f780f02d78eee4b827e41faa3c713da2279d6ab466b9d2e35b18d9d5"
+sha256 = "c41f41223288d084681e3b5f7d09f34382f44808a099203149b53c5f23c8d376"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/complete_core_shell_rhf_retirement.md"
 sha256 = "99520abb40f2d828f9cd80fb56517259fb20c37310a58924380d3d6c2e00f4be"
@@ -6803,6 +6803,76 @@ title = "terminal basis build result — rejected"
     heading = "Terminal Basis And Base Assembly"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
+[[records]]
+dependency_ids = []
+grant = "retirement"
+id = "HP-RETIRE-BYCENTER-SIDECAR-FN-01"
+lifecycle = "approved"
+scope = "Delete only the uninstalled generic staged by-center sidecar carrier, default-range/builder/attach helpers, generic selector and :staged_factorized path branches, matching generic nuclear overload, and two directly stale current documentation claims; preserve fixed-block storage/cache, every product-staged owner and method, nonzero-row and contraction kernels, factorized-final and dense routes, high-order/deferred material, and all numerical behavior. Add zero source lines and no replacement, API, cache, metadata, helper, test, file, dependency, workflow, version, or release change; stop without a commit on any live caller, sibling dependency, parity loss, or replacement need."
+surfaces = ["docs", "source"]
+title = "retire unused generic staged by-center sidecar"
+
+    [[records.document_refs]]
+    heading = "Generic Staged By-Center Sidecar Retirement"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "01ad223d3c822c54289d5d8843b3d71adbf4c520"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "574"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_nested_endcap_panel_shared_shell.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/cartesian_parent_factors_and_cpb_kernels.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_nested_faces.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_qw_raw_blocks.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-RETIRE-BYCENTER-SIDECAR-FN-01"]
+grant = "retirement"
+id = "HP-RETIRE-BYCENTER-SIDECAR-TEST-01"
+lifecycle = "approved"
+scope = "Validate retirement with unchanged core, public Cartesian, and matched-H2+ release owners plus one uncommitted baseline/candidate probe outside the repository. Require exact ordinary factorized-final and product-staged endcap-panel per-center, summed, and complete H1 parity; unchanged route identities; and product-staged dense-oracle agreement at the existing tolerance. Add or edit no committed test, assertion, fixture, runner, workflow, helper, or probe."
+surfaces = ["tests"]
+title = "validate generic staged by-center sidecar retirement"
+
+    [[records.document_refs]]
+    heading = "Generic Staged By-Center Sidecar Retirement"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "01ad223d3c822c54289d5d8843b3d71adbf4c520"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "574"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/core/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/pqs_h2plus_table1_release_runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 evidence_refs = []
