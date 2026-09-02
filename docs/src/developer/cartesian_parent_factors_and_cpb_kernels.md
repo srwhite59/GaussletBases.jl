@@ -932,9 +932,9 @@ Current electron-nuclear construction and consumption:
   - `_qwrg_contract_staged_nuclear_block(left_coefficients,
     right_coefficients, parent_submatrix)` applies local retained coefficients
     to that submatrix.
-  - `_qwrg_bond_aligned_staged_by_center_nuclear_one_body_by_center(...)` has
-    staged and product-staged methods that iterate block pairs, fill local
-    parent submatrices, contract them, and place them into final by-center
+  - `_qwrg_bond_aligned_staged_by_center_nuclear_one_body_by_center(...)` has a
+    product-staged method that iterates block pairs, fills local
+    parent submatrices, contracts them, and places them into final by-center
     matrices.
   - `_qwrg_diatomic_nuclear_one_body_by_center(basis, bundle_x, bundle_y,
     bundle_z, expansion)` is the full direct product parent version. It builds

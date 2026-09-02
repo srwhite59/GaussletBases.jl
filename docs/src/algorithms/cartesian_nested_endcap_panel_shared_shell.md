@@ -65,7 +65,6 @@ repair while retaining the numerical and opt-in policy boundaries below.
    contraction path:
    - `:factorized_final` for exactly factorized final blocks
    - `:product_staged_factorized` for product-owned staged metadata
-   - `:staged_factorized` for generic staged metadata
    - `:general_parent_dense` as the dense fallback/oracle
 
    If exact factorized final-basis extraction succeeds, `:factorized_final` is
