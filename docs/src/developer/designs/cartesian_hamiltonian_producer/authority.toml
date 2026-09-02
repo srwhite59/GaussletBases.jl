@@ -32,7 +32,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pair
 sha256 = "62578861400c82d1521aa1d17df6ca4dc2831d3877e6630c792882e10f4b43e8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
-sha256 = "d3224221cd0ed63307949238753ed931591062e5ad5ac3dc1cee0e17f245d0f8"
+sha256 = "f93e74bc8c0e35bd4c69931e8a9166d980d89dd196e3a4cd50829f44ff0bdc24"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/complete_core_shell_rhf_retirement.md"
 sha256 = "99520abb40f2d828f9cd80fb56517259fb20c37310a58924380d3d6c2e00f4be"
@@ -6805,11 +6805,12 @@ title = "terminal basis build result — rejected"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
 [[records]]
 dependency_ids = []
-grant = "retirement"
+grant = "none"
 id = "HP-RETIRE-BYCENTER-SIDECAR-FN-01"
-lifecycle = "approved"
-scope = "Delete only the now-orphaned generic staged by-center sidecar carrier, default-range/builder/attach helpers, generic selector and :staged_factorized path branches, matching generic nuclear overload, and two directly stale current documentation claims. The high-order owner has archived high-order/manager-lane and released its compatibility claim; do not edit, move, or delete that retained worktree or its ignored evidence. Preserve fixed-block storage/cache, every product-staged owner and method, nonzero-row and contraction kernels, factorized-final and dense routes, all current PQS behavior, and all numerical results. Add zero source lines and no replacement, API, cache, metadata, helper, test, file, dependency, workflow, version, or release change; stop without a commit on any non-archived caller, parity loss, or replacement need."
-surfaces = ["docs", "source"]
+lifecycle = "retired"
+paths = []
+scope = "The orphaned generic staged by-center sidecar carrier, default-range/builder/attach helpers, generic selector and :staged_factorized path branches, matching generic nuclear overload, and two stale current-documentation claims were removed in commit f13e946dfffd47ca9bc06e003f76f54c25316415. The accepted implementation deleted 210 source lines with zero additions and added no replacement, API, cache, metadata, helper, test, file, dependency, workflow, version, or release change. Fixed-block storage/cache, every product-staged owner and method, nonzero-row and contraction kernels, factorized-final and dense routes, current PQS behavior, and numerical results remain intact. The archived high-order worktree and its ignored evidence remain physically preserved behind their separate archive gate and carry no mainline compatibility claim."
+surfaces = []
 title = "retire unused generic staged by-center sidecar"
 
     [[records.document_refs]]
@@ -6827,6 +6828,9 @@ title = "retire unused generic staged by-center sidecar"
     kind = "git_commit"
     value = "b4e632f1417f15e7b03b4b9a165ebf519302ce22"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "f13e946dfffd47ca9bc06e003f76f54c25316415"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "574"
     [[records.evidence_refs]]
@@ -6835,30 +6839,17 @@ title = "retire unused generic staged by-center sidecar"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "576"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/algorithms/cartesian_nested_endcap_panel_shared_shell.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/developer/cartesian_parent_factors_and_cpb_kernels.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian_nested_faces.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/ordinary_qw_raw_blocks.jl"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "577"
 [[records]]
-dependency_ids = ["HP-RETIRE-BYCENTER-SIDECAR-FN-01"]
-grant = "retirement"
+dependency_ids = []
+grant = "none"
 id = "HP-RETIRE-BYCENTER-SIDECAR-TEST-01"
-lifecycle = "approved"
-scope = "Validate retirement with unchanged core, public Cartesian, projected-q-shell/nested, and matched-H2+ release owners plus one uncommitted baseline/candidate probe outside the repository. Require exact ordinary factorized-final and product-staged endcap-panel per-center, summed, and complete H1 parity; unchanged route identities; and product-staged dense-oracle agreement at the existing tolerance. Add or edit no committed test, assertion, fixture, runner, workflow, helper, or probe, and do not run or modify the archived high-order worktree."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Unchanged existing owners and an uncommitted baseline/candidate probe established exact ordinary factorized-final and product-staged endcap-panel parity for every per-center matrix, summed nuclear matrix, kinetic matrix, coefficients, and complete H1. Dimensions remained 433 and 397, route identities were unchanged, and the product-staged dense-oracle error was 8.88e-16. Core, public Cartesian 232/232, nested PQS 464/464 plus supplemented facade 64/64, matched H2+ 18/18, docs 157/157 plus 10/10, package load, authority checks, Documenter, CI run 33664855002, and Docs run 33664855006 passed. No committed test, assertion, fixture, runner, workflow, helper, or probe changed, and the archived high-order worktree was not run or modified."
+surfaces = []
 title = "validate generic staged by-center sidecar retirement"
 
     [[records.document_refs]]
@@ -6876,6 +6867,9 @@ title = "validate generic staged by-center sidecar retirement"
     kind = "git_commit"
     value = "b4e632f1417f15e7b03b4b9a165ebf519302ce22"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "f13e946dfffd47ca9bc06e003f76f54c25316415"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "574"
     [[records.evidence_refs]]
@@ -6884,19 +6878,9 @@ title = "validate generic staged by-center sidecar retirement"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "576"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/core/runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/pqs_h2plus_table1_release_runtests.jl"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "577"
 [[records]]
 dependency_ids = []
 evidence_refs = []

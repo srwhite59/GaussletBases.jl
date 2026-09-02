@@ -178,10 +178,9 @@ matched-comparison cost changed from `22.573 s / 2.535 GB` to
 
 ## Generic Staged By-Center Sidecar Retirement
 
-`HP-RETIRE-BYCENTER-SIDECAR-FN-01` authorizes one bounded deletion of the
+`HP-RETIRE-BYCENTER-SIDECAR-FN-01` records the accepted retirement of the
 unused generic staged by-center sidecar. `HP-RETIRE-BYCENTER-SIDECAR-TEST-01`
-authorizes unchanged existing owners and a transient baseline/candidate parity
-probe. Both grants are temporary and close after accepted implementation.
+records its completed validation. Both grants are closed.
 
 ### Owner And Caller Closure
 
@@ -215,9 +214,10 @@ The generic sidecar is therefore orphaned after the accepted owner release.
 The product-staged carrier remains installed by current PQS/endcap-panel
 construction and is outside this retirement.
 
-### Authorized Deletion
+### Accepted Deletion
 
-Remove exactly this private closure:
+Commit `f13e946dfffd47ca9bc06e003f76f54c25316415` removed exactly this
+private closure:
 
 ```text
 _CartesianNestedStagedByCenterSidecar3D
@@ -230,13 +230,13 @@ the _CartesianNestedStagedByCenterSidecar3D overload of
   _qwrg_bond_aligned_staged_by_center_nuclear_one_body_by_center
 ```
 
-Correct only the directly stale current documentation that presents
-`:staged_factorized` as an available route or says that the nuclear method has
+It corrected only the directly stale current documentation that presented
+`:staged_factorized` as an available route or said that the nuclear method had
 both generic staged and product-staged implementations. Historical archived
 design text, frozen releases, and the retained high-order worktree may keep the
 retired vocabulary.
 
-The retirement must preserve unchanged:
+The retirement preserved unchanged:
 
 - fixed-block sidecar storage and `_nested_staged_by_center_sidecar_cache`;
 - `_CartesianNestedProductStagedByCenterSidecar3D`, all product-staged
@@ -249,37 +249,35 @@ The retirement must preserve unchanged:
 - the deferred XY, shell-plus-core, hierarchical, annulus, and other
   high-order material.
 
-Do not replace the deleted carrier with another type, tuple, named tuple,
-adapter, alias, deprecation, cache, metadata field, status vocabulary, helper,
-or compatibility path. Git history is the main-source archive.
+No replacement type, tuple, named tuple, adapter, alias, deprecation, cache,
+metadata field, status vocabulary, helper, or compatibility path was added.
+Git history is the main-source archive.
 
-### Ownership And Budget
+### Accepted Scope And Accounting
 
-Implementation source is confined to:
+Implementation source was confined to:
 
 ```text
 src/cartesian_nested_faces.jl
 src/ordinary_qw_raw_blocks.jl
 ```
 
-Direct stale-document correction is confined to:
+Direct stale-document correction was confined to:
 
 ```text
 docs/src/algorithms/cartesian_nested_endcap_panel_shared_shell.md
 docs/src/developer/cartesian_parent_factors_and_cpb_kernels.md
 ```
 
-The expected source reduction is approximately `214` lines. Added source lines
-have a hard limit of zero, and the net source delta must be negative. Current
-documentation may add at most `2` preferred or `4` hard lines while removing
-the stale claims. No committed test, fixture, probe, new source file, API,
-export, dependency, workflow, version, or release artifact may be added or
-edited.
+The exact source delta was `+0/-210`. The two current-document corrections
+added three and removed four lines. No committed test, fixture, probe, new
+source file, API, export, dependency, workflow, version, or release artifact
+was added or edited.
 
-### Required Validation And Failure Rule
+### Accepted Validation
 
-Repeat the main and non-archived-consumer caller scan before editing. Use a
-transient probe outside the repository to freeze the baseline and compare the
+A repeated main and non-archived-consumer caller scan found no live installer.
+A transient probe outside the repository froze the baseline and compared the
 candidate for:
 
 - ordinary-QW factorized-final by-center H1;
@@ -290,17 +288,18 @@ candidate for:
 - product-staged agreement with the general dense oracle at the existing
   accepted tolerance.
 
-Baseline-to-candidate matrices must agree exactly. Existing core, public
-Cartesian, projected-q-shell/nested, and matched-H2+ release owners run
-unchanged; no committed test is authorized. Record representative before/after
-elapsed time and allocation as carrying-cost evidence, but performance is not
-permission to alter arithmetic.
+All baseline-to-candidate matrices agreed bitwise. The factorized and
+product-staged dimensions remained `433` and `397`, and the product-staged
+dense-oracle error was `8.88e-16`. Representative factorized time changed from
+`49.33 ms` to `49.98 ms`, with allocation falling by `16` bytes; product-staged
+time changed from `56.01 ms` to `59.12 ms`, with allocation unchanged. These
+measurements show no material performance or allocation regression.
 
-If a current non-archived production, test, paper, or downstream installer is
-found; if exact parity or existing tests fail; if any source line must be added;
-or if deletion requires a replacement path, make no implementation commit and
-report the exact obstacle. Archived high-order files may be inspected but must
-not be modified, moved, or deleted by this transaction.
+Existing core, public Cartesian (`232/232`), nested PQS (`464/464`) and
+supplemented facade (`64/64`), matched H2+ (`18/18`), and documentation
+(`157/157` and `10/10`) owners passed unchanged. Package load, authority checks,
+Documenter, CI run `33664855002`, and Docs run `33664855006` also passed. The
+archived high-order worktree and its evidence were not modified.
 
 ## Angular-Balanced Diatomic Geometry
 

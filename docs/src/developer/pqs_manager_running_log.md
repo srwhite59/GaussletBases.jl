@@ -1714,3 +1714,36 @@ Guardrail / next step:
   and AddNest evidence plus replacement design; exact blocker: repo-manager
   implementation under the two temporary grants. Any newly found non-archived
   caller, source addition, replacement need, or parity loss stops the pass.
+
+## Cartesian Hamiltonian Producer Pass 577 - Close Generic By-Center Sidecar Retirement
+
+Commit(s):
+- implementation `f13e946dfffd47ca9bc06e003f76f54c25316415`;
+- this docs-only lifecycle closeout.
+
+Summary / goal advancement:
+- Accepted the exact `+0/-210` source deletion of the orphaned generic staged
+  by-center carrier, its builder/attach closure and route branches, and its
+  matching nuclear overload. Only the two authorized current-document claims
+  changed; no replacement, source addition, test, API, cache, dependency,
+  workflow, version, or release change was introduced.
+- Baseline probes established bitwise identity for factorized-final dimension
+  `433` and product-staged dimension `397`: every per-center matrix, summed
+  nuclear matrix, kinetic matrix, coefficients, and complete H1 matched. The
+  product-staged dense-oracle error remained `8.88e-16`, and representative
+  timing/allocation measurements showed no material regression.
+- Core, public Cartesian `232/232`, nested PQS `464/464`, supplemented facade
+  `64/64`, matched H2+ `18/18`, and docs `157/157` plus `10/10` passed. CI run
+  `33664855002` and Docs run `33664855006` were green. LT5 advances through a
+  net conceptual and source reduction with current PQS numerics unchanged.
+
+Guardrail / next step:
+- `HP-RETIRE-BYCENTER-SIDECAR-FN-01` is retired/no-grant and its TEST record is
+  completed/no-grant. Product-staged, factorized-final, dense fallback,
+  fixed-block cache storage, and shared contraction kernels remain active.
+- deleted: the complete generic sidecar closure; simplified: by-center route
+  vocabulary now names only live paths; quarantined: deferred historical
+  milestones and all high-order/AddNest evidence; not deleted because: the
+  product-staged and factorized paths serve current endpoints; exact remaining
+  blocker: none for this retirement. The archived high-order worktree remains
+  physically untouched until its separate evidence-preservation gate closes.
