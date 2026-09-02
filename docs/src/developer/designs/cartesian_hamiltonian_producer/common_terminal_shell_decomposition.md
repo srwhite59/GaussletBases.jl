@@ -80,11 +80,11 @@ complete-shell retained counts, or a PQS/WL convergence policy.
 
 ## Projected-Q-Shell Staged Descriptor Retirement
 
-`HP-RETIRE-PQS-STAGED-DESCRIPTOR-FN-01` authorizes one source-only retirement
-of the inert metadata/prototype descriptor attached to the otherwise active
-projected-q-shell layer. `HP-RETIRE-PQS-STAGED-DESCRIPTOR-TEST-01` authorizes
-only running the listed existing owners and transient before/after probes; it
-authorizes no test edit.
+`HP-RETIRE-PQS-STAGED-DESCRIPTOR-FN-01` records the completed source-only
+retirement of the inert metadata/prototype descriptor attached to the otherwise
+active projected-q-shell layer. `HP-RETIRE-PQS-STAGED-DESCRIPTOR-TEST-01`
+records completed validation with unchanged existing owners and transient
+before/after probes. Both execution grants are closed.
 
 The descriptor was a proposed future staged sidecar. It is not consumed by the
 metric packet, final basis, Hamiltonian, current product-staged sidecars, or a
@@ -92,7 +92,7 @@ public API. Its retained copies of support, source-axis coefficients, cleanup
 data, prototype contractions, and false consumption flags duplicate facts from
 the actual layer construction without participating in that construction.
 
-Delete the complete private closure:
+The completed retirement deleted this private closure:
 
 ```text
 _CartesianNestedProjectedQShellStagedUnitDescriptor3D
@@ -111,14 +111,14 @@ _nested_projected_q_shell_cleaned_mode_matrix
 _nested_projected_q_shell_descriptor_metric_product_contraction (both methods)
 ```
 
-In `_nested_projected_q_shell_layer`, make coefficient assembly return the
+In `_nested_projected_q_shell_layer`, coefficient assembly now returns the
 existing `_nested_projected_q_shell_parent_coefficients(...)` result directly.
-Remove descriptor construction and only the diagnostics/provenance entries
-whose subject is descriptor availability, descriptor metadata-only status,
-prototype consumption, or the false `active_builder_consumes` claim. In
-`src/cartesian_nested_diatomic.jl`, remove only the two-line
-`pqs_staged_unit_descriptor` propagation. Do not replace any deleted fact with
-a smaller carrier, `NamedTuple`, accessor, alias, deprecation, serialization
+Descriptor construction and only the diagnostics/provenance entries whose
+subject was descriptor availability, descriptor metadata-only status,
+prototype consumption, or the false `active_builder_consumes` claim were
+removed. The two-line `pqs_staged_unit_descriptor` propagation was removed
+from `src/cartesian_nested_diatomic.jl`. No deleted fact was replaced by a
+smaller carrier, `NamedTuple`, accessor, alias, deprecation, serialization
 record, status vocabulary, or copied diagnostic.
 
 The active projected-q-shell construction remains authoritative and unchanged:
@@ -134,7 +134,7 @@ The generic by-center sidecar, old XY/shell-plus-core/hierarchical milestones,
 active product-staged sidecars, factorized/support-reference kernels, and the
 high-order branch are outside this transaction.
 
-### Caller Proof And Failure Rule
+### Caller Proof And Accepted Boundary
 
 At baseline `1e8e31377efb5778df8e48c9d06c4e2237fd8a81`, tracked live references
 to the descriptor closure occur only in
@@ -145,14 +145,12 @@ an old frozen probe that used the accessor, but its retained executable replay
 does not; this is historical evidence rather than a current downstream
 consumer. Archived design text may retain historical names.
 
-Implementation must repeat the tracked and known paper-workspace caller scan.
-If it finds a current non-ignored production, test, executable paper, or
-downstream consumer, it must make no source commit and report that exact
-caller. The same stop rule applies if direct removal changes one projected-
-q-shell coefficient or metric-packet value, requires a replacement carrier or
-test edit, or exceeds the source budget.
+The implementation repeated the tracked and known paper-workspace caller scan
+without finding a current non-ignored production, test, executable paper, or
+downstream consumer. It required no replacement carrier or test edit and
+preserved every projected-q-shell coefficient and metric-packet value.
 
-### Budget And Validation
+### Accepted Budget And Validation
 
 The implementation is confined to:
 
@@ -161,25 +159,22 @@ src/cartesian_nested_faces.jl
 src/cartesian_nested_diatomic.jl
 ```
 
-The audited direct edit is expected to delete approximately `597` source lines
-and may add at most `12` source lines for direct control-flow simplification.
-Net source must decrease. Add no file, test, helper, API, type, cache,
-dependency, metadata replacement, workflow, version, or release change.
+Implementation commit `8fcda0086f73dbd1348aa6b261c7862f1cf64bb3`
+deleted `593` and added `2` source lines, for a net reduction of `591`. It
+added no file, test, helper, API, type, cache, dependency, metadata replacement,
+workflow, version, or release change.
 
-Before editing, capture exact projected-q-shell coefficient and metric-packet
-values plus packet/basis fingerprints from the baseline. Candidate values must
-match exactly; do not update a golden fingerprint. Also preserve the default
-ordinary-QW H2 fixed-block geometry, dimensions, coefficients, overlap, and
-kinetic result, and preserve the matched H2+ parent/PQS/White-Lindsey
-dimensions, topology, energies, captures, residuals, warnings, and
-fingerprints.
+Projected-q-shell coefficient and metric-packet values, packet/basis
+fingerprints, and default ordinary-QW H2 geometry, coefficients, overlap, and
+kinetic matrices matched the baseline byte for byte. Matched H2+
+parent/PQS/White-Lindsey dimensions, topology, energies, captures, residuals,
+warnings, fingerprints, and accounting remained unchanged.
 
-Run the existing core, public Cartesian, residual-GTO, projected-q-shell/nested,
-and matched-release owners unchanged. Record before/after elapsed time and
-allocation for one representative projected-q-shell layer and the complete
-matched H2+ comparison under the same Julia `1.12.6` order-controlled protocol.
-Performance improvement is evidence, not permission to reorder arithmetic or
-alter numerical work; any material regression must be reported.
+The existing core, public Cartesian, residual-GTO, projected-q-shell/nested,
+and matched-release owners passed unchanged. Warm representative-layer cost
+changed from `2.197 ms / 9.082 MB` to `2.154 ms / 8.986 MB`; warm complete
+matched-comparison cost changed from `22.573 s / 2.535 GB` to
+`22.570 s / 2.534 GB`. No material cold or warm regression was observed.
 
 ## Angular-Balanced Diatomic Geometry
 

@@ -1564,3 +1564,39 @@ Guardrail / carrying cost:
   release work; exact remaining blocker: repo-manager implementation and
   review under these two records. No medium-term goal changes and no
   checkpoint is due.
+
+## Cartesian Hamiltonian Producer Pass 573 - Close Projected-Q-Shell Staged Descriptor Retirement
+
+Commit(s):
+- `8fcda0086f73dbd1348aa6b261c7862f1cf64bb3`;
+- this docs-only lifecycle closeout.
+
+Summary / goal advancement:
+- Accepted complete removal of the inert staged-descriptor type, prototype
+  contractions, duplicate construction facts, false availability/consumption
+  flags, and diatomic propagation. The active boundary-mode projection,
+  symmetric Lowdin cleanup, coefficient matrix, supports, metric packet,
+  numerical diagnostics, and consumed provenance remain authoritative.
+- LT5 advances through a net `591`-line source reduction with no replacement
+  vocabulary. No medium-term goal changes: this closes one classified carrying-
+  cost item without reopening PQS physics, API, release, or high-order work.
+
+Validation / carrying cost:
+- The implementation changed only the two authorized source files by
+  `+2/-593`. Coefficients, metric packets, ordinary-QW H2 matrices, and packet/
+  basis fingerprints were byte-identical. Matched H2+ dimensions, topology,
+  energies, captures, residuals, warnings, fingerprints, and accounting were
+  unchanged.
+- Core, public Cartesian `232/232`, residual-GTO `80/80`, nested augmented H2
+  `464/464` plus facade `64/64`, matched release `18/18`, docs `157/157` and
+  `10/10`, package load, authority check/self-test, Documenter, log bound, and
+  diff checks passed. Remote CI `33644285365` passed all three numerical gates;
+  Docs `33644285334` passed.
+- Warm layer cost changed `2.197 ms / 9.082 MB -> 2.154 ms / 8.986 MB`; warm
+  matched comparison changed `22.573 s / 2.535 GB -> 22.570 s / 2.534 GB`, with
+  no material cold or warm regression. Deleted: the complete inert closure;
+  simplified: coefficient assembly now returns the active result directly;
+  quarantined: generic by-center and active product/factorized machinery;
+  exact remaining blocker: none. FN is retired/no-grant and TEST is
+  completed/no-grant. The separately audited by-center retirement requires its
+  own authority, and no checkpoint is due.
