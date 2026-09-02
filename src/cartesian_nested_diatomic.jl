@@ -2508,8 +2508,6 @@ function _nested_bond_aligned_diatomic_high_order_recipe_source_construction(
                             pqs_dimensions.excluded_from_mvp_gate,
                         policy_q = choice.q,
                         policy_order = choice.order,
-                        pqs_staged_unit_descriptor =
-                            _nested_projected_q_shell_staged_unit_descriptor(layer),
                         pqs_product_staged_sidecar_available = false,
                         factorized_direct_allowed = false,
                         active_default_builder_changed = false,
