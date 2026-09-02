@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `a6e3721bc54d4884025648385c5f78bbbcba606f3c0a6c1ec4db8f293bb9ce38`.
+> [authority.toml](authority.toml), SHA-256 `3633b8628f32feddc8dfda50338d023487a7aaa5958984e1e9774abd1b301659`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -5327,6 +5327,63 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `457`
 - **Dependencies:** `HP-SLICE-HCHAIN-FN-01`
 - **Scope:** Maintain the committed IDA-owner checks, including finite, periodic-template, and singleton structural H1-bandwidth bounds, exact represented-operator zeros outside the reported band, and zero-allocation constant-time query access. Preserve deterministic H/STO-6G transverse construction, bounded G10 donor parity, analytic H1 and direct-quadrature Vee oracles, scalar/row/action parity, finite tail diagnostics, malformed-input rejection, the H10 dense fixture, and H1000 compact construction. H10000 remains transient evidence. Add no HF, DMRG, MPO, publication-energy, fixture file, or test owner under this grant.
+
+### HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01 - relocate radial and atomic source files
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Radial And Atomic Source Relocation`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/gaunt_backend_note.md`
+  - `docs` / `existing`: `docs/radial_multipole_stabilization_milestone.md`
+  - `docs` / `existing`: `docs/radial_paper_parity_prototype_milestone.md`
+  - `docs` / `existing`: `docs/src/algorithms/atomic_ida_exchange_angular_sectors.md`
+  - `docs` / `existing`: `docs/src/developer/cartesian_parent_factors_and_cpb_kernels.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/sliced_hydrogen_chain.md`
+  - `source` / `existing`: `src/GaussletBases.jl`
+  - `source` / `existing`: `src/atomic_angular_sectors.jl`
+  - `source` / `existing`: `src/atomic_ida.jl`
+  - `source` / `existing`: `src/atomic_ida_direct.jl`
+  - `source` / `existing`: `src/atomic_ida_exchange.jl`
+  - `source` / `existing`: `src/atomic_ida_fock.jl`
+  - `source` / `existing`: `src/atomic_ida_two_electron.jl`
+  - `source` / `existing`: `src/atomic_ida_uhf.jl`
+  - `source` / `existing`: `src/atomic_ylm.jl`
+  - `source` / `existing`: `src/fullida_dense_export.jl`
+  - `source` / `existing`: `src/gaunt_tables.jl`
+  - `source` / `existing`: `src/operators.jl`
+  - `source` / `existing`: `src/radial_boundary_prototypes.jl`
+  - `source` / `existing`: `src/radial_ylm_gto_bridge.jl`
+  - `source` / `existing`: `src/sliced_ham_export.jl`
+- **Evidence:**
+  - `git_commit`: `5643e3376bd9f8a1a17ded24f05c4d2c363f89cc`
+  - `manager_pass`: `580`
+- **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`
+- **Scope:** Relocate exactly 14 byte-identical radial/atomic files from baseline 5643e3376bd9f8a1a17ded24f05c4d2c363f89cc by git mv to the canonical contract targets. Substitute only their 14 GaussletBases include strings in place and mechanically replace this record's 14 old owned paths with 14 target existing paths, reconcile the two maintained radial-prototype owners, affected canonical hashes, current documentation pointers, and generated views. Require 14 SHA-identical 100% renames, root +14/-14, unchanged include order, package behavior, and tests. Add no file-body, test, module, API, dispatch, dependency, cache, workflow, numerical, release, empty-directory, angular, foundation, ordinary, Cartesian, or later-layout change; stop before commit on any mismatch or broader need.
+
+### HP-SOURCE-LAYOUT-RADIAL-ATOMIC-TEST-01 - validate radial and atomic source relocation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Radial And Atomic Source Relocation`
+- **Owned paths:**
+  - `test` / `existing`: `test/core/runtests.jl`
+  - `test` / `existing`: `test/ida/runtests.jl`
+  - `test` / `existing`: `test/misc/runtests.jl`
+  - `test` / `existing`: `test/radial/runtests.jl`
+  - `test` / `existing`: `test/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `5643e3376bd9f8a1a17ded24f05c4d2c363f89cc`
+  - `manager_pass`: `580`
+- **Dependencies:** `HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01`
+- **Scope:** Run unchanged core, radial, ida, and misc owners plus package load and transient pre/post SHA-256, include-order, and git diff --find-renames=100% checks. Require docs tests, Documenter, authority check/self-test, generated-view parity, manager-log bound, diff checks, and normal remote CI and Docs. Add or edit no test, assertion, fixture, runner, helper, probe, workflow, or numerical policy; stop if validation requires a test change.
 
 ### HP-TEST-01 - new committed terminal smoke — rejected
 

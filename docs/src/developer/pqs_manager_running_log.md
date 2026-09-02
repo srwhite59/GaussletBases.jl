@@ -1814,3 +1814,51 @@ Guardrail / next step:
   every later proposal in the external review; not deleted because: all data
   loaders and the nested high-precision module remain live; exact remaining
   blocker: none for Step 0.
+
+## Cartesian Hamiltonian Producer Pass 580 - Authorize Radial And Atomic Source Relocation
+
+Commit(s):
+- baseline `5643e3376bd9f8a1a17ded24f05c4d2c363f89cc`;
+- this docs-only authority amendment.
+
+Summary / goal advancement:
+- Accepted Step 1 of the external follow-up review only after independent
+  inspection. The exact surface is `14` tracked files and `5,469` lines, not
+  the review's stale `5,471`; Pass 578 left no containing-file-relative data
+  dependency. The sole nested include is already parent-qualified, and no test
+  directly includes an old path.
+- `HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01/TEST-01` authorize byte-identical
+  `git mv` relocation into `src/radial/` and `src/atomic/`, plus only `14`
+  in-place root include substitutions and exact current-pointer reconciliation.
+  The review's one-record governance estimate is corrected to two maintained
+  path owners, and the current documentation closure is `12` pointers across
+  seven documents.
+
+Guardrail / carrying cost:
+- Production content remains unchanged: `14` complete renames and root
+  `+14/-14` are required. The implementation may mechanically reconcile the
+  exact authority path entries in the same commit so Docs can pass, but may not
+  change lifecycle, grant, behavior, tests, modules, APIs, include order,
+  dependencies, workflows, numerics, releases, empty directories, or any later
+  layout step. Historical evidence remains historical.
+- deleted: no code; simplified: radial/atomic file discovery; quarantined:
+  angular, foundation, ordinary, Cartesian, submodule, and all later layout
+  proposals; not deleted because: every moved owner remains live; exact
+  blocker: implementation must prove all hashes and `14` 100% renames, then
+  pass unchanged owners and normal CI/Docs.
+
+### Medium-Term Goal Checkpoint After Pass 580
+
+- **MT1 - active/maintenance:** no conformance or public-surface policy changes.
+- **MT2 - completed:** controlled Cr2 source migration remains closed.
+- **MT3 - active:** pending producer facilities and oracle interpretation are
+  unchanged.
+- **MT4 - active:** residual/protected research boundaries are unchanged.
+- **MT5 - active/maintenance:** final-v0.2 release, path-aware CI, authority,
+  and documentation contracts remain fixed; this relocation must preserve
+  their current pointers.
+- **MT6 - active/maintenance:** the bounded move improves source discovery at
+  zero production-content growth, but does not create a broader source-layout
+  program or authorize review Steps 2-4.
+- **MT7 - completed/maintenance:** external Cartesian-GTO interchange remains
+  accepted and unchanged.

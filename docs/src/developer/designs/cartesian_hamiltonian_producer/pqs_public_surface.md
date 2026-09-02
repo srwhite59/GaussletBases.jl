@@ -866,6 +866,85 @@ nested high-precision family source. Unchanged `core`, `radial` (`322/322`),
 edit, move, path framework, elaborate nested-module workaround, or later
 source-layout step requires separate authority.
 
+## Radial And Atomic Source Relocation
+
+`HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01` and
+`HP-SOURCE-LAYOUT-RADIAL-ATOMIC-TEST-01` authorize one path-only relocation
+from baseline `5643e3376bd9f8a1a17ded24f05c4d2c363f89cc`. The external follow-up
+review is audit evidence rather than authority. Independent inspection fixes
+its current Step 1 accounting at `14` files and `5,469` lines. It also finds
+two maintained authority path owners for `src/radial_boundary_prototypes.jl`,
+not the review's one: `HP-PACKAGE-ROOT-PATH-FN-01` and
+`HP-PUBLIC-RADIAL-PARITY-DOC-FN-01`.
+
+The implementation must use `git mv` for exactly this map:
+
+| Pre-move path | Current target | Pre-move SHA-256 |
+| --- | --- | --- |
+| `src/radial_boundary_prototypes.jl` | `src/radial/radial_boundary_prototypes.jl` | `f843d9c95328f890bfbd276439022b425eb62dfd5b896fc354d9c420d8cc5be7` |
+| `src/operators.jl` | `src/radial/operators.jl` | `9e2e954bcb96b4d33434f535b8c12d6a027750e72e412b7c27d0fc383e41df24` |
+| `src/radial_ylm_gto_bridge.jl` | `src/radial/radial_ylm_gto_bridge.jl` | `6aa1a3f1533ba0b733a920bd82136cac14a759e5fc6d26fe0442dfa92c5e23b4` |
+| `src/atomic_ylm.jl` | `src/atomic/atomic_ylm.jl` | `1a8072648007c08f56987f063fb83e33cf0909ee850a1746dc3a7def0c73ce21` |
+| `src/atomic_angular_sectors.jl` | `src/atomic/atomic_angular_sectors.jl` | `df7dc874c4a570a8546d68c54dbc032b6dfa6458fabbae0e202589bbf3b9a703` |
+| `src/gaunt_tables.jl` | `src/atomic/gaunt_tables.jl` | `b87f1417175aee60e3615a3ef1972a79dffc1ca64a766f662456256ca6805a79` |
+| `src/atomic_ida.jl` | `src/atomic/atomic_ida.jl` | `544159c9f86c375131bbfd61f35dac48b989c54c96ce5d40889b1a3d4b314591` |
+| `src/atomic_ida_direct.jl` | `src/atomic/atomic_ida_direct.jl` | `756baf892a32dd8a263b1101880d9f4ebb9ef5dc9db4a0e20441ebea0c293a37` |
+| `src/atomic_ida_exchange.jl` | `src/atomic/atomic_ida_exchange.jl` | `fc1883ca05dab6c9a289291be47e7d1a4790ec0ae9abaecfa093de2c1b052b86` |
+| `src/atomic_ida_fock.jl` | `src/atomic/atomic_ida_fock.jl` | `d534b50f39630e1842d8d59ab443ce7100fa28a5559378a5ce0fb0529d7df1f4` |
+| `src/atomic_ida_uhf.jl` | `src/atomic/atomic_ida_uhf.jl` | `7e428c59fb7415136e9662dd5587aad7e2b64ae0a2fd6421556e9e504986c1c5` |
+| `src/atomic_ida_two_electron.jl` | `src/atomic/atomic_ida_two_electron.jl` | `c8ef8ff1e489b96c46c5bb13fe8cb0962b1a38fb0b585fd57d243a94cb9040c8` |
+| `src/fullida_dense_export.jl` | `src/atomic/fullida_dense_export.jl` | `46b1b96252ee2c3e07ad1e5f54a467364d6b44ab1be5009846cdc6147657a8d0` |
+| `src/sliced_ham_export.jl` | `src/atomic/sliced_ham_export.jl` | `408602299e66e84152b866e76c55beb0312565c4226f591694cfa6a57e59bb12` |
+
+Every moved file must remain byte-identical. In `src/GaussletBases.jl`, only
+the `14` quoted include paths may change, in their existing positions. The
+complete include sequence, including the unmoved files interleaved with these
+lines, must remain exact. No grouping comments or include reordering are part
+of this transaction.
+
+Pass 578 removed the only containing-file-location dependencies relevant to
+this move. The radial nested module already resolves
+`src/internal/families_high_prec.jl` through the parent-qualified package root;
+that include line must move byte-for-byte with its containing file. Independent
+inspection found no other `@__DIR__`, nested include, or repository data path
+inside the `14` files and no test that directly includes an old path.
+
+The source implementation commit must also perform the following exact path
+reconciliation so authority and documentation remain valid on the moved tree:
+
+- replace the radial prototype path in both maintained owners named above,
+  including the path text in the radial-parity scope;
+- replace this relocation record's `14` pre-move `existing` entries with its
+  `14` canonical target paths in `existing` state, without changing its
+  lifecycle, grant, scope, or evidence. Target paths are not recorded as
+  `planned` before the move because the authority schema deliberately rejects
+  a missing path whose new parent directory does not yet exist;
+- replace the `12` current code pointers across
+  `docs/gaunt_backend_note.md`,
+  `docs/radial_multipole_stabilization_milestone.md`,
+  `docs/radial_paper_parity_prototype_milestone.md`,
+  `docs/src/algorithms/atomic_ida_exchange_angular_sectors.md`,
+  `docs/src/developer/cartesian_parent_factors_and_cpb_kernels.md`, this
+  document's Package-Root and Radial Paper-Parity sections, and
+  `sliced_hydrogen_chain.md`;
+- regenerate the checked registry and `AGENTS.md` authority views. Historical
+  commit evidence and archived documents may retain their historical paths.
+
+The moved-file content delta is zero and the root include substitution must be
+exactly `+14/-14`, for net-zero production source. The implementation may add
+no wrapper, module, symbol, API, dispatch, dependency, cache, fixture, test,
+workflow, numerical policy, release change, empty-directory cleanup, or later
+layout step. Angular, foundation, ordinary, Cartesian, and existing submodule
+directories remain where they are.
+
+Acceptance requires all `14` target SHA-256 values to match the table and
+`git diff --find-renames=100%` to report exactly `14` complete renames. Package
+load and unchanged `core`, `radial`, `ida`, and `misc` groups must pass, along
+with docs tests, Documenter, authority check/self-test, generated-view parity,
+manager-log bound, `git diff --check`, and normal remote CI and Docs. Any file
+body change, non-100% rename, changed target, include-order change, test edit,
+or need for broader repair stops implementation without a commit.
+
 ## Foundational Basis And Mapping Documentation
 
 `HP-PUBLIC-FOUNDATION-DOC-FN-01` and
