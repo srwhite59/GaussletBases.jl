@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `c21b83652b9f208bdcac55c4c0b1ab9c835b0093d96049266474d873e9959a21`.
+> [authority.toml](authority.toml), SHA-256 `db1df1279a09e97ee3ab470e314962d1405dfb48f478225560c2fba4162df476`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -5327,6 +5327,49 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `457`
 - **Dependencies:** `HP-SLICE-HCHAIN-FN-01`
 - **Scope:** Maintain the committed IDA-owner checks, including finite, periodic-template, and singleton structural H1-bandwidth bounds, exact represented-operator zeros outside the reported band, and zero-allocation constant-time query access. Preserve deterministic H/STO-6G transverse construction, bounded G10 donor parity, analytic H1 and direct-quadrature Vee oracles, scalar/row/action parity, finite tail diagnostics, malformed-input rejection, the H10 dense fixture, and H1000 compact construction. H10000 remains transient evidence. Add no HF, DMRG, MPO, publication-energy, fixture file, or test owner under this grant.
+
+### HP-SOURCE-LAYOUT-ANGULAR-FN-01 - relocate angular source files
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Angular Source Relocation`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/angular_fixed_radial_sequence_milestone.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md`
+  - `source` / `existing`: `src/GaussletBases.jl`
+  - `source` / `existing`: `src/angular_atomic_benchmark.jl`
+  - `source` / `existing`: `src/angular_point_sets.jl`
+  - `source` / `existing`: `src/angular_sequence_export.jl`
+  - `source` / `existing`: `src/angular_shell_assembly.jl`
+  - `source` / `existing`: `src/angular_shell_basis.jl`
+- **Evidence:**
+  - `git_commit`: `82b8d97951fa08bd2b295f8d4a9cf6316d6d3b6c`
+  - `manager_pass`: `583`
+- **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`
+- **Scope:** Relocate five angular source owners from baseline 82b8d97951fa08bd2b295f8d4a9cf6316d6d3b6c into src/angular by byte-identical git mv; update only their in-place root includes, three maintained authority paths, and five current documentation pointers under Angular Source Relocation. Preserve \_lanczos\_ground\_state\_apply exactly. Exclude file bodies, ordering, helpers, APIs, tests, numerics, workflows, releases, and later moves; stop on any mismatch.
+
+### HP-SOURCE-LAYOUT-ANGULAR-TEST-01 - validate angular source relocation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Angular Source Relocation`
+- **Owned paths:**
+  - `test` / `existing`: `test/angular/runtests.jl`
+  - `test` / `existing`: `test/docs/runtests.jl`
+  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
+  - `test` / `existing`: `test/pqs_h2plus_table1_release_runtests.jl`
+  - `test` / `existing`: `test/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `82b8d97951fa08bd2b295f8d4a9cf6316d6d3b6c`
+  - `manager_pass`: `583`
+- **Dependencies:** `HP-SOURCE-LAYOUT-ANGULAR-FN-01`
+- **Scope:** Validate Angular Source Relocation with frozen hashes, five 100% renames, package/resource load, unchanged angular\_public, one full angular run, and PQS release. Also run docs, authority, Documenter, diff, and remote CI/Docs checks. Add or edit no test, fixture, runner, helper, workflow, tolerance, or numerical policy; stop if validation requires adaptation.
 
 ### HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01 - relocate radial and atomic source files
 

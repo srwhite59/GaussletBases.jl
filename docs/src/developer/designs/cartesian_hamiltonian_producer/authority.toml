@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "18d5f3a2e00e37bd524151b06ec2a6294dc6f07f1ad18573c8dd839e5773725d"
+sha256 = "e43b39a0cdd54af8555b6f410355f001c664cd12f97e34913689150da327c4ef"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -8767,6 +8767,100 @@ title = "sliced hydrogen-chain producer validation"
     [[records.paths]]
     kind = "test"
     path = "test/ida/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01"]
+grant = "implementation"
+id = "HP-SOURCE-LAYOUT-ANGULAR-FN-01"
+lifecycle = "approved"
+scope = "Relocate five angular source owners from baseline 82b8d97951fa08bd2b295f8d4a9cf6316d6d3b6c into src/angular by byte-identical git mv; update only their in-place root includes, three maintained authority paths, and five current documentation pointers under Angular Source Relocation. Preserve _lanczos_ground_state_apply exactly. Exclude file bodies, ordering, helpers, APIs, tests, numerics, workflows, releases, and later moves; stop on any mismatch."
+surfaces = ["docs", "source"]
+title = "relocate angular source files"
+
+    [[records.document_refs]]
+    heading = "Angular Source Relocation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "82b8d97951fa08bd2b295f8d4a9cf6316d6d3b6c"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "583"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/angular_fixed_radial_sequence_milestone.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular_atomic_benchmark.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular_point_sets.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular_sequence_export.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular_shell_assembly.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular_shell_basis.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-SOURCE-LAYOUT-ANGULAR-FN-01"]
+grant = "implementation"
+id = "HP-SOURCE-LAYOUT-ANGULAR-TEST-01"
+lifecycle = "approved"
+scope = "Validate Angular Source Relocation with frozen hashes, five 100% renames, package/resource load, unchanged angular_public, one full angular run, and PQS release. Also run docs, authority, Documenter, diff, and remote CI/Docs checks. Add or edit no test, fixture, runner, helper, workflow, tolerance, or numerical policy; stop if validation requires adaptation."
+surfaces = ["tests"]
+title = "validate angular source relocation"
+
+    [[records.document_refs]]
+    heading = "Angular Source Relocation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "82b8d97951fa08bd2b295f8d4a9cf6316d6d3b6c"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "583"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/angular/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/docs/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/pqs_h2plus_table1_release_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01"]

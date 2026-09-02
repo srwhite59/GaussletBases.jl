@@ -947,6 +947,63 @@ run `33679026359` passed against the exact implementation commit. Future file
 moves, body edits, include reordering, or broader layout work require separate
 authority.
 
+## Angular Source Relocation
+
+`HP-SOURCE-LAYOUT-ANGULAR-FN-01` and
+`HP-SOURCE-LAYOUT-ANGULAR-TEST-01` authorize only Step 2 of the external
+follow-up review at baseline `82b8d97951fa08bd2b295f8d4a9cf6316d6d3b6c`.
+The review is audit evidence, not authority. Independent inspection confirms
+exactly five files and `4,750` lines, with this frozen map:
+
+| Pre-move path | Authorized target | SHA-256 |
+| --- | --- | --- |
+| `src/angular_point_sets.jl` | `src/angular/angular_point_sets.jl` | `8b7db8ebcde142212fc72dda1999d013628428a4a8ce7135eb1ed387faac40d9` |
+| `src/angular_shell_basis.jl` | `src/angular/angular_shell_basis.jl` | `6799c7ab7ac3c2e9ac6823719348d0143b24b3929e499a326df956c741ea3039` |
+| `src/angular_shell_assembly.jl` | `src/angular/angular_shell_assembly.jl` | `3e60d20b2e79a074b7af4db6954428b917d64cb1d705934a5c4448bfa91b548b` |
+| `src/angular_atomic_benchmark.jl` | `src/angular/angular_atomic_benchmark.jl` | `d678baf70c4e705112490d63bcdf9aa8865080f5dcc8bf76170bcc0a483917d3` |
+| `src/angular_sequence_export.jl` | `src/angular/angular_sequence_export.jl` | `5377c4b047e8d12615504dbd58689c20ff86c1507ee5fdff4e985d112ca6170a` |
+
+Each move must use `git mv`, preserve the complete file bytes, and appear as a
+`100%` rename. Only the five quoted include paths in `src/GaussletBases.jl`
+may change, in place; the complete include order must remain exact. The moved
+files contain no containing-directory include or data construction. Pass 578's
+package-root helper already owns the angular data paths.
+
+`_lanczos_ground_state_apply` remains defined in
+`angular_atomic_benchmark.jl` with its exact name, dispatch, visibility, and
+load behavior. Its active call from `src/pqs_matched_h2plus.jl` and its angular
+owner call must remain unchanged. This transaction does not relocate or
+generalize that helper.
+
+The implementation must mechanically replace three maintained authority path
+entries: one in `HP-PACKAGE-ROOT-PATH-FN-01` and two in
+`HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01`. Only the two literal source paths in
+the latter record's existing long scope may change; no scope compression is
+part of this pass. It must also update the three current paths in
+`docs/angular_fixed_radial_sequence_milestone.md`, the two current pointers in
+this document, this relocation record's five source paths, and the generated
+registry and `AGENTS.md` view. Explicit pre-move paths in this mapping remain
+historical evidence. No other historical text changes.
+
+Implementation target card:
+
+```text
+Target: relocate five unchanged angular source owners into src/angular/
+Physics endpoint: none changed; angular and matched H2+ results are the oracles
+Allowed files: five git mv operations; five in-place GaussletBases include substitutions; exact current path reconciliation
+Forbidden files/surfaces: every file body, test, workflow, helper, API, numerical, release, and later layout surface
+Must delete or simplify: remove the five flat root source locations; delete no implementation
+Forbidden additions: wrappers, modules, aliases, caches, fixtures, metadata, tests, dependencies, or files beyond the destination directory
+Success condition: five byte-identical 100% renames with unchanged load and numerical owners
+Validation: package/resources, angular_public, one full angular run, PQS release, docs/authority/Documenter/diff, remote CI/Docs
+Line budget: moved bodies +0/-0; root includes exactly +5/-5; current path substitutions only
+Failure rule: make no implementation commit if any hash, rename, include position, helper behavior, or unchanged test differs
+```
+
+The complete angular owner runs once for implementation evidence and is not
+repeated during docs-only closeout. Foundation, ordinary, Cartesian, helper
+relocation, next-minor cleanup, and later review steps remain unauthorized.
+
 ## Foundational Basis And Mapping Documentation
 
 `HP-PUBLIC-FOUNDATION-DOC-FN-01` and

@@ -1918,3 +1918,30 @@ Summary / guardrail:
   when a prior pass is ready to close; otherwise that pass closes immediately
   and angular relocation receives separate authority. Review Step 2 remains
   unauthorized here.
+
+## Cartesian Hamiltonian Producer Pass 583 - Authorize Angular Source Relocation
+
+Commit(s):
+- baseline `82b8d97951fa08bd2b295f8d4a9cf6316d6d3b6c`;
+- this docs-only authority amendment.
+
+Summary / goal advancement:
+- Independently verified Step 2 of the external review: the five flat angular
+  owners total `4,750` lines and match all supplied SHA-256 values. Their root
+  includes occupy five fixed positions; none has a containing-directory path.
+  `_lanczos_ground_state_apply` remains a deliberate cross-track dependency
+  from matched H2+ and must move only with its unchanged containing file.
+- `HP-SOURCE-LAYOUT-ANGULAR-FN-01/TEST-01` authorize five byte-identical
+  `git mv` operations, five in-place include substitutions, and exact current
+  path reconciliation. The corrected governance closure is three authority
+  entries, three milestone pointers, and two canonical pointers.
+
+Guardrail / next step:
+- MT6 remains active. The full angular owner runs once during implementation;
+  docs-only closeout must not repeat it. No test edit, helper relocation, file
+  body, API, numerical, workflow, release, namespace, foundation, ordinary,
+  Cartesian, or later-layout work is granted. Any non-100% rename, helper
+  adaptation, test edit, or parity failure stops the implementation.
+- deleted: no code; simplified: angular source discovery only; quarantined:
+  every later review step; not deleted because: all five owners and the Lanczos
+  helper remain live; exact blocker: implementation and unchanged validation.
