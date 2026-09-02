@@ -1862,3 +1862,33 @@ Guardrail / carrying cost:
   program or authorize review Steps 2-4.
 - **MT7 - completed/maintenance:** external Cartesian-GTO interchange remains
   accepted and unchanged.
+
+## Cartesian Hamiltonian Producer Pass 581 - Close Radial And Atomic Source Relocation
+
+Commit(s):
+- authority `53e292ee7b20796f983482e6208ea53180d09197`;
+- implementation `812a44d4476c598448bfa3ac733054f009c55b89`;
+- this docs-only lifecycle closeout.
+
+Summary / goal advancement:
+- Accepted the exact path-only Step 1 implementation: all `14` files are
+  `100%` renames with the frozen SHA-256 values, the root include list changed
+  exactly `+14/-14` in place, and the implementation tree is
+  `a4f50fcfaadfdb5a19ecaf384878477e4fb923a0`. The two maintained radial path
+  owners and all `12` current documentation pointers were reconciled. No source
+  body, test, module, API, dispatch, dependency, workflow, numerical behavior,
+  or release state changed.
+- Manager inspection independently confirmed the rename objects, hashes,
+  include diff, path closure, and exact remote heads. The unchanged owners,
+  package/resource loads, docs `157/157` plus `10/10`, authority checks,
+  Documenter, and diff checks passed; CI run `33679026378` and Docs run
+  `33679026359` were green.
+
+Guardrail / next step:
+- `HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01` is implemented/maintenance and its
+  TEST record is completed/no-grant. This is a discovery/layout improvement
+  under MT6 with no strategic change and no authorization for review Steps
+  2-4 or another source-layout program.
+- deleted: no code; simplified: radial and atomic source discovery;
+  quarantined: all later review moves and refactors; not deleted because: every
+  relocated owner remains live; exact remaining blocker: none for Step 1.

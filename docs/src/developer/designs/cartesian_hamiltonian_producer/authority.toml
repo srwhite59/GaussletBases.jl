@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "5bede23e3090ffef97db986789c4b91b03eaa5b34e4951986515beebdc6a2201"
+sha256 = "18d5f3a2e00e37bd524151b06ec2a6294dc6f07f1ad18573c8dd839e5773725d"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -8770,10 +8770,10 @@ title = "sliced hydrogen-chain producer validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01"
-lifecycle = "approved"
-scope = "Relocate exactly 14 byte-identical radial/atomic files from baseline 5643e3376bd9f8a1a17ded24f05c4d2c363f89cc by git mv to the canonical contract targets. Substitute only their 14 GaussletBases include strings in place and mechanically replace this record's 14 old owned paths with 14 target existing paths, reconcile the two maintained radial-prototype owners, affected canonical hashes, current documentation pointers, and generated views. Require 14 SHA-identical 100% renames, root +14/-14, unchanged include order, package behavior, and tests. Add no file-body, test, module, API, dispatch, dependency, cache, workflow, numerical, release, empty-directory, angular, foundation, ordinary, Cartesian, or later-layout change; stop before commit on any mismatch or broader need."
+lifecycle = "implemented"
+scope = "Maintain the exact path-only relocation accepted in commit 812a44d4476c598448bfa3ac733054f009c55b89: 14 byte-identical radial/atomic source files at the canonical src/radial and src/atomic targets, their 14 in-place GaussletBases include substitutions, unchanged include order, the two reconciled radial-prototype authority owners, and the 12 reconciled current documentation pointers. Preserve the accepted tree a4f50fcfaadfdb5a19ecaf384878477e4fb923a0, all frozen file hashes, root +14/-14, package behavior, and tests. Add no file-body, test, module, API, dispatch, dependency, cache, workflow, numerical, release, empty-directory, angular, foundation, ordinary, Cartesian, or later-layout change under this maintenance grant."
 surfaces = ["docs", "source"]
 title = "relocate radial and atomic source files"
 
@@ -8786,8 +8786,14 @@ title = "relocate radial and atomic source files"
     kind = "git_commit"
     value = "5643e3376bd9f8a1a17ded24f05c4d2c363f89cc"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "812a44d4476c598448bfa3ac733054f009c55b89"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "580"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "581"
 
     [[records.paths]]
     kind = "docs"
@@ -8879,11 +8885,12 @@ title = "relocate radial and atomic source files"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-SOURCE-LAYOUT-RADIAL-ATOMIC-TEST-01"
-lifecycle = "approved"
-scope = "Run unchanged core, radial, ida, and misc owners plus package load and transient pre/post SHA-256, include-order, and git diff --find-renames=100% checks. Require docs tests, Documenter, authority check/self-test, generated-view parity, manager-log bound, diff checks, and normal remote CI and Docs. Add or edit no test, assertion, fixture, runner, helper, probe, workflow, or numerical policy; stop if validation requires a test change."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Completed validation evidence only; this record grants no test, assertion, fixture, runner, helper, probe, workflow, or numerical-policy edit. All 14 targets retained their frozen SHA-256 values and appeared as 100% renames; root includes changed exactly +14/-14 with order preserved. Package load, full and curated angular-resource loading, unchanged core/radial/ida/misc owners, docs 157/157 plus 10/10, Documenter, authority checks, generated-view parity, manager-log bound, diff checks, CI run 33679026378, and Docs run 33679026359 passed."
+surfaces = []
 title = "validate radial and atomic source relocation"
 
     [[records.document_refs]]
@@ -8895,29 +8902,14 @@ title = "validate radial and atomic source relocation"
     kind = "git_commit"
     value = "5643e3376bd9f8a1a17ded24f05c4d2c363f89cc"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "812a44d4476c598448bfa3ac733054f009c55b89"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "580"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/core/runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/ida/runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/misc/runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/radial/runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/runtests.jl"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "581"
 [[records]]
 dependency_ids = []
 evidence_refs = []

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `25b9f4364ff72347f79c9d0e7a6e9b051f49db38a37acd970911e68610a065f3`.
+> [authority.toml](authority.toml), SHA-256 `c21b83652b9f208bdcac55c4c0b1ab9c835b0093d96049266474d873e9959a21`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -5330,8 +5330,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01 - relocate radial and atomic source files
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -5361,29 +5361,28 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/atomic/sliced_ham_export.jl`
 - **Evidence:**
   - `git_commit`: `5643e3376bd9f8a1a17ded24f05c4d2c363f89cc`
+  - `git_commit`: `812a44d4476c598448bfa3ac733054f009c55b89`
   - `manager_pass`: `580`
+  - `manager_pass`: `581`
 - **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`
-- **Scope:** Relocate exactly 14 byte-identical radial/atomic files from baseline 5643e3376bd9f8a1a17ded24f05c4d2c363f89cc by git mv to the canonical contract targets. Substitute only their 14 GaussletBases include strings in place and mechanically replace this record's 14 old owned paths with 14 target existing paths, reconcile the two maintained radial-prototype owners, affected canonical hashes, current documentation pointers, and generated views. Require 14 SHA-identical 100% renames, root +14/-14, unchanged include order, package behavior, and tests. Add no file-body, test, module, API, dispatch, dependency, cache, workflow, numerical, release, empty-directory, angular, foundation, ordinary, Cartesian, or later-layout change; stop before commit on any mismatch or broader need.
+- **Scope:** Maintain the exact path-only relocation accepted in commit 812a44d4476c598448bfa3ac733054f009c55b89: 14 byte-identical radial/atomic source files at the canonical src/radial and src/atomic targets, their 14 in-place GaussletBases include substitutions, unchanged include order, the two reconciled radial-prototype authority owners, and the 12 reconciled current documentation pointers. Preserve the accepted tree a4f50fcfaadfdb5a19ecaf384878477e4fb923a0, all frozen file hashes, root +14/-14, package behavior, and tests. Add no file-body, test, module, API, dispatch, dependency, cache, workflow, numerical, release, empty-directory, angular, foundation, ordinary, Cartesian, or later-layout change under this maintenance grant.
 
 ### HP-SOURCE-LAYOUT-RADIAL-ATOMIC-TEST-01 - validate radial and atomic source relocation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Radial And Atomic Source Relocation`
-- **Owned paths:**
-  - `test` / `existing`: `test/core/runtests.jl`
-  - `test` / `existing`: `test/ida/runtests.jl`
-  - `test` / `existing`: `test/misc/runtests.jl`
-  - `test` / `existing`: `test/radial/runtests.jl`
-  - `test` / `existing`: `test/runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
   - `git_commit`: `5643e3376bd9f8a1a17ded24f05c4d2c363f89cc`
+  - `git_commit`: `812a44d4476c598448bfa3ac733054f009c55b89`
   - `manager_pass`: `580`
+  - `manager_pass`: `581`
 - **Dependencies:** `HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01`
-- **Scope:** Run unchanged core, radial, ida, and misc owners plus package load and transient pre/post SHA-256, include-order, and git diff --find-renames=100% checks. Require docs tests, Documenter, authority check/self-test, generated-view parity, manager-log bound, diff checks, and normal remote CI and Docs. Add or edit no test, assertion, fixture, runner, helper, probe, workflow, or numerical policy; stop if validation requires a test change.
+- **Scope:** Completed validation evidence only; this record grants no test, assertion, fixture, runner, helper, probe, workflow, or numerical-policy edit. All 14 targets retained their frozen SHA-256 values and appeared as 100% renames; root includes changed exactly +14/-14 with order preserved. Package load, full and curated angular-resource loading, unchanged core/radial/ida/misc owners, docs 157/157 plus 10/10, Documenter, authority checks, generated-view parity, manager-log bound, diff checks, CI run 33679026378, and Docs run 33679026359 passed.
 
 ### HP-TEST-01 - new committed terminal smoke — rejected
 

@@ -869,15 +869,16 @@ source-layout step requires separate authority.
 ## Radial And Atomic Source Relocation
 
 `HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01` and
-`HP-SOURCE-LAYOUT-RADIAL-ATOMIC-TEST-01` authorize one path-only relocation
-from baseline `5643e3376bd9f8a1a17ded24f05c4d2c363f89cc`. The external follow-up
-review is audit evidence rather than authority. Independent inspection fixes
-its current Step 1 accounting at `14` files and `5,469` lines. It also finds
-two maintained authority path owners for `src/radial_boundary_prototypes.jl`,
-not the review's one: `HP-PACKAGE-ROOT-PATH-FN-01` and
+`HP-SOURCE-LAYOUT-RADIAL-ATOMIC-TEST-01` maintain the path-only relocation
+accepted in commit `812a44d4476c598448bfa3ac733054f009c55b89` from baseline
+`5643e3376bd9f8a1a17ded24f05c4d2c363f89cc`. The external follow-up review is
+audit evidence rather than authority. Independent inspection fixed its Step 1
+accounting at `14` files and `5,469` lines and found two maintained authority
+path owners for the radial prototype, not the review's one:
+`HP-PACKAGE-ROOT-PATH-FN-01` and
 `HP-PUBLIC-RADIAL-PARITY-DOC-FN-01`.
 
-The implementation must use `git mv` for exactly this map:
+The accepted implementation used `git mv` for exactly this map:
 
 | Pre-move path | Current target | Pre-move SHA-256 |
 | --- | --- | --- |
@@ -896,11 +897,10 @@ The implementation must use `git mv` for exactly this map:
 | `src/fullida_dense_export.jl` | `src/atomic/fullida_dense_export.jl` | `46b1b96252ee2c3e07ad1e5f54a467364d6b44ab1be5009846cdc6147657a8d0` |
 | `src/sliced_ham_export.jl` | `src/atomic/sliced_ham_export.jl` | `408602299e66e84152b866e76c55beb0312565c4226f591694cfa6a57e59bb12` |
 
-Every moved file must remain byte-identical. In `src/GaussletBases.jl`, only
-the `14` quoted include paths may change, in their existing positions. The
-complete include sequence, including the unmoved files interleaved with these
-lines, must remain exact. No grouping comments or include reordering are part
-of this transaction.
+Every moved file remains byte-identical. In `src/GaussletBases.jl`, only the
+`14` quoted include paths changed, in their existing positions. The complete
+include sequence, including the unmoved files interleaved with these lines,
+remains exact. No grouping comment or include reordering was introduced.
 
 Pass 578 removed the only containing-file-location dependencies relevant to
 this move. The radial nested module already resolves
@@ -909,7 +909,7 @@ that include line must move byte-for-byte with its containing file. Independent
 inspection found no other `@__DIR__`, nested include, or repository data path
 inside the `14` files and no test that directly includes an old path.
 
-The source implementation commit must also perform the following exact path
+The source implementation commit also completed the following exact path
 reconciliation so authority and documentation remain valid on the moved tree:
 
 - replace the radial prototype path in both maintained owners named above,
@@ -930,20 +930,22 @@ reconciliation so authority and documentation remain valid on the moved tree:
 - regenerate the checked registry and `AGENTS.md` authority views. Historical
   commit evidence and archived documents may retain their historical paths.
 
-The moved-file content delta is zero and the root include substitution must be
-exactly `+14/-14`, for net-zero production source. The implementation may add
-no wrapper, module, symbol, API, dispatch, dependency, cache, fixture, test,
-workflow, numerical policy, release change, empty-directory cleanup, or later
-layout step. Angular, foundation, ordinary, Cartesian, and existing submodule
-directories remain where they are.
+The moved-file content delta is zero and the root include substitution is
+exactly `+14/-14`, for net-zero production source. No wrapper, module, symbol,
+API, dispatch, dependency, cache, fixture, test, workflow, numerical policy,
+release change, empty-directory cleanup, or later layout step was added.
+Angular, foundation, ordinary, Cartesian, and existing submodule directories
+remain where they are.
 
-Acceptance requires all `14` target SHA-256 values to match the table and
-`git diff --find-renames=100%` to report exactly `14` complete renames. Package
-load and unchanged `core`, `radial`, `ida`, and `misc` groups must pass, along
-with docs tests, Documenter, authority check/self-test, generated-view parity,
-manager-log bound, `git diff --check`, and normal remote CI and Docs. Any file
-body change, non-100% rename, changed target, include-order change, test edit,
-or need for broader repair stops implementation without a commit.
+All `14` target SHA-256 values match the table, and
+`git diff --find-renames=100%` reports exactly `14` complete renames. Package
+load, full and curated angular-resource loading, and unchanged `core`,
+`radial`, `ida`, and `misc` groups passed. Docs tests passed `157/157` plus
+`10/10`; Documenter, authority check/self-test, generated-view parity,
+manager-log bound, and `git diff --check` passed. CI run `33679026378` and Docs
+run `33679026359` passed against the exact implementation commit. Future file
+moves, body edits, include reordering, or broader layout work require separate
+authority.
 
 ## Foundational Basis And Mapping Documentation
 
