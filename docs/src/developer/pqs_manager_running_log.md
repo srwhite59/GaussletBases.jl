@@ -1495,3 +1495,34 @@ Guardrail / carrying cost:
 - The next lane after implementation closeout is an explicit next-minor
   namespace decision, not automatic documentation, source deletion,
   performance work, or v0.3 development.
+
+## Cartesian Hamiltonian Producer Pass 571 - Close Expert Staged Cartesian Construction Documentation
+
+Commit(s):
+- `5c4f5f363cb5c955a7046e9f287c0dbb67f19abb`;
+- this docs-only lifecycle closeout.
+
+Summary / goal advancement:
+- Accepted the final retained expert-export documentation. The staged
+  constructor is explicitly expert/unstable, directs ordinary users to
+  `cartesian_base_hamiltonian`, and preserves its current return fields as
+  non-schema inspection/composition state. PRF definitions remain private.
+- MT6 moves this documentation/classification lane to completed maintenance.
+  The remaining undocumented exports are exactly the five separately reserved
+  next-minor namespace candidates; this closeout grants no de-export or v0.3
+  work.
+
+Validation / carrying cost:
+- The implementation added `21` source-docstring and `18` reader-reference
+  lines and changed docs tests by `+13/-1`, within all hard budgets. The former
+  count-only assertion was deleted in favor of exact five-name set equality;
+  no API, behavior, numerical code, schema, helper, cache, or file was added.
+- Package load, docs `157/157` and `10/10`, public Cartesian `232/232` and
+  `80/80`, authority check/self-test, Documenter, and diff checks passed.
+  Remote CI `33579964076` passed all three gates; Docs `33579964078` passed and
+  deployed the commit-pinned live reference.
+- deleted: count-only namespace coverage; simplified: the last retained expert
+  export now has one explicit reader boundary; quarantined: stable staged
+  schemas, PRF promotion, namespace transactions, and v0.3; exact remaining
+  blocker: none for this packet. FN is implemented/maintenance and TEST is
+  completed/maintenance.

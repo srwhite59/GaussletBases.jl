@@ -1259,8 +1259,9 @@ implementation commit and report the exact mismatch.
 ## Expert Staged Cartesian Construction Documentation
 
 `HP-PUBLIC-BASE-WORKING-DOC-FN-01` and
-`HP-PUBLIC-BASE-WORKING-DOC-TEST-01` authorize final documentation of the
-existing exported `cartesian_base_working_basis` function. The export remains
+`HP-PUBLIC-BASE-WORKING-DOC-TEST-01` maintain the accepted documentation from
+commit `5c4f5f363cb5c955a7046e9f287c0dbb67f19abb` for the existing exported
+`cartesian_base_working_basis` function. The export remains
 expert/unstable. It is a staged inspection and composition boundary, not a
 second supported Hamiltonian facade; ordinary users should call
 `cartesian_base_hamiltonian`.
@@ -1297,14 +1298,13 @@ correction, PRF wrapper, automatic paper workflow, or complete operator
 assembly. PRF-specific definitions remain unexported and receive no public
 status through this staged constructor.
 
-Implementation is limited to one concise docstring in
-`src/cartesian_base_hamiltonian.jl`, one compact paragraph and curated entry
+The accepted implementation added a `21`-line docstring in
+`src/cartesian_base_hamiltonian.jl`, an `18`-line paragraph and curated entry
 beside `cartesian_base_hamiltonian` in `docs/src/reference/export.md`, and
-focused checks in `test/docs/runtests.jl`. Preferred/hard additions are
-`24/36` source-docstring, `20/32` reader/reference, and `10/16` docs-test lines,
-with no new file.
+changed focused checks in `test/docs/runtests.jl` by `+13/-1`. All additions
+remain within the authorized hard limits, with no new file.
 
-The documentation check must replace the current count-only assertion with
+The documentation check replaces the former count-only assertion with
 exact equality between `Docs.undocumented_names(GaussletBases)`, excluding the
 module self-binding, and this temporary five-name set:
 
@@ -1321,15 +1321,17 @@ All five implementations remain available for qualified internal and research
 use, and none may be de-exported by this packet. This namespace state does not
 begin v0.3 development.
 
-Acceptance requires `cartesian_base_working_basis` to remain exported, gain a
-Julia docstring, and appear in the curated reference with repeated,
-unambiguous expert/unstable and non-schema wording. Existing public Cartesian,
-PQS, Screening, export-integrity, package, docs, and Documenter checks remain
-the execution gates. No definition, signature, field, route, default, method,
-dispatch, staged result, PRF status, numerical result, test owner, workflow,
-dependency, version, tag, or release may change. If truthful documentation
-requires an excluded change or exceeds a hard budget, make no implementation
-commit and report the exact mismatch.
+`cartesian_base_working_basis` remains exported, has a Julia docstring, and
+appears in the curated reference with repeated, unambiguous expert/unstable and
+non-schema wording. The undocumented-export backlog fell exactly `6 -> 5`.
+Package load, docs `157/157` and `10/10`, public Cartesian `232/232` and
+`80/80`, authority check/self-test, local Documenter, and diff checks passed.
+Remote CI run `33579964076` passed Screening, PQS, and Supported floor; Docs run
+`33579964078` passed and deployed the verified live reference. No definition,
+signature, field, route, default, method, dispatch, staged result, PRF status,
+numerical result, test owner, workflow, dependency, version, tag, or release
+may change under maintenance. Any such work, any change to the exact five-name
+set, or any de-export or v0.3 action requires separate docs-only authority.
 
 ## Supported Public Surface Documentation
 
