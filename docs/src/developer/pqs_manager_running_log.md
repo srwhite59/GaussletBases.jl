@@ -1782,3 +1782,35 @@ Guardrail / next step:
   remain live; exact blocker: implementation must prove identical paths and
   bytes. Any mismatch, test edit, elaborate scope workaround, or need for a
   move stops the pass without an implementation commit.
+
+## Cartesian Hamiltonian Producer Pass 579 - Close Package-Root Path Indirection
+
+Commit(s):
+- authority `d6b19f4d597d594bd9c7ea1eb3a814eeb4611d51`;
+- implementation `cadf02f7c6785fdf8fa792358837c5e83010376b`;
+- this docs-only lifecycle closeout.
+
+Summary / goal advancement:
+- Accepted the exact `+8/-8` implementation across the four authorized source
+  files. It adds the two approved private declarations, replaces five repeated
+  data constructions, and gives the radial nested module an explicit
+  parent-qualified package root. No API, test, data, file, include order,
+  dependency, cache, workflow, numerical behavior, or release state changed.
+- Manager rerun of the external probe confirmed all six resolved targets and
+  SHA-256 values, all `122` full angular orders, curated orders `[15,32,51]`,
+  and the radial prototype. Unchanged core, radial `322/322`, angular-public
+  `83/83`, misc `59/59`, and docs `157/157` plus `10/10` passed. CI run
+  `33670968148` and Docs run `33670968155` were green.
+- `HP-PACKAGE-ROOT-PATH-FN-01` moves to implemented/maintenance and its TEST
+  record to completed/no-grant. Step 0 is complete without opening a new
+  medium-term goal or granting any source relocation.
+
+Guardrail / next step:
+- Preserve the private root/helper, exact six targets and hashes, and
+  parent-qualified nested-module access. Any file move, path framework, test
+  edit, or later source-layout step requires a fresh transaction.
+- deleted: five ad hoc data-root constructions and one source-local include
+  assumption; simplified: package data location now has one owner; quarantined:
+  every later proposal in the external review; not deleted because: all data
+  loaders and the nested high-precision module remain live; exact remaining
+  blocker: none for Step 0.

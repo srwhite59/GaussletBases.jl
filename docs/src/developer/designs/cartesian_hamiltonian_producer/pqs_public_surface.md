@@ -814,14 +814,15 @@ tags/releases, workflows, and release state also remain unchanged.
 
 ## Package-Root Data And Include Indirection
 
-`HP-PACKAGE-ROOT-PATH-FN-01/TEST-01` authorize only the source-layout Step 0
-needed to make package data and one nested include independent of the directory
-containing their current source file. The 2026-09-02 external follow-up review
-and metrics ledger are audit evidence, not authority. A fresh audit at
-`5b844e619b317633d6747974af54d8893df653f7` corrects their count to five data
+`HP-PACKAGE-ROOT-PATH-FN-01` maintains the source-layout Step 0 implemented in
+commit `cadf02f7c6785fdf8fa792358837c5e83010376b`: package data and one nested
+include are independent of the directory containing their current source file.
+The 2026-09-02 external follow-up review and metrics ledger remain audit
+evidence, not authority. The fresh baseline audit at
+`5b844e619b317633d6747974af54d8893df653f7` corrected their count to five data
 paths plus one nested include.
 
-The implementation adds exactly one private package-root constant in
+The implementation owns exactly one private package-root constant in
 `GaussletBases` and one small private data-path helper:
 
 ```julia
@@ -848,25 +849,22 @@ All six targets and their baseline SHA-256 values are fixed:
 | `data/legacy/BasisSets` | `6796d34f2c813e5b627b03d003ddd29e0701cfd18e1b4c2ee7d263ce671dbede` |
 | `src/internal/families_high_prec.jl` | `4c7ee5dee90cfb3296b392a41ba3cbd30423bd30aaea84935bb60ebd23608877` |
 
-Source changes are confined to `src/GaussletBases.jl`,
+The accepted source change was confined to `src/GaussletBases.jl`,
 `src/radial_boundary_prototypes.jl`, `src/angular_point_sets.jl`, and
-`src/legacy_basis_adapter.jl`. Only two lines may introduce new declarations.
-Because Git counts each of the six one-line substitutions as an addition, the
-expected raw diff is approximately `+8/-6`; raw additions have a hard limit of
-`10`, and net source growth has a hard limit of `5` lines. No test edit, new
-file, data/fixture change, file or directory move, include reorder, source-body
-refactor, export, API, dependency, metadata framework, cache, numerical policy,
-workflow, release action, or Step 1 work is authorized.
+`src/legacy_basis_adapter.jl`: exactly two private declarations and six direct
+substitutions produced a `+8/-8` diff. No test, file, data/fixture, include
+order, export, API, dependency, metadata framework, cache, numerical policy,
+workflow, release state, or later source-layout step changed.
 
-Validation must record the six resolved package-relative targets and compare
-their hashes with the table above; load both full and curated angular point
-sets directly; load the package; and run unchanged `core`, `radial`,
-`angular_public`, and `misc` groups plus authority, docs, Documenter, and diff
-checks. The implementation commit must receive the normal full CI matrix
-because it changes source. If any target or byte changes, a test needs editing,
-the nested-module reference requires more machinery, the raw/net line limits
-are exceeded, or a file move or later source-layout step becomes necessary,
-make no implementation commit and report the obstacle.
+The completed validation resolved all six package-relative targets to the
+paths above with exact hash parity, loaded all `122` full angular orders and
+curated orders `[15,32,51]`, and loaded the radial prototype, legacy data, and
+nested high-precision family source. Unchanged `core`, `radial` (`322/322`),
+`angular_public` (`83/83`), `misc` (`59/59`), and docs (`157/157` plus
+`10/10`) passed, as did package load, authority checks, Documenter, CI run
+`33670968148`, and Docs run `33670968155`. Any future target/byte change, test
+edit, move, path framework, elaborate nested-module workaround, or later
+source-layout step requires separate authority.
 
 ## Foundational Basis And Mapping Documentation
 
