@@ -21,6 +21,8 @@ jobs:
         run: julia --project=. -e 'using GaussletBases'
       - name: Atomic reference packet
         run: julia --project=. test/nested/cartesian_atomic_hf_reference_packet_runtests.jl
+      - name: Occupied-first injection
+        run: julia --project=. test/nested/cartesian_occupied_first_injection_runtests.jl
       - name: Protected external GTO sidecar
         run: julia --project=. test/nested/cartesian_external_gto_import_runtests.jl
       - name: R3A augmented one-body

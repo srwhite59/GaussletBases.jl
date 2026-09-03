@@ -31,6 +31,7 @@
     docs_make = read_doc("docs", "make.jl")
     docs_workflow = read_doc(".github", "workflows", "docs.yml")
     ci_workflow = read_doc(".github", "workflows", "ci.yml")
+    maintenance_workflow = read_doc(".github", "workflows", "cartesian-internal-maintenance.yml")
     test_runner = read_doc("test", "runtests.jl")
     authority_check = read_doc("docs", "check_cartesian_authority.jl")
     execution_whitelist = read_doc("docs", "src", "developer", "designs",
@@ -472,6 +473,15 @@
             "refs/tags/\${tag}:refs/tags/\${tag}", "refs/tags/\${tag}^{tag}",
             "refs/tags/\${tag}^{commit}", "Pkg.add(url=", "GITHUB_REF_NAME")
         @test !occursin("workflow_run", ci_workflow)
+        maintenance_paths = (
+            "test/nested/cartesian_atomic_hf_reference_packet_runtests.jl", "test/nested/cartesian_occupied_first_injection_runtests.jl",
+            "test/nested/cartesian_external_gto_import_runtests.jl", "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl",
+            "test/nested/cartesian_screened_hartree_correction_runtests.jl")
+        @test issorted(first.(findfirst.(maintenance_paths, Ref(maintenance_workflow))))
+        @test contains_all(maintenance_workflow, "workflow_dispatch:", "cron: \"17 10 * * 3\"",
+            "timeout-minutes: 15", "contents: read")
+        @test !occursin(r"(?m)^  (push|pull_request):", maintenance_workflow)
+        @test length(findall("julia --project=. test/nested/", maintenance_workflow)) == 5
         @test _DOCS_VERSIONS == Any[
             "stable" => "v^",
             "v#.#",
