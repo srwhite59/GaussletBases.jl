@@ -130,15 +130,17 @@ includes one of them.
 
 Current-pointer reconciliation is selective and mechanical. Update `340`
 affected `records.paths` entries, including the one still-planned represented-
-Hartree path, and the `7` existing authority scope path literals. Update the
-`264` current code-pointer occurrences across the `53` hand-edited current-
-pointer documents identified by the preflight. The additional listed canonical
-map remains frozen. Regenerate `registry.md` and `execution_whitelist.md` as
-whole files from `authority.toml`. The pre-move column above, `324` exact-path
-occurrences in `23` archived or historical documents, and broader retired-path
-evidence remain frozen. Do not perform a repository-wide replacement. The
-anti-bloat policy in `AGENTS.md` was made path-neutral in the authorizing commit
-and requires no implementation edit.
+Hartree path, the `7` existing authority scope path literals, and the `3`
+current `repo_path` evidence literals owned by `HP-RHO0-FAPP-FN-01` and
+`HP-RHO0-JANCHOR-FN-01`. Update the `264` current code-pointer occurrences
+across the `53` hand-edited current-pointer documents identified by the
+preflight. The additional listed canonical map remains frozen. Regenerate
+`registry.md` and `execution_whitelist.md` as whole files from `authority.toml`.
+The pre-move column above, `324` exact-path occurrences in `23` archived or
+historical documents, and broader retired-path evidence remain frozen. Do not
+perform a repository-wide replacement. The anti-bloat policy in `AGENTS.md`
+was made path-neutral in the authorizing commit and requires no implementation
+edit.
 
 Implementation target card:
 

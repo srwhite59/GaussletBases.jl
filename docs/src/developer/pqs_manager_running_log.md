@@ -992,3 +992,15 @@ The canonical contract now records those exact facts. The frozen 76-file map,
 documentation pointers, file blob/content hashes, scope, validation, and
 failure rules are otherwise unchanged. No strategic change: MT6 and the paused
 Step 4B implementation remain active.
+
+## Cartesian Hamiltonian Producer Pass 591 - Authorize Current Evidence-Path Reconciliation
+
+The staged relocation exposed three current `repo_path` evidence values that
+the preflight counted outside `records.paths` and scope text. They belong to
+`HP-RHO0-FAPP-FN-01` and `HP-RHO0-JANCHOR-FN-01` and identify retained,
+source-backed dormant implementations, so they must continue resolving to
+tracked files rather than remain as historical spelling. Step 4B may substitute
+only those three values for their mapped `src/cartesian/` targets. The 76-file
+map, 39 loader edits, 340 authority paths, seven scope literals, 264 current
+documentation pointers, tests, behavior, and failure rules remain unchanged.
+No strategic change: MT6 remains the active source-discovery goal.
