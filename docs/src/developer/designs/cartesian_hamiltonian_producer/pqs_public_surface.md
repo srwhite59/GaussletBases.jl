@@ -850,7 +850,7 @@ All six targets and their baseline SHA-256 values are fixed:
 | `src/internal/families_high_prec.jl` | `4c7ee5dee90cfb3296b392a41ba3cbd30423bd30aaea84935bb60ebd23608877` |
 
 The accepted source change was confined to `src/GaussletBases.jl`,
-`src/radial/radial_boundary_prototypes.jl`, `src/angular_point_sets.jl`, and
+`src/radial/radial_boundary_prototypes.jl`, `src/angular/angular_point_sets.jl`, and
 `src/legacy_basis_adapter.jl`: exactly two private declarations and six direct
 substitutions produced a `+8/-8` diff. No test, file, data/fixture, include
 order, export, API, dependency, metadata framework, cache, numerical policy,
@@ -1233,7 +1233,7 @@ IDs, labels, gauge metadata, diagnostics, and existing payload access rather
 than to the profile cache key.
 
 Maintenance is limited to the accepted concise docstrings in
-`src/angular_shell_basis.jl` and `src/angular_sequence_export.jl`, one compact
+`src/angular/angular_shell_basis.jl` and `src/angular/angular_sequence_export.jl`, one compact
 reader-facing addition in `docs/src/explanations/angular_research_track.md`,
 one curated seven-binding section in `docs/src/reference/export.md`, and
 focused checks in `test/docs/runtests.jl`. The accepted implementation added

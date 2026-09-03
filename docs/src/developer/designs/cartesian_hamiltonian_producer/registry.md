@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `db1df1279a09e97ee3ab470e314962d1405dfb48f478225560c2fba4162df476`.
+> [authority.toml](authority.toml), SHA-256 `adc7e8550ae13a7722239b3276e08dcf5a82d2ebcde6a50b179bb247f4644c91`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1423,7 +1423,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Package-Root Data And Include Indirection`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/angular_point_sets.jl`
+  - `source` / `existing`: `src/angular/angular_point_sets.jl`
   - `source` / `existing`: `src/legacy_basis_adapter.jl`
   - `source` / `existing`: `src/radial/radial_boundary_prototypes.jl`
 - **Evidence:**
@@ -2576,15 +2576,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `docs` / `existing`: `docs/src/explanations/angular_research_track.md`
   - `docs` / `existing`: `docs/src/reference/export.md`
-  - `source` / `existing`: `src/angular_sequence_export.jl`
-  - `source` / `existing`: `src/angular_shell_basis.jl`
+  - `source` / `existing`: `src/angular/angular_sequence_export.jl`
+  - `source` / `existing`: `src/angular/angular_shell_basis.jl`
 - **Evidence:**
   - `git_commit`: `628a46599dc7d1a85458a22a78fe095b7783b53a`
   - `git_commit`: `9b410ea14356cee6085ad2de51e73849695a0d97`
   - `manager_pass`: `562`
   - `manager_pass`: `563`
 - **Dependencies:** `HP-ANGULAR-PUBLIC-CI-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`
-- **Scope:** Maintain only the accepted experimental angular producer documentation from commit 9b410ea14356cee6085ad2de51e73849695a0d97: docstrings for the seven exported bindings ShellLocalAngularProfile, ShellLocalAngularProfileOverlap, shell\_local\_angular\_profile, adjacent\_shell\_local\_angular\_profile\_overlap, AtomicFixedRadialAngularSequenceLevel, AtomicFixedRadialAngularSequenceOverlapSidecar, and AtomicFixedRadialAngularSequence in src/angular\_shell\_basis.jl and src/angular\_sequence\_export.jl; the compact reader explanation in docs/src/explanations/angular\_research\_track.md; and the curated seven-binding section in docs/src/reference/export.md. Preserve the experimental producer-side classification, exact injected-Ylm versus mixed-complement ordering, deterministic labels and gauge metadata, provenance/integrity-only profile/level/sequence IDs, shell-independent source-to-target overlaps, adjacent versus complete non-adjacent direct upper-triangle sidecars, and one common radial basis/shell inventory/shell-center set across levels with changing N\_sph/profile. Final working bases remain intended orthonormal, so sidecars are continuation/transfer data rather than generalized-overlap authority. The accepted implementation added 58 source-docstring lines and changed reader/reference documentation by +42/-10, with no new file or executable change. ShellLocalAngularProfileKey remains exported but undocumented and absent from the curated reference; its possible next-minor de-export is outside this grant. Preserve every definition, field, signature, method, dispatch, export, cache behavior, numerical result, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude restart orchestration, common-target lifts, Givens transformations, downstream campaigns, key documentation or de-export, source behavior, API changes, examples, fixtures, and global documentation policy.
+- **Scope:** Maintain only the accepted experimental angular producer documentation from commit 9b410ea14356cee6085ad2de51e73849695a0d97: docstrings for the seven exported bindings ShellLocalAngularProfile, ShellLocalAngularProfileOverlap, shell\_local\_angular\_profile, adjacent\_shell\_local\_angular\_profile\_overlap, AtomicFixedRadialAngularSequenceLevel, AtomicFixedRadialAngularSequenceOverlapSidecar, and AtomicFixedRadialAngularSequence in src/angular/angular\_shell\_basis.jl and src/angular/angular\_sequence\_export.jl; the compact reader explanation in docs/src/explanations/angular\_research\_track.md; and the curated seven-binding section in docs/src/reference/export.md. Preserve the experimental producer-side classification, exact injected-Ylm versus mixed-complement ordering, deterministic labels and gauge metadata, provenance/integrity-only profile/level/sequence IDs, shell-independent source-to-target overlaps, adjacent versus complete non-adjacent direct upper-triangle sidecars, and one common radial basis/shell inventory/shell-center set across levels with changing N\_sph/profile. Final working bases remain intended orthonormal, so sidecars are continuation/transfer data rather than generalized-overlap authority. The accepted implementation added 58 source-docstring lines and changed reader/reference documentation by +42/-10, with no new file or executable change. ShellLocalAngularProfileKey remains exported but undocumented and absent from the curated reference; its possible next-minor de-export is outside this grant. Preserve every definition, field, signature, method, dispatch, export, cache behavior, numerical result, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude restart orchestration, common-target lifts, Givens transformations, downstream campaigns, key documentation or de-export, source behavior, API changes, examples, fixtures, and global documentation policy.
 
 ### HP-PUBLIC-ANGULAR-PRODUCER-DOC-TEST-01 - validate experimental angular producer documentation
 
@@ -5340,11 +5340,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/angular_fixed_radial_sequence_milestone.md`
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md`
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/angular_atomic_benchmark.jl`
-  - `source` / `existing`: `src/angular_point_sets.jl`
-  - `source` / `existing`: `src/angular_sequence_export.jl`
-  - `source` / `existing`: `src/angular_shell_assembly.jl`
-  - `source` / `existing`: `src/angular_shell_basis.jl`
+  - `source` / `existing`: `src/angular/angular_atomic_benchmark.jl`
+  - `source` / `existing`: `src/angular/angular_point_sets.jl`
+  - `source` / `existing`: `src/angular/angular_sequence_export.jl`
+  - `source` / `existing`: `src/angular/angular_shell_assembly.jl`
+  - `source` / `existing`: `src/angular/angular_shell_basis.jl`
 - **Evidence:**
   - `git_commit`: `82b8d97951fa08bd2b295f8d4a9cf6316d6d3b6c`
   - `manager_pass`: `583`

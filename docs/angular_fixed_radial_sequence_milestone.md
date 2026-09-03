@@ -48,15 +48,15 @@ This is a real contract commitment, not just an implementation accident.
 
 The main implementation surface is:
 
-- `src/angular_sequence_export.jl`
+- `src/angular/angular_sequence_export.jl`
 
 The sequence line depends on the shell-local profile/gauge reuse added to:
 
-- `src/angular_shell_basis.jl`
+- `src/angular/angular_shell_basis.jl`
 
 and the supporting assembly reuse in:
 
-- `src/angular_shell_assembly.jl`
+- `src/angular/angular_shell_assembly.jl`
 
 The public exports are wired through:
 
