@@ -36,14 +36,14 @@ Source anchors:
 - **active reusable kernel**: `src/foundation/GaussianAnalyticIntegrals.jl`,
   `gaussian_factor` and `gaussian_pair_factor`; high-exponent paths
   require their cancellation-free pairwise-distance/determinant forms
-- **active donor pattern**: `src/ordinary_mapped_backends.jl`,
+- **active donor pattern**: `src/ordinary/ordinary_mapped_backends.jl`,
   `_mapped_coulomb_expanded_symmetric_matrix`
-- **consumer example only**: `src/ordinary_cartesian_ida.jl`,
+- **consumer example only**: `src/ordinary/ordinary_cartesian_ida.jl`,
   `_ordinary_cartesian_ida_from_gausslet_bundle`
-- **retired/do not call**: `src/ordinary_mapped_backends.jl`,
+- **retired/do not call**: `src/ordinary/ordinary_mapped_backends.jl`,
   `_mapped_cartesian_one_body_matrix` term-by-term `kron` path
-- **active donor pattern**: `src/ordinary_qw_raw_blocks.jl`
-- **consumer example only**: `src/ordinary_qw_operator_assembly.jl`
+- **active donor pattern**: `src/ordinary/ordinary_qw_raw_blocks.jl`
+- **consumer example only**: `src/ordinary/ordinary_qw_operator_assembly.jl`
 
 Do-not-forget rule:
 Use the Gaussian expansion term index as an inner reduction:
@@ -74,19 +74,19 @@ Key docs:
   entries
 
 Source anchors:
-- **active reusable kernel**: `src/ordinary_coulomb.jl`,
+- **active reusable kernel**: `src/ordinary/ordinary_coulomb.jl`,
   `coulomb_gaussian_expansion`, `gaussian_factor_matrices`
 - **active reusable local data**: PGDG intermediates such as
   `pgdg.gaussian_factor_terms` when already centered for the requested axis and
   center
-- **active donor pattern**: `src/ordinary_mapped_backends.jl`:
+- **active donor pattern**: `src/ordinary/ordinary_mapped_backends.jl`:
   `_mapped_legacy_proxy_layer`,
   `_mapped_legacy_proxy_scalar_data`, `mapped_ordinary_one_body_operators`
-- **active donor pattern**: `src/ordinary_cartesian_ida.jl`,
+- **active donor pattern**: `src/ordinary/ordinary_cartesian_ida.jl`,
   `_pair_gaussian_factor_matrices`
-- **active donor pattern**: `src/ordinary_qw_raw_blocks.jl`,
+- **active donor pattern**: `src/ordinary/ordinary_qw_raw_blocks.jl`,
   `_qwrg_cross_1d_blocks`
-- **retired/do not call**: `src/ordinary_qw_raw_blocks.jl`,
+- **retired/do not call**: `src/ordinary/ordinary_qw_raw_blocks.jl`,
   `_qwrg_cross_1d_blocks_midpoint`
 
 Do-not-forget rule:
@@ -113,8 +113,8 @@ Source anchors:
   `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
 - **current extraction targets / parity consumers**:
   `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
-  `src/ordinary_qw_raw_blocks.jl`,
-  `src/ordinary_qw_operator_assembly.jl`
+  `src/ordinary/ordinary_qw_raw_blocks.jl`,
+  `src/ordinary/ordinary_qw_operator_assembly.jl`
 
 Do-not-forget rule:
 The neutral raw-block owner returns uncharged by-center `U_A = -1/r_A`
@@ -146,8 +146,8 @@ Source anchors:
   `src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`
 - **current extraction targets / parity consumers**:
   `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
-  `src/ordinary_qw_raw_blocks.jl`,
-  `src/ordinary_qw_operator_assembly.jl`
+  `src/ordinary/ordinary_qw_raw_blocks.jl`,
+  `src/ordinary/ordinary_qw_operator_assembly.jl`
 
 Do-not-forget rule:
 This owner is for non-nuclear `G-A`/`A-A` raw blocks only: overlap, kinetic,
@@ -346,7 +346,7 @@ Source anchors:
 - **same-construction reuse and fallback caller**:
   `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
   `pqs_terminal_residual_gto_augmented_unit_nuclear`
-- **consumer example only**: `src/ordinary_qw_operator_assembly.jl`,
+- **consumer example only**: `src/ordinary/ordinary_qw_operator_assembly.jl`,
   `assembled_one_body_hamiltonian`
 - **retired history**: the unused multilayer support one-body oracle was
   deleted in Pass 467
@@ -407,16 +407,16 @@ Source anchors:
 - **oracle/reference only**: `src/cartesian_nested_faces.jl`,
   `_nested_factorized_weight_aware_pair_terms`,
   `_nested_weight_aware_pair_terms`, `_nested_support_reference_pair_sum`
-- **active donor pattern**: `src/ordinary_mapped_backends.jl`,
+- **active donor pattern**: `src/ordinary/ordinary_mapped_backends.jl`,
   `_mapped_coulomb_expanded_symmetric_matrix`
-- **active donor pattern**: `src/ordinary_qw_raw_blocks.jl`,
+- **active donor pattern**: `src/ordinary/ordinary_qw_raw_blocks.jl`,
   `_qwrg_fixed_block_interaction_matrix`
 - **retired history**: the unused contracted-parent IDA provenance and metric
   oracle cluster was deleted in Pass 467
-- **consumer example only**: `src/ordinary_cartesian_ida.jl`,
+- **consumer example only**: `src/ordinary/ordinary_cartesian_ida.jl`,
   `_ordinary_cartesian_ida_from_pair_factors`,
   `_ordinary_cartesian_ida_from_gausslet_bundle`
-- **retired/do not call**: `src/ordinary_cartesian_ida.jl`,
+- **retired/do not call**: `src/ordinary/ordinary_cartesian_ida.jl`,
   `_ordinary_cartesian_ida_from_pair_factors` term-by-term `kron` construction
   when a term-first mapped/terminal contraction is available
 
@@ -531,8 +531,8 @@ Key docs:
 
 Source anchors:
 - **oracle/reference only**: `src/cartesian_nested_faces.jl`
-- **oracle/reference only**: `src/ordinary_qw_raw_blocks.jl`
-- **consumer example only**: `src/ordinary_qw_operator_assembly.jl`
+- **oracle/reference only**: `src/ordinary/ordinary_qw_raw_blocks.jl`
+- **consumer example only**: `src/ordinary/ordinary_qw_operator_assembly.jl`
 - **retired history**: the contracted-parent metric cluster was deleted in
   Pass 467; its historical oracle role had no current caller
 

@@ -133,9 +133,9 @@ documents GGT and MWG variants.
 
 ## Code Map
 
-- `src/ordinary_qw_residuals.jl` contains the Qiu-White donor/reference
+- `src/ordinary/ordinary_qw_residuals.jl` contains the Qiu-White donor/reference
   residual-space construction.
-- `src/ordinary_qw_operator_assembly.jl` contains donor/reference GGT and MWG
+- `src/ordinary/ordinary_qw_operator_assembly.jl` contains donor/reference GGT and MWG
   residual interaction logic.
 - [Qiu-White residual-Gaussian route](qiu_white_residual_gaussian_route.md)
   remains the paper-faithful reference description for the old QW line.

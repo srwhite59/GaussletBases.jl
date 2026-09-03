@@ -341,7 +341,7 @@ src/cartesian_residual_gaussians/mwg_interaction.jl
 src/cartesian_ida_hamiltonian.jl
 src/cartesian_protected_ladder_bundle.jl
 src/cartesian_reference_density/atomic_hf_reference_packets.jl
-src/ordinary_coulomb.jl
+src/ordinary/ordinary_coulomb.jl
 src/foundation/GaussianAnalyticIntegrals.jl
 src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
 bin/cartesian_ham_builder.jl

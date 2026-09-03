@@ -52,9 +52,9 @@ In the shorthand used during planning:
 
 This contract applies directly to:
 
-- the mapped PGDG proxy line in `src/ordinary_pgdg.jl`
+- the mapped PGDG proxy line in `src/ordinary/ordinary_pgdg.jl`
 - the contracted 1D PGDG intermediate/bundle layer in
-  `src/ordinary_mapped_backends.jl`
+  `src/ordinary/ordinary_mapped_backends.jl`
 - the compact nested Cartesian fixed-block production line built from those 1D
   tables
 

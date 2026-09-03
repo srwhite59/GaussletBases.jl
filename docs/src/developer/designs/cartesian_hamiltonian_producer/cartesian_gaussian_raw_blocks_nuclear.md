@@ -44,10 +44,10 @@ Its direct live callers are:
 - `_r3a_qw_blocks(...)` in
   `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`;
 - `_qwrg_diatomic_cartesian_shell_blocks_3d(...)` in
-  `src/ordinary_qw_raw_blocks.jl`.
+  `src/ordinary/ordinary_qw_raw_blocks.jl`.
 
 The latter remains part of the live Qiu-White operator path in
-`src/ordinary_qw_operator_assembly.jl`. Residual selection, exact augmented
+`src/ordinary/ordinary_qw_operator_assembly.jl`. Residual selection, exact augmented
 transforms, and Qiu-White route semantics remain with those consumers.
 
 ## Returned Blocks

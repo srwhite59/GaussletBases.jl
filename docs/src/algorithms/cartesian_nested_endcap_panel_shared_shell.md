@@ -88,8 +88,8 @@ until it has a separate analytic-backend validation pass.
 ## Code Pointers
 
 - Public frontend keyword plumbing:
-  - `src/ordinary_qw_nested_frontends.jl:bond_aligned_diatomic_nested_fixed_source`
-  - `src/ordinary_qw_nested_frontends.jl:bond_aligned_diatomic_nested_fixed_block`
+  - `src/ordinary/ordinary_qw_nested_frontends.jl:bond_aligned_diatomic_nested_fixed_source`
+  - `src/ordinary/ordinary_qw_nested_frontends.jl:bond_aligned_diatomic_nested_fixed_block`
 - Internal diatomic source policy:
   - `src/cartesian_nested_diatomic.jl:_nested_bond_aligned_diatomic_source`
 - Owned-unit construction:
@@ -99,7 +99,7 @@ until it has a separate analytic-backend validation pass.
   - `src/cartesian_nested_faces.jl:_nested_by_center_sidecar_path`
   - `src/cartesian_nested_faces.jl:_nested_product_staged_by_center_sidecar_cache`
 - Product-staged nuclear contraction:
-  - `src/ordinary_qw_raw_blocks.jl:_qwrg_bond_aligned_staged_by_center_nuclear_one_body_by_center`
+  - `src/ordinary/ordinary_qw_raw_blocks.jl:_qwrg_bond_aligned_staged_by_center_nuclear_one_body_by_center`
 
 ## Validation Boundary
 

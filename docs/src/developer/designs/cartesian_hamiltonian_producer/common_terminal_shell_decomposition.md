@@ -259,7 +259,7 @@ Implementation source was confined to:
 
 ```text
 src/cartesian_nested_faces.jl
-src/ordinary_qw_raw_blocks.jl
+src/ordinary/ordinary_qw_raw_blocks.jl
 ```
 
 Direct stale-document correction was confined to:

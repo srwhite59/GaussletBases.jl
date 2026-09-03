@@ -8,7 +8,7 @@
 
 2. Form the full three-dimensional gausslet product basis
    `G = {g_i^x(x) g_j^y(y) g_k^z(z)}`.
-   Code: `src/ordinary_cartesian_ida.jl`
+   Code: `src/ordinary/ordinary_cartesian_ida.jl`
 
 3. Form the added three-dimensional Gaussian orbitals `A = {a_I}`, typically
    from a standard basis set.
@@ -16,35 +16,35 @@
    the true atomic-centered Cartesian supplement object built from the shared
    named-basis loader, including active `s, p_x, p_y, p_z` content for
    `lmax = 1`.
-   Code: `src/legacy_basis_adapter.jl`, `src/ordinary_qw_raw_blocks.jl`
+   Code: `src/ordinary/legacy_basis_adapter.jl`, `src/ordinary/ordinary_qw_raw_blocks.jl`
 
 4. Define the residual Gaussians by orthogonalizing the added 3D Gaussian
    orbitals to the full 3D gausslet space:
    `a'_I = (1 - P_G) a_I`,
    then orthonormalize the surviving `{a'_I}` among themselves to obtain the
    residual-Gaussian set `R = {r_A}`.
-   Code: `src/ordinary_qw_residuals.jl`
+   Code: `src/ordinary/ordinary_qw_residuals.jl`
 
 5. Define the final orthonormal hybrid basis as `B = G ∪ R`.
-   Code: `src/ordinary_qw_residuals.jl`,
-   `src/ordinary_qw_operator_assembly.jl`
+   Code: `src/ordinary/ordinary_qw_residuals.jl`,
+   `src/ordinary/ordinary_qw_operator_assembly.jl`
 
 6. Construct the one-particle matrices exactly by Galerkin matrix elements in
    the raw gausslet-plus-GTO space:
    `S_raw`, `T_raw`, `Vnuc_raw`, ...
    Then transform them into the final basis `B` using the linear
    transformation from the raw basis to the orthonormal basis `{G, R}`.
-   Code: `src/ordinary_qw_raw_blocks.jl`,
-   `src/ordinary_qw_operator_assembly.jl`
+   Code: `src/ordinary/ordinary_qw_raw_blocks.jl`,
+   `src/ordinary/ordinary_qw_operator_assembly.jl`
 
 7. Construct the gausslet-gausslet part of the two-electron interaction using
    the integral-diagonal approximation (IDA).
-   Code: `src/ordinary_qw_raw_blocks.jl`,
-   `src/ordinary_qw_operator_assembly.jl`
+   Code: `src/ordinary/ordinary_qw_raw_blocks.jl`,
+   `src/ordinary/ordinary_qw_operator_assembly.jl`
 
 8. For all interaction terms involving one or more residual Gaussians, use a
    residual-Gaussian approximation.
-   Code: `src/ordinary_qw_operator_assembly.jl`
+   Code: `src/ordinary/ordinary_qw_operator_assembly.jl`
 
    8a. In the nearest-center / GGT version, assign each residual Gaussian to
    the nearest/core gausslet and use the corresponding diagonal interaction
@@ -64,7 +64,7 @@
    although the Qiu-White paper was unfortunately ambiguous on this point.
 
 9. Return the final hybrid Hamiltonian in the basis `B`.
-   Code: `src/ordinary_qw_operator_assembly.jl`
+   Code: `src/ordinary/ordinary_qw_operator_assembly.jl`
 
 ## References
 
@@ -108,13 +108,13 @@ is split across the `ordinary_qw_*` files below.
 
 Current split:
 
-- `src/ordinary_qw_types_and_bases.jl` owns QW basis/source data types and
+- `src/ordinary/ordinary_qw_types_and_bases.jl` owns QW basis/source data types and
   constructors.
-- `src/ordinary_qw_residuals.jl` owns residual-space diagnostics,
+- `src/ordinary/ordinary_qw_residuals.jl` owns residual-space diagnostics,
   orthogonalization, keep policy, and stabilization.
-- `src/ordinary_qw_raw_blocks.jl` owns supplement plumbing and raw
+- `src/ordinary/ordinary_qw_raw_blocks.jl` owns supplement plumbing and raw
   gausslet/Gaussian block construction.
-- `src/ordinary_qw_operator_assembly.jl` owns the public operator entry points
+- `src/ordinary/ordinary_qw_operator_assembly.jl` owns the public operator entry points
   and final Hamiltonian assembly described on this page:
   - full 3D gausslet product basis first
   - 3D residual Gaussians orthogonalized to that full space
@@ -124,7 +124,7 @@ Current split:
 - on the atomic line, the added 3D Gaussian orbitals used in this route may now
   come from the explicit atomic-centered Cartesian `s/p` supplement object
   built from `LegacyAtomicGaussianSupplement`
-- the public hybrid path in `src/ordinary_hybrid.jl` is still the later
+- the public hybrid path in `src/ordinary/ordinary_hybrid.jl` is still the later
   COMX/localized hybrid route
 - the current `:residual_gaussian_nearest` and `:residual_gaussian_mwg`
   treatments on `HybridMappedOrdinaryBasis1D` remain useful surrogate or
@@ -142,24 +142,24 @@ points and usage conventions, see
 
 The current code is concentrated in:
 
-- `src/ordinary_qw_operator_assembly.jl`
+- `src/ordinary/ordinary_qw_operator_assembly.jl`
   - `ordinary_cartesian_qiu_white_operators(...)`
     public entry points for the ordinary and nested QW routes
   - `_qwrg_interaction_matrix_nearest(...)`
     step `8a`, nearest-center / GGT residual interaction
   - `_qwrg_interaction_matrix_mwg(...)`
     steps `8b`-`8d`, MWG residual moment matching and interaction
-- `src/ordinary_qw_residuals.jl`
+- `src/ordinary/ordinary_qw_residuals.jl`
   - `_qwrg_residual_space(...)`
     steps `4`-`5`, residual-space construction and final-basis map
-- `src/ordinary_qw_raw_blocks.jl`
+- `src/ordinary/ordinary_qw_raw_blocks.jl`
   - `_qwrg_atomic_cartesian_blocks_3d(...)`
     active atomic-centered 3D supplement raw-block path
   - `_qwrg_diatomic_cartesian_shell_blocks_3d(...)`
     active molecular shell raw-block path
   - `_qwrg_raw_overlap_blocks(...)`, `_qwrg_raw_one_body_blocks(...)`
     step `6`, raw-space block construction
-- `src/legacy_basis_adapter.jl`
+- `src/ordinary/legacy_basis_adapter.jl`
   - `LegacyAtomicGaussianSupplement`
     shared named-basis loader object for the added 3D Gaussian orbitals in step
     `3`

@@ -42,7 +42,7 @@ gaussian_non_nuclear_overlap_blocks(proxy, supplement)
 Direct live callers are in:
 
 - `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`;
-- `src/ordinary_qw_raw_blocks.jl`.
+- `src/ordinary/ordinary_qw_raw_blocks.jl`.
 
 The full helper supplies exact augmented operators and the main diatomic
 Qiu-White wrapper. The overlap-only helper supplies the residual setup mixed

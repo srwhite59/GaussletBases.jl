@@ -5,16 +5,16 @@
 1. Start from one fixed one-dimensional distorted gausslet line.
    The central intermediate is not yet a three-dimensional Hamiltonian. It is a
    one-dimensional distorted-gausslet Coulomb data object.
-   Code: current related infrastructure lives mainly in `src/ordinary_mapped_backends.jl`
+   Code: current related infrastructure lives mainly in `src/ordinary/ordinary_mapped_backends.jl`
 
 2. For that one-dimensional distorted gausslet line, define the term-resolved
    Coulomb data against the Gaussian expansion of `1/r`.
    This includes the one-dimensional data needed for both:
    - nuclear-potential assembly
    - electron-electron / `Vee` assembly
-   Code: current consumers include `src/ordinary_cartesian_ida.jl`,
-   `src/ordinary_qw_raw_blocks.jl`, and
-   `src/ordinary_qw_operator_assembly.jl`
+   Code: current consumers include `src/ordinary/ordinary_cartesian_ida.jl`,
+   `src/ordinary/ordinary_qw_raw_blocks.jl`, and
+   `src/ordinary/ordinary_qw_operator_assembly.jl`
 
 3. In the pure distorted-gausslet route, build that one-dimensional Coulomb
    data directly in the distorted-gausslet representation.
@@ -25,7 +25,7 @@
    distorted-gausslet line through a uniform Gaussian proxy line and build the
    Coulomb data there, then contract back to the working distorted-gausslet
    basis.
-   Code: current proxy-based pieces live in `src/ordinary_mapped_backends.jl`
+   Code: current proxy-based pieces live in `src/ordinary/ordinary_mapped_backends.jl`
 
 5. Introduce a refinement hierarchy for that PGDG surrogate route.
    The proxy line need not stop at the standard PGDG spacing. It can be
@@ -52,8 +52,8 @@
    - product assembly over `x`, `y`, `z`
    - short inner reduction over the Gaussian expansion terms
    Code: current term-first three-dimensional assembly lives in
-   `src/ordinary_cartesian_ida.jl`, `src/ordinary_qw_raw_blocks.jl`, and
-   `src/ordinary_qw_operator_assembly.jl`
+   `src/ordinary/ordinary_cartesian_ida.jl`, `src/ordinary/ordinary_qw_raw_blocks.jl`, and
+   `src/ordinary/ordinary_qw_operator_assembly.jl`
 
 8. Interpret the hierarchy operationally.
    In the intended first practical picture:
@@ -121,13 +121,13 @@ grows around it.
 Current state:
 
 - the repo already has ordinary and Qiu-White-related proxy machinery in
-  `src/ordinary_mapped_backends.jl`
+  `src/ordinary/ordinary_mapped_backends.jl`
 - the repo already has efficient term-first three-dimensional assembly routes
-  in `src/ordinary_cartesian_ida.jl`, `src/ordinary_qw_raw_blocks.jl`, and
-  `src/ordinary_qw_operator_assembly.jl`
+  in `src/ordinary/ordinary_cartesian_ida.jl`, `src/ordinary/ordinary_qw_raw_blocks.jl`, and
+  `src/ordinary/ordinary_qw_operator_assembly.jl`
 - the repo now has the first stored analytic ternary `1 -> 1/3` refinement
   mask and narrow local application helpers in
-  `src/ordinary_pgdg_refinement_masks.jl`
+  `src/ordinary/ordinary_pgdg_refinement_masks.jl`
 - the repo does not yet expose the one-dimensional distorted-gausslet Coulomb
   data object as the main explicit internal abstraction
 - the repo does not yet implement the full PGDG refinement hierarchy as

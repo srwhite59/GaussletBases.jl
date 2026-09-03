@@ -51,7 +51,7 @@ Exact implementation ownership is limited to:
 
 ```text
 src/cartesian_nested_diatomic.jl
-src/ordinary_qw_nested_frontends.jl
+src/ordinary/ordinary_qw_nested_frontends.jl
 ```
 
 The accepted repair used `12` added and `8` deleted source lines, within its
@@ -238,9 +238,9 @@ committing and return the exact blocker for a new design decision.
 - Auto near-nucleus protection:
   - `src/cartesian_nested_diatomic.jl:_nested_diatomic_resolve_core_near_nucleus_protect_rows`
 - Real diatomic source entry point:
-  - `src/ordinary_qw_nested_frontends.jl:bond_aligned_diatomic_nested_fixed_source`
+  - `src/ordinary/ordinary_qw_nested_frontends.jl:bond_aligned_diatomic_nested_fixed_source`
 - Real diagnostics entry point:
-  - `src/ordinary_qw_nested_frontends.jl:bond_aligned_diatomic_nested_geometry_diagnostics`
+  - `src/ordinary/ordinary_qw_nested_frontends.jl:bond_aligned_diatomic_nested_geometry_diagnostics`
 
 ## References
 

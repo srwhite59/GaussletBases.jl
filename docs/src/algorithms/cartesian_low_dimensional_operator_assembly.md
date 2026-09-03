@@ -123,7 +123,7 @@ model choice, not a failed attempt to store full four-index ERIs.
   terminal IDA assembly.
 - `src/cartesian_gaussian_axis_integrals.jl` owns shared Gaussian axis integral
   kernels where present.
-- `src/ordinary_qw_raw_blocks.jl` still contains donor/reference raw-block
+- `src/ordinary/ordinary_qw_raw_blocks.jl` still contains donor/reference raw-block
   surfaces used by surviving QW routes.
 
 The obsolete multilayer complete-core-shell path was

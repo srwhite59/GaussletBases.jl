@@ -267,7 +267,7 @@ Implementation is limited to existing owners:
   parent-backed direct contractions and the bounded parent-IDA comparator;
 - `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
   only for narrow internal module wiring;
-- `src/ordinary_coulomb.jl` only for the scalar onsite-calibrated Gaussian
+- `src/ordinary/ordinary_coulomb.jl` only for the scalar onsite-calibrated Gaussian
   Coulomb formula and its compact resource.
 
 These mechanics remain owned by `CartesianFinalBasisRealization`. The separate

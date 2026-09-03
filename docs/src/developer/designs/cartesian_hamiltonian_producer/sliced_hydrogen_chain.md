@@ -283,7 +283,7 @@ consumer contracts; use `sliced_h1`, `sliced_h1_bandwidth`, `sliced_vee`, and
 
 Owned source surfaces are exactly:
 
-- `src/sliced_hydrogen_chain.jl`;
+- `src/ordinary/sliced_hydrogen_chain.jl`;
 - `src/GaussletBases.jl`, for its include and the accepted six exports.
 
 The implementation may call existing `UniformBasisSpec`, G10 primitive/stencil

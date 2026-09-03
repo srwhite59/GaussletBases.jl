@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `1f2b4ec302ea72c3159c0bdda55d97285a88b683dde9f09749fad0cb433b9f9a`.
+> [authority.toml](authority.toml), SHA-256 `4bbf7c478a08fbc47b1ca2ffc0c834adfd36144afccbcc5ca09fc15d00525534`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -271,8 +271,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [cartesian\_gaussian\_raw\_blocks\_non\_nuclear.md](cartesian_gaussian_raw_blocks_non_nuclear.md); heading `Cartesian Gaussian Raw Blocks - Non-Nuclear Slice`
 - **Owned paths:**
   - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
-  - `source` / `existing`: `src/ordinary_qw_operator_assembly.jl`
-  - `source` / `existing`: `src/ordinary_qw_raw_blocks.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_qw_operator_assembly.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_qw_raw_blocks.jl`
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Dependencies:** `HP-CGRB-NN-FN-01`
@@ -303,8 +303,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [cartesian\_gaussian\_raw\_blocks\_nuclear.md](cartesian_gaussian_raw_blocks_nuclear.md); heading `Cartesian Gaussian Raw Blocks - Nuclear Slice`
 - **Owned paths:**
   - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
-  - `source` / `existing`: `src/ordinary_qw_operator_assembly.jl`
-  - `source` / `existing`: `src/ordinary_qw_raw_blocks.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_qw_operator_assembly.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_qw_raw_blocks.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-CGRB-FN-01`
 - **Scope:** maintain the two direct neutral-kernel call sites and indirect Qiu-White assembly compatibility.
@@ -1460,7 +1460,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
   - `source` / `existing`: `src/angular/angular_point_sets.jl`
-  - `source` / `existing`: `src/legacy_basis_adapter.jl`
+  - `source` / `existing`: `src/ordinary/legacy_basis_adapter.jl`
   - `source` / `existing`: `src/radial/radial_boundary_prototypes.jl`
 - **Evidence:**
   - `git_commit`: `5b844e619b317633d6747974af54d8893df653f7`
@@ -1601,7 +1601,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
   - `source` / `existing`: `src/cartesian_reference_density/atomic_hf_reference_packets.jl`
   - `source` / `existing`: `src/cartesian_residual_gaussians/mwg_interaction.jl`
-  - `source` / `existing`: `src/ordinary_coulomb.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_coulomb.jl`
   - `source` / `existing`: `src/pqs_source_box_low_order_materialization.jl`
   - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
@@ -1761,7 +1761,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
   - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`
-  - `source` / `existing`: `src/ordinary_coulomb.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_coulomb.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_prf_final_g_interaction_audit_2026-07-14.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_prf_gaussian_distance_interaction_audit_2026-07-14.md`
@@ -2987,15 +2987,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Experimental QW Geometry Diagnostics Documentation`
 - **Owned paths:**
   - `docs` / `existing`: `docs/src/reference/operators_and_diagnostics.md`
-  - `source` / `existing`: `src/ordinary_qw_nested_frontends.jl`
-  - `source` / `existing`: `src/ordinary_qw_types_and_bases.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_qw_nested_frontends.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_qw_types_and_bases.jl`
 - **Evidence:**
   - `git_commit`: `6569fbb75107cdc24fa4213eb44dcd2a47578b7f`
   - `git_commit`: `c553c40c2a464f639c4385b6155d37963facdc3d`
   - `manager_pass`: `566`
   - `manager_pass`: `567`
 - **Dependencies:** `HP-PUBLIC-EXPERT-GEOMETRY-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01`, `HP-QW-NESTED-DIAT-FN-01`
-- **Scope:** Maintain only the accepted experimental QW geometry-diagnostics documentation from commit c553c40c2a464f639c4385b6155d37963facdc3d: docstrings for bond\_aligned\_diatomic\_nested\_geometry\_diagnostics in src/ordinary\_qw\_nested\_frontends.jl and for bond\_aligned\_homonuclear\_chain\_geometry\_diagnostics and axis\_aligned\_homonuclear\_square\_lattice\_geometry\_diagnostics in src/ordinary\_qw\_types\_and\_bases.jl, plus their compact shared section in docs/src/reference/operators\_and\_diagnostics.md. Preserve these as route-specific expert diagnostics rather than a general molecular-geometry API or stable serialization schema, with returned vectors and route-specific named records treated as read-only inspection data. The nested source overload preserves and inspects the exact supplied source without rebuilding; the basis overload constructs the normalized nested source through its documented frontend controls and is not a cheap geometry-only query. Preserve the documented geometry, child/shared retention, shell count/dimension, actual provenance, fixed-dimension, contract-audit, atom-growth, and shared-shell/endcap/panel/packet/retention/split/protection boundaries. The chain and square diagnostics inspect only their existing experimental homonuclear bases and retain the documented coordinate, mapped-center, spacing, mapping-kind, monotonicity, symmetry, and x-y agreement summaries without constructing nested sources, Hamiltonians, solver inputs, arbitrary-orientation models, or heteronuclear models. The accepted implementation added 31 source-docstring and 24 reader-documentation lines, with no new file or executable change. Preserve every returned field, definition, signature, default, method, dispatch, construction behavior, export, numerical result, ordinary test, workflow, dependency, numerical policy, compatibility floor, version, tag, and release artifact. Exclude cartesian\_base\_working\_basis, sliced-chain operators, every next-minor de-export candidate, global documentation policy, API changes, and broader QW work.
+- **Scope:** Maintain only the accepted experimental QW geometry-diagnostics documentation from commit c553c40c2a464f639c4385b6155d37963facdc3d: docstrings for bond\_aligned\_diatomic\_nested\_geometry\_diagnostics in src/ordinary/ordinary\_qw\_nested\_frontends.jl and for bond\_aligned\_homonuclear\_chain\_geometry\_diagnostics and axis\_aligned\_homonuclear\_square\_lattice\_geometry\_diagnostics in src/ordinary/ordinary\_qw\_types\_and\_bases.jl, plus their compact shared section in docs/src/reference/operators\_and\_diagnostics.md. Preserve these as route-specific expert diagnostics rather than a general molecular-geometry API or stable serialization schema, with returned vectors and route-specific named records treated as read-only inspection data. The nested source overload preserves and inspects the exact supplied source without rebuilding; the basis overload constructs the normalized nested source through its documented frontend controls and is not a cheap geometry-only query. Preserve the documented geometry, child/shared retention, shell count/dimension, actual provenance, fixed-dimension, contract-audit, atom-growth, and shared-shell/endcap/panel/packet/retention/split/protection boundaries. The chain and square diagnostics inspect only their existing experimental homonuclear bases and retain the documented coordinate, mapped-center, spacing, mapping-kind, monotonicity, symmetry, and x-y agreement summaries without constructing nested sources, Hamiltonians, solver inputs, arbitrary-orientation models, or heteronuclear models. The accepted implementation added 31 source-docstring and 24 reader-documentation lines, with no new file or executable change. Preserve every returned field, definition, signature, default, method, dispatch, construction behavior, export, numerical result, ordinary test, workflow, dependency, numerical policy, compatibility floor, version, tag, and release artifact. Exclude cartesian\_base\_working\_basis, sliced-chain operators, every next-minor de-export candidate, global documentation policy, API changes, and broader QW work.
 
 ### HP-PUBLIC-QW-GEOMETRY-DOC-TEST-01 - validate experimental QW geometry diagnostics documentation
 
@@ -3063,14 +3063,14 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Experimental Sliced Hydrogen-Chain Operator Documentation`
 - **Owned paths:**
   - `docs` / `existing`: `docs/src/reference/atomic_and_ordinary.md`
-  - `source` / `existing`: `src/sliced_hydrogen_chain.jl`
+  - `source` / `existing`: `src/ordinary/sliced_hydrogen_chain.jl`
 - **Evidence:**
   - `git_commit`: `4dcb648d32d5368f19d0104b55425e582070cb3c`
   - `git_commit`: `ec3b8fa12a68118c922ae87ec3cacae821633d5b`
   - `manager_pass`: `568`
   - `manager_pass`: `569`
 - **Dependencies:** `HP-PUBLIC-ATOMIC-IDA-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-SLICE-HCHAIN-FN-01`
-- **Scope:** Maintain only the accepted experimental sliced hydrogen-chain operator documentation from commit ec3b8fa12a68118c922ae87ec3cacae821633d5b: docstrings for sliced\_h1, sliced\_vee, and sliced\_row\! in src/sliced\_hydrogen\_chain.jl and their compact six-export section with SlicedHydrogenChain, sliced\_hydrogen\_chain, and sliced\_h1\_bandwidth in docs/src/reference/atomic\_and\_ordinary.md. Preserve this as an experimental minimal hydrogen-chain producer rather than a general molecular Hamiltonian, solver, MPO, electron-sector framework, or sliced-basis framework. Preserve sliced\_h1 as a read-only lazy AbstractMatrix{Float64} view of the electronic one-body operator with nuclear repulsion separate in chain.nuclear\_repulsion, represented structural half-bandwidth semantics, and exact represented zeros outside the band without a physical-continuum-zero claim. Preserve sliced\_vee as a read-only lazy two-index density-density interaction view rather than a four-index ERI tensor. Both views retain their chain owner and expose size, scalar indexing, and mul\! without owning an N-by-N dense matrix; their concrete types remain private and non-contractual, and explicit Matrix materialization remains bounded-diagnostics-only. Preserve sliced\_row\! destination-length and row validation, complete caller-owned-destination overwrite and return, zero allocation for a compatible buffer, band-limited H1 extraction, and full-column Vee extraction. Stable fields and diagnostics remain read-only consumer data while internal bands, Coulomb blocks, coefficients, work arrays, and view types remain non-contractual. The accepted implementation added 36 source-docstring and 32 reader-reference lines, with no new file or executable change. Preserve every type, field, definition, method, signature, dispatch, coefficient, tolerance, numerical result, storage choice, allocation policy, export, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude cartesian\_base\_working\_basis, every next-minor de-export candidate, source behavior, API reduction, new examples or fixtures, global documentation policy, and broader sliced-chain work.
+- **Scope:** Maintain only the accepted experimental sliced hydrogen-chain operator documentation from commit ec3b8fa12a68118c922ae87ec3cacae821633d5b: docstrings for sliced\_h1, sliced\_vee, and sliced\_row\! in src/ordinary/sliced\_hydrogen\_chain.jl and their compact six-export section with SlicedHydrogenChain, sliced\_hydrogen\_chain, and sliced\_h1\_bandwidth in docs/src/reference/atomic\_and\_ordinary.md. Preserve this as an experimental minimal hydrogen-chain producer rather than a general molecular Hamiltonian, solver, MPO, electron-sector framework, or sliced-basis framework. Preserve sliced\_h1 as a read-only lazy AbstractMatrix{Float64} view of the electronic one-body operator with nuclear repulsion separate in chain.nuclear\_repulsion, represented structural half-bandwidth semantics, and exact represented zeros outside the band without a physical-continuum-zero claim. Preserve sliced\_vee as a read-only lazy two-index density-density interaction view rather than a four-index ERI tensor. Both views retain their chain owner and expose size, scalar indexing, and mul\! without owning an N-by-N dense matrix; their concrete types remain private and non-contractual, and explicit Matrix materialization remains bounded-diagnostics-only. Preserve sliced\_row\! destination-length and row validation, complete caller-owned-destination overwrite and return, zero allocation for a compatible buffer, band-limited H1 extraction, and full-column Vee extraction. Stable fields and diagnostics remain read-only consumer data while internal bands, Coulomb blocks, coefficients, work arrays, and view types remain non-contractual. The accepted implementation added 36 source-docstring and 32 reader-reference lines, with no new file or executable change. Preserve every type, field, definition, method, signature, dispatch, coefficient, tolerance, numerical result, storage choice, allocation policy, export, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude cartesian\_base\_working\_basis, every next-minor de-export candidate, source behavior, API reduction, new examples or fixtures, global documentation policy, and broader sliced-chain work.
 
 ### HP-PUBLIC-SLICED-HCHAIN-DOC-TEST-01 - validate experimental sliced hydrogen-chain operator documentation
 
@@ -3105,14 +3105,14 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/GaussletBases.jl`
   - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
   - `source` / `existing`: `src/cartesian_external_gto_import.jl`
-  - `source` / `existing`: `src/ordinary_coulomb.jl`
-  - `source` / `existing`: `src/ordinary_qw_types_and_bases.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_coulomb.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_qw_types_and_bases.jl`
 - **Evidence:**
   - `git_commit`: `8161f131aa962fef979f8ef09c14d23231eb14e4`
   - `manager_pass`: `554`
   - `manager_pass`: `555`
 - **Dependencies:** `HP-PUBLIC-ATOMIC-IDA-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`
-- **Scope:** Maintain only the accepted supported-public documentation from commit 8161f131aa962fef979f8ef09c14d23231eb14e4 for BondAlignedDiatomicQWBasis3D, CoulombGaussianExpansion, basis\_metadata, cartesian\_base\_hamiltonian, external\_gto\_ordering\_fingerprint, and external\_gto\_overlap\_fingerprint. Keep the BondAlignedDiatomicQWBasis3D docstring on the concrete exported type rather than the unexported AbstractBondAlignedOrdinaryQWBasis3D parent; preserve its narrow bond-aligned mapped-product role and existing public homonuclear and heteronuclear builders without a general-geometry claim. Preserve CoulombGaussianExpansion as the finite callable sum of coefficients\[i\] \* exp(-exponents\[i\] \* r^2), with matching counts, positive exponents, copied Float64 inputs, and recorded del/s/c/maxu generator parameters, without an exact-Coulomb or universal-accuracy-interval claim. Preserve basis\_metadata without a universal metadata schema, concrete type, field set, ownership, or copy guarantee. Keep cartesian\_base\_hamiltonian documented as returning CartesianIDAHamiltonian{Float64} and optionally writing the existing artifact only for the stated origin-centered H and z-aligned H2 base routes, without general molecules, supplements, corrections, route controls, or solver behavior. Keep both external-GTO hashes documented as strict packet-integrity fingerprints: ordering covers ordered AO labels plus stored angular powers, centers, primitive data, and normalization convention; overlap covers column-major Matrix{Float64} values while dimensions and scientific consistency remain separate validation. Neither hash is permutation-, tolerance-, or convention-invariant or a numerical-equivalence test. Maintain docstrings only in src/ordinary\_qw\_types\_and\_bases.jl, src/ordinary\_coulomb.jl, src/GaussletBases.jl, src/cartesian\_base\_hamiltonian.jl, and src/cartesian\_external\_gto\_import.jl, and their curated entries or short limiting prose only in docs/src/reference/bases\_and\_mappings.md, docs/src/reference/operators\_and\_diagnostics.md, and docs/src/reference/export.md. The accepted delta is +52/-10 source-docstring lines and +20 reader-documentation lines, with no new file or executable change. Preserve every implementation, constructor, field, method, signature, dispatch, export, numerical behavior, artifact, hash algorithm, compatibility floor, workflow, tag, and release artifact. Add no global checkdocs policy or allowlist, source behavior, dependency, example, schema, test outside the docs family, API reduction, or release work. The remaining nineteen expert/experimental bindings and five future de-export candidates stay outside this maintenance record and require separate classification or audit authority.
+- **Scope:** Maintain only the accepted supported-public documentation from commit 8161f131aa962fef979f8ef09c14d23231eb14e4 for BondAlignedDiatomicQWBasis3D, CoulombGaussianExpansion, basis\_metadata, cartesian\_base\_hamiltonian, external\_gto\_ordering\_fingerprint, and external\_gto\_overlap\_fingerprint. Keep the BondAlignedDiatomicQWBasis3D docstring on the concrete exported type rather than the unexported AbstractBondAlignedOrdinaryQWBasis3D parent; preserve its narrow bond-aligned mapped-product role and existing public homonuclear and heteronuclear builders without a general-geometry claim. Preserve CoulombGaussianExpansion as the finite callable sum of coefficients\[i\] \* exp(-exponents\[i\] \* r^2), with matching counts, positive exponents, copied Float64 inputs, and recorded del/s/c/maxu generator parameters, without an exact-Coulomb or universal-accuracy-interval claim. Preserve basis\_metadata without a universal metadata schema, concrete type, field set, ownership, or copy guarantee. Keep cartesian\_base\_hamiltonian documented as returning CartesianIDAHamiltonian{Float64} and optionally writing the existing artifact only for the stated origin-centered H and z-aligned H2 base routes, without general molecules, supplements, corrections, route controls, or solver behavior. Keep both external-GTO hashes documented as strict packet-integrity fingerprints: ordering covers ordered AO labels plus stored angular powers, centers, primitive data, and normalization convention; overlap covers column-major Matrix{Float64} values while dimensions and scientific consistency remain separate validation. Neither hash is permutation-, tolerance-, or convention-invariant or a numerical-equivalence test. Maintain docstrings only in src/ordinary/ordinary\_qw\_types\_and\_bases.jl, src/ordinary/ordinary\_coulomb.jl, src/GaussletBases.jl, src/cartesian\_base\_hamiltonian.jl, and src/cartesian\_external\_gto\_import.jl, and their curated entries or short limiting prose only in docs/src/reference/bases\_and\_mappings.md, docs/src/reference/operators\_and\_diagnostics.md, and docs/src/reference/export.md. The accepted delta is +52/-10 source-docstring lines and +20 reader-documentation lines, with no new file or executable change. Preserve every implementation, constructor, field, method, signature, dispatch, export, numerical behavior, artifact, hash algorithm, compatibility floor, workflow, tag, and release artifact. Add no global checkdocs policy or allowlist, source behavior, dependency, example, schema, test outside the docs family, API reduction, or release work. The remaining nineteen expert/experimental bindings and five future de-export candidates stay outside this maintenance record and require separate classification or audit authority.
 
 ### HP-PUBLIC-SUPPORTED-SURFACE-DOC-TEST-01 - validate six supported public surface bindings
 
@@ -3141,7 +3141,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [cartesian\_nested\_diatomic\_box\_policy.md](../../../algorithms/cartesian_nested_diatomic_box_policy.md); heading `Exported Front-Door Maintenance Contract`
 - **Owned paths:**
   - `source` / `existing`: `src/cartesian_nested_diatomic.jl`
-  - `source` / `existing`: `src/ordinary_qw_nested_frontends.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_qw_nested_frontends.jl`
 - **Evidence:**
   - `git_commit`: `6a365699102ebe30c31a9499f338cb192334ef1c`
   - `manager_pass`: `472`
@@ -5344,7 +5344,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [sliced\_hydrogen\_chain.md](sliced_hydrogen_chain.md); heading `Sliced Hydrogen-Chain Producer`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/sliced_hydrogen_chain.jl`
+  - `source` / `existing`: `src/ordinary/sliced_hydrogen_chain.jl`
 - **Evidence:**
   - `git_commit`: `c895e353d`
   - `git_commit`: `47023f190`
@@ -5503,21 +5503,21 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/sliced_hydrogen_chain.md`
   - `docs` / `existing`: `docs/src/developer/pgdg_cartesian_efficiency_contract.md`
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/legacy_basis_adapter.jl`
-  - `source` / `existing`: `src/ordinary_cartesian_ida.jl`
-  - `source` / `existing`: `src/ordinary_coulomb.jl`
-  - `source` / `existing`: `src/ordinary_hybrid.jl`
-  - `source` / `existing`: `src/ordinary_mapped_backends.jl`
-  - `source` / `existing`: `src/ordinary_pgdg.jl`
-  - `source` / `existing`: `src/ordinary_pgdg_refinement_masks.jl`
-  - `source` / `existing`: `src/ordinary_qw_corrections.jl`
-  - `source` / `existing`: `src/ordinary_qw_nested_frontends.jl`
-  - `source` / `existing`: `src/ordinary_qw_operator_assembly.jl`
-  - `source` / `existing`: `src/ordinary_qw_raw_blocks.jl`
-  - `source` / `existing`: `src/ordinary_qw_residuals.jl`
-  - `source` / `existing`: `src/ordinary_qw_types_and_bases.jl`
-  - `source` / `existing`: `src/ordinary_sho.jl`
-  - `source` / `existing`: `src/sliced_hydrogen_chain.jl`
+  - `source` / `existing`: `src/ordinary/legacy_basis_adapter.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_cartesian_ida.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_coulomb.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_hybrid.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_mapped_backends.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_pgdg.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_pgdg_refinement_masks.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_qw_corrections.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_qw_nested_frontends.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_qw_operator_assembly.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_qw_raw_blocks.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_qw_residuals.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_qw_types_and_bases.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_sho.jl`
+  - `source` / `existing`: `src/ordinary/sliced_hydrogen_chain.jl`
 - **Evidence:**
   - `git_commit`: `24512b0beda75174572fc2b728010b432331c05c`
   - `manager_pass`: `587`

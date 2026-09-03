@@ -851,7 +851,7 @@ All six targets and their baseline SHA-256 values are fixed:
 
 The accepted source change was confined to `src/GaussletBases.jl`,
 `src/radial/radial_boundary_prototypes.jl`, `src/angular/angular_point_sets.jl`, and
-`src/legacy_basis_adapter.jl`: exactly two private declarations and six direct
+`src/ordinary/legacy_basis_adapter.jl`: exactly two private declarations and six direct
 substitutions produced a `+8/-8` diff. No test, file, data/fixture, include
 order, export, API, dependency, metadata framework, cache, numerical policy,
 workflow, release state, or later source-layout step changed.
@@ -1502,8 +1502,8 @@ agreement. Neither route constructs a nested source, Hamiltonian, solver input,
 arbitrary-orientation model, or heteronuclear model.
 
 The accepted implementation is limited to concise docstrings in
-`src/ordinary_qw_nested_frontends.jl` and
-`src/ordinary_qw_types_and_bases.jl`, one compact section titled
+`src/ordinary/ordinary_qw_nested_frontends.jl` and
+`src/ordinary/ordinary_qw_types_and_bases.jl`, one compact section titled
 "Experimental QW geometry diagnostics" in
 `docs/src/reference/operators_and_diagnostics.md`, and focused checks in
 `test/docs/runtests.jl`. It added `31` source-docstring and `24` reader-
@@ -1573,7 +1573,7 @@ arrays, and operator-view concrete types remain non-contractual. Documentation
 must not turn those internals into a storage, ownership, or mutation promise.
 
 The accepted implementation is limited to concise docstrings in
-`src/sliced_hydrogen_chain.jl`, one compact section in
+`src/ordinary/sliced_hydrogen_chain.jl`, one compact section in
 `docs/src/reference/atomic_and_ordinary.md`, and focused checks in
 `test/docs/runtests.jl`. It added `36` source-docstring and `32`
 reader-reference lines and changed docs tests by `+12/-1`, with no new file or
@@ -1694,7 +1694,7 @@ implemented by commit `8161f131aa962fef979f8ef09c14d23231eb14e4`:
 | `external_gto_overlap_fingerprint` | Provide a strict packet-integrity hash over column-major `Matrix{Float64}` values. Dimensions and scientific consistency are validated elsewhere; the hash is not a numerical-equivalence, tolerance-invariant, permutation-invariant, or convention-invariant test. |
 
 Maintenance is limited to the accepted docstrings in
-`src/ordinary_qw_types_and_bases.jl`, `src/ordinary_coulomb.jl`,
+`src/ordinary/ordinary_qw_types_and_bases.jl`, `src/ordinary/ordinary_coulomb.jl`,
 `src/GaussletBases.jl`, `src/cartesian_base_hamiltonian.jl`, and
 `src/cartesian_external_gto_import.jl`, and their curated entries or short
 limiting prose in `docs/src/reference/bases_and_mappings.md`,
