@@ -53,6 +53,42 @@ Authority maintenance is one-way and atomic:
 Do not edit generated records by hand, render into the live tree, recover
 authority from prose, or introduce a reverse parser.
 
+### Generated Authority Views
+
+`authority.toml` remains the sole authority source. `registry.md` and the
+execution whitelist are deterministic, checked views and grant nothing on
+their own. An executable ID must both derive from the machine record and occur
+in the committed execution whitelist; disagreement fails closed.
+
+`HP-AUTHORITY-EXECUTION-WHITELIST-FN-01/TEST-01` authorizes one
+authority-preserving relocation of the generated ID list from the marked
+`AGENTS.md` block to the generated whole file
+`execution_whitelist.md`. Until that implementation is committed and closed,
+the existing marked block remains the required view. The implementation must:
+
+- keep `registry.md` as the other deterministic whole-file view;
+- leave concise stable instructions in `AGENTS.md` requiring source-bearing
+  workers to inspect the exact authority record and execution whitelist, with
+  no embedded generated IDs or authority digest;
+- make `docs/check_cartesian_authority.jl` render and compare both whole-file
+  views byte-for-byte and delete the obsolete marker-extraction machinery;
+- preserve adversarial rejection of a missing, stale, modified, or incorrectly
+  generated whitelist and a stale registry; and
+- update only current normative references. Historical evidence remains
+  unchanged.
+
+The bounded implementation owns `AGENTS.md`, the authority checker, the one
+new generated file, the current authority/invariant references, and focused
+checks in `test/docs/runtests.jl`. Expected deltas are about `+7-12/-236` in
+`AGENTS.md`, one roughly `236`-line generated file, a net-smaller checker with
+about `12-20` additions and `38-48` deletions, at most `16` focused test lines,
+and no more than `12` current-reference substitutions. It adds no schema field,
+dependency, workflow, source/API/export change, reverse parser, generator
+layer, Step 4 authority, or historical rewrite. If derivation changes, any
+adversarial case passes, `AGENTS.md` retains generated IDs or a digest, or the
+boundary requires broader machinery, implementation must stop without a
+commit.
+
 For execution records, `dependency_ids` are immediate normative prerequisites,
 not navigation. An execution record must not depend on a retired, rejected,
 superseded, or no-grant record. No-grant historical records may retain

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `29b2e02288a4272ca906ca3eb4157d728ecb91ccf495dece8f1f16352fae422b`.
+> [authority.toml](authority.toml), SHA-256 `05f655c92c8407e818533fedd0ae2612daca78bc585312ce75a34b4bea9c86da`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -84,6 +84,37 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `559`
 - **Dependencies:** `HP-ANGULAR-TEST-CONTROL-FN-01`
 - **Scope:** none. No focused docs regression was needed or added. Acceptance is frozen by commit \`22d25e8c5061abafa5a37ea35d4a51adfa4b9a72\`, the \`61,907\`-pass/one-skip complete absent-checkout angular run, direct failure-propagation inspection, and the package/docs/authority/CI evidence recorded in the canonical contract. Future test or runner behavior requires a new amendment.
+
+### HP-AUTHORITY-EXECUTION-WHITELIST-FN-01 - whole-file execution whitelist authority view
+
+- **Lifecycle:** `approved`
+- **Grant:** `design`
+- **Surfaces:** `docs`
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [invariants.md](invariants.md); heading `Generated Authority Views`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/README.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md`
+- **Evidence:**
+  - `manager_pass`: `586`
+- **Dependencies:** none
+- **Scope:** Relocate the generated execution-ID view from the marked AGENTS.md block to execution\_whitelist.md under Generated Authority Views. Keep authority.toml sole authority and registry.md checked; leave stable fail-closed AGENTS instructions and update only current normative references. No schema, source/API/export/workflow, Step 4, reverse parser, generator layer, or historical rewrite.
+
+### HP-AUTHORITY-EXECUTION-WHITELIST-TEST-01 - whole-file execution whitelist validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [invariants.md](invariants.md); heading `Generated Authority Views`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `586`
+- **Dependencies:** `HP-AUTHORITY-EXECUTION-WHITELIST-FN-01`
+- **Scope:** Adapt only test/docs/runtests.jl to enforce Generated Authority Views: exact registry and whole-file whitelist generation plus missing, stale, modified, nongenerated-whitelist, and stale-registry failures. Preserve executable-ID intersection semantics and every existing docs check. No new test owner, dependency, workflow, checker framework, prose pruning, Step 4, or unrelated reorganization.
 
 ### HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01 - scheduled Cartesian internal numerical-maintenance workflow
 
@@ -2826,8 +2857,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-PAPER-CI-FN-01 - paper-aligned PQS and screening CI workflow
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `tools`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2857,21 +2888,23 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `560`
   - `manager_pass`: `561`
   - `git_commit`: `f2e13ff3c788551c43eb2de269d4723de880ae8e`
+  - `git_commit`: `891bf3e84653197b90b930d7d5787be17d8fb998`
   - `manager_pass`: `585`
+  - `manager_pass`: `586`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`
-- **Scope:** Implement only the \`docs\_fast\` addition under Paper-Aligned CI Boundary: append it to the existing Julia 1.10 Supported-floor selection and preserve every classifier, job/row/name, Julia version, timeout, command, trigger, permission, paper gate, tag rule, and \`fast\` alias. Add no job, dependency, source/API/export/numerical/release change; stop if existing numerical selection changes.
+- **Scope:** Maintain the accepted \`docs\_fast\` append from 891bf3e84653197b90b930d7d5787be17d8fb998 in the existing Julia 1.10 Supported-floor row. Preserve every classifier, job/row/name, Julia version, numerical group, timeout, trigger, permission, paper/tag lane, and \`fast\` alias. No new row, dependency, source/API/export, numerical-policy, or release change.
 
 ### HP-PUBLIC-PAPER-CI-TEST-01 - paper-aligned PQS and screening release validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Paper-Aligned CI Boundary`
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
-  - `test` / `planned`: `test/docs/public_surface_runtests.jl`
+  - `test` / `existing`: `test/docs/public_surface_runtests.jl`
   - `test` / `existing`: `test/pqs_h2plus_table1_release_runtests.jl`
   - `test` / `existing`: `test/runtests.jl`
 - **Evidence:**
@@ -2898,9 +2931,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `560`
   - `manager_pass`: `561`
   - `git_commit`: `f2e13ff3c788551c43eb2de269d4723de880ae8e`
+  - `git_commit`: `891bf3e84653197b90b930d7d5787be17d8fb998`
   - `manager_pass`: `585`
+  - `manager_pass`: `586`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PUBLIC-PAPER-CI-FN-01`
-- **Scope:** Extract only existing mechanical export/doc-presence/exact-five-set checks into one shared test/docs/public\_surface\_runtests.jl owner, selected once by \`docs\_fast\` or \`docs\`. Permit the approved test-local Julia 1.10 Docs semantic fallback and cross-version/alias checks. Preserve prose/reference/version/Documenter assertions and forbid broad pruning, dependencies, production shims, numerical tests, or duplicate execution.
+- **Scope:** Maintain the shared public-surface owner accepted at 891bf3e84653197b90b930d7d5787be17d8fb998: exact 95-name documentation, alias handling, five-name reserved set, Julia 1.10 fallback, Julia 1.12 native parity, and once-only \`docs\_fast\`/\`docs\` selection. Preserve all prose/reference/version/Documenter checks. No broad pruning, dependency, production shim, numerical test, or duplicate execution.
 
 ### HP-PUBLIC-PARTITION-LEAF-DOC-FN-01 - document partition hierarchy and leaf-local accessors
 

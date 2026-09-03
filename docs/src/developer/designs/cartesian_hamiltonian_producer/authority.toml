@@ -52,6 +52,9 @@ sha256 = "c004c7ceeb748e0b51a310c695d46a5185895c69adec5102f68c347e707b0930"
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_orbital_import.md"
 sha256 = "b1395e5c33d63eb8e0517e4cdc3e602400fa6d9dbe134e8cda5107963960f9da"
 [[documents]]
+path = "docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md"
+sha256 = "ce157c3187a0e3deed3e27935dad87cd8fed8a66c798a33ec03827c4ada4918d"
+[[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md"
 sha256 = "356ad99936f29a3a18e3e2f389cecdb3b69d782e60fad95e1e660c019a8dfede"
 [[documents]]
@@ -314,6 +317,54 @@ title = "angular optional-consumer control-flow validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "559"
+[[records]]
+dependency_ids = []
+grant = "design"
+id = "HP-AUTHORITY-EXECUTION-WHITELIST-FN-01"
+lifecycle = "approved"
+scope = "Relocate the generated execution-ID view from the marked AGENTS.md block to execution_whitelist.md under Generated Authority Views. Keep authority.toml sole authority and registry.md checked; leave stable fail-closed AGENTS instructions and update only current normative references. No schema, source/API/export/workflow, Step 4, reverse parser, generator layer, or historical rewrite."
+surfaces = ["docs"]
+title = "whole-file execution whitelist authority view"
+
+    [[records.document_refs]]
+    heading = "Generated Authority Views"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "586"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/README.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-AUTHORITY-EXECUTION-WHITELIST-FN-01"]
+grant = "implementation"
+id = "HP-AUTHORITY-EXECUTION-WHITELIST-TEST-01"
+lifecycle = "approved"
+scope = "Adapt only test/docs/runtests.jl to enforce Generated Authority Views: exact registry and whole-file whitelist generation plus missing, stale, modified, nongenerated-whitelist, and stale-registry failures. Preserve executable-ID intersection semantics and every existing docs check. No new test owner, dependency, workflow, checker framework, prose pruning, Step 4, or unrelated reorganization."
+surfaces = ["tests"]
+title = "whole-file execution whitelist validation"
+
+    [[records.document_refs]]
+    heading = "Generated Authority Views"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "586"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/docs/runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-ATOMREF-PACKET-TEST-01", "HP-PQS-SCREEN-HARTREE-CORR-TEST-01", "HP-R3-TEST-01", "HP-REP-XGTO-PROTECT-SIDECAR-TEST-01"]
 grant = "maintenance"
@@ -4926,10 +4977,10 @@ title = "validate function evaluation and stencil documentation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PUBLIC-COMPAT-FN-01", "HP-PQS-PUBLIC-MATCHED-TEST-01", "HP-PQS-PUBLIC-SCREEN-TEST-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-PAPER-CI-FN-01"
-lifecycle = "approved"
-scope = "Implement only the `docs_fast` addition under Paper-Aligned CI Boundary: append it to the existing Julia 1.10 Supported-floor selection and preserve every classifier, job/row/name, Julia version, timeout, command, trigger, permission, paper gate, tag rule, and `fast` alias. Add no job, dependency, source/API/export/numerical/release change; stop if existing numerical selection changes."
+lifecycle = "implemented"
+scope = "Maintain the accepted `docs_fast` append from 891bf3e84653197b90b930d7d5787be17d8fb998 in the existing Julia 1.10 Supported-floor row. Preserve every classifier, job/row/name, Julia version, numerical group, timeout, trigger, permission, paper/tag lane, and `fast` alias. No new row, dependency, source/API/export, numerical-policy, or release change."
 surfaces = ["tools"]
 title = "paper-aligned PQS and screening CI workflow"
 
@@ -5005,8 +5056,14 @@ title = "paper-aligned PQS and screening CI workflow"
     kind = "git_commit"
     value = "f2e13ff3c788551c43eb2de269d4723de880ae8e"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "891bf3e84653197b90b930d7d5787be17d8fb998"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "585"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "586"
 
     [[records.paths]]
     kind = "tool"
@@ -5014,10 +5071,10 @@ title = "paper-aligned PQS and screening CI workflow"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-TEST-01", "HP-PQS-PUBLIC-MATCHED-TEST-01", "HP-PQS-PUBLIC-SCREEN-TEST-01", "HP-PUBLIC-PAPER-CI-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-PAPER-CI-TEST-01"
-lifecycle = "approved"
-scope = "Extract only existing mechanical export/doc-presence/exact-five-set checks into one shared test/docs/public_surface_runtests.jl owner, selected once by `docs_fast` or `docs`. Permit the approved test-local Julia 1.10 Docs semantic fallback and cross-version/alias checks. Preserve prose/reference/version/Documenter assertions and forbid broad pruning, dependencies, production shims, numerical tests, or duplicate execution."
+lifecycle = "completed"
+scope = "Maintain the shared public-surface owner accepted at 891bf3e84653197b90b930d7d5787be17d8fb998: exact 95-name documentation, alias handling, five-name reserved set, Julia 1.10 fallback, Julia 1.12 native parity, and once-only `docs_fast`/`docs` selection. Preserve all prose/reference/version/Documenter checks. No broad pruning, dependency, production shim, numerical test, or duplicate execution."
 surfaces = ["tests"]
 title = "paper-aligned PQS and screening release validation"
 
@@ -5096,8 +5153,14 @@ title = "paper-aligned PQS and screening release validation"
     kind = "git_commit"
     value = "f2e13ff3c788551c43eb2de269d4723de880ae8e"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "891bf3e84653197b90b930d7d5787be17d8fb998"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "585"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "586"
 
     [[records.paths]]
     kind = "test"
@@ -5106,7 +5169,7 @@ title = "paper-aligned PQS and screening release validation"
     [[records.paths]]
     kind = "test"
     path = "test/docs/public_surface_runtests.jl"
-    state = "planned"
+    state = "existing"
     [[records.paths]]
     kind = "test"
     path = "test/pqs_h2plus_table1_release_runtests.jl"
