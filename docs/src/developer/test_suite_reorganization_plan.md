@@ -386,10 +386,11 @@ It must use Julia `1.12` and one sequential read-only job with job-level
 `contents: read`. The only triggers are manual `workflow_dispatch` and the
 weekly cron `17 10 * * 3`. Pushes, pull requests, `main`, and tags must not
 trigger it. The job instantiates once, checks package load once, and then runs
-exactly these existing files, in this order, as four separate Julia processes:
+exactly these existing files, in this order, as five separate Julia processes:
 
 ```text
 test/nested/cartesian_atomic_hf_reference_packet_runtests.jl
+test/nested/cartesian_occupied_first_injection_runtests.jl
 test/nested/cartesian_external_gto_import_runtests.jl
 test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
 test/nested/cartesian_screened_hartree_correction_runtests.jl
@@ -406,14 +407,24 @@ ceiling is therefore `15` minutes. Any further timeout change requires a new
 evidence-backed amendment. Upload no artifact and add no helper script, test
 framework, status payload, or coverage dependency.
 
-The workflow record owns only the new workflow. The validation record owns
-edits only to
-`test/nested/cartesian_screened_hartree_correction_runtests.jl`; the other
-three files are unchanged execution inputs under their existing owners. Do not
-edit or split the governance-heavy R3A file, the atomic-packet owner, or the
-protected-sidecar owner.
+Pass 592 independently classified the unchanged occupied-first owner as unique,
+live physical coverage suitable for this lane. At the relocated Step 4B head it
+passed `64/64` in `27.0` seconds, covering packet-driven Be/Ne PQS overlap,
+mandatory occupied recovery, optional selection, and terminal due diligence;
+the synthetic `misc` checks do not duplicate those endpoints. Add it only after
+the atomic-packet process. One manual dispatch must pass all five suites within
+the existing `15`-minute ceiling; timeout or failure stops the transaction.
+Implementation is limited to one two-line workflow step and at most `10` added
+policy-test lines. Add no file, group, helper, fixture, numerical assertion, or
+workflow machinery.
 
-Within the screening file, remove only two demonstrated duplicate classes:
+The workflow record owns only the existing workflow. The current validation
+amendment may add focused policy assertions only in `test/docs/runtests.jl`.
+Every numerical file is an unchanged execution input under its existing owner.
+Do not edit or split the governance-heavy R3A file or any other numerical owner.
+
+The original Pass 510 screening-deduplication transaction removed only two
+demonstrated duplicate classes:
 
 - generic supplied-field malformed-input assertions already protected by the
   `22`-check public owner
@@ -421,25 +432,19 @@ Within the screening file, remove only two demonstrated duplicate classes:
 - packet readback/schema failures already protected by the `117`-check atomic
   owner `test/nested/cartesian_atomic_hf_reference_packet_runtests.jl`.
 
-Run each stronger owner before and after deletion. Preserve packet correction,
-occupied embedding, additive `P0/q0`, self/cross accounting, translated
-density fields, `GG/GA/AA` checks, fitted-field validation, and
-consumer-specific rejection. The expected deletion is `45-70` test lines, but
-the overlap proof controls: if fewer lines are redundant, report that exact
-overlap rather than weakening unique coverage. Add no assertion, fixture, or
-test file. The workflow-plus-test delta must be net non-positive; if the
-provable deletion cannot offset the coherent workflow, stop without an
-implementation commit and report the obstacle.
+That accepted deletion preserved packet correction, occupied embedding,
+additive `P0/q0`, self/cross accounting, translated density fields,
+`GG/GA/AA` checks, fitted-field validation, and consumer-specific rejection.
+It is maintenance evidence, not authority to edit the screening owner again.
 
-The occupied-first injection and represented molecular-Hartree suites remain
-excluded, direct-run evidence. The former stays private research evidence; the
-latter remains blocked on its scaling-owner decision. Do not run, reclassify,
-or schedule either suite. Do not edit `test/runtests.jl`, the existing
+The represented molecular-Hartree suite remains excluded direct-run evidence,
+blocked on its incomplete scaling-owner lifecycle. Do not run, reclassify, or
+schedule it. Do not edit `test/runtests.jl`, the existing
 three-row public CI workflow, production source, APIs, dependencies, manifests,
 examples, versions, tags, releases, or immutable RC1 state.
 
 The gate is accepted for weekly and manual maintenance. Each run must retain
-the four independent processes, existing order, read-only permissions, and
+the five independent processes, existing order, read-only permissions, and
 Julia `1.12`. Contract maintenance requires authority check/self-test, docs
 tests, package load, Documenter, manager-log bound, YAML inspection, diff
 checks, and the relevant remote workflow evidence. The schedule does not
@@ -522,10 +527,10 @@ Only after the split is stable:
 
 ## Next bounded chunk
 
-The scheduled Cartesian internal-maintenance gate is complete. Select no
-automatic follow-on from this page. Occupied-first injection remains private
-direct-run evidence, and represented molecular Hartree remains blocked on its
-scaling-owner decision; either requires a separate lifecycle assignment.
+The scheduled Cartesian internal-maintenance gate is reopened only for the
+approved occupied-first fifth process and focused policy check above.
+Represented molecular Hartree remains blocked on its scaling-owner decision
+and requires a separate lifecycle assignment.
 
 Do not reopen the runner structure unless the optional `examples` extraction
 later proves worth doing.

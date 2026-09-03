@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `4d2f8a399ce65c705fc094e3e10fdf00f283b4234bf4aef4b608b91cc6440d39`.
+> [authority.toml](authority.toml), SHA-256 `a360632a397a3dd430524fc6bc557ef200da9e8ead8fd2f2b16551ef0e9bb79f`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -123,8 +123,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01 - scheduled Cartesian internal numerical-maintenance workflow
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tools`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -137,25 +137,30 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `510`
   - `manager_pass`: `512`
   - `manager_pass`: `514`
-- **Dependencies:** `HP-PQS-ATOMREF-PACKET-TEST-01`, `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`, `HP-R3-TEST-01`, `HP-REP-XGTO-PROTECT-SIDECAR-TEST-01`
-- **Scope:** Maintain exactly the implemented \`.github/workflows/cartesian-internal-maintenance.yml\`: Julia 1.12, weekly cron \`17 10 \* \* 3\` plus \`workflow\_dispatch\`, one sequential job with job-level \`contents: read\`, one instantiate and package-load check, then atomic packet, protected sidecar, R3A, and screened Hartree as four separate processes in that order, with \`timeout-minutes: 15\`. Commit \`b8e89dae08840665847628e2c8b2e8bf42730387\` changed only the timeout, and manual run \`32657600781\` passed in 9m59s. Maintenance is limited to semantics-preserving workflow syntax or action-version upkeep. No command, test composition, ordering, cadence, trigger, permission, Julia version, timeout, public gate, source, test, RC1, or release-state change is authorized without a new amendment.
+  - `git_commit`: `64d8d65b6891d5e56a0b09f63ff934270b31a9fc`
+  - `manager_pass`: `592`
+- **Dependencies:** `HP-PQS-ATOMREF-PACKET-TEST-01`, `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`, `HP-R3-TEST-01`, `HP-REP-XGTO-PROTECT-SIDECAR-TEST-01`, `HP-RG-OCC-FIRST-INJECT-TEST-01`
+- **Scope:** Add only \`test/nested/cartesian\_occupied\_first\_injection\_runtests.jl\` as the second of five separate Julia processes in the existing weekly/manual workflow. Preserve Julia 1.12, the 15-minute timeout, workflow/job, cadence, triggers, permissions, setup, every existing command's relative order, and public CI. No test, source, helper, group, row, timeout, or release change; stop if manual dispatch times out or any suite fails.
 
 ### HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-TEST-01 - scheduled internal gate and screening deduplication validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [test\_suite\_reorganization\_plan.md](../../test_suite_reorganization_plan.md); heading `Scheduled Cartesian Internal Maintenance Gate`
 - **Owned paths:**
   - `test` / `existing`: `test/nested/cartesian_screened_hartree_correction_runtests.jl`
+  - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
   - `git_commit`: `1f550899ffac6b682081595b482e1bdfb2e65da2`
   - `manager_pass`: `510`
   - `manager_pass`: `512`
-- **Dependencies:** `HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01`, `HP-PQS-ATOMREF-PACKET-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`
-- **Scope:** Maintain the completed screening deduplication from commit \`1f550899ffac6b682081595b482e1bdfb2e65da2\`: 47 duplicate lines were removed while the remaining screened-Hartree owner passes 85 checks. Generic supplied-field malformed cases remain owned by the 22-check public screening test, and packet readback/schema failures remain owned by the 117-check atomic-packet test. Preserve packet correction, occupied embedding, additive P0/q0 and self/cross accounting, translated density fields, GG/GA/AA checks, fitted-field validation, and consumer-specific rejection. The timeout repair authorizes no test edit, assertion, fixture, file, runner row, or other nested-suite change. Occupied-first injection and represented molecular Hartree remain unscheduled and unclassified.
+  - `git_commit`: `64d8d65b6891d5e56a0b09f63ff934270b31a9fc`
+  - `manager_pass`: `592`
+- **Dependencies:** `HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01`, `HP-PQS-ATOMREF-PACKET-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`, `HP-RG-OCC-FIRST-INJECT-TEST-01`
+- **Scope:** Add only focused policy assertions in \`test/docs/runtests.jl\` for the exact five process paths/order and unchanged 15-minute, trigger, and permission boundary. Edit no numerical owner. Validate occupied-first 64/64, all five suites by one manual dispatch, docs/authority/package/YAML/diff, and normal CI/Docs; stop on timeout or failure. Represented Hartree remains standalone and blocked.
 
 ### HP-CGAI-FN-01 - historical Cartesian Gaussian axis-helper proposal
 
@@ -5545,8 +5550,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-SOURCE-LAYOUT-CARTESIAN-FN-01 - relocate Cartesian and PQS source files
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -5686,24 +5691,27 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `git_commit`: `96802b00cc380707306106b529ff22a09ccb415e`
   - `manager_pass`: `588`
+  - `git_commit`: `64d8d65b6891d5e56a0b09f63ff934270b31a9fc`
+  - `manager_pass`: `592`
 - **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`, `HP-SOURCE-LAYOUT-FOUNDATION-FN-01`, `HP-SOURCE-LAYOUT-ORDINARY-FN-01`
-- **Scope:** Path-neutralize one location-bearing docstring, then relocate the frozen 76-file Cartesian/PQS inventory into src/cartesian under Cartesian/PQS Source Relocation as R100 renames relative to that prerequisite commit; substitute 39 root includes and classified current pointers only. Exclude executable bodies, tests, ordering, APIs, workflows, numerics, follow-on refactors, and release work; stop on any hash, rename, dependency, pointer, or validation mismatch.
+- **Scope:** Maintain the 76-file Cartesian/PQS relocation accepted in commit \`64d8d65b6891d5e56a0b09f63ff934270b31a9fc\`: R100 owners under \`src/cartesian/\`, 39 in-place root includes, the frozen normalized include hash, and classified current pointers. Exclude file bodies, tests, include order, APIs, workflows, numerics, follow-on refactors, and release work.
 
 ### HP-SOURCE-LAYOUT-CARTESIAN-TEST-01 - validate Cartesian and PQS source relocation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [cartesian\_pqs\_source\_relocation.md](cartesian_pqs_source_relocation.md); heading `Cartesian/PQS Source Relocation`
-- **Owned paths:**
-  - `test` / `existing`: `test/runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
   - `git_commit`: `96802b00cc380707306106b529ff22a09ccb415e`
   - `manager_pass`: `588`
+  - `git_commit`: `64d8d65b6891d5e56a0b09f63ff934270b31a9fc`
+  - `manager_pass`: `592`
 - **Dependencies:** `HP-SOURCE-LAYOUT-CARTESIAN-FN-01`
-- **Scope:** Run unchanged package load, core/ida/cartesian/examples/docs\_fast, pqs\_release, screening\_release, four Cartesian maintenance owners, full docs/authority/Documenter checks, and all three remote CI jobs plus Docs. Add or edit no test, runner, workflow, tolerance, or numerical policy; stop if relocation needs adaptation or any owner differs.
+- **Scope:** Completed validation evidence only. Exact R100/hash/order/path closure, package load, PQS 18/18, Screening 23/23, four maintenance owners, docs 167/167, authority/Documenter, CI 33798470616, and Docs 33798470735 passed for commit \`64d8d65b6891d5e56a0b09f63ff934270b31a9fc\`. This record grants no test, runner, workflow, tolerance, numerical, or follow-on edit.
 
 ### HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01 - relocate radial and atomic source files
 

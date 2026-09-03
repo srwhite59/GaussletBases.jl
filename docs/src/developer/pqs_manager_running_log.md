@@ -1004,3 +1004,25 @@ only those three values for their mapped `src/cartesian/` targets. The 76-file
 map, 39 loader edits, 340 authority paths, seven scope literals, 264 current
 documentation pointers, tests, behavior, and failure rules remain unchanged.
 No strategic change: MT6 remains the active source-discovery goal.
+
+## Cartesian Hamiltonian Producer Pass 592 - Close Cartesian Relocation And Authorize Occupied-First Maintenance
+
+Accepted Step 4B implementation `64d8d65b6891d5e56a0b09f63ff934270b31a9fc`
+and tree `739aa1d036b1b9b6f0bc83f7e5588271b5c7d15a`: all `76` owners are
+`R100` moves under `src/cartesian/`, the `39` root include substitutions retain
+the normalized `8ab555c688804b36f384f0516d75407e618b9fe78b875060a685e0aa454f5f7e`
+identity, and path closure is exact. Package load, PQS `18/18`, Screening
+`23/23`, four maintenance owners, docs `167/167`, authority, Documenter, CI
+`33798470616`, and Docs `33798470735` passed. The external review's Step 0-4
+source-layout sequence is complete; no runtime, API, numerical, workflow, or
+release behavior changed.
+
+The orphan-owner audit remains deliberately split. Occupied-first passed
+`64/64` in `27.0` seconds at the relocated head and uniquely protects physical
+Be/Ne packet-to-PQS capture and selection beyond the `misc` synthetic checks.
+The existing maintenance FN/TEST pair is reopened only to add it after atomic
+packet as a fifth separate process and add a focused workflow-policy assertion;
+the `15`-minute ceiling and every other workflow boundary remain fixed.
+Represented molecular Hartree passed its bounded standalone oracle, but
+`HP-REP-MIXDENS-HARTREE-*` remains approved/implementation with the planned
+contraction owner absent, so it stays unwired pending that owner decision.
