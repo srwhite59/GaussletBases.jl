@@ -2,7 +2,7 @@
     _cartesian_terminal_shellification_geometry(parent_axes, nuclear_positions; kwargs...)
 
 Compatibility wrapper for `CartesianShellification.raw_terminal_geometry`.
-The implementation lives in `src/cartesian_shellification/`.
+The implementation is provided by the internal `CartesianShellification` module.
 """
 function _cartesian_terminal_shellification_geometry(
     parent_axes::NTuple{3,<:AbstractVector},
