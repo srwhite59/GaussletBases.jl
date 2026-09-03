@@ -30,6 +30,7 @@
     docs_make = read_doc("docs", "make.jl")
     docs_workflow = read_doc(".github", "workflows", "docs.yml")
     ci_workflow = read_doc(".github", "workflows", "ci.yml")
+    test_runner = read_doc("test", "runtests.jl")
     authority_check = read_doc("docs", "check_cartesian_authority.jl")
 
     docs_site_index = read_doc("docs", "src", "index.md")
@@ -49,69 +50,16 @@
     docs_site_reference_ops = read_doc("docs", "src", "reference", "operators_and_diagnostics.md")
     docs_site_reference_atomic = read_doc("docs", "src", "reference", "atomic_and_ordinary.md")
     docs_site_reference_export = read_doc("docs", "src", "reference", "export.md")
-    v0_2_exports = (
-        :PQSH2PlusRow, :PQSH2PlusComparison, :pqs_h2plus_comparison,
-        :ExactRepresentedHartreeField, :FittedReferenceHartreeField,
-        :ScreenedHartreeCorrection, :screened_hartree_correction,
-        :screened_hartree_delta_one_body, :screened_hartree_energy_constant,
-        :screened_hartree_consistency_error, :screened_hartree_field_kind,
-        :cartesian_residual_gto_mwg_system,
-    )
-    external_gto_exports = (
-        :ExternalGTOOrbitalSpinBlock, :ExternalGTOOrbitalPacket,
-        :ExternalGTOOrbitalSpinImport, :ExternalGTOOrbitalImportResult,
-        :import_external_gto_orbitals, :read_external_cartesian_gto_packet,
-        :closest_external_gto_determinant,
-    )
-    foundation_exports = (
-        :uofx, :xofu, :dudx, :du2dx2, :basis_spec,
-        :family, :mapping, :centers, :reference_centers, :integral_weights,
-    )
-    function_stencil_exports = (
-        :value, :direct_value, :derivative, :center, :reference_center,
-        :integral_weight, :stencil, :coefficients, :terms,
-    )
-    partition_leaf_exports = (
-        :boxes, :leaf_boxes, :box_indices, :box_level, :box_parent, :box_children,
-        :box_block, :box_coupling, :leaf_primitive_indices, :primitive_origins,
-        :primitive_leaf_boxes, :leaf_contractions)
     partition_leaf_context = (
         :BasisBox1D, :BasisPartition1D, :basis_partition, :HierarchicalBasisBox1D,
         :HierarchicalBasisPartition1D, :hierarchical_partition, :refine_partition,
         :LeafGaussianSpec1D, :LeafLocalPGDG1D, :build_leaf_pgdg, :augment_leaf_pgdg,
         :GlobalMappedPrimitiveLayer1D, :build_global_mapped_primitive_layer,
         :LeafBoxContraction1D, :LeafBoxContractionLayer1D, :contract_leaf_boxes)
-    atomic_ida_reference_exports = (
-        :orbitals, :two_electron_states, :radial_multipole, :gaunt_coefficient,
-        :gaunt_tensor, :angular_kernel, :apply_overlap, :apply_hamiltonian,
-        :ground_state_energy, :lanczos_ground_state)
     atomic_ida_reference_context = (
         :AtomicOrbital, :AtomicIDAOperators, :atomic_ida_operators,
         :AtomicIDATwoElectronState, :AtomicIDATwoElectronProblem,
         :atomic_ida_two_electron_problem)
-    supported_surface_exports = (
-        :BondAlignedDiatomicQWBasis3D, :CoulombGaussianExpansion, :basis_metadata,
-        :cartesian_base_hamiltonian, :external_gto_ordering_fingerprint,
-        :external_gto_overlap_fingerprint)
-    angular_producer_exports = (
-        :ShellLocalAngularProfile, :ShellLocalAngularProfileOverlap,
-        :shell_local_angular_profile, :adjacent_shell_local_angular_profile_overlap,
-        :AtomicFixedRadialAngularSequenceLevel,
-        :AtomicFixedRadialAngularSequenceOverlapSidecar, :AtomicFixedRadialAngularSequence)
-    radial_parity_exports = (
-        :RadialBoundaryPrototype, :radial_boundary_prototype,
-        :radial_boundary_prototype_names, :build_paper_parity_radial_basis)
-    qw_geometry_exports = (
-        :bond_aligned_diatomic_nested_geometry_diagnostics,
-        :bond_aligned_homonuclear_chain_geometry_diagnostics,
-        :axis_aligned_homonuclear_square_lattice_geometry_diagnostics)
-    sliced_chain_exports = (
-        :SlicedHydrogenChain, :sliced_hydrogen_chain, :sliced_h1,
-        :sliced_h1_bandwidth, :sliced_vee, Symbol("sliced_row!"))
-    reserved_undocumented_exports = Set((
-        :OneCenterAtomicNestedStructureDiagnostics, :one_center_atomic_nested_structure_diagnostics,
-        :one_center_atomic_nested_structure_report, :diagnose_qwrg_residual_space,
-        :ShellLocalAngularProfileKey))
     docs_site_developer = read_doc("docs", "src", "developer", "index.md")
     docs_site_developer_notes = read_doc("docs", "src", "developer", "supporting_notes.md")
     docs_site_architecture = read_doc("docs", "src", "developer", "architecture.md")
@@ -280,9 +228,8 @@
             "PQS shell construction", "examples/39_pqs_h2plus.jl")
         @test occursin("\"External Cartesian GTO transfer\" => \"manual/external_cartesian_gto_transfer.md\"", docs_make)
         @test occursin("[External Cartesian GTO transfer](external_cartesian_gto_transfer.md)", docs_site_manual)
-        @test all(name -> name in names(GaussletBases), external_gto_exports)
         @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_export)\n"),
-            external_gto_exports)
+            _DOCUMENTED_PUBLIC_SURFACE.external_gto)
         @test !occursin("\ngto_overlap_matrix\n", "\n$(docs_site_reference_export)\n")
         @test contains_all(docs_site_external_gto, "checkpoint-only exporter",
             "unchanged raw projection", "minimum_gram_eigenvalue",
@@ -294,9 +241,8 @@
         @test contains_all(pqs_example, "cartesian_base_hamiltonian",
             "CartesianIDAHamiltonian", "one_body_hamiltonian", "nuclear_repulsion")
         @test !occursin("GaussletBases._", pqs_example)
-        @test all(name -> name in names(GaussletBases), v0_2_exports)
         @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_export)\n"),
-            v0_2_exports)
+            _DOCUMENTED_PUBLIC_SURFACE.v0_2)
         for page in (docs_site_diatomic_box, docs_site_diatomic_distortion)
             @test all(path -> !occursin(path, page),
                 ("/Users/srw", "Dropbox", "CloudStorage"))
@@ -511,8 +457,14 @@
             ci_workflow)
         @test all(gate -> length(findall("gate: $gate", ci_workflow)) == 1,
             ("Supported floor", "PQS paper", "Screening paper"))
-        @test occursin("groups: core,ida,cartesian,examples,radial,misc,angular_public", ci_workflow)
+        @test occursin("groups: core,ida,cartesian,examples,radial,misc,angular_public,docs_fast", ci_workflow)
         @test !occursin(r"groups:[^\n]*[, ]angular(?:,|\n)", ci_workflow)
+        @test contains_all(test_runner, ":docs_fast,",
+            "_test_group_enabled(:docs_fast) || _test_group_enabled(:docs)",
+            "docs\", \"public_surface_runtests.jl")
+        @test length(findall("public_surface_runtests.jl", test_runner)) == 1
+        @test occursin("const _FAST_TEST_GROUPS = Set((\n    :radial,\n    :core,\n    :ida,\n    :docs,\n))",
+            test_runner)
         @test contains_all(ci_workflow, "tag-identity-install:",
             "refs/tags/\${tag}:refs/tags/\${tag}", "refs/tags/\${tag}^{tag}",
             "refs/tags/\${tag}^{commit}", "Pkg.add(url=", "GITHUB_REF_NAME")
@@ -589,19 +541,13 @@
             "white_lindsey_atomic_mapping",
             "CombinedInvsqrtMapping",
         )
-        @test all(name -> name in names(GaussletBases), foundation_exports)
-        @test all(name -> Base.Docs.hasdoc(GaussletBases, name), foundation_exports)
         @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_bases)\n"),
-            foundation_exports)
-        @test all(name -> name in names(GaussletBases), function_stencil_exports)
-        @test all(name -> Base.Docs.hasdoc(GaussletBases, name), function_stencil_exports)
+            _DOCUMENTED_PUBLIC_SURFACE.foundation)
         @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_bases)\n"),
-            function_stencil_exports)
-        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name),
-            partition_leaf_exports)
+            _DOCUMENTED_PUBLIC_SURFACE.function_stencil)
         @test occursin("## Partitions and leaf-local layers", docs_site_reference_bases) &&
               all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_bases)\n"),
-            (partition_leaf_exports..., partition_leaf_context...))
+            (_DOCUMENTED_PUBLIC_SURFACE.partition_leaf..., partition_leaf_context...))
 
         @test contains_all(
             docs_site_reference_ops,
@@ -620,21 +566,17 @@
             "ordinary_cartesian_qiu_white_operators",
             "ordinary_cartesian_vee_expectation",
         )
-        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name),
-            atomic_ida_reference_exports)
         @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_atomic)\n"),
-            (atomic_ida_reference_exports..., atomic_ida_reference_context...))
+            (_DOCUMENTED_PUBLIC_SURFACE.atomic_ida..., atomic_ida_reference_context...))
         @test contains_all_lower(docs_site_reference_atomic, "read-only", "construction order",
             "rebuilt on demand", "not cached", "stored dense matrices", "fully reorthogonalized",
             "krylovdim", "value", "one-up/one-down", "not a production solver")
-        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name),
-            supported_surface_exports)
         @test !Base.Docs.hasdoc(GaussletBases, :AbstractBondAlignedOrdinaryQWBasis3D)
         @test occursin("\nbasis_metadata\n", "\n$(docs_site_reference_bases)\n")
         @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_ops)\n"),
             (:BondAlignedDiatomicQWBasis3D, :CoulombGaussianExpansion))
         @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_export)\n"),
-            supported_surface_exports[4:6])
+            _DOCUMENTED_PUBLIC_SURFACE.supported[4:6])
         @test contains_all_lower(docs_site_reference_bases, "owner-specific",
             "no universal field schema", "copy behavior")
         @test contains_all_lower(docs_site_reference_ops, "bond-aligned mapped-product", "homonuclear",
@@ -642,64 +584,51 @@
         @test contains_all_lower(docs_site_reference_export, "origin-centered hydrogen", "z axis",
             "strict packet-integrity", "not numerical", "permutation", "tolerance", "convention")
 
-        geometry_inspection_exports = (
-            :bond_aligned_diatomic_geometry_payload, :BondAlignedDiatomicGeometryPoint3D,
-            :BondAlignedDiatomicGeometryNucleus3D, :BondAlignedDiatomicGeometryBox3D,
-            :BondAlignedDiatomicGeometryPayload3D, :BondAlignedDiatomicGeometryPlaneSlice3D,
-            :bond_aligned_diatomic_source_geometry_payload, :bond_aligned_diatomic_plane_slice)
-        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name), geometry_inspection_exports)
         @test occursin("## Expert/experimental bond-aligned geometry inspection", docs_site_reference_bases) &&
-              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_bases)\n"), geometry_inspection_exports)
+              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_bases)\n"),
+            _DOCUMENTED_PUBLIC_SURFACE.geometry)
         @test contains_all_lower(docs_site_reference_bases, "inspection and visualization", "does not construct or mutate",
             "compressed fixed centers", "raw source-region points", "same basis geometry", "read-only inspection data",
             "not as a general molecular-geometry api", "plotting framework", "stable serialization format")
-        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name),
-            angular_producer_exports)
         @test occursin("## Experimental Angular Profile And Sequence Producers", docs_site_reference_export) &&
-              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_export)\n"), angular_producer_exports)
-        @test :ShellLocalAngularProfileKey in names(GaussletBases) &&
-              !Base.Docs.hasdoc(GaussletBases, :ShellLocalAngularProfileKey) &&
-              !occursin("\nShellLocalAngularProfileKey\n", "\n$(docs_site_reference_export)\n")
+              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_export)\n"),
+            _DOCUMENTED_PUBLIC_SURFACE.angular)
+        @test !occursin("\nShellLocalAngularProfileKey\n", "\n$(docs_site_reference_export)\n")
         @test contains_all_lower(docs_site_angular_track, "experimental producer-side state",
             "exact injected-ylm block before its mixed complement", "deterministic labels", "gauge metadata",
             "provenance identity", "one radial basis", "shell-independent", "continuation/transfer",
             "adjacent sidecars", "complete non-adjacent upper", "orthonormal", "generalized-overlap",
             "restart ladders", "givens transformations", "campaign", "orchestration remain external")
-        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name), radial_parity_exports)
         @test occursin("## Expert radial paper-parity prototype", docs_site_reference_bases) &&
-              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_bases)\n"), radial_parity_exports)
+              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_bases)\n"),
+            _DOCUMENTED_PUBLIC_SURFACE.radial_parity)
         @test contains_all_lower(docs_site_reference_bases, "artifact-backed", ":paper_parity_g10_k6_x2",
             "rejects any other", "not a registry/plugin", "shared cached inspection", "read-only",
             "legacy_strict_trim", "ordinary radial front door", "complete paper-calculation")
         @test contains_all(recommended_atomic_setup, "RadialBasisSpec", "0.09358986806", "0.02357750369", "0.0936", "0.0236")
         @test contains_all_lower(recommended_atomic_setup, "expert artifact-backed", "read-only",
             "ordinary front door", "entire paper calculation")
-        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name), qw_geometry_exports)
         @test occursin("## Experimental QW geometry diagnostics", docs_site_reference_ops) &&
-              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_ops)\n"), qw_geometry_exports)
+              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_ops)\n"),
+            _DOCUMENTED_PUBLIC_SURFACE.qw_geometry)
         @test contains_all_lower(docs_site_reference_ops, "route-specific expert", "read-only inspection",
             "general molecular-geometry api", "stable serialization", "exact source", "basis overload",
             "constructs the normalized nested source", "not a lightweight geometry-only query",
             "shared-shell", "chain and square", "existing experimental bases", "no nested source",
             "hamiltonian", "solver input", "arbitrary-orientation", "heteronuclear")
-        @test all(name -> name in names(GaussletBases) && Base.Docs.hasdoc(GaussletBases, name), sliced_chain_exports)
         @test occursin("## Experimental sliced hydrogen-chain operators", docs_site_reference_atomic) &&
-              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_atomic)\n"), sliced_chain_exports)
+              all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_atomic)\n"),
+            _DOCUMENTED_PUBLIC_SURFACE.sliced_chain)
         @test contains_all_lower(docs_site_reference_atomic, "experimental minimal hydrogen-chain producer",
             "not a general molecular hamiltonian", "lazy, read-only", "separate", "represented structural half-bandwidth",
             "physical continuum", "two-index density-density", "four-index eri", "retain their chain owner", "mul!",
             "without owning", "private and non-contractual", "bounded diagnostics", "completely overwrites and returns",
             "zero allocation", "band-limited", "covers every column", "read-only consumer data", "non-contractual")
-        @test :cartesian_base_working_basis in names(GaussletBases) &&
-              Base.Docs.hasdoc(GaussletBases, :cartesian_base_working_basis)
         @test occursin("\ncartesian_base_working_basis\n", "\n$(docs_site_reference_export)\n")
         @test contains_all_lower(docs_site_reference_export, "expert/unstable", "staged-construction",
             "not a second hamiltonian facade", "stable result schema", "ordinary users", "complete one-body",
             "nuclear operator", "vee", "cartesianidahamiltonian", "artifact", "solver", "correction",
             "prf wrapper", "paper workflow", "source_mode_overrides", "private and unexported")
-        @test Set(filter(!=(:GaussletBases), Docs.undocumented_names(GaussletBases))) ==
-              reserved_undocumented_exports
-
         @test contains_all(
             docs_site_reference_export,
             "atomic_ida_density_interaction_matrix",

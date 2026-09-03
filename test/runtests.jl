@@ -18,6 +18,7 @@ const _AVAILABLE_TEST_GROUPS = (
     :ida,
     :cartesian,
     :docs,
+    :docs_fast,
     :examples,
     :pqs_release,
     :screening_release,
@@ -915,6 +916,9 @@ if _test_group_enabled(:misc)
     include(joinpath(@__DIR__, "misc", "runtests.jl"))
 end
 
+if _test_group_enabled(:docs_fast) || _test_group_enabled(:docs)
+    include(joinpath(@__DIR__, "docs", "public_surface_runtests.jl"))
+end
 if _test_group_enabled(:docs)
     include(joinpath(@__DIR__, "docs", "runtests.jl"))
 end
