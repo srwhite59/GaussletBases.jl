@@ -31,6 +31,9 @@ sha256 = "1508a43da6534fd71826d956d942068f37ac2eee5e7d106218aec75c49e7454e"
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pair_planning_materialization_retirement.md"
 sha256 = "62578861400c82d1521aa1d17df6ca4dc2831d3877e6630c792882e10f4b43e8"
 [[documents]]
+path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pqs_source_relocation.md"
+sha256 = "49853fe6932e4583240033e7a24242979b064f476e4f73680e55c0851f152ad1"
+[[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
 sha256 = "b1971cdad9311036869ff0f1f3a2666b7c0f6ec433625dc036993e727f68ad75"
 [[documents]]
@@ -80,7 +83,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "8c26de2f80531ee85dfdd62a78833a0c313a91046632051ad897188c83575757"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "9637c904524f651cbbdb1f003f85fed38b836e9bc3231ce5687213046df36d9d"
+sha256 = "1829d75781974fb30a58436d4c37e9d3b7cbb78db921923dcf50069b90975d50"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -9113,10 +9116,10 @@ title = "validate foundation source relocation"
     value = "585"
 [[records]]
 dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01", "HP-SOURCE-LAYOUT-FOUNDATION-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-SOURCE-LAYOUT-ORDINARY-FN-01"
-lifecycle = "approved"
-scope = "Move exactly 15 frozen Ordinary owners into src/ordinary under Ordinary Source Relocation as byte-identical R100 renames; substitute only their 15 root include paths and classified current authority/documentation pointers. Exclude file bodies, tests, ordering, APIs, workflows, numerics, Cartesian/PQS relocation, and later layout work; stop on any hash, rename, path-count, or validation mismatch."
+lifecycle = "implemented"
+scope = "Maintain the 15 byte-identical Ordinary owners relocated in commit 96802b00cc380707306106b529ff22a09ccb415e under Ordinary Source Relocation, their exact include positions, classified current pointers, frozen hashes, and R100 identities. Exclude file bodies, tests, ordering, APIs, workflows, numerics, Cartesian/PQS relocation, and later layout work."
 surfaces = ["docs", "source"]
 title = "relocate ordinary source files"
 
@@ -9131,6 +9134,12 @@ title = "relocate ordinary source files"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "587"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "96802b00cc380707306106b529ff22a09ccb415e"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "588"
 
     [[records.paths]]
     kind = "docs"
@@ -9266,11 +9275,12 @@ title = "relocate ordinary source files"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-SOURCE-LAYOUT-ORDINARY-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-SOURCE-LAYOUT-ORDINARY-TEST-01"
-lifecycle = "approved"
-scope = "Run unchanged package load, full Supported-floor selection, all three remote CI jobs, docs, authority/self-test, generated-view, Documenter, rename/hash, include-order, direct-path, manager-log, and diff checks. Add or edit no test, assertion, fixture, runner, helper, workflow, tolerance, or numerical policy; stop if validation requires adaptation or any existing owner differs."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Completed validation evidence only. Fifteen R100 renames, exact hashes and include order, package load, Supported floor, authority/self-test, generated views, docs, Documenter, CI 33767227348, and Docs 33767227357 passed for commit 96802b00cc380707306106b529ff22a09ccb415e. This record grants no test, runner, workflow, tolerance, numerical, or later-layout edit."
+surfaces = []
 title = "validate ordinary source relocation"
 
     [[records.document_refs]]
@@ -9284,6 +9294,577 @@ title = "validate ordinary source relocation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "587"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "96802b00cc380707306106b529ff22a09ccb415e"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "588"
+[[records]]
+dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01", "HP-SOURCE-LAYOUT-FOUNDATION-FN-01", "HP-SOURCE-LAYOUT-ORDINARY-FN-01"]
+grant = "implementation"
+id = "HP-SOURCE-LAYOUT-CARTESIAN-FN-01"
+lifecycle = "approved"
+scope = "Path-neutralize one location-bearing docstring, then relocate the frozen 76-file Cartesian/PQS inventory into src/cartesian under Cartesian/PQS Source Relocation as R100 renames relative to that prerequisite commit; substitute 40 root includes and classified current pointers only. Exclude executable bodies, tests, ordering, APIs, workflows, numerics, follow-on refactors, and release work; stop on any hash, rename, dependency, pointer, or validation mismatch."
+surfaces = ["docs", "source"]
+title = "relocate Cartesian and PQS source files"
+
+    [[records.document_refs]]
+    heading = "Cartesian/PQS Source Relocation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pqs_source_relocation.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "96802b00cc380707306106b529ff22a09ccb415e"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "588"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_ida_overview.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_low_dimensional_operator_assembly.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_nested_atomic_nonrecursive_route.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_nested_diatomic_box_policy.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_nested_endcap_panel_shared_shell.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_nested_face_construction.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/ida_hamiltonian_and_counterpoise.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/pqs_shell_construction.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/algorithm_implementation_index.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/cartesian_route_dictionary.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driver_atom_workflow.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driver_usability_workflow.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_nuclear.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_hamiltonian_artifact_manifest.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pqs_source_relocation.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_cartesian_gto_interchange.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_orbital_import.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/nesting_supplement_composition_plan.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/numerical_complete_residual_basis.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/occupied_first_injection.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_backed_injected_composition.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_residual_functions.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_complete_shell_aspect_source_modes.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_factor.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_additive_reference_correction.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_artifact.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_basis.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_ladder.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/public_ns_core_side_parity.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_one_center_base_atoms.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_homonuclear_diatomic_supplemented_workflow.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_residual_gto_mwg_augmentation.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_same_construction_base_reuse.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_terminal_gg_product_matrices.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_unit_nuclear_ugg_gaussian_sum.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_usability_supplemented_workflow.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/reference_hartree_numerics.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/represented_mixed_density_hartree.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_injection_hybrid.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/retained_gto_egoi.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/route_stage_metadata_contract.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartree_correction_assembly.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_shellification_due_diligence.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_terminal_basis_realization.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/CartesianParentAxisFactors.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/CartesianParentGaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/bond_aligned_diatomic_geometry.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_base_hamiltonian.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_basis_representation.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_cpb/CartesianCPB.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_cpb/coordinate_product_boxes.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_cross_overlap.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_external_gto_import.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_external_gto_interchange.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/pqs_terminal_ida.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/pqs_terminal_one_body.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/terminal_face_product_blocks.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_gaussian_axis_integrals.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_gto_probes.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_ida_hamiltonian.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_nested_atomic.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_nested_diatomic.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_nested_experimental_geometries.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_nested_faces.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_nested_owned_units.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_pair_block_materialization/CartesianPairBlockMaterialization.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_protected_ladder_bundle.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_qw_hybrid_representation.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_raw_product_sources/CartesianRawProductSources.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_raw_product_sources/axis_transform_facts.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_raw_product_sources/records.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_raw_product_sources/source_mode_indices.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_raw_product_sources/summaries.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_reference_density/CartesianReferenceDensity.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_reference_density/atomic_hf_reference_packets.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_reference_density/represented_molecular_hartree.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_reference_density/screened_hartree_correction.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_representation_constructors.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_representation_transfer.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_residual_gaussians/CartesianResidualGaussians.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_residual_gaussians/augmented_operators.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_residual_gaussians/mwg_interaction.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_residual_gaussians/residual_basis.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_retained_unit_transform_contracts/CartesianRetainedUnitTransformContracts.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_retained_unit_transform_contracts/records.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_retained_unit_transform_contracts/summaries.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_retained_unit_transform_contracts/unit_contracts.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_retained_units/CartesianRetainedUnits.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_retained_units/lower_contract_units.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_retained_units/records.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_retained_units/summaries.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_route_core/CartesianRouteCore.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_route_core/lowering_sources.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_route_core/retained_spaces.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_route_core/shellification_regions.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_shellification/CartesianShellification.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_shellification/terminal_geometry.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_terminal_lowering/CartesianTerminalLowering.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_terminal_lowering/contracts.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_terminal_lowering/policies.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_terminal_lowering/region_contracts.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_terminal_lowering/selection.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_terminal_lowering/summaries.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian_terminal_shellification_geometry.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/gaussian_coulomb_reference.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/hamiltonian_corrections.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/pqs_matched_h2plus.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/pqs_source_box_diatomic_complete_core_shell.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/pqs_source_box_low_order_materialization.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/pqs_source_box_route_driver_helpers.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/pqs_source_box_route_driver_skeletons.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-SOURCE-LAYOUT-CARTESIAN-FN-01"]
+grant = "implementation"
+id = "HP-SOURCE-LAYOUT-CARTESIAN-TEST-01"
+lifecycle = "approved"
+scope = "Run unchanged package load, core/ida/cartesian/examples/docs_fast, pqs_release, screening_release, four Cartesian maintenance owners, full docs/authority/Documenter checks, and all three remote CI jobs plus Docs. Add or edit no test, runner, workflow, tolerance, or numerical policy; stop if relocation needs adaptation or any owner differs."
+surfaces = ["tests"]
+title = "validate Cartesian and PQS source relocation"
+
+    [[records.document_refs]]
+    heading = "Cartesian/PQS Source Relocation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pqs_source_relocation.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "96802b00cc380707306106b529ff22a09ccb415e"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "588"
 
     [[records.paths]]
     kind = "test"
