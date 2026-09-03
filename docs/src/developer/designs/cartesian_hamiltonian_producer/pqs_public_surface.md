@@ -927,8 +927,9 @@ reconciliation so authority and documentation remain valid on the moved tree:
   `docs/src/developer/cartesian_parent_factors_and_cpb_kernels.md`, this
   document's Package-Root and Radial Paper-Parity sections, and
   `sliced_hydrogen_chain.md`;
-- regenerate the checked registry and `AGENTS.md` authority views. Historical
-  commit evidence and archived documents may retain their historical paths.
+- regenerate the checked `registry.md` and `execution_whitelist.md` views.
+  Historical commit evidence and archived documents may retain their historical
+  paths.
 
 The moved-file content delta is zero and the root include substitution is
 exactly `+14/-14`, for net-zero production source. No wrapper, module, symbol,
@@ -1043,11 +1044,12 @@ The same source-path substitution is authorized in `test/runtests.jl` and
 Current-pointer reconciliation is mechanical: replace the `26` affected path
 tokens across the nine hand-edited current documents named by the authority
 record; replace the three active authority paths for mappings and the shared
-Gaussian analytic owner; and regenerate the three corresponding registry
-entries and the `AGENTS.md` authority view. Also reconcile the Package-Root
-target path/hash and the Radial/Atomic maintenance wording for the one changed
-parent-qualified include. Historical evidence, pre-move mapping columns, and
-completed validation facts retain their historical paths and hashes.
+Gaussian analytic owner; and regenerate the corresponding registry entries and
+both whole-file views, `registry.md` and `execution_whitelist.md`. Also reconcile
+the Package-Root target path/hash and the Radial/Atomic maintenance wording for
+the one changed parent-qualified include. Historical evidence, pre-move mapping
+columns, and completed validation facts retain their historical paths and
+hashes.
 
 Implementation target card:
 
@@ -1068,6 +1070,91 @@ The complete angular owner is not part of Step 3 validation and must not be
 repeated. No module wrapper, symbol move, include reorder, API, dispatch,
 dependency, fixture, cache, numerical policy, workflow, release work, Step 4,
 or later source-layout authority is granted.
+
+## Ordinary Source Relocation
+
+`HP-SOURCE-LAYOUT-ORDINARY-FN-01` and
+`HP-SOURCE-LAYOUT-ORDINARY-TEST-01` authorize only the Ordinary half of source-
+layout Step 4 from baseline
+`24512b0beda75174572fc2b728010b432331c05c`. The external follow-up review is
+audit evidence, not authority. Independent inspection splits Step 4 because
+the Ordinary and Cartesian path closures are substantially separable. This
+transaction owns exactly `15` flat files and `14,430` lines; Cartesian/PQS
+relocation remains a later decision.
+
+The implementation must use `git mv` for exactly this frozen map:
+
+| Pre-move path | Authorized target | Git blob | SHA-256 |
+| --- | --- | --- | --- |
+| `src/legacy_basis_adapter.jl` | `src/ordinary/legacy_basis_adapter.jl` | `b630ce9544297b76879a0013a984e9b64ba7ea32` | `5469b107c1a270cdfb169cd621beb656c0d8485b432ea7a1a68928d5bcd890f6` |
+| `src/ordinary_cartesian_ida.jl` | `src/ordinary/ordinary_cartesian_ida.jl` | `4f85f37c92108626ff99c5971a196202bae22c14` | `18fa23fb09c3034d1791005e1f3e514721ed639c700718ef0f301265a56902fe` |
+| `src/ordinary_coulomb.jl` | `src/ordinary/ordinary_coulomb.jl` | `94fd3f0d1c5f671316365c7264ba179a703ccf88` | `469efa553ff3a44913a4ea00170f0a122b0f920c412c3061290dd9a3baf44183` |
+| `src/ordinary_hybrid.jl` | `src/ordinary/ordinary_hybrid.jl` | `32bfc7230711a8a8bf7dabaf9e7173a12b50e4a3` | `154ac16119779fcbf2ebb0f22b1873cbad8268773bafaeef765019e25c22ac77` |
+| `src/ordinary_mapped_backends.jl` | `src/ordinary/ordinary_mapped_backends.jl` | `b17a84858a60405c1491b01d18a7188bbb993b57` | `de450f2142e37e10cf5951e2dff5a41812c43935274c04c55c91a5b02736df9d` |
+| `src/ordinary_pgdg.jl` | `src/ordinary/ordinary_pgdg.jl` | `97032896bf29b3fafc09c1ba8a5742c2f4520a99` | `a25d23e4077e9ca9656e397308315b6692f913450a42121793fc56b55f55f149` |
+| `src/ordinary_pgdg_refinement_masks.jl` | `src/ordinary/ordinary_pgdg_refinement_masks.jl` | `845d9b74f0541a7e9b7d4997e9004e78f94bdea3` | `326348f60b31f827339bec36c4ba9ca12cad3e85366dea22e9184ccfb91cef05` |
+| `src/ordinary_qw_corrections.jl` | `src/ordinary/ordinary_qw_corrections.jl` | `046196521cdd70e7cb9621919f067dd92c9e9372` | `d07cb98640861dbbeb7b0d3f3e5852e249bed747c8749bbfe2a1994d8fdbd272` |
+| `src/ordinary_qw_nested_frontends.jl` | `src/ordinary/ordinary_qw_nested_frontends.jl` | `7ca32b580aadffc0079ee83e0207b777bbd948ac` | `0bb862f36d8ef9bf6e080fee8e8cf9ce95e99bdb5b49e7016610dceb5f8e3fd0` |
+| `src/ordinary_qw_operator_assembly.jl` | `src/ordinary/ordinary_qw_operator_assembly.jl` | `d321d07d187b452ff6b2ddda42f782b297f2a8af` | `57eb1411f07e99383b66687172a5c12d835121c0cb249d01651539edbede968f` |
+| `src/ordinary_qw_raw_blocks.jl` | `src/ordinary/ordinary_qw_raw_blocks.jl` | `bb2aacde6adbd26993618b989f24ea59fcf32093` | `3c724e76a44866406d6d20a8a4ce60388fd9415c2155ba7480273df6c36b79da` |
+| `src/ordinary_qw_residuals.jl` | `src/ordinary/ordinary_qw_residuals.jl` | `19c7f081429370d5b9cf51b592649eccfd82ff5e` | `1ac7e69771ddb101e7f55f30c3e153890c4ffad749534a90ef362a77a440061a` |
+| `src/ordinary_qw_types_and_bases.jl` | `src/ordinary/ordinary_qw_types_and_bases.jl` | `7dbca0e51e85c3a884b8862a4ac19521e8a2dd03` | `333183ed6957b16c1fcf2a14dde832b916e69bf96ccf673c63c3b20a7bac5a97` |
+| `src/ordinary_sho.jl` | `src/ordinary/ordinary_sho.jl` | `9a5e3fd844e82b5a914cbca4354205ee37819e59` | `0218364dc8af4a62ad16f84515f71de2fbf24d4e7f9b134c402b2e8415d47ef5` |
+| `src/sliced_hydrogen_chain.jl` | `src/ordinary/sliced_hydrogen_chain.jl` | `462cbdfaabd53ccff9558095cb376b6cbcb8b2f5` | `186044e0bdd951a9db7380e0c364fb96a1d7b2981357c601df7962429649301a` |
+
+Every moved file must remain byte-identical and appear as a `100%` rename. In
+`src/GaussletBases.jl`, only the corresponding `15` quoted include paths may
+change, in their existing positions. The complete include order remains exact;
+no grouping comments are added.
+
+The frozen owners contain no nested include and no source-location-dependent
+data path. Vendored legacy data already uses `_package_data_path`; its existing
+explicit caller path and home-directory fallback are behavior, not relocation
+dependencies. Outside the root `src/GaussletBases.jl` loader, no source, test,
+example, script, tool, or workflow directly includes any of these files. The
+known call from
+`src/foundation/primitive_sets.jl` into later ordinary mapped-backend helpers
+remains unchanged and valid under the existing root include sequence.
+
+Current-pointer reconciliation is mechanical and part of the same source
+commit:
+
+- replace `14` existing path entries across the ten pre-existing authority
+  records and five path literals in three of their scope strings;
+- replace this relocation record's `15` source paths with their targets while
+  preserving lifecycle, grant, scope, evidence, and all nonpath text;
+- replace `86` current code-pointer occurrences across the `17` hand-edited
+  documents named by this record; and
+- update the canonical document digest and regenerate `registry.md` and
+  `execution_whitelist.md` as whole files.
+
+The explicit pre-move-path column above, archived reviews, completed historical
+evidence, and the `65` classified historical occurrences retain their old path
+text. The implementation must not perform a repository-wide blind replacement.
+
+Implementation target card:
+
+```text
+Target: relocate exactly 15 Ordinary owners into src/ordinary/
+Physics endpoint: none changed; the existing public and ordinary owners remain the oracles
+Allowed files: 15 git mv operations, 15 root include substitutions, and exact current authority/documentation path reconciliation
+Forbidden files/surfaces: every file body, test, workflow, API, numerical contract, release, and Cartesian/PQS move
+Must delete or simplify: remove the 15 flat source locations; delete no implementation
+Forbidden additions: modules, namespaces, wrappers, aliases, shims, helpers, caches, fixtures, dependencies, tests, or files beyond the destination directory
+Success condition: 15 byte-identical R100 moves, exact path substitutions, unchanged include order and behavior
+Validation: hashes/renames, include order and direct-path closure, package load, Supported floor, docs/authority/Documenter/diff, normal CI/Docs
+Line budget: moved bodies +0/-0; src/GaussletBases.jl +15/-15; current authority/documentation path substitutions only; tests +0/-0
+Failure rule: make no implementation commit if any hash, rename score, include position, body, test, path count, package load, or unchanged owner differs
+```
+
+The unchanged Supported-floor selection must pass, including `core`, `ida`,
+`cartesian`, `examples`, `radial`, `misc`, `angular_public`, and `docs_fast`.
+The source-bearing implementation commit must classify as full and pass all
+three existing CI jobs plus Docs. No complete angular rerun is required.
+Cartesian/PQS Step 4B, decomposition, Lanczos relocation, foundation dependency
+inversion, orphan-test work, conditioning diagnostics, prose-test cleanup,
+empty-directory cleanup, API/export changes, and release work remain outside
+this authority.
 
 ## Foundational Basis And Mapping Documentation
 

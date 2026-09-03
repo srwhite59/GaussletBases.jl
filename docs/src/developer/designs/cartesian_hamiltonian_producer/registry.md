@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `7d659b23a6a3b885dec207f1fe16489313c291ca750e89390911e2afb6613000`.
+> [authority.toml](authority.toml), SHA-256 `1f2b4ec302ea72c3159c0bdda55d97285a88b683dde9f09749fad0cb433b9f9a`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -87,24 +87,27 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-AUTHORITY-EXECUTION-WHITELIST-FN-01 - whole-file execution whitelist authority view
 
-- **Lifecycle:** `approved`
-- **Grant:** `design`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`
 - **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [invariants.md](invariants.md); heading `Generated Authority Views`
 - **Owned paths:**
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/README.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/execution_whitelist.md`
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md`
 - **Evidence:**
+  - `git_commit`: `24512b0beda75174572fc2b728010b432331c05c`
   - `manager_pass`: `586`
+  - `manager_pass`: `587`
 - **Dependencies:** none
-- **Scope:** Relocate the generated execution-ID view from the marked AGENTS.md block to execution\_whitelist.md under Generated Authority Views. Keep authority.toml sole authority and registry.md checked; leave stable fail-closed AGENTS instructions and update only current normative references. No schema, source/API/export/workflow, Step 4, reverse parser, generator layer, or historical rewrite.
+- **Scope:** Maintain the whole-file execution whitelist implemented in commit 24512b0beda75174572fc2b728010b432331c05c under Generated Authority Views. Preserve authority.toml as sole authority, byte-checked registry and whitelist generation, stable fail-closed AGENTS instructions, and exact executable-ID intersection semantics. Exclude schema, source/API/export/workflow, reverse-parser, generator-layer, and historical rewrites.
 
 ### HP-AUTHORITY-EXECUTION-WHITELIST-TEST-01 - whole-file execution whitelist validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -112,9 +115,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `24512b0beda75174572fc2b728010b432331c05c`
   - `manager_pass`: `586`
+  - `manager_pass`: `587`
 - **Dependencies:** `HP-AUTHORITY-EXECUTION-WHITELIST-FN-01`
-- **Scope:** Adapt only test/docs/runtests.jl to enforce Generated Authority Views: exact registry and whole-file whitelist generation plus missing, stale, modified, nongenerated-whitelist, and stale-registry failures. Preserve executable-ID intersection semantics and every existing docs check. No new test owner, dependency, workflow, checker framework, prose pruning, Step 4, or unrelated reorganization.
+- **Scope:** Maintain the G3 validation accepted in commit 24512b0beda75174572fc2b728010b432331c05c: exact registry/whitelist generation and missing, stale, modified, nongenerated-whitelist, and stale-registry failures. Preserve executable-ID intersection semantics and existing docs checks. Exclude new owners, dependencies, workflows, checker frameworks, prose pruning, Step 4, source/API work, and unrelated reorganization.
 
 ### HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01 - scheduled Cartesian internal numerical-maintenance workflow
 
@@ -5470,6 +5475,70 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `585`
 - **Dependencies:** `HP-SOURCE-LAYOUT-FOUNDATION-FN-01`
 - **Scope:** Completed validation evidence only. Exact hashes/diffs, include order, package/resources, core/radial 2174/2174, docs 157/157 plus 10/10, authority, Documenter, CI 33713199108, and Docs 33713199099 passed for commit f2e13ff3c788551c43eb2de269d4723de880ae8e. This record grants no test, fixture, runner, workflow, numerical, or later-layout edit.
+
+### HP-SOURCE-LAYOUT-ORDINARY-FN-01 - relocate ordinary source files
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Ordinary Source Relocation`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_low_dimensional_operator_assembly.md`
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_atomic_nonrecursive_route.md`
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_diatomic_box_policy.md`
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_endcap_panel_shared_shell.md`
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_face_construction.md`
+  - `docs` / `existing`: `docs/src/algorithms/distorted_gausslet_pgdg_refinement_hierarchy.md`
+  - `docs` / `existing`: `docs/src/algorithms/qiu_white_residual_gaussian_route.md`
+  - `docs` / `existing`: `docs/src/algorithms/residual_gaussian_extension.md`
+  - `docs` / `existing`: `docs/src/developer/algorithm_implementation_index.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_nuclear.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/parent_residual_functions.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/sliced_hydrogen_chain.md`
+  - `docs` / `existing`: `docs/src/developer/pgdg_cartesian_efficiency_contract.md`
+  - `source` / `existing`: `src/GaussletBases.jl`
+  - `source` / `existing`: `src/legacy_basis_adapter.jl`
+  - `source` / `existing`: `src/ordinary_cartesian_ida.jl`
+  - `source` / `existing`: `src/ordinary_coulomb.jl`
+  - `source` / `existing`: `src/ordinary_hybrid.jl`
+  - `source` / `existing`: `src/ordinary_mapped_backends.jl`
+  - `source` / `existing`: `src/ordinary_pgdg.jl`
+  - `source` / `existing`: `src/ordinary_pgdg_refinement_masks.jl`
+  - `source` / `existing`: `src/ordinary_qw_corrections.jl`
+  - `source` / `existing`: `src/ordinary_qw_nested_frontends.jl`
+  - `source` / `existing`: `src/ordinary_qw_operator_assembly.jl`
+  - `source` / `existing`: `src/ordinary_qw_raw_blocks.jl`
+  - `source` / `existing`: `src/ordinary_qw_residuals.jl`
+  - `source` / `existing`: `src/ordinary_qw_types_and_bases.jl`
+  - `source` / `existing`: `src/ordinary_sho.jl`
+  - `source` / `existing`: `src/sliced_hydrogen_chain.jl`
+- **Evidence:**
+  - `git_commit`: `24512b0beda75174572fc2b728010b432331c05c`
+  - `manager_pass`: `587`
+- **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`, `HP-SOURCE-LAYOUT-FOUNDATION-FN-01`
+- **Scope:** Move exactly 15 frozen Ordinary owners into src/ordinary under Ordinary Source Relocation as byte-identical R100 renames; substitute only their 15 root include paths and classified current authority/documentation pointers. Exclude file bodies, tests, ordering, APIs, workflows, numerics, Cartesian/PQS relocation, and later layout work; stop on any hash, rename, path-count, or validation mismatch.
+
+### HP-SOURCE-LAYOUT-ORDINARY-TEST-01 - validate ordinary source relocation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Ordinary Source Relocation`
+- **Owned paths:**
+  - `test` / `existing`: `test/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `24512b0beda75174572fc2b728010b432331c05c`
+  - `manager_pass`: `587`
+- **Dependencies:** `HP-SOURCE-LAYOUT-ORDINARY-FN-01`
+- **Scope:** Run unchanged package load, full Supported-floor selection, all three remote CI jobs, docs, authority/self-test, generated-view, Documenter, rename/hash, include-order, direct-path, manager-log, and diff checks. Add or edit no test, assertion, fixture, runner, helper, workflow, tolerance, or numerical policy; stop if validation requires adaptation or any existing owner differs.
 
 ### HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01 - relocate radial and atomic source files
 

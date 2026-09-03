@@ -80,7 +80,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "8c26de2f80531ee85dfdd62a78833a0c313a91046632051ad897188c83575757"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "67e67e53a67b5d7de0d7d6d06fdcf494054068c498db15169f70c8004fcc9994"
+sha256 = "f3d679728986c44e2519941f6d32b065118c06decf5f2f9de61f993d01f3a2b1"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -319,10 +319,10 @@ title = "angular optional-consumer control-flow validation"
     value = "559"
 [[records]]
 dependency_ids = []
-grant = "design"
+grant = "maintenance"
 id = "HP-AUTHORITY-EXECUTION-WHITELIST-FN-01"
-lifecycle = "approved"
-scope = "Relocate the generated execution-ID view from the marked AGENTS.md block to execution_whitelist.md under Generated Authority Views. Keep authority.toml sole authority and registry.md checked; leave stable fail-closed AGENTS instructions and update only current normative references. No schema, source/API/export/workflow, Step 4, reverse parser, generator layer, or historical rewrite."
+lifecycle = "implemented"
+scope = "Maintain the whole-file execution whitelist implemented in commit 24512b0beda75174572fc2b728010b432331c05c under Generated Authority Views. Preserve authority.toml as sole authority, byte-checked registry and whitelist generation, stable fail-closed AGENTS instructions, and exact executable-ID intersection semantics. Exclude schema, source/API/export/workflow, reverse-parser, generator-layer, and historical rewrites."
 surfaces = ["docs"]
 title = "whole-file execution whitelist authority view"
 
@@ -332,8 +332,14 @@ title = "whole-file execution whitelist authority view"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "24512b0beda75174572fc2b728010b432331c05c"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "586"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "587"
 
     [[records.paths]]
     kind = "docs"
@@ -341,14 +347,18 @@ title = "whole-file execution whitelist authority view"
     state = "existing"
     [[records.paths]]
     kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/execution_whitelist.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-AUTHORITY-EXECUTION-WHITELIST-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-AUTHORITY-EXECUTION-WHITELIST-TEST-01"
-lifecycle = "approved"
-scope = "Adapt only test/docs/runtests.jl to enforce Generated Authority Views: exact registry and whole-file whitelist generation plus missing, stale, modified, nongenerated-whitelist, and stale-registry failures. Preserve executable-ID intersection semantics and every existing docs check. No new test owner, dependency, workflow, checker framework, prose pruning, Step 4, or unrelated reorganization."
+lifecycle = "completed"
+scope = "Maintain the G3 validation accepted in commit 24512b0beda75174572fc2b728010b432331c05c: exact registry/whitelist generation and missing, stale, modified, nongenerated-whitelist, and stale-registry failures. Preserve executable-ID intersection semantics and existing docs checks. Exclude new owners, dependencies, workflows, checker frameworks, prose pruning, Step 4, source/API work, and unrelated reorganization."
 surfaces = ["tests"]
 title = "whole-file execution whitelist validation"
 
@@ -358,8 +368,14 @@ title = "whole-file execution whitelist validation"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "24512b0beda75174572fc2b728010b432331c05c"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "586"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "587"
 
     [[records.paths]]
     kind = "test"
@@ -9095,6 +9111,184 @@ title = "validate foundation source relocation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "585"
+[[records]]
+dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01", "HP-SOURCE-LAYOUT-FOUNDATION-FN-01"]
+grant = "implementation"
+id = "HP-SOURCE-LAYOUT-ORDINARY-FN-01"
+lifecycle = "approved"
+scope = "Move exactly 15 frozen Ordinary owners into src/ordinary under Ordinary Source Relocation as byte-identical R100 renames; substitute only their 15 root include paths and classified current authority/documentation pointers. Exclude file bodies, tests, ordering, APIs, workflows, numerics, Cartesian/PQS relocation, and later layout work; stop on any hash, rename, path-count, or validation mismatch."
+surfaces = ["docs", "source"]
+title = "relocate ordinary source files"
+
+    [[records.document_refs]]
+    heading = "Ordinary Source Relocation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "24512b0beda75174572fc2b728010b432331c05c"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "587"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_low_dimensional_operator_assembly.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_nested_atomic_nonrecursive_route.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_nested_diatomic_box_policy.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_nested_endcap_panel_shared_shell.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_nested_face_construction.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/distorted_gausslet_pgdg_refinement_hierarchy.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/qiu_white_residual_gaussian_route.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/residual_gaussian_extension.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/algorithm_implementation_index.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_nuclear.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/parent_residual_functions.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/sliced_hydrogen_chain.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/pgdg_cartesian_efficiency_contract.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/legacy_basis_adapter.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_cartesian_ida.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_coulomb.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_hybrid.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_mapped_backends.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_pgdg.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_pgdg_refinement_masks.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_qw_corrections.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_qw_nested_frontends.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_qw_operator_assembly.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_qw_raw_blocks.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_qw_residuals.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_qw_types_and_bases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary_sho.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/sliced_hydrogen_chain.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-SOURCE-LAYOUT-ORDINARY-FN-01"]
+grant = "implementation"
+id = "HP-SOURCE-LAYOUT-ORDINARY-TEST-01"
+lifecycle = "approved"
+scope = "Run unchanged package load, full Supported-floor selection, all three remote CI jobs, docs, authority/self-test, generated-view, Documenter, rename/hash, include-order, direct-path, manager-log, and diff checks. Add or edit no test, assertion, fixture, runner, helper, workflow, tolerance, or numerical policy; stop if validation requires adaptation or any existing owner differs."
+surfaces = ["tests"]
+title = "validate ordinary source relocation"
+
+    [[records.document_refs]]
+    heading = "Ordinary Source Relocation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "24512b0beda75174572fc2b728010b432331c05c"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "587"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01"]
 grant = "maintenance"
