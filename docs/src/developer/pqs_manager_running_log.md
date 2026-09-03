@@ -980,3 +980,15 @@ corrected from `40` to `39`; the map, hashes, scope, prerequisite commit
 `381743d13269f5d75f58fe2ffc9b483248451bc2`, and all failure rules are unchanged.
 No strategic change: MT6 remains active, and Step 4B may resume only after this
 correction and its checks pass.
+
+## Cartesian Hamiltonian Producer Pass 590 - Correct Step 4B Derived Counts
+
+Independent checks against the staged relocation established seven authority
+scope substitutions, not ten, and recomputed the post-Ordinary normalized
+88-entry loader digest as
+`8ab555c688804b36f384f0516d75407e618b9fe78b875060a685e0aa454f5f7e`.
+The canonical contract now records those exact facts. The frozen 76-file map,
+39 root substitutions, 37 nested includes, 340 authority paths, 264 current
+documentation pointers, file blob/content hashes, scope, validation, and
+failure rules are otherwise unchanged. No strategic change: MT6 and the paused
+Step 4B implementation remain active.

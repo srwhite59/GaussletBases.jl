@@ -121,7 +121,7 @@ owner not included there; `CartesianParentGaussletBases.jl` includes it as one
 of the `37` byte-identical nested sibling includes. The complete `88`-entry
 include order is fixed; after removing the new `cartesian/` prefix its SHA-256
 must remain
-`df8d273f7aba508b67052fb8a511389255134348300b1f4516cda96971eff6f0`.
+`8ab555c688804b36f384f0516d75407e618b9fe78b875060a685e0aa454f5f7e`.
 The `37` nested sibling includes and `17` module-relative imports in the moved
 owners remain byte-identical. None of these owners uses `@__DIR__`, `@__FILE__`,
 the package data helper, or a source-relative resource path, and no source,
@@ -130,7 +130,7 @@ includes one of them.
 
 Current-pointer reconciliation is selective and mechanical. Update `340`
 affected `records.paths` entries, including the one still-planned represented-
-Hartree path, and the `10` existing authority scope path literals. Update the
+Hartree path, and the `7` existing authority scope path literals. Update the
 `264` current code-pointer occurrences across the `53` hand-edited current-
 pointer documents identified by the preflight. The additional listed canonical
 map remains frozen. Regenerate `registry.md` and `execution_whitelist.md` as
