@@ -15,6 +15,7 @@
     changelog = read_doc("CHANGELOG.md")
     status = read_doc("STATUS.md")
     roadmap = read_doc("ROADMAP.md")
+    agents = read_doc("AGENTS.md")
 
     docs_architecture = read_doc("docs", "architecture.md")
     current_atomic_branch = read_doc("docs", "current_atomic_branch.md")
@@ -32,6 +33,8 @@
     ci_workflow = read_doc(".github", "workflows", "ci.yml")
     test_runner = read_doc("test", "runtests.jl")
     authority_check = read_doc("docs", "check_cartesian_authority.jl")
+    execution_whitelist = read_doc("docs", "src", "developer", "designs",
+        "cartesian_hamiltonian_producer", "execution_whitelist.md")
 
     docs_site_index = read_doc("docs", "src", "index.md")
     docs_site_manual = read_doc("docs", "src", "manual", "index.md")
@@ -529,9 +532,21 @@
             "module CartesianAuthority",
             "authority must set authoritative=true",
             "generated registry is stale or partially edited",
+            "generated execution whitelist is stale or partially edited",
             "legacy authority artifact remains live",
             "--render",
         )
+        @test startswith(execution_whitelist,
+            "# Cartesian Hamiltonian Producer Execution Whitelist\n\n")
+        @test contains_all(execution_whitelist, "Generated authority view. Do not edit.",
+            "SHA-256", "HP-AUTHORITY-EXECUTION-WHITELIST-TEST-01")
+        @test contains_all(agents, "authority.toml", "execution_whitelist.md",
+            "grants nothing independently")
+        @test all(needle -> !occursin(needle, agents),
+            ("BEGIN CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST",
+             "Authority SHA-256:", "- `HP-"))
+        @test all(needle -> !occursin(needle, authority_check),
+            ("marked_whitelist_block", "_standalone_marker", "agents_whitelist_block.md"))
 
         @test contains_all(
             docs_site_reference_bases,

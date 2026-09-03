@@ -40,8 +40,8 @@ archaeology and are not normal startup reading.
 ## Current Strategic State
 
 - The broad producer-documentation reorganization is complete. Schema-v3
-  `authority.toml` is authoritative, generated registry/AGENTS views are
-  checked one-way outputs, and authority CI is fail-closed.
+  `authority.toml` is authoritative, generated registry/execution-whitelist
+  views are checked one-way outputs, and authority CI is fail-closed.
 - The first complete post-cutover static conformance audit covered all `150`
   execution records: `107` matched, `11` documented gaps, `8` numerical gates,
   and `24` discrepancies. Pass 399 closed the atomic-packet fail-fast subset.

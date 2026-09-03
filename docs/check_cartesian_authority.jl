@@ -17,10 +17,8 @@ const PRODUCER_DOCS = joinpath(
 )
 const AUTHORITY_PATH = joinpath(PRODUCER_DOCS, "authority.toml")
 const REGISTRY_PATH = joinpath(PRODUCER_DOCS, "registry.md")
-const AGENTS_PATH = joinpath(ROOT, "AGENTS.md")
+const EXECUTION_WHITELIST_PATH = joinpath(PRODUCER_DOCS, "execution_whitelist.md")
 const ARTIFACT_KIND = "cartesian_authority"
-const WHITELIST_BEGIN = "<!-- BEGIN CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST -->"
-const WHITELIST_END = "<!-- END CARTESIAN HAMILTONIAN PRODUCER EXECUTION WHITELIST -->"
 const LEGACY_PATHS = [
     joinpath(PRODUCER_DOCS, "authority_candidate.toml"),
     joinpath(PRODUCER_DOCS, "authority_transition_snapshot.toml"),
@@ -613,21 +611,22 @@ end
 function check_authority(snapshot = load_snapshot())
     checker_text = read(@__FILE__, String)
     registry_text = read(REGISTRY_PATH, String)
-    agents_text = read(AGENTS_PATH, String)
+    whitelist_text = read(EXECUTION_WHITELIST_PATH, String)
     errors = validation_errors(snapshot.data)
     snapshot.text == serialized(snapshot.data) || push!(errors, "authority TOML serialization is not canonical")
     append!(errors, legacy_live_errors())
     isempty(errors) || error("Cartesian authority errors:\n" * join(first(errors, 100), "\n"))
     assert_snapshot_unchanged(snapshot, Set(document["path"] for document in snapshot.data["documents"]))
     registry = render_registry(snapshot)
-    whitelist = render_whitelist_block(snapshot)
+    whitelist = render_execution_whitelist(snapshot)
     registry == render_registry(snapshot) || error("registry render is nondeterministic")
-    whitelist == render_whitelist_block(snapshot) || error("whitelist render is nondeterministic")
+    whitelist == render_execution_whitelist(snapshot) || error("whitelist render is nondeterministic")
     assert_render_structure(snapshot, registry, whitelist)
-    validate_committed_views(snapshot, registry, whitelist; registry_text, agents_text)
+    validate_committed_views(snapshot, registry, whitelist; registry_text, whitelist_text)
     assert_snapshot_unchanged(snapshot, Set(document["path"] for document in snapshot.data["documents"]))
     read(REGISTRY_PATH, String) == registry_text || error("registry changed during authority check")
-    read(AGENTS_PATH, String) == agents_text || error("AGENTS changed during authority check")
+    read(EXECUTION_WHITELIST_PATH, String) == whitelist_text ||
+        error("execution whitelist changed during authority check")
     read(@__FILE__, String) == checker_text || error("authority checker changed during authority check")
     return nothing
 end
@@ -653,12 +652,12 @@ function _list(values; empty = "none")
     return join((code_span(value) for value in values), ", ")
 end
 
-function render_whitelist_block(snapshot = load_snapshot())
+function render_execution_whitelist(snapshot = load_snapshot())
     io = IOBuffer()
-    println(io, WHITELIST_BEGIN)
-    println(io, "> **Generated authority view. Do not edit this block.**")
-    println(io, "> Source: `docs/src/developer/designs/cartesian_hamiltonian_producer/authority.toml`.")
-    println(io, "> Authority SHA-256: `$(snapshot.sha256)`.")
+    println(io, "# Cartesian Hamiltonian Producer Execution Whitelist")
+    println(io)
+    println(io, "> **Generated authority view. Do not edit.** The record-level source is")
+    println(io, "> [authority.toml](authority.toml), SHA-256 `$(snapshot.sha256)`.")
     println(io)
     println(io, "Cartesian Hamiltonian producer source work is currently authorized only for")
     println(io, "these approved design IDs:")
@@ -666,9 +665,7 @@ function render_whitelist_block(snapshot = load_snapshot())
     for id in execution_ids(snapshot.data)
         println(io, "- `", id, "`")
     end
-    println(io)
-    println(io, WHITELIST_END)
-    return chomp(String(take!(io))) * "\n"
+    return rstrip(String(take!(io))) * "\n"
 end
 
 function render_registry(snapshot = load_snapshot())
@@ -729,56 +726,25 @@ function assert_render_structure(snapshot, registry, whitelist)
     record_headings = count(line -> startswith(line, "### HP-"), registry_lines)
     record_headings == length(snapshot.data["records"]) ||
         error("registry record-heading count mismatch")
-    count(==(WHITELIST_BEGIN), _normalized_lines(whitelist)) == 1 ||
-        error("whitelist begin-marker count mismatch")
-    count(==(WHITELIST_END), _normalized_lines(whitelist)) == 1 ||
-        error("whitelist end-marker count mismatch")
-    occursin(WHITELIST_BEGIN, registry) && error("registry contains whitelist begin marker")
-    occursin(WHITELIST_END, registry) && error("registry contains whitelist end marker")
+    startswith(whitelist, "# Cartesian Hamiltonian Producer Execution Whitelist\n\n") ||
+        error("execution whitelist heading mismatch")
+    occursin("> **Generated authority view. Do not edit.**", whitelist) ||
+        error("execution whitelist generated notice is missing")
     Markdown.parse(registry)
     Markdown.parse(whitelist)
     return nothing
 end
 
-function _standalone_marker(text, range)
-    before = first(range) == firstindex(text) || text[prevind(text, first(range))] == '\n'
-    after_index = nextind(text, last(range))
-    after = after_index > lastindex(text) || text[after_index] in ('\r', '\n')
-    return before && after
-end
-
-function marked_whitelist_block(text)
-    starts = collect(findall(WHITELIST_BEGIN, text))
-    stops = collect(findall(WHITELIST_END, text))
-    length(starts) == 1 || error("expected one AGENTS whitelist begin marker")
-    length(stops) == 1 || error("expected one AGENTS whitelist end marker")
-    start, stop = only(starts), only(stops)
-    first(start) < first(stop) || error("AGENTS whitelist markers are reversed")
-    _standalone_marker(text, start) || error("AGENTS whitelist begin marker must occupy one line")
-    _standalone_marker(text, stop) || error("AGENTS whitelist end marker must occupy one line")
-
-    block_end = last(stop)
-    following = nextind(text, block_end)
-    if following <= lastindex(text) && text[following] == '\r'
-        block_end = following
-        following = nextind(text, following)
-        following <= lastindex(text) && text[following] == '\n' && (block_end = following)
-    elseif following <= lastindex(text) && text[following] == '\n'
-        block_end = following
-    end
-    return String(SubString(text, first(start), block_end))
-end
-
 function validate_committed_views(
     snapshot,
     registry = render_registry(snapshot),
-    whitelist = render_whitelist_block(snapshot);
+    whitelist = render_execution_whitelist(snapshot);
     registry_text = read(REGISTRY_PATH, String),
-    agents_text = read(AGENTS_PATH, String),
+    whitelist_text = read(EXECUTION_WHITELIST_PATH, String),
 )
     registry_text == registry || error("generated registry is stale or partially edited")
-    marked_whitelist_block(agents_text) == whitelist ||
-        error("generated AGENTS whitelist block is stale or partially edited")
+    whitelist_text == whitelist ||
+        error("generated execution whitelist is stale or partially edited")
     return nothing
 end
 
@@ -846,13 +812,13 @@ function render_external(output_dir, snapshot = load_snapshot())
     append!(errors, legacy_live_errors())
     isempty(errors) || error("Cartesian authority errors:\n" * join(first(errors, 100), "\n"))
     registry = render_registry(snapshot)
-    whitelist = render_whitelist_block(snapshot)
+    whitelist = render_execution_whitelist(snapshot)
     assert_render_structure(snapshot, registry, whitelist)
     assert_snapshot_unchanged(snapshot, Set(document["path"] for document in snapshot.data["documents"]))
     read(@__FILE__, String) == checker_text || error("authority checker changed during rendering")
     output_dir = _prepare_external_output_dir(output_dir)
     outputs = Dict(
-        "agents_whitelist_block.md" => whitelist,
+        "execution_whitelist.md" => whitelist,
         "registry.md" => registry,
     )
     for (name, content) in outputs
@@ -887,7 +853,7 @@ function self_test()
     snapshot = load_snapshot()
     isempty(validation_errors(snapshot.data)) || error("authority must pass before self-test")
     registry = render_registry(snapshot)
-    whitelist = render_whitelist_block(snapshot)
+    whitelist = render_execution_whitelist(snapshot)
     validate_committed_views(snapshot, registry, whitelist)
 
     broken = deepcopy(snapshot.data)
@@ -993,32 +959,36 @@ function self_test()
     _expect_failure(broken, "unknown kind")
 
     registry == render_registry(snapshot) || error("registry render changed")
-    whitelist == render_whitelist_block(snapshot) || error("whitelist render changed")
+    whitelist == render_execution_whitelist(snapshot) || error("whitelist render changed")
     assert_render_structure(snapshot, registry, whitelist)
 
-    agents_text = read(AGENTS_PATH, String)
     _expect_error("registry is stale") do
         validate_committed_views(
             snapshot,
             registry,
             whitelist;
             registry_text = registry * "\n",
-            agents_text,
+            whitelist_text = whitelist,
         )
     end
-    _expect_error("AGENTS whitelist block is stale") do
-        changed = replace(agents_text, first(execution_ids(snapshot.data)) => "HP-BROKEN-ID"; count = 1)
-        validate_committed_views(snapshot, registry, whitelist; registry_text = registry, agents_text = changed)
+    _expect_error("execution whitelist is stale") do
+        changed = replace(whitelist, first(execution_ids(snapshot.data)) => "HP-BROKEN-ID"; count = 1)
+        validate_committed_views(snapshot, registry, whitelist; registry_text = registry, whitelist_text = changed)
     end
-    _expect_error("begin marker") do
-        changed = replace(agents_text, WHITELIST_BEGIN => ""; count = 1)
-        validate_committed_views(snapshot, registry, whitelist; registry_text = registry, agents_text = changed)
+    _expect_error("execution whitelist is stale") do
+        changed = replace(whitelist, "# Cartesian Hamiltonian Producer" => "# Nongenerated"; count = 1)
+        validate_committed_views(snapshot, registry, whitelist; registry_text = registry, whitelist_text = changed)
     end
 
     mktempdir() do directory
         missing = joinpath(directory, "missing.toml")
         _expect_error("No such file") do
             load_snapshot(missing)
+        end
+        missing_whitelist = joinpath(directory, "execution_whitelist.md")
+        _expect_error("No such file") do
+            validate_committed_views(snapshot, registry, whitelist;
+                registry_text = registry, whitelist_text = read(missing_whitelist, String))
         end
         corrupt = joinpath(directory, "corrupt.toml")
         write(corrupt, "not = [valid")
@@ -1043,14 +1013,14 @@ function self_test()
         isnothing(safe_repo_path("../escape"; root = directory, root_real = realpath(directory))) ||
             error("repository traversal path was not rejected")
 
-        output = joinpath(directory, "render")
-        render_external(output, snapshot)
-        read(joinpath(output, "registry.md"), String) == registry ||
-            error("external registry render mismatch")
-        read(joinpath(output, "agents_whitelist_block.md"), String) == whitelist ||
-            error("external whitelist render mismatch")
+        outputs = (joinpath(directory, "render-a"), joinpath(directory, "render-b"))
+        foreach(output -> render_external(output, snapshot), outputs)
+        for (name, expected) in (("registry.md", registry), ("execution_whitelist.md", whitelist))
+            rendered = map(output -> read(joinpath(output, name), String), outputs)
+            all(==(expected), rendered) || error("external $name render mismatch")
+        end
         _expect_error("new directory") do
-            _prepare_external_output_dir(output)
+            _prepare_external_output_dir(first(outputs))
         end
 
         parent = realpath(directory)

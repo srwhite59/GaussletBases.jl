@@ -53,7 +53,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_o
 sha256 = "b1395e5c33d63eb8e0517e4cdc3e602400fa6d9dbe134e8cda5107963960f9da"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md"
-sha256 = "ce157c3187a0e3deed3e27935dad87cd8fed8a66c798a33ec03827c4ada4918d"
+sha256 = "cd5aac9b88c3c4eeb8d813e10a582c859786159bb0fb0db47f4fb8241022a8fc"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md"
 sha256 = "356ad99936f29a3a18e3e2f389cecdb3b69d782e60fad95e1e660c019a8dfede"

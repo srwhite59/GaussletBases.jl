@@ -3,9 +3,10 @@
 This page is navigation and orientation for the Cartesian/PQS Hamiltonian
 producer. It does not independently grant source authority: `current.md` owns
 live status, `authority.toml` owns record-level permissions and surfaces,
-`registry.md` is its generated human view, `invariants.md` owns
-cross-subsystem guardrails, and linked subsystem pages own their numerical
-contracts. On disagreement, follow the fail-closed rule in `invariants.md`.
+`registry.md` and `execution_whitelist.md` are its generated checked views,
+`invariants.md` owns cross-subsystem guardrails, and linked subsystem pages
+own their numerical contracts. On disagreement, follow the fail-closed rule
+in `invariants.md`.
 
 ## Orientation
 
@@ -54,6 +55,7 @@ ID or subsystem.
 
 - [current.md](current.md)
 - [registry.md](registry.md)
+- [execution_whitelist.md](execution_whitelist.md)
 - [invariants.md](invariants.md)
 - [Sliced hydrogen-chain producer](sliced_hydrogen_chain.md) for the approved
   expert G10-times-transverse minimal H-chain basis, full analytic one-body
@@ -214,10 +216,10 @@ ID or subsystem.
 The task-specific map above is the contract index. The schema-v3
 [machine authority](authority.toml) owns each ID's lifecycle, grant, exact
 surfaces, dependencies, and canonical references. The generated
-[registry](registry.md) and marked `AGENTS.md` whitelist are checked views;
-linked pages own behavior. Surrounding policy and contracts may restrict
-machine authority but cannot broaden it. Do not copy their specifications into
-this navigation page.
+[registry](registry.md) and [execution whitelist](execution_whitelist.md) are
+checked views; linked pages own behavior. Surrounding policy and contracts may
+restrict machine authority but cannot broaden it. Do not copy their
+specifications into this navigation page.
 
 The [atomic cutover record](authority_atomic_cutover_plan.md) preserves the
 reviewed transition digest, activation boundary, validation, and whole-commit

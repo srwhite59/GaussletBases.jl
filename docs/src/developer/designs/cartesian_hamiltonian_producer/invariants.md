@@ -8,7 +8,7 @@ Gaussian work.
 
 - `authority.toml` is the sole record-level authority for each ID's lifecycle,
   grant, exact owned paths, dependencies, and canonical references.
-- `registry.md` and the marked `AGENTS.md` execution whitelist are
+- `registry.md` and `execution_whitelist.md` are
   deterministic checked views. They grant no independent authority.
 - Existing subsystem wording that the registry "owns" or "remains
   authoritative" for an ID means this exact generated human view of the
@@ -44,8 +44,8 @@ Authority maintenance is one-way and atomic:
    hashed contract changes, update its `[[documents]]` digest explicitly.
 2. Render into a new external directory with
    `julia --project=docs docs/check_cartesian_authority.jl --render DIR`.
-3. Replace all of `registry.md` and only the marked generated block in
-   `AGENTS.md` with those rendered views.
+3. Replace all of `registry.md` and `execution_whitelist.md` with the rendered
+   whole-file views.
 4. Run the checker in `--check` and `--self-test` modes before the docs tests
    and Documenter build, then commit the machine record, contracts, and views
    together.
@@ -56,38 +56,17 @@ authority from prose, or introduce a reverse parser.
 ### Generated Authority Views
 
 `authority.toml` remains the sole authority source. `registry.md` and the
-execution whitelist are deterministic, checked views and grant nothing on
-their own. An executable ID must both derive from the machine record and occur
-in the committed execution whitelist; disagreement fails closed.
+generated whole-file `execution_whitelist.md` are deterministic, checked views
+and grant nothing on their own. An executable ID must both derive from the
+machine record and occur in the committed execution whitelist; disagreement
+fails closed.
 
-`HP-AUTHORITY-EXECUTION-WHITELIST-FN-01/TEST-01` authorizes one
-authority-preserving relocation of the generated ID list from the marked
-`AGENTS.md` block to the generated whole file
-`execution_whitelist.md`. Until that implementation is committed and closed,
-the existing marked block remains the required view. The implementation must:
-
-- keep `registry.md` as the other deterministic whole-file view;
-- leave concise stable instructions in `AGENTS.md` requiring source-bearing
-  workers to inspect the exact authority record and execution whitelist, with
-  no embedded generated IDs or authority digest;
-- make `docs/check_cartesian_authority.jl` render and compare both whole-file
-  views byte-for-byte and delete the obsolete marker-extraction machinery;
-- preserve adversarial rejection of a missing, stale, modified, or incorrectly
-  generated whitelist and a stale registry; and
-- update only current normative references. Historical evidence remains
-  unchanged.
-
-The bounded implementation owns `AGENTS.md`, the authority checker, the one
-new generated file, the current authority/invariant references, and focused
-checks in `test/docs/runtests.jl`. Expected deltas are about `+7-12/-236` in
-`AGENTS.md`, one roughly `236`-line generated file, a net-smaller checker with
-about `12-20` additions and `38-48` deletions, at most `16` focused test lines,
-and no more than `12` current-reference substitutions. It adds no schema field,
-dependency, workflow, source/API/export change, reverse parser, generator
-layer, Step 4 authority, or historical rewrite. If derivation changes, any
-adversarial case passes, `AGENTS.md` retains generated IDs or a digest, or the
-boundary requires broader machinery, implementation must stop without a
-commit.
+The checker renders both views outside the repository and compares them
+byte-for-byte with the committed files. Missing, stale, modified, or
+structurally incorrect views fail. The whitelist is a one-way checked output,
+not a hashed authority input, because it contains the authority digest.
+`AGENTS.md` carries only stable instructions to inspect the exact machine
+record and this whitelist; it contains no generated IDs or authority digest.
 
 For execution records, `dependency_ids` are immediate normative prerequisites,
 not navigation. An execution record must not depend on a retired, rejected,
