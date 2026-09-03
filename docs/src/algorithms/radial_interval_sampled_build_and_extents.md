@@ -10,33 +10,33 @@
    - reference spacing
    - seed-window parameters
    - optional `xgaussian` supplement
-   Code: `src/bases.jl`
+   Code: `src/foundation/bases.jl`
 
 2. Separate the public extent from the internal extents.
    The current contract is:
    - `rmax`: public last-center extent
    - `build_umax`: internal setup/build extent in mapped `u`
    - `quadrature_umax`: internal active quadrature extent in mapped `u`
-   Code: `src/bases.jl`, `src/quadrature.jl`
+   Code: `src/foundation/bases.jl`, `src/foundation/quadrature.jl`
 
 3. Determine the internal build target in reference/mapped space.
    The construction logic derives:
    - odd-count seed window
    - internal build/setup extent
    - setup grid extent large enough for localization and cleanup
-   Code: `src/bases.jl`
+   Code: `src/foundation/bases.jl`
 
 4. Build the setup-grid sampled layer with interval support, not dense full
    columns.
    For each shifted seed gausslet and each injected `xgaussian`, construct a
    setup-grid object only on the interval where it is numerically active.
-   Code: `src/bases.jl`
+   Code: `src/foundation/bases.jl`
 
 5. Use the runtime machine-significant family support for that setup layer.
    The runtime family tables are trimmed after the last coefficient with
    `abs(c) >= 1e-17`, while the full high-precision family tables remain in the
    repo as internal reference data.
-   Code: `src/families.jl`, `src/internal/families_high_prec.jl`
+   Code: `src/foundation/families.jl`, `src/foundation/internal/families_high_prec.jl`
 
 6. Assemble the seed overlap and position data by overlap-range weighted dot
    products.
@@ -45,7 +45,7 @@
    - seed position matrices
    - seed-to-`xgaussian` cross terms
    without storing long dense zero-tail columns.
-   Code: `src/bases.jl`
+   Code: `src/foundation/bases.jl`
 
 7. Keep the later dense seed-space linear algebra unchanged.
    The present radial build still does:
@@ -54,13 +54,13 @@
    - COMX localization
    - final QR/sign-fix flow
    - primitive contraction into the public `RadialBasis`
-   Code: `src/bases.jl`
+   Code: `src/foundation/bases.jl`
 
 8. Build the final public basis in the same form as before.
    The interval-sampled objects are construction-time helpers only. Once the
    final localized basis is formed, they are discarded and the public result is
    the ordinary `RadialBasis`.
-   Code: `src/bases.jl`
+   Code: `src/foundation/bases.jl`
 
 9. Derive the default quadrature extent from retained support, not setup
    padding.
@@ -69,13 +69,13 @@
    - runtime family support width
    - retained `xgaussian` support
    and builds `quadrature_umax` from those active retained objects.
-   Code: `src/bases.jl`, `src/quadrature.jl`
+   Code: `src/foundation/bases.jl`, `src/foundation/quadrature.jl`
 
 10. Build the physical quadrature grid from that retained-support extent.
     The automatic default path maps `quadrature_umax` to physical space and
     refines until the public-quality quadrature checks are satisfied.
     `quadrature_rmax` remains only as an expert override.
-    Code: `src/quadrature.jl`, `src/diagnostics.jl`
+    Code: `src/foundation/quadrature.jl`, `src/foundation/diagnostics.jl`
 
 ## References
 
@@ -125,7 +125,7 @@ The present route is both faster and conceptually cleaner.
 
 The current trusted radial path is split across three files:
 
-- `src/bases.jl`
+- `src/foundation/bases.jl`
   - `_select_construction_data(...)`
     build-grid selection and refinement framing for steps `3` and `7`
   - `_seed_scalar_integrals(...)`
@@ -139,10 +139,10 @@ The current trusted radial path is split across three files:
     construction-quality gate used during grid refinement
   - `build_basis(spec::RadialBasisSpec; ...)`
     public front door for the whole build route
-- `src/quadrature.jl`
+- `src/foundation/quadrature.jl`
   - `radial_quadrature(basis::RadialBasis; ...)`
     automatic retained-support quadrature construction for steps `9` and `10`
-- `src/diagnostics.jl`
+- `src/foundation/diagnostics.jl`
   - `basis_diagnostics(basis::RadialBasis; ...)`
     public diagnostics path sharing the same automatic quadrature policy
 

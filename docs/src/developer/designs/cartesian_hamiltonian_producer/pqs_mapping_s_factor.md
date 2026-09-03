@@ -87,7 +87,7 @@ not recover mapping controls from an artifact sidecar.
 
 ## Source Ownership
 
-- `src/mappings.jl` owns the one-center atomic mapping and positive combined
+- `src/foundation/mappings.jl` owns the one-center atomic mapping and positive combined
   inverse-sqrt fit.
 - `src/pqs_source_box_route_driver_helpers.jl` owns factor normalization,
   multicenter fit inputs, and parent mapping metadata.

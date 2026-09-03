@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `e6bca1c0be8ccb5e146130037e4982bebbbefe2bdc3ae581c23e4529df9e48b4`.
+> [authority.toml](authority.toml), SHA-256 `fa820588ba8c53312db1e0b28c05552334bb118dc3d0f42ce4bd76a3a90cac08`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1557,7 +1557,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [coulomb\_accuracy\_policy.md](coulomb_accuracy_policy.md); heading `Producer-Wide Coulomb Accuracy Policy`
 - **Owned paths:**
   - `driver` / `existing`: `bin/cartesian_ham_builder.jl`
-  - `source` / `existing`: `src/GaussianAnalyticIntegrals.jl`
+  - `source` / `existing`: `src/foundation/GaussianAnalyticIntegrals.jl`
   - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
   - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
   - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
@@ -1653,7 +1653,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `driver` / `existing`: `bin/cartesian_ham_builder.jl`
   - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
   - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
-  - `source` / `existing`: `src/mappings.jl`
+  - `source` / `existing`: `src/foundation/mappings.jl`
   - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** none
@@ -3656,7 +3656,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [represented\_mixed\_density\_hartree.md](represented_mixed_density_hartree.md); heading `Represented Mixed-Density Hartree Producer`
 - **Owned paths:**
-  - `source` / `existing`: `src/GaussianAnalyticIntegrals.jl`
+  - `source` / `existing`: `src/foundation/GaussianAnalyticIntegrals.jl`
   - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
   - `source` / `existing`: `src/cartesian_reference_density/CartesianReferenceDensity.jl`
   - `source` / `existing`: `src/cartesian_reference_density/represented_molecular_hartree.jl`
@@ -5388,24 +5388,24 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_factor.md`
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md`
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/represented_mixed_density_hartree.md`
-  - `source` / `existing`: `src/GaussianAnalyticIntegrals.jl`
+  - `source` / `existing`: `src/foundation/GaussianAnalyticIntegrals.jl`
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/bases.jl`
-  - `source` / `existing`: `src/diagnostics.jl`
-  - `source` / `existing`: `src/families.jl`
-  - `source` / `existing`: `src/functions.jl`
-  - `source` / `existing`: `src/global_leaf_contraction.jl`
-  - `source` / `existing`: `src/hierarchical_partitions.jl`
-  - `source` / `existing`: `src/internal/families_high_prec.jl`
-  - `source` / `existing`: `src/internal/wavelet_filters.jl`
-  - `source` / `existing`: `src/leaf_pgdg.jl`
-  - `source` / `existing`: `src/mappings.jl`
-  - `source` / `existing`: `src/partitions.jl`
-  - `source` / `existing`: `src/primitive_sets.jl`
-  - `source` / `existing`: `src/quadrature.jl`
+  - `source` / `existing`: `src/foundation/bases.jl`
+  - `source` / `existing`: `src/foundation/diagnostics.jl`
+  - `source` / `existing`: `src/foundation/families.jl`
+  - `source` / `existing`: `src/foundation/functions.jl`
+  - `source` / `existing`: `src/foundation/global_leaf_contraction.jl`
+  - `source` / `existing`: `src/foundation/hierarchical_partitions.jl`
+  - `source` / `existing`: `src/foundation/internal/families_high_prec.jl`
+  - `source` / `existing`: `src/foundation/internal/wavelet_filters.jl`
+  - `source` / `existing`: `src/foundation/leaf_pgdg.jl`
+  - `source` / `existing`: `src/foundation/mappings.jl`
+  - `source` / `existing`: `src/foundation/partitions.jl`
+  - `source` / `existing`: `src/foundation/primitive_sets.jl`
+  - `source` / `existing`: `src/foundation/quadrature.jl`
   - `source` / `existing`: `src/radial/radial_boundary_prototypes.jl`
-  - `source` / `existing`: `src/stencils.jl`
-  - `source` / `existing`: `src/timing.jl`
+  - `source` / `existing`: `src/foundation/stencils.jl`
+  - `source` / `existing`: `src/foundation/timing.jl`
 - **Evidence:**
   - `git_commit`: `f8421494e19b3a4553a7f89e20049520c38e3b2c`
   - `manager_pass`: `584`

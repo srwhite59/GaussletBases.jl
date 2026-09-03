@@ -200,7 +200,7 @@ end
 end
 
 @testset "Runtime family tables use trimmed machine-significant tails" begin
-    high_prec_path = joinpath(_PROJECT_ROOT, "src", "internal", "families_high_prec.jl")
+    high_prec_path = joinpath(_PROJECT_ROOT, "src", "foundation", "internal", "families_high_prec.jl")
     @test isfile(high_prec_path)
 
     expected_runtime_radii = Dict(:G4 => 54, :G6 => 48, :G8 => 67, :G10 => 75)

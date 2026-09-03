@@ -33,7 +33,7 @@ Key docs:
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md`
 
 Source anchors:
-- **active reusable kernel**: `src/GaussianAnalyticIntegrals.jl`,
+- **active reusable kernel**: `src/foundation/GaussianAnalyticIntegrals.jl`,
   `gaussian_factor` and `gaussian_pair_factor`; high-exponent paths
   require their cancellation-free pairwise-distance/determinant forms
 - **active donor pattern**: `src/ordinary_mapped_backends.jl`,

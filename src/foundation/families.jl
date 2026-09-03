@@ -2,12 +2,12 @@
 # Built-in runtime gausslet family tables.
 #
 # The underlying ternary wavelet filters c_n_l_m are preserved separately in
-# `src/internal/wavelet_filters.jl`. Those tables are kept as internal reference
+# `src/foundation/internal/wavelet_filters.jl`. Those tables are kept as internal reference
 # data and are not currently used by the runtime construction path, which works
 # directly with the pre-folded Gaussian cf-style family coefficients below.
 #
 # The full original high-precision Gaussian family tables are preserved for
-# reference in `src/internal/families_high_prec.jl`, which is intentionally not
+# reference in `src/foundation/internal/families_high_prec.jl`, which is intentionally not
 # included at runtime. The literal tables below are the machine-significant
 # runtime copies used by the package.
 #

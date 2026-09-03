@@ -4,7 +4,7 @@
 # This file is intentionally not included by GaussletBases at runtime. It keeps
 # the original long-tail coefficient data for reference, validation, and export
 # workflows that want the full stored tables rather than the trimmed runtime
-# machine-significant copies in `src/families.jl`.
+# machine-significant copies in `src/foundation/families.jl`.
 #
 const _G4_HIGH_PREC_POSITIVE_COEFFICIENTS = [
     1.52094338883413282559331491939,

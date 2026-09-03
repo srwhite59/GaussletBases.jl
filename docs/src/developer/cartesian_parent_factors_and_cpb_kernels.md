@@ -302,7 +302,7 @@ The current Qiu-White/raw mixed one-body and Gaussian-factor surfaces are:
     overlap, kinetic, position/x2, Gaussian factors, and combined one-body
     terms.
 
-The shared formula source is `src/GaussianAnalyticIntegrals.jl`:
+The shared formula source is `src/foundation/GaussianAnalyticIntegrals.jl`:
 
 - `polynomial_gaussian_shell_prefactor`
 - `polynomial_gaussian_basic_integral`

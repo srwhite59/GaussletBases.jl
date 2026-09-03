@@ -118,7 +118,7 @@ The retirement must not delete, move, or reinterpret:
 - `src/cartesian_cpb/` coordinate-product-box geometry;
 - `src/CartesianParentGaussletBases.jl` and
   `src/CartesianParentAxisFactors.jl`;
-- `src/GaussianAnalyticIntegrals.jl`, `src/ordinary_coulomb.jl`, and
+- `src/foundation/GaussianAnalyticIntegrals.jl`, `src/ordinary_coulomb.jl`, and
   `src/cartesian_gaussian_raw_blocks/`;
 - Cartesian terminal, PQS, White--Lindsey, PRF, residual-GTO, and
   represented-Hartree owners;

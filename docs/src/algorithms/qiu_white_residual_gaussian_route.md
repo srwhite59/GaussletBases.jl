@@ -4,7 +4,7 @@
 
 1. Build the one-dimensional distorted gausslet bases on the three Cartesian
    axes: `Gx`, `Gy`, `Gz`.
-   Code: `src/bases.jl` via `build_basis(...)`
+   Code: `src/foundation/bases.jl` via `build_basis(...)`
 
 2. Form the full three-dimensional gausslet product basis
    `G = {g_i^x(x) g_j^y(y) g_k^z(z)}`.

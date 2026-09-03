@@ -7,7 +7,7 @@
 #     cf_n_l_m  = Gaussian stencil coefficients derived from those filters
 #
 # The current package runtime uses the pre-folded Gaussian cf-style family
-# tables in `src/families.jl` directly. The c_n_l_m tables are kept here as
+# tables in `src/foundation/families.jl` directly. The c_n_l_m tables are kept here as
 # reference data only for now, so they remain available for documentation,
 # coefficient extraction into other languages, and possible future direct
 # generation paths.

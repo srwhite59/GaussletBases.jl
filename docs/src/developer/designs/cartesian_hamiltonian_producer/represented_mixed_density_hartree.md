@@ -352,7 +352,7 @@ Approved source ownership is limited to:
   construction contract;
 - `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` for narrow reuse
   or generalization of neutral pair-density/potential target kernels;
-- `src/GaussianAnalyticIntegrals.jl` for the narrow shared one-dimensional
+- `src/foundation/GaussianAnalyticIntegrals.jl` for the narrow shared one-dimensional
   pair/convolution primitive;
 - `src/gaussian_coulomb_reference.jl` only to remove duplicated private
   polynomial-kernel algebra and preserve oracle parity.

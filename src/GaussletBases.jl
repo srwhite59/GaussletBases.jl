@@ -883,11 +883,11 @@ function integral_weight(f::AbstractFunction1D)
     return total
 end
 
-include("mappings.jl")
-include("stencils.jl")
-include("functions.jl")
-include("GaussianAnalyticIntegrals.jl")
-include("timing.jl")
+include("foundation/mappings.jl")
+include("foundation/stencils.jl")
+include("foundation/functions.jl")
+include("foundation/GaussianAnalyticIntegrals.jl")
+include("foundation/timing.jl")
 using .TimeG: @timeg,
              timing_enabled,
              timing_live_enabled,
@@ -897,11 +897,11 @@ using .TimeG: @timeg,
              reset_timing_report!,
              current_timing_report,
              timing_report
-include("internal/wavelet_filters.jl")
-include("families.jl")
-include("bases.jl")
-include("quadrature.jl")
-include("primitive_sets.jl")
+include("foundation/internal/wavelet_filters.jl")
+include("foundation/families.jl")
+include("foundation/bases.jl")
+include("foundation/quadrature.jl")
+include("foundation/primitive_sets.jl")
 include("ordinary_coulomb.jl")
 include("ordinary_pgdg.jl")
 include("ordinary_pgdg_refinement_masks.jl")
@@ -963,11 +963,11 @@ include("cartesian_qw_hybrid_representation.jl")
 include("gaussian_coulomb_reference.jl")
 include("hamiltonian_corrections.jl")
 include("bond_aligned_diatomic_geometry.jl")
-include("partitions.jl")
-include("hierarchical_partitions.jl")
-include("leaf_pgdg.jl")
-include("global_leaf_contraction.jl")
-include("diagnostics.jl")
+include("foundation/partitions.jl")
+include("foundation/hierarchical_partitions.jl")
+include("foundation/leaf_pgdg.jl")
+include("foundation/global_leaf_contraction.jl")
+include("foundation/diagnostics.jl")
 include("radial/radial_boundary_prototypes.jl")
 include("radial/operators.jl")
 include("sliced_hydrogen_chain.jl")

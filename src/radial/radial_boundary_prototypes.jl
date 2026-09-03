@@ -1,5 +1,5 @@
 module _RadialPrototypeHighPrecFamilies
-include(joinpath(parentmodule(@__MODULE__)._PACKAGE_ROOT, "src", "internal", "families_high_prec.jl"))
+include(joinpath(parentmodule(@__MODULE__)._PACKAGE_ROOT, "src", "foundation", "internal", "families_high_prec.jl"))
 end
 
 const _RADIAL_BOUNDARY_PROTOTYPE_NAME = :paper_parity_g10_k6_x2

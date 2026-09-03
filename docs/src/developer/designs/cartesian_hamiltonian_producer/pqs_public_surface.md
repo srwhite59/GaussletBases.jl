@@ -847,7 +847,7 @@ All six targets and their baseline SHA-256 values are fixed:
 | `data/angular/SpherePoints_manifest.toml` | `afc39d4a34b4171bbdaecf52cc4f5dfe0c4f583d1ff4eb8e72252054fb2fedb2` |
 | `data/angular/curated_sphere_points.toml` | `4666e89fa2f68397bad8d031817afe460094e7fde94fa1f7cfeb110f48f30f71` |
 | `data/legacy/BasisSets` | `6796d34f2c813e5b627b03d003ddd29e0701cfd18e1b4c2ee7d263ce671dbede` |
-| `src/internal/families_high_prec.jl` | `4c7ee5dee90cfb3296b392a41ba3cbd30423bd30aaea84935bb60ebd23608877` |
+| `src/foundation/internal/families_high_prec.jl` | `df1585417300676aed7d585cf74071ae4a5568a1d3b076948693ba1b5f72cb87` |
 
 The accepted source change was confined to `src/GaussletBases.jl`,
 `src/radial/radial_boundary_prototypes.jl`, `src/angular/angular_point_sets.jl`, and
@@ -904,7 +904,7 @@ remains exact. No grouping comment or include reordering was introduced.
 
 Pass 578 removed the only containing-file-location dependencies relevant to
 this move. The radial nested module already resolves
-`src/internal/families_high_prec.jl` through the parent-qualified package root;
+`src/foundation/internal/families_high_prec.jl` through the parent-qualified package root;
 that include line must move byte-for-byte with its containing file. Independent
 inspection found no other `@__DIR__`, nested include, or repository data path
 inside the `14` files and no test that directly includes an old path.

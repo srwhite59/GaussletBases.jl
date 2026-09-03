@@ -69,7 +69,7 @@ if _TEST_GROUP_ENV != "all"
 end
 
 module _HighPrecFamilyReference
-include(joinpath(dirname(@__DIR__), "src", "internal", "families_high_prec.jl"))
+include(joinpath(dirname(@__DIR__), "src", "foundation", "internal", "families_high_prec.jl"))
 end
 
 const _HIGH_PREC_FAMILY_REFERENCE = _HighPrecFamilyReference._HIGH_PREC_POSITIVE_COEFFICIENTS
