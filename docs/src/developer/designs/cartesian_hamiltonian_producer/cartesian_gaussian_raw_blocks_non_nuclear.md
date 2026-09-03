@@ -23,14 +23,14 @@ overlap-only path, `806b37e32` for `A-A` family reuse, and `71a89433c` for
 The owner is:
 
 ```text
-src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl
+src/cartesian/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl
 ```
 
 It is loaded by
-`src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`. Shared
+`src/cartesian/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`. Shared
 private axis families come from the same internal module, and analytic
 overlap/kinetic/position/x2 tables come from
-`src/cartesian_gaussian_axis_integrals.jl`.
+`src/cartesian/cartesian_gaussian_axis_integrals.jl`.
 
 Implemented entry points are:
 
@@ -41,7 +41,7 @@ gaussian_non_nuclear_overlap_blocks(proxy, supplement)
 
 Direct live callers are in:
 
-- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`;
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`;
 - `src/ordinary/ordinary_qw_raw_blocks.jl`.
 
 The full helper supplies exact augmented operators and the main diatomic

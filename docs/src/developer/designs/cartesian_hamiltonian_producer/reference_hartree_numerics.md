@@ -28,18 +28,18 @@ Live correction ownership is separate:
 
 Raw exact Hartree construction is owned by:
 
-- `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`;
-- `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` for
+- `src/cartesian/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`;
+- `src/cartesian/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl` for
   internal module wiring.
 
 The existing dense oracle and reusable pair-term algebra remain in
-`src/gaussian_coulomb_reference.jl`. Under these IDs that file is an
+`src/cartesian/gaussian_coulomb_reference.jl`. Under these IDs that file is an
 oracle/debug and narrow algebra-reuse surface only; it is not a second raw
 block production owner.
 
 Protected fixed/localized transformation is owned by:
 
-- `src/cartesian_residual_gaussians/augmented_operators.jl`.
+- `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`.
 
 The primary implemented entry points are:
 

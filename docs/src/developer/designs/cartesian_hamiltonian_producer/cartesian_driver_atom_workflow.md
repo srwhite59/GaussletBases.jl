@@ -89,7 +89,7 @@ interpreted. `expected_dimension`, when supplied, must match exactly.
 
 The `HP-DRV-ATOM-*` driver contract owns atom input normalization and wiring
 only in `bin/cartesian_ham_builder.jl`. Public atom validation and construction
-in `src/cartesian_base_hamiltonian.jl` remain under `HP-R1-ATOM-*`, while
+in `src/cartesian/cartesian_base_hamiltonian.jl` remain under `HP-R1-ATOM-*`, while
 supplemented atom composition remains under `HP-COMP-SUPPATOM-*`. This driver
 contract owns no package source, test, tool, or committed input fixture.
 

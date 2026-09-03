@@ -11,7 +11,7 @@
 2. Choose one centered rectangular working cube in the parent index lattice.
    The nonrecursive atomic route works on that parent cube only. It does not
    re-coarsen already-renormalized shell functions.
-   Code: `src/cartesian_nested_faces.jl`
+   Code: `src/cartesian/cartesian_nested_faces.jl`
 
 3. Decompose the outer shell annuli of that cube into disjoint geometric
    strata.
@@ -20,7 +20,7 @@
    - edges: exactly two boundary coordinates
    - corners: exactly three boundary coordinates
    - retained core: no boundary coordinates
-   Code: `src/cartesian_nested_faces.jl`
+   Code: `src/cartesian/cartesian_nested_faces.jl`
 
 4. Build the local contraction objects on the original parent-space rows
    assigned to each stratum.
@@ -29,7 +29,7 @@
    - edge piece: one free-interval `doside`
    - corner piece: direct corner column in the first pass
    - retained core: direct parent block at the present nonrecursive level
-   Code: `src/cartesian_nested_faces.jl`
+   Code: `src/cartesian/cartesian_nested_faces.jl`
    Primitive algorithm page:
    [Cartesian nested face construction](cartesian_nested_face_construction.md)
 
@@ -40,7 +40,7 @@
    - shell edge piece
    - shell corner piece
    - retained core block
-   Code: `src/cartesian_nested_faces.jl`
+   Code: `src/cartesian/cartesian_nested_faces.jl`
 
 6. Assemble the nonrecursive nested fixed source from those shell layers plus
    the retained core.
@@ -49,7 +49,7 @@
    - corrected complete-shell
    The corrected complete-shell line is the first trusted reduced atomic
    anchor beyond shell-plus-core.
-   Code: `src/cartesian_nested_faces.jl`
+   Code: `src/cartesian/cartesian_nested_faces.jl`
 
 7. Propagate the fixed-fixed operator packet through the same contraction maps.
    The carried packet includes:
@@ -68,7 +68,7 @@
    V' = D(1/w')\,M'\,D(1/w').
    ```
 
-   Code: `src/cartesian_nested_faces.jl`
+   Code: `src/cartesian/cartesian_nested_faces.jl`
 
 8. Build the nested fixed-block adapter without changing the downstream
    consumer algebra.
@@ -78,7 +78,7 @@
    - the transformed fixed-fixed packet
    - fixed-Gaussian cross blocks contracted from parent raw blocks through `C`
    Gaussian-Gaussian blocks stay on the existing analytic route.
-   Code: `src/cartesian_nested_faces.jl`, `src/ordinary/ordinary_qw_raw_blocks.jl`,
+   Code: `src/cartesian/cartesian_nested_faces.jl`, `src/ordinary/ordinary_qw_raw_blocks.jl`,
    `src/ordinary/ordinary_qw_operator_assembly.jl`
 
 9. Hand the adapted fixed block to the existing QW residual-Gaussian route.
@@ -166,7 +166,7 @@ primitive shell milestones.
 ## Code Map
 
 The current landed implementation is concentrated in
-`src/cartesian_nested_faces.jl`:
+`src/cartesian/cartesian_nested_faces.jl`:
 
 - `_nested_doside_1d(...)`
   primitive local `doside` construction for step `4`

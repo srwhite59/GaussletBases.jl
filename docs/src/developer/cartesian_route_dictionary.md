@@ -32,7 +32,7 @@ mapped parent lattice
 
 Mapped-COMX is one source-axis option within PQS realization. Its axis-fact
 helper remains at
-`src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`; the
+`src/cartesian/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`; the
 module path does not make the retired pair ladder live.
 
 ## Geometry Terms

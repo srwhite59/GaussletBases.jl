@@ -333,21 +333,21 @@ expansions inside a produced Hamiltonian.
 Only these files are approved:
 
 ```text
-src/cartesian_base_hamiltonian.jl
-src/pqs_source_box_route_driver_helpers.jl
-src/pqs_source_box_low_order_materialization.jl
-src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
-src/cartesian_residual_gaussians/mwg_interaction.jl
-src/cartesian_ida_hamiltonian.jl
-src/cartesian_protected_ladder_bundle.jl
-src/cartesian_reference_density/atomic_hf_reference_packets.jl
+src/cartesian/cartesian_base_hamiltonian.jl
+src/cartesian/pqs_source_box_route_driver_helpers.jl
+src/cartesian/pqs_source_box_low_order_materialization.jl
+src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl
+src/cartesian/cartesian_ida_hamiltonian.jl
+src/cartesian/cartesian_protected_ladder_bundle.jl
+src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl
 src/ordinary/ordinary_coulomb.jl
 src/foundation/GaussianAnalyticIntegrals.jl
-src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
+src/cartesian/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
 bin/cartesian_ham_builder.jl
 ```
 
-`src/cartesian_ida_hamiltonian.jl` is approved only for compact summary
+`src/cartesian/cartesian_ida_hamiltonian.jl` is approved only for compact summary
 serialization/readback shared by current artifact owners. It must not make
 `CartesianIDAHamiltonian` choose or carry a construction expansion.
 

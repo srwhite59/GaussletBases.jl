@@ -17,8 +17,8 @@ nuclear center. Neutral Gaussian `G-A` and `A-A` nuclear blocks remain owned by
 Implemented source:
 
 ```text
-src/cartesian_final_basis_realization/pqs_terminal_one_body.jl
-src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl
+src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
 ```
 
 The principal helpers are `_accumulate_terminal_gaussian_sum!` and its

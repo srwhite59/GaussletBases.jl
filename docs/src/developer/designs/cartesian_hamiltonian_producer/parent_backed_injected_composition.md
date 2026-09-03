@@ -345,20 +345,20 @@ the old correction and requires rebuilding it.
 Commits `cdd2c27af` and `006432e9d` implemented the facility in these existing
 owners:
 
-- `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
   owns the composition object, fixed-span terminal replacement, exact
   complement, and compact validation;
-- `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` owns exact
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl` owns exact
   native parent-backed one-body operators;
-- `src/cartesian_final_basis_realization/pqs_terminal_ida.jl` owns rebuilt
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_ida.jl` owns rebuilt
   terminal IDA and parent-Gaussian base interaction blocks;
-- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` owns
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` owns
   parent-backed-to-GTO overlap, numerical-complete augmentation, native exact
   operators, separated interaction composition, and fitted-field
   representation;
-- `src/cartesian_residual_gaussians/mwg_interaction.jl` owns the separated
+- `src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl` owns the separated
   terminal, parent-residual, and external-residual MWG blocks; and
-- `src/cartesian_protected_ladder_bundle.jl` owns the private in-memory
+- `src/cartesian/cartesian_protected_ladder_bundle.jl` owns the private in-memory
   composition and additive screened-Hartree delegation seam.
 
 The implementation consumes the existing numerical-complete residual builder,

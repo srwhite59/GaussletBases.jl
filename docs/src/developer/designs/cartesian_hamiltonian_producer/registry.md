@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `f73b2da266bf45796d1a462ab6ef96fd11cad7c69f4a791c5ceabfa2aac0a67e`.
+> [authority.toml](authority.toml), SHA-256 `4d2f8a399ce65c705fc094e3e10fdf00f283b4234bf4aef4b608b91cc6440d39`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -180,8 +180,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [cartesian\_gaussian\_raw\_blocks\_nuclear.md](cartesian_gaussian_raw_blocks_nuclear.md); heading `Cartesian Gaussian Raw Blocks - Nuclear Slice`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
 - **Evidence:**
   - `repo_path`: `test/core/runtests.jl`
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
@@ -197,7 +197,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [cartesian\_gaussian\_raw\_blocks\_nuclear.md](cartesian_gaussian_raw_blocks_nuclear.md); heading `Cartesian Gaussian Raw Blocks - Nuclear Slice`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-CGRB-FILE-01`
 - **Scope:** maintain exact uncharged by-center \`G-A\`/\`A-A\` output and the stable pairwise analytic factor formula.
@@ -211,7 +211,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [cartesian\_gaussian\_raw\_blocks\_nuclear.md](cartesian_gaussian_raw_blocks_nuclear.md); heading `Cartesian Gaussian Raw Blocks - Nuclear Slice`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-CGRB-FN-01`
 - **Scope:** maintain function-local family maps, unique center/family-pair tables, orientation flags, term-first filling, and coupled primitive products.
@@ -225,8 +225,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [cartesian\_gaussian\_raw\_blocks\_non\_nuclear.md](cartesian_gaussian_raw_blocks_non_nuclear.md); heading `Cartesian Gaussian Raw Blocks - Non-Nuclear Slice`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Dependencies:** none
@@ -241,8 +241,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [cartesian\_gaussian\_raw\_blocks\_non\_nuclear.md](cartesian_gaussian_raw_blocks_non_nuclear.md); heading `Cartesian Gaussian Raw Blocks - Non-Nuclear Slice`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_gaussian_axis_integrals.jl`
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_axis_integrals.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-CGRB-NN-FILE-01`
 - **Scope:** maintain exact \`G-A\`/\`A-A\` overlap, kinetic, x/y/z, and x2/y2/z2 blocks, symmetry, family reuse, and the overlap-only path.
@@ -270,7 +270,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [cartesian\_gaussian\_raw\_blocks\_non\_nuclear.md](cartesian_gaussian_raw_blocks_non_nuclear.md); heading `Cartesian Gaussian Raw Blocks - Non-Nuclear Slice`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
   - `source` / `existing`: `src/ordinary/ordinary_qw_operator_assembly.jl`
   - `source` / `existing`: `src/ordinary/ordinary_qw_raw_blocks.jl`
 - **Evidence:**
@@ -302,7 +302,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [cartesian\_gaussian\_raw\_blocks\_nuclear.md](cartesian_gaussian_raw_blocks_nuclear.md); heading `Cartesian Gaussian Raw Blocks - Nuclear Slice`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
   - `source` / `existing`: `src/ordinary/ordinary_qw_operator_assembly.jl`
   - `source` / `existing`: `src/ordinary/ordinary_qw_raw_blocks.jl`
 - **Evidence:** none
@@ -344,7 +344,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Common Terminal Shell Decomposition`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_shellification/terminal_geometry.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_shellification/terminal_geometry.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** emit native ordered \`:angular\_z\_extension\_slab\` stacks so the ordinary shell body plus planned axial extensions realizes the physical outer-nucleus angular target. It does not change real-shell retained policy or central-gap/contact ownership.
@@ -371,7 +371,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [r1\_one\_center\_base\_atoms.md](r1_one_center_base_atoms.md); heading `R1 One-Center Base Atoms`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** derive atom parent counts from physical \`basis.radius\` and the existing mapping/spacing policy; \`ns\` remains resolution/nesting input.
@@ -399,7 +399,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [nesting\_supplement\_composition\_plan.md](nesting_supplement_composition_plan.md); heading `Nesting/Supplement Composition`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** maintain explicit equal-symbol/equal-charge diatomics at two finite distinct z-axis centers and send them through the existing PQS/WL base path. Electron-sector independence and charged-sector acceptance are owned separately by HP-R1-ESECTOR-FN-01.
@@ -427,10 +427,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Common Terminal Shell Decomposition`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/terminal_face_product_blocks.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/terminal_face_product_blocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** one route-neutral face/face-stack coefficient assembly over fixed normal-axis indices. It is not a new terminal-basis policy.
@@ -458,7 +458,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [nesting\_supplement\_composition\_plan.md](nesting_supplement_composition_plan.md); heading `Nesting/Supplement Composition`
 - **Owned paths:**
   - `driver` / `existing`: `bin/cartesian_ham_builder.jl`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** normalize public \`ns\`, derive \`q = ns\` for PQS and \`q = ns - 2\` for WL, validate any legacy \`q\` compatibility, and record the existing compact provenance.
@@ -486,8 +486,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [public\_ns\_core\_side\_parity.md](public_ns_core_side_parity.md); heading `Public ns Direct-Core Side Parity`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-COMP-NS-FN-01`
 - **Scope:** preserve \`direct\_core\_side = isodd(ns) ? ns : ns + 1\` for direct nucleus-centered identity blocks only. Boundary retained construction remains route-local.
@@ -541,8 +541,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Common Terminal Shell Decomposition`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_shellification/terminal_geometry.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_shellification/terminal_geometry.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** feed the same public \`ns\`, direct-core side, centers, bond axis, and parent facts into common z-axis diatomic shellification before family lowering. Central-gap/contact redesign is not approved.
@@ -569,8 +569,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Common Terminal Shell Decomposition`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_shellification/terminal_geometry.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_shellification/terminal_geometry.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** maintain route-family-free direct-core/shell regions, ordering, coverage, and owned support before PQS/WL retained construction diverges.
@@ -598,8 +598,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [nesting\_supplement\_composition\_plan.md](nesting_supplement_composition_plan.md); heading `Nesting/Supplement Composition`
 - **Owned paths:**
   - `driver` / `existing`: `bin/cartesian_ham_builder.jl`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** origin-centered all-electron atoms use the existing atomic supplement loader and the same PQS/WL residual-GTO/MWG path as supported diatomics.
@@ -627,8 +627,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [nesting\_supplement\_composition\_plan.md](nesting_supplement_composition_plan.md); heading `Nesting/Supplement Composition`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** a WL terminal basis enters the same residual-GTO, exact augmented one-body, residual MWG/IDA, assembly, and artifact path as PQS.
@@ -656,15 +656,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Common Terminal Shell Decomposition`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`
-  - `source` / `existing`: `src/cartesian_retained_units/lower_contract_units.jl`
-  - `source` / `existing`: `src/cartesian_shellification/terminal_geometry.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/region_contracts.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/selection.jl`
-  - `source` / `existing`: `src/pqs_source_box_diatomic_complete_core_shell.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_unit_transform_contracts/unit_contracts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_units/lower_contract_units.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_shellification/terminal_geometry.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/region_contracts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/selection.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_diatomic_complete_core_shell.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** midpoint, outer-mismatch, and angular-z-extension slabs lower as compact face stacks for both PQS and WL, never as full identity CPBs. Maintenance includes both terminal realizers plus only conditionally required native slab metadata and route-summary caller support in the named shellification/helper files. Real shells remain family-specific.
@@ -678,7 +678,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Common Terminal Shell Decomposition`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_terminal_shellification_geometry.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_shellification_geometry.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** describe native compact slab kinds consistently in internal inventory/scaffold summaries. It does not materialize coefficients or create artifact/report payloads.
@@ -718,15 +718,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [white\_lindsey\_terminal\_basis\_realization.md](white_lindsey_terminal_basis_realization.md); heading `White-Lindsey Terminal Basis Realization`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/region_contracts.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/selection.jl`
-  - `source` / `existing`: `src/cartesian_terminal_shellification_geometry.jl`
-  - `source` / `existing`: `src/pqs_source_box_diatomic_complete_core_shell.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/region_contracts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/selection.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_shellification_geometry.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_diatomic_complete_core_shell.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** maintain native WL z-axis diatomic terminal records and the shared base Hamiltonian path, including truthful route provenance \`:z\_axis\_diatomic\_wl\_base\`.
@@ -755,7 +755,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [nesting\_supplement\_composition\_plan.md](nesting_supplement_composition_plan.md); heading `Nesting/Supplement Composition`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-COMP-NS-FN-01`
 - **Scope:** reject normalized WL z-axis diatomic \`ns \< 4\` before route construction and preserve retained-support saturation as valid behavior.
@@ -783,15 +783,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [route\_stage\_metadata\_contract.md](route_stage_metadata_contract.md); heading `Route/Stage Metadata Contract`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/records.jl`
-  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/summaries.jl`
-  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/contracts.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/selection.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/summaries.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_unit_transform_contracts/records.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_unit_transform_contracts/summaries.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_unit_transform_contracts/unit_contracts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/contracts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/selection.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/summaries.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** maintain vector-backed available/selected lowering contracts and retained-unit transform contracts with unchanged accessor and order semantics. Per-contract \`source\_cpbs\` and fixed mathematical tuples remain outside this cleanup.
@@ -902,7 +902,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [cartesian\_driver\_usability\_workflow.md](cartesian_driver_usability_workflow.md); heading `Cartesian Driver Usability Workflow`
 - **Owned paths:**
   - `driver` / `existing`: `bin/cartesian_ham_builder.jl`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** maintain the bounded human-facing terminal-region inventory with region/lowering/realization kind, shell index, support/retained counts, compression, identity/product status, index/physical bounds, slab facts, and base/supplemented dimensions.
@@ -959,7 +959,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [cartesian\_driver\_usability\_workflow.md](cartesian_driver_usability_workflow.md); heading `Cartesian Driver Usability Workflow`
 - **Owned paths:**
   - `driver` / `existing`: `bin/cartesian_ham_builder.jl`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** map \`:pqs\` to \`:pqs\_source\_box\` and \`:wl\` to \`:white\_lindsey\_low\_order\`, preserve public stage/artifact behavior, and reject unsupported combinations without exposing internal route vocabulary.
@@ -974,7 +974,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [terminal\_shellification\_due\_diligence.md](terminal_shellification_due_diligence.md); heading `Terminal Shellification Due Diligence`
 - **Owned paths:**
   - `driver` / `existing`: `bin/cartesian_ham_builder.jl`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** maintain the bounded in-memory/report table joining terminal inventory with retained/support facts; system/geometry, axis/center/weight, dimension, and shell-row diagnostics; actual and expected source shapes; retained/final ranges; slab metadata; and advisory warning flags.
@@ -1002,10 +1002,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [cartesian\_driver\_usability\_workflow.md](cartesian_driver_usability_workflow.md); heading `Cartesian Driver Usability Workflow`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
-  - `source` / `existing`: `src/pqs_source_box_low_order_materialization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_low_order_materialization.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/dmrgtmp/pqs_perf_audit_f9ca5a7b_20260825/compile_and_nuclear_followup.md`
   - `git_commit`: `3419da6132810d8c4454f5b013c6302ef7842cb3`
@@ -1063,7 +1063,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [terminal\_basis\_and\_base\_assembly.md](terminal_basis_and_base_assembly.md); heading `Terminal Basis And Base Assembly`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-OBJ-01`, `HP-OBJ-02`
 - **Scope:** maintain the implemented terminal object and PQS realization owner.
@@ -1077,7 +1077,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [terminal\_basis\_and\_base\_assembly.md](terminal_basis_and_base_assembly.md); heading `Terminal Basis And Base Assembly`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
 - **Evidence:**
   - `git_commit`: `e1d5ca2ddb3a39134fddb476d00029ec590c431f`
   - `manager_pass`: `526`
@@ -1093,7 +1093,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [terminal\_basis\_and\_base\_assembly.md](terminal_basis_and_base_assembly.md); heading `Terminal Basis And Base Assembly`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
 - **Evidence:**
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
 - **Dependencies:** `HP-FN-00`
@@ -1108,7 +1108,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [terminal\_basis\_and\_base\_assembly.md](terminal_basis_and_base_assembly.md); heading `Terminal Basis And Base Assembly`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** maintain exact support equality, duplicate-row rejection, pairwise disjointness, and shell-local identity validation.
@@ -1122,7 +1122,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [terminal\_basis\_and\_base\_assembly.md](terminal_basis_and_base_assembly.md); heading `Terminal Basis And Base Assembly`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/dmrgtmp/pqs_perf_audit_f9ca5a7b_20260825/compile_and_nuclear_followup.md`
   - `git_commit`: `3419da6132810d8c4454f5b013c6302ef7842cb3`
@@ -1145,7 +1145,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [terminal\_basis\_and\_base\_assembly.md](terminal_basis_and_base_assembly.md); heading `Terminal Basis And Base Assembly`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_ida.jl`
 - **Evidence:**
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
 - **Dependencies:** none
@@ -1160,8 +1160,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [terminal\_basis\_and\_base\_assembly.md](terminal_basis_and_base_assembly.md); heading `Terminal Basis And Base Assembly`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_ida_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_ida_hamiltonian.jl`
 - **Evidence:**
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
   - `repo_path`: `test/ida/cartesian_ida_hamiltonian_runtests.jl`
@@ -1177,9 +1177,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [cartesian\_hamiltonian\_artifact\_manifest.md](cartesian_hamiltonian_artifact_manifest.md); heading `Cartesian Hamiltonian Artifact Manifest`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
-  - `source` / `existing`: `src/cartesian_ida_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_ida_hamiltonian.jl`
 - **Evidence:**
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
@@ -1195,20 +1195,20 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [cartesian\_hamiltonian\_artifact\_manifest.md](cartesian_hamiltonian_artifact_manifest.md); heading `Cartesian Hamiltonian Artifact Manifest`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/cartesian_raw_product_sources/CartesianRawProductSources.jl`
-  - `source` / `existing`: `src/cartesian_raw_product_sources/records.jl`
-  - `source` / `existing`: `src/cartesian_raw_product_sources/source_mode_indices.jl`
-  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/CartesianRetainedUnitTransformContracts.jl`
-  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/records.jl`
-  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`
-  - `source` / `existing`: `src/cartesian_retained_units/CartesianRetainedUnits.jl`
-  - `source` / `existing`: `src/cartesian_retained_units/lower_contract_units.jl`
-  - `source` / `existing`: `src/cartesian_retained_units/records.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/contracts.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/region_contracts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_raw_product_sources/CartesianRawProductSources.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_raw_product_sources/records.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_raw_product_sources/source_mode_indices.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_unit_transform_contracts/CartesianRetainedUnitTransformContracts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_unit_transform_contracts/records.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_unit_transform_contracts/unit_contracts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_units/CartesianRetainedUnits.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_units/lower_contract_units.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_units/records.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/contracts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/region_contracts.jl`
 - **Evidence:**
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
@@ -1255,8 +1255,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [mapped\_comx\_source\_span.md](mapped_comx_source_span.md); heading `Mapped-COMX Source Span`
 - **Owned paths:**
   - `driver` / `existing`: `bin/cartesian_ham_builder.jl`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** expose \`source\_span = :ordinary \| :mapped\_comx\`, default ordinary, and reject mapped-COMX with White-Lindsey. This is not a diagnostic route switch.
@@ -1283,8 +1283,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [mapped\_comx\_source\_span.md](mapped_comx_source_span.md); heading `Mapped-COMX Source Span`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_nested_faces.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_nested_faces.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** source maintenance in the existing owners only; no new production file or second COMX owner.
@@ -1298,7 +1298,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [mapped\_comx\_source\_span.md](mapped_comx_source_span.md); heading `Mapped-COMX Source Span`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_nested_faces.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_nested_faces.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** construct normalized-local-coordinate mapped enrichment before the existing physical-coordinate COMX cleanup. Ordinary behavior remains default.
@@ -1312,7 +1312,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [mapped\_comx\_source\_span.md](mapped_comx_source_span.md); heading `Mapped-COMX Source Span`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_nested_faces.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_nested_faces.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** fixed protected-P2, mapped-Chebyshev, lambda/no-sqrt-J, and physical-localization facts. No public export or general tuning object.
@@ -1326,7 +1326,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [mapped\_comx\_source\_span.md](mapped_comx_source_span.md); heading `Mapped-COMX Source Span`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
 - **Evidence:**
   - `git_commit`: `e1d5ca2ddb3a39134fddb476d00029ec590c431f`
   - `manager_pass`: `526`
@@ -1368,7 +1368,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [mapped\_comx\_source\_span.md](mapped_comx_source_span.md); heading `Mapped-COMX Source Span`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** pass the internal source-span choice into the existing doside seam and return ordinary carried \`AxisSourceTransformFact\` objects.
@@ -1382,8 +1382,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [cartesian\_hamiltonian\_artifact\_manifest.md](cartesian_hamiltonian_artifact_manifest.md); heading `Cartesian Hamiltonian Artifact Manifest`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
 - **Evidence:**
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
@@ -1414,7 +1414,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [terminal\_basis\_and\_base\_assembly.md](terminal_basis_and_base_assembly.md); heading `Terminal Basis And Base Assembly`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
 - **Evidence:**
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
@@ -1430,7 +1430,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [terminal\_basis\_and\_base\_assembly.md](terminal_basis_and_base_assembly.md); heading `Terminal Basis And Base Assembly`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
 - **Evidence:**
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
 - **Dependencies:** `HP-OBJ-01`
@@ -1496,9 +1496,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [pqs\_complete\_shell\_aspect\_source\_modes.md](pqs_complete_shell_aspect_source_modes.md); heading `Matched PQS/White-Lindsey Complete-Shell Aspect Source Modes`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/pqs_wl_shared_shell_policy_audit_2026-07-29.md`
   - `git_commit`: `6e2c97704`
@@ -1534,9 +1534,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [atomic\_hf\_reference\_packets.md](atomic_hf_reference_packets.md); heading `Atomic HF Reference Packets`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/CartesianReferenceDensity.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/atomic_hf_reference_packets.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/screened_hartree_correction.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/CartesianReferenceDensity.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-RHO0-MIXH-GAAA-FN-01`, `HP-RHO0-MIXH-GG-FN-01`
 - **Scope:** maintain converged one-center determinant packets, exact packet self-integrity, exact owner/order/placement mapping, numerical owner-local overlap equivalence at \`1e-10\`, ordinary density and radial-potential fits, read/write validation, and explicit fit/provenance diagnostics. Density fits own \`E0\`; potential fits approximate \`J0\`. Polished legacy packets reject.
@@ -1594,16 +1594,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `driver` / `existing`: `bin/cartesian_ham_builder.jl`
   - `source` / `existing`: `src/foundation/GaussianAnalyticIntegrals.jl`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
-  - `source` / `existing`: `src/cartesian_ida_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/atomic_hf_reference_packets.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/mwg_interaction.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_ida_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_protected_ladder_bundle.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl`
   - `source` / `existing`: `src/ordinary/ordinary_coulomb.jl`
-  - `source` / `existing`: `src/pqs_source_box_low_order_materialization.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_low_order_materialization.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** source maintenance, including only completion of the already approved Standard60 fingerprint/provenance and canonical-driver exposure.
@@ -1687,10 +1687,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [pqs\_mapping\_s\_factor.md](pqs_mapping_s_factor.md); heading `` PQS/WL Mapping `s_factor` ``
 - **Owned paths:**
   - `driver` / `existing`: `bin/cartesian_ham_builder.jl`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_protected_ladder_bundle.jl`
   - `source` / `existing`: `src/foundation/mappings.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** maintain finite positive \`s\_factor\`, default \`1.0\`, one-center \`effective\_s = s\_factor\*sqrt(Z\*core\_spacing)\`, the analogous per-center multicenter combined-inverse-sqrt input, and explicit standard/effective provenance.
@@ -1759,8 +1759,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [parent\_residual\_functions.md](parent_residual_functions.md); heading `Parent-Backed Gaussian Direct Interaction`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_ida.jl`
   - `source` / `existing`: `src/ordinary/ordinary_coulomb.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_prf_final_g_interaction_audit_2026-07-14.md`
@@ -1800,7 +1800,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Consumer API Contract`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/hooke/reports/hooke_be_ns5_prf_completion_status_2026-08-06.md`
   - `manager_pass`: `449`
@@ -1812,7 +1812,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `820c2fc8bc9fa25ca699994e3eff0805b5b5eb98`
   - `manager_pass`: `476`
 - **Dependencies:** `HP-PQS-PRF-FN-01`, `HP-PQS-PRF-INJECT-COMP-FN-01`, `HP-PQS-PRF-INJECT-INTERACT-FN-01`, `HP-R3U-FN-01`
-- **Scope:** Maintain only the six unexported PRF diagnostic/provenance definitions in src/cartesian\_base\_hamiltonian.jl: CartesianParentResidualRegion, CartesianParentBackedHamiltonianResult, cartesian\_parent\_residual\_regions, cartesian\_parent\_residual\_block, cartesian\_parent\_backed\_composition, and cartesian\_parent\_backed\_hamiltonian. Preserve exact descriptor-to-PRF source binding, delegation to the independently owned PRF/injection/operator/interaction numerics, and unchanged historical Cr2 reproduction capability. Do not re-export them or add an alias, shim, deprecation, helper, replacement, type, field, signature, metadata, default, artifact, driver, solver, numerical change, broader PRF cleanup, or public compatibility promise.
+- **Scope:** Maintain only the six unexported PRF diagnostic/provenance definitions in src/cartesian/cartesian\_base\_hamiltonian.jl: CartesianParentResidualRegion, CartesianParentBackedHamiltonianResult, cartesian\_parent\_residual\_regions, cartesian\_parent\_residual\_block, cartesian\_parent\_backed\_composition, and cartesian\_parent\_backed\_hamiltonian. Preserve exact descriptor-to-PRF source binding, delegation to the independently owned PRF/injection/operator/interaction numerics, and unchanged historical Cr2 reproduction capability. Do not re-export them or add an alias, shim, deprecation, helper, replacement, type, field, signature, metadata, default, artifact, driver, solver, numerical change, broader PRF cleanup, or public compatibility promise.
 
 ### HP-PQS-PRF-CONSUMER-TEST-01 - qualify internal PRF consumer validation
 
@@ -1846,9 +1846,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [parent\_residual\_functions.md](parent_residual_functions.md); heading `Parent Residual Function Construction`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_fixed_parent_shell_q5_q9_completion_ladder_2026-07-14.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_shell_local_parent_completion_occupancy_audit_2026-07-14.md`
@@ -1867,10 +1867,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Fixed-Span Injection`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
-  - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_protected_ladder_bundle.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_q7_injected_numcomplete_screened_uhf_2026-07-15.md`
   - `git_commit`: `cdd2c27af`
@@ -1906,10 +1906,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [parent\_backed\_injected\_composition.md](parent_backed_injected_composition.md); heading `Interaction Block Contract`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
-  - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/mwg_interaction.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_ida.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_protected_ladder_bundle.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/cr2_q7_injected_numcomplete_screened_uhf_2026-07-15.md`
   - `git_commit`: `006432e9d`
@@ -2028,8 +2028,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_diatomic_coordinate_distortion.md`
   - `docs` / `existing`: `docs/src/howto/example_guide.md`
   - `docs` / `existing`: `docs/src/reference/export.md`
-  - `source` / `existing`: `src/cartesian_reference_density/screened_hartree_correction.jl`
-  - `source` / `existing`: `src/pqs_matched_h2plus.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl`
+  - `source` / `existing`: `src/cartesian/pqs_matched_h2plus.jl`
 - **Evidence:**
   - `git_commit`: `c78defcc9b299ee5f32cf42910812f5581657d93`
   - `manager_pass`: `487`
@@ -2065,7 +2065,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Matched H2+ Public Comparison`
 - **Owned paths:**
-  - `source` / `existing`: `src/pqs_matched_h2plus.jl`
+  - `source` / `existing`: `src/cartesian/pqs_matched_h2plus.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/notes/assignments/repo_design_manager_pqs_v0p2_public_surface_2026-08-17.md`
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/reproduction/pqs_release_candidate_2026-08-17/data/table1_h2plus/table1_h2plus_matched_composite.tsv`
@@ -2078,7 +2078,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `530`
   - `manager_pass`: `531`
 - **Dependencies:** `HP-PQS-ASPECTSHELL-FN-01`, `HP-PQS-COULOMB-ACCURACY-FN-01`, `HP-R1-FN-01`
-- **Scope:** Maintain only the accepted call-local workspace implementation in \`src/pqs\_matched\_h2plus.jl\`: each \`\_pqs\_h2plus\_parent\_solution\` invocation owns disjoint output and scratch storage used by the mutating three-axis product action and \`raw\_nuclear\` accumulation. Preserve exact deterministic action parity, axis/product/Gaussian-term arithmetic order, no parent-sized per-action allocation, independent concurrent-call ownership, and all dimensions/fingerprints/topology/energies/captures/residuals/symmetry/warnings and release tolerances. Do not restore the allocating helpers or add a mutable global, task-local store, pool, cache, lock, hidden persistent state, escaping scratch view, public workspace/API/type, second source owner, test edit, dependency, metadata, workflow, example, fixture, or release change.
+- **Scope:** Maintain only the accepted call-local workspace implementation in \`src/cartesian/pqs\_matched\_h2plus.jl\`: each \`\_pqs\_h2plus\_parent\_solution\` invocation owns disjoint output and scratch storage used by the mutating three-axis product action and \`raw\_nuclear\` accumulation. Preserve exact deterministic action parity, axis/product/Gaussian-term arithmetic order, no parent-sized per-action allocation, independent concurrent-call ownership, and all dimensions/fingerprints/topology/energies/captures/residuals/symmetry/warnings and release tolerances. Do not restore the allocating helpers or add a mutable global, task-local store, pool, cache, lock, hidden persistent state, escaping scratch view, public workspace/API/type, second source owner, test edit, dependency, metadata, workflow, example, fixture, or release change.
 
 ### HP-PQS-PUBLIC-MATCHED-TEST-01 - matched H2+ public release validation
 
@@ -2326,8 +2326,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Screened-Hartree Public Assembly`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/CartesianReferenceDensity.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/screened_hartree_correction.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/CartesianReferenceDensity.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Dropbox/Papers/PQS/notes/assignments/repo_design_manager_pqs_v0p2_public_surface_2026-08-17.md`
   - `git_commit`: `058ee54f45c759949f70b54a699ccc318476f8ac`
@@ -2506,9 +2506,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [screened\_hartree\_correction\_assembly.md](screened_hartree_correction_assembly.md); heading `Screened Hartree Correction Assembly`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/CartesianReferenceDensity.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/atomic_hf_reference_packets.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/screened_hartree_correction.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/CartesianReferenceDensity.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** consume represented converged references and same-basis \`V\_IDA\`, \`J0\_G\`, and \`E0\_G\`; return in-memory \`Delta\_J0 = J0\_G - Diagonal(V\_IDA\*q0)\` and \`C = 0.5\*q0'V\_IDA\*q0 - 0.5\*E0\_G\`; preserve strict representation, finiteness, symmetry, convergence, and derivative/algebra failures while reporting ordinary fitted-potential energy inconsistency.
@@ -2576,9 +2576,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [pqs\_semantic\_shell\_q\_overrides.md](pqs_semantic_shell_q_overrides.md); heading `Semantic Per-Shell PQS Source-q Overrides`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_protected_ladder_bundle.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:**
   - `git_commit`: `4de885c90`
   - `manager_pass`: `414`
@@ -2685,14 +2685,14 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Expert Staged Cartesian Construction Documentation`
 - **Owned paths:**
   - `docs` / `existing`: `docs/src/reference/export.md`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:**
   - `git_commit`: `5c4f5f363cb5c955a7046e9f287c0dbb67f19abb`
   - `git_commit`: `83db3f50d8f3e44a0d3d31a6742648db99e2c575`
   - `manager_pass`: `570`
   - `manager_pass`: `571`
 - **Dependencies:** `HP-PQS-PRF-CONSUMER-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`, `HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01`, `HP-R1-FILE-01`
-- **Scope:** Maintain only the accepted documentation from commit 5c4f5f363cb5c955a7046e9f287c0dbb67f19abb for the existing exported expert/unstable cartesian\_base\_working\_basis function: its 21-line docstring in src/cartesian\_base\_hamiltonian.jl and 18-line Expert staged Cartesian construction section plus curated entry in docs/src/reference/export.md. Preserve the existing system::NamedTuple and basis::NamedTuple validation boundary and the existing supplemented and source\_mode\_overrides expert controls. Preserve that the function resolves inputs and the Coulomb expansion and constructs the parent plus terminal-basis realization in memory, but does not itself assemble the complete one-body, nuclear, Vee, CartesianIDAHamiltonian, artifact, solver, correction, PRF wrapper, or paper workflow; ordinary users call cartesian\_base\_hamiltonian. The current staged return carries input, parent, terminal\_basis, coulomb\_expansion, source\_mode\_provenance, terminal\_inventory, and terminal\_due\_diligence, but its fields, nested private types, inventory rows, report layouts, and source\_mode\_overrides layout remain explicitly expert/unstable, non-schema, and non-compatibility promises. terminal\_inventory and terminal\_due\_diligence may be nothing when the selected expert route has no terminal realization. PRF-specific definitions remain unexported and gain no public status. Preserve every definition, signature, field, route, default, method, dispatch, staged result, export, PRF status, numerical result, test owner, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude all five reserved undocumented names, namespace reduction, v0.3 work, new examples or fixtures, source behavior, API expansion, and global documentation policy.
+- **Scope:** Maintain only the accepted documentation from commit 5c4f5f363cb5c955a7046e9f287c0dbb67f19abb for the existing exported expert/unstable cartesian\_base\_working\_basis function: its 21-line docstring in src/cartesian/cartesian\_base\_hamiltonian.jl and 18-line Expert staged Cartesian construction section plus curated entry in docs/src/reference/export.md. Preserve the existing system::NamedTuple and basis::NamedTuple validation boundary and the existing supplemented and source\_mode\_overrides expert controls. Preserve that the function resolves inputs and the Coulomb expansion and constructs the parent plus terminal-basis realization in memory, but does not itself assemble the complete one-body, nuclear, Vee, CartesianIDAHamiltonian, artifact, solver, correction, PRF wrapper, or paper workflow; ordinary users call cartesian\_base\_hamiltonian. The current staged return carries input, parent, terminal\_basis, coulomb\_expansion, source\_mode\_provenance, terminal\_inventory, and terminal\_due\_diligence, but its fields, nested private types, inventory rows, report layouts, and source\_mode\_overrides layout remain explicitly expert/unstable, non-schema, and non-compatibility promises. terminal\_inventory and terminal\_due\_diligence may be nothing when the selected expert route has no terminal realization. PRF-specific definitions remain unexported and gain no public status. Preserve every definition, signature, field, route, default, method, dispatch, staged result, export, PRF status, numerical result, test owner, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude all five reserved undocumented names, namespace reduction, v0.3 work, new examples or fixtures, source behavior, API expansion, and global documentation policy.
 
 ### HP-PUBLIC-BASE-WORKING-DOC-TEST-01 - validate expert staged Cartesian construction documentation
 
@@ -2757,7 +2757,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Package Export Integrity`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian_nested_faces.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_nested_faces.jl`
 - **Evidence:**
   - `git_commit`: `41ab3e13121f5af1e145775500e91f9ac61c9760`
   - `git_commit`: `b72500f7e619db5875918e3290ed2b306be51f43`
@@ -2767,7 +2767,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `543`
   - `manager_pass`: `545`
 - **Dependencies:** none
-- **Scope:** Maintain the post-v0.2 export cleanup implemented by commit 6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468. TimedNestedFixedBlockBuild and its root export remain absent. OneCenterAtomicNestedLayerStructure and QiuWhiteResidualGaussianOperators remain defined but unexported; retain the one-line QiuWhiteResidualGaussianOperators alias to OrdinaryCartesianOperators3D for qualified compatibility. The accepted production delta is +0/-7 across src/GaussletBases.jl and src/cartesian\_nested\_faces.jl, and the undocumented exported-binding backlog is 71. Preserve CartesianBasisBundle3D and nested\_fixed\_block\_timing\_report absence, final\_units and unit\_keys internal-export absence, lowering\_recipe, ShellLocalAngularProfileKey, @timeg, CuratedSpherePointSet, LegacySGaussianData, QiuWhiteHybridOrbital3D, every ordinary/QW/nested numerical result, and immutable v0.2.0 tags/releases. Add no shim, warning, replacement API, alias deletion, docstring, test, helper, metadata, file, dependency, numerical change, workflow, version, tag, release, registration, or citation change. Ignored historical probes and conflicted copies remain untouched.
+- **Scope:** Maintain the post-v0.2 export cleanup implemented by commit 6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468. TimedNestedFixedBlockBuild and its root export remain absent. OneCenterAtomicNestedLayerStructure and QiuWhiteResidualGaussianOperators remain defined but unexported; retain the one-line QiuWhiteResidualGaussianOperators alias to OrdinaryCartesianOperators3D for qualified compatibility. The accepted production delta is +0/-7 across src/GaussletBases.jl and src/cartesian/cartesian\_nested\_faces.jl, and the undocumented exported-binding backlog is 71. Preserve CartesianBasisBundle3D and nested\_fixed\_block\_timing\_report absence, final\_units and unit\_keys internal-export absence, lowering\_recipe, ShellLocalAngularProfileKey, @timeg, CuratedSpherePointSet, LegacySGaussianData, QiuWhiteHybridOrbital3D, every ordinary/QW/nested numerical result, and immutable v0.2.0 tags/releases. Add no shim, warning, replacement API, alias deletion, docstring, test, helper, metadata, file, dependency, numerical change, workflow, version, tag, release, registration, or citation change. Ignored historical probes and conflicted copies remain untouched.
 
 ### HP-PUBLIC-EXPORT-INTEGRITY-TEST-01 - validate package export integrity
 
@@ -3103,8 +3103,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/reference/export.md`
   - `docs` / `existing`: `docs/src/reference/operators_and_diagnostics.md`
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_external_gto_import.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_external_gto_import.jl`
   - `source` / `existing`: `src/ordinary/ordinary_coulomb.jl`
   - `source` / `existing`: `src/ordinary/ordinary_qw_types_and_bases.jl`
 - **Evidence:**
@@ -3112,7 +3112,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `554`
   - `manager_pass`: `555`
 - **Dependencies:** `HP-PUBLIC-ATOMIC-IDA-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`
-- **Scope:** Maintain only the accepted supported-public documentation from commit 8161f131aa962fef979f8ef09c14d23231eb14e4 for BondAlignedDiatomicQWBasis3D, CoulombGaussianExpansion, basis\_metadata, cartesian\_base\_hamiltonian, external\_gto\_ordering\_fingerprint, and external\_gto\_overlap\_fingerprint. Keep the BondAlignedDiatomicQWBasis3D docstring on the concrete exported type rather than the unexported AbstractBondAlignedOrdinaryQWBasis3D parent; preserve its narrow bond-aligned mapped-product role and existing public homonuclear and heteronuclear builders without a general-geometry claim. Preserve CoulombGaussianExpansion as the finite callable sum of coefficients\[i\] \* exp(-exponents\[i\] \* r^2), with matching counts, positive exponents, copied Float64 inputs, and recorded del/s/c/maxu generator parameters, without an exact-Coulomb or universal-accuracy-interval claim. Preserve basis\_metadata without a universal metadata schema, concrete type, field set, ownership, or copy guarantee. Keep cartesian\_base\_hamiltonian documented as returning CartesianIDAHamiltonian{Float64} and optionally writing the existing artifact only for the stated origin-centered H and z-aligned H2 base routes, without general molecules, supplements, corrections, route controls, or solver behavior. Keep both external-GTO hashes documented as strict packet-integrity fingerprints: ordering covers ordered AO labels plus stored angular powers, centers, primitive data, and normalization convention; overlap covers column-major Matrix{Float64} values while dimensions and scientific consistency remain separate validation. Neither hash is permutation-, tolerance-, or convention-invariant or a numerical-equivalence test. Maintain docstrings only in src/ordinary/ordinary\_qw\_types\_and\_bases.jl, src/ordinary/ordinary\_coulomb.jl, src/GaussletBases.jl, src/cartesian\_base\_hamiltonian.jl, and src/cartesian\_external\_gto\_import.jl, and their curated entries or short limiting prose only in docs/src/reference/bases\_and\_mappings.md, docs/src/reference/operators\_and\_diagnostics.md, and docs/src/reference/export.md. The accepted delta is +52/-10 source-docstring lines and +20 reader-documentation lines, with no new file or executable change. Preserve every implementation, constructor, field, method, signature, dispatch, export, numerical behavior, artifact, hash algorithm, compatibility floor, workflow, tag, and release artifact. Add no global checkdocs policy or allowlist, source behavior, dependency, example, schema, test outside the docs family, API reduction, or release work. The remaining nineteen expert/experimental bindings and five future de-export candidates stay outside this maintenance record and require separate classification or audit authority.
+- **Scope:** Maintain only the accepted supported-public documentation from commit 8161f131aa962fef979f8ef09c14d23231eb14e4 for BondAlignedDiatomicQWBasis3D, CoulombGaussianExpansion, basis\_metadata, cartesian\_base\_hamiltonian, external\_gto\_ordering\_fingerprint, and external\_gto\_overlap\_fingerprint. Keep the BondAlignedDiatomicQWBasis3D docstring on the concrete exported type rather than the unexported AbstractBondAlignedOrdinaryQWBasis3D parent; preserve its narrow bond-aligned mapped-product role and existing public homonuclear and heteronuclear builders without a general-geometry claim. Preserve CoulombGaussianExpansion as the finite callable sum of coefficients\[i\] \* exp(-exponents\[i\] \* r^2), with matching counts, positive exponents, copied Float64 inputs, and recorded del/s/c/maxu generator parameters, without an exact-Coulomb or universal-accuracy-interval claim. Preserve basis\_metadata without a universal metadata schema, concrete type, field set, ownership, or copy guarantee. Keep cartesian\_base\_hamiltonian documented as returning CartesianIDAHamiltonian{Float64} and optionally writing the existing artifact only for the stated origin-centered H and z-aligned H2 base routes, without general molecules, supplements, corrections, route controls, or solver behavior. Keep both external-GTO hashes documented as strict packet-integrity fingerprints: ordering covers ordered AO labels plus stored angular powers, centers, primitive data, and normalization convention; overlap covers column-major Matrix{Float64} values while dimensions and scientific consistency remain separate validation. Neither hash is permutation-, tolerance-, or convention-invariant or a numerical-equivalence test. Maintain docstrings only in src/ordinary/ordinary\_qw\_types\_and\_bases.jl, src/ordinary/ordinary\_coulomb.jl, src/GaussletBases.jl, src/cartesian/cartesian\_base\_hamiltonian.jl, and src/cartesian/cartesian\_external\_gto\_import.jl, and their curated entries or short limiting prose only in docs/src/reference/bases\_and\_mappings.md, docs/src/reference/operators\_and\_diagnostics.md, and docs/src/reference/export.md. The accepted delta is +52/-10 source-docstring lines and +20 reader-documentation lines, with no new file or executable change. Preserve every implementation, constructor, field, method, signature, dispatch, export, numerical behavior, artifact, hash algorithm, compatibility floor, workflow, tag, and release artifact. Add no global checkdocs policy or allowlist, source behavior, dependency, example, schema, test outside the docs family, API reduction, or release work. The remaining nineteen expert/experimental bindings and five future de-export candidates stay outside this maintenance record and require separate classification or audit authority.
 
 ### HP-PUBLIC-SUPPORTED-SURFACE-DOC-TEST-01 - validate six supported public surface bindings
 
@@ -3140,7 +3140,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [cartesian\_nested\_diatomic\_box\_policy.md](../../../algorithms/cartesian_nested_diatomic_box_policy.md); heading `Exported Front-Door Maintenance Contract`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_nested_diatomic.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_nested_diatomic.jl`
   - `source` / `existing`: `src/ordinary/ordinary_qw_nested_frontends.jl`
 - **Evidence:**
   - `git_commit`: `6a365699102ebe30c31a9499f338cb192334ef1c`
@@ -3175,8 +3175,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `R1 Public Base Producer`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_ida_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_ida_hamiltonian.jl`
 - **Evidence:**
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
 - **Dependencies:** none
@@ -3191,7 +3191,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [r1\_one\_center\_base\_atoms.md](r1_one_center_base_atoms.md); heading `R1 One-Center Base Atoms`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** maintain explicit origin-centered all-electron atom geometry and input validation in the existing \`cartesian\_base\_hamiltonian(system; basis, hamfile)\` facade. Charge, electron counts, spin sectors, basis, and ECP behavior must never be inferred from the atom label. Charged-sector acceptance is owned separately by HP-R1-ESECTOR-FN-01.
@@ -3219,7 +3219,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [r1\_one\_center\_base\_atoms.md](r1_one_center_base_atoms.md); heading `R1 One-Center Base Atoms`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** map explicit charge and \`core\_spacing\` into the private atomic mapping, derive physical parent extent from \`radius\`, and use the same terminal, one-body, IDA, Hamiltonian, writer, and provenance machinery as the supported base producer. Atom routes remain \`:one\_center\_pqs\_base\` or \`:one\_center\_wl\_base\` according to nesting.
@@ -3233,7 +3233,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `R1 Public Base Producer`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:**
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
 - **Dependencies:** none
@@ -3248,12 +3248,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `Electron-Sector Independence`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:**
   - `git_commit`: `540cef00b`
   - `manager_pass`: `446`
 - **Dependencies:** `HP-COMP-BASEDIAT-FN-01`, `HP-R1-ATOM-FN-01`, `HP-R1-FN-01`, `HP-R3U-ZDI-FN-01`
-- **Scope:** Remove neutrality-derived and integer-charge validation from the existing base and supplemented atom/homonuclear-z-diatomic normalization in src/cartesian\_base\_hamiltonian.jl. Preserve explicit required nup/ndn, positive total electron count, orbital-dimension validation, geometry restrictions, neutral-call behavior, and all basis/operator algorithms. At fixed nuclei and basis, changing only nup/ndn must leave parent-axis, terminal-coefficient/support, supplement/residual, kinetic, unit-nuclear, H1, and Vee numerical arrays plus nuclear repulsion exact; containers and provenance may differ only in explicit sector-derived fields. Delete the obsolete integer-charge helper if it has no live caller. Add no API, type, field, artifact key/schema, cache key, correction framework, driver branch, source helper/file, or zero-electron-sector support. Maximum 20 added source lines; net source should decrease.
+- **Scope:** Remove neutrality-derived and integer-charge validation from the existing base and supplemented atom/homonuclear-z-diatomic normalization in src/cartesian/cartesian\_base\_hamiltonian.jl. Preserve explicit required nup/ndn, positive total electron count, orbital-dimension validation, geometry restrictions, neutral-call behavior, and all basis/operator algorithms. At fixed nuclei and basis, changing only nup/ndn must leave parent-axis, terminal-coefficient/support, supplement/residual, kinetic, unit-nuclear, H1, and Vee numerical arrays plus nuclear repulsion exact; containers and provenance may differ only in explicit sector-derived fields. Delete the obsolete integer-charge helper if it has no live caller. Add no API, type, field, artifact key/schema, cache key, correction framework, driver branch, source helper/file, or zero-electron-sector support. Maximum 20 added source lines; net source should decrease.
 
 ### HP-R1-ESECTOR-TEST-01 - charged-sector independence validation
 
@@ -3282,7 +3282,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `R1 Public Base Producer`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:**
   - `manager_pass`: `475`
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
@@ -3299,7 +3299,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `R1 Public Base Producer`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:**
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
 - **Dependencies:** `HP-R1-CORE-FN-01`
@@ -3328,7 +3328,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `R1 Public Base Producer`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:**
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
 - **Dependencies:** none
@@ -3343,7 +3343,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [cartesian\_hamiltonian\_artifact\_manifest.md](cartesian_hamiltonian_artifact_manifest.md); heading `Cartesian Hamiltonian Artifact Manifest`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Dependencies:** `HP-HAM-MANIFEST-FN-01`, `HP-HAM-MANIFEST-SRC-FN-01`
@@ -3358,8 +3358,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [residual\_gaussian\_domain\_module.md](residual_gaussian_domain_module.md); heading `Residual Gaussian Domain Module`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Dependencies:** `HP-RG-FN-01`
@@ -3374,8 +3374,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [residual\_gaussian\_domain\_module.md](residual_gaussian_domain_module.md); heading `Residual Gaussian Domain Module`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Dependencies:** `HP-RG-FN-02`
@@ -3390,8 +3390,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [r3\_residual\_gto\_mwg\_augmentation.md](r3_residual_gto_mwg_augmentation.md); heading `R3 Residual-GTO/MWG Compatibility History`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/mwg_interaction.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl`
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Dependencies:** `HP-RG-FN-03`, `HP-RG-FN-04`
@@ -3407,8 +3407,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [r3\_residual\_gto\_mwg\_augmentation.md](r3_residual_gto_mwg_augmentation.md); heading `R3 Residual-GTO/MWG Compatibility History`
   - `canonical` [residual\_gaussian\_domain\_module.md](residual_gaussian_domain_module.md); heading `Residual Gaussian Domain Module`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Dependencies:** `HP-RG-OBJ-01`
@@ -3466,8 +3466,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [r3\_same\_construction\_base\_reuse.md](r3_same_construction_base_reuse.md); heading `R3 Same-Construction Base Reuse`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-R3GG-FN-01`, `HP-R3UN-FN-01`
 - **Scope:** maintain trusted \`base\_kinetic\` and \`base\_unit\_nuclear\` handoff, dimension/center checks, and live exact recomputation fallbacks.
@@ -3495,8 +3495,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [r3\_terminal\_gg\_product\_matrices.md](r3_terminal_gg_product_matrices.md); heading `R3 Terminal G-G Product Matrices`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** maintain exact kinetic and first/second moment \`G-G\` assembly with function-local scratch reuse.
@@ -3537,8 +3537,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [r3\_usability\_supplemented\_workflow.md](r3_usability_supplemented_workflow.md); heading `R3 Usability Supplemented Workflow`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
   - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Evidence:** none
 - **Dependencies:** none
@@ -3553,7 +3553,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [r3\_usability\_supplemented\_workflow.md](r3_usability_supplemented_workflow.md); heading `R3 Usability Supplemented Workflow`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Dependencies:** none
@@ -3582,8 +3582,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [r3\_usability\_supplemented\_workflow.md](r3_usability_supplemented_workflow.md); heading `R3 Usability Supplemented Workflow`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Dependencies:** none
@@ -3598,7 +3598,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [r3\_homonuclear\_diatomic\_supplemented\_workflow.md](r3_homonuclear_diatomic_supplemented_workflow.md); heading `R3 Homonuclear Z-Axis Diatomic Supplemented Workflow`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-R3U-FN-01`
 - **Scope:** maintain explicit all-electron homonuclear two-center z-axis geometry, system validation, and optional trusted supplement \`basisfile\`. Charged-sector acceptance and sector-independent operator parity are owned separately by HP-R1-ESECTOR-FN-01.
@@ -3640,8 +3640,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [r3\_unit\_nuclear\_ugg\_gaussian\_sum.md](r3_unit_nuclear_ugg_gaussian_sum.md); heading `R3 Unit-Nuclear U_GG Gaussian Sum`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** maintain exact uncharged by-center \`U\_GG\`, term-first assembly, and function-local scratch reuse.
@@ -3669,12 +3669,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [route\_stage\_metadata\_contract.md](route_stage_metadata_contract.md); heading `Route/Stage Metadata Contract`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/cartesian_raw_product_sources/records.jl`
-  - `source` / `existing`: `src/cartesian_raw_product_sources/source_mode_indices.jl`
-  - `source` / `existing`: `src/cartesian_raw_product_sources/summaries.jl`
-  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_raw_product_sources/records.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_raw_product_sources/source_mode_indices.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_raw_product_sources/summaries.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_unit_transform_contracts/unit_contracts.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** maintain vector-backed mode/column inventories while preserving fixed \`NTuple{3,Int}\` coordinates, deterministic mode order, retained-rule association, and manifest source provenance.
@@ -3702,12 +3702,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [represented\_mixed\_density\_hartree.md](represented_mixed_density_hartree.md); heading `Represented Mixed-Density Hartree Producer`
 - **Owned paths:**
   - `source` / `existing`: `src/foundation/GaussianAnalyticIntegrals.jl`
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/CartesianReferenceDensity.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/represented_molecular_hartree.jl`
-  - `source` / `planned`: `src/cartesian_reference_density/represented_hartree_contractions.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
-  - `source` / `existing`: `src/gaussian_coulomb_reference.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/CartesianReferenceDensity.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/represented_molecular_hartree.jl`
+  - `source` / `planned`: `src/cartesian/cartesian_reference_density/represented_hartree_contractions.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/gaussian_coulomb_reference.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/cr2_req084_molecular_full_hartree_capability_2026-08-13.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/work/REQ-084/repo_design_manager_assignment.md`
@@ -3788,8 +3788,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `PQS Residual-GTO Same-Construction Working Basis`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_gto_probes.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gto_probes.jl`
   - `docs` / `existing`: `docs/src/reference/export.md`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/requests/REQ-101_amendment_public_external_gto_import.md`
@@ -3828,7 +3828,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [external\_cartesian\_gto\_interchange.md](external_cartesian_gto_interchange.md); heading `External Cartesian GTO Interchange`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian_external_gto_interchange.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_external_gto_interchange.jl`
 - **Evidence:**
   - `git_commit`: `bd1d11cec71c2257b311054bb064e361bb533042`
   - `manager_pass`: `515`
@@ -3846,7 +3846,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [external\_gto\_orbital\_import.md](external_gto_orbital_import.md); heading `External GTO Orbital Import`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian_external_gto_import.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_external_gto_import.jl`
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_external_gto_import_runtests.jl`
 - **Dependencies:** none
@@ -3879,7 +3879,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [external\_cartesian\_gto\_interchange.md](external_cartesian_gto_interchange.md); heading `External Cartesian GTO Interchange`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian_external_gto_interchange.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_external_gto_interchange.jl`
 - **Evidence:**
   - `git_commit`: `bd1d11cec71c2257b311054bb064e361bb533042`
   - `manager_pass`: `515`
@@ -3919,7 +3919,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [external\_gto\_orbital\_import.md](external_gto_orbital_import.md); heading `External GTO Orbital Import`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_external_gto_import.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_external_gto_import.jl`
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_external_gto_import_runtests.jl`
 - **Dependencies:** none
@@ -4347,8 +4347,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [residual\_gaussian\_orthogonality\_robustness.md](residual_gaussian_orthogonality_robustness.md); heading `Residual Gaussian Orthogonality And Cutoff Policy`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** source maintenance.
@@ -4389,10 +4389,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [residual\_gaussian\_domain\_module.md](residual_gaussian_domain_module.md); heading `Residual Gaussian Domain Module`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_residual_gaussians/CartesianResidualGaussians.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/mwg_interaction.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/CartesianResidualGaussians.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Dependencies:** none
@@ -4407,7 +4407,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [residual\_gaussian\_domain\_module.md](residual_gaussian_domain_module.md); heading `Residual Gaussian Domain Module`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Dependencies:** none
@@ -4422,7 +4422,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [residual\_gaussian\_domain\_module.md](residual_gaussian_domain_module.md); heading `Residual Gaussian Domain Module`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** source maintenance.
@@ -4436,7 +4436,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [residual\_gaussian\_domain\_module.md](residual_gaussian_domain_module.md); heading `Residual Gaussian Domain Module`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_residual_gaussians/mwg_interaction.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** source maintenance.
@@ -4450,7 +4450,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [residual\_gaussian\_domain\_module.md](residual_gaussian_domain_module.md); heading `Residual Gaussian Domain Module`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_residual_gaussians/mwg_interaction.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** source maintenance.
@@ -4503,10 +4503,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [residual\_gaussian\_injection\_hybrid.md](residual_gaussian_injection_hybrid.md); heading `Default-Off Direct-G Residual Injection`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/mwg_interaction.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** source maintenance for existing default-off behavior only; no feature expansion or new caller.
@@ -4520,11 +4520,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [numerical\_complete\_residual\_basis.md](numerical_complete_residual_basis.md); heading `Numerical-Complete Residual Gaussian Basis`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/atomic_hf_reference_packets.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/screened_hartree_correction.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_protected_ladder_bundle.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** source maintenance for the fixed \`eta\_num = 1e-10\` numerical- complete composition and existing private additive consumer only.
@@ -4553,7 +4553,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [residual\_gaussian\_domain\_module.md](residual_gaussian_domain_module.md); heading `Residual Gaussian Domain Module`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-RG-FILE-01`
 - **Scope:** source maintenance.
@@ -4580,7 +4580,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [occupied\_first\_injection.md](occupied_first_injection.md); heading `Occupied-First Injection Geometry`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** validate physical capture geometry, make supplied \`Y\_occ\` mandatory, keep pre-inclusion capture distinct from post-inclusion recovery, and capture-select optional supplement directions. Weak rejected directions never become MWG residual channels.
@@ -4609,8 +4609,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [residual\_gaussian\_orthogonality\_robustness.md](residual_gaussian_orthogonality_robustness.md); heading `Residual Gaussian Orthogonality And Cutoff Policy`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** source maintenance.
@@ -4638,12 +4638,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [protected\_additive\_reference\_correction.md](protected_additive_reference_correction.md); heading `Protected Additive Atomic Reference Correction`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
-  - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/atomic_hf_reference_packets.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/screened_hartree_correction.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_protected_ladder_bundle.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** build compact \`R\` once; use staged protected geometry with the full-rank occupied union mandatory for basis protection; preserve original per-packet occupied blocks for additive \`P0\`; build placed fitted-potential \`GG/GA/AA\`; include all self and twice-cross \`E0\` terms; transform \`J0\` through native protected/localized one-body operators; and return the existing in-memory \`ScreenedHartreeCorrection\` plus reference diagnostics. The private seam returns \`(member, correction, reference)\`; the no-reference path remains unchanged.
@@ -4672,8 +4672,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [protected\_localized\_artifact.md](protected_localized_artifact.md); heading `Protected-Localized Artifact Contract`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_ida_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_ida_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** write and read the recognized, versioned, opt-in protected-localized artifact without changing its native matrix order.
@@ -4700,8 +4700,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [protected\_localized\_artifact.md](protected_localized_artifact.md); heading `Protected-Localized Artifact Contract`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_ida_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_ida_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-RG-PROTECT-ART-FN-01`
 - **Scope:** attach validated native-order center, sector, inverse-permutation, and optional all-or-none spread metadata to the protected artifact.
@@ -4781,7 +4781,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [protected\_localized\_basis.md](protected_localized_basis.md); heading `Protected-Localized Basis Convention`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** consume the already-built compact residual object; build protected and broad original subspaces; keep Gaussian Gram, representability, and fake-RDM gates distinct; and return transform-ready \`Z\`, \`B\`, \`Q\_perp\`, \`F\`, and diagnostics. Rejected broad directions never become MWG channels.
@@ -4811,9 +4811,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [protected\_localized\_ladder.md](protected_localized_ladder.md); heading `Protected-Localized Ladder Bundles`
 - **Owned paths:**
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian_ida_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
-  - `source` / `existing`: `src/cartesian_representation_transfer.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_ida_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_protected_ladder_bundle.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_representation_transfer.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** write a versioned directory manifest, protected member artifacts, exact adjacent \`S\_BA\` sidecars, optional native-order restart sidecars, and bounded summaries; transfer only as \`C\_B = S\_BA \* C\_A\` and evaluate with target \`H1\_L\` / \`Vee\_L\`.
@@ -4866,7 +4866,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [protected\_localized\_basis.md](protected_localized_basis.md); heading `Protected-Localized Basis Convention`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** construct dense exact fixed-sector kinetic, per-center unit nuclear, and assembled \`H1\_F\` matrices through the actual protected/localized one-body transform, with orthogonality and symmetry diagnostics.
@@ -4955,8 +4955,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [residual\_gaussian\_domain\_module.md](residual_gaussian_domain_module.md); heading `Residual Gaussian Domain Module`
 - **Owned paths:**
   - `driver` / `existing`: `bin/cartesian_ham_builder.jl`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-RG-FN-01`, `HP-RG-FN-02`, `HP-RG-FN-03`, `HP-RG-FN-04`
 - **Scope:** compatibility/caller maintenance.
@@ -5023,7 +5023,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `evidence` [rho0\_reference\_density\_matrix.md](rho0_reference_density_matrix.md); heading `Rho0 And Reference-Density Correction History`
 - **Owned paths:** none
 - **Evidence:**
-  - `repo_path`: `src/cartesian_ida_hamiltonian.jl`
+  - `repo_path`: `src/cartesian/cartesian_ida_hamiltonian.jl`
 - **Dependencies:** none
 - **Scope:** approximate IDA energy/Fock seam.
 
@@ -5050,8 +5050,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `history` [rho0\_reference\_density\_matrix.md](rho0_reference_density_matrix.md); heading `Rho0 And Reference-Density Correction History`
 - **Owned paths:** none
 - **Evidence:**
-  - `repo_path`: `src/cartesian_ida_hamiltonian.jl`
-  - `repo_path`: `src/cartesian_residual_gaussians/augmented_operators.jl`
+  - `repo_path`: `src/cartesian/cartesian_ida_hamiltonian.jl`
+  - `repo_path`: `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`
 - **Dependencies:** none
 - **Scope:** direct-Hartree anchor helper.
 
@@ -5077,7 +5077,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [reference\_hartree\_numerics.md](reference_hartree_numerics.md); heading `Reference Hartree Numerics`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** source maintenance for the exact protected fixed-sector transform, localized \`sym(W' \* J0\_F \* W)\`, and existing convenience composition only.
@@ -5107,8 +5107,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [reference\_hartree\_numerics.md](reference_hartree_numerics.md); heading `Reference Hartree Numerics`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** source maintenance for exact \`GA\`, symmetric \`AA\`, and compact diagnostics only.
@@ -5136,9 +5136,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [reference\_hartree\_numerics.md](reference_hartree_numerics.md); heading `Reference Hartree Numerics`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
-  - `source` / `existing`: `src/gaussian_coulomb_reference.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
+  - `source` / `existing`: `src/cartesian/gaussian_coulomb_reference.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** source maintenance for exact one-center finite symmetric-\`P\_A\` \`GG\` construction and compact diagnostics only.
@@ -5231,7 +5231,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [route\_stage\_metadata\_contract.md](route_stage_metadata_contract.md); heading `Route/Stage Metadata Contract`
 - **Owned paths:**
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** maintain vector-backed ordered retained-unit and pair-family rows with label lookup; labels remain data rather than concrete type parameters.
@@ -5258,8 +5258,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [nesting\_supplement\_composition\_plan.md](nesting_supplement_composition_plan.md); heading `Nesting/Supplement Composition`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** build only the selected \`:pqs\_source\_box\` or \`:white\_lindsey\_low\_order\` subrecipe and leave inactive family vocabulary absent or \`nothing\` without merging the algorithms.
@@ -5286,9 +5286,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [route\_stage\_metadata\_contract.md](route_stage_metadata_contract.md); heading `Route/Stage Metadata Contract`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/pqs_source_box_diatomic_complete_core_shell.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_diatomic_complete_core_shell.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** keep only live compact plans/realizations/summaries across stage boundaries. This does not retire route skeletons or pair/assembly/report stages.
@@ -5315,8 +5315,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [route\_stage\_metadata\_contract.md](route_stage_metadata_contract.md); heading `Route/Stage Metadata Contract`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_terminal_shellification_geometry.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_shellification_geometry.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** preserve compact vector-backed route/shellification summaries and narrow stage returns without duplicate lowering-plan ownership.
@@ -5606,83 +5606,83 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md`
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_shellification_due_diligence.md`
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_terminal_basis_realization.md`
-  - `source` / `existing`: `src/CartesianParentAxisFactors.jl`
-  - `source` / `existing`: `src/CartesianParentGaussletBases.jl`
+  - `source` / `existing`: `src/cartesian/CartesianParentAxisFactors.jl`
+  - `source` / `existing`: `src/cartesian/CartesianParentGaussletBases.jl`
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/bond_aligned_diatomic_geometry.jl`
-  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_basis_representation.jl`
-  - `source` / `existing`: `src/cartesian_cpb/CartesianCPB.jl`
-  - `source` / `existing`: `src/cartesian_cpb/coordinate_product_boxes.jl`
-  - `source` / `existing`: `src/cartesian_cross_overlap.jl`
-  - `source` / `existing`: `src/cartesian_external_gto_import.jl`
-  - `source` / `existing`: `src/cartesian_external_gto_interchange.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/terminal_face_product_blocks.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/cartesian_gaussian_axis_integrals.jl`
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`
-  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
-  - `source` / `existing`: `src/cartesian_gto_probes.jl`
-  - `source` / `existing`: `src/cartesian_ida_hamiltonian.jl`
-  - `source` / `existing`: `src/cartesian_nested_atomic.jl`
-  - `source` / `existing`: `src/cartesian_nested_diatomic.jl`
-  - `source` / `existing`: `src/cartesian_nested_experimental_geometries.jl`
-  - `source` / `existing`: `src/cartesian_nested_faces.jl`
-  - `source` / `existing`: `src/cartesian_nested_owned_units.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/CartesianPairBlockMaterialization.jl`
-  - `source` / `existing`: `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`
-  - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
-  - `source` / `existing`: `src/cartesian_qw_hybrid_representation.jl`
-  - `source` / `existing`: `src/cartesian_raw_product_sources/CartesianRawProductSources.jl`
-  - `source` / `existing`: `src/cartesian_raw_product_sources/axis_transform_facts.jl`
-  - `source` / `existing`: `src/cartesian_raw_product_sources/records.jl`
-  - `source` / `existing`: `src/cartesian_raw_product_sources/source_mode_indices.jl`
-  - `source` / `existing`: `src/cartesian_raw_product_sources/summaries.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/CartesianReferenceDensity.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/atomic_hf_reference_packets.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/represented_molecular_hartree.jl`
-  - `source` / `existing`: `src/cartesian_reference_density/screened_hartree_correction.jl`
-  - `source` / `existing`: `src/cartesian_representation_constructors.jl`
-  - `source` / `existing`: `src/cartesian_representation_transfer.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/CartesianResidualGaussians.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/mwg_interaction.jl`
-  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
-  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/CartesianRetainedUnitTransformContracts.jl`
-  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/records.jl`
-  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/summaries.jl`
-  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`
-  - `source` / `existing`: `src/cartesian_retained_units/CartesianRetainedUnits.jl`
-  - `source` / `existing`: `src/cartesian_retained_units/lower_contract_units.jl`
-  - `source` / `existing`: `src/cartesian_retained_units/records.jl`
-  - `source` / `existing`: `src/cartesian_retained_units/summaries.jl`
-  - `source` / `existing`: `src/cartesian_route_core/CartesianRouteCore.jl`
-  - `source` / `existing`: `src/cartesian_route_core/lowering_sources.jl`
-  - `source` / `existing`: `src/cartesian_route_core/retained_spaces.jl`
-  - `source` / `existing`: `src/cartesian_route_core/shellification_regions.jl`
-  - `source` / `existing`: `src/cartesian_shellification/CartesianShellification.jl`
-  - `source` / `existing`: `src/cartesian_shellification/terminal_geometry.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/CartesianTerminalLowering.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/contracts.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/policies.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/region_contracts.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/selection.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/summaries.jl`
-  - `source` / `existing`: `src/cartesian_terminal_shellification_geometry.jl`
-  - `source` / `existing`: `src/gaussian_coulomb_reference.jl`
-  - `source` / `existing`: `src/hamiltonian_corrections.jl`
-  - `source` / `existing`: `src/pqs_matched_h2plus.jl`
-  - `source` / `existing`: `src/pqs_source_box_diatomic_complete_core_shell.jl`
-  - `source` / `existing`: `src/pqs_source_box_low_order_materialization.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_skeletons.jl`
+  - `source` / `existing`: `src/cartesian/bond_aligned_diatomic_geometry.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_basis_representation.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_cpb/CartesianCPB.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_cpb/coordinate_product_boxes.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_cross_overlap.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_external_gto_import.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_external_gto_interchange.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_ida.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/terminal_face_product_blocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_axis_integrals.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gto_probes.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_ida_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_nested_atomic.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_nested_diatomic.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_nested_experimental_geometries.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_nested_faces.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_nested_owned_units.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_pair_block_materialization/CartesianPairBlockMaterialization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_protected_ladder_bundle.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_qw_hybrid_representation.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_raw_product_sources/CartesianRawProductSources.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_raw_product_sources/axis_transform_facts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_raw_product_sources/records.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_raw_product_sources/source_mode_indices.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_raw_product_sources/summaries.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/CartesianReferenceDensity.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/represented_molecular_hartree.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_representation_constructors.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_representation_transfer.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/CartesianResidualGaussians.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_unit_transform_contracts/CartesianRetainedUnitTransformContracts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_unit_transform_contracts/records.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_unit_transform_contracts/summaries.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_unit_transform_contracts/unit_contracts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_units/CartesianRetainedUnits.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_units/lower_contract_units.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_units/records.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_units/summaries.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_route_core/CartesianRouteCore.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_route_core/lowering_sources.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_route_core/retained_spaces.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_route_core/shellification_regions.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_shellification/CartesianShellification.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_shellification/terminal_geometry.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/CartesianTerminalLowering.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/contracts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/policies.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/region_contracts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/selection.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/summaries.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_shellification_geometry.jl`
+  - `source` / `existing`: `src/cartesian/gaussian_coulomb_reference.jl`
+  - `source` / `existing`: `src/cartesian/hamiltonian_corrections.jl`
+  - `source` / `existing`: `src/cartesian/pqs_matched_h2plus.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_diatomic_complete_core_shell.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_low_order_materialization.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_skeletons.jl`
 - **Evidence:**
   - `git_commit`: `96802b00cc380707306106b529ff22a09ccb415e`
   - `manager_pass`: `588`
@@ -5783,7 +5783,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [terminal\_basis\_and\_base\_assembly.md](terminal_basis_and_base_assembly.md); heading `Terminal Basis And Base Assembly`
 - **Owned paths:**
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:**
   - `repo_path`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
 - **Dependencies:** `HP-FN-01`
@@ -5811,12 +5811,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [white\_lindsey\_terminal\_basis\_realization.md](white_lindsey_terminal_basis_realization.md); heading `White-Lindsey Terminal Basis Realization`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`
-  - `source` / `existing`: `src/cartesian_retained_units/lower_contract_units.jl`
-  - `source` / `existing`: `src/cartesian_shellification/terminal_geometry.jl`
-  - `source` / `existing`: `src/cartesian_terminal_lowering/region_contracts.jl`
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_unit_transform_contracts/unit_contracts.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_retained_units/lower_contract_units.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_shellification/terminal_geometry.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_terminal_lowering/region_contracts.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-COMP-FACEPROD-FN-01`
 - **Scope:** maintain compact products of one-dimensional contractions for WL boundary units. Identity realization remains valid only for true direct/core units; support rows are not themselves retained functions.
@@ -5846,7 +5846,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [white\_lindsey\_terminal\_basis\_realization.md](white_lindsey_terminal_basis_realization.md); heading `White-Lindsey Terminal Basis Realization`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** Keep odd-side enforcement only for direct nucleus-centered cores. Cubic WL boundary products retain the requested route-local count, with canonical examples \`ns=4 -\> 56\` and \`ns=5 -\> 98\`; eligible matched aspect shells are separately governed by \`HP-PQS-ASPECTSHELL-FN-01\` and use axis-specific inner counts from the shared outer shape.
@@ -5876,8 +5876,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [white\_lindsey\_terminal\_basis\_realization.md](white_lindsey_terminal_basis_realization.md); heading `White-Lindsey Terminal Basis Realization`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** maintain the existing WL-specific sibling that returns the shared \`CartesianTerminalBasisRealization\`. No new module, basis object, route result, artifact, report, or export is authorized.
@@ -5891,8 +5891,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [white\_lindsey\_terminal\_basis\_realization.md](white_lindsey_terminal_basis_realization.md); heading `White-Lindsey Terminal Basis Realization`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
-  - `source` / `existing`: `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-COMP-FACEPROD-FN-01`, `HP-WLTERM-FILE-01`
 - **Scope:** realize direct identity blocks and compact WL facet/edge/corner, boundary-stratum, and thin-slab products on authoritative owned supports while preserving retained/transform order and block-local identity checks.
@@ -5920,7 +5920,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [white\_lindsey\_terminal\_basis\_realization.md](white_lindsey_terminal_basis_realization.md); heading `White-Lindsey Terminal Basis Realization`
 - **Owned paths:**
-  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** pass native \`:white\_lindsey\_low\_order\` support, retained, and transform records into the WL realizer without changing PQS behavior or restoring old WL materialization.

@@ -168,11 +168,11 @@ full-shell boundary count.
 
 Current maintenance ownership is limited to:
 
-- `src/pqs_source_box_route_driver_helpers.jl` for angular-dimension
+- `src/cartesian/pqs_source_box_route_driver_helpers.jl` for angular-dimension
   selection and matched lowering-contract enrichment;
-- `src/cartesian_base_hamiltonian.jl` for due-diligence shape reporting and
+- `src/cartesian/cartesian_base_hamiltonian.jl` for due-diligence shape reporting and
   route-aware aggregate interpretation;
-- `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
+- `src/cartesian/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
   for axis-specific WL one-dimensional counts.
 
 The obsolete contracted-parent/multilayer planning route was retired under

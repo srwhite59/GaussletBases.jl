@@ -41,7 +41,7 @@ own additive contribution to `P0`.
 
 ## Current Live Seams
 
-The implementation in `src/cartesian_protected_ladder_bundle.jl` builds
+The implementation in `src/cartesian/cartesian_protected_ladder_bundle.jl` builds
 `R_compact`, embeds each packet occupied block, and passes those blocks with
 the exact residual object to
 `staged_protected_original_injection_geometry(...)`. The separate
@@ -54,11 +54,11 @@ protected path operates over `M = [G, R_compact]` under the existing
 Existing reusable owners already provide:
 
 - raw exact reference Hartree `GG`, `GA`, and `AA` blocks in
-  `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`;
+  `src/cartesian/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`;
 - protected fixed-sector and localized one-body transformation from the
   protected-localized basis owner;
 - the existing `ScreenedHartreeCorrection` algebra in
-  `src/cartesian_reference_density/screened_hartree_correction.jl`.
+  `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl`.
 
 The implemented path combines staged protected-original geometry with
 mandatory occupied blocks, fast placed fitted-potential `GG/GA/AA`, additive
@@ -221,7 +221,7 @@ a reason to rotate the additive atomic densities.
 
 The practical packet path uses each packet's fitted potential to evaluate the
 same fitted density cloud field efficiently. The neutral raw-block owner in
-`src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` applies an explicit
+`src/cartesian/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` applies an explicit
 placed spherical Gaussian potential term list through the existing `GG`, `GA`,
 and `AA` axis factors and block assembly. The packet and ladder owners do not
 duplicate those analytic Gaussian loops.
@@ -311,18 +311,18 @@ memory for an explicit off/on comparison. No corrected artifact is approved.
 
 ## Implemented Ownership
 
-- `src/cartesian_residual_gaussians/residual_basis.jl` owns compact residual
+- `src/cartesian/cartesian_residual_gaussians/residual_basis.jl` owns compact residual
   source indices, the mandatory occupied union, and staged protected geometry.
-- `src/cartesian_residual_gaussians/augmented_operators.jl` owns native-`L`
+- `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl` owns native-`L`
   packet representation and protected fixed/localized Hartree transforms.
-- `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` owns placed
+- `src/cartesian/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` owns placed
   fitted-potential `GG/GA/AA` assembly.
-- `src/cartesian_reference_density/atomic_hf_reference_packets.jl` owns packet
+- `src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl` owns packet
   identity and embedding checks, fitted fields, and compact density-cloud
   self/cross energies.
-- `src/cartesian_reference_density/screened_hartree_correction.jl` owns
+- `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl` owns
   additive `P0_L/q0_L`, consistency diagnostics, and correction algebra.
-- `src/cartesian_protected_ladder_bundle.jl` owns the private composition
+- `src/cartesian/cartesian_protected_ladder_bundle.jl` owns the private composition
   sibling and returns the member, correction, and reference diagnostics.
 
 The registry owns exact source authority. This lane adds no public export,

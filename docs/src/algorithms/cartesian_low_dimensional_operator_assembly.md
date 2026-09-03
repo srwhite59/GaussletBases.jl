@@ -117,11 +117,11 @@ model choice, not a failed attempt to store full four-index ERIs.
 
 ## Code Map
 
-- `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` consumes
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl` consumes
   factorized products for current terminal one-body assembly.
-- `src/cartesian_final_basis_realization/pqs_terminal_ida.jl` owns current
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_ida.jl` owns current
   terminal IDA assembly.
-- `src/cartesian_gaussian_axis_integrals.jl` owns shared Gaussian axis integral
+- `src/cartesian/cartesian_gaussian_axis_integrals.jl` owns shared Gaussian axis integral
   kernels where present.
 - `src/ordinary/ordinary_qw_raw_blocks.jl` still contains donor/reference raw-block
   surfaces used by surviving QW routes.

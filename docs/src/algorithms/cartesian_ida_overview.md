@@ -111,14 +111,14 @@ R^T S R \approx I.
 
 Current implementation surfaces are:
 
-- `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
   for current support-local terminal realization.
-- `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` and
-  `src/cartesian_final_basis_realization/pqs_terminal_ida.jl` for current
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl` and
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_ida.jl` for current
   terminal one-body and IDA assembly.
-- `src/cartesian_ida_hamiltonian.jl` for the public one-basis IDA Hamiltonian
+- `src/cartesian/cartesian_ida_hamiltonian.jl` for the public one-basis IDA Hamiltonian
   object and minimal artifact reader/writer.
-- `src/cartesian_gaussian_axis_integrals.jl` for shared Cartesian Gaussian axis
+- `src/cartesian/cartesian_gaussian_axis_integrals.jl` for shared Cartesian Gaussian axis
   integral kernels where present.
 
 The older contracted-parent/multilayer complete-core-shell oracle was

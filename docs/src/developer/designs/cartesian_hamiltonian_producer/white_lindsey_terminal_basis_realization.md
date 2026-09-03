@@ -134,15 +134,15 @@ Hamiltonian construction.
 
 Current ownership is limited to:
 
-- `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
+- `src/cartesian/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
   for WL block realization and validation;
-- `src/cartesian_final_basis_realization/terminal_face_product_blocks.jl` for
+- `src/cartesian/cartesian_final_basis_realization/terminal_face_product_blocks.jl` for
   the neutral facet and thin-slab coefficient primitive;
-- `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+- `src/cartesian/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
   for module wiring;
 - the established terminal-lowering, retained-unit, and transform-contract
   owners for native WL strata and compact slabs;
-- `src/pqs_source_box_route_driver_helpers.jl` for narrow route-to-terminal
+- `src/cartesian/pqs_source_box_route_driver_helpers.jl` for narrow route-to-terminal
   wiring.
 
 Common shell geometry belongs to its separate contract. The registry remains

@@ -209,11 +209,11 @@ source surface to repair several downstream copies.
 
 Implementation is limited to:
 
-- `src/pqs_source_box_route_driver_helpers.jl` for strict normalization,
+- `src/cartesian/pqs_source_box_route_driver_helpers.jl` for strict normalization,
   semantic matching, and lowering-contract shape enrichment;
-- `src/cartesian_base_hamiltonian.jl` for a private keyword on
+- `src/cartesian/cartesian_base_hamiltonian.jl` for a private keyword on
   `cartesian_base_working_basis(...)` and narrow internal-stage forwarding;
-- `src/cartesian_protected_ladder_bundle.jl` for private forwarding from the
+- `src/cartesian/cartesian_protected_ladder_bundle.jl` for private forwarding from the
   `_plb_build_numerical_complete_additive_reference_member(...)` call site
   through an explicit `_plb_build_inputs(...)` keyword;
 - `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl` for bounded

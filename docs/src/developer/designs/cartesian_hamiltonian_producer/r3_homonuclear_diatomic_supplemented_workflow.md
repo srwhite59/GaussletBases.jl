@@ -41,7 +41,7 @@ molecular-scope contract.
 
 ## Producer Boundary
 
-`src/cartesian_base_hamiltonian.jl` validates the system through
+`src/cartesian/cartesian_base_hamiltonian.jl` validates the system through
 `_cartesian_r3_diatomic_inputs(...)` and the supplement through
 `_cartesian_r3_supplement_inputs(...)`. Required physical inputs remain
 explicit: atom symbols, charges, positions, electron counts, near-core

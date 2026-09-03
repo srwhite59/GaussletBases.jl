@@ -126,13 +126,13 @@ below by the direct-core side. `ns` is resolution/nesting input, not box extent.
 
 ## Ownership And Failure
 
-`src/cartesian_base_hamiltonian.jl` owns input normalization, family-selective
+`src/cartesian/cartesian_base_hamiltonian.jl` owns input normalization, family-selective
 base route inputs, public `ns`/derived `q`, WL rejection, one-center sizing, and
-shared supplemented composition. `src/pqs_source_box_route_driver_helpers.jl`
+shared supplemented composition. `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 owns route recipe selection. `bin/cartesian_ham_builder.jl` owns visible driver
 input and dispatch, not a second composition algorithm. Shared residual
 augmentation remains in
-`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
+`src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
 
 Reject heteronuclear, translated, non-z-axis, or general molecular geometry;
 invalid charges or electron sectors; inconsistent `ns`/`q`; WL diatomic

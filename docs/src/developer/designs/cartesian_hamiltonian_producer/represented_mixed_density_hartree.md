@@ -341,20 +341,20 @@ type. Its variable-size inventories must be vector-backed.
 
 Approved source ownership is limited to:
 
-- private `src/cartesian_reference_density/represented_molecular_hartree.jl`;
+- private `src/cartesian/cartesian_reference_density/represented_molecular_hartree.jl`;
 - one private
-  `src/cartesian_reference_density/represented_hartree_contractions.jl` for
+  `src/cartesian/cartesian_reference_density/represented_hartree_contractions.jl` for
   the occupied-block/separable contraction kernel;
-- `src/cartesian_reference_density/CartesianReferenceDensity.jl` for one
+- `src/cartesian/cartesian_reference_density/CartesianReferenceDensity.jl` for one
   include;
-- `src/cartesian_residual_gaussians/residual_basis.jl` only to expose one
+- `src/cartesian/cartesian_residual_gaussians/residual_basis.jl` only to expose one
   private reusable residual-validity calculation matching its existing
   construction contract;
-- `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` for narrow reuse
+- `src/cartesian/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl` for narrow reuse
   or generalization of neutral pair-density/potential target kernels;
 - `src/foundation/GaussianAnalyticIntegrals.jl` for the narrow shared one-dimensional
   pair/convolution primitive;
-- `src/gaussian_coulomb_reference.jl` only to remove duplicated private
+- `src/cartesian/gaussian_coulomb_reference.jl` only to remove duplicated private
   polynomial-kernel algebra and preserve oracle parity.
 
 Residual selection/construction and screened-Hartree assembly remain unchanged.

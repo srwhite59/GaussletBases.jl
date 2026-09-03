@@ -136,7 +136,7 @@ one-body or interaction orchestration are outside this contract.
 ## Source Ownership
 
 The one-center atom facade normalization and shared-workflow wiring are owned
-only by `src/cartesian_base_hamiltonian.jl`. The existing export/include in
+only by `src/cartesian/cartesian_base_hamiltonian.jl`. The existing export/include in
 `src/GaussletBases.jl` belongs to the broader R1 base facade and is unchanged
 by the atom relaxation. No atom-only source file, committed fixture, or new
 test owner is part of this contract.

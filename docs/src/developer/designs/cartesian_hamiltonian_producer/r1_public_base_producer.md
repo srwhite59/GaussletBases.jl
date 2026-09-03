@@ -47,7 +47,7 @@ cartesian_base_hamiltonian(
 Implementation owner:
 
 ```text
-src/cartesian_base_hamiltonian.jl
+src/cartesian/cartesian_base_hamiltonian.jl
 ```
 
 Export/include owner:
@@ -190,7 +190,7 @@ mapping-strength exception is separately canonical in
 The complete three-tier `:compact | :standard | :high` design belongs to
 [Coulomb accuracy policy](coulomb_accuracy_policy.md). At the Pass 378 source
 baseline, this facade still validates only `:compact | :high`; `:standard` is
-approved there but has not yet landed in `src/cartesian_base_hamiltonian.jl`.
+approved there but has not yet landed in `src/cartesian/cartesian_base_hamiltonian.jl`.
 This R1 reconciliation does not change that implementation lifecycle.
 
 Unknown basis keys, invalid types, incompatible geometry-specific fields, and
@@ -228,7 +228,7 @@ returns the same in-memory Hamiltonian. Empty paths fail; file-system errors
 propagate normally. Production does not require readback.
 
 The minimal matrix payload and `read_cartesian_ida_hamiltonian(...)` are owned
-by `src/cartesian_ida_hamiltonian.jl`. The reader reconstructs the Hamiltonian
+by `src/cartesian/cartesian_ida_hamiltonian.jl`. The reader reconstructs the Hamiltonian
 from its standard matrix and physical metadata keys and ignores additional
 provenance groups.
 

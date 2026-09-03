@@ -118,9 +118,9 @@ field, solver state, or consumer policy.
 Approved source owners are limited to:
 
 - `src/GaussletBases.jl` for the one export;
-- `src/cartesian_base_hamiltonian.jl` for the compact result and shared
+- `src/cartesian/cartesian_base_hamiltonian.jl` for the compact result and shared
   same-construction assembly;
-- `src/cartesian_gto_probes.jl` for the exact cross-overlap dispatch;
+- `src/cartesian/cartesian_gto_probes.jl` for the exact cross-overlap dispatch;
 - `docs/src/reference/export.md` for the exported function's doc entry.
 
 Reuse the existing terminal projection, supplement-overlap, residual, and

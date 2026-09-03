@@ -22,7 +22,7 @@ accepted numerical and readback evidence.
 
 ## Artifact Layers
 
-The low-level writer in `src/cartesian_ida_hamiltonian.jl` remains minimal. It
+The low-level writer in `src/cartesian/cartesian_ida_hamiltonian.jl` remains minimal. It
 writes exactly:
 
 ```text
@@ -326,12 +326,12 @@ truthful persisted nesting and route facts.
 
 Implemented source owners are:
 
-- `src/cartesian_base_hamiltonian.jl` for labels, source provenance, recipe,
+- `src/cartesian/cartesian_base_hamiltonian.jl` for labels, source provenance, recipe,
   route truth, and facade composition;
-- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` for the
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` for the
   supplemented artifact and `supplement_provenance/` write;
-- `src/cartesian_ida_hamiltonian.jl` for the unchanged minimal writer/reader;
-- `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+- `src/cartesian/cartesian_ida_hamiltonian.jl` for the unchanged minimal writer/reader;
+- `src/cartesian/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
   for the nesting-neutral module boundary description.
 
 Manifest dimensions must equal the Hamiltonian dimension. Missing native

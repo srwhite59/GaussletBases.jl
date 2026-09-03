@@ -17,8 +17,8 @@ augmented operators. Neutral Gaussian `G-A` and `A-A` blocks remain owned by
 Implemented source:
 
 ```text
-src/cartesian_final_basis_realization/pqs_terminal_one_body.jl
-src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl
+src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
 ```
 
 The reusable terminal kernel is `assemble_terminal_product_operator!`, with

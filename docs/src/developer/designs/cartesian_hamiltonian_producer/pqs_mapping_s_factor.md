@@ -89,12 +89,12 @@ not recover mapping controls from an artifact sidecar.
 
 - `src/foundation/mappings.jl` owns the one-center atomic mapping and positive combined
   inverse-sqrt fit.
-- `src/pqs_source_box_route_driver_helpers.jl` owns factor normalization,
+- `src/cartesian/pqs_source_box_route_driver_helpers.jl` owns factor normalization,
   multicenter fit inputs, and parent mapping metadata.
-- `src/cartesian_base_hamiltonian.jl` owns the public basis input and ordinary
+- `src/cartesian/cartesian_base_hamiltonian.jl` owns the public basis input and ordinary
   artifact provenance.
 - `bin/cartesian_ham_builder.jl` owns the normal expert driver input.
-- `src/cartesian_protected_ladder_bundle.jl` may only preserve and read recipe
+- `src/cartesian/cartesian_protected_ladder_bundle.jl` may only preserve and read recipe
   provenance for this control.
 
 No package export or source owner outside those surfaces is introduced by the

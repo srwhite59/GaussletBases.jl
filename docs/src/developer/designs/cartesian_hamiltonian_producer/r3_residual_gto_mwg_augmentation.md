@@ -54,9 +54,9 @@ exist and where their current law moved.
 The current numerical implementation is in:
 
 ```text
-src/cartesian_residual_gaussians/residual_basis.jl
-src/cartesian_residual_gaussians/augmented_operators.jl
-src/cartesian_residual_gaussians/mwg_interaction.jl
+src/cartesian/cartesian_residual_gaussians/residual_basis.jl
+src/cartesian/cartesian_residual_gaussians/augmented_operators.jl
+src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl
 ```
 
 Those files own owner-local residual selection, the final inter-owner merge,
@@ -69,7 +69,7 @@ failure behavior, and validation gates live only in the domain contract.
 The historical terminal owner remains:
 
 ```text
-src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
 ```
 
 It now provides construction checks, compatibility entry points, raw-block
@@ -85,7 +85,7 @@ Hamiltonian type directly.
 
 ### Supported Workflow
 
-`src/cartesian_base_hamiltonian.jl` owns the non-exported
+`src/cartesian/cartesian_base_hamiltonian.jl` owns the non-exported
 `cartesian_residual_gto_mwg_hamiltonian(...)` facade. It constructs the base
 Hamiltonian, terminal basis, parent bundles, Gaussian supplement, residual
 basis, exact augmented operators, and MWG interaction from one construction.

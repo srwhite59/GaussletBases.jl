@@ -171,13 +171,13 @@ matrix readback path ignores those extra keys.
 
 ## Code Map
 
-- `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` builds
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl` builds
   current terminal one-body operators and separated unit-nuclear fields.
-- `src/cartesian_final_basis_realization/pqs_terminal_ida.jl` builds the
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_ida.jl` builds the
   current terminal IDA interaction.
-- `src/cartesian_ida_hamiltonian.jl` contains the public one-basis IDA
+- `src/cartesian/cartesian_ida_hamiltonian.jl` contains the public one-basis IDA
   Hamiltonian object and minimal artifact reader/writer.
-- `src/cartesian_base_hamiltonian.jl` contains the bounded public facade.
+- `src/cartesian/cartesian_base_hamiltonian.jl` contains the bounded public facade.
 
 The obsolete contracted-parent/multilayer complete-core-shell route was
 [retired](../developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md).

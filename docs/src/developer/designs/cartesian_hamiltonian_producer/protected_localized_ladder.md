@@ -288,13 +288,13 @@ rotation.
 
 Primary implemented owner:
 
-- `src/cartesian_protected_ladder_bundle.jl`.
+- `src/cartesian/cartesian_protected_ladder_bundle.jl`.
 
 Related existing owners:
 
-- `src/cartesian_representation_transfer.jl` for the general final-basis
+- `src/cartesian/cartesian_representation_transfer.jl` for the general final-basis
   cross-overlap transfer contract;
-- `src/cartesian_ida_hamiltonian.jl` for protected member artifacts.
+- `src/cartesian/cartesian_ida_hamiltonian.jl` for protected member artifacts.
 
 Implementation evidence:
 

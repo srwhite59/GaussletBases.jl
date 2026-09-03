@@ -168,15 +168,15 @@ or alter protected-localized ladder and EGOI facilities.
 
 `HP-RG-NUMCOMP-FN-01` approves only:
 
-- `src/cartesian_residual_gaussians/residual_basis.jl`, only if a narrow policy
+- `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`, only if a narrow policy
   assertion or diagnostic is needed around the existing builder;
-- `src/cartesian_residual_gaussians/augmented_operators.jl` for packet
+- `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl` for packet
   occupied-block representation in native `[G,R_num]` order;
-- `src/cartesian_protected_ladder_bundle.jl` for narrow private in-memory
+- `src/cartesian/cartesian_protected_ladder_bundle.jl` for narrow private in-memory
   composition reusing existing inputs, placements, fields, energies, augmented
   operators, and MWG;
-- `src/cartesian_reference_density/atomic_hf_reference_packets.jl` and
-  `src/cartesian_reference_density/screened_hartree_correction.jl` only for
+- `src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl` and
+  `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl` only for
   narrow reuse when no contract or persistent result shape changes.
 
 Commit `b2da7070c` added `118` source lines without changing

@@ -163,9 +163,9 @@ nonzero and remain assembled over terminal block pairs.
 
 ## Code Map
 
-- `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
   owns the current terminal block-local realization contract.
-- `src/cartesian_shellification/terminal_geometry.jl` implements the
+- `src/cartesian/cartesian_shellification/terminal_geometry.jl` implements the
   diatomic atom-contact core seed-box hull rule and terminal region coverage
   checks before lowering.
 - The obsolete complete-core-shell and multilayer oracle route was deleted

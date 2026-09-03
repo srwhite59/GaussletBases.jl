@@ -38,7 +38,7 @@ transform. Capture below one reports representation loss.
 
 ## Implemented Ownership And Entry Points
 
-`src/cartesian_external_gto_import.jl` owns all packet, result, protected
+`src/cartesian/cartesian_external_gto_import.jl` owns all packet, result, protected
 composition, sidecar, and saved-representation logic. `src/GaussletBases.jl`
 exports the general packet/import API and includes the owner file.
 
@@ -52,11 +52,11 @@ Protected entry points remain module-qualified and unexported:
 `read_protected_localized_external_gto_representation`, and
 `external_gto_import_from_saved_representation`.
 
-`src/cartesian_gto_probes.jl` owns `gto_overlap_matrix(...)` and the reused
+`src/cartesian/cartesian_gto_probes.jl` owns `gto_overlap_matrix(...)` and the reused
 exact `_cartesian_final_gto_cross_overlap_handoff(...)`.
-`src/cartesian_representation_transfer.jl` records the related cross-overlap
+`src/cartesian/cartesian_representation_transfer.jl` records the related cross-overlap
 final-basis convention but is not called by this implementation.
-`src/cartesian_protected_ladder_bundle.jl` supplies the existing in-memory
+`src/cartesian/cartesian_protected_ladder_bundle.jl` supplies the existing in-memory
 protected member shape and commit helper; no ladder accessor or schema was
 added.
 

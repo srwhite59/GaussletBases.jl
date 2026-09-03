@@ -119,10 +119,10 @@ inspect mapped orders, expose high-order controls, or add another route.
 
 Source-span construction:
 
-- `src/cartesian_nested_faces.jl`;
+- `src/cartesian/cartesian_nested_faces.jl`;
 - narrow source-axis plumbing, and the sole continuing numerical role of the
   reduced `CartesianPairBlockMaterialization` module, in
-  `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`.
+  `src/cartesian/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`.
 
 The former unit-pair, pair-plan, and pair-materialization ladder was
 separately retired. That retirement kept this file byte-for-byte unchanged
@@ -132,15 +132,15 @@ materialization layer.
 
 Terminal consumption:
 
-- `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`;
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`;
 - module import/include support in
-  `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`.
+  `src/cartesian/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`.
 
 Driver/staged selection:
 
 - `bin/cartesian_ham_builder.jl`;
-- `src/cartesian_base_hamiltonian.jl`;
-- `src/pqs_source_box_route_driver_helpers.jl`.
+- `src/cartesian/cartesian_base_hamiltonian.jl`;
+- `src/cartesian/pqs_source_box_route_driver_helpers.jl`.
 
 No mapped-COMX production file under `cartesian_raw_product_sources/` is
 owned or needed.

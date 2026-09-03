@@ -265,11 +265,11 @@ or construction.
 The implemented source surface is:
 
 ```text
-src/cartesian_base_hamiltonian.jl
+src/cartesian/cartesian_base_hamiltonian.jl
 bin/cartesian_ham_builder.jl
 ```
 
-`src/pqs_source_box_route_driver_helpers.jl` may supply compact access to
+`src/cartesian/pqs_source_box_route_driver_helpers.jl` may supply compact access to
 existing native facts; it is not a second report owner. The registry remains
 authoritative for exact source permission.
 

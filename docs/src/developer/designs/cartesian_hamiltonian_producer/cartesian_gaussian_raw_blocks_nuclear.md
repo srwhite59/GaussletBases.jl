@@ -24,8 +24,8 @@ stable high-exponent formula. Manager-log Passes 078-082B record acceptance.
 The internal module is loaded from:
 
 ```text
-src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl
-src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
+src/cartesian/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl
+src/cartesian/cartesian_gaussian_raw_blocks/nuclear_blocks.jl
 ```
 
 `src/GaussletBases.jl` includes the module but exports no raw-block API. The
@@ -42,7 +42,7 @@ CartesianGaussianRawBlocks.gaussian_nuclear_raw_blocks_by_center(
 Its direct live callers are:
 
 - `_r3a_qw_blocks(...)` in
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`;
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`;
 - `_qwrg_diatomic_cartesian_shell_blocks_3d(...)` in
   `src/ordinary/ordinary_qw_raw_blocks.jl`.
 
@@ -136,7 +136,7 @@ Cr2-specific contract.
 
 `HP-CGAI-FN-01` proposed an in-place
 `_cartesian_gaussian_axis_integral_table!(...)` or specialized nonallocating
-factor helper in `src/cartesian_gaussian_axis_integrals.jl`. That symbol and
+factor helper in `src/cartesian/cartesian_gaussian_axis_integrals.jl`. That symbol and
 consumer never landed. `HP-CGRB-FN-02` succeeded with the private
 `_factor_axis_integral(...)` and `_fill_axis_factor_table!(...)` owned directly
 by `nuclear_blocks.jl`; therefore `HP-CGAI-FN-01` is a superseded historical

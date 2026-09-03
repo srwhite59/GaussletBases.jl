@@ -35,7 +35,7 @@ cartesian_base_hamiltonian(system; basis, hamfile = nothing)
 
 That facade accepts exact public records and returns
 `CartesianIDAHamiltonian{Float64}` directly. The driver instead calls the
-non-exported staged functions in `src/cartesian_base_hamiltonian.jl` so its
+non-exported staged functions in `src/cartesian/cartesian_base_hamiltonian.jl` so its
 physics-level timings remain visible and so it can compose the separately
 implemented supplemented workflow. Driver variable names are not facade
 keywords, and driver defaults are not hidden producer defaults.
@@ -171,12 +171,12 @@ write a separate check record or validate every provenance sidecar.
 
 - `bin/cartesian_ham_builder.jl` owns the canonical script, inputs,
   presentation, staged calls, and artifact/readback workflow.
-- `src/cartesian_base_hamiltonian.jl` owns the non-exported staged producer
+- `src/cartesian/cartesian_base_hamiltonian.jl` owns the non-exported staged producer
   composition used by the script.
-- `src/pqs_source_box_low_order_materialization.jl` and
-  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` own the
+- `src/cartesian/pqs_source_box_low_order_materialization.jl` and
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl` own the
   existing behavior-preserving base operator-class factoring.
-- `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` owns the
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` owns the
   existing supplemented operator-class factoring and artifact write.
 
 Artifact format and reader behavior remain with their canonical artifact
@@ -186,7 +186,7 @@ committed input-fixture file.
 ### Base-Operator Buffer Ownership
 
 Pass 532 implemented call-local terminal-buffer reuse in
-`src/pqs_source_box_low_order_materialization.jl`. The base kinetic stage
+`src/cartesian/pqs_source_box_low_order_materialization.jl`. The base kinetic stage
 reuse one call-local set of the existing terminal action/tile/block buffers
 across its three Cartesian product terms. The base unit-nuclear stage may
 reuse a separate call-local set across all physical centers. It must call the

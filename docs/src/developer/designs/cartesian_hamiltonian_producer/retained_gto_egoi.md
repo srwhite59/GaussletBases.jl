@@ -11,7 +11,7 @@ implementation authority.
 - `HP-RG-PROTECT-EGOI-TEST-01` is deferred with no test grant or planned path.
 
 The generic matrix-level EGOI routines remain implemented in
-`src/hamiltonian_corrections.jl`:
+`src/cartesian/hamiltonian_corrections.jl`:
 
 - `egoi_target_product_matrix`;
 - `egoi_target_coulomb_matrix`;

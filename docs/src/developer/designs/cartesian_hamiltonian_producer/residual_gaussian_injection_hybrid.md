@@ -167,11 +167,11 @@ remain unchanged within roundoff.
 
 Approved implementation owners are:
 
-- `src/cartesian_residual_gaussians/residual_basis.jl`;
-- `src/cartesian_residual_gaussians/augmented_operators.jl`;
-- `src/cartesian_residual_gaussians/mwg_interaction.jl`;
+- `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`;
+- `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`;
+- `src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl`;
 - narrow compatibility plumbing in
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`.
 
 Compact implementation facts may include injection and rank thresholds,
 injected dimension/owner counts, `B/Q_perp` transform authority, and the

@@ -109,10 +109,10 @@ Key docs:
 
 Source anchors:
 - **active implementation surface after extraction**:
-  `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`,
-  `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
+  `src/cartesian/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`,
+  `src/cartesian/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
 - **current extraction targets / parity consumers**:
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
   `src/ordinary/ordinary_qw_raw_blocks.jl`,
   `src/ordinary/ordinary_qw_operator_assembly.jl`
 
@@ -143,9 +143,9 @@ Key docs:
 
 Source anchors:
 - **active implementation surface after extraction**:
-  `src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`
+  `src/cartesian/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`
 - **current extraction targets / parity consumers**:
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
   `src/ordinary/ordinary_qw_raw_blocks.jl`,
   `src/ordinary/ordinary_qw_operator_assembly.jl`
 
@@ -171,22 +171,22 @@ Key docs:
 
 Source anchors:
 - **active implementation surface**:
-  `src/cartesian_residual_gaussians/residual_basis.jl`,
+  `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`,
   `staged_protected_original_injection_geometry`
 - **active reusable kernel**:
-  `src/cartesian_residual_gaussians/augmented_operators.jl`,
+  `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`,
   `transform_protected_original_fixed_sector_exact_hartree`
 - **active reusable kernels**:
-  `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`,
+  `src/cartesian/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`,
   `atomic_reference_hartree_gg_block` and
   `atomic_reference_hartree_ga_aa_blocks`
 - **active reference owner**:
-  `src/cartesian_reference_density/atomic_hf_reference_packets.jl`
+  `src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl`
 - **active correction owner**:
-  `src/cartesian_reference_density/screened_hartree_correction.jl`,
+  `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl`,
   `ScreenedHartreeCorrection`
 - **consumer composition seam**:
-  `src/cartesian_protected_ladder_bundle.jl`, `_plb_build_member`
+  `src/cartesian/cartesian_protected_ladder_bundle.jl`, `_plb_build_member`
 
 Do-not-forget rule:
 Use an orthonormalized occupied union only to protect the basis span. Build
@@ -208,7 +208,7 @@ Key docs:
 - `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_cpb_block_provider_retirement.md`
 
 Source anchors:
-- **active reusable kernel**: `src/CartesianParentAxisFactors.jl`,
+- **active reusable kernel**: `src/cartesian/CartesianParentAxisFactors.jl`,
   `parent_overlap_axis_factor_packet`
 - **retired experimental pilot**: `CartesianCPBBlockProviders`; its source was
   deleted after a no-caller audit and must not be restored as a provider
@@ -239,10 +239,10 @@ Key docs:
 
 Source anchors:
 - **active reusable kernel**:
-  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
 - **active operator owners**:
-  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`,
-  `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl`,
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_ida.jl`
 - **retired history**: the deleted contracted-parent/multilayer
   complete-core-shell oracle is recorded in
   `docs/src/developer/designs/cartesian_hamiltonian_producer/contracted_parent_multilayer_retirement.md`
@@ -268,11 +268,11 @@ Key docs:
 - `docs/src/developer/pqs_source_box_operator_framework.md`
 
 Source anchors:
-- **active reusable kernel**: `src/cartesian_route_core/retained_spaces.jl`
+- **active reusable kernel**: `src/cartesian/cartesian_route_core/retained_spaces.jl`
 - **active terminal consumer**:
-  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
 - **mapped-COMX axis facts only**:
-  `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`
+  `src/cartesian/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`
 - **retired history**: the unused contracted-parent source-box shadow and
   private GTO adapter were deleted in Pass 467
 - **retired history**: the orphaned source-safe-term, bridge, readiness,
@@ -297,18 +297,18 @@ Key docs:
 - `docs/src/developer/pqs_source_box_operator_framework.md`
 
 Source anchors:
-- **approved owner**: `src/cartesian_nested_faces.jl`,
+- **approved owner**: `src/cartesian/cartesian_nested_faces.jl`,
   `_nested_doside_1d`, `_nested_retained_span`, and existing
   `_cleanup_comx_transform`
 - **narrow wiring/provenance surfaces**:
-  `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`,
+  `src/cartesian/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`,
   plus existing `AxisSourceTransformFact` provenance/accessors only if needed
 - **terminal-basis consumer seam**:
-  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`,
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`,
   `_shell_seed(...)`
 - **driver/facade selector seam**:
-  `bin/cartesian_ham_builder.jl`, `src/cartesian_base_hamiltonian.jl`, and
-  narrow propagation through `src/pqs_source_box_route_driver_helpers.jl`
+  `bin/cartesian_ham_builder.jl`, `src/cartesian/cartesian_base_hamiltonian.jl`, and
+  narrow propagation through `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 
 Do-not-forget rule:
 The first installed rule is protected physical `P2` plus mapped Chebyshev
@@ -338,13 +338,13 @@ Key docs:
 
 Source anchors:
 - **active implementation surface**:
-  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`,
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl`,
   `assemble_terminal_product_operator!`
 - **implemented terminal unit-nuclear surface**:
-  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`,
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl`,
   `_accumulate_terminal_gaussian_sum!`, `_terminal_gaussian_sum_action`
 - **same-construction reuse and fallback caller**:
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
   `pqs_terminal_residual_gto_augmented_unit_nuclear`
 - **consumer example only**: `src/ordinary/ordinary_qw_operator_assembly.jl`,
   `assembled_one_body_hamiltonian`
@@ -374,13 +374,13 @@ Key docs:
 
 Source anchors:
 - **active implementation surface**:
-  `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`,
   `pqs_terminal_residual_gto_augmented_products`
 - **active reusable kernel**:
-  `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`,
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl`,
   `assemble_terminal_product_operator!`, `_assemble_terminal_product_operator!`
 - **trusted reuse callers**:
-  `src/cartesian_base_hamiltonian.jl`, `bin/cartesian_ham_builder.jl`
+  `src/cartesian/cartesian_base_hamiltonian.jl`, `bin/cartesian_ham_builder.jl`
 
 Do-not-forget rule:
 This implementation is final-basis `G-G` only. Scratch is function-local.
@@ -402,9 +402,9 @@ Key docs:
 
 Source anchors:
 - **active implementation surface**:
-  `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`,
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_ida.jl`,
   `assemble_terminal_ida_interaction!`
-- **oracle/reference only**: `src/cartesian_nested_faces.jl`,
+- **oracle/reference only**: `src/cartesian/cartesian_nested_faces.jl`,
   `_nested_factorized_weight_aware_pair_terms`,
   `_nested_weight_aware_pair_terms`, `_nested_support_reference_pair_sum`
 - **active donor pattern**: `src/ordinary/ordinary_mapped_backends.jl`,
@@ -437,15 +437,15 @@ Key docs:
 - `docs/src/developer/numerical_contracts.md`
 
 Source anchors:
-- **active reusable kernel**: `src/cartesian_ida_hamiltonian.jl`,
+- **active reusable kernel**: `src/cartesian/cartesian_ida_hamiltonian.jl`,
   `CartesianIDAHamiltonian`, `write_cartesian_ida_hamiltonian`
-- **active implementation surface**: `src/cartesian_base_hamiltonian.jl`,
+- **active implementation surface**: `src/cartesian/cartesian_base_hamiltonian.jl`,
   staged base/supplemented producer functions used by the canonical driver
 - **active staged construction surface**:
   `cartesian_base_working_basis`, `cartesian_base_products`,
   `cartesian_base_unit_nuclear`, `cartesian_base_vee`, and
   `cartesian_base_hamiltonian_assembly` in
-  `src/cartesian_base_hamiltonian.jl`
+  `src/cartesian/cartesian_base_hamiltonian.jl`
 - **retired/do not call**:
   `cartesian_materialization(report, terminal_basis_realization,
   materialization_inputs)` and its former wrapper choreography; the route
@@ -502,10 +502,10 @@ Key docs:
 - `docs/src/developer/high_order_doside_physical_block_speed_plan.md`
 
 Source anchors after the approved retirement:
-- **active donor pattern**: `src/cartesian_nested_owned_units.jl`,
+- **active donor pattern**: `src/cartesian/cartesian_nested_owned_units.jl`,
   `_nested_endcap_panel_owned_units`,
   `_nested_endcap_panel_shell_layer`
-- **active donor pattern**: `src/cartesian_nested_faces.jl`, `_nested_doside_1d`
+- **active donor pattern**: `src/cartesian/cartesian_nested_faces.jl`, `_nested_doside_1d`
 - **retirement pending**: `src/cartesian_high_order_doside_experimental.jl`,
   `src/cartesian_high_order_doside_ida_experimental.jl`,
   `src/ordinary_qw_experimental_paths.jl`, and
@@ -530,7 +530,7 @@ Key docs:
 - `docs/src/developer/old_flat_cartesian_retirement_audit_2026-06-14.md`
 
 Source anchors:
-- **oracle/reference only**: `src/cartesian_nested_faces.jl`
+- **oracle/reference only**: `src/cartesian/cartesian_nested_faces.jl`
 - **oracle/reference only**: `src/ordinary/ordinary_qw_raw_blocks.jl`
 - **consumer example only**: `src/ordinary/ordinary_qw_operator_assembly.jl`
 - **retired history**: the contracted-parent metric cluster was deleted in

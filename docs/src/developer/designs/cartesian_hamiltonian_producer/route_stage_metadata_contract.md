@@ -33,23 +33,23 @@ it.
 
 ## Current Owners
 
-- `src/pqs_source_box_route_driver_helpers.jl` owns ordered retained-unit and
+- `src/cartesian/pqs_source_box_route_driver_helpers.jl` owns ordered retained-unit and
   pair-family rows and the compact stage handoffs.
-- `src/pqs_source_box_route_driver_skeletons.jl` retains ownership of upstream
+- `src/cartesian/pqs_source_box_route_driver_skeletons.jl` retains ownership of upstream
   route-skeleton construction; the carrier cleanup did not retire it.
-- `src/cartesian_terminal_shellification_geometry.jl` owns the private
+- `src/cartesian/cartesian_terminal_shellification_geometry.jl` owns the private
   shellification-region inventory derived in scaffold order. It is descriptive
   shellification metadata, not a second lowering-plan owner.
-- `src/cartesian_raw_product_sources/` owns `RawProductBoxPlan` source-mode
+- `src/cartesian/cartesian_raw_product_sources/` owns `RawProductBoxPlan` source-mode
   inventories and their accessors.
-- `src/cartesian_terminal_lowering/` owns available and selected terminal
+- `src/cartesian/cartesian_terminal_lowering/` owns available and selected terminal
   lowering contracts.
-- `src/cartesian_retained_units/` owns the ordered retained-unit plan;
-  `src/cartesian_retained_unit_transform_contracts/` owns one ordered transform
+- `src/cartesian/cartesian_retained_units/` owns the ordered retained-unit plan;
+  `src/cartesian/cartesian_retained_unit_transform_contracts/` owns one ordered transform
   contract per retained unit.
-- `src/pqs_source_box_diatomic_complete_core_shell.jl` owns the active terminal
+- `src/cartesian/pqs_source_box_diatomic_complete_core_shell.jl` owns the active terminal
   topology support-region and terminal retained-rule plans consumed by
-  `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`.
+  `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`.
 
 ## Inventory And Plan Semantics
 

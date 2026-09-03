@@ -265,7 +265,7 @@ workflow.
 The geometry and operator helpers are internal. Their ordinary no-reference
 consumer is explicit and default-off; ordinary PQS/RG construction remains
 unchanged. The current protected member path in
-`src/cartesian_protected_ladder_bundle.jl` composes the staged geometry, exact
+`src/cartesian/cartesian_protected_ladder_bundle.jl` composes the staged geometry, exact
 fixed-sector one-body matrix, and protected-localized inherited-site
 Hamiltonian. Persistence and bundle behavior remain under their separate
 authorities and are not specified here.
@@ -281,16 +281,16 @@ screened-Hartree reference fields.
 
 Core source ownership:
 
-- `src/cartesian_residual_gaussians/residual_basis.jl` owns staged protected
+- `src/cartesian/cartesian_residual_gaussians/residual_basis.jl` owns staged protected
   geometry, Gaussian cleanup, representability/fake-RDM selection, and
   geometry diagnostics.
-- `src/cartesian_residual_gaussians/augmented_operators.jl` owns exact
+- `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl` owns exact
   fixed-sector one-body transformation and the localized/inherited-site
   in-memory convention.
 
 Current internal consumer, under separate authority:
 
-- `src/cartesian_protected_ladder_bundle.jl`.
+- `src/cartesian/cartesian_protected_ladder_bundle.jl`.
 
 The source/test IDs were validated through bounded default-path smokes and
 ignored source-backed replays rather than a dedicated committed unit-test

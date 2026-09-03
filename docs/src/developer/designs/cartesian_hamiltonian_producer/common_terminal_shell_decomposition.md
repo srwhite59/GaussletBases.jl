@@ -117,7 +117,7 @@ Descriptor construction and only the diagnostics/provenance entries whose
 subject was descriptor availability, descriptor metadata-only status,
 prototype consumption, or the false `active_builder_consumes` claim were
 removed. The two-line `pqs_staged_unit_descriptor` propagation was removed
-from `src/cartesian_nested_diatomic.jl`. No deleted fact was replaced by a
+from `src/cartesian/cartesian_nested_diatomic.jl`. No deleted fact was replaced by a
 smaller carrier, `NamedTuple`, accessor, alias, deprecation, serialization
 record, status vocabulary, or copied diagnostic.
 
@@ -138,8 +138,8 @@ high-order branch are outside this transaction.
 
 At baseline `1e8e31377efb5778df8e48c9d06c4e2237fd8a81`, tracked live references
 to the descriptor closure occur only in
-`src/cartesian_nested_faces.jl` and the two-line propagation in
-`src/cartesian_nested_diatomic.jl`. No tracked test, driver, tool, example, or
+`src/cartesian/cartesian_nested_faces.jl` and the two-line propagation in
+`src/cartesian/cartesian_nested_diatomic.jl`. No tracked test, driver, tool, example, or
 current nonhistorical contract calls it. A completed REQ-094 worker log records
 an old frozen probe that used the accessor, but its retained executable replay
 does not; this is historical evidence rather than a current downstream
@@ -155,8 +155,8 @@ preserved every projected-q-shell coefficient and metric-packet value.
 The implementation is confined to:
 
 ```text
-src/cartesian_nested_faces.jl
-src/cartesian_nested_diatomic.jl
+src/cartesian/cartesian_nested_faces.jl
+src/cartesian/cartesian_nested_diatomic.jl
 ```
 
 Implementation commit `8fcda0086f73dbd1348aa6b261c7862f1cf64bb3`
@@ -258,7 +258,7 @@ Git history is the main-source archive.
 Implementation source was confined to:
 
 ```text
-src/cartesian_nested_faces.jl
+src/cartesian/cartesian_nested_faces.jl
 src/ordinary/ordinary_qw_raw_blocks.jl
 ```
 
@@ -402,19 +402,19 @@ realization facts without becoming numerical authority.
 
 Current implementation ownership is limited to:
 
-- `src/cartesian_shellification/terminal_geometry.jl` for common regions,
+- `src/cartesian/cartesian_shellification/terminal_geometry.jl` for common regions,
   angular targets, and native slab stacks;
-- `src/pqs_source_box_route_driver_helpers.jl` for narrow common-input caller
+- `src/cartesian/pqs_source_box_route_driver_helpers.jl` for narrow common-input caller
   plumbing;
-- `src/cartesian_terminal_lowering/selection.jl` and
-  `src/cartesian_terminal_lowering/region_contracts.jl` for common slab
+- `src/cartesian/cartesian_terminal_lowering/selection.jl` and
+  `src/cartesian/cartesian_terminal_lowering/region_contracts.jl` for common slab
   selection and contracts;
-- `src/cartesian_retained_units/lower_contract_units.jl` and
-  `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl` for the
+- `src/cartesian/cartesian_retained_units/lower_contract_units.jl` and
+  `src/cartesian/cartesian_retained_unit_transform_contracts/unit_contracts.jl` for the
   compact slab retained unit and transform contract;
-- `src/cartesian_final_basis_realization/terminal_face_product_blocks.jl` and
+- `src/cartesian/cartesian_final_basis_realization/terminal_face_product_blocks.jl` and
   the PQS/WL terminal realizers for neutral face-stack realization;
-- `src/cartesian_terminal_shellification_geometry.jl` for compact internal
+- `src/cartesian/cartesian_terminal_shellification_geometry.jl` for compact internal
   inventory metadata.
 
 The registry remains authoritative for exact file permission.

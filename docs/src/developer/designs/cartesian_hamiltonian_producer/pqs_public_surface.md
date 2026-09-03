@@ -163,7 +163,7 @@ serial product actions exactly. No benchmark, baseline helper, or performance
 fixture is committed. Maintenance must preserve the absence of parent-sized
 per-action allocation and must not reintroduce cross-call storage.
 
-Maintenance is confined to `src/pqs_matched_h2plus.jl`. The accepted
+Maintenance is confined to `src/cartesian/pqs_matched_h2plus.jl`. The accepted
 implementation added/deleted `55/32` source lines, stayed within the `60`-line
 hard and `30`-line net limits, and removed the allocating private helpers rather
 than retaining parallel implementations. No test edit, new file, type, export,
@@ -793,7 +793,7 @@ It also removes `OneCenterAtomicNestedLayerStructure` and
 `QiuWhiteResidualGaussianOperators` from the root export while retaining the
 unchanged internal diagnostic-storage type and one-line alias to
 `OrdinaryCartesianOperators3D`. The exact delta is `+0/-7` across
-`src/GaussletBases.jl` and `src/cartesian_nested_faces.jl`. The root-surface
+`src/GaussletBases.jl` and `src/cartesian/cartesian_nested_faces.jl`. The root-surface
 reduction is the useful cleanup; retaining the alias avoids compatibility risk
 without meaningful carrying cost. Ignored historical probes and conflicted
 copies remain untouched.
@@ -1647,7 +1647,7 @@ assembly. PRF-specific definitions remain unexported and receive no public
 status through this staged constructor.
 
 The accepted implementation added a `21`-line docstring in
-`src/cartesian_base_hamiltonian.jl`, an `18`-line paragraph and curated entry
+`src/cartesian/cartesian_base_hamiltonian.jl`, an `18`-line paragraph and curated entry
 beside `cartesian_base_hamiltonian` in `docs/src/reference/export.md`, and
 changed focused checks in `test/docs/runtests.jl` by `+13/-1`. All additions
 remain within the authorized hard limits, with no new file.
@@ -1699,8 +1699,8 @@ implemented by commit `8161f131aa962fef979f8ef09c14d23231eb14e4`:
 
 Maintenance is limited to the accepted docstrings in
 `src/ordinary/ordinary_qw_types_and_bases.jl`, `src/ordinary/ordinary_coulomb.jl`,
-`src/GaussletBases.jl`, `src/cartesian_base_hamiltonian.jl`, and
-`src/cartesian_external_gto_import.jl`, and their curated entries or short
+`src/GaussletBases.jl`, `src/cartesian/cartesian_base_hamiltonian.jl`, and
+`src/cartesian/cartesian_external_gto_import.jl`, and their curated entries or short
 limiting prose in `docs/src/reference/bases_and_mappings.md`,
 `docs/src/reference/operators_and_diagnostics.md`, and
 `docs/src/reference/export.md`. The implementation added `52` and removed `10`
@@ -2131,9 +2131,9 @@ Approved source ownership:
 
 ```text
 src/GaussletBases.jl
-src/pqs_matched_h2plus.jl
-src/cartesian_reference_density/CartesianReferenceDensity.jl
-src/cartesian_reference_density/screened_hartree_correction.jl
+src/cartesian/pqs_matched_h2plus.jl
+src/cartesian/cartesian_reference_density/CartesianReferenceDensity.jl
+src/cartesian/cartesian_reference_density/screened_hartree_correction.jl
 ```
 
 Approved test ownership:

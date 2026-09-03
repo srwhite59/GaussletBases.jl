@@ -205,7 +205,7 @@ additive molecular `P0/J0/E0` belongs to
 
 Implementation and test ownership is recorded in the compact registry entry.
 The implementation lives in
-`src/cartesian_residual_gaussians/residual_basis.jl` and may consume
+`src/cartesian/cartesian_residual_gaussians/residual_basis.jl` and may consume
 already-owned packet/import coefficient data without changing those owners.
 
 Validation uses:

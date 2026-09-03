@@ -153,11 +153,11 @@ corrected artifact. The detailed source and Be2 gates are in
 
 Implemented source surface:
 
-- `src/cartesian_reference_density/CartesianReferenceDensity.jl`;
-- `src/cartesian_reference_density/screened_hartree_correction.jl`;
+- `src/cartesian/cartesian_reference_density/CartesianReferenceDensity.jl`;
+- `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl`;
 - `src/GaussletBases.jl` only for include/qualified access wiring;
 - optional narrow use of
-  `src/cartesian_reference_density/atomic_hf_reference_packets.jl` for packet
+  `src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl` for packet
   readback/validation helpers.
 
 Do not place this object in the Hamiltonian artifact writer, solver workflow,

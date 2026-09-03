@@ -392,7 +392,7 @@ solver, basis-default, or production claim.
 Implemented ownership is limited to:
 
 ```text
-src/cartesian_external_gto_interchange.jl
+src/cartesian/cartesian_external_gto_interchange.jl
 src/GaussletBases.jl
 bin/export_pyscf_cartesian_gto.py
 test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl

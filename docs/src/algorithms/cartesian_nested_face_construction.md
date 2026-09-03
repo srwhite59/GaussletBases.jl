@@ -11,12 +11,12 @@
 2. Choose one one-dimensional interval on that fixed line.
    The first primitive is local, not global: one interval of finalized parent
    functions that will be compressed into a smaller side space.
-   Code: `src/cartesian_nested_faces.jl`
+   Code: `src/cartesian/cartesian_nested_faces.jl`
 
 3. Build one local `doside` contraction on that interval.
    The retained span is not an arbitrary truncation. It is the low-order local
    coordinate content of the interval.
-   Code: `src/cartesian_nested_faces.jl`
+   Code: `src/cartesian/cartesian_nested_faces.jl`
    Legacy model:
    `GaussletModules/PureGaussianGausslet.jl` `getsideu(...)`, `getside(...)`
 
@@ -27,19 +27,19 @@
    - orthogonalize in the local metric
    - diagonalize the projected local coordinate operator
    - sign-fix with the local weights
-   Code: `src/cartesian_nested_faces.jl`
+   Code: `src/cartesian/cartesian_nested_faces.jl`
 
 5. Build one tangential face product from those side spaces.
    For one rectangular face:
    - contract the first tangential interval with `doside`
    - contract the second tangential interval with `doside`
    - take the product of the two retained side spaces
-   Code: `src/cartesian_nested_faces.jl`
+   Code: `src/cartesian/cartesian_nested_faces.jl`
 
 6. Restrict to face interiors so different faces remain disjoint.
    The first primitive shell language already depends on disjoint support
    between opposite or neighboring faces.
-   Code: `src/cartesian_nested_faces.jl`
+   Code: `src/cartesian/cartesian_nested_faces.jl`
 
 7. Assemble the first shell packet from those face pieces.
    The shell packet carries:
@@ -47,7 +47,7 @@
    - shell overlap
    - one-body packet pieces
    - retained Gaussian-factor and pair-factor sums
-   Code: `src/cartesian_nested_faces.jl`
+   Code: `src/cartesian/cartesian_nested_faces.jl`
 
 8. Stop at the first shell packet.
    This page is only the primitive page:

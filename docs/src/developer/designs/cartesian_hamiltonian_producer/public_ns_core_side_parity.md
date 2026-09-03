@@ -47,9 +47,9 @@ forcing equal boundary construction or final dimensions.
 
 Source owners:
 
-- `src/cartesian_base_hamiltonian.jl`:
+- `src/cartesian/cartesian_base_hamiltonian.jl`:
   `_cartesian_base_direct_core_side(ns)` and the one-center parent minimum;
-- `src/pqs_source_box_route_driver_helpers.jl`: direct-core route
+- `src/cartesian/pqs_source_box_route_driver_helpers.jl`: direct-core route
   construction and truthful `:public_ns_direct_core_side` provenance.
 
 The broader public `ns` and route-local `q` contract is owned by

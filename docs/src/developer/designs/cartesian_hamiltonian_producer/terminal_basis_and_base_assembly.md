@@ -201,7 +201,7 @@ field, object, module, or source permission.
 ## Route Wiring
 
 `cartesian_transforms` reaches terminal realization through the current helper
-in `src/pqs_source_box_route_driver_helpers.jl`.
+in `src/cartesian/pqs_source_box_route_driver_helpers.jl`.
 
 For `:pqs_source_box`, it passes the typed terminal support plan, retained
 records, transform contracts, and parent axis bundle directly to
@@ -257,8 +257,8 @@ within their active numerical checks.
 ### Implemented Call-Local Terminal Buffer Reuse
 
 Pass 532 implemented one storage-only optimization in
-`src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` and its base
-caller in `src/pqs_source_box_low_order_materialization.jl`. The existing
+`src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl` and its base
+caller in `src/cartesian/pqs_source_box_low_order_materialization.jl`. The existing
 action, tile, and block buffers may be sized once from the live terminal blocks
 and reused within one base-product or unit-nuclear construction. The three
 kinetic product terms may share one lexical buffer set, and all physical
@@ -328,7 +328,7 @@ full unrolling, term-major traversal, layout-dependent offsets, or another
 algorithm. The old scalar inner loop was deleted; no parallel fallback remains.
 
 The exact implementation delta is `+50/-14` lines in
-`src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, reaching but
+`src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl`, reaching but
 not exceeding the authorized `50`-line hard limit. It added no helper, tuple
 machinery, type, file, API, test, cache, metadata, dependency, or other owner
 edit. The design evidence is the transient report with SHA-256
@@ -466,12 +466,12 @@ and the existing artifact path. See
 
 | Contract | Source owner |
 | --- | --- |
-| Terminal objects and PQS realization | `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl` |
-| Exact product and Gaussian-sum one-body assembly | `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` |
-| Localized IDA assembly | `src/cartesian_final_basis_realization/pqs_terminal_ida.jl` |
-| Terminal-stage route wiring | `src/pqs_source_box_route_driver_helpers.jl` |
-| Base product/unit-nuclear/IDA composition | `src/pqs_source_box_low_order_materialization.jl`, `src/cartesian_base_hamiltonian.jl` |
-| Hamiltonian object and one-body/nuclear accounting | `src/cartesian_ida_hamiltonian.jl` |
+| Terminal objects and PQS realization | `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl` |
+| Exact product and Gaussian-sum one-body assembly | `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl` |
+| Localized IDA assembly | `src/cartesian/cartesian_final_basis_realization/pqs_terminal_ida.jl` |
+| Terminal-stage route wiring | `src/cartesian/pqs_source_box_route_driver_helpers.jl` |
+| Base product/unit-nuclear/IDA composition | `src/cartesian/pqs_source_box_low_order_materialization.jl`, `src/cartesian/cartesian_base_hamiltonian.jl` |
+| Hamiltonian object and one-body/nuclear accounting | `src/cartesian/cartesian_ida_hamiltonian.jl` |
 
 ## Validation
 

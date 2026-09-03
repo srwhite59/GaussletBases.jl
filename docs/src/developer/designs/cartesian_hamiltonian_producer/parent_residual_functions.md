@@ -259,13 +259,13 @@ block.
 
 Implementation is limited to existing owners:
 
-- `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
   for parent/terminal projection, validation, and the compact PRF block;
-- `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl` for exact
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_one_body.jl` for exact
   factorized PRF one-body blocks;
-- `src/cartesian_final_basis_realization/pqs_terminal_ida.jl` for streamed
+- `src/cartesian/cartesian_final_basis_realization/pqs_terminal_ida.jl` for streamed
   parent-backed direct contractions and the bounded parent-IDA comparator;
-- `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+- `src/cartesian/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
   only for narrow internal module wiring;
 - `src/ordinary/ordinary_coulomb.jl` only for the scalar onsite-calibrated Gaussian
   Coulomb formula and its compact resource.

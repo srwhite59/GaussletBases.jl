@@ -91,13 +91,13 @@ until it has a separate analytic-backend validation pass.
   - `src/ordinary/ordinary_qw_nested_frontends.jl:bond_aligned_diatomic_nested_fixed_source`
   - `src/ordinary/ordinary_qw_nested_frontends.jl:bond_aligned_diatomic_nested_fixed_block`
 - Internal diatomic source policy:
-  - `src/cartesian_nested_diatomic.jl:_nested_bond_aligned_diatomic_source`
+  - `src/cartesian/cartesian_nested_diatomic.jl:_nested_bond_aligned_diatomic_source`
 - Owned-unit construction:
-  - `src/cartesian_nested_owned_units.jl:_nested_endcap_panel_owned_units`
-  - `src/cartesian_nested_owned_units.jl:_nested_endcap_panel_shell_layer`
+  - `src/cartesian/cartesian_nested_owned_units.jl:_nested_endcap_panel_owned_units`
+  - `src/cartesian/cartesian_nested_owned_units.jl:_nested_endcap_panel_shell_layer`
 - Staged by-center sidecar selection:
-  - `src/cartesian_nested_faces.jl:_nested_by_center_sidecar_path`
-  - `src/cartesian_nested_faces.jl:_nested_product_staged_by_center_sidecar_cache`
+  - `src/cartesian/cartesian_nested_faces.jl:_nested_by_center_sidecar_path`
+  - `src/cartesian/cartesian_nested_faces.jl:_nested_product_staged_by_center_sidecar_cache`
 - Product-staged nuclear contraction:
   - `src/ordinary/ordinary_qw_raw_blocks.jl:_qwrg_bond_aligned_staged_by_center_nuclear_one_body_by_center`
 

@@ -31,10 +31,10 @@ robustness and cutoff precedence are canonical in
 The internal owner is:
 
 ```text
-src/cartesian_residual_gaussians/CartesianResidualGaussians.jl
-src/cartesian_residual_gaussians/residual_basis.jl
-src/cartesian_residual_gaussians/augmented_operators.jl
-src/cartesian_residual_gaussians/mwg_interaction.jl
+src/cartesian/cartesian_residual_gaussians/CartesianResidualGaussians.jl
+src/cartesian/cartesian_residual_gaussians/residual_basis.jl
+src/cartesian/cartesian_residual_gaussians/augmented_operators.jl
+src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl
 ```
 
 `src/GaussletBases.jl` includes the module but exports no RG-domain API.
@@ -42,9 +42,9 @@ src/cartesian_residual_gaussians/mwg_interaction.jl
 Current composition remains in:
 
 ```text
-src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
-src/cartesian_base_hamiltonian.jl
-src/cartesian_protected_ladder_bundle.jl
+src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl
+src/cartesian/cartesian_base_hamiltonian.jl
+src/cartesian/cartesian_protected_ladder_bundle.jl
 bin/cartesian_ham_builder.jl
 ```
 

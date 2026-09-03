@@ -12,7 +12,7 @@ page records those completed objects; it does not redefine their construction.
 
 ## Identity And Ownership
 
-`src/cartesian_ida_hamiltonian.jl` owns the artifact writer and reader:
+`src/cartesian/cartesian_ida_hamiltonian.jl` owns the artifact writer and reader:
 
 - `write_protected_localized_ida_hamiltonian`;
 - `read_protected_localized_ida_hamiltonian`.
@@ -26,7 +26,7 @@ convention_id      = :protected_localized_inherited_site_ida_v1
 convention_version = 1
 ```
 
-`src/cartesian_residual_gaussians/augmented_operators.jl` owns
+`src/cartesian/cartesian_residual_gaussians/augmented_operators.jl` owns
 `protected_localized_row_locality`, which constructs optional locality
 metadata before the writer validates and stores it.
 
@@ -166,8 +166,8 @@ consumers must call the protected reader explicitly.
 
 Source ownership:
 
-- `src/cartesian_ida_hamiltonian.jl`;
-- `src/cartesian_residual_gaussians/augmented_operators.jl`.
+- `src/cartesian/cartesian_ida_hamiltonian.jl`;
+- `src/cartesian/cartesian_residual_gaussians/augmented_operators.jl`.
 
 There is no dedicated committed core protected-artifact test file.
 `test/ida/cartesian_ida_hamiltonian_runtests.jl` exercises only the ordinary

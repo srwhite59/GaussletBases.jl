@@ -31,7 +31,7 @@ cartesian_residual_gto_mwg_hamiltonian(
 )::CartesianIDAHamiltonian{Float64}
 ```
 
-It is defined in `src/cartesian_base_hamiltonian.jl` and is intentionally not
+It is defined in `src/cartesian/cartesian_base_hamiltonian.jl` and is intentionally not
 exported from `GaussletBases`. It returns the existing Hamiltonian directly,
 not a wrapper, report, status object, payload, or `(value, metadata)` pair.
 
@@ -115,7 +115,7 @@ an arbitrary dimension-compatible Hamiltonian.
 Residual-basis, exact-operator, and MWG formulas belong to
 [Residual Gaussian domain module](residual_gaussian_domain_module.md). The
 terminal compatibility functions in
-`src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` compose
+`src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl` compose
 raw blocks, enforce same-construction checks, delegate numerical physics to
 the domain module, and assemble the existing Hamiltonian type.
 
