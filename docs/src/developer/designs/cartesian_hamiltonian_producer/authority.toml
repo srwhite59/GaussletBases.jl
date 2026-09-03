@@ -32,7 +32,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pair
 sha256 = "62578861400c82d1521aa1d17df6ca4dc2831d3877e6630c792882e10f4b43e8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pqs_source_relocation.md"
-sha256 = "49853fe6932e4583240033e7a24242979b064f476e4f73680e55c0851f152ad1"
+sha256 = "b0851c93dc6775698db7dd0f120424be5bca72f427b20a6f2cceeee7b278a150"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
 sha256 = "b1971cdad9311036869ff0f1f3a2666b7c0f6ec433625dc036993e727f68ad75"
@@ -9305,7 +9305,7 @@ dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01", "HP-SOURCE-LAYOUT-FOUNDATION-FN-
 grant = "implementation"
 id = "HP-SOURCE-LAYOUT-CARTESIAN-FN-01"
 lifecycle = "approved"
-scope = "Path-neutralize one location-bearing docstring, then relocate the frozen 76-file Cartesian/PQS inventory into src/cartesian under Cartesian/PQS Source Relocation as R100 renames relative to that prerequisite commit; substitute 40 root includes and classified current pointers only. Exclude executable bodies, tests, ordering, APIs, workflows, numerics, follow-on refactors, and release work; stop on any hash, rename, dependency, pointer, or validation mismatch."
+scope = "Path-neutralize one location-bearing docstring, then relocate the frozen 76-file Cartesian/PQS inventory into src/cartesian under Cartesian/PQS Source Relocation as R100 renames relative to that prerequisite commit; substitute 39 root includes and classified current pointers only. Exclude executable bodies, tests, ordering, APIs, workflows, numerics, follow-on refactors, and release work; stop on any hash, rename, dependency, pointer, or validation mismatch."
 surfaces = ["docs", "source"]
 title = "relocate Cartesian and PQS source files"
 

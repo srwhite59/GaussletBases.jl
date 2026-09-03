@@ -968,3 +968,15 @@ MT6 advances source discovery only. Deleted: no implementation. Simplified:
 Ordinary discovery is complete. Quarantined: decomposition, Lanczos movement,
 dependency inversion, orphan/conditioning work, and later layout. Exact blocker:
 any hash, rename, dependency, pointer, or unchanged-owner mismatch stops Step 4B.
+
+## Cartesian Hamiltonian Producer Pass 589 - Correct Step 4B Root-Include Count
+
+Independent comparison of the frozen map with the root loader established that
+the `76` moved files comprise `39` direct `src/GaussletBases.jl` includes and
+`37` byte-identical nested sibling includes. `CartesianParentAxisFactors.jl` is
+the sole mapped flat owner in the latter set and is included by
+`CartesianParentGaussletBases.jl`. The authority and canonical count are
+corrected from `40` to `39`; the map, hashes, scope, prerequisite commit
+`381743d13269f5d75f58fe2ffc9b483248451bc2`, and all failure rules are unchanged.
+No strategic change: MT6 remains active, and Step 4B may resume only after this
+correction and its checks pass.

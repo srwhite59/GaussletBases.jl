@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `f3fafdc14cf5a4893230a7ad56aa59760d203f78aa130c6331f8642d5aa07069`.
+> [authority.toml](authority.toml), SHA-256 `d327f49a6392b121c4cbb6965f567bd88be74d59357ede5602411bc077b3ed82`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -5687,7 +5687,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `96802b00cc380707306106b529ff22a09ccb415e`
   - `manager_pass`: `588`
 - **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`, `HP-SOURCE-LAYOUT-FOUNDATION-FN-01`, `HP-SOURCE-LAYOUT-ORDINARY-FN-01`
-- **Scope:** Path-neutralize one location-bearing docstring, then relocate the frozen 76-file Cartesian/PQS inventory into src/cartesian under Cartesian/PQS Source Relocation as R100 renames relative to that prerequisite commit; substitute 40 root includes and classified current pointers only. Exclude executable bodies, tests, ordering, APIs, workflows, numerics, follow-on refactors, and release work; stop on any hash, rename, dependency, pointer, or validation mismatch.
+- **Scope:** Path-neutralize one location-bearing docstring, then relocate the frozen 76-file Cartesian/PQS inventory into src/cartesian under Cartesian/PQS Source Relocation as R100 renames relative to that prerequisite commit; substitute 39 root includes and classified current pointers only. Exclude executable bodies, tests, ordering, APIs, workflows, numerics, follow-on refactors, and release work; stop on any hash, rename, dependency, pointer, or validation mismatch.
 
 ### HP-SOURCE-LAYOUT-CARTESIAN-TEST-01 - validate Cartesian and PQS source relocation
 

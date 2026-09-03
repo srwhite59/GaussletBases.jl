@@ -115,9 +115,12 @@ The frozen baseline map is:
 | `src/pqs_source_box_route_driver_helpers.jl` | `src/cartesian/pqs_source_box_route_driver_helpers.jl` | `69f83fb552aacd03c7488efc3b5e6d73414239c2` | `b2f68d09fff5e4622173597f915d3278b7eafc07d090ea2fdd5cd8096be973f8` |
 | `src/pqs_source_box_route_driver_skeletons.jl` | `src/cartesian/pqs_source_box_route_driver_skeletons.jl` | `aa1644ebc46574508b8c40f583e9b56fd148856e` | `6dc13c1790c4e33ba04767ee6095e5aafb17743cd232a100da20eccd3a764a3b` |
 
-In `src/GaussletBases.jl`, only the corresponding `40` quoted include paths
-may change, in place. The complete `88`-entry include order is fixed; after
-removing the new `cartesian/` prefix its SHA-256 must remain
+In `src/GaussletBases.jl`, only the corresponding `39` quoted include paths
+may change, in place. `CartesianParentAxisFactors.jl` is the sole mapped flat
+owner not included there; `CartesianParentGaussletBases.jl` includes it as one
+of the `37` byte-identical nested sibling includes. The complete `88`-entry
+include order is fixed; after removing the new `cartesian/` prefix its SHA-256
+must remain
 `df8d273f7aba508b67052fb8a511389255134348300b1f4516cda96971eff6f0`.
 The `37` nested sibling includes and `17` module-relative imports in the moved
 owners remain byte-identical. None of these owners uses `@__DIR__`, `@__FILE__`,
@@ -142,13 +145,13 @@ Implementation target card:
 ```text
 Target: relocate the exact 76-file Cartesian/PQS inventory under src/cartesian/
 Physics endpoint: none changed; existing Cartesian, PQS, and Screening owners remain the oracles
-Allowed files: one path-neutral docstring commit; 28 file and 12 directory git mv operations; 40 root include substitutions; classified current authority/documentation paths
+Allowed files: one path-neutral docstring commit; 28 file and 12 directory git mv operations; 39 root include substitutions; classified current authority/documentation paths
 Forbidden files/surfaces: every executable body, test, workflow, API, numerical contract, release, and follow-on refactor
 Must delete or simplify: remove the 28 flat files and 12 flat submodule directories; delete no implementation
 Forbidden additions: modules, namespaces, renamed bindings/files, wrappers, shims, helpers, caches, fixtures, dependencies, tests, or files beyond the destination directory
 Success condition: exact prerequisite hash, then 76 R100 files, exact path substitutions, unchanged include order and behavior
 Validation: hashes/renames, include/import order, path closure, package load, bounded public and maintenance owners, docs/authority/Documenter/diff, normal full CI/Docs
-Line budget: prerequisite docstring +1/-1; moved bodies +0/-0; src/GaussletBases.jl +40/-40; current authority/documentation substitutions only; tests/workflows +0/-0
+Line budget: prerequisite docstring +1/-1; moved bodies +0/-0; src/GaussletBases.jl +39/-39; current authority/documentation substitutions only; tests/workflows +0/-0
 Failure rule: make no relocation commit if any hash, rename score, include/import position, executable body, test, path count, package load, or unchanged owner differs
 ```
 
