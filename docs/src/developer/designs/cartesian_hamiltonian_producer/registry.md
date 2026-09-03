@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `adc7e8550ae13a7722239b3276e08dcf5a82d2ebcde6a50b179bb247f4644c91`.
+> [authority.toml](authority.toml), SHA-256 `e6bca1c0be8ccb5e146130037e4982bebbbefe2bdc3ae581c23e4529df9e48b4`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -5330,8 +5330,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-SOURCE-LAYOUT-ANGULAR-FN-01 - relocate angular source files
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -5347,29 +5347,87 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/angular/angular_shell_basis.jl`
 - **Evidence:**
   - `git_commit`: `82b8d97951fa08bd2b295f8d4a9cf6316d6d3b6c`
+  - `git_commit`: `f8421494e19b3a4553a7f89e20049520c38e3b2c`
   - `manager_pass`: `583`
+  - `manager_pass`: `584`
 - **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`
-- **Scope:** Relocate five angular source owners from baseline 82b8d97951fa08bd2b295f8d4a9cf6316d6d3b6c into src/angular by byte-identical git mv; update only their in-place root includes, three maintained authority paths, and five current documentation pointers under Angular Source Relocation. Preserve \_lanczos\_ground\_state\_apply exactly. Exclude file bodies, ordering, helpers, APIs, tests, numerics, workflows, releases, and later moves; stop on any mismatch.
+- **Scope:** Maintain the five byte-identical angular owners relocated in commit f8421494e19b3a4553a7f89e20049520c38e3b2c under Angular Source Relocation, their exact include positions and current pointers, and the unchanged \_lanczos\_ground\_state\_apply definition and load behavior. Exclude file bodies, tests, workflows, APIs, numerics, helper relocation, releases, foundation work, and later moves.
 
 ### HP-SOURCE-LAYOUT-ANGULAR-TEST-01 - validate angular source relocation
+
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Angular Source Relocation`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `82b8d97951fa08bd2b295f8d4a9cf6316d6d3b6c`
+  - `git_commit`: `f8421494e19b3a4553a7f89e20049520c38e3b2c`
+  - `manager_pass`: `583`
+  - `manager_pass`: `584`
+- **Dependencies:** `HP-SOURCE-LAYOUT-ANGULAR-FN-01`
+- **Scope:** Completed validation evidence only. Five R100 renames, package/resources, angular\_public 83/83, full angular 61,812/61,812, HFDMRG adapter 66/66, matched H2+ 18/18, docs, authority, Documenter, CI 33711417479, and Docs 33711417480 passed. This record grants no test, fixture, runner, helper, workflow, tolerance, or numerical-policy edit.
+
+### HP-SOURCE-LAYOUT-FOUNDATION-FN-01 - relocate foundation source files
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Foundation Source Relocation`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/algorithms/qiu_white_residual_gaussian_route.md`
+  - `docs` / `existing`: `docs/src/algorithms/radial_interval_sampled_build_and_extents.md`
+  - `docs` / `existing`: `docs/src/developer/algorithm_implementation_index.md`
+  - `docs` / `existing`: `docs/src/developer/cartesian_parent_factors_and_cpb_kernels.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_cpb_block_provider_retirement.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_factor.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/represented_mixed_density_hartree.md`
+  - `source` / `existing`: `src/GaussianAnalyticIntegrals.jl`
+  - `source` / `existing`: `src/GaussletBases.jl`
+  - `source` / `existing`: `src/bases.jl`
+  - `source` / `existing`: `src/diagnostics.jl`
+  - `source` / `existing`: `src/families.jl`
+  - `source` / `existing`: `src/functions.jl`
+  - `source` / `existing`: `src/global_leaf_contraction.jl`
+  - `source` / `existing`: `src/hierarchical_partitions.jl`
+  - `source` / `existing`: `src/internal/families_high_prec.jl`
+  - `source` / `existing`: `src/internal/wavelet_filters.jl`
+  - `source` / `existing`: `src/leaf_pgdg.jl`
+  - `source` / `existing`: `src/mappings.jl`
+  - `source` / `existing`: `src/partitions.jl`
+  - `source` / `existing`: `src/primitive_sets.jl`
+  - `source` / `existing`: `src/quadrature.jl`
+  - `source` / `existing`: `src/radial/radial_boundary_prototypes.jl`
+  - `source` / `existing`: `src/stencils.jl`
+  - `source` / `existing`: `src/timing.jl`
+- **Evidence:**
+  - `git_commit`: `f8421494e19b3a4553a7f89e20049520c38e3b2c`
+  - `manager_pass`: `584`
+- **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`, `HP-PQS-COULOMB-ACCURACY-FN-01`, `HP-PQS-MAP-SFACTOR-FN-01`, `HP-REP-MIXDENS-HARTREE-FN-01`, `HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01`
+- **Scope:** Move exactly 16 owners into src/foundation under Foundation Source Relocation: 13 byte-identical renames, three moves with only four path-comment substitutions, 15 root includes, one radial include, three maintained authority paths, and current-pointer reconciliation. Exclude executable bodies, symbols, ordering, APIs, tests beyond paired paths, workflows, numerics, releases, and later moves; stop on any hash or diff mismatch.
+
+### HP-SOURCE-LAYOUT-FOUNDATION-TEST-01 - validate foundation source relocation
 
 - **Lifecycle:** `approved`
 - **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Angular Source Relocation`
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Foundation Source Relocation`
 - **Owned paths:**
-  - `test` / `existing`: `test/angular/runtests.jl`
-  - `test` / `existing`: `test/docs/runtests.jl`
-  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
-  - `test` / `existing`: `test/pqs_h2plus_table1_release_runtests.jl`
+  - `test` / `existing`: `test/radial/runtests.jl`
   - `test` / `existing`: `test/runtests.jl`
 - **Evidence:**
-  - `git_commit`: `82b8d97951fa08bd2b295f8d4a9cf6316d6d3b6c`
-  - `manager_pass`: `583`
-- **Dependencies:** `HP-SOURCE-LAYOUT-ANGULAR-FN-01`
-- **Scope:** Validate Angular Source Relocation with frozen hashes, five 100% renames, package/resource load, unchanged angular\_public, one full angular run, and PQS release. Also run docs, authority, Documenter, diff, and remote CI/Docs checks. Add or edit no test, fixture, runner, helper, workflow, tolerance, or numerical policy; stop if validation requires adaptation.
+  - `git_commit`: `f8421494e19b3a4553a7f89e20049520c38e3b2c`
+  - `manager_pass`: `584`
+- **Dependencies:** `HP-SOURCE-LAYOUT-FOUNDATION-FN-01`
+- **Scope:** Change only the two direct families\_high\_prec path strings in test/runtests.jl and test/radial/runtests.jl; change no assertion or runner behavior. Validate exact hashes and diffs, include order, package-root targets, package load, core/radial, docs, authority, generated views, Documenter, normal CI/Docs, and no full angular rerun. Stop if any test requires adaptation.
 
 ### HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01 - relocate radial and atomic source files
 

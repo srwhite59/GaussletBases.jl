@@ -950,12 +950,12 @@ authority.
 ## Angular Source Relocation
 
 `HP-SOURCE-LAYOUT-ANGULAR-FN-01` and
-`HP-SOURCE-LAYOUT-ANGULAR-TEST-01` authorize only Step 2 of the external
-follow-up review at baseline `82b8d97951fa08bd2b295f8d4a9cf6316d6d3b6c`.
-The review is audit evidence, not authority. Independent inspection confirms
-exactly five files and `4,750` lines, with this frozen map:
+`HP-SOURCE-LAYOUT-ANGULAR-TEST-01` maintain the path-only Step 2 relocation
+accepted in commit `f8421494e19b3a4553a7f89e20049520c38e3b2c` from
+baseline `82b8d97951fa08bd2b295f8d4a9cf6316d6d3b6c`. The external follow-up
+review is audit evidence, not authority. The accepted map is:
 
-| Pre-move path | Authorized target | SHA-256 |
+| Pre-move path | Current target | SHA-256 |
 | --- | --- | --- |
 | `src/angular_point_sets.jl` | `src/angular/angular_point_sets.jl` | `8b7db8ebcde142212fc72dda1999d013628428a4a8ce7135eb1ed387faac40d9` |
 | `src/angular_shell_basis.jl` | `src/angular/angular_shell_basis.jl` | `6799c7ab7ac3c2e9ac6823719348d0143b24b3929e499a326df956c741ea3039` |
@@ -963,46 +963,111 @@ exactly five files and `4,750` lines, with this frozen map:
 | `src/angular_atomic_benchmark.jl` | `src/angular/angular_atomic_benchmark.jl` | `d678baf70c4e705112490d63bcdf9aa8865080f5dcc8bf76170bcc0a483917d3` |
 | `src/angular_sequence_export.jl` | `src/angular/angular_sequence_export.jl` | `5377c4b047e8d12615504dbd58689c20ff86c1507ee5fdff4e985d112ca6170a` |
 
-Each move must use `git mv`, preserve the complete file bytes, and appear as a
-`100%` rename. Only the five quoted include paths in `src/GaussletBases.jl`
-may change, in place; the complete include order must remain exact. The moved
-files contain no containing-directory include or data construction. Pass 578's
-package-root helper already owns the angular data paths.
+All five files remain byte-identical and appear as `100%` renames. Only their
+five quoted include paths in `src/GaussletBases.jl` changed, in place, and the
+complete include order remains exact. Current authority and documentation
+pointers were reconciled mechanically. The accepted tree is
+`61aa2190735cbb31267195722a1197ff93ddaebf`; the complete change is
+`+31/-31`, with no source-body, test, workflow, API, or numerical edit.
 
 `_lanczos_ground_state_apply` remains defined in
-`angular_atomic_benchmark.jl` with its exact name, dispatch, visibility, and
-load behavior. Its active call from `src/pqs_matched_h2plus.jl` and its angular
-owner call must remain unchanged. This transaction does not relocate or
-generalize that helper.
+`src/angular/angular_atomic_benchmark.jl` with its exact name, dispatch,
+visibility, and load behavior. Its matched-H2+ and angular call sites remain
+unchanged; relocation or generalization of that helper requires separate
+authority.
 
-The implementation must mechanically replace three maintained authority path
-entries: one in `HP-PACKAGE-ROOT-PATH-FN-01` and two in
-`HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01`. Only the two literal source paths in
-the latter record's existing long scope may change; no scope compression is
-part of this pass. It must also update the three current paths in
-`docs/angular_fixed_radial_sequence_milestone.md`, the two current pointers in
-this document, this relocation record's five source paths, and the generated
-registry and `AGENTS.md` view. Explicit pre-move paths in this mapping remain
-historical evidence. No other historical text changes.
+Package/resource loading, `angular_public` (`83/83`), the one required complete
+angular run (`61,812/61,812`), the isolated HFDMRG adapter (`66/66`), and the
+matched H2+ owner (`18/18`) passed. Docs passed `157/157` plus `10/10`;
+authority checks, Documenter, and diff checks passed. CI run `33711417479`
+passed all three numerical gates and Docs run `33711417480` passed. The full
+angular owner is not repeated during lifecycle closeout. Future file-body,
+test, workflow, API, numerical, helper-relocation, release, or later-layout
+work remains outside this maintenance boundary.
+
+## Foundation Source Relocation
+
+`HP-SOURCE-LAYOUT-FOUNDATION-FN-01` and
+`HP-SOURCE-LAYOUT-FOUNDATION-TEST-01` authorize only Step 3 of the external
+follow-up review from baseline
+`f8421494e19b3a4553a7f89e20049520c38e3b2c`. The review is audit evidence,
+not authority. Independent inspection fixes the destination at
+`src/foundation/`, matching the architecture's “Broad foundation” layer, and
+fixes the inventory at `16` files and `6,001` lines: the fourteen flat
+foundation owners plus both tracked files under `src/internal/`.
+
+Thirteen files must move with unchanged bytes and appear as `100%` renames:
+
+| Pre-move path | Authorized target | Required SHA-256 |
+| --- | --- | --- |
+| `src/mappings.jl` | `src/foundation/mappings.jl` | `605f2dc5b61fd06753e1952756c6fac4881e0fb8cd1c54da2f8fb3999fea9914` |
+| `src/stencils.jl` | `src/foundation/stencils.jl` | `109c12436f0edb0a1bd68332bca86bb2b91b07c1bc725b6cb2488bc87e084891` |
+| `src/functions.jl` | `src/foundation/functions.jl` | `4c04e03046066c2a6eed32c451380a21998510a5991e2d444446066c4d667995` |
+| `src/bases.jl` | `src/foundation/bases.jl` | `442fcb2e25d72692e2c3db99dcca3525e745cac44441468b408512844b58b0ec` |
+| `src/quadrature.jl` | `src/foundation/quadrature.jl` | `b8cb02661521abe60f9026320a65e08809d12e5436deae20ed7b7b4fab61ce80` |
+| `src/primitive_sets.jl` | `src/foundation/primitive_sets.jl` | `edfd611468516c1707e26a6ecc954e59cd3860b69c160a0eeb9ae09c599a2a99` |
+| `src/partitions.jl` | `src/foundation/partitions.jl` | `8fef22f9ee424b9b12cd0e7f613a6b7ff2479b334244cef4d0749203d69861c4` |
+| `src/hierarchical_partitions.jl` | `src/foundation/hierarchical_partitions.jl` | `e18b6f1fc3594e9ea47a65db375c96181cdb347e6cfaa9265f7c4f012e7bb183` |
+| `src/leaf_pgdg.jl` | `src/foundation/leaf_pgdg.jl` | `bb48f1492ebf32b228b5456e7792e938ef610f013a28f5a72c085189605337cc` |
+| `src/global_leaf_contraction.jl` | `src/foundation/global_leaf_contraction.jl` | `56510159720aaa08b6d8d9891574d45fa573cd8de920d4594c3ddff196eb1004` |
+| `src/diagnostics.jl` | `src/foundation/diagnostics.jl` | `69fd53ad714765663a5009c7d9fbe714b36f596b36e501a0a77949ba683f75d7` |
+| `src/timing.jl` | `src/foundation/timing.jl` | `6edc25510ad3d3819912583b575d23d3e7b028db583582b3db2650cb1db684c4` |
+| `src/GaussianAnalyticIntegrals.jl` | `src/foundation/GaussianAnalyticIntegrals.jl` | `b593aff9394ea49d380cc071b1c7b5b8eb3e8165ba07f22e67e5d8b0acc3d304` |
+
+Three moved files contain four current path comments. Leaving those comments
+stale would violate the path-only purpose, so only these literal substitutions
+are authorized; no executable statement may change:
+
+| Pre-move path | Authorized target | Baseline SHA-256 | Required target SHA-256 |
+| --- | --- | --- | --- |
+| `src/families.jl` | `src/foundation/families.jl` | `29dc311da6cfc7bb280dc7fc429e3cd5de2af1072c249509a3c522978a58fd20` | `c1550b78b597c734a13a398a790f56009349559019e18b89d39652e709e2738d` |
+| `src/internal/families_high_prec.jl` | `src/foundation/internal/families_high_prec.jl` | `4c7ee5dee90cfb3296b392a41ba3cbd30423bd30aaea84935bb60ebd23608877` | `df1585417300676aed7d585cf74071ae4a5568a1d3b076948693ba1b5f72cb87` |
+| `src/internal/wavelet_filters.jl` | `src/foundation/internal/wavelet_filters.jl` | `6162f7328ae1badb742f292fdec8b0bb9d2f7233642103251e47152d5be11cfe` | `34f006a0f20f0f1ade3c7efb26cf86e88c1751ac19ce63de8af5be10b7939043` |
+
+The exact four comment changes are the two `src/internal/...` pointers in
+`families.jl` and the one `src/families.jl` pointer in each internal file.
+`GaussianAnalyticIntegrals` and `TimeG` remain nested modules loaded at their
+existing positions. The active call from `primitive_sets.jl` to the later
+ordinary mapped-backend helpers remains unchanged; this transaction neither
+relocates nor repairs that cross-track dependency.
+
+In `src/GaussletBases.jl`, only the fifteen quoted include paths for these
+runtime-loaded files may change, in place. The complete include sequence and
+the adjacent `using .TimeG` block must remain exact. The radial prototype's
+parent-qualified include may change only from `src/internal/families_high_prec.jl`
+to `src/foundation/internal/families_high_prec.jl`; its required post-change
+SHA-256 is `fd00b5ee833a15b03f394db320b76e36e9cf2b73a4359fedd59be8852e57397d`.
+The same source-path substitution is authorized in `test/runtests.jl` and
+`test/radial/runtests.jl`, with no assertion or runner change.
+
+Current-pointer reconciliation is mechanical: replace the `26` affected path
+tokens across the nine hand-edited current documents named by the authority
+record; replace the three active authority paths for mappings and the shared
+Gaussian analytic owner; and regenerate the three corresponding registry
+entries and the `AGENTS.md` authority view. Also reconcile the Package-Root
+target path/hash and the Radial/Atomic maintenance wording for the one changed
+parent-qualified include. Historical evidence, pre-move mapping columns, and
+completed validation facts retain their historical paths and hashes.
 
 Implementation target card:
 
 ```text
-Target: relocate five unchanged angular source owners into src/angular/
-Physics endpoint: none changed; angular and matched H2+ results are the oracles
-Allowed files: five git mv operations; five in-place GaussletBases include substitutions; exact current path reconciliation
-Forbidden files/surfaces: every file body, test, workflow, helper, API, numerical, release, and later layout surface
-Must delete or simplify: remove the five flat root source locations; delete no implementation
-Forbidden additions: wrappers, modules, aliases, caches, fixtures, metadata, tests, dependencies, or files beyond the destination directory
-Success condition: five byte-identical 100% renames with unchanged load and numerical owners
-Validation: package/resources, angular_public, one full angular run, PQS release, docs/authority/Documenter/diff, remote CI/Docs
-Line budget: moved bodies +0/-0; root includes exactly +5/-5; current path substitutions only
-Failure rule: make no implementation commit if any hash, rename, include position, helper behavior, or unchanged test differs
+Target: relocate exactly 16 foundation owners into src/foundation/
+Physics endpoint: none changed; package load plus core/radial are the local oracles
+Allowed files: 16 git mv operations, four path comments, 15 root includes, one radial include, two test paths, and exact current-pointer reconciliation
+Forbidden files/surfaces: all other source bodies, tests, workflows, APIs, numerics, releases, and later layout work
+Must delete or simplify: remove the flat foundation locations and tracked src/internal location; delete no implementation
+Forbidden additions: wrappers, modules, symbols, aliases, helpers, caches, fixtures, metadata, dependencies, tests, or files beyond destination directories
+Success condition: 13 byte-identical R100 moves, three exact comment-only moves, exact path substitutions, and unchanged behavior
+Validation: hashes/diffs, include order, package-root targets, package load, core/radial, docs/authority/Documenter/diff, normal CI/Docs
+Line budget: source path substitutions +20/-20; tests +2/-2; current documentation and authority path substitutions only
+Failure rule: make no implementation commit if any hash, executable line, include position, package target, or unchanged test differs
 ```
 
-The complete angular owner runs once for implementation evidence and is not
-repeated during docs-only closeout. Foundation, ordinary, Cartesian, helper
-relocation, next-minor cleanup, and later review steps remain unauthorized.
+The complete angular owner is not part of Step 3 validation and must not be
+repeated. No module wrapper, symbol move, include reorder, API, dispatch,
+dependency, fixture, cache, numerical policy, workflow, release work, Step 4,
+or later source-layout authority is granted.
 
 ## Foundational Basis And Mapping Documentation
 

@@ -1945,3 +1945,38 @@ Guardrail / next step:
 - deleted: no code; simplified: angular source discovery only; quarantined:
   every later review step; not deleted because: all five owners and the Lanczos
   helper remain live; exact blocker: implementation and unchanged validation.
+
+## Cartesian Hamiltonian Producer Pass 584 - Close Angular And Authorize Foundation Relocation
+
+Commit(s):
+- angular implementation `f8421494e19b3a4553a7f89e20049520c38e3b2c`;
+- accepted tree `61aa2190735cbb31267195722a1197ff93ddaebf`;
+- this combined docs-only transition.
+
+Summary / goal advancement:
+- Accepted Step 2 exactly: five byte-identical `100%` renames, five in-place
+  include substitutions, and only current authority/generated/documentation
+  path updates (`+31/-31`). The Lanczos helper and both call sites remain
+  unchanged. Package/resources, angular-public `83/83`, the sole complete
+  angular run `61,812/61,812`, isolated HFDMRG adapter `66/66`, matched H2+
+  `18/18`, docs `157/157` plus `10/10`, authority, Documenter, and diff checks
+  passed. CI `33711417479` and Docs `33711417480` passed after push.
+- Independent Step 3 preflight remains valid at the accepted head and corrects
+  the external proposal: the architectural destination is `src/foundation/`,
+  with `16` files and `6,001` lines. Thirteen must remain byte-identical; three
+  may change only four live path comments. `HP-SOURCE-LAYOUT-FOUNDATION-FN-01`
+  and `TEST-01` separately authorize that exact relocation, fifteen root
+  include paths, one parent-qualified radial include, two direct test paths,
+  and current-pointer reconciliation. This uses the Pass 582 combined-transition
+  rule without delaying the completed angular closeout.
+
+Guardrail / next step:
+- MT6 remains active. Repo-manager must wait for this commit and its checks
+  before Step 3. No executable source body, symbol, include order, assertion,
+  workflow, numerical behavior, API, release state, Step 4, or full-angular
+  rerun is authorized. Any hash, diff, package-target, or test deviation stops
+  implementation without a commit.
+- deleted: no code; simplified: angular discovery is complete and foundation
+  discovery is the next bounded move; quarantined: cross-track dependency
+  repair and all later layout work; not deleted because: all foundation owners
+  remain live; exact blocker: Step 3 must satisfy the frozen map and checks.
