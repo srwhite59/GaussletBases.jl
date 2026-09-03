@@ -1026,3 +1026,25 @@ the `15`-minute ceiling and every other workflow boundary remain fixed.
 Represented molecular Hartree passed its bounded standalone oracle, but
 `HP-REP-MIXDENS-HARTREE-*` remains approved/implementation with the planned
 contraction owner absent, so it stays unwired pending that owner decision.
+
+## Cartesian Hamiltonian Producer Pass 593 - Close Occupied-First And Authorize Shared Lanczos
+
+Accepted commit `9367afd5ac47b81afe4ad8e2170f274fd36f362f` and tree
+`8a3458d63c1625369e4ddfcb1d57ffcf5c45573d`. The unchanged occupied-first
+owner now follows atomic packet in the scheduled lane; local `64/64`, manual
+run `33801669502` (all five suites in `10m17s`), CI `33801664774`, and Docs
+`33801664806` passed. The `+2` workflow and `+10` policy-test delta changed no
+owner, numerical code, timeout, trigger, permission, or public CI. Both
+maintenance records are closed; represented Hartree remains unwired.
+
+Independent preflight also found two structurally identical 81-line reference
+Lanczos implementations. `HP-FOUNDATION-LANCZOS-FN-01/TEST-01` authorize one
+exact private-helper move to `src/foundation/lanczos.jl`, one root include,
+and a thin behavior-exact atomic wrapper plus at most `20` focused existing-
+owner test lines. The helper's three callers remain unchanged. Default,
+supplied-`v0`, maximum-step, breakdown, malformed-problem, return, error,
+allocation, compilation, angular, and PQS behavior must retain exact parity;
+the source hard budget is `+110/-162` and must remain net negative. MT6 advances
+only if duplicate solver code is actually removed. No full angular rerun,
+public solver abstraction, policy, dependency, cache, workflow, represented-
+Hartree work, or release change is authorized.

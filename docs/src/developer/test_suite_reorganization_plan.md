@@ -411,12 +411,13 @@ Pass 592 independently classified the unchanged occupied-first owner as unique,
 live physical coverage suitable for this lane. At the relocated Step 4B head it
 passed `64/64` in `27.0` seconds, covering packet-driven Be/Ne PQS overlap,
 mandatory occupied recovery, optional selection, and terminal due diligence;
-the synthetic `misc` checks do not duplicate those endpoints. Add it only after
-the atomic-packet process. One manual dispatch must pass all five suites within
-the existing `15`-minute ceiling; timeout or failure stops the transaction.
-Implementation is limited to one two-line workflow step and at most `10` added
-policy-test lines. Add no file, group, helper, fixture, numerical assertion, or
-workflow machinery.
+the synthetic `misc` checks do not duplicate those endpoints. Commit
+`9367afd5ac47b81afe4ad8e2170f274fd36f362f` added it only after the atomic
+packet with a two-line workflow step and ten focused policy-test lines. Manual
+run `33801669502` passed in `10m17s`: atomic packet `117/117`, occupied-first
+`64/64`, protected sidecar `49/49`, R3A `464/464` plus facade `64/64`, and
+screened Hartree `85/85`. CI run `33801664774` and Docs run `33801664806`
+passed. No owner, command, timeout, trigger, permission, or public CI changed.
 
 The workflow record owns only the existing workflow. The current validation
 amendment may add focused policy assertions only in `test/docs/runtests.jl`.
@@ -527,10 +528,9 @@ Only after the split is stable:
 
 ## Next bounded chunk
 
-The scheduled Cartesian internal-maintenance gate is reopened only for the
-approved occupied-first fifth process and focused policy check above.
-Represented molecular Hartree remains blocked on its scaling-owner decision
-and requires a separate lifecycle assignment.
+The five-process scheduled Cartesian internal-maintenance gate is in
+maintenance. Represented molecular Hartree remains blocked on its scaling-owner
+decision and requires a separate lifecycle assignment.
 
 Do not reopen the runner structure unless the optional `examples` extraction
 later proves worth doing.

@@ -971,11 +971,12 @@ pointers were reconciled mechanically. The accepted tree is
 `61aa2190735cbb31267195722a1197ff93ddaebf`; the complete change is
 `+31/-31`, with no source-body, test, workflow, API, or numerical edit.
 
-`_lanczos_ground_state_apply` remains defined in
+The relocation accepted `_lanczos_ground_state_apply` in
 `src/angular/angular_atomic_benchmark.jl` with its exact name, dispatch,
-visibility, and load behavior. Its matched-H2+ and angular call sites remain
-unchanged; relocation or generalization of that helper requires separate
-authority.
+visibility, and load behavior. The separately approved
+[Shared Reference Lanczos Kernel](#shared-reference-lanczos-kernel) transaction
+may move that exact body into `src/foundation/`; that specific consolidation
+does not reopen this path-only lifecycle.
 
 Package/resource loading, `angular_public` (`83/83`), the one required complete
 angular run (`61,812/61,812`), the isolated HFDMRG adapter (`66/66`), and the
@@ -1067,9 +1068,11 @@ Failure rule: make no implementation commit if any hash, executable line, includ
 ```
 
 The complete angular owner is not part of Step 3 validation and must not be
-repeated. No module wrapper, symbol move, include reorder, API, dispatch,
-dependency, fixture, cache, numerical policy, workflow, release work, Step 4,
-or later source-layout authority is granted.
+repeated. The separately approved Shared Reference Lanczos Kernel may add one
+foundation owner and one include while preserving the existing relative order;
+that exception does not reopen Step 3. No other module wrapper, symbol move,
+include reorder, API, dispatch, dependency, fixture, cache, numerical policy,
+workflow, release work, or later source-layout authority is granted.
 
 ## Ordinary Source Relocation
 
@@ -1159,6 +1162,47 @@ and release work remain outside this maintenance authority.
 The independently governed
 [Cartesian/PQS source relocation](cartesian_pqs_source_relocation.md) follows
 the accepted Ordinary move and changes no public or numerical contract.
+
+## Shared Reference Lanczos Kernel
+
+`HP-FOUNDATION-LANCZOS-FN-01` and
+`HP-FOUNDATION-LANCZOS-TEST-01` authorize one net-negative consolidation of
+the small fully reorthogonalized reference Lanczos algorithm, not a new solver
+or optimization.
+
+Move the exact 81-line `_lanczos_ground_state_apply` block at lines 1112--1192
+of `src/angular/angular_atomic_benchmark.jl`, SHA-256
+`95dd5bd4f1734bd8bacdc18f712537279e9cbaf066bb6c023189c9537039bc51`.
+Move it byte-identically to the sole new owner `src/foundation/lanczos.jl`,
+include it immediately after `foundation/primitive_sets.jl`, and delete the old
+copy. Preserve its private name/signature/defaults and the angular, matched-H2+,
+and paper-driver callers. Existing includes retain relative order; the
+normalized 89-entry fingerprint is
+`46cc0f341af7c41663359b317e780b4b9fa7bc2e2a61292b0d460762af588016`.
+
+Replace the duplicate body of
+`lanczos_ground_state(::AtomicIDATwoElectronProblem)` with a thin
+problem-specific wrapper. Preserve its public signature/defaults, validation
+types/messages, `v0` failures, and named return fields/order. Use a local
+nonescaping mutating action for valid square matrices, while retaining the
+existing failure for a manually assembled nonsquare problem. Initialization,
+maximum-step policy, recurrence, full ordered reorthogonalization,
+`SymTridiagonal` solve, residual/stops, reconstruction, and normalization keep
+their exact order.
+
+Controlled old/new evidence must be exact for the current atomic fixture with
+default and supplied `v0`, an unconverged maximum-step case, and a Krylov
+breakdown case, including errors and the malformed problem. Extend only
+`test/ida/runtests.jl` by 16/20 preferred/hard lines. Source must remain net
+negative, approximately `+107/-162` and at most `+110/-162`.
+
+Acceptance runs the focused IDA owner, one bounded direct angular small-ED
+consumer, and matched-H2+ release owner once, plus warmed allocation/time and
+fresh compilation comparisons. Package/docs/authority/Documenter/diff and full
+CI/Docs must pass; do not run complete angular. Add no public binding, solver
+abstraction, dependency, cache, metadata, policy, caller edit, workflow,
+release, or unrelated work. Any parity, budget, or material performance failure
+stops without a commit.
 
 ## Foundational Basis And Mapping Documentation
 
@@ -1322,6 +1366,9 @@ promise neither retained dense storage nor caching or scalable large-angular-
 momentum use. `lanczos_ground_state` is a small reference routine, not a
 general many-electron or production eigensolver, and
 `AtomicIDATwoElectronProblem` remains only the tiny one-up/one-down consumer.
+The Shared Reference Lanczos Kernel transaction may consolidate the duplicate
+private implementation only if this complete public behavior remains exact;
+it grants no broader solver status.
 
 The implementation added `70` source-docstring lines, `26` reference lines,
 and `15` focused docs-test lines. These additions are within all hard limits,

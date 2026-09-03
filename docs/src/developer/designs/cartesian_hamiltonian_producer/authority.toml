@@ -32,7 +32,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pair
 sha256 = "62578861400c82d1521aa1d17df6ca4dc2831d3877e6630c792882e10f4b43e8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pqs_source_relocation.md"
-sha256 = "3b16083e6b63bf869aad52bdd17bc03b62cb33f289ed545e067bcc7d084532dd"
+sha256 = "c68b904813d2abbcbf95d3dcbb097ea88692f8e92ba1ca99ea45924422e5afd1"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
 sha256 = "f8e0cb4dc93ec062e50a21f691130e3b48c813d07f949d4dd35e42f6f8e85c08"
@@ -83,7 +83,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "02893c3a15acd9fccda4d0419819983b9dc824946c2df3ca6e3db94d07924e42"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "0b38c506d35db06ea85ba86a845b38128a2263341dff6dd1bd1a1fc91fa8343c"
+sha256 = "c14d34951da983d5ecca80f8d7fc4bb6642a80a16ab52415c3fb910916d620d4"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "c7fe3a87bf8e70ad88025f66ed4c57d6d19b3961033891fb6a4e431b090c801e"
@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
-sha256 = "6f568ac46e1b56e6696d524ba4f2f961bf21bdb4a82bf403ce7947b40e99af80"
+sha256 = "8742f7b1ea8977d3f4b04472ae09971f1b785d3d5cc130a7aa13b242548b7f71"
 
 [[records]]
 dependency_ids = ["HP-ANGULAR-TEST-CONTROL-FN-01", "HP-PUBLIC-PAPER-CI-FN-01"]
@@ -386,10 +386,10 @@ title = "whole-file execution whitelist validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-ATOMREF-PACKET-TEST-01", "HP-PQS-SCREEN-HARTREE-CORR-TEST-01", "HP-R3-TEST-01", "HP-REP-XGTO-PROTECT-SIDECAR-TEST-01", "HP-RG-OCC-FIRST-INJECT-TEST-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01"
-lifecycle = "approved"
-scope = "Add only `test/nested/cartesian_occupied_first_injection_runtests.jl` as the second of five separate Julia processes in the existing weekly/manual workflow. Preserve Julia 1.12, the 15-minute timeout, workflow/job, cadence, triggers, permissions, setup, every existing command's relative order, and public CI. No test, source, helper, group, row, timeout, or release change; stop if manual dispatch times out or any suite fails."
+lifecycle = "implemented"
+scope = "Maintain the five-process Julia 1.12 weekly/manual lane accepted in commit 9367afd5ac47b81afe4ad8e2170f274fd36f362f: atomic packet, occupied-first, protected sidecar, R3A, and screened Hartree, in that order, under the existing 15-minute/read-only boundary. Preserve commands, cadence, triggers, permissions, public CI, and unchanged owners. Represented Hartree remains standalone."
 surfaces = ["tools"]
 title = "scheduled Cartesian internal numerical-maintenance workflow"
 
@@ -419,6 +419,12 @@ title = "scheduled Cartesian internal numerical-maintenance workflow"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "592"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "9367afd5ac47b81afe4ad8e2170f274fd36f362f"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "593"
 
     [[records.paths]]
     kind = "tool"
@@ -426,10 +432,10 @@ title = "scheduled Cartesian internal numerical-maintenance workflow"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01", "HP-PQS-ATOMREF-PACKET-TEST-01", "HP-PQS-PUBLIC-SCREEN-TEST-01", "HP-PQS-SCREEN-HARTREE-CORR-TEST-01", "HP-RG-OCC-FIRST-INJECT-TEST-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-TEST-01"
-lifecycle = "approved"
-scope = "Add only focused policy assertions in `test/docs/runtests.jl` for the exact five process paths/order and unchanged 15-minute, trigger, and permission boundary. Edit no numerical owner. Validate occupied-first 64/64, all five suites by one manual dispatch, docs/authority/package/YAML/diff, and normal CI/Docs; stop on timeout or failure. Represented Hartree remains standalone and blocked."
+lifecycle = "completed"
+scope = "Maintain the focused policy checks accepted in commit 9367afd5ac47b81afe4ad8e2170f274fd36f362f for the exact five process paths/order and unchanged timeout, trigger, and permission boundary. The unchanged occupied-first owner passed 64/64; manual run 33801669502 passed all five suites in 10m17s, and CI 33801664774 plus Docs 33801664806 passed. Represented Hartree remains standalone and blocked."
 surfaces = ["tests"]
 title = "scheduled internal gate and screening deduplication validation"
 
@@ -453,6 +459,12 @@ title = "scheduled internal gate and screening deduplication validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "592"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "9367afd5ac47b81afe4ad8e2170f274fd36f362f"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "593"
 
     [[records.paths]]
     kind = "test"
@@ -1964,6 +1976,74 @@ title = "final Hamiltonian construction"
     [[records.paths]]
     kind = "source"
     path = "src/cartesian/cartesian_ida_hamiltonian.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-PAPER-H2-DRV-FN-01", "HP-PQS-PUBLIC-MATCHED-FN-01", "HP-PUBLIC-ATOMIC-IDA-DOC-FN-01", "HP-SOURCE-LAYOUT-ANGULAR-FN-01", "HP-SOURCE-LAYOUT-CARTESIAN-FN-01", "HP-SOURCE-LAYOUT-FOUNDATION-FN-01", "HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01"]
+grant = "implementation"
+id = "HP-FOUNDATION-LANCZOS-FN-01"
+lifecycle = "approved"
+scope = "Move the exact `_lanczos_ground_state_apply` body to planned `src/foundation/lanczos.jl` and replace the duplicate atomic public body with a thin behavior-exact wrapper under Shared Reference Lanczos Kernel. Preserve private callers, public API/errors/returns, arithmetic order, one root include, and the net-negative hard budget. No algorithm, abstraction, dependency, cache, caller, workflow, or release change; stop on parity, regression, or budget failure."
+surfaces = ["source"]
+title = "consolidate shared reference Lanczos kernel"
+
+    [[records.document_refs]]
+    heading = "Shared Reference Lanczos Kernel"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "9367afd5ac47b81afe4ad8e2170f274fd36f362f"
+    [[records.evidence_refs]]
+    kind = "repo_path"
+    value = "bin/pqs_paper_h2_driver.jl"
+    [[records.evidence_refs]]
+    kind = "repo_path"
+    value = "src/cartesian/pqs_matched_h2plus.jl"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "593"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_atomic_benchmark.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/atomic/atomic_ida_two_electron.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/foundation/lanczos.jl"
+    state = "planned"
+[[records]]
+dependency_ids = ["HP-FOUNDATION-LANCZOS-FN-01", "HP-PQS-PUBLIC-MATCHED-TEST-01", "HP-PUBLIC-ATOMIC-IDA-DOC-TEST-01"]
+grant = "implementation"
+id = "HP-FOUNDATION-LANCZOS-TEST-01"
+lifecycle = "approved"
+scope = "Extend only `test/ida/runtests.jl` within the 16/20-line preferred/hard budget for supplied-v0, maximum-step, breakdown, return-shape, and exact public-error parity. Reuse existing endpoints and add no file, fixture, helper, or policy. Validate dual-revision exact parity, focused atomic and angular/PQS consumers, allocation/compile timing, package/docs/authority, and full CI/Docs; do not rerun the complete angular suite."
+surfaces = ["tests"]
+title = "validate shared reference Lanczos consolidation"
+
+    [[records.document_refs]]
+    heading = "Shared Reference Lanczos Kernel"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "9367afd5ac47b81afe4ad8e2170f274fd36f362f"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "593"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/ida/runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = []
@@ -4625,7 +4705,7 @@ dependency_ids = ["HP-PUBLIC-EXPORT-INTEGRITY-FN-01", "HP-PUBLIC-PARTITION-LEAF-
 grant = "maintenance"
 id = "HP-PUBLIC-ATOMIC-IDA-DOC-FN-01"
 lifecycle = "implemented"
-scope = "Maintain only the accepted atomic-IDA inspection and tiny two-electron reference documentation from commit 8f84afb491ff7cc0f818a6ed982eca638a509b65: concise docstrings on the ten existing exported generics orbitals, two_electron_states, radial_multipole, gaunt_coefficient, gaunt_tensor, angular_kernel, apply_overlap, apply_hamiltonian, ground_state_energy, and lanczos_ground_state, plus their compact section in docs/src/reference/atomic_and_ordinary.md. Preserve stored ordered-record/read-only semantics without claiming universal ordering; requested radial-multipole access; one complex spherical-harmonic Gaunt coefficient; on-demand dense gaunt_tensor/angular_kernel reconstruction without retained-storage, cache, or scalable-large-angular-momentum claims; dimension-validated application of stored dense overlap/Hamiltonian matrices; dense Hermitian ground-state evaluation; and the existing small fully reorthogonalized reference Lanczos controls and return fields. Keep AtomicIDATwoElectronProblem explicitly limited to the tiny one-up/one-down consumer. The accepted additions are 70 source-docstring lines and 26 reference lines, with no new file or executable change. Preserve every implementation, method, signature, dispatch, export, numerical behavior, solver policy, storage choice, cache behavior, compatibility floor, workflow, tag, and release artifact. The remaining 30 undocumented exports are outside this grant: six supported-public documentation candidates, nineteen expert/experimental bindings requiring accurate classification, and five future de-export-audit candidates; none is deletion-ready without a separate caller and authority audit. Do not enable Documenter checkdocs, add a global undocumented-name allowlist, or broaden into generalized solvers, dense-tensor caches, ordinary tests, angular research, source behavior, dependencies, examples, API reduction, or release work."
+scope = "Maintain only the accepted atomic-IDA inspection and tiny two-electron reference documentation from commit 8f84afb491ff7cc0f818a6ed982eca638a509b65: concise docstrings on the ten existing exported generics orbitals, two_electron_states, radial_multipole, gaunt_coefficient, gaunt_tensor, angular_kernel, apply_overlap, apply_hamiltonian, ground_state_energy, and lanczos_ground_state, plus their compact section in docs/src/reference/atomic_and_ordinary.md. Preserve stored ordered-record/read-only semantics without claiming universal ordering; requested radial-multipole access; one complex spherical-harmonic Gaunt coefficient; on-demand dense gaunt_tensor/angular_kernel reconstruction without retained-storage, cache, or scalable-large-angular-momentum claims; dimension-validated application of stored dense overlap/Hamiltonian matrices; dense Hermitian ground-state evaluation; and the existing small fully reorthogonalized reference Lanczos controls and return fields. Keep AtomicIDATwoElectronProblem explicitly limited to the tiny one-up/one-down consumer. The accepted additions are 70 source-docstring lines and 26 reference lines, with no new file or executable change. Except for the behavior-exact consolidation separately governed by HP-FOUNDATION-LANCZOS-FN-01, preserve every method, signature, dispatch, export, numerical behavior, solver policy, storage choice, cache behavior, compatibility floor, workflow, tag, and release artifact. The remaining 30 undocumented exports are outside this grant: six supported-public documentation candidates, nineteen expert/experimental bindings requiring accurate classification, and five future de-export-audit candidates; none is deletion-ready without a separate caller and authority audit. Do not enable Documenter checkdocs, add a global undocumented-name allowlist, or broaden into generalized solvers, dense-tensor caches, ordinary tests, angular research, source behavior, dependencies, examples, API reduction, or release work."
 surfaces = ["docs", "source"]
 title = "document atomic IDA inspection and tiny two-electron reference bindings"
 
@@ -8887,7 +8967,7 @@ dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01"]
 grant = "maintenance"
 id = "HP-SOURCE-LAYOUT-ANGULAR-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the five byte-identical angular owners relocated in commit f8421494e19b3a4553a7f89e20049520c38e3b2c under Angular Source Relocation, their exact include positions and current pointers, and the unchanged _lanczos_ground_state_apply definition and load behavior. Exclude file bodies, tests, workflows, APIs, numerics, helper relocation, releases, foundation work, and later moves."
+scope = "Maintain the five byte-identical angular owners relocated in commit f8421494e19b3a4553a7f89e20049520c38e3b2c, their exact include positions, and current pointers. That relocation's frozen helper placement is historical; only HP-FOUNDATION-LANCZOS-FN-01 may subsequently move `_lanczos_ground_state_apply`. Exclude all other file bodies, tests, workflows, APIs, numerics, helper moves, releases, foundation work, and later moves."
 surfaces = ["docs", "source"]
 title = "relocate angular source files"
 
@@ -8973,7 +9053,7 @@ dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01", "HP-PQS-COULOMB-ACCURACY-FN-01",
 grant = "maintenance"
 id = "HP-SOURCE-LAYOUT-FOUNDATION-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the accepted Step 3 relocation from commit f2e13ff3c788551c43eb2de269d4723de880ae8e: 16 owners under src/foundation, 13 byte-identical and three with only four path-comment updates; preserve include order, parent-qualified radial include, exact test/current pointers, package behavior, and tree 20faffb58324a8533acd0041119cdc39235db2e2. No body, symbol, API, test, workflow, numerical, release, Step 4, or later-layout change."
+scope = "Maintain the accepted Step 3 relocation from commit f2e13ff3c788551c43eb2de269d4723de880ae8e: 16 relocated owners, exact order and pointers, package behavior, and tree. HP-FOUNDATION-LANCZOS-FN-01 separately authorizes one planned foundation file and one include. No other body, symbol, API, test, workflow, numerical, release, or layout change."
 surfaces = ["docs", "source"]
 title = "relocate foundation source files"
 
@@ -9321,7 +9401,7 @@ dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01", "HP-SOURCE-LAYOUT-FOUNDATION-FN-
 grant = "maintenance"
 id = "HP-SOURCE-LAYOUT-CARTESIAN-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the 76-file Cartesian/PQS relocation accepted in commit `64d8d65b6891d5e56a0b09f63ff934270b31a9fc`: R100 owners under `src/cartesian/`, 39 in-place root includes, the frozen normalized include hash, and classified current pointers. Exclude file bodies, tests, include order, APIs, workflows, numerics, follow-on refactors, and release work."
+scope = "Maintain the 76-file Cartesian/PQS relocation accepted in commit `64d8d65b6891d5e56a0b09f63ff934270b31a9fc`: R100 owners, 39 in-place root includes, and classified pointers. Its 88-entry normalized hash is relocation evidence; HP-FOUNDATION-LANCZOS-FN-01 alone may insert one earlier foundation include while preserving existing relative order. Exclude all other bodies, tests, order changes, APIs, workflows, numerics, refactors, and releases."
 surfaces = ["docs", "source"]
 title = "relocate Cartesian and PQS source files"
 
@@ -9899,7 +9979,7 @@ dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01"]
 grant = "maintenance"
 id = "HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the exact path-only relocation accepted in commit 812a44d4476c598448bfa3ac733054f009c55b89: 14 byte-identical radial/atomic source files at the canonical src/radial and src/atomic targets, their 14 in-place GaussletBases include substitutions, unchanged include order, the two reconciled radial-prototype authority owners, and the 12 reconciled current documentation pointers. Preserve the accepted tree a4f50fcfaadfdb5a19ecaf384878477e4fb923a0, all frozen file hashes, root +14/-14, package behavior, and tests. Add no file-body, test, module, API, dispatch, dependency, cache, workflow, numerical, release, empty-directory, angular, foundation, ordinary, Cartesian, or later-layout change under this maintenance grant."
+scope = "Maintain the exact path-only relocation accepted in commit 812a44d4476c598448bfa3ac733054f009c55b89: 14 radial/atomic targets, in-place includes, reconciled pointers, frozen relocation hashes/tree, package behavior, and tests. HP-FOUNDATION-LANCZOS-FN-01 alone may subsequently simplify the atomic Lanczos body without changing its public behavior. Add no other body, test, module, API, dispatch, dependency, cache, workflow, numerical, release, or layout change."
 surfaces = ["docs", "source"]
 title = "relocate radial and atomic source files"
 

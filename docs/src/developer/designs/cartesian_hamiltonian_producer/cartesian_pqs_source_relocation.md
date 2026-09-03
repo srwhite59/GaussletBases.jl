@@ -128,6 +128,14 @@ the package data helper, or a source-relative resource path, and no source,
 test, example, script, tool, or workflow outside the root loader directly
 includes one of them.
 
+That 88-entry digest remains the exact Step 4B relocation identity. The
+separate `HP-FOUNDATION-LANCZOS-FN-01` transaction may subsequently insert
+only `foundation/lanczos.jl` immediately after `foundation/primitive_sets.jl`,
+without changing the relative order of any existing entry. Its required
+normalized 89-entry digest is
+`46cc0f341af7c41663359b317e780b4b9fa7bc2e2a61292b0d460762af588016`;
+this does not reopen any Cartesian/PQS move or body.
+
 Current-pointer reconciliation is selective and mechanical. Update `340`
 affected `records.paths` entries, including the one still-planned represented-
 Hartree path, the `7` existing authority scope path literals, and the `3`
