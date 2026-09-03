@@ -77,7 +77,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "323e9f8517bf29a6dc4f1033192e30c7983f5c1feef854a50d36ebf80ca89b57"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "e43b39a0cdd54af8555b6f410355f001c664cd12f97e34913689150da327c4ef"
+sha256 = "7ceb7c5a289480613277e79b7d4ad45146e33b2fdfd5d513391a8f2939aecfaf"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "afb53bed431286303a09c79efbd0e324462216b50c4f8087a3a366e75add87ec"
@@ -2359,7 +2359,7 @@ title = "package-root data and nested-include path indirection"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/angular_point_sets.jl"
+    path = "src/angular/angular_point_sets.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
@@ -4465,7 +4465,7 @@ dependency_ids = ["HP-ANGULAR-PUBLIC-CI-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-FN-0
 grant = "maintenance"
 id = "HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01"
 lifecycle = "implemented"
-scope = "Maintain only the accepted experimental angular producer documentation from commit 9b410ea14356cee6085ad2de51e73849695a0d97: docstrings for the seven exported bindings ShellLocalAngularProfile, ShellLocalAngularProfileOverlap, shell_local_angular_profile, adjacent_shell_local_angular_profile_overlap, AtomicFixedRadialAngularSequenceLevel, AtomicFixedRadialAngularSequenceOverlapSidecar, and AtomicFixedRadialAngularSequence in src/angular_shell_basis.jl and src/angular_sequence_export.jl; the compact reader explanation in docs/src/explanations/angular_research_track.md; and the curated seven-binding section in docs/src/reference/export.md. Preserve the experimental producer-side classification, exact injected-Ylm versus mixed-complement ordering, deterministic labels and gauge metadata, provenance/integrity-only profile/level/sequence IDs, shell-independent source-to-target overlaps, adjacent versus complete non-adjacent direct upper-triangle sidecars, and one common radial basis/shell inventory/shell-center set across levels with changing N_sph/profile. Final working bases remain intended orthonormal, so sidecars are continuation/transfer data rather than generalized-overlap authority. The accepted implementation added 58 source-docstring lines and changed reader/reference documentation by +42/-10, with no new file or executable change. ShellLocalAngularProfileKey remains exported but undocumented and absent from the curated reference; its possible next-minor de-export is outside this grant. Preserve every definition, field, signature, method, dispatch, export, cache behavior, numerical result, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude restart orchestration, common-target lifts, Givens transformations, downstream campaigns, key documentation or de-export, source behavior, API changes, examples, fixtures, and global documentation policy."
+scope = "Maintain only the accepted experimental angular producer documentation from commit 9b410ea14356cee6085ad2de51e73849695a0d97: docstrings for the seven exported bindings ShellLocalAngularProfile, ShellLocalAngularProfileOverlap, shell_local_angular_profile, adjacent_shell_local_angular_profile_overlap, AtomicFixedRadialAngularSequenceLevel, AtomicFixedRadialAngularSequenceOverlapSidecar, and AtomicFixedRadialAngularSequence in src/angular/angular_shell_basis.jl and src/angular/angular_sequence_export.jl; the compact reader explanation in docs/src/explanations/angular_research_track.md; and the curated seven-binding section in docs/src/reference/export.md. Preserve the experimental producer-side classification, exact injected-Ylm versus mixed-complement ordering, deterministic labels and gauge metadata, provenance/integrity-only profile/level/sequence IDs, shell-independent source-to-target overlaps, adjacent versus complete non-adjacent direct upper-triangle sidecars, and one common radial basis/shell inventory/shell-center set across levels with changing N_sph/profile. Final working bases remain intended orthonormal, so sidecars are continuation/transfer data rather than generalized-overlap authority. The accepted implementation added 58 source-docstring lines and changed reader/reference documentation by +42/-10, with no new file or executable change. ShellLocalAngularProfileKey remains exported but undocumented and absent from the curated reference; its possible next-minor de-export is outside this grant. Preserve every definition, field, signature, method, dispatch, export, cache behavior, numerical result, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude restart orchestration, common-target lifts, Givens transformations, downstream campaigns, key documentation or de-export, source behavior, API changes, examples, fixtures, and global documentation policy."
 surfaces = ["docs", "source"]
 title = "document experimental angular profile and sequence producers"
 
@@ -4497,11 +4497,11 @@ title = "document experimental angular profile and sequence producers"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/angular_sequence_export.jl"
+    path = "src/angular/angular_sequence_export.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/angular_shell_basis.jl"
+    path = "src/angular/angular_shell_basis.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-ANGULAR-PUBLIC-CI-TEST-01", "HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-TEST-01"]
@@ -8803,23 +8803,23 @@ title = "relocate angular source files"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/angular_atomic_benchmark.jl"
+    path = "src/angular/angular_atomic_benchmark.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/angular_point_sets.jl"
+    path = "src/angular/angular_point_sets.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/angular_sequence_export.jl"
+    path = "src/angular/angular_sequence_export.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/angular_shell_assembly.jl"
+    path = "src/angular/angular_shell_assembly.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "src/angular_shell_basis.jl"
+    path = "src/angular/angular_shell_basis.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-SOURCE-LAYOUT-ANGULAR-FN-01"]
