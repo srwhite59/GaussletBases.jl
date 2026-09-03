@@ -1073,14 +1073,14 @@ or later source-layout authority is granted.
 
 ## Ordinary Source Relocation
 
-`HP-SOURCE-LAYOUT-ORDINARY-FN-01` and
-`HP-SOURCE-LAYOUT-ORDINARY-TEST-01` authorize only the Ordinary half of source-
-layout Step 4 from baseline
-`24512b0beda75174572fc2b728010b432331c05c`. The external follow-up review is
-audit evidence, not authority. Independent inspection splits Step 4 because
-the Ordinary and Cartesian path closures are substantially separable. This
-transaction owns exactly `15` flat files and `14,430` lines; Cartesian/PQS
-relocation remains a later decision.
+`HP-SOURCE-LAYOUT-ORDINARY-FN-01` maintains the Ordinary half of source-layout
+Step 4 accepted in commit `96802b00cc380707306106b529ff22a09ccb415e`
+from baseline `24512b0beda75174572fc2b728010b432331c05c`;
+`HP-SOURCE-LAYOUT-ORDINARY-TEST-01` is completed with no implementation grant.
+The external follow-up review is audit evidence, not authority. Independent
+inspection split Step 4 because the Ordinary and Cartesian path closures are
+substantially separable. This transaction owns exactly `15` flat files and
+`14,430` lines.
 
 The implementation must use `git mv` for exactly this frozen map:
 
@@ -1151,10 +1151,14 @@ The unchanged Supported-floor selection must pass, including `core`, `ida`,
 `cartesian`, `examples`, `radial`, `misc`, `angular_public`, and `docs_fast`.
 The source-bearing implementation commit must classify as full and pass all
 three existing CI jobs plus Docs. No complete angular rerun is required.
-Cartesian/PQS Step 4B, decomposition, Lanczos relocation, foundation dependency
-inversion, orphan-test work, conditioning diagnostics, prose-test cleanup,
-empty-directory cleanup, API/export changes, and release work remain outside
-this authority.
+Cartesian/PQS Step 4B is governed separately below. Decomposition, Lanczos
+relocation, foundation dependency inversion, orphan-test work, conditioning
+diagnostics, prose-test cleanup, empty-directory cleanup, API/export changes,
+and release work remain outside this maintenance authority.
+
+The independently governed
+[Cartesian/PQS source relocation](cartesian_pqs_source_relocation.md) follows
+the accepted Ordinary move and changes no public or numerical contract.
 
 ## Foundational Basis And Mapping Documentation
 

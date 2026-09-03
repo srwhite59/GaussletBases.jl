@@ -946,3 +946,25 @@ No strategic change: MT6 advances source discoverability only. The bounded
 ledger rotated Passes 538-566 verbatim into a `1,082`-line archive with SHA-256
 `fa5207b905c69acb7094599b5d0ec67c0303c5d8e5c3b341e0082023048edd83`;
 the live volume retains Passes 567-587.
+
+## Cartesian Hamiltonian Producer Pass 588 - Close Ordinary And Authorize Cartesian/PQS Relocation
+
+Accepted Step 4A implementation `96802b00cc380707306106b529ff22a09ccb415e`
+and tree `c09786c2fd73ddd7a4271c59860a95b6359a20cc`: all `15` Ordinary
+owners are byte-identical `R100` moves, the root loader has exactly `15`
+in-place path substitutions, and classified current pointers plus both generated
+views were reconciled. Package load, unchanged Supported-floor owners, docs,
+authority/self-test, two renders, Documenter, CI `33767227348`, and Docs
+`33767227357` passed. The machine-local Julia 1.10 precompile fault is not a
+package failure because the clean remote Julia 1.10 gate completed. The FN
+record enters maintenance and TEST closes with no grant.
+
+Independent Step 4B preflight remains exact at this head. It authorizes `76`
+files (`40,736` lines) under `src/cartesian/`, with one prerequisite path-neutral
+docstring edit followed by `76` `R100` moves in a second local commit and one
+push. Root include order, nested includes/imports, executable bodies, tests,
+APIs, numerics, workflows, and release state remain fixed. No strategic change:
+MT6 advances source discovery only. Deleted: no implementation. Simplified:
+Ordinary discovery is complete. Quarantined: decomposition, Lanczos movement,
+dependency inversion, orphan/conditioning work, and later layout. Exact blocker:
+any hash, rename, dependency, pointer, or unchanged-owner mismatch stops Step 4B.

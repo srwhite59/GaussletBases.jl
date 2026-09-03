@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `4bbf7c478a08fbc47b1ca2ffc0c834adfd36144afccbcc5ca09fc15d00525534`.
+> [authority.toml](authority.toml), SHA-256 `f3fafdc14cf5a4893230a7ad56aa59760d203f78aa130c6331f8642d5aa07069`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -5478,8 +5478,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-SOURCE-LAYOUT-ORDINARY-FN-01 - relocate ordinary source files
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -5521,24 +5521,189 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `git_commit`: `24512b0beda75174572fc2b728010b432331c05c`
   - `manager_pass`: `587`
+  - `git_commit`: `96802b00cc380707306106b529ff22a09ccb415e`
+  - `manager_pass`: `588`
 - **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`, `HP-SOURCE-LAYOUT-FOUNDATION-FN-01`
-- **Scope:** Move exactly 15 frozen Ordinary owners into src/ordinary under Ordinary Source Relocation as byte-identical R100 renames; substitute only their 15 root include paths and classified current authority/documentation pointers. Exclude file bodies, tests, ordering, APIs, workflows, numerics, Cartesian/PQS relocation, and later layout work; stop on any hash, rename, path-count, or validation mismatch.
+- **Scope:** Maintain the 15 byte-identical Ordinary owners relocated in commit 96802b00cc380707306106b529ff22a09ccb415e under Ordinary Source Relocation, their exact include positions, classified current pointers, frozen hashes, and R100 identities. Exclude file bodies, tests, ordering, APIs, workflows, numerics, Cartesian/PQS relocation, and later layout work.
 
 ### HP-SOURCE-LAYOUT-ORDINARY-TEST-01 - validate ordinary source relocation
+
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Ordinary Source Relocation`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `24512b0beda75174572fc2b728010b432331c05c`
+  - `manager_pass`: `587`
+  - `git_commit`: `96802b00cc380707306106b529ff22a09ccb415e`
+  - `manager_pass`: `588`
+- **Dependencies:** `HP-SOURCE-LAYOUT-ORDINARY-FN-01`
+- **Scope:** Completed validation evidence only. Fifteen R100 renames, exact hashes and include order, package load, Supported floor, authority/self-test, generated views, docs, Documenter, CI 33767227348, and Docs 33767227357 passed for commit 96802b00cc380707306106b529ff22a09ccb415e. This record grants no test, runner, workflow, tolerance, numerical, or later-layout edit.
+
+### HP-SOURCE-LAYOUT-CARTESIAN-FN-01 - relocate Cartesian and PQS source files
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [cartesian\_pqs\_source\_relocation.md](cartesian_pqs_source_relocation.md); heading `Cartesian/PQS Source Relocation`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_ida_overview.md`
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_low_dimensional_operator_assembly.md`
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_atomic_nonrecursive_route.md`
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_diatomic_box_policy.md`
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_endcap_panel_shared_shell.md`
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_face_construction.md`
+  - `docs` / `existing`: `docs/src/algorithms/ida_hamiltonian_and_counterpoise.md`
+  - `docs` / `existing`: `docs/src/algorithms/pqs_shell_construction.md`
+  - `docs` / `existing`: `docs/src/developer/algorithm_implementation_index.md`
+  - `docs` / `existing`: `docs/src/developer/cartesian_route_dictionary.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driver_atom_workflow.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driver_usability_workflow.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_nuclear.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_hamiltonian_artifact_manifest.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pqs_source_relocation.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/external_cartesian_gto_interchange.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_orbital_import.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/nesting_supplement_composition_plan.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/numerical_complete_residual_basis.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/occupied_first_injection.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/parent_backed_injected_composition.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/parent_residual_functions.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_complete_shell_aspect_source_modes.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_factor.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/protected_additive_reference_correction.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_artifact.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_basis.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_ladder.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/public_ns_core_side_parity.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/r1_one_center_base_atoms.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/r3_homonuclear_diatomic_supplemented_workflow.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/r3_residual_gto_mwg_augmentation.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/r3_same_construction_base_reuse.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/r3_terminal_gg_product_matrices.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/r3_unit_nuclear_ugg_gaussian_sum.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/r3_usability_supplemented_workflow.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/reference_hartree_numerics.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/represented_mixed_density_hartree.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_injection_hybrid.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/retained_gto_egoi.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/route_stage_metadata_contract.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartree_correction_assembly.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_shellification_due_diligence.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_terminal_basis_realization.md`
+  - `source` / `existing`: `src/CartesianParentAxisFactors.jl`
+  - `source` / `existing`: `src/CartesianParentGaussletBases.jl`
+  - `source` / `existing`: `src/GaussletBases.jl`
+  - `source` / `existing`: `src/bond_aligned_diatomic_geometry.jl`
+  - `source` / `existing`: `src/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian_basis_representation.jl`
+  - `source` / `existing`: `src/cartesian_cpb/CartesianCPB.jl`
+  - `source` / `existing`: `src/cartesian_cpb/coordinate_product_boxes.jl`
+  - `source` / `existing`: `src/cartesian_cross_overlap.jl`
+  - `source` / `existing`: `src/cartesian_external_gto_import.jl`
+  - `source` / `existing`: `src/cartesian_external_gto_interchange.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/CartesianFinalBasisRealization.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_ida.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_one_body.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/terminal_face_product_blocks.jl`
+  - `source` / `existing`: `src/cartesian_final_basis_realization/white_lindsey_terminal_basis_realization.jl`
+  - `source` / `existing`: `src/cartesian_gaussian_axis_integrals.jl`
+  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/CartesianGaussianRawBlocks.jl`
+  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
+  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/non_nuclear_blocks.jl`
+  - `source` / `existing`: `src/cartesian_gaussian_raw_blocks/nuclear_blocks.jl`
+  - `source` / `existing`: `src/cartesian_gto_probes.jl`
+  - `source` / `existing`: `src/cartesian_ida_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian_nested_atomic.jl`
+  - `source` / `existing`: `src/cartesian_nested_diatomic.jl`
+  - `source` / `existing`: `src/cartesian_nested_experimental_geometries.jl`
+  - `source` / `existing`: `src/cartesian_nested_faces.jl`
+  - `source` / `existing`: `src/cartesian_nested_owned_units.jl`
+  - `source` / `existing`: `src/cartesian_pair_block_materialization/CartesianPairBlockMaterialization.jl`
+  - `source` / `existing`: `src/cartesian_pair_block_materialization/pqs_source_axis_transforms.jl`
+  - `source` / `existing`: `src/cartesian_protected_ladder_bundle.jl`
+  - `source` / `existing`: `src/cartesian_qw_hybrid_representation.jl`
+  - `source` / `existing`: `src/cartesian_raw_product_sources/CartesianRawProductSources.jl`
+  - `source` / `existing`: `src/cartesian_raw_product_sources/axis_transform_facts.jl`
+  - `source` / `existing`: `src/cartesian_raw_product_sources/records.jl`
+  - `source` / `existing`: `src/cartesian_raw_product_sources/source_mode_indices.jl`
+  - `source` / `existing`: `src/cartesian_raw_product_sources/summaries.jl`
+  - `source` / `existing`: `src/cartesian_reference_density/CartesianReferenceDensity.jl`
+  - `source` / `existing`: `src/cartesian_reference_density/atomic_hf_reference_packets.jl`
+  - `source` / `existing`: `src/cartesian_reference_density/represented_molecular_hartree.jl`
+  - `source` / `existing`: `src/cartesian_reference_density/screened_hartree_correction.jl`
+  - `source` / `existing`: `src/cartesian_representation_constructors.jl`
+  - `source` / `existing`: `src/cartesian_representation_transfer.jl`
+  - `source` / `existing`: `src/cartesian_residual_gaussians/CartesianResidualGaussians.jl`
+  - `source` / `existing`: `src/cartesian_residual_gaussians/augmented_operators.jl`
+  - `source` / `existing`: `src/cartesian_residual_gaussians/mwg_interaction.jl`
+  - `source` / `existing`: `src/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/CartesianRetainedUnitTransformContracts.jl`
+  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/records.jl`
+  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/summaries.jl`
+  - `source` / `existing`: `src/cartesian_retained_unit_transform_contracts/unit_contracts.jl`
+  - `source` / `existing`: `src/cartesian_retained_units/CartesianRetainedUnits.jl`
+  - `source` / `existing`: `src/cartesian_retained_units/lower_contract_units.jl`
+  - `source` / `existing`: `src/cartesian_retained_units/records.jl`
+  - `source` / `existing`: `src/cartesian_retained_units/summaries.jl`
+  - `source` / `existing`: `src/cartesian_route_core/CartesianRouteCore.jl`
+  - `source` / `existing`: `src/cartesian_route_core/lowering_sources.jl`
+  - `source` / `existing`: `src/cartesian_route_core/retained_spaces.jl`
+  - `source` / `existing`: `src/cartesian_route_core/shellification_regions.jl`
+  - `source` / `existing`: `src/cartesian_shellification/CartesianShellification.jl`
+  - `source` / `existing`: `src/cartesian_shellification/terminal_geometry.jl`
+  - `source` / `existing`: `src/cartesian_terminal_lowering/CartesianTerminalLowering.jl`
+  - `source` / `existing`: `src/cartesian_terminal_lowering/contracts.jl`
+  - `source` / `existing`: `src/cartesian_terminal_lowering/policies.jl`
+  - `source` / `existing`: `src/cartesian_terminal_lowering/region_contracts.jl`
+  - `source` / `existing`: `src/cartesian_terminal_lowering/selection.jl`
+  - `source` / `existing`: `src/cartesian_terminal_lowering/summaries.jl`
+  - `source` / `existing`: `src/cartesian_terminal_shellification_geometry.jl`
+  - `source` / `existing`: `src/gaussian_coulomb_reference.jl`
+  - `source` / `existing`: `src/hamiltonian_corrections.jl`
+  - `source` / `existing`: `src/pqs_matched_h2plus.jl`
+  - `source` / `existing`: `src/pqs_source_box_diatomic_complete_core_shell.jl`
+  - `source` / `existing`: `src/pqs_source_box_low_order_materialization.jl`
+  - `source` / `existing`: `src/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/pqs_source_box_route_driver_skeletons.jl`
+- **Evidence:**
+  - `git_commit`: `96802b00cc380707306106b529ff22a09ccb415e`
+  - `manager_pass`: `588`
+- **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`, `HP-SOURCE-LAYOUT-FOUNDATION-FN-01`, `HP-SOURCE-LAYOUT-ORDINARY-FN-01`
+- **Scope:** Path-neutralize one location-bearing docstring, then relocate the frozen 76-file Cartesian/PQS inventory into src/cartesian under Cartesian/PQS Source Relocation as R100 renames relative to that prerequisite commit; substitute 40 root includes and classified current pointers only. Exclude executable bodies, tests, ordering, APIs, workflows, numerics, follow-on refactors, and release work; stop on any hash, rename, dependency, pointer, or validation mismatch.
+
+### HP-SOURCE-LAYOUT-CARTESIAN-TEST-01 - validate Cartesian and PQS source relocation
 
 - **Lifecycle:** `approved`
 - **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Ordinary Source Relocation`
+  - `canonical` [cartesian\_pqs\_source\_relocation.md](cartesian_pqs_source_relocation.md); heading `Cartesian/PQS Source Relocation`
 - **Owned paths:**
   - `test` / `existing`: `test/runtests.jl`
 - **Evidence:**
-  - `git_commit`: `24512b0beda75174572fc2b728010b432331c05c`
-  - `manager_pass`: `587`
-- **Dependencies:** `HP-SOURCE-LAYOUT-ORDINARY-FN-01`
-- **Scope:** Run unchanged package load, full Supported-floor selection, all three remote CI jobs, docs, authority/self-test, generated-view, Documenter, rename/hash, include-order, direct-path, manager-log, and diff checks. Add or edit no test, assertion, fixture, runner, helper, workflow, tolerance, or numerical policy; stop if validation requires adaptation or any existing owner differs.
+  - `git_commit`: `96802b00cc380707306106b529ff22a09ccb415e`
+  - `manager_pass`: `588`
+- **Dependencies:** `HP-SOURCE-LAYOUT-CARTESIAN-FN-01`
+- **Scope:** Run unchanged package load, core/ida/cartesian/examples/docs\_fast, pqs\_release, screening\_release, four Cartesian maintenance owners, full docs/authority/Documenter checks, and all three remote CI jobs plus Docs. Add or edit no test, runner, workflow, tolerance, or numerical policy; stop if relocation needs adaptation or any owner differs.
 
 ### HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01 - relocate radial and atomic source files
 

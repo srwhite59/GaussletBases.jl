@@ -587,10 +587,8 @@ approved source surface, and are reported in the implementation handoff.
 Until explicitly relaxed by the user, repo-manager must reject Cartesian/PQS
 commits that fail this gate. This section applies to active work touching:
 
-- `src/cartesian*`
-- `src/pqs*`
-- `src/*source_box*`
-- `src/*route_driver*`
+- Cartesian/PQS source owners, whether still at the `src/` root during an
+  authorized relocation or under `src/cartesian/`
 - `bin/cartesian_ham_builder.jl`
 - `tools/cartesian*`
 - tests that exercise these paths

@@ -146,6 +146,9 @@ ID or subsystem.
   compatibility declaration are accepted, and the RC1 and RC2 tags and
   package-centered GitHub prereleases are published and validated; final release
   remains separate
+- [Cartesian/PQS source relocation](cartesian_pqs_source_relocation.md) for the
+  exact path-only Step 4B inventory, selective pointer migration, and unchanged
+  runtime/include-order contract
 - [External Cartesian GTO interchange](external_cartesian_gto_interchange.md)
   for the implemented versioned packet bundle, optional checkpoint-only PySCF
   exporter, exact AO-convention reconciliation, and explicit closest-
