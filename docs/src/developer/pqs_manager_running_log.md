@@ -1980,3 +1980,21 @@ Guardrail / next step:
   discovery is the next bounded move; quarantined: cross-track dependency
   repair and all later layout work; not deleted because: all foundation owners
   remain live; exact blocker: Step 3 must satisfy the frozen map and checks.
+
+## Cartesian Hamiltonian Producer Pass 585 - Close Foundation And Authorize Docs-Fast
+
+Accepted foundation implementation `f2e13ff3c788551c43eb2de269d4723de880ae8e`
+and tree `20faffb58324a8533acd0041119cdc39235db2e2`. All `16` owners moved
+within the authorized `+20/-20` source-path and `+2/-2` test-path boundary:
+`13` are byte-identical and three contain only the four approved comments.
+Package/resources, core/radial `2,174/2,174`, docs `157/157` plus `10/10`,
+authority, Documenter, CI `33713199108`, and Docs `33713199099` passed. No
+strategic change: MT6 retains the path-only result and Step 4 remains excluded.
+
+The same transition reopens `HP-PUBLIC-PAPER-CI-FN-01/TEST-01` only for G4:
+one shared mechanical public-surface owner, a `docs_fast` group appended to the
+existing Julia `1.10` Supported-floor selection, and a test-local 1.10 Docs
+semantic fallback cross-checked against Julia `1.12.6`. Existing prose checks,
+`fast`, classifiers, three jobs/rows, paper/tag lanes, and numerics remain fixed.
+Repo-manager must wait for this commit and its checks; equivalence, alias,
+exact-five-set, once-only execution, or group-selection failure stops the pass.

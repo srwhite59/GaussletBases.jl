@@ -1878,19 +1878,18 @@ suites under `test/nested` remain unwired. Their classification as maintained
 scheduled coverage, quarantine, or deletion is a separate bloat-review
 decision. No claim about their value or lifecycle is made here.
 
-Maintenance ownership for the path-aware routing is limited to:
+Before the bounded G4 extension below, maintenance ownership for the
+path-aware routing was limited to:
 
 ```text
 .github/workflows/ci.yml
 test/docs/runtests.jl
 ```
 
-Production source and numerical-test changes are zero. Maintenance may preserve
-or correct only this routing contract and its focused policy checks. Add no
-file, action dependency, script, helper, fixture, test group, numerical
-assertion, status vocabulary, manifest, API, compatibility layer, or release
-framework. Any scope expansion or change to the three scientific gates requires
-new design authority.
+Production source and numerical-test changes are zero. The G4 extension below
+supersedes only the former prohibition on one mechanical test group and one
+shared test owner. Any other scope expansion or change to the three scientific
+gates requires new design authority.
 
 Transition acceptance was intentionally staged. The first closeout probe,
 commit `72446880603c7e554f6ae71b2de2dc6edf28b31b`, correctly reached the
@@ -1953,6 +1952,71 @@ release-efficiency process reduces future candidate publication to three
 design-manager lifecycle passes, but each exact tag/publication transaction
 still requires separate version-specific authority with frozen candidate and
 release identities.
+
+### Lightweight Source-Push Public-Surface Integrity
+
+Pass 585 reopens `HP-PUBLIC-PAPER-CI-FN-01` and
+`HP-PUBLIC-PAPER-CI-TEST-01` only for the independently reviewed G4 boundary.
+The implementation adds one `docs_fast` group to the existing Julia `1.10`
+`Supported floor` selection. It changes no matrix row, job or required-check
+name, Julia version, timeout, classifier, marker, command, trigger, permission,
+PQS/Screening gate, tag rule, or `fast` alias.
+
+One new shared owner, `test/docs/public_surface_runtests.jl`, must contain only
+the existing mechanical public-surface contract: the `95` named documented
+exports remain exported, each has documentation, and the complete
+undocumented-export set excluding the module self-binding is exactly:
+
+```text
+OneCenterAtomicNestedStructureDiagnostics
+one_center_atomic_nested_structure_diagnostics
+one_center_atomic_nested_structure_report
+diagnose_qwrg_residual_space
+ShellLocalAngularProfileKey
+```
+
+Move the corresponding inventories and mechanical assertions out of
+`test/docs/runtests.jl`; do not duplicate them. Reference-page placement,
+reader wording, version-menu behavior, Documenter fixtures, authority checks,
+deployment policy, and every other prose assertion remain in the full `docs`
+owner. The shared owner must require only the root test environment and package
+load, never the docs environment or Documenter.
+
+Julia `1.10.12` exposes neither `Base.Docs.hasdoc` nor
+`Base.Docs.undocumented_names`. A small test-local semantic fallback may inspect
+Base Docs binding metadata and resolve aliases; no production compatibility
+shim or dependency is permitted. On Julia `1.12.6`, it must agree with
+`Base.Docs.hasdoc` for every current public name, reproduce
+`Base.Docs.undocumented_names` after excluding the module self-binding, and
+pass an explicit documented-alias check. On Julia `1.10.12`, it must yield the
+exact five-name set above.
+
+`test/runtests.jl` must expose `docs_fast` for explicit selection and `all`,
+and include the shared owner exactly once whenever either `docs_fast` or
+`docs` is selected. Thus `docs_fast`, `docs`, `docs_fast,docs`, and `all` each
+execute the mechanical owner once. The existing `fast` alias remains byte-for-
+byte unchanged. In `.github/workflows/ci.yml`, append only `docs_fast` to the
+existing Supported-floor group string; bare `docs` and every numerical group
+remain unchanged.
+
+Budget: one new test file at preferred `92-98`, hard `110` lines; move about
+`58` inventory lines and remove or simplify about `24` mechanical assertion
+lines from the full docs owner; runner additions preferred `4`, hard `8` lines;
+workflow delta exactly `+1/-1`; total tracked-test growth preferred `15-25`,
+hard `35` lines. Broad phrase-test pruning is forbidden. If cross-version alias
+or exact-set equivalence fails, execution duplicates, the Julia `1.10` package
+test requires a docs environment, or any existing numerical selection changes,
+make no implementation commit and report the mismatch.
+
+Acceptance requires focused `docs_fast`, full `docs`, combined
+`docs_fast,docs`, and `all` inclusion/control-flow evidence without running all
+numerical groups merely to count the include; direct Julia `1.10.12` and
+`1.12.6` semantic checks; unchanged normal docs/authority/Documenter checks;
+and a full implementation-push CI because `.github/workflows/ci.yml` changes.
+The Supported-floor log must visibly execute `docs_fast`; PQS and Screening
+remain unchanged. No G3 whitelist relocation, prose cleanup, Step 4, source,
+API, export, dependency, numerical-policy, release, or new workflow authority
+is granted.
 
 ## Compatibility
 

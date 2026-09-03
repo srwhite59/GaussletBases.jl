@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `fa820588ba8c53312db1e0b28c05552334bb118dc3d0f42ce4bd76a3a90cac08`.
+> [authority.toml](authority.toml), SHA-256 `29b2e02288a4272ca906ca3eb4157d728ecb91ccf495dece8f1f16352fae422b`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2826,8 +2826,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-PAPER-CI-FN-01 - paper-aligned PQS and screening CI workflow
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tools`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2856,19 +2856,22 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `544`
   - `manager_pass`: `560`
   - `manager_pass`: `561`
+  - `git_commit`: `f2e13ff3c788551c43eb2de269d4723de880ae8e`
+  - `manager_pass`: `585`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`
-- **Scope:** Maintain the implemented three-gate workflow with the exact Julia 1.10 Supported-floor selection core,ida,cartesian,examples,radial,misc,angular\_public. Commit db156966a4a3a7bf2f685fa0f89312afca7b4280 appended only the bounded public angular owner; bare \`angular\` remains excluded. Preserve the workflow file, three job names and rows, Julia versions, 30-minute timeout, path classifier and four-path allowlist, documentation-only markers and lightweight lane, commands, triggers, permissions, pull-request behavior, PQS and Screening groups, annotated-tag identity/install lane, disabled slow tests, and fail-closed behavior. Add no other group, row, job, workflow, action dependency, helper, command, trigger, permission, source, numerical policy, dependency, manifest, version, tag, release, registration, citation, or test-owner change.
+- **Scope:** Implement only the \`docs\_fast\` addition under Paper-Aligned CI Boundary: append it to the existing Julia 1.10 Supported-floor selection and preserve every classifier, job/row/name, Julia version, timeout, command, trigger, permission, paper gate, tag rule, and \`fast\` alias. Add no job, dependency, source/API/export/numerical/release change; stop if existing numerical selection changes.
 
 ### HP-PUBLIC-PAPER-CI-TEST-01 - paper-aligned PQS and screening release validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Paper-Aligned CI Boundary`
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
+  - `test` / `planned`: `test/docs/public_surface_runtests.jl`
   - `test` / `existing`: `test/pqs_h2plus_table1_release_runtests.jl`
   - `test` / `existing`: `test/runtests.jl`
 - **Evidence:**
@@ -2894,8 +2897,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `544`
   - `manager_pass`: `560`
   - `manager_pass`: `561`
+  - `git_commit`: `f2e13ff3c788551c43eb2de269d4723de880ae8e`
+  - `manager_pass`: `585`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PUBLIC-PAPER-CI-FN-01`
-- **Scope:** Maintain the focused documentation-policy assertions requiring the exact Supported-floor selection core,ida,cartesian,examples,radial,misc,angular\_public and rejecting bare \`angular\`. Preserve every numerical assertion, tolerance, fixture, pqs\_release single-execution contract, screening\_release contract, required-check identity, all three CI names/rows, path-aware routing, workflow command, and documentation link. Radial passed 322/322, misc passed 59/59, the focused angular owner passed 83/83, and remote CI run 33509253422 passed the expanded Julia 1.10 Supported-floor gate plus unchanged PQS and Screening gates. Add no other numerical assertion, fixture, helper, cache, artifact, file, framework, group, row, workflow, source, API, dependency, docs, version, tag, or release change.
+- **Scope:** Extract only existing mechanical export/doc-presence/exact-five-set checks into one shared test/docs/public\_surface\_runtests.jl owner, selected once by \`docs\_fast\` or \`docs\`. Permit the approved test-local Julia 1.10 Docs semantic fallback and cross-version/alias checks. Preserve prose/reference/version/Documenter assertions and forbid broad pruning, dependencies, production shims, numerical tests, or duplicate execution.
 
 ### HP-PUBLIC-PARTITION-LEAF-DOC-FN-01 - document partition hierarchy and leaf-local accessors
 
@@ -5372,8 +5377,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-SOURCE-LAYOUT-FOUNDATION-FN-01 - relocate foundation source files
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -5409,25 +5414,27 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `git_commit`: `f8421494e19b3a4553a7f89e20049520c38e3b2c`
   - `manager_pass`: `584`
+  - `git_commit`: `f2e13ff3c788551c43eb2de269d4723de880ae8e`
+  - `manager_pass`: `585`
 - **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`, `HP-PQS-COULOMB-ACCURACY-FN-01`, `HP-PQS-MAP-SFACTOR-FN-01`, `HP-REP-MIXDENS-HARTREE-FN-01`, `HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01`
-- **Scope:** Move exactly 16 owners into src/foundation under Foundation Source Relocation: 13 byte-identical renames, three moves with only four path-comment substitutions, 15 root includes, one radial include, three maintained authority paths, and current-pointer reconciliation. Exclude executable bodies, symbols, ordering, APIs, tests beyond paired paths, workflows, numerics, releases, and later moves; stop on any hash or diff mismatch.
+- **Scope:** Maintain the accepted Step 3 relocation from commit f2e13ff3c788551c43eb2de269d4723de880ae8e: 16 owners under src/foundation, 13 byte-identical and three with only four path-comment updates; preserve include order, parent-qualified radial include, exact test/current pointers, package behavior, and tree 20faffb58324a8533acd0041119cdc39235db2e2. No body, symbol, API, test, workflow, numerical, release, Step 4, or later-layout change.
 
 ### HP-SOURCE-LAYOUT-FOUNDATION-TEST-01 - validate foundation source relocation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Foundation Source Relocation`
-- **Owned paths:**
-  - `test` / `existing`: `test/radial/runtests.jl`
-  - `test` / `existing`: `test/runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
   - `git_commit`: `f8421494e19b3a4553a7f89e20049520c38e3b2c`
   - `manager_pass`: `584`
+  - `git_commit`: `f2e13ff3c788551c43eb2de269d4723de880ae8e`
+  - `manager_pass`: `585`
 - **Dependencies:** `HP-SOURCE-LAYOUT-FOUNDATION-FN-01`
-- **Scope:** Change only the two direct families\_high\_prec path strings in test/runtests.jl and test/radial/runtests.jl; change no assertion or runner behavior. Validate exact hashes and diffs, include order, package-root targets, package load, core/radial, docs, authority, generated views, Documenter, normal CI/Docs, and no full angular rerun. Stop if any test requires adaptation.
+- **Scope:** Completed validation evidence only. Exact hashes/diffs, include order, package/resources, core/radial 2174/2174, docs 157/157 plus 10/10, authority, Documenter, CI 33713199108, and Docs 33713199099 passed for commit f2e13ff3c788551c43eb2de269d4723de880ae8e. This record grants no test, fixture, runner, workflow, numerical, or later-layout edit.
 
 ### HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01 - relocate radial and atomic source files
 
