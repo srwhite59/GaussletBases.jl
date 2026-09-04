@@ -318,13 +318,15 @@ function _path_errors(item, id, index, tracked)
     root_project = kind == "source" && path == "Project.toml"
     root_changelog = kind == "docs" && path == "CHANGELOG.md"
     root_readme = kind == "docs" && path == "README.md"
+    root_status_doc = kind == "docs" && state == "existing" &&
+        path in ("DESIGN.md", "ROADMAP.md", "STATUS.md")
     repository_workflow_tool = kind == "tool" && path in (
         ".github/workflows/cartesian-internal-maintenance.yml",
         ".github/workflows/ci.yml",
         ".github/workflows/docs.yml",
         "docs/make.jl",
     )
-    (root_project || root_changelog || root_readme || repository_workflow_tool ||
+    (root_project || root_changelog || root_readme || root_status_doc || repository_workflow_tool ||
      any(prefix -> startswith(path, prefix), prefixes[kind])) ||
         push!(errors, "$id.paths[$index] has wrong prefix: $path")
     state == "existing" && (!isfile(absolute) || !(path in tracked)) &&
