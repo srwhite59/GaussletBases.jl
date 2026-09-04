@@ -56,7 +56,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_o
 sha256 = "417af5ce68d45a3719cb38a6ec9f47564f422f75ebc08d70c18f8bdf472fe7a0"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md"
-sha256 = "8160103ad6911c089671b326e11a289b797c2ab8083ff40263007b0185228ff1"
+sha256 = "9e612596e63d1a7b8040f192a164f083212584a30530363ad6dc09eea6b3c9f5"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md"
 sha256 = "e21df153a635702b03303d1f4ced9fcf5e23728030099e2cc8a0105494ce759a"
@@ -339,7 +339,7 @@ dependency_ids = []
 grant = "maintenance"
 id = "HP-AUTHORITY-EXECUTION-WHITELIST-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the whole-file execution whitelist implemented in commit 24512b0beda75174572fc2b728010b432331c05c under Generated Authority Views. Preserve authority.toml as sole authority, byte-checked registry and whitelist generation, stable fail-closed AGENTS instructions, and exact executable-ID intersection semantics. Exclude schema, source/API/export/workflow, reverse-parser, generator-layer, and historical rewrites."
+scope = "Maintain Generated Authority Views, including the user-approved Root Status Documentation Path Amendment: only docs/check_cartesian_authority.jl::_path_errors may admit existing DESIGN.md, ROADMAP.md, and STATUS.md docs paths. Preserve planned-state restrictions, all other path checks, deterministic views, and deny-by-default authority. No reader-page, source/API, schema, workflow, release, or numerical change."
 surfaces = ["docs"]
 title = "whole-file execution whitelist authority view"
 
@@ -357,6 +357,9 @@ title = "whole-file execution whitelist authority view"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "587"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "601"
 
     [[records.paths]]
     kind = "docs"
