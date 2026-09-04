@@ -1234,3 +1234,22 @@ change: MT1 reader correctness and MT5/MT6 bounded maintenance remain in force.
 - MT5: active/maintenance; authority views and mechanical documentation checks remain the gate.
 - MT6: active; preserve bounded maintenance and avoid duplicate numerical validation.
 - MT7: completed/maintenance; external Cartesian-GTO interchange remains unchanged.
+
+## Cartesian Hamiltonian Producer Pass 601 - Authorize Root Documentation Path Recognition
+
+The current-status/onboarding preflight at `6220f161b` found a sound nine-path
+editorial boundary, but the checker rejects the existing root DESIGN, ROADMAP,
+and STATUS documents. Its root-doc exceptions currently cover README and
+CHANGELOG only. The user explicitly approved the prerequisite checker repair.
+The existing whole-file authority maintenance record now owns only this
+three-name addition to `_path_errors`, with 4/6 preferred/hard added lines and
+at most two deletions in the checker. Planned-state restrictions and all other
+path, schema, generation, and deny-by-default checks remain intact.
+
+Validation uses existing self-tests plus an uncommitted positive/negative path
+probe, package/docs/build checks, deterministic renders, and remote docs-only
+CI/Docs. No test growth, source, numerical run, workflow, or release change is
+authorized. MT5 gains recognition of already existing documentation owners;
+MT1/MT6's shorter onboarding summaries remain the separately preflighted next
+packet. That packet is not granted yet. The exact next step is repo-manager's
+single-file checker implementation after this amendment and its checks pass.

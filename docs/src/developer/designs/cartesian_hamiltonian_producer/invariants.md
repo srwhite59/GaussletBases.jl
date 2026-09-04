@@ -68,6 +68,43 @@ not a hashed authority input, because it contains the authority digest.
 `AGENTS.md` carries only stable instructions to inspect the exact machine
 record and this whitelist; it contains no generated IDs or authority digest.
 
+#### Root Status Documentation Path Amendment
+
+Pass 601 records the user's explicit approval for repo-manager to change only
+`_path_errors` in `docs/check_cartesian_authority.jl`: admit exactly
+`DESIGN.md`, `ROADMAP.md`, and `STATUS.md` as existing root `kind = "docs"`
+paths, alongside the already permitted README and CHANGELOG. This is bounded
+authority-tooling maintenance under `HP-AUTHORITY-EXECUTION-WHITELIST-FN-01`,
+not a producer-source grant or permission to edit those reader pages yet.
+The checker itself remains outside the producer source-path whitelist, as in
+the accepted whole-file-view tooling transaction; no new path kind or checker
+self-registration exception is needed.
+
+Prefer a direct three-name condition added to the existing root-prefix check.
+Preferred/hard checker budgets are 4/6 added lines, at most 2 deleted lines;
+one existing file only. Preserve tracked-file checks, Markdown requirements,
+path normalization/traversal/symlink rejection, every other prefix, and the
+planned-state restriction: these three files must not gain planned-path
+permission. Preserve schema, lifecycle rules, generation, and executable-ID
+intersection semantics. Add no helper, schema field, generic root glob,
+framework, test file, or committed assertion.
+
+Use the existing authority check and adversarial self-test. An uncommitted
+focused probe must establish acceptance of all three existing tracked paths,
+continued README/CHANGELOG acceptance, rejection of an unrelated root file
+(for example AGENTS.md as a docs path), rejection of source-as-docs and unsafe
+paths, and rejection of planned records for the three additions. Re-render
+the existing views independently and compare them byte-for-byte. Require
+package load, docs_fast/full docs, Documenter, log-bound and diff checks, and
+remote docs-only CI with all three marker jobs plus separate Docs success.
+Do not run numerical owners for this tooling-only change.
+
+Stop without an implementation commit if this requires any broader path,
+schema, test, or behavior change. The status/onboarding editorial packet
+remains preflighted but ungranted until this change is reviewed. Its eventual
+navigation path already has the existing `docs/make.jl` tool classification.
+No source, API, workflow, release, deployment, or numerical change is granted.
+
 For execution records, `dependency_ids` are immediate normative prerequisites,
 not navigation. An execution record must not depend on a retired, rejected,
 superseded, or no-grant record. No-grant historical records may retain

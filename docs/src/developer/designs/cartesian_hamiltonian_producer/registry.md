@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `3776bacae9e9103926de474cbea572a67440ff32c913a56f3952d9599bcc7232`.
+> [authority.toml](authority.toml), SHA-256 `7f120368232f33bd4f3867d395732d318d09e48f83ac3aab80d269d18d197743`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -106,8 +106,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `24512b0beda75174572fc2b728010b432331c05c`
   - `manager_pass`: `586`
   - `manager_pass`: `587`
+  - `manager_pass`: `601`
 - **Dependencies:** none
-- **Scope:** Maintain the whole-file execution whitelist implemented in commit 24512b0beda75174572fc2b728010b432331c05c under Generated Authority Views. Preserve authority.toml as sole authority, byte-checked registry and whitelist generation, stable fail-closed AGENTS instructions, and exact executable-ID intersection semantics. Exclude schema, source/API/export/workflow, reverse-parser, generator-layer, and historical rewrites.
+- **Scope:** Maintain Generated Authority Views, including the user-approved Root Status Documentation Path Amendment: only docs/check\_cartesian\_authority.jl::\_path\_errors may admit existing DESIGN.md, ROADMAP.md, and STATUS.md docs paths. Preserve planned-state restrictions, all other path checks, deterministic views, and deny-by-default authority. No reader-page, source/API, schema, workflow, release, or numerical change.
 
 ### HP-AUTHORITY-EXECUTION-WHITELIST-TEST-01 - whole-file execution whitelist validation
 
