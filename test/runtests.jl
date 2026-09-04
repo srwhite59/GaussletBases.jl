@@ -516,8 +516,10 @@ end
 
 function _local_hfdmrg_module()
     return _cached_fixture(:local_hfdmrg_module, () -> begin
-        path = "/Users/srw/Dropbox/codexhome/work/hfdmrg/src"
-        isdir(path) || return nothing
+        path = strip(get(ENV, "GAUSSLETBASES_HFDMRG_SRC", ""))
+        isempty(path) && return nothing
+        isdir(path) || throw(ArgumentError(
+            "GAUSSLETBASES_HFDMRG_SRC is not a directory: $(repr(path))"))
         path in LOAD_PATH || push!(LOAD_PATH, path)
         @eval Main using HFDMRG
         return Base.invokelatest(getfield, Main, :HFDMRG)
