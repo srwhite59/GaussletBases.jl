@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
-sha256 = "8742f7b1ea8977d3f4b04472ae09971f1b785d3d5cc130a7aa13b242548b7f71"
+sha256 = "876de6dbb023fbe9dc4b299776739b4204635773a10571bc94227f58a04a8caf"
 
 [[records]]
 dependency_ids = ["HP-ANGULAR-TEST-CONTROL-FN-01", "HP-PUBLIC-PAPER-CI-FN-01"]
@@ -263,7 +263,7 @@ dependency_ids = []
 grant = "maintenance"
 id = "HP-ANGULAR-TEST-CONTROL-FN-01"
 lifecycle = "implemented"
-scope = "Maintain only the accepted two-file control-flow repair from commit `22d25e8c5061abafa5a37ea35d4a51adfa4b9a72`: a missing optional HFDMRG checkout produces one visible skip limited to the handshake; if the configured path exists, load/import errors propagate as test failures; no file-level return truncates later angular tests; explicit `angular` selection retains the complete owner; and `angular` remains absent from `_FAST_TEST_GROUPS`. The exact implementation delta was +6/-9 with no numerical assertion, source, API, dependency, workflow, helper, file, or docs-test change. Preserve all other group definitions and every broader angular exclusion from the canonical contract; any behavioral or ownership change requires a new amendment."
+scope = "Maintain Pass 559 while replacing only `_local_hfdmrg_module`'s personal path in `test/runtests.jl` with `GAUSSLETBASES_HFDMRG_SRC`: blank means absent, non-directory errors, and an existing directory retains uncaught `LOAD_PATH`/import behavior and the existing cache. Budget `+4/-2`, hard `+7/-2`. Preserve skip/continuation, group selection, numerics, dependencies, workflows, APIs, and path-search prohibition."
 surfaces = ["tests"]
 title = "angular optional-consumer control-flow repair"
 
@@ -284,11 +284,10 @@ title = "angular optional-consumer control-flow repair"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "559"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "597"
 
-    [[records.paths]]
-    kind = "test"
-    path = "test/angular/runtests.jl"
-    state = "existing"
     [[records.paths]]
     kind = "test"
     path = "test/runtests.jl"
@@ -299,7 +298,7 @@ grant = "none"
 id = "HP-ANGULAR-TEST-CONTROL-TEST-01"
 lifecycle = "completed"
 paths = []
-scope = "none. No focused docs regression was needed or added. Acceptance is frozen by commit `22d25e8c5061abafa5a37ea35d4a51adfa4b9a72`, the `61,907`-pass/one-skip complete absent-checkout angular run, direct failure-propagation inspection, and the package/docs/authority/CI evidence recorded in the canonical contract. Future test or runner behavior requires a new amendment."
+scope = "none. Add no committed test. Accept the maintenance amendment only after separate processes cover unset, blank, invalid, existing-but-unloadable, and valid configuration; the valid path must resolve to the configured module and pass the isolated 66-check adapter owner. Do not rerun full angular. Require package load, authority/self-test, docs, Documenter, diff checks, source-bearing CI, and Docs."
 surfaces = []
 title = "angular optional-consumer control-flow validation"
 
@@ -320,6 +319,9 @@ title = "angular optional-consumer control-flow validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "559"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "597"
 [[records]]
 dependency_ids = []
 grant = "maintenance"
