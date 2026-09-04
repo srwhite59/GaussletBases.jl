@@ -175,7 +175,8 @@ Future tag-lane repair, registration, citation metadata, and any later release
 are separate decisions. The execution whitelist now lives in its generated
 whole-file view, and `docs_fast` protects mechanical public-surface integrity
 on source pushes. The next bounded maintenance step removes only prose wording
-locks from the full docs owner while retaining all mechanical policy checks.
+locks from the full docs owner while retaining all mechanical policy checks;
+that bounded cleanup is now accepted and in maintenance.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
 metadata, unsupported exports, and development-era tests as conformance work
@@ -214,9 +215,10 @@ leaving `ShellLocalAngularProfileKey` exported, undocumented, and unreferenced
 as the sole angular next-minor de-export candidate. That future namespace
 change remains separate from documentation and does not reopen v0.2 release
 work. The audited source-layout sequence, shared private Lanczos extraction,
-and mapped-representation ownership inversion are complete. The current
-carrying-cost target is the separately bounded documentation-test reduction;
-it grants no source, API, workflow, or reader-prose change.
+and mapped-representation ownership inversion are complete. The accepted
+documentation-test reduction removes 220 net lines without weakening the
+mechanical public-surface boundary. Further carrying-cost work requires a new
+audit; no source, API, workflow, or reader-prose change follows automatically.
 
 **MT7 - External Cartesian GTO interchange (completed/maintenance).** The
 strict versioned reader, checkpoint-only PySCF exporter, frozen d-shell
@@ -1115,3 +1117,19 @@ advance through narrower test ownership without weakening documentation review.
 - **MT5 - active/maintenance:** generated authority views and mechanical public-surface checks are stable; bounded prose-test cleanup is next.
 - **MT6 - active:** source-layout and ownership inversions are closed; the authorized net-negative docs-test cleanup is the current carrying-cost target.
 - **MT7 - completed/maintenance:** external Cartesian-GTO interchange remains unchanged.
+
+## Cartesian Hamiltonian Producer Pass 596 - Close Documentation Prose-Test Cleanup
+
+Accepted commit `e65075e789d66e4169da4b6e88a68a30cac36e43`. The full docs
+owner is exactly 497 lines after the authorized `+19/-239` change, net `-220`
+lines and 31 fewer test sites. Descriptive phrase locks and their unused helper
+and reads are gone; all classified mechanical checks and four durable heading
+boundaries remain. The shared public-surface owner stayed byte-identical at Git
+blob `b3dfc94a9362997aec84a31acab835ca7fef919c`.
+
+Manager replay passed `docs_fast` `8/8`, full docs `122/122`, policy `10/10`,
+and package load. Authority/self-test, manager-log bound, Documenter, and diff
+checks passed; CI `33836202784` used only the docs lane and three visible
+markers, and Docs `33836202788` passed. No numerical matrix executed and no
+reader prose, source, API, workflow, helper, or file changed. MT5/MT6 record a
+completed net-negative ownership cleanup; no successor transaction is opened.

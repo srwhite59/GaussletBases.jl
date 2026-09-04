@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `22fa071e40f1acb4fb176e7b1cb3419fa68902ec25607330878ed3a86dddaf87`.
+> [authority.toml](authority.toml), SHA-256 `a9ba03ffe930fb98e0fa8f09693cc633791c02288afb19cbcfa1287bfc41a857`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2802,8 +2802,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-DOCS-PROSE-CLEANUP-FN-01 - simplify full documentation test ownership
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2811,14 +2811,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `e65075e789d66e4169da4b6e88a68a30cac36e43`
   - `manager_pass`: `595`
+  - `manager_pass`: `596`
 - **Dependencies:** `HP-PUBLIC-ANGULAR-PRODUCER-DOC-TEST-01`, `HP-PUBLIC-ATOMIC-IDA-DOC-TEST-01`, `HP-PUBLIC-BASE-WORKING-DOC-TEST-01`, `HP-PUBLIC-EXPERT-GEOMETRY-DOC-TEST-01`, `HP-PUBLIC-FOUNDATION-DOC-TEST-01`, `HP-PUBLIC-FUNCTION-STENCIL-DOC-TEST-01`, `HP-PUBLIC-PAPER-CI-TEST-01`, `HP-PUBLIC-PARTITION-LEAF-DOC-TEST-01`, `HP-PUBLIC-QW-GEOMETRY-DOC-TEST-01`, `HP-PUBLIC-RADIAL-PARITY-DOC-TEST-01`, `HP-PUBLIC-SLICED-HCHAIN-DOC-TEST-01`, `HP-PUBLIC-SUPPORTED-SURFACE-DOC-TEST-01`, `HP-REP-XGTO-READER-DOC-TEST-01`
-- **Scope:** Remove only descriptive wording locks from \`test/docs/runtests.jl\` under the canonical classification. Preserve the shared 95-name/five-reserved owner byte-for-byte; workflow, release, authority, version/URL, page/name-placement, public-example, path-safety, and four note-status checks remain. Replace four durable boundaries with headings. Target \`717 -\> 497\`, \`+19/-239\`; add no docs prose, source, workflow, helper, file, or numerical execution.
+- **Scope:** Maintain commit e65075e789d66e4169da4b6e88a68a30cac36e43: \`test/docs/runtests.jl\` is exactly 497 lines after the accepted \`+19/-239\` cleanup. Preserve every retained mechanical policy/placement check, four heading boundaries, and byte-identical shared public-surface owner blob \`b3dfc94a9362997aec84a31acab835ca7fef919c\`; add no prose lock, docs edit, source, workflow, helper, file, or numerical execution.
 
 ### HP-PUBLIC-DOCS-PROSE-CLEANUP-TEST-01 - validate mechanical documentation test boundary
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2826,9 +2828,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `e65075e789d66e4169da4b6e88a68a30cac36e43`
   - `manager_pass`: `595`
+  - `manager_pass`: `596`
 - **Dependencies:** `HP-PUBLIC-DOCS-PROSE-CLEANUP-FN-01`
-- **Scope:** Require \`docs\_fast\` 8/8, full docs 122/122, policy 10/10, unchanged public-surface hash, authority/self-test, Documenter, diff checks, docs-only marker lane, and Docs. This record supersedes wording-list test obligations in its dependencies only; their reader contracts remain. Stop on mechanical-check loss, docs edits, added framework, net reduction below 200 lines, or numerical-matrix execution.
+- **Scope:** Maintain the accepted mechanical boundary from e65075e789d66e4169da4b6e88a68a30cac36e43: \`docs\_fast\` 8/8, full docs 122/122, policy 10/10, unchanged public-surface owner, authority/self-test, Documenter, and docs-only marker evidence. Reader contracts remain review-owned. Add no prose snapshot, framework, docs/source/workflow change, duplicate owner, or numerical-matrix execution.
 
 ### HP-PUBLIC-EXPERT-GEOMETRY-DOC-FN-01 - document expert bond-aligned geometry inspection
 

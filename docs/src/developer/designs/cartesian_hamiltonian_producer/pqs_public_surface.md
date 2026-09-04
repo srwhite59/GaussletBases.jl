@@ -2118,17 +2118,16 @@ separate records below and must not weaken this contract.
 ### Documentation Prose Test Cleanup
 
 `HP-PUBLIC-DOCS-PROSE-CLEANUP-FN-01` and
-`HP-PUBLIC-DOCS-PROSE-CLEANUP-TEST-01` authorize only `test/docs/runtests.jl`.
-Keep the shared owner byte-identical and all mechanical release/version,
-workflow/authority, placement/example/path, log, and note-status checks.
-Delete prose phrase lists, retaining headings for external transfer, atomic IDA,
-angular producers, and staged Cartesian construction. Reader contracts remain;
-add no docs, source, workflow, framework, file, or numerical change.
+`HP-PUBLIC-DOCS-PROSE-CLEANUP-TEST-01` are maintenance-only after commit
+`e65075e789d66e4169da4b6e88a68a30cac36e43`. The full owner is exactly 497
+lines after `+19/-239` (net `-220`; 31 fewer tests). Mechanical release/version,
+workflow/authority, placement/example/path, log, note-status, and four heading
+boundaries remain; the shared owner is byte-identical.
 
-Target exactly `717 -> 497`, `+19/-239` (net `-220`; 31 fewer tests), with
-`8/8`, `122/122`, and `10/10`; require the docs-only marker lane, Docs,
-authority/self-test, Documenter, and diff checks. Scope, mechanical-coverage,
-or net-deletion failure stops the transaction.
+Local and remote validation passed at `8/8`, `122/122`, and `10/10`, including
+authority/self-test, Documenter, CI `33836202784`, and Docs `33836202788`.
+Reader contracts remain review-owned. Restore no prose locks or duplicate
+owner; add no docs, source, workflow, framework, file, or numerical change.
 
 ## Compatibility
 
