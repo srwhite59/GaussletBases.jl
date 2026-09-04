@@ -5,8 +5,9 @@ contract `HP-COMP-NSCORE-TEST-01` is completed.
 
 ## Contract
 
-`ns` is the public requested cube/source/nesting size. Route-local `q` is
-derived by the selected nesting family:
+Public `q` and `ns` normalize to one consistent pair. `q` is local order;
+`ns` is the matched-family cube/source/nesting size used for shared geometry
+and direct-core parity:
 
 ```text
 nesting = :pqs  -> q = ns
@@ -14,8 +15,8 @@ nesting = :wl   -> q = ns - 2
 ```
 
 Direct nucleus-centered core identity blocks need an odd side so the nucleus is
-centered on a grid point. Their side is therefore derived from public `ns`,
-not route-local `q`:
+centered on a grid point. Their side is therefore derived from normalized `ns`,
+not local-order `q`:
 
 ```text
 direct_core_side = isodd(ns) ? ns : ns + 1
@@ -52,7 +53,7 @@ Source owners:
 - `src/cartesian/pqs_source_box_route_driver_helpers.jl`: direct-core route
   construction and truthful `:public_ns_direct_core_side` provenance.
 
-The broader public `ns` and route-local `q` contract is owned by
+The broader public `q`/`ns` normalization contract is owned by
 [Nesting/supplement composition](nesting_supplement_composition_plan.md).
 
 ## Validation And Evidence

@@ -310,10 +310,12 @@ The canonical RG algorithm contract is
   not implied by this invariant and requires separate authority.
 - One-center atom parent sizing uses physical extent. Public `basis.radius`
   / driver `padding` is the atom box-size authority.
-- Public size input uses `ns` as the requested cube/source/nesting size.
-  Route-local `q` is derived only after selecting `nesting`: `q = ns` for PQS
-  and `q = ns - 2` for White-Lindsey. Do not treat `q` as the common public
-  cube-size field, direct parent side-count rule, or physical box extent.
+- Public size input accepts either local-order `q` or matched-family `ns`.
+  Normalization gives `q = ns` for PQS and `q = ns - 2` for White-Lindsey, or
+  derives `ns = q` and `ns = q + 2`, respectively. If both are supplied they
+  must agree. PQS-only work may lead with `q`; matched-family comparisons use
+  `ns`. Do not treat local-order `q` as the common direct parent side-count rule
+  or physical box extent.
 - White-Lindsey z-axis diatomics with normalized `ns < 4` are unsupported and
   should reject before route construction. Working WL diatomic `ns` ranges may
   saturate the final retained support when physical parent extent dominates;
@@ -338,8 +340,8 @@ The canonical RG algorithm contract is
   boundary retained count must preserve the requested shell contraction count;
   for WL public `ns = 4`, route-local `q = 2` gives `4^3 - 2^3 = 56`
   boundary columns, not `26`.
-- Direct nucleus-centered core side must be derived from public `ns`, not
-  route-local `q`: `direct_core_side = isodd(ns) ? ns : ns + 1`. Route-local
+- Direct nucleus-centered core side must be derived from normalized `ns`, not
+  local-order `q`: `direct_core_side = isodd(ns) ? ns : ns + 1`. Route-local
   `q` remains `q = ns` for PQS and `q = ns - 2` for White-Lindsey, but it does
   not define the shared direct core side.
 - Terminal shell decomposition is common geometry. Direct core regions,
@@ -347,7 +349,7 @@ The canonical RG algorithm contract is
   by one route-family-free operation before PQS or White-Lindsey lowering.
   For z-axis diatomics, PQS and White-Lindsey must call that common shellifier
   with the same first-step arguments when the public system, parent axes,
-  public `ns`, direct core side, nuclear centers, and bond axis match.
+  normalized `ns`, direct core side, nuclear centers, and bond axis match.
   Central-gap/contact, shared-shell, and outer-mismatch ownership are common
   shell geometry, not retained-construction geometry.
   PQS may then use shell support plus a full source CPB for retained-mode
@@ -365,7 +367,7 @@ The canonical RG algorithm contract is
   shells.
 - A private semantic shell `source_q` is a source-span refinement, not a second
   public/route `q`. It may be applied only after common shellification and must
-  not change public `ns`, PQS route `q`, direct-core side, parent axes, shell
+  not change normalized `ns`, PQS route `q`, direct-core side, parent axes, shell
   boxes, support ownership, or region order. Shared-shell longitudinal `L`
   remains owned by the existing angular-band selector; callers may not supply
   `L` or a full shape. The first override lane is ordinary-span only and does
@@ -373,7 +375,7 @@ The canonical RG algorithm contract is
 - Z-axis diatomic thin slab stacks are not real shell regions and are not
   direct identity sectors. For both PQS and White-Lindsey,
   `:direct_midpoint_slab` and `:outer_mismatch_slab` must lower through the
-  same compact slab function with the same terminal region, public `ns`, slab
+  same compact slab function with the same terminal region, normalized `ns`, slab
   normal/thickness, and native source/support facts. The compact unit-slice
   retained scale is `ns x ns x 1` after one-dimensional COMX/product
   compression; a thickness-`t <= ns` outer-mismatch region should scale about

@@ -63,7 +63,7 @@ For the diatomic path, `basis` requires:
 - `core_spacing`;
 - `xmax_parallel`;
 - `xmax_transverse`;
-- at least one of `ns` or legacy-compatible `q`.
+- at least one of the supported public size inputs `q` or `ns`.
 
 The shared base producer owns normalization of `ns`, route-local `q`,
 `nesting`, `source_span`, `s_factor`, `coulomb_accuracy`,

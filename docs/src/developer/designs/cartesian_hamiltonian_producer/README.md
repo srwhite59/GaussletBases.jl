@@ -177,8 +177,8 @@ ID or subsystem.
 - [Nesting/supplement composition](nesting_supplement_composition_plan.md)
   for the implemented 2 x 2 x 2 composition matrix and dependency order
 - [Public ns direct-core side parity](public_ns_core_side_parity.md)
-  for deriving direct nucleus-centered core side from public `ns` rather than
-  route-local `q`
+  for deriving direct nucleus-centered core side from normalized `ns` rather
+  than local-order `q`
 - [Common terminal shell decomposition](common_terminal_shell_decomposition.md)
   for keeping direct core and shell-owned support construction shared before
   PQS/WL retained-realization geometry diverges

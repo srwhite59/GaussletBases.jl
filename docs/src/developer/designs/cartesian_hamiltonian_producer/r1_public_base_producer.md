@@ -145,8 +145,8 @@ explicit objects and must not alter the meaning of the bare producer.
 ## Basis Input
 
 `basis` is a plain `NamedTuple`. It must contain `core_spacing` and at least one
-of `ns` or legacy-compatible `q`. Size values must be positive integers and
-may not be `Bool`.
+of the supported public size inputs `q` or `ns`. Size values must be positive
+integers and may not be `Bool`.
 
 Geometry-specific required fields:
 
@@ -172,10 +172,19 @@ Implemented optional fields and defaults:
 `nesting`, `source_span`, and `coulomb_accuracy` may be supplied as symbols or
 strings and are normalized to symbols before construction.
 
-Public `ns` and route-local `q` semantics belong to
+Public `q` and `ns` semantics belong to
 [nesting and supplement composition](nesting_supplement_composition_plan.md).
-Durable calls use `ns`; `q` remains a compatibility input. When both are
-present, `q` must match the value derived from `ns` and `nesting`.
+`q` is the scientific local-order parameter and is the natural lead input for
+a PQS-only construction. `ns` is the matched-family parameter and is the
+natural lead input when comparing PQS with White-Lindsey. Normalization uses
+`q = ns` for PQS and `q = ns - 2` for White-Lindsey; conversely, explicit `q`
+implies `ns = q` or `ns = q + 2`, respectively. When both are present, they
+must agree with `nesting`.
+
+The existing provenance spelling `ns_source = :legacy_q_compatibility` for an
+explicit-`q` call is retained unchanged. Renaming or interpreting that metadata
+is a separate compatibility decision and is not part of the public input
+classification.
 
 `core_spacing` is the one public near-nucleus physical scale. It is not
 `reference_spacing`, box extent, or a hidden element default. One-center
@@ -356,8 +365,49 @@ ordering or present either value as converged or publication evidence.
 The existing quick-example test invokes this file, the focused docs owner
 protects its links and public-name boundary, and the Julia-1.10 CI selection
 includes the existing `examples` group. No new test file, workflow framework,
-other CI change, source/API surface, private call, parser, artifact, solver,
+other CI change, source/API surface, private call, artifact, solver,
 supplement, PRF, screening, or numerical-order gate is part of maintenance.
+
+## Public Cartesian Front-Door Documentation
+
+`HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-FN-01` owns one bounded correction of the
+existing public facade documentation. It may change only the
+`cartesian_base_hamiltonian` docstring, the Export reference, and the PQS manual
+page. The docstring must state the exact `system` key set, the atom and
+diatomic `basis` schemas, all implemented optional defaults and restrictions,
+the public `q`/`ns` normalization above, and the atom-only `d` rule. Its
+geometry statement must describe origin-centered one-center atoms and
+equal-label/equal-charge homonuclear z-axis diatomics; H and H2 are examples,
+not the element boundary.
+
+The Export reference keeps its intentional public-`q` examples. The Hydrogen
+example must omit `d` or set it equal to `core_spacing`, and no prose may claim
+that those values are independent. The PQS manual gains one compact,
+copyable PQS-only H2+ construction using `q = 4`; the matched Example 39 keeps
+`ns = 4` because `ns` is the comparison parameter. The manual must identify
+algorithm-page `Vee` with `ham.electron_electron_ida` and must not present the
+construction as a solver or convergence result.
+
+`HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-TEST-01` adds focused checks only in the
+existing docs owner. They must syntax-parse the canonical fenced Julia block,
+check its exact system/basis schema and public call shape, and tie its physical
+inputs and normalized PQS size to the already-executed Example 39. They must
+also protect the corrected `d`, geometry, `q`/`ns`, and `Vee` identities.
+Example 39 remains the sole numerical execution for this documentation path;
+the docs tests and Documenter must not construct another Cartesian
+Hamiltonian.
+
+Preferred/hard implementation budgets are `45/65` added source-docstring
+lines, `45/70` added reader-documentation lines, and `20/30` added docs-test
+lines, with no new file. No example, definition, method, API, default,
+provenance spelling, numerical behavior, workflow, artifact format, version,
+tag, or release change is authorized. If accurate copyable documentation or
+its structural protection requires another public helper, a numerical doctest,
+or broader test machinery, implementation must stop and report the exact gap.
+
+A main-branch implementation updates `/dev/`. `/stable/` remains the immutable
+`v0.2.0` documentation until a separately authorized patch release or
+documentation-policy decision; this repair grants neither.
 
 ## Failure Behavior
 

@@ -1175,3 +1175,30 @@ repeated. Package/docs/authority/Documenter checks, full source-bearing CI
 portability defect is closed; MT5/MT6 and release state are unchanged. The
 remaining guardrail is explicit configuration only: no personal fallback or
 filesystem discovery may return.
+
+## Cartesian Hamiltonian Producer Pass 599 - Authorize Public Cartesian Front Door Repair
+
+The September 4 documentation review correctly identified a broken Hydrogen
+snippet and an underspecified headline facade, but its claim that public `q` is
+legacy-only is rejected. Source inspection and a package-level normalization
+probe confirmed that both `q` and `ns` are accepted for one-center atoms and
+homonuclear z-axis diatomics: `q` is PQS local order, while `ns` is the matched
+PQS/White-Lindsey parameter. Explicit `q` derives `ns`; jointly supplied values
+must agree. The implementation's `ns_source = :legacy_q_compatibility`
+provenance spelling remains untouched pending a separate compatibility audit.
+The actual geometry boundary is broader than H/H2: positive-charge
+origin-centered atoms and equal-label/equal-charge homonuclear z-axis
+diatomics are accepted, with existing He/He2 owner evidence.
+
+`HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-FN-01/TEST-01` authorize one repair across
+the existing facade docstring, Export reference, PQS manual, and docs test. The
+manual may lead a PQS-only construction with `q = 4`; matched Example 39 keeps
+`ns = 4`. Structural syntax/schema checks must tie the snippet to that existing
+executed example and identify `Vee` as `ham.electron_electron_ida`, without
+constructing another Hamiltonian in docs. This cost boundary is material: even
+a fresh minimum `q = 3` probe took `16.6-19.3` seconds and allocated about
+`6.5` GiB cumulatively, while Example 39 already costs `31.06` seconds and
+about `1.1` GiB peak RSS in Supported-floor CI. Main will repair `/dev/`; the
+immutable v0.2.0 `/stable/` remains unchanged. MT1 gains a reader-correctness
+repair; no API, numerical, workflow, artifact, metadata, or release authority
+is opened.

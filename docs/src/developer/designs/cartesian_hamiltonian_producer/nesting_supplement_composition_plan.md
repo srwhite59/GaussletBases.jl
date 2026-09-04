@@ -57,17 +57,23 @@ general molecular support.
 
 ## Public Size Rules
 
-Public `ns` is the requested cube/source/nesting size. Route-local `q` is
-derived only after nesting selection:
+Both `q` and `ns` are supported public inputs and normalize to one consistent
+pair after nesting selection. `q` is the scientific local-order parameter;
+`ns` is the common matched-family cube/source/nesting parameter:
 
 ```text
 nesting = :pqs  -> q = ns
 nesting = :wl   -> q = ns - 2
+nesting = :pqs  -> ns = q
+nesting = :wl   -> ns = q + 2
 ```
 
-Legacy public `q`, where still accepted, is normalization compatibility only.
-If both values are supplied, they must agree with the selected nesting. New
-inputs and provenance use `ns`.
+If both values are supplied, they must agree with the selected nesting.
+PQS-only examples may lead with `q`; matched PQS/White-Lindsey comparisons use
+`ns`. Internally, common geometry and direct-core sizing use normalized `ns`,
+while retained construction uses normalized local-order `q`. The existing
+explicit-`q` `ns_source` provenance spelling is unchanged pending a separate
+compatibility decision.
 
 White-Lindsey z-axis diatomics reject normalized `ns < 4` before route
 construction because the complete-shell inner box requires the stricter floor;
@@ -127,7 +133,7 @@ below by the direct-core side. `ns` is resolution/nesting input, not box extent.
 ## Ownership And Failure
 
 `src/cartesian/cartesian_base_hamiltonian.jl` owns input normalization, family-selective
-base route inputs, public `ns`/derived `q`, WL rejection, one-center sizing, and
+base route inputs, public `q`/`ns` normalization, WL rejection, one-center sizing, and
 shared supplemented composition. `src/cartesian/pqs_source_box_route_driver_helpers.jl`
 owns route recipe selection. `bin/cartesian_ham_builder.jl` owns visible driver
 input and dispatch, not a second composition algorithm. Shared residual

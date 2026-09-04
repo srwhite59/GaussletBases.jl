@@ -36,8 +36,8 @@ shared-shell, angular-extension, and outer-mismatch ownership are common
 geometry facts. Construction-family code must not recompute them or
 reinterpret their owned rows.
 
-Public `ns` is the common shell-size input. The direct nucleus-centered core
-side is
+Normalized `ns` is the common shell-size input. The direct nucleus-centered
+core side is
 
 ```text
 direct_core_side = isodd(ns) ? ns : ns + 1
