@@ -140,6 +140,20 @@ end
         xmax_transverse = 4.0,
         bond_axis = :z,
     )
+    representation = basis_representation(basis)
+    @test representation isa CartesianBasisRepresentation3D
+    @test keys(representation.axis_representations) == (:x, :y, :z)
+    source_axes = (basis.basis_x, basis.basis_y, basis.basis_z)
+    for (axis, source_axis) in zip(representation.axis_representations, source_axes)
+        @test axis.metadata.basis_kind == :mapped_uniform
+        @test axis.metadata.mapping_value === mapping(source_axis)
+        @test axis.metadata.center_data == axis.metadata.reference_center_data
+        @test axis.metadata.center_data != centers(source_axis)
+        @test size(axis.coefficient_matrix) ==
+              (length(axis.primitive_set), length(axis.metadata.center_data))
+        @test all(matrix -> all(isfinite, matrix), values(axis.basis_matrices))
+        @test all(matrix -> isapprox(matrix, transpose(matrix); atol = 1.0e-10, rtol = 1.0e-10), values(axis.basis_matrices))
+    end
 
     @test basis isa BondAlignedDiatomicQWBasis3D
     @test mapping(basis.basis_x) === mapping(basis.basis_y)
