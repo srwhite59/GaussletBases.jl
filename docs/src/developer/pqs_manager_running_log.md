@@ -1202,3 +1202,35 @@ about `1.1` GiB peak RSS in Supported-floor CI. Main will repair `/dev/`; the
 immutable v0.2.0 `/stable/` remains unchanged. MT1 gains a reader-correctness
 repair; no API, numerical, workflow, artifact, metadata, or release authority
 is opened.
+
+## Cartesian Hamiltonian Producer Pass 600 - Close Public Cartesian Front Door
+
+Accepted `3641cd4766f7209936c27bea503385a23437231b`, tree
+`c444aee31709ebfb4e8c99050ed8345f8d6c6dcf`. Manager inspection confirmed
+the four authorized files, docstring-only source change, schemas against the
+normalizer, and syntax/schema checks without another Hamiltonian execution.
+Source docstrings were `+41/-5`, reader documentation `+46/-13`, and docs
+tests `+23/-0`, within hard budgets. CI `33928517839` and Docs `33928517853`
+passed at that exact commit; implementation docs passed `8/8`, `130/130`,
+and `10/10`. Closeout uses package/docs, authority/self-test, deterministic
+views, Documenter, and diff checks, without repeating numerical owners.
+
+Deleted: false Hydrogen `d` independence and H-only restriction. Simplified:
+one copyable PQS construction tied to existing Example 39. Quarantined:
+`ns_source = :legacy_q_compatibility` spelling for separate compatibility
+review. Not deleted because: intentional public `q` examples remain valid.
+Added/deleted source lines: `41/5`, all docstrings. New tests: eight checks in
+the existing docs owner; no test file. New metadata/status fields: none.
+Exact remaining blocker: none for this repair; `/stable/` correction still
+requires separate release or documentation-policy authority. No strategic
+change: MT1 reader correctness and MT5/MT6 bounded maintenance remain in force.
+
+### Medium-Term Goal Checkpoint After Pass 600
+
+- MT1: active; this reader-correctness repair is closed, with further work evidence-led.
+- MT2: completed; no Cr2 migration is reopened.
+- MT3: blocked on the separate represented mixed-density Hartree owner decision.
+- MT4: active; residual/protected-basis contracts remain unchanged.
+- MT5: active/maintenance; authority views and mechanical documentation checks remain the gate.
+- MT6: active; preserve bounded maintenance and avoid duplicate numerical validation.
+- MT7: completed/maintenance; external Cartesian-GTO interchange remains unchanged.

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `f354a208fb63b944b6412ce65ee7d2f8add013eee4499759556be3caef7d238f`.
+> [authority.toml](authority.toml), SHA-256 `3776bacae9e9103926de474cbea572a67440ff32c913a56f3952d9599bcc7232`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2805,10 +2805,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Dependencies:** `HP-PQS-PRF-CONSUMER-TEST-01`, `HP-PUBLIC-BASE-WORKING-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-SUPPORTED-SURFACE-DOC-TEST-01`
 - **Scope:** Maintain only the accepted focused documentation checks in test/docs/runtests.jl from commit 5c4f5f363cb5c955a7046e9f287c0dbb67f19abb, with accepted delta +13/-1. Require cartesian\_base\_working\_basis to remain exported, carry Julia documentation, and appear in the curated Export reference beside cartesian\_base\_hamiltonian with the accepted expert/unstable, staged-construction, non-second-facade, no-complete-operator, no-artifact, no-solver, no-correction, no-PRF-wrapper, and non-stable-result-schema boundary. Preserve exact set equality, excluding only the GaussletBases module self-binding, for exactly OneCenterAtomicNestedStructureDiagnostics, one\_center\_atomic\_nested\_structure\_diagnostics, one\_center\_atomic\_nested\_structure\_report, diagnose\_qwrg\_residual\_space, and ShellLocalAngularProfileKey. This temporary exact-set regression must reject substitution by any newly undocumented export and remains pending an explicitly authorized next-minor namespace transaction; it is not a general allowlist and grants no de-export. Documenter remains the executable @docs resolution gate; public Cartesian passed 232/232 and 80/80, docs passed 157/157 and 10/10, and remote CI run 33579964076 plus Docs run 33579964078 passed. Add no test file, numerical assertion, fixture, parser framework, checkdocs change, workflow, source behavior, definition, signature, field, route, default, dispatch, staged result, PRF-status change, export change, dependency, example, version, tag, release, namespace transaction, or v0.3 work.
 
-### HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-FN-01 - repair the public Cartesian front-door documentation
+### HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-FN-01 - maintain the public Cartesian front-door documentation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2819,13 +2819,14 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:**
   - `manager_pass`: `599`
+  - `manager_pass`: `600`
 - **Dependencies:** `HP-COMP-NS-FN-01`, `HP-PQS-READER-DOC-01`, `HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01`, `HP-R1-FN-01`
-- **Scope:** Expand only the existing \`cartesian\_base\_hamiltonian\` docstring, Export reference, and PQS manual under the canonical front-door contract: exact validated schemas/defaults/geometry, supported \`q\`/\`ns\` normalization, atom-only \`d\`, corrected examples, one compact PQS snippet, and \`Vee\` field mapping. Preserve Example 39 as the sole numerical execution and leave metadata spelling, behavior, API, workflow, artifacts, and release state unchanged.
+- **Scope:** Maintain the accepted front-door documentation under the canonical Public Cartesian Front-Door Documentation heading: facade schemas/defaults/geometry, supported \`q\`/\`ns\`, atom-only \`d\`, corrected Export example, PQS snippet, and \`Vee\` mapping. Preserve Example 39 as the numerical owner and the provenance spelling. No behavior, API, workflow, artifact, or release changes.
 
 ### HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-TEST-01 - validate the public Cartesian front-door documentation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2834,8 +2835,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
   - `manager_pass`: `599`
+  - `manager_pass`: `600`
 - **Dependencies:** `HP-PQS-READER-TEST-01`, `HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-FN-01`, `HP-R1-TEST-01`
-- **Scope:** Add only focused structural checks in \`test/docs/runtests.jl\`: syntax-parse the canonical snippet; verify its exact schema, public call shape, Example 39 equivalence, corrected \`d\`, \`q\`/\`ns\`, geometry, and \`Vee\` identities. Construct no Hamiltonian, add no test file or parser framework, and change no numerical, workflow, API, artifact, metadata, or release policy.
+- **Scope:** Maintain the accepted structural checks in \`test/docs/runtests.jl\` under the canonical Public Cartesian Front-Door Documentation heading: parsed snippet schema/call, Example 39 inputs, corrected \`d\`, \`q\`/\`ns\`, geometry, and \`Vee\` identities. Construct no Hamiltonian and add no parser framework, numerical assertion, workflow, API, metadata, artifact, or release policy.
 
 ### HP-PUBLIC-DOCS-PROSE-CLEANUP-FN-01 - simplify full documentation test ownership
 
