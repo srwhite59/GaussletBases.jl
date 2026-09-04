@@ -32,7 +32,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pair
 sha256 = "62578861400c82d1521aa1d17df6ca4dc2831d3877e6630c792882e10f4b43e8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pqs_source_relocation.md"
-sha256 = "c68b904813d2abbcbf95d3dcbb097ea88692f8e92ba1ca99ea45924422e5afd1"
+sha256 = "1eb1fcf74b441212bea6bf914f6a8413b963b3c1c83dce112b8bd321aa1e7093"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
 sha256 = "f8e0cb4dc93ec062e50a21f691130e3b48c813d07f949d4dd35e42f6f8e85c08"
@@ -83,7 +83,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "02893c3a15acd9fccda4d0419819983b9dc824946c2df3ca6e3db94d07924e42"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "c14d34951da983d5ecca80f8d7fc4bb6642a80a16ab52415c3fb910916d620d4"
+sha256 = "185156ab8875fa94d0d8cf5f49bee57fd509b409207786349b2a3881da9f310c"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "c7fe3a87bf8e70ad88025f66ed4c57d6d19b3961033891fb6a4e431b090c801e"
@@ -1979,10 +1979,10 @@ title = "final Hamiltonian construction"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-PAPER-H2-DRV-FN-01", "HP-PQS-PUBLIC-MATCHED-FN-01", "HP-PUBLIC-ATOMIC-IDA-DOC-FN-01", "HP-SOURCE-LAYOUT-ANGULAR-FN-01", "HP-SOURCE-LAYOUT-CARTESIAN-FN-01", "HP-SOURCE-LAYOUT-FOUNDATION-FN-01", "HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-FOUNDATION-LANCZOS-FN-01"
-lifecycle = "approved"
-scope = "Move the exact `_lanczos_ground_state_apply` body to planned `src/foundation/lanczos.jl` and replace the duplicate atomic public body with a thin behavior-exact wrapper under Shared Reference Lanczos Kernel. Preserve private callers, public API/errors/returns, arithmetic order, one root include, and the net-negative hard budget. No algorithm, abstraction, dependency, cache, caller, workflow, or release change; stop on parity, regression, or budget failure."
+lifecycle = "implemented"
+scope = "Maintain the shared reference Lanczos consolidation accepted in commit 99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2: one byte-identical private foundation kernel, one thin atomic wrapper, unchanged callers, public errors/returns, and arithmetic order. Preserve the exact `+91/-149` source result; add no algorithm, abstraction, dependency, cache, policy, workflow, API, or release change."
 surfaces = ["source"]
 title = "consolidate shared reference Lanczos kernel"
 
@@ -2003,6 +2003,12 @@ title = "consolidate shared reference Lanczos kernel"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "593"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "594"
 
     [[records.paths]]
     kind = "source"
@@ -2019,13 +2025,13 @@ title = "consolidate shared reference Lanczos kernel"
     [[records.paths]]
     kind = "source"
     path = "src/foundation/lanczos.jl"
-    state = "planned"
+    state = "existing"
 [[records]]
 dependency_ids = ["HP-FOUNDATION-LANCZOS-FN-01", "HP-PQS-PUBLIC-MATCHED-TEST-01", "HP-PUBLIC-ATOMIC-IDA-DOC-TEST-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-FOUNDATION-LANCZOS-TEST-01"
-lifecycle = "approved"
-scope = "Extend only `test/ida/runtests.jl` within the 16/20-line preferred/hard budget for supplied-v0, maximum-step, breakdown, return-shape, and exact public-error parity. Reuse existing endpoints and add no file, fixture, helper, or policy. Validate dual-revision exact parity, focused atomic and angular/PQS consumers, allocation/compile timing, package/docs/authority, and full CI/Docs; do not rerun the complete angular suite."
+lifecycle = "completed"
+scope = "Maintain the 19-line focused IDA extension accepted in commit 99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2 for supplied-v0, maximum-step, breakdown, return-shape, public-error, and malformed-problem parity. Exact dual-revision snapshots, focused atomic/angular/PQS consumers, allocation/compile checks, and CI 33825308690 passed. Add no file, fixture, helper, policy, workflow, or complete-angular rerun."
 surfaces = ["tests"]
 title = "validate shared reference Lanczos consolidation"
 
@@ -2040,6 +2046,12 @@ title = "validate shared reference Lanczos consolidation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "593"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "594"
 
     [[records.paths]]
     kind = "test"
@@ -2200,6 +2212,63 @@ title = "artifact manifest validation"
     [[records.paths]]
     kind = "test"
     path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-FOUNDATION-LANCZOS-FN-01", "HP-SOURCE-LAYOUT-CARTESIAN-FN-01", "HP-SOURCE-LAYOUT-FOUNDATION-FN-01", "HP-SOURCE-LAYOUT-ORDINARY-FN-01"]
+grant = "implementation"
+id = "HP-MAPPED-ORDINARY-REP-FN-01"
+lifecycle = "approved"
+scope = "Move the exact two-function mapped-Ordinary representation block from `src/foundation/primitive_sets.jl` to `src/ordinary/ordinary_mapped_backends.jl` after proxy localization, byte-identically and at `+25/-25`. Preserve spellings, signatures, bodies, caller, load order, public representations, and numerics. Add no redesign, helper, API, dependency, workflow, or release change; stop on caller adaptation, parity, or budget failure."
+surfaces = ["source"]
+title = "move mapped Ordinary representation ownership"
+
+    [[records.document_refs]]
+    heading = "Mapped Ordinary Working-Basis Representation Ownership"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "594"
+    [[records.evidence_refs]]
+    kind = "repo_path"
+    value = "src/cartesian/cartesian_representation_constructors.jl"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/foundation/primitive_sets.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary/ordinary_mapped_backends.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-MAPPED-ORDINARY-REP-FN-01"]
+grant = "implementation"
+id = "HP-MAPPED-ORDINARY-REP-TEST-01"
+lifecycle = "approved"
+scope = "Extend only `test/core/runtests.jl` by 10/16 preferred/hard lines, reusing its small bond-aligned basis to check the specialized Cartesian representation type, axes, mapped metadata, localized centers, coefficient dimensions, and finite symmetric matrices. Require exact old/new representation parity and existing core/Cartesian endpoints. Add no file, fixture, helper, tolerance, workflow, or unrelated assertion."
+surfaces = ["tests"]
+title = "validate mapped Ordinary representation ownership"
+
+    [[records.document_refs]]
+    heading = "Mapped Ordinary Working-Basis Representation Ownership"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "594"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/core/runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = []
@@ -8967,7 +9036,7 @@ dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01"]
 grant = "maintenance"
 id = "HP-SOURCE-LAYOUT-ANGULAR-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the five byte-identical angular owners relocated in commit f8421494e19b3a4553a7f89e20049520c38e3b2c, their exact include positions, and current pointers. That relocation's frozen helper placement is historical; only HP-FOUNDATION-LANCZOS-FN-01 may subsequently move `_lanczos_ground_state_apply`. Exclude all other file bodies, tests, workflows, APIs, numerics, helper moves, releases, foundation work, and later moves."
+scope = "Maintain the five byte-identical angular owners relocated in commit f8421494e19b3a4553a7f89e20049520c38e3b2c, their exact include positions, and current pointers. The accepted HP-FOUNDATION-LANCZOS-FN-01 consolidation moved only `_lanczos_ground_state_apply` in commit 99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2. Exclude all other file bodies, tests, workflows, APIs, numerics, helper moves, releases, foundation work, and later moves."
 surfaces = ["docs", "source"]
 title = "relocate angular source files"
 
@@ -9053,7 +9122,7 @@ dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01", "HP-PQS-COULOMB-ACCURACY-FN-01",
 grant = "maintenance"
 id = "HP-SOURCE-LAYOUT-FOUNDATION-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the accepted Step 3 relocation from commit f2e13ff3c788551c43eb2de269d4723de880ae8e: 16 relocated owners, exact order and pointers, package behavior, and tree. HP-FOUNDATION-LANCZOS-FN-01 separately authorizes one planned foundation file and one include. No other body, symbol, API, test, workflow, numerical, release, or layout change."
+scope = "Maintain the accepted Step 3 relocation from commit f2e13ff3c788551c43eb2de269d4723de880ae8e and the one Lanczos owner/include accepted at 99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2. HP-MAPPED-ORDINARY-REP-FN-01 alone may remove its exact unchanged Ordinary-specific block from `primitive_sets.jl`. No other body, symbol, API, test, workflow, numerical, release, or layout change."
 surfaces = ["docs", "source"]
 title = "relocate foundation source files"
 
@@ -9215,7 +9284,7 @@ dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01", "HP-SOURCE-LAYOUT-FOUNDATION-FN-
 grant = "maintenance"
 id = "HP-SOURCE-LAYOUT-ORDINARY-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the 15 byte-identical Ordinary owners relocated in commit 96802b00cc380707306106b529ff22a09ccb415e under Ordinary Source Relocation, their exact include positions, classified current pointers, frozen hashes, and R100 identities. Exclude file bodies, tests, ordering, APIs, workflows, numerics, Cartesian/PQS relocation, and later layout work."
+scope = "Maintain the 15 byte-identical Ordinary owners relocated in commit 96802b00cc380707306106b529ff22a09ccb415e, their include positions, current pointers, hashes, and R100 identities. HP-MAPPED-ORDINARY-REP-FN-01 alone may append the exact unchanged representation block after mapped proxy localization. Exclude every other body, test, ordering, API, workflow, numerical, Cartesian/PQS, or layout change."
 surfaces = ["docs", "source"]
 title = "relocate ordinary source files"
 
@@ -9401,7 +9470,7 @@ dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01", "HP-SOURCE-LAYOUT-FOUNDATION-FN-
 grant = "maintenance"
 id = "HP-SOURCE-LAYOUT-CARTESIAN-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the 76-file Cartesian/PQS relocation accepted in commit `64d8d65b6891d5e56a0b09f63ff934270b31a9fc`: R100 owners, 39 in-place root includes, and classified pointers. Its 88-entry normalized hash is relocation evidence; HP-FOUNDATION-LANCZOS-FN-01 alone may insert one earlier foundation include while preserving existing relative order. Exclude all other bodies, tests, order changes, APIs, workflows, numerics, refactors, and releases."
+scope = "Maintain the 76-file Cartesian/PQS relocation accepted in commit `64d8d65b6891d5e56a0b09f63ff934270b31a9fc`: R100 owners, 39 in-place root includes, classified pointers, and existing relative order. The accepted Lanczos include yields its separately recorded 89-entry identity. Exclude all other bodies, tests, order changes, APIs, workflows, numerics, refactors, and releases."
 surfaces = ["docs", "source"]
 title = "relocate Cartesian and PQS source files"
 
@@ -9979,7 +10048,7 @@ dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01"]
 grant = "maintenance"
 id = "HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the exact path-only relocation accepted in commit 812a44d4476c598448bfa3ac733054f009c55b89: 14 radial/atomic targets, in-place includes, reconciled pointers, frozen relocation hashes/tree, package behavior, and tests. HP-FOUNDATION-LANCZOS-FN-01 alone may subsequently simplify the atomic Lanczos body without changing its public behavior. Add no other body, test, module, API, dispatch, dependency, cache, workflow, numerical, release, or layout change."
+scope = "Maintain the exact path-only relocation accepted in commit 812a44d4476c598448bfa3ac733054f009c55b89: 14 radial/atomic targets, in-place includes, pointers, hashes/tree, package behavior, and tests. The accepted HP-FOUNDATION-LANCZOS-FN-01 wrapper preserves atomic public behavior. Add no other body, test, module, API, dispatch, dependency, cache, workflow, numerical, release, or layout change."
 surfaces = ["docs", "source"]
 title = "relocate radial and atomic source files"
 
