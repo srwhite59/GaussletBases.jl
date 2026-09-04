@@ -1187,28 +1187,15 @@ this remains a small reference algorithm, not a new solver or policy surface.
 
 ## Mapped Ordinary Working-Basis Representation Ownership
 
-`HP-MAPPED-ORDINARY-REP-FN-01` and
-`HP-MAPPED-ORDINARY-REP-TEST-01` authorize one dependency-direction cleanup,
-not a redesign. Move lines 237--261 of `src/foundation/primitive_sets.jl`,
-SHA-256
+Commit `3f173f63f190a4869739f070c9fc100195413bc9` completed the bounded
+ownership cleanup. The exact 25-line block with SHA-256
 `20bd94d4ce9f5a5a250b37ae1cb383a185838f5892d651f1c5074f81d1ecfb78`,
-byte-for-byte into `src/ordinary/ordinary_mapped_backends.jl` immediately after
-`_mapped_legacy_proxy_localized`; delete the original in the same commit. The
-required source delta is `+25/-25`.
-
-Preserve the two `_mapped_ordinary_working_basis_*` names, signatures, bodies,
-arithmetic, defaults, and results. General metadata/representation machinery
-remains in Foundation; proxy/localization helpers remain in Ordinary. The sole
-Cartesian caller stays unchanged, after both owners in root load order.
-
-Extend only the existing small bond-aligned testset in `test/core/runtests.jl`,
-within `10/16` preferred/hard added lines. Check the public Cartesian type,
-axes, mapped/localized metadata, coefficient dimensions, and finite symmetric
-matrices. Require an exact old/new representation snapshot, existing core and
-Cartesian endpoints, package/docs/authority/Documenter, and full CI/Docs. Add
-no file, fixture, helper, API, dependency, tolerance, workflow, or numerical
-policy. Any non-byte-identical move, caller adaptation, parity difference, or
-broader machinery stops without a commit.
+moved byte-for-byte from `src/foundation/primitive_sets.jl` to
+`src/ordinary/ordinary_mapped_backends.jl`; source is `+25/-25`. Names, bodies,
+results, sole Cartesian caller, and load order are unchanged. The 14-line core
+fixture extension, serialized parity, Cartesian endpoints, CI `33833428267`,
+and Docs `33833428264` passed. Both records are maintenance-only; no helper,
+API, dependency, workflow, metadata, or numerical policy changed.
 
 ## Foundational Basis And Mapping Documentation
 
@@ -2099,17 +2086,10 @@ release identities.
 
 ### Lightweight Source-Push Public-Surface Integrity
 
-Pass 585 reopens `HP-PUBLIC-PAPER-CI-FN-01` and
-`HP-PUBLIC-PAPER-CI-TEST-01` only for the independently reviewed G4 boundary.
-The implementation adds one `docs_fast` group to the existing Julia `1.10`
-`Supported floor` selection. It changes no matrix row, job or required-check
-name, Julia version, timeout, classifier, marker, command, trigger, permission,
-PQS/Screening gate, tag rule, or `fast` alias.
-
-One new shared owner, `test/docs/public_surface_runtests.jl`, must contain only
-the existing mechanical public-surface contract: the `95` named documented
-exports remain exported, each has documentation, and the complete
-undocumented-export set excluding the module self-binding is exactly:
+Pass 585 accepted the shared mechanical owner at
+`test/docs/public_surface_runtests.jl`: all 95 supported public names remain
+exported and documented, while the complete undocumented set (excluding the
+module self-binding) is exactly:
 
 ```text
 OneCenterAtomicNestedStructureDiagnostics
@@ -2121,46 +2101,34 @@ ShellLocalAngularProfileKey
 
 Move the corresponding inventories and mechanical assertions out of
 `test/docs/runtests.jl`; do not duplicate them. Reference-page placement,
-reader wording, version-menu behavior, Documenter fixtures, authority checks,
-deployment policy, and every other prose assertion remain in the full `docs`
-owner. The shared owner must require only the root test environment and package
-load, never the docs environment or Documenter.
+version-menu behavior, Documenter, authority, and deployment remain full-`docs`
+concerns. Reader prose remains review-owned; only the separate cleanup below may
+remove wording locks. The shared owner uses only the root test environment and
+package load, never Documenter.
 
-Julia `1.10.12` exposes neither `Base.Docs.hasdoc` nor
-`Base.Docs.undocumented_names`. A small test-local semantic fallback may inspect
-Base Docs binding metadata and resolve aliases; no production compatibility
-shim or dependency is permitted. On Julia `1.12.6`, it must agree with
-`Base.Docs.hasdoc` for every current public name, reproduce
-`Base.Docs.undocumented_names` after excluding the module self-binding, and
-pass an explicit documented-alias check. On Julia `1.10.12`, it must yield the
-exact five-name set above.
+The test-local Julia 1.10 fallback handles aliases and agrees on Julia 1.12 with
+`Base.Docs.hasdoc` for every public name and with
+`Base.Docs.undocumented_names` after module-self treatment. It adds no package
+dependency or production shim. The owner runs exactly once for `docs_fast`,
+`docs`, `docs_fast,docs`, and `all`; `fast` excludes it. Supported floor alone
+adds `docs_fast`; all jobs, groups, versions, classifiers, permissions, tag
+rules, and paper gates remain unchanged. Further test cleanup requires the
+separate records below and must not weaken this contract.
 
-`test/runtests.jl` must expose `docs_fast` for explicit selection and `all`,
-and include the shared owner exactly once whenever either `docs_fast` or
-`docs` is selected. Thus `docs_fast`, `docs`, `docs_fast,docs`, and `all` each
-execute the mechanical owner once. The existing `fast` alias remains byte-for-
-byte unchanged. In `.github/workflows/ci.yml`, append only `docs_fast` to the
-existing Supported-floor group string; bare `docs` and every numerical group
-remain unchanged.
+### Documentation Prose Test Cleanup
 
-Budget: one new test file at preferred `92-98`, hard `110` lines; move about
-`58` inventory lines and remove or simplify about `24` mechanical assertion
-lines from the full docs owner; runner additions preferred `4`, hard `8` lines;
-workflow delta exactly `+1/-1`; total tracked-test growth preferred `15-25`,
-hard `35` lines. Broad phrase-test pruning is forbidden. If cross-version alias
-or exact-set equivalence fails, execution duplicates, the Julia `1.10` package
-test requires a docs environment, or any existing numerical selection changes,
-make no implementation commit and report the mismatch.
+`HP-PUBLIC-DOCS-PROSE-CLEANUP-FN-01` and
+`HP-PUBLIC-DOCS-PROSE-CLEANUP-TEST-01` authorize only `test/docs/runtests.jl`.
+Keep the shared owner byte-identical and all mechanical release/version,
+workflow/authority, placement/example/path, log, and note-status checks.
+Delete prose phrase lists, retaining headings for external transfer, atomic IDA,
+angular producers, and staged Cartesian construction. Reader contracts remain;
+add no docs, source, workflow, framework, file, or numerical change.
 
-Acceptance requires focused `docs_fast`, full `docs`, combined
-`docs_fast,docs`, and `all` inclusion/control-flow evidence without running all
-numerical groups merely to count the include; direct Julia `1.10.12` and
-`1.12.6` semantic checks; unchanged normal docs/authority/Documenter checks;
-and a full implementation-push CI because `.github/workflows/ci.yml` changes.
-The Supported-floor log must visibly execute `docs_fast`; PQS and Screening
-remain unchanged. No G3 whitelist relocation, prose cleanup, Step 4, source,
-API, export, dependency, numerical-policy, release, or new workflow authority
-is granted.
+Target exactly `717 -> 497`, `+19/-239` (net `-220`; 31 fewer tests), with
+`8/8`, `122/122`, and `10/10`; require the docs-only marker lane, Docs,
+authority/self-test, Documenter, and diff checks. Scope, mechanical-coverage,
+or net-deletion failure stops the transaction.
 
 ## Compatibility
 

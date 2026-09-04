@@ -172,7 +172,10 @@ remain fixed. The bounded Julia `1.10` Supported-floor extension to the live
 `radial`, `misc`, and fixed-radial `angular_public` groups is implemented and
 accepted. The complete `angular` research group remains outside per-push CI.
 Future tag-lane repair, registration, citation metadata, and any later release
-are separate decisions.
+are separate decisions. The execution whitelist now lives in its generated
+whole-file view, and `docs_fast` protects mechanical public-surface integrity
+on source pushes. The next bounded maintenance step removes only prose wording
+locks from the full docs owner while retaining all mechanical policy checks.
 
 **MT6 - Carrying-cost control (active).** Remove stale helpers, compatibility
 metadata, unsupported exports, and development-era tests as conformance work
@@ -210,7 +213,10 @@ exports. The angular packet must reduce that count exactly to `16` while
 leaving `ShellLocalAngularProfileKey` exported, undocumented, and unreferenced
 as the sole angular next-minor de-export candidate. That future namespace
 change remains separate from documentation and does not reopen v0.2 release
-work.
+work. The audited source-layout sequence, shared private Lanczos extraction,
+and mapped-representation ownership inversion are complete. The current
+carrying-cost target is the separately bounded documentation-test reduction;
+it grants no source, API, workflow, or reader-prose change.
 
 **MT7 - External Cartesian GTO interchange (completed/maintenance).** The
 strict versioned reader, checkpoint-only PySCF exporter, frozen d-shell
@@ -1075,3 +1081,37 @@ representation. Any caller adaptation, parity difference, broader machinery,
 or budget failure stops without an implementation commit. Complete angular,
 represented-Hartree, diagnostics, optimization, and release work remain out of
 scope.
+
+## Cartesian Hamiltonian Producer Pass 595 - Close Mapped Ownership And Authorize Docs-Test Reduction
+
+Accepted commit `3f173f63f190a4869739f070c9fc100195413bc9` and tree
+`e5567e5020bbd4184d21eb15a9eb7897a22bc18e`. The exact 25-line mapped
+working-basis representation block moved byte-identically from Foundation to
+Ordinary with SHA-256
+`20bd94d4ce9f5a5a250b37ae1cb383a185838f5892d651f1c5074f81d1ecfb78`;
+the sole Cartesian caller and package load order remain unchanged. Source is
+exactly `+25/-25`; the existing core fixture gained 14 focused lines. Manager
+inspection confirmed the block identity, caller closure, and load order, then
+replayed the complete core owner. Serialized representation parity, core,
+Cartesian `232/232`, residual-GTO `80/80`, CI `33833428267`, and Docs
+`33833428264` passed. Both mapped-ownership records are maintenance-only.
+
+Independent G4 classification authorizes only
+`HP-PUBLIC-DOCS-PROSE-CLEANUP-FN-01/TEST-01`. The implementation may change
+`test/docs/runtests.jl` from 717 to 497 lines (`+19/-239`, net `-220`) by
+retaining all mechanical policy, placement, authority, release, workflow, and
+path checks, reducing four durable reader boundaries to headings, and deleting
+descriptive phrase lists. The shared public-surface owner stays byte-identical.
+Any documentation/source/workflow edit, lost mechanical check, net deletion
+below 200 lines, or numerical-matrix execution fails closed. MT5 and MT6
+advance through narrower test ownership without weakening documentation review.
+
+### Medium-Term Goal Checkpoint After Pass 595
+
+- **MT1 - active:** continue only evidence-led conformance repairs.
+- **MT2 - completed:** no Cr2 source-migration work is reopened.
+- **MT3 - active:** represented mixed-density Hartree remains separately blocked.
+- **MT4 - active:** residual and protected-basis boundaries remain unchanged.
+- **MT5 - active/maintenance:** generated authority views and mechanical public-surface checks are stable; bounded prose-test cleanup is next.
+- **MT6 - active:** source-layout and ownership inversions are closed; the authorized net-negative docs-test cleanup is the current carrying-cost target.
+- **MT7 - completed/maintenance:** external Cartesian-GTO interchange remains unchanged.

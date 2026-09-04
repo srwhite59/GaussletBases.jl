@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `4d7c4362a4f2a5eac67536c2ffb0afce22bcdc61f7748f3f9bfc630b34f75727`.
+> [authority.toml](authority.toml), SHA-256 `22fa071e40f1acb4fb176e7b1cb3419fa68902ec25607330878ed3a86dddaf87`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1297,8 +1297,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-MAPPED-ORDINARY-REP-FN-01 - move mapped Ordinary representation ownership
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1308,15 +1308,17 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/ordinary/ordinary_mapped_backends.jl`
 - **Evidence:**
   - `git_commit`: `99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2`
+  - `git_commit`: `3f173f63f190a4869739f070c9fc100195413bc9`
   - `manager_pass`: `594`
+  - `manager_pass`: `595`
   - `repo_path`: `src/cartesian/cartesian_representation_constructors.jl`
 - **Dependencies:** `HP-FOUNDATION-LANCZOS-FN-01`, `HP-SOURCE-LAYOUT-CARTESIAN-FN-01`, `HP-SOURCE-LAYOUT-FOUNDATION-FN-01`, `HP-SOURCE-LAYOUT-ORDINARY-FN-01`
-- **Scope:** Move the exact two-function mapped-Ordinary representation block from \`src/foundation/primitive\_sets.jl\` to \`src/ordinary/ordinary\_mapped\_backends.jl\` after proxy localization, byte-identically and at \`+25/-25\`. Preserve spellings, signatures, bodies, caller, load order, public representations, and numerics. Add no redesign, helper, API, dependency, workflow, or release change; stop on caller adaptation, parity, or budget failure.
+- **Scope:** Maintain commit 3f173f63f190a4869739f070c9fc100195413bc9: the exact 25-line mapped-Ordinary representation block now follows proxy localization in \`ordinary\_mapped\_backends.jl\`, with frozen SHA-256 \`20bd94d4ce9f5a5a250b37ae1cb383a185838f5892d651f1c5074f81d1ecfb78\`. Preserve its names, bodies, sole Cartesian caller, load order, public results, and exact \`+25/-25\` ownership move; add no redesign, helper, API, dependency, workflow, or release change.
 
 ### HP-MAPPED-ORDINARY-REP-TEST-01 - validate mapped Ordinary representation ownership
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1325,9 +1327,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/core/runtests.jl`
 - **Evidence:**
   - `git_commit`: `99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2`
+  - `git_commit`: `3f173f63f190a4869739f070c9fc100195413bc9`
   - `manager_pass`: `594`
+  - `manager_pass`: `595`
 - **Dependencies:** `HP-MAPPED-ORDINARY-REP-FN-01`
-- **Scope:** Extend only \`test/core/runtests.jl\` by 10/16 preferred/hard lines, reusing its small bond-aligned basis to check the specialized Cartesian representation type, axes, mapped metadata, localized centers, coefficient dimensions, and finite symmetric matrices. Require exact old/new representation parity and existing core/Cartesian endpoints. Add no file, fixture, helper, tolerance, workflow, or unrelated assertion.
+- **Scope:** Maintain the 14-line core-fixture extension accepted at 3f173f63f190a4869739f070c9fc100195413bc9. It checks the specialized Cartesian representation type, axes, mapped/localized metadata, coefficient dimensions, and finite symmetric matrices; exact serialized old/new parity and existing core/Cartesian endpoints passed. Add no file, fixture, helper, tolerance, workflow, unrelated assertion, or new execution grant.
 
 ### HP-MCOMX-DRV-FN-01 - canonical source-span selector
 
@@ -2796,6 +2800,36 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Dependencies:** `HP-PQS-PRF-CONSUMER-TEST-01`, `HP-PUBLIC-BASE-WORKING-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-SUPPORTED-SURFACE-DOC-TEST-01`
 - **Scope:** Maintain only the accepted focused documentation checks in test/docs/runtests.jl from commit 5c4f5f363cb5c955a7046e9f287c0dbb67f19abb, with accepted delta +13/-1. Require cartesian\_base\_working\_basis to remain exported, carry Julia documentation, and appear in the curated Export reference beside cartesian\_base\_hamiltonian with the accepted expert/unstable, staged-construction, non-second-facade, no-complete-operator, no-artifact, no-solver, no-correction, no-PRF-wrapper, and non-stable-result-schema boundary. Preserve exact set equality, excluding only the GaussletBases module self-binding, for exactly OneCenterAtomicNestedStructureDiagnostics, one\_center\_atomic\_nested\_structure\_diagnostics, one\_center\_atomic\_nested\_structure\_report, diagnose\_qwrg\_residual\_space, and ShellLocalAngularProfileKey. This temporary exact-set regression must reject substitution by any newly undocumented export and remains pending an explicitly authorized next-minor namespace transaction; it is not a general allowlist and grants no de-export. Documenter remains the executable @docs resolution gate; public Cartesian passed 232/232 and 80/80, docs passed 157/157 and 10/10, and remote CI run 33579964076 plus Docs run 33579964078 passed. Add no test file, numerical assertion, fixture, parser framework, checkdocs change, workflow, source behavior, definition, signature, field, route, default, dispatch, staged result, PRF-status change, export change, dependency, example, version, tag, release, namespace transaction, or v0.3 work.
 
+### HP-PUBLIC-DOCS-PROSE-CLEANUP-FN-01 - simplify full documentation test ownership
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Documentation Prose Test Cleanup`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `595`
+- **Dependencies:** `HP-PUBLIC-ANGULAR-PRODUCER-DOC-TEST-01`, `HP-PUBLIC-ATOMIC-IDA-DOC-TEST-01`, `HP-PUBLIC-BASE-WORKING-DOC-TEST-01`, `HP-PUBLIC-EXPERT-GEOMETRY-DOC-TEST-01`, `HP-PUBLIC-FOUNDATION-DOC-TEST-01`, `HP-PUBLIC-FUNCTION-STENCIL-DOC-TEST-01`, `HP-PUBLIC-PAPER-CI-TEST-01`, `HP-PUBLIC-PARTITION-LEAF-DOC-TEST-01`, `HP-PUBLIC-QW-GEOMETRY-DOC-TEST-01`, `HP-PUBLIC-RADIAL-PARITY-DOC-TEST-01`, `HP-PUBLIC-SLICED-HCHAIN-DOC-TEST-01`, `HP-PUBLIC-SUPPORTED-SURFACE-DOC-TEST-01`, `HP-REP-XGTO-READER-DOC-TEST-01`
+- **Scope:** Remove only descriptive wording locks from \`test/docs/runtests.jl\` under the canonical classification. Preserve the shared 95-name/five-reserved owner byte-for-byte; workflow, release, authority, version/URL, page/name-placement, public-example, path-safety, and four note-status checks remain. Replace four durable boundaries with headings. Target \`717 -\> 497\`, \`+19/-239\`; add no docs prose, source, workflow, helper, file, or numerical execution.
+
+### HP-PUBLIC-DOCS-PROSE-CLEANUP-TEST-01 - validate mechanical documentation test boundary
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Documentation Prose Test Cleanup`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `595`
+- **Dependencies:** `HP-PUBLIC-DOCS-PROSE-CLEANUP-FN-01`
+- **Scope:** Require \`docs\_fast\` 8/8, full docs 122/122, policy 10/10, unchanged public-surface hash, authority/self-test, Documenter, diff checks, docs-only marker lane, and Docs. This record supersedes wording-list test obligations in its dependencies only; their reader contracts remain. Stop on mechanical-check loss, docs edits, added framework, net reduction below 200 lines, or numerical-matrix execution.
+
 ### HP-PUBLIC-EXPERT-GEOMETRY-DOC-FN-01 - document expert bond-aligned geometry inspection
 
 - **Lifecycle:** `implemented`
@@ -3024,7 +3058,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `585`
   - `manager_pass`: `586`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PUBLIC-PAPER-CI-FN-01`
-- **Scope:** Maintain the shared public-surface owner accepted at 891bf3e84653197b90b930d7d5787be17d8fb998: exact 95-name documentation, alias handling, five-name reserved set, Julia 1.10 fallback, Julia 1.12 native parity, and once-only \`docs\_fast\`/\`docs\` selection. Preserve all prose/reference/version/Documenter checks. No broad pruning, dependency, production shim, numerical test, or duplicate execution.
+- **Scope:** Maintain the shared public-surface owner accepted at 891bf3e84653197b90b930d7d5787be17d8fb998: exact 95-name documentation, alias handling, five-name reserved set, Julia 1.10 fallback, Julia 1.12 native parity, and once-only \`docs\_fast\`/\`docs\` selection. HP-PUBLIC-DOCS-PROSE-CLEANUP-TEST-01 alone may remove the separately classified wording locks while preserving mechanical reference/version/Documenter checks. No other pruning, dependency, production shim, numerical test, or duplicate execution.
 
 ### HP-PUBLIC-PARTITION-LEAF-DOC-FN-01 - document partition hierarchy and leaf-local accessors
 

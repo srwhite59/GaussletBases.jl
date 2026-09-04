@@ -83,7 +83,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "02893c3a15acd9fccda4d0419819983b9dc824946c2df3ca6e3db94d07924e42"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "185156ab8875fa94d0d8cf5f49bee57fd509b409207786349b2a3881da9f310c"
+sha256 = "6f6701e165d88117ab837b755dbe4a60894b37d2f14f1511e966c90dac3adea3"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "c7fe3a87bf8e70ad88025f66ed4c57d6d19b3961033891fb6a4e431b090c801e"
@@ -2215,10 +2215,10 @@ title = "artifact manifest validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-FOUNDATION-LANCZOS-FN-01", "HP-SOURCE-LAYOUT-CARTESIAN-FN-01", "HP-SOURCE-LAYOUT-FOUNDATION-FN-01", "HP-SOURCE-LAYOUT-ORDINARY-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-MAPPED-ORDINARY-REP-FN-01"
-lifecycle = "approved"
-scope = "Move the exact two-function mapped-Ordinary representation block from `src/foundation/primitive_sets.jl` to `src/ordinary/ordinary_mapped_backends.jl` after proxy localization, byte-identically and at `+25/-25`. Preserve spellings, signatures, bodies, caller, load order, public representations, and numerics. Add no redesign, helper, API, dependency, workflow, or release change; stop on caller adaptation, parity, or budget failure."
+lifecycle = "implemented"
+scope = "Maintain commit 3f173f63f190a4869739f070c9fc100195413bc9: the exact 25-line mapped-Ordinary representation block now follows proxy localization in `ordinary_mapped_backends.jl`, with frozen SHA-256 `20bd94d4ce9f5a5a250b37ae1cb383a185838f5892d651f1c5074f81d1ecfb78`. Preserve its names, bodies, sole Cartesian caller, load order, public results, and exact `+25/-25` ownership move; add no redesign, helper, API, dependency, workflow, or release change."
 surfaces = ["source"]
 title = "move mapped Ordinary representation ownership"
 
@@ -2231,8 +2231,14 @@ title = "move mapped Ordinary representation ownership"
     kind = "git_commit"
     value = "99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "3f173f63f190a4869739f070c9fc100195413bc9"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "594"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "595"
     [[records.evidence_refs]]
     kind = "repo_path"
     value = "src/cartesian/cartesian_representation_constructors.jl"
@@ -2247,10 +2253,10 @@ title = "move mapped Ordinary representation ownership"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-MAPPED-ORDINARY-REP-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-MAPPED-ORDINARY-REP-TEST-01"
-lifecycle = "approved"
-scope = "Extend only `test/core/runtests.jl` by 10/16 preferred/hard lines, reusing its small bond-aligned basis to check the specialized Cartesian representation type, axes, mapped metadata, localized centers, coefficient dimensions, and finite symmetric matrices. Require exact old/new representation parity and existing core/Cartesian endpoints. Add no file, fixture, helper, tolerance, workflow, or unrelated assertion."
+lifecycle = "completed"
+scope = "Maintain the 14-line core-fixture extension accepted at 3f173f63f190a4869739f070c9fc100195413bc9. It checks the specialized Cartesian representation type, axes, mapped/localized metadata, coefficient dimensions, and finite symmetric matrices; exact serialized old/new parity and existing core/Cartesian endpoints passed. Add no file, fixture, helper, tolerance, workflow, unrelated assertion, or new execution grant."
 surfaces = ["tests"]
 title = "validate mapped Ordinary representation ownership"
 
@@ -2263,8 +2269,14 @@ title = "validate mapped Ordinary representation ownership"
     kind = "git_commit"
     value = "99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "3f173f63f190a4869739f070c9fc100195413bc9"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "594"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "595"
 
     [[records.paths]]
     kind = "test"
@@ -4896,6 +4908,50 @@ title = "validate expert staged Cartesian construction documentation"
     path = "test/docs/runtests.jl"
     state = "existing"
 [[records]]
+dependency_ids = ["HP-PUBLIC-ANGULAR-PRODUCER-DOC-TEST-01", "HP-PUBLIC-ATOMIC-IDA-DOC-TEST-01", "HP-PUBLIC-BASE-WORKING-DOC-TEST-01", "HP-PUBLIC-EXPERT-GEOMETRY-DOC-TEST-01", "HP-PUBLIC-FOUNDATION-DOC-TEST-01", "HP-PUBLIC-FUNCTION-STENCIL-DOC-TEST-01", "HP-PUBLIC-PAPER-CI-TEST-01", "HP-PUBLIC-PARTITION-LEAF-DOC-TEST-01", "HP-PUBLIC-QW-GEOMETRY-DOC-TEST-01", "HP-PUBLIC-RADIAL-PARITY-DOC-TEST-01", "HP-PUBLIC-SLICED-HCHAIN-DOC-TEST-01", "HP-PUBLIC-SUPPORTED-SURFACE-DOC-TEST-01", "HP-REP-XGTO-READER-DOC-TEST-01"]
+grant = "implementation"
+id = "HP-PUBLIC-DOCS-PROSE-CLEANUP-FN-01"
+lifecycle = "approved"
+scope = "Remove only descriptive wording locks from `test/docs/runtests.jl` under the canonical classification. Preserve the shared 95-name/five-reserved owner byte-for-byte; workflow, release, authority, version/URL, page/name-placement, public-example, path-safety, and four note-status checks remain. Replace four durable boundaries with headings. Target `717 -> 497`, `+19/-239`; add no docs prose, source, workflow, helper, file, or numerical execution."
+surfaces = ["tests"]
+title = "simplify full documentation test ownership"
+
+    [[records.document_refs]]
+    heading = "Documentation Prose Test Cleanup"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "595"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/docs/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PUBLIC-DOCS-PROSE-CLEANUP-FN-01"]
+grant = "implementation"
+id = "HP-PUBLIC-DOCS-PROSE-CLEANUP-TEST-01"
+lifecycle = "approved"
+scope = "Require `docs_fast` 8/8, full docs 122/122, policy 10/10, unchanged public-surface hash, authority/self-test, Documenter, diff checks, docs-only marker lane, and Docs. This record supersedes wording-list test obligations in its dependencies only; their reader contracts remain. Stop on mechanical-check loss, docs edits, added framework, net reduction below 200 lines, or numerical-matrix execution."
+surfaces = ["tests"]
+title = "validate mechanical documentation test boundary"
+
+    [[records.document_refs]]
+    heading = "Documentation Prose Test Cleanup"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "595"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/docs/runtests.jl"
+    state = "existing"
+[[records]]
 dependency_ids = ["HP-PUBLIC-EXPORT-INTEGRITY-FN-01", "HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01", "HP-QW-NESTED-DIAT-FN-01"]
 grant = "maintenance"
 id = "HP-PUBLIC-EXPERT-GEOMETRY-DOC-FN-01"
@@ -5258,7 +5314,7 @@ dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-TEST-01", "HP-PQS-PUBLIC-MATCHED-TEST-0
 grant = "maintenance"
 id = "HP-PUBLIC-PAPER-CI-TEST-01"
 lifecycle = "completed"
-scope = "Maintain the shared public-surface owner accepted at 891bf3e84653197b90b930d7d5787be17d8fb998: exact 95-name documentation, alias handling, five-name reserved set, Julia 1.10 fallback, Julia 1.12 native parity, and once-only `docs_fast`/`docs` selection. Preserve all prose/reference/version/Documenter checks. No broad pruning, dependency, production shim, numerical test, or duplicate execution."
+scope = "Maintain the shared public-surface owner accepted at 891bf3e84653197b90b930d7d5787be17d8fb998: exact 95-name documentation, alias handling, five-name reserved set, Julia 1.10 fallback, Julia 1.12 native parity, and once-only `docs_fast`/`docs` selection. HP-PUBLIC-DOCS-PROSE-CLEANUP-TEST-01 alone may remove the separately classified wording locks while preserving mechanical reference/version/Documenter checks. No other pruning, dependency, production shim, numerical test, or duplicate execution."
 surfaces = ["tests"]
 title = "paper-aligned PQS and screening release validation"
 
