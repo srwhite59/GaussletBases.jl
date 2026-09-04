@@ -803,6 +803,12 @@ end
     _rb, _grid, _radial_ops, _ida, problem = _tiny_atomic_ida_lanczos_fixture()
     dense = ground_state_energy(problem)
     lanczos = lanczos_ground_state(problem; krylovdim = 200, maxiter = 200, tol = 1.0e-7)
+    supplied = lanczos_ground_state(problem; krylovdim = 200, maxiter = 200,
+        tol = 1.0e-7, v0 = ones(size(problem.hamiltonian, 1)))
+    maximum_step = lanczos_ground_state(problem;
+        krylovdim = 2, maxiter = 1, tol = eps(Float64))
+    breakdown = GaussletBases._lanczos_ground_state_apply(
+        (output, input) -> copyto!(output, input), 3)
 
     @test lanczos.converged
     @test lanczos.iterations <= 200
@@ -812,6 +818,19 @@ end
     @test norm(problem.orbital_overlap - I, Inf) ≤ 5.0e-6
     @test norm(problem.overlap - I, Inf) ≤ 1.0e-5
     @test -2.95 < dense < -2.85
+    @test supplied == lanczos
+    @test keys(supplied) == (:value, :vector, :residual, :iterations, :converged)
+    @test !maximum_step.converged && maximum_step.iterations == 1
+    @test breakdown.converged && breakdown.iterations == 1 && breakdown.residual < eps(Float64)
+    for kwargs in ((; krylovdim = 1), (; maxiter = 0), (; tol = 0.0))
+        @test_throws ArgumentError lanczos_ground_state(problem; kwargs...)
+    end
+    @test_throws DimensionMismatch lanczos_ground_state(problem; v0 = zeros(size(problem.hamiltonian, 1) - 1))
+    @test_throws ArgumentError lanczos_ground_state(problem; v0 = zeros(size(problem.hamiltonian, 1)))
+    malformed = AtomicIDATwoElectronProblem(
+        problem.operators, problem.orbital_data, problem.orbital_overlap, problem.state_data,
+        problem.overlap, problem.one_body, problem.two_body, problem.hamiltonian[:, 1:(end - 1)])
+    @test_throws DimensionMismatch lanczos_ground_state(malformed)
 end
 
 @testset "Minimal sliced hydrogen chain" begin
