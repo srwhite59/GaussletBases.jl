@@ -31,15 +31,15 @@ public producer for the base Cartesian IDA Hamiltonian. It returns a
 writes the existing Cartesian IDA Hamiltonian artifact and records fixed
 producer provenance under `producer_provenance/`.
 
-The R1 public scope is intentionally narrow:
+The public scope is intentionally narrow:
 
-- origin-centered hydrogen atom;
-- hydrogen molecule on the Cartesian z axis;
+- one positive-charge atom centered at the origin;
+- two distinct, equal-label/equal-charge centers on the Cartesian z axis;
 - unsupplemented, uncorrected, all-electron localized-IDA Hamiltonians.
 
-It does not support arbitrary molecular orientation, x/y-aligned H2, other
-atoms, supplements, corrections, solver controls, or public route-stage
-selection.
+H and H2 are examples, not element restrictions. The facade does not support
+translated atoms, arbitrary molecular orientation, heteronuclear diatomics,
+supplements, corrections, solver controls, or public route-stage selection.
 
 ### Expert staged Cartesian construction
 
@@ -73,7 +73,6 @@ h_basis = (;
     q = 5,
     core_spacing = 0.5,
     radius = 4.0,
-    d = 0.3,
     reference_spacing = 1.0,
 )
 
@@ -105,8 +104,10 @@ h2_ham = cartesian_base_hamiltonian(
 )
 ```
 
-For H, `d` is the White-Lindsey atomic mapping parameter and is independent of
-`core_spacing` and `reference_spacing`. For H2, `d` is not a public input.
+For a one-center atom, `d` is a deprecated compatibility input: omit it, as
+above, or set it exactly equal to `core_spacing`. Diatomics reject `d`.
+For PQS, `q = ns`; for White-Lindsey, `q = ns - 2`. Supplying both size fields
+requires consistency, while `ns` is the natural matched-comparison input.
 
 For the current SlicedMRGUtils / HamIO bridge family, the package also exposes a
 thin explicit compatibility adapter:

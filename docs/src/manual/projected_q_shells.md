@@ -24,10 +24,42 @@ The detailed constructions are documented in:
 
 ## Supported public construction
 
-The public base-Hamiltonian facade currently accepts origin-centered
-one-center atoms and homonuclear diatomics with distinct centers on the
-Cartesian z axis. It constructs an unsupplemented, uncorrected localized-IDA
-Hamiltonian; it does not run a solver.
+The public base-Hamiltonian facade currently accepts positive-charge,
+origin-centered one-center atoms and equal-label/equal-charge homonuclear
+diatomics with distinct centers on the Cartesian z axis. It constructs an
+unsupplemented, uncorrected localized-IDA Hamiltonian; it does not run a solver.
+
+This PQS-only H2+ construction uses the scientific local order `q = 4`:
+
+```julia
+using GaussletBases
+
+system = (;
+    atom_symbols = ["H", "H"],
+    nuclear_charges = [1.0, 1.0],
+    atom_locations = [(0.0, 0.0, -1.0), (0.0, 0.0, 1.0)],
+    nup = 1,
+    ndn = 0,
+)
+basis = (;
+    q = 4,
+    core_spacing = 0.6,
+    xmax_parallel = 3.0,
+    xmax_transverse = 2.0,
+    tail_spacing = 2.8,
+    nesting = :pqs,
+)
+ham = cartesian_base_hamiltonian(system; basis = basis)
+h1 = one_body_hamiltonian(ham)
+Vee = ham.electron_electron_ida
+E_nn = nuclear_repulsion(ham)
+```
+
+Here `Vee` is the matrix called ``V_{ee}`` on the algorithm pages. The snippet
+only constructs operator data; `h1`, `Vee`, and `E_nn` are not solver results.
+For PQS, `q = ns`, so this is the PQS half of Example 39's matched `ns = 4`
+fixture with identical physical and extent inputs. White-Lindsey instead uses
+`q = ns - 2`.
 
 [`examples/39_pqs_h2plus.jl`](https://github.com/srwhite59/GaussletBases.jl/blob/main/examples/39_pqs_h2plus.jl)
 builds a small H2+ case with nuclei at `z = -1,+1` bohr. The PQS and

@@ -46,6 +46,9 @@
     docs_site_reference_ops = read_doc("docs", "src", "reference", "operators_and_diagnostics.md")
     docs_site_reference_atomic = read_doc("docs", "src", "reference", "atomic_and_ordinary.md")
     docs_site_reference_export = read_doc("docs", "src", "reference", "export.md")
+    frontdoor_doc = string(@doc GaussletBases.cartesian_base_hamiltonian)
+    pqs_frontdoor_code = only(match(r"(?s)```julia\n(.*?)\n```", docs_site_pqs).captures)
+    pqs_frontdoor_ast = Meta.parse("begin\n$(pqs_frontdoor_code)\nend")
     partition_leaf_context = (
         :BasisBox1D, :BasisPartition1D, :basis_partition, :HierarchicalBasisBox1D,
         :HierarchicalBasisPartition1D, :hierarchical_partition, :refine_partition,
@@ -144,6 +147,26 @@
         )
         @test contains_all(docs_site_pqs, "# Projected q-shells (PQS)",
             "PQS shell construction", "examples/39_pqs_h2plus.jl")
+        @test Meta.parse("system = (; atom_symbols = [\"H\", \"H\"], " *
+            "nuclear_charges = [1.0, 1.0], atom_locations = " *
+            "[(0.0, 0.0, -1.0), (0.0, 0.0, 1.0)], nup = 1, ndn = 0)") in pqs_frontdoor_ast.args
+        @test Meta.parse("basis = (; q = 4, core_spacing = 0.6, " *
+            "xmax_parallel = 3.0, xmax_transverse = 2.0, " *
+            "tail_spacing = 2.8, nesting = :pqs)") in pqs_frontdoor_ast.args
+        @test Meta.parse("ham = cartesian_base_hamiltonian(system; basis = basis)") in
+              pqs_frontdoor_ast.args
+        @test Meta.parse("Vee = ham.electron_electron_ida") in pqs_frontdoor_ast.args
+        @test contains_all(pqs_example, "nuclear_charges = [1.0, 1.0]",
+            "atom_locations = [(0.0, 0.0, -1.0), (0.0, 0.0, 1.0)]",
+            "nup = 1", "ndn = 0", "ns = 4", "core_spacing = 0.6",
+            "xmax_parallel = 3.0", "xmax_transverse = 2.0", "tail_spacing = 2.8")
+        @test contains_all(pqs_frontdoor_code, "q = 4", "nesting = :pqs",
+            "Vee = ham.electron_electron_ida")
+        @test contains_all(frontdoor_doc, "equal atom-symbol labels", "q = ns",
+            "q = ns - 2", "must equal `core_spacing`", "nuclear_charges")
+        @test contains_all(docs_site_reference_export, "one positive-charge atom",
+            "equal-label/equal-charge", "set it exactly equal to `core_spacing`") &&
+              !occursin("d = 0.3", docs_site_reference_export)
         @test occursin("\"External Cartesian GTO transfer\" => \"manual/external_cartesian_gto_transfer.md\"", docs_make)
         @test occursin("[External Cartesian GTO transfer](external_cartesian_gto_transfer.md)", docs_site_manual)
         @test all(name -> occursin("\n$(name)\n", "\n$(docs_site_reference_export)\n"),

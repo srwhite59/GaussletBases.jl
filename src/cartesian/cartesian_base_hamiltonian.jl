@@ -996,12 +996,48 @@ end
 """
     cartesian_base_hamiltonian(system; basis, hamfile=nothing)
 
-Construct and return a `CartesianIDAHamiltonian{Float64}` for the supported
-base routes: origin-centered hydrogen and z-aligned H2. When `hamfile` is
-provided, also write the existing Cartesian IDA Hamiltonian artifact.
+Construct an unsupplemented, uncorrected `CartesianIDAHamiltonian{Float64}`.
 
-This facade does not provide general molecular geometry, supplements,
-corrections, route controls, or solver behavior.
+`system` must contain exactly these keys:
+
+- `atom_symbols`, `nuclear_charges`, and `atom_locations`, each an
+  `AbstractVector` with the same length;
+- `nup` and `ndn`, nonnegative integers with positive sum. They select an
+  electron sector and need not make the system neutral.
+
+Locations are finite three-tuples and charges are finite and positive. The
+supported geometries are either one center at `(0, 0, 0)`, or two distinct
+centers on the Cartesian z axis with equal atom-symbol labels and equal
+charges. Thus H and H2 are examples, not element restrictions. No translation,
+rotation, heteronuclear geometry, or ECP handling is performed.
+
+`basis` must contain at least one of `q` or `ns`, plus geometry-specific keys:
+
+- one-center atom: `core_spacing` and `radius`;
+- z-axis diatomic: `core_spacing`, `xmax_parallel`, and `xmax_transverse`.
+
+All sizes are positive non-`Bool` integers; all spacings and extents are finite
+and positive. For `nesting = :pqs`, `q = ns`. For `nesting = :wl`,
+`q = ns - 2`; White-Lindsey requires `ns >= 3`, and a diatomic requires
+`ns >= 4`. Supplying both `q` and `ns` requires consistency. Supplying only
+`q` derives `ns = q` for PQS or `ns = q + 2` for White-Lindsey.
+
+Shared optional basis keys are:
+
+- `parent_axis_family = :G10`; no other family is supported;
+- `reference_spacing = 1.0` and `tail_spacing = 10.0`;
+- `nesting = :pqs`, with `:pqs` and `:wl` supported;
+- `source_span = :ordinary`, with `:mapped_comx` supported only for PQS;
+- `s_factor = 1.0`, which must be finite and positive;
+- `coulomb_accuracy = :compact`, with `:compact` and `:high` supported.
+
+The `nesting`, `source_span`, and `coulomb_accuracy` values may also be strings.
+Unknown keys fail. The deprecated compatibility key `d` is accepted only for
+one-center atoms and must equal `core_spacing`; diatomics reject it.
+
+When `hamfile` is a nonempty path, the function also writes the existing
+Cartesian IDA Hamiltonian artifact. It does not add supplements or corrections,
+run a solver, or expose internal construction stages.
 """
 function cartesian_base_hamiltonian(
     system::NamedTuple;
