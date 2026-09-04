@@ -129,10 +129,10 @@ test, example, script, tool, or workflow outside the root loader directly
 includes one of them.
 
 That 88-entry digest remains the exact Step 4B relocation identity. The
-separate `HP-FOUNDATION-LANCZOS-FN-01` transaction may subsequently insert
-only `foundation/lanczos.jl` immediately after `foundation/primitive_sets.jl`,
-without changing the relative order of any existing entry. Its required
-normalized 89-entry digest is
+accepted `HP-FOUNDATION-LANCZOS-FN-01` transaction inserted only
+`foundation/lanczos.jl` immediately after `foundation/primitive_sets.jl`,
+without changing the relative order of any existing entry. Its normalized
+89-entry digest is
 `46cc0f341af7c41663359b317e780b4b9fa7bc2e2a61292b0d460762af588016`;
 this does not reopen any Cartesian/PQS move or body.
 
@@ -177,6 +177,7 @@ represented-Hartree, or unrelated nested suites.
 
 This authority adds no umbrella module, namespace, binding, export, dispatch,
 dependency, test policy, workflow, numerical policy, cache, or release work.
-`cartesian_nested_faces.jl` decomposition, Lanczos relocation, primitive-set
-dependency inversion, orphan-test repair, conditioning work, empty-directory
-cleanup, and every later layout or architecture change remain separate.
+`cartesian_nested_faces.jl` decomposition, further Lanczos work, Foundation-to-
+Ordinary ownership changes, orphan-test repair, conditioning work, empty-
+directory cleanup, and every later layout or architecture change remain
+separate.

@@ -973,10 +973,10 @@ pointers were reconciled mechanically. The accepted tree is
 
 The relocation accepted `_lanczos_ground_state_apply` in
 `src/angular/angular_atomic_benchmark.jl` with its exact name, dispatch,
-visibility, and load behavior. The separately approved
+visibility, and load behavior. The subsequently accepted
 [Shared Reference Lanczos Kernel](#shared-reference-lanczos-kernel) transaction
-may move that exact body into `src/foundation/`; that specific consolidation
-does not reopen this path-only lifecycle.
+moved that exact body into `src/foundation/`; that specific consolidation did
+not reopen this path-only lifecycle.
 
 Package/resource loading, `angular_public` (`83/83`), the one required complete
 angular run (`61,812/61,812`), the isolated HFDMRG adapter (`66/66`), and the
@@ -1029,9 +1029,11 @@ are authorized; no executable statement may change:
 The exact four comment changes are the two `src/internal/...` pointers in
 `families.jl` and the one `src/families.jl` pointer in each internal file.
 `GaussianAnalyticIntegrals` and `TimeG` remain nested modules loaded at their
-existing positions. The active call from `primitive_sets.jl` to the later
-ordinary mapped-backend helpers remains unchanged; this transaction neither
-relocates nor repairs that cross-track dependency.
+existing positions. Step 3 left the call from `primitive_sets.jl` to the later
+ordinary mapped-backend helpers unchanged. The separately governed
+[Mapped Ordinary Working-Basis Representation Ownership](#mapped-ordinary-working-basis-representation-ownership)
+transaction may move that exact Ordinary-specific block without reopening the
+relocation.
 
 In `src/GaussletBases.jl`, only the fifteen quoted include paths for these
 runtime-loaded files may change, in place. The complete include sequence and
@@ -1068,9 +1070,9 @@ Failure rule: make no implementation commit if any hash, executable line, includ
 ```
 
 The complete angular owner is not part of Step 3 validation and must not be
-repeated. The separately approved Shared Reference Lanczos Kernel may add one
-foundation owner and one include while preserving the existing relative order;
-that exception does not reopen Step 3. No other module wrapper, symbol move,
+repeated. The accepted Shared Reference Lanczos Kernel added one foundation
+owner and one include while preserving the existing relative order; that
+exception did not reopen Step 3. No other module wrapper, symbol move,
 include reorder, API, dispatch, dependency, fixture, cache, numerical policy,
 workflow, release work, or later source-layout authority is granted.
 
@@ -1115,9 +1117,10 @@ data path. Vendored legacy data already uses `_package_data_path`; its existing
 explicit caller path and home-directory fallback are behavior, not relocation
 dependencies. Outside the root `src/GaussletBases.jl` loader, no source, test,
 example, script, tool, or workflow directly includes any of these files. The
-known call from
-`src/foundation/primitive_sets.jl` into later ordinary mapped-backend helpers
-remains unchanged and valid under the existing root include sequence.
+known call from `src/foundation/primitive_sets.jl` into later Ordinary
+mapped-backend helpers remained valid under the accepted include sequence. Its
+separate ownership transaction may move the exact unchanged two-function block
+into `ordinary_mapped_backends.jl`; it does not reopen this relocation.
 
 Current-pointer reconciliation is mechanical and part of the same source
 commit:
@@ -1154,8 +1157,8 @@ The unchanged Supported-floor selection must pass, including `core`, `ida`,
 `cartesian`, `examples`, `radial`, `misc`, `angular_public`, and `docs_fast`.
 The source-bearing implementation commit must classify as full and pass all
 three existing CI jobs plus Docs. No complete angular rerun is required.
-Cartesian/PQS Step 4B is governed separately below. Decomposition, Lanczos
-relocation, foundation dependency inversion, orphan-test work, conditioning
+Cartesian/PQS Step 4B is governed separately below. Decomposition, further
+Lanczos work, unassigned dependency inversion, orphan-test work, conditioning
 diagnostics, prose-test cleanup, empty-directory cleanup, API/export changes,
 and release work remain outside this maintenance authority.
 
@@ -1166,43 +1169,46 @@ the accepted Ordinary move and changes no public or numerical contract.
 ## Shared Reference Lanczos Kernel
 
 `HP-FOUNDATION-LANCZOS-FN-01` and
-`HP-FOUNDATION-LANCZOS-TEST-01` authorize one net-negative consolidation of
-the small fully reorthogonalized reference Lanczos algorithm, not a new solver
-or optimization.
-
-Move the exact 81-line `_lanczos_ground_state_apply` block at lines 1112--1192
-of `src/angular/angular_atomic_benchmark.jl`, SHA-256
-`95dd5bd4f1734bd8bacdc18f712537279e9cbaf066bb6c023189c9537039bc51`.
-Move it byte-identically to the sole new owner `src/foundation/lanczos.jl`,
-include it immediately after `foundation/primitive_sets.jl`, and delete the old
-copy. Preserve its private name/signature/defaults and the angular, matched-H2+,
-and paper-driver callers. Existing includes retain relative order; the
-normalized 89-entry fingerprint is
+`HP-FOUNDATION-LANCZOS-TEST-01` maintain commit `99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2`.
+The exact 81-line `_lanczos_ground_state_apply` body, SHA-256
+`95dd5bd4f1734bd8bacdc18f712537279e9cbaf066bb6c023189c9537039bc51`,
+is solely owned by `src/foundation/lanczos.jl`, immediately after
+`foundation/primitive_sets.jl`. Its private contract and four callers remain
+unchanged; existing includes retain relative order and the 89-entry fingerprint
+is
 `46cc0f341af7c41663359b317e780b4b9fa7bc2e2a61292b0d460762af588016`.
 
-Replace the duplicate body of
-`lanczos_ground_state(::AtomicIDATwoElectronProblem)` with a thin
-problem-specific wrapper. Preserve its public signature/defaults, validation
-types/messages, `v0` failures, and named return fields/order. Use a local
-nonescaping mutating action for valid square matrices, while retaining the
-existing failure for a manually assembled nonsquare problem. Initialization,
-maximum-step policy, recurrence, full ordered reorthogonalization,
-`SymTridiagonal` solve, residual/stops, reconstruction, and normalization keep
-their exact order.
+`lanczos_ground_state(::AtomicIDATwoElectronProblem)` is now a thin
+problem wrapper preserving public defaults, errors, `v0` and malformed-problem
+failures, and return fields/order. The duplicate recurrence is gone. Exact
+old/new replay, focused IDA/angular/PQS consumers, allocation/compile checks,
+and CI passed. Preserve the accepted source `+91/-149` and test `+19` result;
+this remains a small reference algorithm, not a new solver or policy surface.
 
-Controlled old/new evidence must be exact for the current atomic fixture with
-default and supplied `v0`, an unconverged maximum-step case, and a Krylov
-breakdown case, including errors and the malformed problem. Extend only
-`test/ida/runtests.jl` by 16/20 preferred/hard lines. Source must remain net
-negative, approximately `+107/-162` and at most `+110/-162`.
+## Mapped Ordinary Working-Basis Representation Ownership
 
-Acceptance runs the focused IDA owner, one bounded direct angular small-ED
-consumer, and matched-H2+ release owner once, plus warmed allocation/time and
-fresh compilation comparisons. Package/docs/authority/Documenter/diff and full
-CI/Docs must pass; do not run complete angular. Add no public binding, solver
-abstraction, dependency, cache, metadata, policy, caller edit, workflow,
-release, or unrelated work. Any parity, budget, or material performance failure
-stops without a commit.
+`HP-MAPPED-ORDINARY-REP-FN-01` and
+`HP-MAPPED-ORDINARY-REP-TEST-01` authorize one dependency-direction cleanup,
+not a redesign. Move lines 237--261 of `src/foundation/primitive_sets.jl`,
+SHA-256
+`20bd94d4ce9f5a5a250b37ae1cb383a185838f5892d651f1c5074f81d1ecfb78`,
+byte-for-byte into `src/ordinary/ordinary_mapped_backends.jl` immediately after
+`_mapped_legacy_proxy_localized`; delete the original in the same commit. The
+required source delta is `+25/-25`.
+
+Preserve the two `_mapped_ordinary_working_basis_*` names, signatures, bodies,
+arithmetic, defaults, and results. General metadata/representation machinery
+remains in Foundation; proxy/localization helpers remain in Ordinary. The sole
+Cartesian caller stays unchanged, after both owners in root load order.
+
+Extend only the existing small bond-aligned testset in `test/core/runtests.jl`,
+within `10/16` preferred/hard added lines. Check the public Cartesian type,
+axes, mapped/localized metadata, coefficient dimensions, and finite symmetric
+matrices. Require an exact old/new representation snapshot, existing core and
+Cartesian endpoints, package/docs/authority/Documenter, and full CI/Docs. Add
+no file, fixture, helper, API, dependency, tolerance, workflow, or numerical
+policy. Any non-byte-identical move, caller adaptation, parity difference, or
+broader machinery stops without a commit.
 
 ## Foundational Basis And Mapping Documentation
 
@@ -1366,9 +1372,9 @@ promise neither retained dense storage nor caching or scalable large-angular-
 momentum use. `lanczos_ground_state` is a small reference routine, not a
 general many-electron or production eigensolver, and
 `AtomicIDATwoElectronProblem` remains only the tiny one-up/one-down consumer.
-The Shared Reference Lanczos Kernel transaction may consolidate the duplicate
-private implementation only if this complete public behavior remains exact;
-it grants no broader solver status.
+The accepted Shared Reference Lanczos Kernel consolidation shares one private
+implementation while preserving this complete public behavior exactly; it
+grants no broader solver status.
 
 The implementation added `70` source-docstring lines, `26` reference lines,
 and `15` focused docs-test lines. These additions are within all hard limits,

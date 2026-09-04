@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `8082647ae03e48939b038141054e53ebdb14ab433843cac7e35a39fd1c504ed7`.
+> [authority.toml](authority.toml), SHA-256 `4d7c4362a4f2a5eac67536c2ffb0afce22bcdc61f7748f3f9bfc630b34f75727`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1179,8 +1179,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-FOUNDATION-LANCZOS-FN-01 - consolidate shared reference Lanczos kernel
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1189,19 +1189,21 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/GaussletBases.jl`
   - `source` / `existing`: `src/angular/angular_atomic_benchmark.jl`
   - `source` / `existing`: `src/atomic/atomic_ida_two_electron.jl`
-  - `source` / `planned`: `src/foundation/lanczos.jl`
+  - `source` / `existing`: `src/foundation/lanczos.jl`
 - **Evidence:**
   - `git_commit`: `9367afd5ac47b81afe4ad8e2170f274fd36f362f`
   - `repo_path`: `bin/pqs_paper_h2_driver.jl`
   - `repo_path`: `src/cartesian/pqs_matched_h2plus.jl`
   - `manager_pass`: `593`
+  - `git_commit`: `99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2`
+  - `manager_pass`: `594`
 - **Dependencies:** `HP-PQS-PAPER-H2-DRV-FN-01`, `HP-PQS-PUBLIC-MATCHED-FN-01`, `HP-PUBLIC-ATOMIC-IDA-DOC-FN-01`, `HP-SOURCE-LAYOUT-ANGULAR-FN-01`, `HP-SOURCE-LAYOUT-CARTESIAN-FN-01`, `HP-SOURCE-LAYOUT-FOUNDATION-FN-01`, `HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01`
-- **Scope:** Move the exact \`\_lanczos\_ground\_state\_apply\` body to planned \`src/foundation/lanczos.jl\` and replace the duplicate atomic public body with a thin behavior-exact wrapper under Shared Reference Lanczos Kernel. Preserve private callers, public API/errors/returns, arithmetic order, one root include, and the net-negative hard budget. No algorithm, abstraction, dependency, cache, caller, workflow, or release change; stop on parity, regression, or budget failure.
+- **Scope:** Maintain the shared reference Lanczos consolidation accepted in commit 99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2: one byte-identical private foundation kernel, one thin atomic wrapper, unchanged callers, public errors/returns, and arithmetic order. Preserve the exact \`+91/-149\` source result; add no algorithm, abstraction, dependency, cache, policy, workflow, API, or release change.
 
 ### HP-FOUNDATION-LANCZOS-TEST-01 - validate shared reference Lanczos consolidation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1211,8 +1213,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `git_commit`: `9367afd5ac47b81afe4ad8e2170f274fd36f362f`
   - `manager_pass`: `593`
+  - `git_commit`: `99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2`
+  - `manager_pass`: `594`
 - **Dependencies:** `HP-FOUNDATION-LANCZOS-FN-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PUBLIC-ATOMIC-IDA-DOC-TEST-01`
-- **Scope:** Extend only \`test/ida/runtests.jl\` within the 16/20-line preferred/hard budget for supplied-v0, maximum-step, breakdown, return-shape, and exact public-error parity. Reuse existing endpoints and add no file, fixture, helper, or policy. Validate dual-revision exact parity, focused atomic and angular/PQS consumers, allocation/compile timing, package/docs/authority, and full CI/Docs; do not rerun the complete angular suite.
+- **Scope:** Maintain the 19-line focused IDA extension accepted in commit 99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2 for supplied-v0, maximum-step, breakdown, return-shape, public-error, and malformed-problem parity. Exact dual-revision snapshots, focused atomic/angular/PQS consumers, allocation/compile checks, and CI 33825308690 passed. Add no file, fixture, helper, policy, workflow, or complete-angular rerun.
 
 ### HP-HAM-MANIFEST-FN-01 - compact Hamiltonian artifact manifest
 
@@ -1290,6 +1294,40 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:** none
 - **Dependencies:** `HP-HAM-MANIFEST-FN-01`
 - **Scope:** maintain base/supplemented readback and selected provenance-root checks. The accepted direct-JLD2 evidence owns detailed field/status coverage.
+
+### HP-MAPPED-ORDINARY-REP-FN-01 - move mapped Ordinary representation ownership
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Mapped Ordinary Working-Basis Representation Ownership`
+- **Owned paths:**
+  - `source` / `existing`: `src/foundation/primitive_sets.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_mapped_backends.jl`
+- **Evidence:**
+  - `git_commit`: `99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2`
+  - `manager_pass`: `594`
+  - `repo_path`: `src/cartesian/cartesian_representation_constructors.jl`
+- **Dependencies:** `HP-FOUNDATION-LANCZOS-FN-01`, `HP-SOURCE-LAYOUT-CARTESIAN-FN-01`, `HP-SOURCE-LAYOUT-FOUNDATION-FN-01`, `HP-SOURCE-LAYOUT-ORDINARY-FN-01`
+- **Scope:** Move the exact two-function mapped-Ordinary representation block from \`src/foundation/primitive\_sets.jl\` to \`src/ordinary/ordinary\_mapped\_backends.jl\` after proxy localization, byte-identically and at \`+25/-25\`. Preserve spellings, signatures, bodies, caller, load order, public representations, and numerics. Add no redesign, helper, API, dependency, workflow, or release change; stop on caller adaptation, parity, or budget failure.
+
+### HP-MAPPED-ORDINARY-REP-TEST-01 - validate mapped Ordinary representation ownership
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_public\_surface.md](pqs_public_surface.md); heading `Mapped Ordinary Working-Basis Representation Ownership`
+- **Owned paths:**
+  - `test` / `existing`: `test/core/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2`
+  - `manager_pass`: `594`
+- **Dependencies:** `HP-MAPPED-ORDINARY-REP-FN-01`
+- **Scope:** Extend only \`test/core/runtests.jl\` by 10/16 preferred/hard lines, reusing its small bond-aligned basis to check the specialized Cartesian representation type, axes, mapped metadata, localized centers, coefficient dimensions, and finite symmetric matrices. Require exact old/new representation parity and existing core/Cartesian endpoints. Add no file, fixture, helper, tolerance, workflow, or unrelated assertion.
 
 ### HP-MCOMX-DRV-FN-01 - canonical source-span selector
 
@@ -5442,7 +5480,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `583`
   - `manager_pass`: `584`
 - **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`
-- **Scope:** Maintain the five byte-identical angular owners relocated in commit f8421494e19b3a4553a7f89e20049520c38e3b2c, their exact include positions, and current pointers. That relocation's frozen helper placement is historical; only HP-FOUNDATION-LANCZOS-FN-01 may subsequently move \`\_lanczos\_ground\_state\_apply\`. Exclude all other file bodies, tests, workflows, APIs, numerics, helper moves, releases, foundation work, and later moves.
+- **Scope:** Maintain the five byte-identical angular owners relocated in commit f8421494e19b3a4553a7f89e20049520c38e3b2c, their exact include positions, and current pointers. The accepted HP-FOUNDATION-LANCZOS-FN-01 consolidation moved only \`\_lanczos\_ground\_state\_apply\` in commit 99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2. Exclude all other file bodies, tests, workflows, APIs, numerics, helper moves, releases, foundation work, and later moves.
 
 ### HP-SOURCE-LAYOUT-ANGULAR-TEST-01 - validate angular source relocation
 
@@ -5503,7 +5541,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `f2e13ff3c788551c43eb2de269d4723de880ae8e`
   - `manager_pass`: `585`
 - **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`, `HP-PQS-COULOMB-ACCURACY-FN-01`, `HP-PQS-MAP-SFACTOR-FN-01`, `HP-REP-MIXDENS-HARTREE-FN-01`, `HP-SOURCE-LAYOUT-RADIAL-ATOMIC-FN-01`
-- **Scope:** Maintain the accepted Step 3 relocation from commit f2e13ff3c788551c43eb2de269d4723de880ae8e: 16 relocated owners, exact order and pointers, package behavior, and tree. HP-FOUNDATION-LANCZOS-FN-01 separately authorizes one planned foundation file and one include. No other body, symbol, API, test, workflow, numerical, release, or layout change.
+- **Scope:** Maintain the accepted Step 3 relocation from commit f2e13ff3c788551c43eb2de269d4723de880ae8e and the one Lanczos owner/include accepted at 99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2. HP-MAPPED-ORDINARY-REP-FN-01 alone may remove its exact unchanged Ordinary-specific block from \`primitive\_sets.jl\`. No other body, symbol, API, test, workflow, numerical, release, or layout change.
 
 ### HP-SOURCE-LAYOUT-FOUNDATION-TEST-01 - validate foundation source relocation
 
@@ -5570,7 +5608,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `96802b00cc380707306106b529ff22a09ccb415e`
   - `manager_pass`: `588`
 - **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`, `HP-SOURCE-LAYOUT-FOUNDATION-FN-01`
-- **Scope:** Maintain the 15 byte-identical Ordinary owners relocated in commit 96802b00cc380707306106b529ff22a09ccb415e under Ordinary Source Relocation, their exact include positions, classified current pointers, frozen hashes, and R100 identities. Exclude file bodies, tests, ordering, APIs, workflows, numerics, Cartesian/PQS relocation, and later layout work.
+- **Scope:** Maintain the 15 byte-identical Ordinary owners relocated in commit 96802b00cc380707306106b529ff22a09ccb415e, their include positions, current pointers, hashes, and R100 identities. HP-MAPPED-ORDINARY-REP-FN-01 alone may append the exact unchanged representation block after mapped proxy localization. Exclude every other body, test, ordering, API, workflow, numerical, Cartesian/PQS, or layout change.
 
 ### HP-SOURCE-LAYOUT-ORDINARY-TEST-01 - validate ordinary source relocation
 
@@ -5735,7 +5773,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `64d8d65b6891d5e56a0b09f63ff934270b31a9fc`
   - `manager_pass`: `592`
 - **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`, `HP-SOURCE-LAYOUT-FOUNDATION-FN-01`, `HP-SOURCE-LAYOUT-ORDINARY-FN-01`
-- **Scope:** Maintain the 76-file Cartesian/PQS relocation accepted in commit \`64d8d65b6891d5e56a0b09f63ff934270b31a9fc\`: R100 owners, 39 in-place root includes, and classified pointers. Its 88-entry normalized hash is relocation evidence; HP-FOUNDATION-LANCZOS-FN-01 alone may insert one earlier foundation include while preserving existing relative order. Exclude all other bodies, tests, order changes, APIs, workflows, numerics, refactors, and releases.
+- **Scope:** Maintain the 76-file Cartesian/PQS relocation accepted in commit \`64d8d65b6891d5e56a0b09f63ff934270b31a9fc\`: R100 owners, 39 in-place root includes, classified pointers, and existing relative order. The accepted Lanczos include yields its separately recorded 89-entry identity. Exclude all other bodies, tests, order changes, APIs, workflows, numerics, refactors, and releases.
 
 ### HP-SOURCE-LAYOUT-CARTESIAN-TEST-01 - validate Cartesian and PQS source relocation
 
@@ -5791,7 +5829,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `580`
   - `manager_pass`: `581`
 - **Dependencies:** `HP-PACKAGE-ROOT-PATH-FN-01`
-- **Scope:** Maintain the exact path-only relocation accepted in commit 812a44d4476c598448bfa3ac733054f009c55b89: 14 radial/atomic targets, in-place includes, reconciled pointers, frozen relocation hashes/tree, package behavior, and tests. HP-FOUNDATION-LANCZOS-FN-01 alone may subsequently simplify the atomic Lanczos body without changing its public behavior. Add no other body, test, module, API, dispatch, dependency, cache, workflow, numerical, release, or layout change.
+- **Scope:** Maintain the exact path-only relocation accepted in commit 812a44d4476c598448bfa3ac733054f009c55b89: 14 radial/atomic targets, in-place includes, pointers, hashes/tree, package behavior, and tests. The accepted HP-FOUNDATION-LANCZOS-FN-01 wrapper preserves atomic public behavior. Add no other body, test, module, API, dispatch, dependency, cache, workflow, numerical, release, or layout change.
 
 ### HP-SOURCE-LAYOUT-RADIAL-ATOMIC-TEST-01 - validate radial and atomic source relocation
 

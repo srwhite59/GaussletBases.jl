@@ -1048,3 +1048,30 @@ the source hard budget is `+110/-162` and must remain net negative. MT6 advances
 only if duplicate solver code is actually removed. No full angular rerun,
 public solver abstraction, policy, dependency, cache, workflow, represented-
 Hartree work, or release change is authorized.
+
+## Cartesian Hamiltonian Producer Pass 594 - Close Shared Lanczos And Authorize Mapped Representation Ownership
+
+Accepted commit `99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2` and tree
+`0c846fb25f6eab04ac536bb516c9c81142bfca77`. The exact 81-line private
+Lanczos kernel moved to Foundation with its frozen SHA, the atomic public method
+became a thin wrapper, and the duplicate recurrence was deleted. Production
+source is `+91/-149`, net `-58`; the existing IDA owner gained `19` focused
+lines. Independent manager replay reproduced the exact old/new snapshot and
+public errors; warm allocation fell from `30,733,984` to `30,313,696` bytes,
+with neutral time and no compilation regression. IDA, angular small ED, matched
+H2+, and CI `33825308690` passed. Docs `33825308655` failed only on the expected
+planned-to-existing path transition. MT6 advances through real duplicate-code
+removal; no solver or policy surface changed.
+
+Independent preflight remains valid at the accepted head for the last known
+Foundation-to-Ordinary inversion. `HP-MAPPED-ORDINARY-REP-FN-01/TEST-01`
+authorize only the frozen 25-line mapped representation block, SHA-256
+`20bd94d4ce9f5a5a250b37ae1cb383a185838f5892d651f1c5074f81d1ecfb78`,
+to move byte-identically from `foundation/primitive_sets.jl` immediately after
+the Ordinary proxy-localization owner. The sole Cartesian caller and load order
+stay unchanged; source is exactly `+25/-25`. A `10/16`-line extension of the
+existing small core fixture must exercise the specialized public
+representation. Any caller adaptation, parity difference, broader machinery,
+or budget failure stops without an implementation commit. Complete angular,
+represented-Hartree, diagnostics, optimization, and release work remain out of
+scope.
