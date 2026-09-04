@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `a9ba03ffe930fb98e0fa8f09693cc633791c02288afb19cbcfa1287bfc41a857`.
+> [authority.toml](authority.toml), SHA-256 `07e387a0e6bdb88bb957bdb33309f49085f7bc4ce2c2f6b1c2bd53e8b20381e6`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -58,15 +58,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [test\_suite\_reorganization\_plan.md](../../test_suite_reorganization_plan.md); heading `Angular Optional-Consumer Control Flow`
 - **Owned paths:**
-  - `test` / `existing`: `test/angular/runtests.jl`
   - `test` / `existing`: `test/runtests.jl`
 - **Evidence:**
   - `git_commit`: `22d25e8c5061abafa5a37ea35d4a51adfa4b9a72`
   - `git_commit`: `5f1708d989269562d9182ed630336104c258da2e`
   - `manager_pass`: `558`
   - `manager_pass`: `559`
+  - `manager_pass`: `597`
 - **Dependencies:** none
-- **Scope:** Maintain only the accepted two-file control-flow repair from commit \`22d25e8c5061abafa5a37ea35d4a51adfa4b9a72\`: a missing optional HFDMRG checkout produces one visible skip limited to the handshake; if the configured path exists, load/import errors propagate as test failures; no file-level return truncates later angular tests; explicit \`angular\` selection retains the complete owner; and \`angular\` remains absent from \`\_FAST\_TEST\_GROUPS\`. The exact implementation delta was +6/-9 with no numerical assertion, source, API, dependency, workflow, helper, file, or docs-test change. Preserve all other group definitions and every broader angular exclusion from the canonical contract; any behavioral or ownership change requires a new amendment.
+- **Scope:** Maintain Pass 559 while replacing only \`\_local\_hfdmrg\_module\`'s personal path in \`test/runtests.jl\` with \`GAUSSLETBASES\_HFDMRG\_SRC\`: blank means absent, non-directory errors, and an existing directory retains uncaught \`LOAD\_PATH\`/import behavior and the existing cache. Budget \`+4/-2\`, hard \`+7/-2\`. Preserve skip/continuation, group selection, numerics, dependencies, workflows, APIs, and path-search prohibition.
 
 ### HP-ANGULAR-TEST-CONTROL-TEST-01 - angular optional-consumer control-flow validation
 
@@ -82,8 +82,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `5f1708d989269562d9182ed630336104c258da2e`
   - `manager_pass`: `558`
   - `manager_pass`: `559`
+  - `manager_pass`: `597`
 - **Dependencies:** `HP-ANGULAR-TEST-CONTROL-FN-01`
-- **Scope:** none. No focused docs regression was needed or added. Acceptance is frozen by commit \`22d25e8c5061abafa5a37ea35d4a51adfa4b9a72\`, the \`61,907\`-pass/one-skip complete absent-checkout angular run, direct failure-propagation inspection, and the package/docs/authority/CI evidence recorded in the canonical contract. Future test or runner behavior requires a new amendment.
+- **Scope:** none. Add no committed test. Accept the maintenance amendment only after separate processes cover unset, blank, invalid, existing-but-unloadable, and valid configuration; the valid path must resolve to the configured module and pass the isolated 66-check adapter owner. Do not rerun full angular. Require package load, authority/self-test, docs, Documenter, diff checks, source-bearing CI, and Docs.
 
 ### HP-AUTHORITY-EXECUTION-WHITELIST-FN-01 - whole-file execution whitelist authority view
 

@@ -1133,3 +1133,24 @@ checks passed; CI `33836202784` used only the docs lane and three visible
 markers, and Docs `33836202788` passed. No numerical matrix executed and no
 reader prose, source, API, workflow, helper, or file changed. MT5/MT6 record a
 completed net-negative ownership cleanup; no successor transaction is opened.
+
+## Cartesian Hamiltonian Producer Pass 597 - Authorize Portable HFDMRG Test Path
+
+Independent inspection found the remaining portability defect confined to
+`_local_hfdmrg_module()` in `test/runtests.jl`: its only machine-specific input
+is a hard-coded source directory, while the accepted cache, visible absence
+skip, propagated import failures, later-test continuation, and angular group
+ownership are already correct. A clean detached HFDMRG source at the accepted
+Pass 583 revision loaded successfully when its `src` directory was added using
+the existing `LOAD_PATH`/`using` sequence.
+
+The maintenance amendment therefore authorizes only
+`GAUSSLETBASES_HFDMRG_SRC`, with blank-as-absent and a clear non-directory
+failure. Preferred/hard implementation budgets are `+4/-2` and `+7/-2` in the
+single existing test runner. Five fresh-process cases must distinguish absence,
+bad configuration, propagated import failure, and a valid module; the valid
+case reuses the isolated 66-check adapter owner. No full angular rerun,
+production source, workflow, dependency, discovery, fallback, cache change, or
+new test is authorized. MT1 gains a bounded conformance repair; MT5/MT6 and all
+release state remain unchanged. The exact blocker is now repo-manager's
+single-function implementation and validation.

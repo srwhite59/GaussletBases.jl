@@ -310,6 +310,26 @@ that an existing checkout now loads without a catch-all, `angular` remains
 explicitly selectable, and only its `fast` membership was removed. No focused
 docs regression was needed or added.
 
+Pass 597 adds one portability-only maintenance amendment without reopening that
+control-flow repair. `_local_hfdmrg_module()` must read the optional source
+directory from `GAUSSLETBASES_HFDMRG_SRC`. An unset or whitespace-only value
+returns `nothing` and reaches the existing visible handshake skip. A configured
+path that is missing or is not a directory must raise a clear `ArgumentError`.
+An existing directory retains the current `LOAD_PATH` insertion and
+`using HFDMRG` behavior; load and import errors continue to propagate. The
+cache remains unchanged, and no user-specific fallback, filesystem search,
+package installation, dependency, or CI configuration is allowed.
+
+Implementation is limited to `_local_hfdmrg_module()` in `test/runtests.jl`.
+The preferred delta is `+4/-2` test lines and the hard limit is `+7/-2`; no
+other tracked file or assertion may change. Acceptance uses fresh Julia
+processes for unset, whitespace-only, invalid, existing-but-unloadable, and
+valid configurations because `_FIXTURE_CACHE` intentionally memoizes the
+result. The valid process must resolve the configured HFDMRG module and pass
+the established isolated 66-check adapter owner. The full angular suite must
+not be repeated. Package load, normal source-bearing CI, Docs, authority and
+self-test, documentation tests, Documenter, and diff checks remain required.
+
 ## Fixed-Radial Angular Public CI Extraction
 
 `HP-ANGULAR-PUBLIC-CI-FN-01` and `HP-ANGULAR-PUBLIC-CI-TEST-01`
