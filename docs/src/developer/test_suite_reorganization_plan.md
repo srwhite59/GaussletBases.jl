@@ -330,6 +330,17 @@ the established isolated 66-check adapter owner. The full angular suite must
 not be repeated. Package load, normal source-bearing CI, Docs, authority and
 self-test, documentation tests, Documenter, and diff checks remain required.
 
+Implementation commit `9004fd5087c0a24bfe253f0b166a8cf91fae813f`
+closed the portability amendment with exactly `+4/-2` lines in
+`test/runtests.jl`. Fresh processes covered unset, whitespace-only, invalid,
+existing-but-unloadable, and valid configurations. The valid source resolved to
+clean HFDMRG revision `19e11fc2b12a142138dc3324f585d8aa92d46098` and the
+isolated adapter owner passed `66/66` in `14m07.8s`; the complete angular owner
+was not repeated. Package load, authority/self-test, documentation tests,
+Documenter, CI `33876664840`, and Docs `33876664823` passed. The Pass 559
+control-flow behavior, cache, angular selection, and numerical tests remain
+unchanged.
+
 ## Fixed-Radial Angular Public CI Extraction
 
 `HP-ANGULAR-PUBLIC-CI-FN-01` and `HP-ANGULAR-PUBLIC-CI-TEST-01`

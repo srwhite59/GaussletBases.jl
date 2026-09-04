@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
-sha256 = "876de6dbb023fbe9dc4b299776739b4204635773a10571bc94227f58a04a8caf"
+sha256 = "9cb8b99af42cdaa7e339c80dff79323ee59efbfd8a6dd6e727c34b6d26c12fd3"
 
 [[records]]
 dependency_ids = ["HP-ANGULAR-TEST-CONTROL-FN-01", "HP-PUBLIC-PAPER-CI-FN-01"]
@@ -263,7 +263,7 @@ dependency_ids = []
 grant = "maintenance"
 id = "HP-ANGULAR-TEST-CONTROL-FN-01"
 lifecycle = "implemented"
-scope = "Maintain Pass 559 while replacing only `_local_hfdmrg_module`'s personal path in `test/runtests.jl` with `GAUSSLETBASES_HFDMRG_SRC`: blank means absent, non-directory errors, and an existing directory retains uncaught `LOAD_PATH`/import behavior and the existing cache. Budget `+4/-2`, hard `+7/-2`. Preserve skip/continuation, group selection, numerics, dependencies, workflows, APIs, and path-search prohibition."
+scope = "Maintain the portable optional-consumer handshake: `_local_hfdmrg_module()` reads only `GAUSSLETBASES_HFDMRG_SRC`; blank means absent, non-directory throws, and configured directories retain uncaught `LOAD_PATH`/import behavior and the existing cache. Preserve the visible skip, later angular execution, explicit `angular` selection, and exclusion from fast/public CI. No discovery, fallback, dependency, workflow, API, or numerical change."
 surfaces = ["tests"]
 title = "angular optional-consumer control-flow repair"
 
@@ -279,6 +279,9 @@ title = "angular optional-consumer control-flow repair"
     kind = "git_commit"
     value = "5f1708d989269562d9182ed630336104c258da2e"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "9004fd5087c0a24bfe253f0b166a8cf91fae813f"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "558"
     [[records.evidence_refs]]
@@ -287,6 +290,9 @@ title = "angular optional-consumer control-flow repair"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "597"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "598"
 
     [[records.paths]]
     kind = "test"
@@ -298,7 +304,7 @@ grant = "none"
 id = "HP-ANGULAR-TEST-CONTROL-TEST-01"
 lifecycle = "completed"
 paths = []
-scope = "none. Add no committed test. Accept the maintenance amendment only after separate processes cover unset, blank, invalid, existing-but-unloadable, and valid configuration; the valid path must resolve to the configured module and pass the isolated 66-check adapter owner. Do not rerun full angular. Require package load, authority/self-test, docs, Documenter, diff checks, source-bearing CI, and Docs."
+scope = "none. Preserve separate-process coverage of unset, blank, invalid, existing-but-unloadable, and valid paths plus the isolated 66-check adapter owner. Full angular is not required for portability maintenance. No committed test or implementation grant remains."
 surfaces = []
 title = "angular optional-consumer control-flow validation"
 
@@ -314,6 +320,9 @@ title = "angular optional-consumer control-flow validation"
     kind = "git_commit"
     value = "5f1708d989269562d9182ed630336104c258da2e"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "9004fd5087c0a24bfe253f0b166a8cf91fae813f"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "558"
     [[records.evidence_refs]]
@@ -322,6 +331,9 @@ title = "angular optional-consumer control-flow validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "597"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "598"
 [[records]]
 dependency_ids = []
 grant = "maintenance"

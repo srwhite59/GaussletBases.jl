@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `07e387a0e6bdb88bb957bdb33309f49085f7bc4ce2c2f6b1c2bd53e8b20381e6`.
+> [authority.toml](authority.toml), SHA-256 `460adcbf9551473f1879006054d52430eacc6f54dfe13a57535cd7de7da8566c`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -62,11 +62,13 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `git_commit`: `22d25e8c5061abafa5a37ea35d4a51adfa4b9a72`
   - `git_commit`: `5f1708d989269562d9182ed630336104c258da2e`
+  - `git_commit`: `9004fd5087c0a24bfe253f0b166a8cf91fae813f`
   - `manager_pass`: `558`
   - `manager_pass`: `559`
   - `manager_pass`: `597`
+  - `manager_pass`: `598`
 - **Dependencies:** none
-- **Scope:** Maintain Pass 559 while replacing only \`\_local\_hfdmrg\_module\`'s personal path in \`test/runtests.jl\` with \`GAUSSLETBASES\_HFDMRG\_SRC\`: blank means absent, non-directory errors, and an existing directory retains uncaught \`LOAD\_PATH\`/import behavior and the existing cache. Budget \`+4/-2\`, hard \`+7/-2\`. Preserve skip/continuation, group selection, numerics, dependencies, workflows, APIs, and path-search prohibition.
+- **Scope:** Maintain the portable optional-consumer handshake: \`\_local\_hfdmrg\_module()\` reads only \`GAUSSLETBASES\_HFDMRG\_SRC\`; blank means absent, non-directory throws, and configured directories retain uncaught \`LOAD\_PATH\`/import behavior and the existing cache. Preserve the visible skip, later angular execution, explicit \`angular\` selection, and exclusion from fast/public CI. No discovery, fallback, dependency, workflow, API, or numerical change.
 
 ### HP-ANGULAR-TEST-CONTROL-TEST-01 - angular optional-consumer control-flow validation
 
@@ -80,11 +82,13 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `git_commit`: `22d25e8c5061abafa5a37ea35d4a51adfa4b9a72`
   - `git_commit`: `5f1708d989269562d9182ed630336104c258da2e`
+  - `git_commit`: `9004fd5087c0a24bfe253f0b166a8cf91fae813f`
   - `manager_pass`: `558`
   - `manager_pass`: `559`
   - `manager_pass`: `597`
+  - `manager_pass`: `598`
 - **Dependencies:** `HP-ANGULAR-TEST-CONTROL-FN-01`
-- **Scope:** none. Add no committed test. Accept the maintenance amendment only after separate processes cover unset, blank, invalid, existing-but-unloadable, and valid configuration; the valid path must resolve to the configured module and pass the isolated 66-check adapter owner. Do not rerun full angular. Require package load, authority/self-test, docs, Documenter, diff checks, source-bearing CI, and Docs.
+- **Scope:** none. Preserve separate-process coverage of unset, blank, invalid, existing-but-unloadable, and valid paths plus the isolated 66-check adapter owner. Full angular is not required for portability maintenance. No committed test or implementation grant remains.
 
 ### HP-AUTHORITY-EXECUTION-WHITELIST-FN-01 - whole-file execution whitelist authority view
 

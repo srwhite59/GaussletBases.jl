@@ -1154,3 +1154,24 @@ production source, workflow, dependency, discovery, fallback, cache change, or
 new test is authorized. MT1 gains a bounded conformance repair; MT5/MT6 and all
 release state remain unchanged. The exact blocker is now repo-manager's
 single-function implementation and validation.
+
+## Cartesian Hamiltonian Producer Pass 598 - Close Portable HFDMRG Test Path
+
+Accepted implementation `9004fd5087c0a24bfe253f0b166a8cf91fae813f`.
+`_local_hfdmrg_module()` now reads only `GAUSSLETBASES_HFDMRG_SRC`: blank is
+optional-consumer absence, a non-directory raises a clear `ArgumentError`, and
+configured-directory load/import failures propagate through the unchanged
+cache and handshake. The exact test-runner delta is `+4/-2`; no production
+source, dependency, workflow, helper, fallback search, or numerical assertion
+changed.
+
+Repo-manager's five fresh-process cases passed, and clean HFDMRG revision
+`19e11fc2b12a142138dc3324f585d8aa92d46098` passed the isolated adapter owner
+`66/66` in `14m07.8s`. Manager replay independently reproduced the four cheap
+control-flow cases and resolved the valid module to that clean checkout. The
+angular owner blob is unchanged; its full 16-minute suite was correctly not
+repeated. Package/docs/authority/Documenter checks, full source-bearing CI
+`33876664840`, and Docs `33876664823` passed at the implementation SHA. MT1's
+portability defect is closed; MT5/MT6 and release state are unchanged. The
+remaining guardrail is explicit configuration only: no personal fallback or
+filesystem discovery may return.
