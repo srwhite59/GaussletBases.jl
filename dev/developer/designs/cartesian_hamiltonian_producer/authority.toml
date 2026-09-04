@@ -4923,12 +4923,12 @@ title = "validate expert staged Cartesian construction documentation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-COMP-NS-FN-01", "HP-PQS-READER-DOC-01", "HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01", "HP-R1-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-FN-01"
-lifecycle = "approved"
-scope = "Expand only the existing `cartesian_base_hamiltonian` docstring, Export reference, and PQS manual under the canonical front-door contract: exact validated schemas/defaults/geometry, supported `q`/`ns` normalization, atom-only `d`, corrected examples, one compact PQS snippet, and `Vee` field mapping. Preserve Example 39 as the sole numerical execution and leave metadata spelling, behavior, API, workflow, artifacts, and release state unchanged."
+lifecycle = "implemented"
+scope = "Maintain the accepted front-door documentation under the canonical Public Cartesian Front-Door Documentation heading: facade schemas/defaults/geometry, supported `q`/`ns`, atom-only `d`, corrected Export example, PQS snippet, and `Vee` mapping. Preserve Example 39 as the numerical owner and the provenance spelling. No behavior, API, workflow, artifact, or release changes."
 surfaces = ["docs", "source"]
-title = "repair the public Cartesian front-door documentation"
+title = "maintain the public Cartesian front-door documentation"
 
     [[records.document_refs]]
     heading = "Public Cartesian Front-Door Documentation"
@@ -4938,6 +4938,9 @@ title = "repair the public Cartesian front-door documentation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "599"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "600"
 
     [[records.paths]]
     kind = "docs"
@@ -4953,10 +4956,10 @@ title = "repair the public Cartesian front-door documentation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-READER-TEST-01", "HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-FN-01", "HP-R1-TEST-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-TEST-01"
-lifecycle = "approved"
-scope = "Add only focused structural checks in `test/docs/runtests.jl`: syntax-parse the canonical snippet; verify its exact schema, public call shape, Example 39 equivalence, corrected `d`, `q`/`ns`, geometry, and `Vee` identities. Construct no Hamiltonian, add no test file or parser framework, and change no numerical, workflow, API, artifact, metadata, or release policy."
+lifecycle = "completed"
+scope = "Maintain the accepted structural checks in `test/docs/runtests.jl` under the canonical Public Cartesian Front-Door Documentation heading: parsed snippet schema/call, Example 39 inputs, corrected `d`, `q`/`ns`, geometry, and `Vee` identities. Construct no Hamiltonian and add no parser framework, numerical assertion, workflow, API, metadata, artifact, or release policy."
 surfaces = ["tests"]
 title = "validate the public Cartesian front-door documentation"
 
@@ -4968,6 +4971,9 @@ title = "validate the public Cartesian front-door documentation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "599"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "600"
 
     [[records.paths]]
     kind = "test"
