@@ -469,6 +469,157 @@ algorithm pointers, orphan-page deletion, workflows, deployment/version
 policy, releases, and other review items. If truthful wording requires an
 interface, test, policy, or broader path change, stop and report before commit.
 
+## Reference Discoverability First Subset
+
+Pass 604 audited `493c295bc64c481b93e12dc2b3efa16d508ed79f` against the
+September 4 external review. There are 351 root exports excluding the module,
+346 with documentation, and 219 whose documentation is rendered in reference
+pages. The verified missing inventory is 127 documented names, not 133.
+The five reserved undocumented names are not missing docstrings to publish.
+`QiuWhiteHybridOrbital3D` inherits the rendered `OrdinaryCartesianOrbital3D`
+documentation; it lacks a separate alias entry, not underlying documentation.
+`LegacySGaussianData` has its own rendered alias docstring.
+`CuratedSpherePointSet` has its own unrendered alias docstring and remains in
+the missing inventory. Imported TimeG bindings are counted by their owning
+binding; the imported reference-density bindings are already rendered.
+
+### Installed Documenter Decision
+
+Julia 1.12.6 / Documenter 1.17.0 scratch builds and installed `docchecks.jl`
+establish that `checkdocs=:exports` recursively includes submodules. The
+unchanged site produces 217 missing docstrings across 206 bindings: 127
+root-public bindings / 136 signatures and 79 other bindings / 81 signatures.
+This is not a root-only discoverability check. It would pull internal
+Cartesian exports into the reference boundary.
+
+The checker enumerates existing documentation metadata, so the five reserved
+undocumented exports do not fail it and need no placeholder or reserved
+`@docs` block. Alias-local docstrings are independent; rendering only an
+undocumented alias does not satisfy its canonical binding's coverage.
+The scratch fixture passed with complete canonical/alias documentation,
+failed when the documented alias was omitted, and failed when only one of
+two documented method signatures was included. Generic `@docs` entries render
+all available documented signatures. It is not an every-method-docstring rule.
+
+Keep `checkdocs=:none` in this first subset. Do not add a module-ignore list,
+global inventory framework, empty documentation, or source/export changes to
+force global coverage. Existing docs_fast retains the exact five-name set.
+
+### Exact Authorized Placement
+
+`HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01` adds the following 49 previously
+unrendered names through ordinary canonical `@docs` entries. Reuse docstrings
+without copying their prose. Compact headings may divide types from expert
+representation inspection. Do not add runnable examples or duplicate existing
+entries, including existing GTO, PQS, and screening references.
+
+`reference/bases_and_mappings.md` (29):
+
+```text
+AbstractFunction1D AbstractPrimitiveFunction1D AbstractBasisFunction1D
+AbstractCoordinateMapping AbstractBasisSpec Gaussian HalfLineGaussian
+XGaussian Distorted GaussletFamily Gausslet MappedGausslet BoundaryGausslet
+RadialGausslet StencilTerm FunctionStencil UniformBasis MappedUniformBasis
+HalfLineBasis RadialBasis RadialQuadratureGrid PrimitiveSet1D BasisMetadata1D
+BasisRepresentation1D basis_representation primitive_set primitives
+stencil_matrix moment_center
+```
+
+`reference/operators_and_diagnostics.md` (4), operator conventions/resources:
+
+```text
+AbstractDiagonalApproximation IntegralDiagonal position_matrix
+coulomb_gaussian_expansion
+```
+
+`reference/atomic_and_ordinary.md` (16), atomic channel inspection followed
+by Cartesian overlap/projector/transfer and its representation/result types:
+
+```text
+YlmChannel YlmChannelSet ylm_channels channel_range channel_overlap
+channel_hamiltonian CartesianBasisMetadata3D CartesianBasisRepresentation3D
+CartesianGaussianShellOrbitalRepresentation3D
+CartesianGaussianShellSupplementRepresentation3D
+CartesianBasisTransferDiagnostics CartesianBasisProjector3D
+CartesianOrbitalTransferResult cross_overlap basis_projector transfer_orbitals
+```
+
+Preserve representation-family restrictions and the distinction between the
+Cartesian transfer helper's documented optional cleanup and external-GTO raw
+projection/explicit determinant preparation. Self-overlaps remain diagnostic;
+this presentation grants no generalized-overlap policy or new schema promise.
+Expert inspection must be labeled as such; no experimental producer is promoted.
+
+### Remaining Verified Inventory, Not Authorized
+
+The following 78 documented names remain absent after the proposed subset.
+Later placement should group mapping/PGDG in bases, primitive/timing utilities
+in operators, QW and radial-GTO bridges in atomic/ordinary, and angular
+producers/export adapters in explicitly experimental reference sections.
+`QWRGResidualSpaceDiagnostics` retains its separate future namespace decision.
+
+```text
+@timeg AtomicInjectedAngularCartesianMomentBundle AtomicInjectedAngularHFDMRGHFAdapter
+AtomicInjectedAngularHFStyleBenchmark AtomicInjectedAngularOneBodyBenchmark
+AtomicInjectedAngularSmallEDBenchmark AtomicShellLocalInjectedAngularAssembly
+AxisAlignedHomonuclearSquareLatticeQWBasis3D BondAlignedHomonuclearChainQWBasis3D
+CartesianGTOSubspaceProjectionResult CombinedInvsqrtMapping CuratedSpherePointSet
+LegacyBondAlignedDiatomicGaussianSupplement LegacyBondAlignedHeteronuclearGaussianSupplement
+MappedPGDGLocalized1D MappedPGDGPrototype1D QWRGResidualSpaceDiagnostics
+RadialYlmCartesianGTOAdapter RadialYlmCartesianProjectionResult RadialYlmSolidHarmonicGTOFit
+ShellLocalInjectedAngularBasis SpherePointSet SpherePointSetProvenance
+assembled_one_body_hamiltonian assign_atomic_angular_shell_orders
+atomic_fixed_radial_legacy_dmrgatom_payload atomic_injected_angular_hf_style_diagnostics
+atomic_injected_angular_hfdmrg_hf_adapter_diagnostics atomic_injected_angular_one_body_diagnostics
+atomic_injected_angular_small_ed_diagnostics atomic_shell_local_angular_diagnostics
+axis_aligned_homonuclear_square_lattice_qw_basis bond_aligned_heteronuclear_qw_basis
+bond_aligned_homonuclear_chain_qw_basis bond_aligned_homonuclear_qw_basis
+build_atomic_injected_angular_cartesian_moments build_atomic_injected_angular_hf_style_benchmark
+build_atomic_injected_angular_hfdmrg_hf_adapter build_atomic_injected_angular_hfdmrg_hf_seeds
+build_atomic_injected_angular_hfdmrg_payload build_atomic_injected_angular_one_body_benchmark
+build_atomic_injected_angular_small_ed_benchmark build_atomic_shell_local_angular_assembly
+build_one_center_atomic_full_parent_shell_sequence build_one_center_atomic_legacy_profile_shell_sequence
+build_shell_local_injected_angular_basis contract_primitive_diagonal contract_primitive_matrix
+contract_primitive_vector curated_sphere_point_set curated_sphere_point_set_orders current_timing_report
+evaluate_radial_ylm_gto_fit fibonacci_sphere_point_set fit_combined_invsqrt_mapping
+fit_radial_ylm_to_solid_harmonic_gto gaussian_factor_matrices gaussian_factor_matrix
+mapped_pgdg_localized mapped_pgdg_prototype one_center_atomic_full_parent_fixed_block
+one_center_atomic_legacy_profile_fixed_block optimize_sphere_point_set
+project_cartesian_gto_to_supplement_subspace project_radial_ylm_gto_adapter_to_cartesian
+radial_ylm_fit_cartesian_gto_adapter reset_timing_report! run_atomic_injected_angular_hfdmrg_hf
+set_timing! set_timing_live! set_timing_thresholds! shell_local_injected_angular_diagnostics
+sphere_point_set sphere_point_set_orders timing_enabled timing_live_enabled timing_report
+write_atomic_fixed_radial_legacy_dmrgatom_jld2
+```
+
+### Budget, Safeguard, And Acceptance
+
+Expected net reader-documentation growth is 75-105 lines; preferred/hard added
+lines are 105/125 across the three pages. Only short orienting/limiting prose
+and headings surround the reused docstrings. No new file, source docstring,
+manual, navigation, workflow, dependency, release, or deployment edit.
+
+`HP-PUBLIC-REFERENCE-DISCOVERY-DOC-TEST-01` permits 20/28 preferred/hard added
+lines in existing `test/docs/runtests.jl`: grouped structural membership of
+these exact names in canonical `@docs` blocks on their assigned pages, not
+descriptive phrase matching. Use direct checks, no reusable parser/helper,
+snapshot, global missing-name allowlist, or new inventory owner. Existing
+public-surface checks remain byte-identical. This catches reference removal
+that docs_fast cannot catch; do not duplicate export/hasdoc assertions.
+
+Validate all 49 entries render, with no duplicate-docstring errors and the
+same documented signatures; the corrected missing count becomes 78, not zero.
+The production-navigation scratch build rendered 268 objects versus 219 at
+baseline, with all selected entries and the exact reserved set verified.
+Use existing docs_fast/full docs, package load, authority/self-test,
+deterministic views, manager-log bound, Documenter, and diff checks. Require
+remote docs-only CI with all three marker jobs and separate Docs deployment;
+no numerical suite rerun. `/dev/` changes; `/stable/` remains immutable v0.2.0.
+If docstrings need source correction, alias handling requires new machinery,
+or bounds cannot be respected, stop before commit and report. Remaining
+inventory and global Documenter coverage need separate review, not automatic
+follow-on authority.
+
 ## Failure Behavior
 
 Malformed public requests throw, normally with `ArgumentError`, before

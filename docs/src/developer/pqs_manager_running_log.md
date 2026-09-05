@@ -1301,3 +1301,35 @@ closeout uses the existing docs-only checks, not another numerical run.
 `HP-PUBLIC-STATUS-ONBOARDING-DOC-01` is implemented/maintenance with no
 remaining implementation grant or blocker. `/stable/` and release state remain
 unchanged; other review items require a separate decision.
+
+## Cartesian Hamiltonian Producer Pass 604 - Reference Discoverability Preflight
+
+At `493c295bc`, independently corrected Fable's 133-name claim to 127:
+351 exports excluding the module, 346 documented, 219 rendered after alias
+resolution. Five reserved names are deliberately undocumented; the Qiu-White
+hybrid alias already resolves to rendered canonical documentation. Installed
+Documenter 1.17.0 recursively checks submodules: naive `:exports` reports
+217 signatures / 206 bindings, including internal Cartesian owners. Scratch
+strict fixtures confirm reserved names need no placeholders, documented
+aliases need their own entries, and partial method entries leave uncovered
+signatures. No global policy change is justified by that audit.
+
+Authorize only 49 radial/tutorial, atomic-channel, and Cartesian transfer
+bindings in three existing reference pages; reuse their source docstrings.
+The production-navigation scratch build rendered all 49 (268 objects total)
+with the five-name set unchanged. Exact selected/deferred inventories and
+checker findings are recorded in the canonical contract, not only scratch.
+Evidence: `/Users/srw/dmrgtmp/reference_audit_20260904/` and
+`/Users/srw/dmrgtmp/reference_subset_20260904/`; strict fixture results are in
+`/Users/srw/dmrgtmp/reference_checker_fixture_20260904/`.
+
+MT1/MT6 advance discoverability without promoting experimental machinery.
+Expected reader growth 75-105 lines, hard 125; tests 20/28 preferred/hard,
+no helper or new owner. Deleted: none, because these are live contracts;
+simplified: access to existing documentation. Quarantined: remaining 78
+reference gaps, global coverage policy, and other review items. Source
+`+0/-0`; no metadata/status field or numerical test. Validate existing docs,
+authority/self-test/views, package load, Documenter, and remote docs-only
+CI/Docs. Repo-manager waits for this grant and checks; `/stable/`, releases,
+and the five reserved names remain unchanged. Next blocker: implementation
+and separate lifecycle closeout, not completion of all reference coverage.

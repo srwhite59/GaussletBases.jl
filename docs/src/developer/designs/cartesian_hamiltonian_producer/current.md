@@ -38,6 +38,12 @@ claim.
 
 ## Active And Pending Work
 
+Pass 604 authorizes only the 49-name Reference Discoverability First Subset
+through `HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01` and
+`HP-PUBLIC-REFERENCE-DISCOVERY-DOC-TEST-01`. The corrected gap is 127 documented
+root exports; 78 remain outside this grant. Global Documenter export checking,
+internal-submodule reference promotion, and reserved-name changes are excluded.
+
 | Lane | State | Exact next boundary |
 | --- | --- | --- |
 | `HP-AUTHORITY-EXECUTION-WHITELIST-*` | Whole-file views and root-doc recognition implemented; maintenance | Preserve existing DESIGN.md, ROADMAP.md, and STATUS.md path recognition, planned-state restrictions, deterministic views, and every other fail-closed rule |

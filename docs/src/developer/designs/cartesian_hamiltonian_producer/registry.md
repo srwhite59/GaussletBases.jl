@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `0e12e2fe5408aecbafb00e0871156f41e3348ec12102db0c937a2909e0c3c4e5`.
+> [authority.toml](authority.toml), SHA-256 `82f68529f249e073c9930b263110230355eeef964e67243cf2a3534bca9e6229`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -3216,6 +3216,39 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `565`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-FOUNDATION-DOC-TEST-01`, `HP-PUBLIC-RADIAL-PARITY-DOC-FN-01`
 - **Scope:** Maintain only the accepted focused documentation checks in test/docs/runtests.jl from commit 84ebdc5792c954b4c09f08b53ba86ef9332bf6b8. They require RadialBoundaryPrototype, radial\_boundary\_prototype, radial\_boundary\_prototype\_names, and build\_paper\_parity\_radial\_basis to remain exported, documented, and colocated in the curated expert radial paper-parity section; require the recommended setup to retain RadialBasisSpec as the ordinary front door and distinguish exact widths 0.09358986806 and 0.02357750369 from rounded presets 0.0936 and 0.0236; and preserve the artifact-backed cached/read-only, sole supported name, non-registry, unknown-name rejection, frozen-boundary extension, legacy\_strict\_trim default, build\_basis(prototype; ...), controlled-comparison-only, and inspection-data boundaries. The undocumented exported-binding count, excluding the module self-binding, is exactly 12 after the accepted 16-to-12 reduction. The accepted docs-test delta is +14/-1. Documenter remains the executable @docs resolution gate; the existing radial owner passed 322/322 and Supported-floor CI remains unchanged. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, artifact or cache test, export change, dependency, example, version, tag, or release work.
+
+### HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01 - expose radial and Cartesian transfer reference contracts
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `Reference Discoverability First Subset`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/reference/atomic_and_ordinary.md`
+  - `docs` / `existing`: `docs/src/reference/bases_and_mappings.md`
+  - `docs` / `existing`: `docs/src/reference/operators_and_diagnostics.md`
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `604`
+- **Dependencies:** `HP-PUBLIC-ATOMIC-IDA-DOC-FN-01`, `HP-PUBLIC-FOUNDATION-DOC-FN-01`
+- **Scope:** Render the exact 49 bindings in three reference pages and protect their placement in the shared docs-test owner under Reference Discoverability First Subset. Reuse docstrings and compact headings. Preserve aliases, reserved exports, source/API, numerical behavior, global checkdocs policy, navigation, workflows, and release/deployment state. No new file or remaining-inventory authority.
+
+### HP-PUBLIC-REFERENCE-DISCOVERY-DOC-TEST-01 - protect focused rendered-reference membership
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `Reference Discoverability First Subset`
+- **Owned paths:**
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `604`
+- **Dependencies:** `HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01`
+- **Scope:** Add compact canonical @docs membership checks for the 49 assigned bindings in test/docs/runtests.jl under Reference Discoverability First Subset. Preserve public\_surface\_runtests.jl, prose freedom, and existing mechanical policies. No helper framework, snapshot, global inventory, numerical test, source/API, workflow, or release change.
 
 ### HP-PUBLIC-SLICED-HCHAIN-DOC-FN-01 - document experimental sliced hydrogen-chain operators
 
