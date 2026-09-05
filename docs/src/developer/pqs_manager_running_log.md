@@ -1356,3 +1356,33 @@ MT2 completed; MT3 blocked on the represented mixed-density Hartree owner;
 MT4 active with unchanged residual/protected boundaries; MT5 active/maintenance
 for authority and mechanical checks; MT6 active with the bounded reference
 subset now closed; MT7 completed/maintenance. No new implementation lane opens.
+
+## Cartesian Hamiltonian Producer Pass 606 - Reference Completion Authority
+
+Revalidated all 78 deferred names at `3c4325a5a` against the frozen Pass 604
+inventory. One coherent packet fits four existing reference pages: mapped/PGDG
+construction (6), primitive/timing utilities (14), expert/experimental QW and
+nesting (14), radial-GTO and experimental angular producers/adapters (44).
+Production-navigation scratch rendering resolves every selected binding and
+documented signature without duplicate inclusion. Page sizes are 104149,
+51085, 173775, and 127089 bytes, below the unchanged 200 KiB limit.
+
+The scratch native export check leaves no documented root-public gaps; its
+remaining 81 docstrings / 79 bindings are internal to recursively included
+submodules. Keep the existing structural safeguard and `checkdocs=:none`;
+forcing global coverage would require unrelated policy or promotion. The five
+reserved names and documented alias handling remain unchanged. Exact grouped
+inventory, classifications, and acceptance live in Reference Discoverability
+Completion, not a new inventory framework. Scratch evidence is under
+`/Users/srw/dmrgtmp/reference_completion_20260905/`.
+
+MT1/MT6 advance reference completeness without changing supported scope.
+Expected reader growth 145-185 lines, preferred/hard additions 190/220;
+structural test extension 40/50. Deleted: none, because these docstrings serve
+live exports; simplified: one completion packet rather than arbitrary batches.
+Quarantined: internal promotion, reserved namespace changes, releases and stable
+deployment. Source `+0/-0`; no new test owner, helper, metadata, or status field.
+Validate docs, authority/self-test/views, package load, Documenter, log bound,
+diff checks and remote docs-only CI/Docs; no numerical reruns. Repo-manager
+waits for this commit and checks before implementation; separate closeout is
+the remaining blocker. This pass grants no implementation in the current role.

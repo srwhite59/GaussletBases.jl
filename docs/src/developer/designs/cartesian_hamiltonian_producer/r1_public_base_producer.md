@@ -620,6 +620,208 @@ or bounds cannot be respected, stop before commit and report. Remaining
 inventory and global Documenter coverage need separate review, not automatic
 follow-on authority.
 
+## Reference Discoverability Completion
+
+Pass 606 revalidates the frozen remaining inventory against
+`3c4325a5aa3c100f226052d387fed5a03af28b95`. The first 49 entries are accepted;
+this amendment supersedes only their deferred-inventory restriction, not their
+existing safeguards. Authorize all remaining 78 documented root-public names
+together: six in bases, fourteen in operators, fourteen in atomic/ordinary,
+and forty-four in export. This closes the documented-reference gap from 78
+to zero without changing the five deliberately undocumented exports.
+
+### Exact Completion Placement
+
+**Expert mapped and experimental PGDG construction** in `reference/bases_and_mappings.md` (6):
+
+```text
+CombinedInvsqrtMapping
+fit_combined_invsqrt_mapping
+MappedPGDGPrototype1D
+MappedPGDGLocalized1D
+mapped_pgdg_prototype
+mapped_pgdg_localized
+```
+
+**Primitive contraction and Gaussian factors** in `reference/operators_and_diagnostics.md` (5):
+
+```text
+contract_primitive_vector
+contract_primitive_diagonal
+contract_primitive_matrix
+gaussian_factor_matrix
+gaussian_factor_matrices
+```
+
+**Coarse timing controls** in `reference/operators_and_diagnostics.md` (9):
+
+```text
+@timeg
+timing_enabled
+timing_live_enabled
+set_timing!
+set_timing_live!
+set_timing_thresholds!
+reset_timing_report!
+current_timing_report
+timing_report
+```
+
+**Expert QW geometry and supplement construction** in `reference/atomic_and_ordinary.md` (5):
+
+```text
+LegacyBondAlignedDiatomicGaussianSupplement
+LegacyBondAlignedHeteronuclearGaussianSupplement
+bond_aligned_homonuclear_qw_basis
+bond_aligned_heteronuclear_qw_basis
+assembled_one_body_hamiltonian
+```
+
+**Experimental chain and square geometry** in `reference/atomic_and_ordinary.md` (4):
+
+```text
+BondAlignedHomonuclearChainQWBasis3D
+AxisAlignedHomonuclearSquareLatticeQWBasis3D
+bond_aligned_homonuclear_chain_qw_basis
+axis_aligned_homonuclear_square_lattice_qw_basis
+```
+
+**Expert atomic nesting and legacy profile** in `reference/atomic_and_ordinary.md` (4):
+
+```text
+build_one_center_atomic_full_parent_shell_sequence
+one_center_atomic_full_parent_fixed_block
+build_one_center_atomic_legacy_profile_shell_sequence
+one_center_atomic_legacy_profile_fixed_block
+```
+
+**Expert compatibility diagnostic** in `reference/atomic_and_ordinary.md` (1):
+
+```text
+QWRGResidualSpaceDiagnostics
+```
+
+**Expert radial Ylm to Cartesian GTO bridge** in `reference/export.md` (9):
+
+```text
+RadialYlmSolidHarmonicGTOFit
+RadialYlmCartesianGTOAdapter
+RadialYlmCartesianProjectionResult
+CartesianGTOSubspaceProjectionResult
+fit_radial_ylm_to_solid_harmonic_gto
+evaluate_radial_ylm_gto_fit
+radial_ylm_fit_cartesian_gto_adapter
+project_radial_ylm_gto_adapter_to_cartesian
+project_cartesian_gto_to_supplement_subspace
+```
+
+**Experimental angular point sets and shell assembly** in `reference/export.md` (16):
+
+```text
+SpherePointSetProvenance
+SpherePointSet
+CuratedSpherePointSet
+fibonacci_sphere_point_set
+optimize_sphere_point_set
+sphere_point_set
+sphere_point_set_orders
+curated_sphere_point_set
+curated_sphere_point_set_orders
+ShellLocalInjectedAngularBasis
+build_shell_local_injected_angular_basis
+shell_local_injected_angular_diagnostics
+AtomicShellLocalInjectedAngularAssembly
+assign_atomic_angular_shell_orders
+build_atomic_shell_local_angular_assembly
+atomic_shell_local_angular_diagnostics
+```
+
+**Experimental angular benchmarks and consumer adapters** in `reference/export.md` (17):
+
+```text
+AtomicInjectedAngularOneBodyBenchmark
+AtomicInjectedAngularCartesianMomentBundle
+AtomicInjectedAngularHFStyleBenchmark
+AtomicInjectedAngularHFDMRGHFAdapter
+AtomicInjectedAngularSmallEDBenchmark
+build_atomic_injected_angular_one_body_benchmark
+build_atomic_injected_angular_cartesian_moments
+build_atomic_injected_angular_hf_style_benchmark
+build_atomic_injected_angular_hfdmrg_hf_adapter
+build_atomic_injected_angular_hfdmrg_hf_seeds
+build_atomic_injected_angular_hfdmrg_payload
+build_atomic_injected_angular_small_ed_benchmark
+atomic_injected_angular_one_body_diagnostics
+atomic_injected_angular_hf_style_diagnostics
+atomic_injected_angular_hfdmrg_hf_adapter_diagnostics
+atomic_injected_angular_small_ed_diagnostics
+run_atomic_injected_angular_hfdmrg_hf
+```
+
+**Experimental legacy fixed radial consumer export** in `reference/export.md` (2):
+
+```text
+atomic_fixed_radial_legacy_dmrgatom_payload
+write_atomic_fixed_radial_legacy_dmrgatom_jld2
+```
+
+Reuse each existing docstring through a canonical, unspecialized `@docs`
+entry, including its documented methods. Preserve supported interfaces as
+supported, and explicitly label the expert and experimental groups above;
+rendering does not promote scientific maturity or compatibility. Short
+orientation may distinguish mapped construction from PGDG prototypes, radial
+fit from Cartesian adapter, and angular producers from downstream solvers.
+The radial-GTO supplement-subspace diagnostic does not change final-basis
+overlap policy. Legacy angular adapters do not imply general restart support.
+`QWRGResidualSpaceDiagnostics` remains subject to its existing future
+namespace decision; documenting its existing docstring grants no de-export
+and must not include the reserved `diagnose_qwrg_residual_space`.
+
+### Completion Evidence And Coverage Decision
+
+A production-navigation scratch build with Julia 1.12.6 / Documenter 1.17.0
+resolved all 78 entries, including the separately documented
+`CuratedSpherePointSet` alias and imported TimeG bindings, with no duplicate
+inclusion. All root-public documented bindings are covered after alias
+resolution; the five reserved names remain unchanged. Rendered reference
+sizes were 104149, 51085, 173775, and 127089 bytes respectively. These fit the
+unchanged 200 KiB limit; no further arbitrary subset is necessary.
+
+Native `checkdocs=:exports` still reports 81 docstrings for 79 non-root-public
+bindings from recursively included submodules, and no root-public gaps.
+It therefore cannot replace the focused safeguard unchanged. Do not introduce
+module exclusions, internal documentation promotion, empty docstrings, or
+coverage machinery to make it pass. Keep production `checkdocs=:none`.
+The native check also does not enforce placement in the reference pages.
+The five reserved undocumented names need no native-check exceptions.
+
+### Completion Budget And Acceptance
+
+Allowed implementation paths are the four existing reference pages above and
+`test/docs/runtests.jl`. Expected net reader growth is 145-185 lines;
+preferred/hard added documentation lines are 190/220. Extend the existing
+grouped canonical-block membership check to these 78 names and the export page,
+retaining its first 49 names and all other mechanical policies. Preferred/hard
+added test lines are 40/50. No new helper, parser, inventory framework,
+snapshot, prose lock, numerical assertion, test owner, or file.
+`test/docs/public_surface_runtests.jl` remains byte-identical.
+
+Require all 78 rendered entries, zero remaining documented-root reference
+gaps with the accepted alias treatment, no duplicate inclusion, unchanged
+reserved-name/API contract, and the usual page-size limits. Validate existing
+docs_fast/full docs, package load, authority/self-test, deterministic generated
+views, manager-log bound, Documenter, and diff checks. Require remote docs-only
+CI with three successful named markers and separate Docs deployment. Inspect
+the four live reference pages; do not rerun numerical matrices, angular
+benchmarks, HFDMRG, or paper examples for this presentation-only change.
+
+No source/docstring correction, export/API change, navigation, dependency,
+workflow, release, tag, or deployment-policy edit is granted. Only `/dev/`
+is corrected; `/stable/` remains immutable v0.2.0. If any docstring requires
+source repair, resolution requires new machinery, or budgets/page sizes
+cannot be respected, stop before commit and report rather than broaden.
+Implementation and its separate lifecycle closeout remain required.
+
 ## Failure Behavior
 
 Malformed public requests throw, normally with `ArgumentError`, before
