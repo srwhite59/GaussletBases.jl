@@ -38,6 +38,13 @@ claim.
 
 ## Active And Pending Work
 
+Pass 608 authorizes `HP-PUBLIC-ONBOARDING-EXAMPLES-TEST-01`: move only examples
+02, 03, 04, and 15 from slow to quick selection, exactly `+4/-4` runner lines.
+Fresh Julia 1.12.6 added cost is 17.95s; no artifacts were written. The canonical
+Onboarding Example CI Selection heading owns acceptance and exclusions.
+Repo-manager waits for this authority commit and checks before implementation.
+Workflow, timeout, other examples, and Example 41's shared calculation stay fixed.
+
 Pass 607 closes Reference Discoverability Completion at `88b081589`:
 `HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01` is implemented/maintenance and
 `HP-PUBLIC-REFERENCE-DISCOVERY-DOC-TEST-01` completed/maintenance, with no

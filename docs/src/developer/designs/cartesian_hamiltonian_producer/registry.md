@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `0f0ed4c7a6ff596377934f615836477f852179fbd8156e278d61aca11547cfb3`.
+> [authority.toml](authority.toml), SHA-256 `feba5b94acc2736b3243f6abe970fabf8b344eb51015387327693566a69c9ea0`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -3023,6 +3023,21 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `549`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-FOUNDATION-DOC-TEST-01`, `HP-PUBLIC-FUNCTION-STENCIL-DOC-FN-01`
 - **Scope:** Maintain only the accepted family-scoped checks from 624718972627b5ebf74beaa57ad73b8725aac587 that the exact nine function-evaluation/stencil bindings remain exported, carry Julia documentation, and appear in docs/src/reference/bases\_and\_mappings.md. Preserve Documenter as the executable @docs resolution gate and the accepted undocumented-export count of 52. Add no global undocumented-name inventory or allowlist, checkdocs change, parser framework, test file, numerical assertion, fixture, workflow, source behavior, or broader reference-page scan.
+
+### HP-PUBLIC-ONBOARDING-EXAMPLES-TEST-01 - run recommended onboarding examples in routine CI
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `Onboarding Example CI Selection`
+- **Owned paths:**
+  - `test` / `existing`: `test/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `608`
+- **Dependencies:** `HP-PUBLIC-PAPER-CI-FN-01`
+- **Scope:** Move only the existing example 02, 03, 04, and 15 assertions from slow to quick selection in test/runtests.jl under Onboarding Example CI Selection, exactly +4/-4. Preserve scripts, runner, all other selections, and numerical behavior. No workflow, timeout, framework, source/API, dependency, fixture, release, or other-example change.
 
 ### HP-PUBLIC-PAPER-CI-FN-01 - paper-aligned PQS and screening CI workflow
 

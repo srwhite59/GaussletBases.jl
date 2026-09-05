@@ -113,7 +113,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_one_center_
 sha256 = "57cba2b45fc434cf372885b131ee0198e569527b6977b65168cebff29ee99223"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
-sha256 = "041d2058d6bcc439e65ff94c5cb52514d923dbfeae98bef40272e2872e4b239e"
+sha256 = "83fa4170e0579e695069eaea92d331a1f6c079517cca798006b9cc3a9e15570d"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_homonuclear_diatomic_supplemented_workflow.md"
 sha256 = "36e4007e97e7d32d95ee3fc024e362b71c3fa865ce3b9e0066189b99327b48e9"
@@ -5307,6 +5307,28 @@ title = "validate function evaluation and stencil documentation"
     [[records.paths]]
     kind = "test"
     path = "test/docs/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PUBLIC-PAPER-CI-FN-01"]
+grant = "implementation"
+id = "HP-PUBLIC-ONBOARDING-EXAMPLES-TEST-01"
+lifecycle = "approved"
+scope = "Move only the existing example 02, 03, 04, and 15 assertions from slow to quick selection in test/runtests.jl under Onboarding Example CI Selection, exactly +4/-4. Preserve scripts, runner, all other selections, and numerical behavior. No workflow, timeout, framework, source/API, dependency, fixture, release, or other-example change."
+surfaces = ["tests"]
+title = "run recommended onboarding examples in routine CI"
+
+    [[records.document_refs]]
+    heading = "Onboarding Example CI Selection"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "608"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PUBLIC-COMPAT-FN-01", "HP-PQS-PUBLIC-MATCHED-TEST-01", "HP-PQS-PUBLIC-SCREEN-TEST-01"]

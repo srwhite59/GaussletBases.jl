@@ -822,6 +822,64 @@ source repair, resolution requires new machinery, or budgets/page sizes
 cannot be respected, stop before commit and report rather than broaden.
 Implementation and its separate lifecycle closeout remain required.
 
+## Onboarding Example CI Selection
+
+Pass 608 at `8b6664676682774d1f5b91425e966f3d755be0bb` independently confirms
+that README, the example guide, and the examples index recommend 01-04,
+followed by 15 for explicit angular channels. Routine Supported-floor CI runs
+the `examples` group with slow tests disabled: only 01, 39, and 40 currently
+run there. The four onboarding scripts below are present only in its slow list.
+
+Fresh Julia 1.12.6 processes using the existing runner's launch flags and
+normal depot passed with these wall times, including startup and compilation:
+
+| Script | Seconds |
+| --- | ---: |
+| `02_radial_basis.jl` | 3.006 |
+| `03_radial_operators.jl` | 3.580 |
+| `04_hydrogen_ground_state.jl` | 5.086 |
+| `15_atomic_hydrogen_ylm.jl` | 6.281 |
+| Total added quick-selection cost | 17.953 |
+
+Each ran in a separate empty machine-local working directory and left it
+empty; source inspection confirms stdout-only reporting, no artifact writes.
+No temporary-output interface or example edit is needed. This measures fresh
+processes with an installed environment, not clean-depot preparation or Linux
+CI timing. Verified CI `33932844939` completed Supported floor in 8m25s;
+the unchanged 30-minute timeout has ample prospective headroom, subject to the
+required new remote measurement. Logs reside under
+`/Users/srw/dmrgtmp/onboarding_preflight_20260905/`.
+
+Authorize only `HP-PUBLIC-ONBOARDING-EXAMPLES-TEST-01`, a test-selection grant:
+move the four existing `_run_example_script` assertions in `test/runtests.jl`
+to the quick testset immediately after 01, in order 02, 03, 04, 15. Delete
+their corresponding slow-list entries. Exact implementation budget is
+`+4/-4` lines in that one file, with no added numerical assertion or helper.
+The quick set becomes 01, 02, 03, 04, 15, 39, 40. Both slow-disabled and
+slow-enabled selection execute each of the four moved scripts exactly once.
+Preserve the example runner, numerical scripts, all other list entries,
+groups, aliases, and selection semantics. The pre-existing duplicate 01 in
+the slow list is not part of this four-script packet.
+
+Acceptance requires the expanded quick example owner to pass `7/7` and report
+elapsed time. Inspect selection structurally for exactly one occurrence of
+each moved script outside the slow conditional; do not run the entire slow
+suite just to verify this list move. Run normal package, authority/self-test,
+docs, generated-view, Documenter, log-bound, and diff checks. The runner edit
+must classify full: require all three existing remote numerical jobs and Docs
+to pass, with Supported floor visibly running seven quick examples and its
+elapsed time recorded comfortably below the existing timeout. If the added
+cost is disproportionate or the job loses practical headroom, stop and report;
+do not change timeout, workflow, or script content. Closeout is docs-only.
+
+No workflow, CI row, framework, new test owner/file, dependency, fixture,
+source/API, numerical policy, cache, artifact, release, or stable-documentation
+change is granted. Other unselected examples remain separately classified.
+Example 41 already shares its complete comparison with the 18-assertion PQS
+release owner; its absence from the script list is intentional, not a gap.
+No blanket weekly wiring or follow-on implementation is authorized. If the
+exact list move cannot meet this contract, make no implementation commit.
+
 ## Failure Behavior
 
 Malformed public requests throw, normally with `ArgumentError`, before

@@ -1407,3 +1407,31 @@ reserved namespace decisions, and release/deployment changes. Source `+0/-0`;
 no new test owner, helper, metadata, or status field. Preserve the structural
 safeguard and `checkdocs=:none`; native export coverage still reaches 79
 non-root-public bindings. `/stable/` and the two handoffs remain unchanged.
+
+## Cartesian Hamiltonian Producer Pass 608 - Onboarding Example Selection
+
+At `8b6664676`, independently confirmed README, example guide, and examples
+index recommend 01-04 then 15, while routine CI runs only 01/39/40. Fresh
+Julia 1.12.6 subprocess timings for 02/03/04/15 were 3.006/3.580/5.086/6.281s,
+17.953s total including startup. Separate empty working directories remained
+empty; scripts write only stdout. Hydrogen energy remained
+`-0.4999999972344178` Ha. These are local installed-environment measurements,
+not a prediction of exact clean Linux CI time. Verified Supported-floor run
+`33932844939` took 8m25s against the unchanged 30-minute timeout.
+
+Authorize one test-only ID for an exact `+4/-4` move of existing assertions,
+not a new function pair or runner framework. Require quick `7/7`, structural
+once-only selection for the moved scripts, and measured full remote acceptance
+with ample timeout headroom. No need to run the entire slow suite to inspect
+list membership. Authority checks use docs-only CI; implementation uses the
+existing full matrix because test/runtests.jl changes. Existing docs, package,
+authority/self-test/views, Documenter, log-bound, and diff checks remain gates.
+
+MT1/MT6 advance executable onboarding reliability, not numerical capability.
+Deleted: four slow-list duplicates when moved; simplified: recommended scripts
+share the existing quick runner. Quarantined: other unselected examples,
+weekly expansion, and existing duplicate 01. Example 41 already shares the
+PQS release calculation and is not an orphan. Source `+0/-0`; no new numerical
+assertion, helper, file, metadata, or status field. Scripts remain live and
+unchanged; implementation and measured acceptance are the remaining blocker.
+No workflow, release, stable deployment, or follow-on authority is granted.
