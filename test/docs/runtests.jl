@@ -253,10 +253,20 @@
                 HalfLineBasis RadialBasis RadialQuadratureGrid PrimitiveSet1D BasisMetadata1D
                 BasisRepresentation1D basis_representation primitive_set primitives
                 stencil_matrix moment_center
+                CombinedInvsqrtMapping fit_combined_invsqrt_mapping
+                MappedPGDGPrototype1D MappedPGDGLocalized1D
+                mapped_pgdg_prototype mapped_pgdg_localized
                 """)),
             (docs_site_reference_ops, split("""
                 AbstractDiagonalApproximation IntegralDiagonal position_matrix
                 coulomb_gaussian_expansion
+                contract_primitive_vector contract_primitive_diagonal
+                contract_primitive_matrix gaussian_factor_matrix
+                gaussian_factor_matrices @timeg
+                timing_enabled timing_live_enabled
+                set_timing! set_timing_live!
+                set_timing_thresholds! reset_timing_report!
+                current_timing_report timing_report
                 """)),
             (docs_site_reference_atomic, split("""
                 YlmChannel YlmChannelSet ylm_channels channel_range channel_overlap
@@ -265,6 +275,37 @@
                 CartesianGaussianShellSupplementRepresentation3D
                 CartesianBasisTransferDiagnostics CartesianBasisProjector3D
                 CartesianOrbitalTransferResult cross_overlap basis_projector transfer_orbitals
+                LegacyBondAlignedDiatomicGaussianSupplement LegacyBondAlignedHeteronuclearGaussianSupplement
+                bond_aligned_homonuclear_qw_basis bond_aligned_heteronuclear_qw_basis
+                assembled_one_body_hamiltonian BondAlignedHomonuclearChainQWBasis3D
+                AxisAlignedHomonuclearSquareLatticeQWBasis3D bond_aligned_homonuclear_chain_qw_basis
+                axis_aligned_homonuclear_square_lattice_qw_basis build_one_center_atomic_full_parent_shell_sequence
+                one_center_atomic_full_parent_fixed_block build_one_center_atomic_legacy_profile_shell_sequence
+                one_center_atomic_legacy_profile_fixed_block QWRGResidualSpaceDiagnostics
+                """)),
+            (docs_site_reference_export, split("""
+                RadialYlmSolidHarmonicGTOFit RadialYlmCartesianGTOAdapter
+                RadialYlmCartesianProjectionResult CartesianGTOSubspaceProjectionResult
+                fit_radial_ylm_to_solid_harmonic_gto evaluate_radial_ylm_gto_fit
+                radial_ylm_fit_cartesian_gto_adapter project_radial_ylm_gto_adapter_to_cartesian
+                project_cartesian_gto_to_supplement_subspace SpherePointSetProvenance
+                SpherePointSet CuratedSpherePointSet
+                fibonacci_sphere_point_set optimize_sphere_point_set
+                sphere_point_set sphere_point_set_orders
+                curated_sphere_point_set curated_sphere_point_set_orders
+                ShellLocalInjectedAngularBasis build_shell_local_injected_angular_basis
+                shell_local_injected_angular_diagnostics AtomicShellLocalInjectedAngularAssembly
+                assign_atomic_angular_shell_orders build_atomic_shell_local_angular_assembly
+                atomic_shell_local_angular_diagnostics AtomicInjectedAngularOneBodyBenchmark
+                AtomicInjectedAngularCartesianMomentBundle AtomicInjectedAngularHFStyleBenchmark
+                AtomicInjectedAngularHFDMRGHFAdapter AtomicInjectedAngularSmallEDBenchmark
+                build_atomic_injected_angular_one_body_benchmark build_atomic_injected_angular_cartesian_moments
+                build_atomic_injected_angular_hf_style_benchmark build_atomic_injected_angular_hfdmrg_hf_adapter
+                build_atomic_injected_angular_hfdmrg_hf_seeds build_atomic_injected_angular_hfdmrg_payload
+                build_atomic_injected_angular_small_ed_benchmark atomic_injected_angular_one_body_diagnostics
+                atomic_injected_angular_hf_style_diagnostics atomic_injected_angular_hfdmrg_hf_adapter_diagnostics
+                atomic_injected_angular_small_ed_diagnostics run_atomic_injected_angular_hfdmrg_hf
+                atomic_fixed_radial_legacy_dmrgatom_payload write_atomic_fixed_radial_legacy_dmrgatom_jld2
                 """)))
             entries = [strip(line) for block in eachmatch(r"(?ms)^```@docs\n(.*?)^```", page)
                 for line in split(block.captures[1], '\n')]

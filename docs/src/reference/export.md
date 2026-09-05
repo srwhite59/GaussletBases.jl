@@ -242,3 +242,78 @@ write_sliced_ham_jld2
 write_atomic_hamv6_jld2
 write_angular_benchmark_exact_hamv6_jld2
 ```
+
+## Expert radial Ylm to Cartesian GTO bridge
+
+Radial fitting, Cartesian adaptation, and projection are distinct operations.
+Supplement-subspace diagnostics do not change final-basis overlap policy.
+
+```@docs
+RadialYlmSolidHarmonicGTOFit
+RadialYlmCartesianGTOAdapter
+RadialYlmCartesianProjectionResult
+CartesianGTOSubspaceProjectionResult
+fit_radial_ylm_to_solid_harmonic_gto
+evaluate_radial_ylm_gto_fit
+radial_ylm_fit_cartesian_gto_adapter
+project_radial_ylm_gto_adapter_to_cartesian
+project_cartesian_gto_to_supplement_subspace
+```
+
+## Experimental angular point sets and shell assembly
+
+These point sets and injected-shell producers belong to the angular research
+track; their inclusion here does not establish a general atomic workflow.
+
+```@docs
+SpherePointSetProvenance
+SpherePointSet
+CuratedSpherePointSet
+fibonacci_sphere_point_set
+optimize_sphere_point_set
+sphere_point_set
+sphere_point_set_orders
+curated_sphere_point_set
+curated_sphere_point_set_orders
+ShellLocalInjectedAngularBasis
+build_shell_local_injected_angular_basis
+shell_local_injected_angular_diagnostics
+AtomicShellLocalInjectedAngularAssembly
+assign_atomic_angular_shell_orders
+build_atomic_shell_local_angular_assembly
+atomic_shell_local_angular_diagnostics
+```
+
+## Experimental angular benchmarks and consumer adapters
+
+These bounded benchmarks and consumer adapters are experimental. Downstream
+solver integration remains separate from basis and operator construction.
+
+```@docs
+AtomicInjectedAngularOneBodyBenchmark
+AtomicInjectedAngularCartesianMomentBundle
+AtomicInjectedAngularHFStyleBenchmark
+AtomicInjectedAngularHFDMRGHFAdapter
+AtomicInjectedAngularSmallEDBenchmark
+build_atomic_injected_angular_one_body_benchmark
+build_atomic_injected_angular_cartesian_moments
+build_atomic_injected_angular_hf_style_benchmark
+build_atomic_injected_angular_hfdmrg_hf_adapter
+build_atomic_injected_angular_hfdmrg_hf_seeds
+build_atomic_injected_angular_hfdmrg_payload
+build_atomic_injected_angular_small_ed_benchmark
+atomic_injected_angular_one_body_diagnostics
+atomic_injected_angular_hf_style_diagnostics
+atomic_injected_angular_hfdmrg_hf_adapter_diagnostics
+atomic_injected_angular_small_ed_diagnostics
+run_atomic_injected_angular_hfdmrg_hf
+```
+
+## Experimental legacy fixed radial consumer export
+
+These legacy consumer formats do not provide general restart support.
+
+```@docs
+atomic_fixed_radial_legacy_dmrgatom_payload
+write_atomic_fixed_radial_legacy_dmrgatom_jld2
+```

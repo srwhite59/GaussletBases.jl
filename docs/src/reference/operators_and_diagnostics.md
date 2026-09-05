@@ -107,3 +107,32 @@ atomic_operators
 centrifugal
 multipole
 ```
+
+## Primitive contraction and Gaussian factors
+
+These utilities contract explicit primitive representations and construct
+Gaussian factors under the documented basis and grid conventions.
+
+```@docs
+contract_primitive_vector
+contract_primitive_diagonal
+contract_primitive_matrix
+gaussian_factor_matrix
+gaussian_factor_matrices
+```
+
+## Coarse timing controls
+
+Timing controls report execution cost; they do not change numerical policy.
+
+```@docs
+@timeg
+timing_enabled
+timing_live_enabled
+set_timing!
+set_timing_live!
+set_timing_thresholds!
+reset_timing_report!
+current_timing_report
+timing_report
+```

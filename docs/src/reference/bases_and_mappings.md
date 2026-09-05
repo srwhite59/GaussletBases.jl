@@ -216,3 +216,17 @@ BondAlignedDiatomicGeometryPlaneSlice3D
 bond_aligned_diatomic_source_geometry_payload
 bond_aligned_diatomic_plane_slice
 ```
+
+## Expert mapped and experimental PGDG construction
+
+Mapped construction and PGDG prototypes have distinct method-specific
+contracts; exposing their documentation does not promote experimental backends.
+
+```@docs
+CombinedInvsqrtMapping
+fit_combined_invsqrt_mapping
+MappedPGDGPrototype1D
+MappedPGDGLocalized1D
+mapped_pgdg_prototype
+mapped_pgdg_localized
+```

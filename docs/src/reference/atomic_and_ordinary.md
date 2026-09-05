@@ -375,3 +375,47 @@ OrdinaryCartesianBranchCorrectionResult
 apply_ordinary_cartesian_corrections
 ordinary_cartesian_corrected_branch
 ```
+
+## Expert QW geometry and supplement construction
+
+Use the documented geometry and supplement restrictions of each constructor.
+
+```@docs
+LegacyBondAlignedDiatomicGaussianSupplement
+LegacyBondAlignedHeteronuclearGaussianSupplement
+bond_aligned_homonuclear_qw_basis
+bond_aligned_heteronuclear_qw_basis
+assembled_one_body_hamiltonian
+```
+
+## Experimental chain and square geometry
+
+These producer-side geometries remain experimental, not general molecular workflows.
+
+```@docs
+BondAlignedHomonuclearChainQWBasis3D
+AxisAlignedHomonuclearSquareLatticeQWBasis3D
+bond_aligned_homonuclear_chain_qw_basis
+axis_aligned_homonuclear_square_lattice_qw_basis
+```
+
+## Expert atomic nesting and legacy profile
+
+Full-parent and legacy-profile construction are separate expert routes,
+not replacements for the standard PQS base facade.
+
+```@docs
+build_one_center_atomic_full_parent_shell_sequence
+one_center_atomic_full_parent_fixed_block
+build_one_center_atomic_legacy_profile_shell_sequence
+one_center_atomic_legacy_profile_fixed_block
+```
+
+## Expert compatibility diagnostic
+
+This existing diagnostic carrier retains its compatibility classification
+and separate future namespace decision.
+
+```@docs
+QWRGResidualSpaceDiagnostics
+```
