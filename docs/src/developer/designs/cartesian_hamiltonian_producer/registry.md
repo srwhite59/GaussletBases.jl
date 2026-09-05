@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `82f68529f249e073c9930b263110230355eeef964e67243cf2a3534bca9e6229`.
+> [authority.toml](authority.toml), SHA-256 `9d040d0d87014f99700eb83714a567268aa20d279bc8e9b06418dbb535f31278`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -3219,8 +3219,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01 - expose radial and Cartesian transfer reference contracts
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -3231,14 +3231,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/reference/operators_and_diagnostics.md`
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `1e4d93dd0ca034183ecb03b6ca883a06e4a3f7df`
   - `manager_pass`: `604`
+  - `manager_pass`: `605`
 - **Dependencies:** `HP-PUBLIC-ATOMIC-IDA-DOC-FN-01`, `HP-PUBLIC-FOUNDATION-DOC-FN-01`
-- **Scope:** Render the exact 49 bindings in three reference pages and protect their placement in the shared docs-test owner under Reference Discoverability First Subset. Reuse docstrings and compact headings. Preserve aliases, reserved exports, source/API, numerical behavior, global checkdocs policy, navigation, workflows, and release/deployment state. No new file or remaining-inventory authority.
+- **Scope:** Maintain the 49 reference entries accepted at 1e4d93dd0ca034183ecb03b6ca883a06e4a3f7df under Reference Discoverability First Subset. Preserve reused docstrings, expert labels, structural membership checks, reserved exports, checkdocs policy, and release/deployment state. No remaining implementation grant, source/API change, or authority for the 78 deferred names.
 
 ### HP-PUBLIC-REFERENCE-DISCOVERY-DOC-TEST-01 - protect focused rendered-reference membership
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -3246,9 +3248,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `1e4d93dd0ca034183ecb03b6ca883a06e4a3f7df`
   - `manager_pass`: `604`
+  - `manager_pass`: `605`
 - **Dependencies:** `HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01`
-- **Scope:** Add compact canonical @docs membership checks for the 49 assigned bindings in test/docs/runtests.jl under Reference Discoverability First Subset. Preserve public\_surface\_runtests.jl, prose freedom, and existing mechanical policies. No helper framework, snapshot, global inventory, numerical test, source/API, workflow, or release change.
+- **Scope:** Maintain the accepted canonical @docs membership checks from 1e4d93dd0ca034183ecb03b6ca883a06e4a3f7df under Reference Discoverability First Subset. Preserve public\_surface\_runtests.jl, prose freedom, and existing mechanical policies. No remaining implementation grant, helper framework, global inventory, numerical test, source/API, workflow, or release change.
 
 ### HP-PUBLIC-SLICED-HCHAIN-DOC-FN-01 - document experimental sliced hydrogen-chain operators
 

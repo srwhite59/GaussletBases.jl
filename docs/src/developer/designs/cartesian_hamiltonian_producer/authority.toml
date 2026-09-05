@@ -5713,10 +5713,10 @@ title = "validate radial paper-parity reproducibility documentation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-ATOMIC-IDA-DOC-FN-01", "HP-PUBLIC-FOUNDATION-DOC-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01"
-lifecycle = "approved"
-scope = "Render the exact 49 bindings in three reference pages and protect their placement in the shared docs-test owner under Reference Discoverability First Subset. Reuse docstrings and compact headings. Preserve aliases, reserved exports, source/API, numerical behavior, global checkdocs policy, navigation, workflows, and release/deployment state. No new file or remaining-inventory authority."
+lifecycle = "implemented"
+scope = "Maintain the 49 reference entries accepted at 1e4d93dd0ca034183ecb03b6ca883a06e4a3f7df under Reference Discoverability First Subset. Preserve reused docstrings, expert labels, structural membership checks, reserved exports, checkdocs policy, and release/deployment state. No remaining implementation grant, source/API change, or authority for the 78 deferred names."
 surfaces = ["docs", "tests"]
 title = "expose radial and Cartesian transfer reference contracts"
 
@@ -5726,8 +5726,14 @@ title = "expose radial and Cartesian transfer reference contracts"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1e4d93dd0ca034183ecb03b6ca883a06e4a3f7df"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "604"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "605"
 
     [[records.paths]]
     kind = "docs"
@@ -5747,10 +5753,10 @@ title = "expose radial and Cartesian transfer reference contracts"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-REFERENCE-DISCOVERY-DOC-TEST-01"
-lifecycle = "approved"
-scope = "Add compact canonical @docs membership checks for the 49 assigned bindings in test/docs/runtests.jl under Reference Discoverability First Subset. Preserve public_surface_runtests.jl, prose freedom, and existing mechanical policies. No helper framework, snapshot, global inventory, numerical test, source/API, workflow, or release change."
+lifecycle = "completed"
+scope = "Maintain the accepted canonical @docs membership checks from 1e4d93dd0ca034183ecb03b6ca883a06e4a3f7df under Reference Discoverability First Subset. Preserve public_surface_runtests.jl, prose freedom, and existing mechanical policies. No remaining implementation grant, helper framework, global inventory, numerical test, source/API, workflow, or release change."
 surfaces = ["tests"]
 title = "protect focused rendered-reference membership"
 
@@ -5760,8 +5766,14 @@ title = "protect focused rendered-reference membership"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1e4d93dd0ca034183ecb03b6ca883a06e4a3f7df"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "604"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "605"
 
     [[records.paths]]
     kind = "test"

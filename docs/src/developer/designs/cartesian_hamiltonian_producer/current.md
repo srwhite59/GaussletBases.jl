@@ -38,11 +38,12 @@ claim.
 
 ## Active And Pending Work
 
-Pass 604 authorizes only the 49-name Reference Discoverability First Subset
-through `HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01` and
-`HP-PUBLIC-REFERENCE-DISCOVERY-DOC-TEST-01`. The corrected gap is 127 documented
-root exports; 78 remain outside this grant. Global Documenter export checking,
-internal-submodule reference promotion, and reserved-name changes are excluded.
+Pass 605 closes the 49-name Reference Discoverability First Subset at
+`1e4d93dd0`: `HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01` is implemented/maintenance
+and `HP-PUBLIC-REFERENCE-DISCOVERY-DOC-TEST-01` completed/maintenance, with no
+remaining implementation grant. The documented-reference gap is 78. Global
+Documenter coverage, internal-submodule promotion, and reserved-name changes
+remain outside this completed packet.
 
 | Lane | State | Exact next boundary |
 | --- | --- | --- |

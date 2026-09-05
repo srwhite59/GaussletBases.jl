@@ -1333,3 +1333,26 @@ authority/self-test/views, package load, Documenter, and remote docs-only
 CI/Docs. Repo-manager waits for this grant and checks; `/stable/`, releases,
 and the five reserved names remain unchanged. Next blocker: implementation
 and separate lifecycle closeout, not completion of all reference coverage.
+
+## Cartesian Hamiltonian Producer Pass 605 - Close Reference First Subset
+
+Accepted `1e4d93dd0ca034183ecb03b6ca883a06e4a3f7df` after independent diff
+review: all 49 assigned entries reuse docstrings, with `+90` reference lines
+and `+26` structural test lines within hard budgets. CI `33967290552` and
+Docs `33967290534` passed at the exact SHA; docs were `8/8`, `133/133`, `10/10`.
+Authority/self-test, generated parity, package load, Documenter, log bound,
+and diff checks passed. Closeout uses docs-only checks without numerical reruns.
+FN/TEST are implemented/completed maintenance; the remaining 78 names and
+global coverage policy remain separately reviewable, not newly authorized.
+
+No strategic change. Deleted: none, because these are live contracts;
+simplified: reference discovery; quarantined: remaining inventory and reserved
+namespace decisions. Source `+0/-0`, no new files or metadata/status fields.
+The shared public-surface owner, five reserved names, and `/stable/` are
+unchanged. No blocker remains for this packet.
+
+Medium-term checkpoint: MT1 remains active with evidence-led conformance;
+MT2 completed; MT3 blocked on the represented mixed-density Hartree owner;
+MT4 active with unchanged residual/protected boundaries; MT5 active/maintenance
+for authority and mechanical checks; MT6 active with the bounded reference
+subset now closed; MT7 completed/maintenance. No new implementation lane opens.
