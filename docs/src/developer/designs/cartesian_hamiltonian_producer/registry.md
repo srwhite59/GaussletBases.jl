@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `7d849768dd875254e2c3c56988a58528519025ae6f11e3d6b8046d1f9f854e13`.
+> [authority.toml](authority.toml), SHA-256 `0f0ed4c7a6ff596377934f615836477f852179fbd8156e278d61aca11547cfb3`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -3219,8 +3219,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01 - complete documented public reference presentation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -3234,15 +3234,18 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
   - `git_commit`: `1e4d93dd0ca034183ecb03b6ca883a06e4a3f7df`
+  - `git_commit`: `88b08158941c303b0c311febd9c639af7df3ad4d`
   - `manager_pass`: `604`
   - `manager_pass`: `605`
+  - `manager_pass`: `606`
+  - `manager_pass`: `607`
 - **Dependencies:** `HP-PUBLIC-ATOMIC-IDA-DOC-FN-01`, `HP-PUBLIC-FOUNDATION-DOC-FN-01`
-- **Scope:** Render the exact remaining 78 names in four existing reference pages under Reference Discoverability Completion; extend the existing structural membership check. Preserve the accepted first subset, classifications, docstrings, reserved names, API, and coverage policy. No source, numerical, framework, workflow, release, or deployment change.
+- **Scope:** Maintain the reference completion accepted at 88b08158941c303b0c311febd9c639af7df3ad4d under Reference Discoverability Completion and First Subset. Preserve all 127 added entries, classifications, reused docstrings, structural coverage, reserved names, and release/deployment policy. No remaining implementation grant, source/API change, or internal-submodule promotion.
 
 ### HP-PUBLIC-REFERENCE-DISCOVERY-DOC-TEST-01 - protect focused rendered-reference membership
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -3252,10 +3255,13 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
   - `git_commit`: `1e4d93dd0ca034183ecb03b6ca883a06e4a3f7df`
+  - `git_commit`: `88b08158941c303b0c311febd9c639af7df3ad4d`
   - `manager_pass`: `604`
   - `manager_pass`: `605`
+  - `manager_pass`: `606`
+  - `manager_pass`: `607`
 - **Dependencies:** `HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01`
-- **Scope:** Extend only the grouped canonical @docs membership checks in test/docs/runtests.jl for the exact 78 names under Reference Discoverability Completion. Preserve the first 49, public\_surface\_runtests.jl, prose freedom, and mechanical policies. No helper, parser, inventory framework, numerical test, source/API, workflow, release, or global coverage-policy change.
+- **Scope:** Maintain the accepted grouped canonical @docs membership checks under Reference Discoverability Completion. Preserve first-subset coverage, public\_surface\_runtests.jl, prose freedom, and mechanical policies. No remaining implementation grant, new inventory machinery, numerical test, source/API, workflow, release, or global coverage-policy change.
 
 ### HP-PUBLIC-SLICED-HCHAIN-DOC-FN-01 - document experimental sliced hydrogen-chain operators
 

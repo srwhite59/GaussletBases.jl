@@ -38,14 +38,13 @@ claim.
 
 ## Active And Pending Work
 
-Pass 606 reopens `HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01` and
-`HP-PUBLIC-REFERENCE-DISCOVERY-DOC-TEST-01` as approved/implementation for
-Reference Discoverability Completion: all 78 remaining documented names in
-four existing reference pages and the existing structural membership check.
-The first 49 remain accepted at `1e4d93dd0` (Pass 605). Repo-manager waits for
-this authority commit and its required checks. Global Documenter policy,
-internal-submodule promotion, reserved-name changes, and releases remain out
-of scope; the completion contract owns placement, budgets, and failure rules.
+Pass 607 closes Reference Discoverability Completion at `88b081589`:
+`HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01` is implemented/maintenance and
+`HP-PUBLIC-REFERENCE-DISCOVERY-DOC-TEST-01` completed/maintenance, with no
+remaining implementation grant. All 78 entries are rendered; the documented
+root-public reference gap is zero, with the first 49 and five reserved names
+unchanged. Keep the structural safeguard and current Documenter policy;
+internal-submodule promotion, namespace decisions, and releases remain separate.
 
 | Lane | State | Exact next boundary |
 | --- | --- | --- |
