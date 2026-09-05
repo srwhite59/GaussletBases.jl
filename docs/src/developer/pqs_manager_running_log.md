@@ -1282,3 +1282,22 @@ Quarantined: other review items. No new metadata/status fields or test files.
 MT1/MT5 advance reader consistency and MT6 favors shorter summaries; no new
 development commitment. Repo-manager waits for this commit and checks before
 implementation. `/dev/` receives corrections; `/stable/` remains immutable.
+
+## Cartesian Hamiltonian Producer Pass 603 - Close Status And Onboarding
+
+Accepted `f75b92544bc74b5f31b8bf526d3a5e10f4d98879` after independent
+nine-path diff review: Markdown `+172/-310`, navigation exactly `+2/-2`,
+ROADMAP 28 lines, architecture only `+8/-2`. No strategic change: MT1/MT6
+retain radial-first onboarding, standard bounded PQS, and distinct supplied-
+field screening/external-transfer contracts. Deleted: stale warnings and
+roadmap commitments; simplified: summaries and radial navigation; quarantined:
+remaining review items. Live manuals remain authoritative, so no implementation
+was deleted. Source `+0/-0`; no tests, metadata, or status fields added.
+
+Implementation CI `33932844939` and Docs `33932844925` passed at the exact
+commit; existing docs were `8/8`, `130/130`, `10/10`. Authority/self-test,
+generated parity, package load, Documenter, and diff checks passed. Manager
+closeout uses the existing docs-only checks, not another numerical run.
+`HP-PUBLIC-STATUS-ONBOARDING-DOC-01` is implemented/maintenance with no
+remaining implementation grant or blocker. `/stable/` and release state remain
+unchanged; other review items require a separate decision.

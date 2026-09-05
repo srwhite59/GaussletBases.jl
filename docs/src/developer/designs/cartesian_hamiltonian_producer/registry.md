@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `a54f268ce15f5b6223fe29adeae00f9dbafc23247124c7cefa62b5c6b286b430`.
+> [authority.toml](authority.toml), SHA-256 `0e12e2fe5408aecbafb00e0871156f41e3348ec12102db0c937a2909e0c3c4e5`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -3256,8 +3256,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-STATUS-ONBOARDING-DOC-01 - reconcile released capabilities and reader onboarding
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `tools`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -3273,9 +3273,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/manual/index.md`
   - `tool` / `existing`: `docs/make.jl`
 - **Evidence:**
+  - `git_commit`: `f75b92544bc74b5f31b8bf526d3a5e10f4d98879`
   - `manager_pass`: `602`
+  - `manager_pass`: `603`
 - **Dependencies:** `HP-AUTHORITY-EXECUTION-WHITELIST-FN-01`, `HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-FN-01`
-- **Scope:** Reconcile the nine assigned status/onboarding/navigation paths under Current Status And Onboarding Documentation. Present released bounded interfaces, standard PQS, and radial-first onboarding; shorten stale summaries and expose two existing radial entries. Architecture edits correct contradictions only. Preserve tests, source/API, numerical behavior, workflows, release/deployment policy, and all deferred review items.
+- **Scope:** Maintain the nine status/onboarding/navigation paths under Current Status And Onboarding Documentation, as accepted at f75b92544bc74b5f31b8bf526d3a5e10f4d98879. Preserve bounded interfaces, standard PQS, radial-first onboarding, and scientific scope. No remaining implementation grant or authority for tests, source/API, numerical behavior, workflows, release/deployment policy, or deferred review items.
 
 ### HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01 - document six supported public surface bindings
 
