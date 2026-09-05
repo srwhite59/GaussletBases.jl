@@ -5779,10 +5779,10 @@ title = "validate experimental sliced hydrogen-chain operator documentation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-AUTHORITY-EXECUTION-WHITELIST-FN-01", "HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-STATUS-ONBOARDING-DOC-01"
-lifecycle = "approved"
-scope = "Reconcile the nine assigned status/onboarding/navigation paths under Current Status And Onboarding Documentation. Present released bounded interfaces, standard PQS, and radial-first onboarding; shorten stale summaries and expose two existing radial entries. Architecture edits correct contradictions only. Preserve tests, source/API, numerical behavior, workflows, release/deployment policy, and all deferred review items."
+lifecycle = "implemented"
+scope = "Maintain the nine status/onboarding/navigation paths under Current Status And Onboarding Documentation, as accepted at f75b92544bc74b5f31b8bf526d3a5e10f4d98879. Preserve bounded interfaces, standard PQS, radial-first onboarding, and scientific scope. No remaining implementation grant or authority for tests, source/API, numerical behavior, workflows, release/deployment policy, or deferred review items."
 surfaces = ["docs", "tools"]
 title = "reconcile released capabilities and reader onboarding"
 
@@ -5792,8 +5792,14 @@ title = "reconcile released capabilities and reader onboarding"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "f75b92544bc74b5f31b8bf526d3a5e10f4d98879"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "602"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "603"
 
     [[records.paths]]
     kind = "docs"
