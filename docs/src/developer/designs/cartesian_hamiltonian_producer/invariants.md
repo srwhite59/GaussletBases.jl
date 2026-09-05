@@ -70,8 +70,8 @@ record and this whitelist; it contains no generated IDs or authority digest.
 
 #### Root Status Documentation Path Amendment
 
-Pass 601 records the user's explicit approval for repo-manager to change only
-`_path_errors` in `docs/check_cartesian_authority.jl`: admit exactly
+Pass 601 was implemented by `98294fd4c5b4159d95dc87440d80fb773b70a2cc`
+and accepted in Pass 602. Maintain `_path_errors` recognition of exactly
 `DESIGN.md`, `ROADMAP.md`, and `STATUS.md` as existing root `kind = "docs"`
 paths, alongside the already permitted README and CHANGELOG. This is bounded
 authority-tooling maintenance under `HP-AUTHORITY-EXECUTION-WHITELIST-FN-01`,
@@ -100,9 +100,9 @@ remote docs-only CI with all three marker jobs plus separate Docs success.
 Do not run numerical owners for this tooling-only change.
 
 Stop without an implementation commit if this requires any broader path,
-schema, test, or behavior change. The status/onboarding editorial packet
-remains preflighted but ungranted until this change is reviewed. Its eventual
-navigation path already has the existing `docs/make.jl` tool classification.
+schema, test, or behavior change. Status/onboarding editorial work is separately
+owned by `HP-PUBLIC-STATUS-ONBOARDING-DOC-01`; its navigation path uses the
+existing `docs/make.jl` tool classification.
 No source, API, workflow, release, deployment, or numerical change is granted.
 
 For execution records, `dependency_ids` are immediate normative prerequisites,

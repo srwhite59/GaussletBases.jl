@@ -56,7 +56,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_o
 sha256 = "417af5ce68d45a3719cb38a6ec9f47564f422f75ebc08d70c18f8bdf472fe7a0"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md"
-sha256 = "9e612596e63d1a7b8040f192a164f083212584a30530363ad6dc09eea6b3c9f5"
+sha256 = "2631b7b44d2500a3a03a72907b745c42e8c92f592d96f517883b2c129b8eedd6"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md"
 sha256 = "e21df153a635702b03303d1f4ced9fcf5e23728030099e2cc8a0105494ce759a"
@@ -113,7 +113,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_one_center_
 sha256 = "57cba2b45fc434cf372885b131ee0198e569527b6977b65168cebff29ee99223"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
-sha256 = "9a66120f6d99a5b2b23ec49a5cca48cd587f7c6ffbfd6b7150203114bbf2633c"
+sha256 = "df0cd905f5501a76c39e6f15f2d6c91497c865b83ba99c7291b7dbfedb1da4ac"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_homonuclear_diatomic_supplemented_workflow.md"
 sha256 = "36e4007e97e7d32d95ee3fc024e362b71c3fa865ce3b9e0066189b99327b48e9"
@@ -339,7 +339,7 @@ dependency_ids = []
 grant = "maintenance"
 id = "HP-AUTHORITY-EXECUTION-WHITELIST-FN-01"
 lifecycle = "implemented"
-scope = "Maintain Generated Authority Views, including the user-approved Root Status Documentation Path Amendment: only docs/check_cartesian_authority.jl::_path_errors may admit existing DESIGN.md, ROADMAP.md, and STATUS.md docs paths. Preserve planned-state restrictions, all other path checks, deterministic views, and deny-by-default authority. No reader-page, source/API, schema, workflow, release, or numerical change."
+scope = "Maintain Generated Authority Views and accepted existing-root-document recognition from 98294fd4c5b4159d95dc87440d80fb773b70a2cc. Preserve exact DESIGN.md, ROADMAP.md, and STATUS.md acceptance, planned-state restrictions, all other path checks, deterministic registry/whitelist generation, and deny-by-default authority. No broader checker, reader-page, source/API, schema, workflow, release, or numerical change."
 surfaces = ["docs"]
 title = "whole-file execution whitelist authority view"
 
@@ -352,6 +352,9 @@ title = "whole-file execution whitelist authority view"
     kind = "git_commit"
     value = "24512b0beda75174572fc2b728010b432331c05c"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "98294fd4c5b4159d95dc87440d80fb773b70a2cc"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "586"
     [[records.evidence_refs]]
@@ -360,6 +363,9 @@ title = "whole-file execution whitelist authority view"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "601"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "602"
 
     [[records.paths]]
     kind = "docs"
@@ -5770,6 +5776,60 @@ title = "validate experimental sliced hydrogen-chain operator documentation"
     [[records.paths]]
     kind = "test"
     path = "test/docs/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-AUTHORITY-EXECUTION-WHITELIST-FN-01", "HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-FN-01"]
+grant = "implementation"
+id = "HP-PUBLIC-STATUS-ONBOARDING-DOC-01"
+lifecycle = "approved"
+scope = "Reconcile the nine assigned status/onboarding/navigation paths under Current Status And Onboarding Documentation. Present released bounded interfaces, standard PQS, and radial-first onboarding; shorten stale summaries and expose two existing radial entries. Architecture edits correct contradictions only. Preserve tests, source/API, numerical behavior, workflows, release/deployment policy, and all deferred review items."
+surfaces = ["docs", "tools"]
+title = "reconcile released capabilities and reader onboarding"
+
+    [[records.document_refs]]
+    heading = "Current Status And Onboarding Documentation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "602"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "DESIGN.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "README.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "ROADMAP.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "STATUS.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/developer/architecture.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/explanations/current_ordinary_branch.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/index.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/manual/index.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "tool"
+    path = "docs/make.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-ATOMIC-IDA-DOC-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-FN-01"]

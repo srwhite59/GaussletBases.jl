@@ -409,6 +409,66 @@ A main-branch implementation updates `/dev/`. `/stable/` remains the immutable
 `v0.2.0` documentation until a separately authorized patch release or
 documentation-policy decision; this repair grants neither.
 
+## Current Status And Onboarding Documentation
+
+`HP-PUBLIC-STATUS-ONBOARDING-DOC-01` owns one editorial reconciliation of
+README, STATUS, DESIGN, ROADMAP, the docs home/manual overview, and the current
+ordinary branch page with the released v0.2 interfaces. Link to existing
+manuals instead of repeating schemas or tutorials. Inspect the developer
+architecture summary and edit only contradictory package/Cartesian claims;
+do not redesign its internal architecture account.
+
+Present PQS as the standard current Cartesian construction and default base
+route. Preserve supported `q` and `ns` and their accepted relation;
+White-Lindsey remains a matched comparison/alternative. Radial construction
+remains the recommended beginner path. Separate supported interface contracts
+from scientific maturity: publication or release does not establish arbitrary
+molecular geometry, convergence, or complete solver support.
+
+Consistently distinguish the released surfaces:
+
+- Base Hamiltonian: unsupplemented, uncorrected all-electron localized IDA for
+  origin-centered atoms and equal-label/equal-charge z-axis diatomics, within
+  the facade contract, with no general molecular solver claim.
+- Reference-density Hartree screening: supplied-field correction assembly in
+  the same orthonormal basis/order plus a separate scalar. No automatic field
+  generation, fitting, exchange, or SCF claim. PQS and screening remain
+  distinct method surfaces.
+- External Cartesian GTO transfer: version-1 validated packets, optional
+  checkpoint-only PySCF/NumPy exporter, raw projection with capture loss, and
+  separate caller-thresholded determinant cleanup. Exporter scope does not
+  broaden destination-basis geometry or provide a Hamiltonian/restart.
+
+Remove the completed-repair warning from STATUS, and the obsolete pending
+repair and governance ID from the reader branch page. Shorten ROADMAP to at
+most 60 lines of current maintenance/research boundaries with no new work
+commitments, dates, paper status, or compatibility promises. DESIGN directs
+usage readers to manuals/reference before optional roadmap context. Preserve
+accurate expert/research distinctions and existing useful links.
+
+Fix README's First radial workflow URL to the existing stable tutorial path.
+In `docs/make.jl`, move exactly the First radial workflow and Recommended
+atomic setup entries from hidden entries to visible Manual entries after
+Overview. Preserve labels/paths, every other entry, and all build settings.
+No tutorial-body changes or duplicate navigation entries are authorized.
+
+Across the eight Markdown implementation pages (1,070 baseline lines),
+preferred/hard added lines are 180/260, with net non-increasing total lines;
+prefer at least 80 lines removed net. Optional architecture edits are capped
+at 35 added lines within that total. Navigation is exactly +2/-2 lines.
+No new file or test edit. Validate by editorial review, existing docs_fast/full
+docs, package load, link/navigation inspection, authority/self-test, generated
+view parity, Documenter, and diff checks. Root-document implementation changes
+trigger the unchanged full three-gate CI plus Docs; authority/closeout use
+docs-only checks. Add no prose/title-equality tests or numerical doctests.
+
+Main corrects `/dev/`; immutable v0.2.0 `/stable/` remains unchanged. Preserve
+README's release pin and stable-link policy except the mislabeled tutorial
+target. Exclude source/API/numerics, reference expansion, example scheduling,
+algorithm pointers, orphan-page deletion, workflows, deployment/version
+policy, releases, and other review items. If truthful wording requires an
+interface, test, policy, or broader path change, stop and report before commit.
+
 ## Failure Behavior
 
 Malformed public requests throw, normally with `ArgumentError`, before

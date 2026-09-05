@@ -1253,3 +1253,32 @@ authorized. MT5 gains recognition of already existing documentation owners;
 MT1/MT6's shorter onboarding summaries remain the separately preflighted next
 packet. That packet is not granted yet. The exact next step is repo-manager's
 single-file checker implementation after this amendment and its checks pass.
+
+## Cartesian Hamiltonian Producer Pass 602 - Close Root Paths And Authorize Onboarding
+
+Accepted `98294fd4c5b4159d95dc87440d80fb773b70a2cc`: only `_path_errors`
+changed, exactly `+3/-1`, admitting the three existing tracked root status
+documents. Independent manager probes passed `16/16`, including planned,
+wrong-kind, unrelated-root, and traversal rejection. CI `33931379213` and
+Docs `33931379258` passed at that commit; docs were `8/8`, `130/130`, `10/10`.
+Existing authority/self-test and generated views passed. Checker maintenance
+is closed with all other fail-closed rules retained; no test or source growth.
+
+The independent onboarding preflight remains valid because none of its nine
+paths changed during the prerequisite. `HP-PUBLIC-STATUS-ONBOARDING-DOC-01`
+now grants the bounded editorial reconciliation: eight Markdown summaries
+(1,070 baseline lines), 180/260 preferred/hard additions, net non-increasing
+total, a 60-line ROADMAP ceiling, and exactly two visible radial navigation
+entries replacing their hidden entries. Architecture edits only resolve
+contradictions. PQS is the standard current Cartesian approach; interface
+support is distinct from scientific maturity. Supplied-field screening and
+external transfer retain their separate, bounded manual contracts.
+
+No prose-lock test, source, example, API, workflow, release, or scientific
+policy change is opened. Root-document edits trigger existing full CI; this
+combined authority/closeout uses docs-only checks. Deleted/simplified: the
+checker classification obstacle; reader-summary reduction is the next target.
+Quarantined: other review items. No new metadata/status fields or test files.
+MT1/MT5 advance reader consistency and MT6 favors shorter summaries; no new
+development commitment. Repo-manager waits for this commit and checks before
+implementation. `/dev/` receives corrections; `/stable/` remains immutable.

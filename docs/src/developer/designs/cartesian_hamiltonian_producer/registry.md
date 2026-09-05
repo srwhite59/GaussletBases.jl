@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `7f120368232f33bd4f3867d395732d318d09e48f83ac3aab80d269d18d197743`.
+> [authority.toml](authority.toml), SHA-256 `a54f268ce15f5b6223fe29adeae00f9dbafc23247124c7cefa62b5c6b286b430`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -104,11 +104,13 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md`
 - **Evidence:**
   - `git_commit`: `24512b0beda75174572fc2b728010b432331c05c`
+  - `git_commit`: `98294fd4c5b4159d95dc87440d80fb773b70a2cc`
   - `manager_pass`: `586`
   - `manager_pass`: `587`
   - `manager_pass`: `601`
+  - `manager_pass`: `602`
 - **Dependencies:** none
-- **Scope:** Maintain Generated Authority Views, including the user-approved Root Status Documentation Path Amendment: only docs/check\_cartesian\_authority.jl::\_path\_errors may admit existing DESIGN.md, ROADMAP.md, and STATUS.md docs paths. Preserve planned-state restrictions, all other path checks, deterministic views, and deny-by-default authority. No reader-page, source/API, schema, workflow, release, or numerical change.
+- **Scope:** Maintain Generated Authority Views and accepted existing-root-document recognition from 98294fd4c5b4159d95dc87440d80fb773b70a2cc. Preserve exact DESIGN.md, ROADMAP.md, and STATUS.md acceptance, planned-state restrictions, all other path checks, deterministic registry/whitelist generation, and deny-by-default authority. No broader checker, reader-page, source/API, schema, workflow, release, or numerical change.
 
 ### HP-AUTHORITY-EXECUTION-WHITELIST-TEST-01 - whole-file execution whitelist validation
 
@@ -3251,6 +3253,29 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `569`
 - **Dependencies:** `HP-PUBLIC-ATOMIC-IDA-DOC-TEST-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-SLICED-HCHAIN-DOC-FN-01`, `HP-SLICE-HCHAIN-TEST-01`
 - **Scope:** Maintain only the accepted focused documentation checks in test/docs/runtests.jl from commit ec3b8fa12a68118c922ae87ec3cacae821633d5b. They require sliced\_h1, sliced\_vee, and sliced\_row\! to remain exported, carry Julia documentation, and appear with SlicedHydrogenChain, sliced\_hydrogen\_chain, and sliced\_h1\_bandwidth in one Experimental sliced hydrogen-chain operators section of docs/src/reference/atomic\_and\_ordinary.md. Preserve the tested experimental non-general-producer boundary; lazy read-only H1 and two-index density-density views; separate nuclear repulsion; represented-band versus physical-continuum distinction; private concrete view types; owner retention; size/scalar/mul\! access without dense ownership; bounded-only explicit Matrix materialization; complete validating overwrite/return semantics for caller-owned rows; zero-allocation compatible-buffer behavior; band-limited H1 versus full-column Vee extraction; and read-only stable fields versus non-contractual internals. The undocumented exported-binding count, excluding the module self-binding, is exactly 6 after the accepted 9-to-6 reduction. The accepted docs-test delta is +12/-1. Documenter remains the executable @docs resolution gate; the minimal sliced hydrogen-chain owner passed 72/72, and remote CI run 33565530332 passed all three gates. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, type, field, signature, dispatch, coefficient, tolerance, allocation-policy, export, dependency, example, version, tag, release, working-basis, or namespace-reduction work.
+
+### HP-PUBLIC-STATUS-ONBOARDING-DOC-01 - reconcile released capabilities and reader onboarding
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `tools`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `Current Status And Onboarding Documentation`
+- **Owned paths:**
+  - `docs` / `existing`: `DESIGN.md`
+  - `docs` / `existing`: `README.md`
+  - `docs` / `existing`: `ROADMAP.md`
+  - `docs` / `existing`: `STATUS.md`
+  - `docs` / `existing`: `docs/src/developer/architecture.md`
+  - `docs` / `existing`: `docs/src/explanations/current_ordinary_branch.md`
+  - `docs` / `existing`: `docs/src/index.md`
+  - `docs` / `existing`: `docs/src/manual/index.md`
+  - `tool` / `existing`: `docs/make.jl`
+- **Evidence:**
+  - `manager_pass`: `602`
+- **Dependencies:** `HP-AUTHORITY-EXECUTION-WHITELIST-FN-01`, `HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-FN-01`
+- **Scope:** Reconcile the nine assigned status/onboarding/navigation paths under Current Status And Onboarding Documentation. Present released bounded interfaces, standard PQS, and radial-first onboarding; shorten stale summaries and expose two existing radial entries. Architecture edits correct contradictions only. Preserve tests, source/API, numerical behavior, workflows, release/deployment policy, and all deferred review items.
 
 ### HP-PUBLIC-SUPPORTED-SURFACE-DOC-FN-01 - document six supported public surface bindings
 
