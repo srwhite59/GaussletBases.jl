@@ -5713,10 +5713,10 @@ title = "validate radial paper-parity reproducibility documentation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-ATOMIC-IDA-DOC-FN-01", "HP-PUBLIC-FOUNDATION-DOC-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01"
-lifecycle = "approved"
-scope = "Render the exact remaining 78 names in four existing reference pages under Reference Discoverability Completion; extend the existing structural membership check. Preserve the accepted first subset, classifications, docstrings, reserved names, API, and coverage policy. No source, numerical, framework, workflow, release, or deployment change."
+lifecycle = "implemented"
+scope = "Maintain the reference completion accepted at 88b08158941c303b0c311febd9c639af7df3ad4d under Reference Discoverability Completion and First Subset. Preserve all 127 added entries, classifications, reused docstrings, structural coverage, reserved names, and release/deployment policy. No remaining implementation grant, source/API change, or internal-submodule promotion."
 surfaces = ["docs", "tests"]
 title = "complete documented public reference presentation"
 
@@ -5733,11 +5733,20 @@ title = "complete documented public reference presentation"
     kind = "git_commit"
     value = "1e4d93dd0ca034183ecb03b6ca883a06e4a3f7df"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "88b08158941c303b0c311febd9c639af7df3ad4d"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "604"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "605"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "606"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "607"
 
     [[records.paths]]
     kind = "docs"
@@ -5761,10 +5770,10 @@ title = "complete documented public reference presentation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-REFERENCE-DISCOVERY-DOC-TEST-01"
-lifecycle = "approved"
-scope = "Extend only the grouped canonical @docs membership checks in test/docs/runtests.jl for the exact 78 names under Reference Discoverability Completion. Preserve the first 49, public_surface_runtests.jl, prose freedom, and mechanical policies. No helper, parser, inventory framework, numerical test, source/API, workflow, release, or global coverage-policy change."
+lifecycle = "completed"
+scope = "Maintain the accepted grouped canonical @docs membership checks under Reference Discoverability Completion. Preserve first-subset coverage, public_surface_runtests.jl, prose freedom, and mechanical policies. No remaining implementation grant, new inventory machinery, numerical test, source/API, workflow, release, or global coverage-policy change."
 surfaces = ["tests"]
 title = "protect focused rendered-reference membership"
 
@@ -5781,11 +5790,20 @@ title = "protect focused rendered-reference membership"
     kind = "git_commit"
     value = "1e4d93dd0ca034183ecb03b6ca883a06e4a3f7df"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "88b08158941c303b0c311febd9c639af7df3ad4d"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "604"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "605"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "606"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "607"
 
     [[records.paths]]
     kind = "test"
