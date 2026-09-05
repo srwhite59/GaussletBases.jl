@@ -52,18 +52,27 @@ If you want atom-centered radial and atomic work:
 2. [Recommended atomic setup](../howto/recommended_atomic_setup.md)
 3. [Current atomic branch](../explanations/current_atomic_branch.md)
 
-If you want the ordinary Cartesian branch:
+For the standard Cartesian construction and its separate companion guides:
 
-1. [Current ordinary branch](../explanations/current_ordinary_branch.md)
-2. [Projected q-shells (PQS)](projected_q_shells.md)
+1. [Projected q-shells (PQS)](projected_q_shells.md)
+2. [Current ordinary branch](../explanations/current_ordinary_branch.md)
 3. [Reference-density Hartree screening](reference_density_hartree_screening.md)
 4. [External Cartesian GTO transfer](external_cartesian_gto_transfer.md)
 5. [Example guide](../howto/example_guide.md)
 
-The ordinary branch is worth reading after you understand the radial line. It
-is the right place to learn the current mapped ordinary workflow and the
-separate paper-faithful Qiu-White ordinary reference path, but it is not the
-best first entry point into the package.
+PQS is the default base route; White-Lindsey remains a matched alternative.
+The base facade constructs unsupplemented, uncorrected all-electron IDA
+Hamiltonians for origin-centered atoms and equal-label/equal-charge z-axis
+diatomics. Both `q` and `ns` are supported: PQS uses `q = ns`, White-Lindsey
+uses `q = ns - 2`, and supplying both requires consistency.
+
+Screening assembles a supplied-field correction and separate scalar in one
+orthonormal basis/order; it does not fit fields, correct exchange, or run SCF.
+External transfer reads validated version-1 packets, preserves raw projection
+and capture loss, and offers separate caller-thresholded determinant cleanup.
+Its optional PySCF/NumPy checkpoint exporter provides neither a Hamiltonian nor
+a complete restart and does not broaden destination geometry. These are
+distinct supported contracts, not guarantees of convergence or solver support.
 
 If you want the active experimental angular line:
 

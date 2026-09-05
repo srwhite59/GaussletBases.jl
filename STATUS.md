@@ -1,148 +1,57 @@
 # Current Status
 
-This file is the short current **capability / trust matrix** for the repo.
+This is the current capability/trust summary, not a changelog or a roadmap.
+A supported interface specifies what may be constructed; it does not promise
+convergence, arbitrary geometry, or a complete electronic-structure solution.
 
-It is not a changelog and it is not a roadmap. The question here is simply:
+## Recommended starting point
 
-- what is mature enough to trust
-- what is real but still experimental
-- what is legacy or quarantined
+The radial/atomic line remains the mature beginner workflow: ordinary 1D,
+half-line and radial bases, quadrature and diagnostics, radial one-body
+operators, atomic `(l,m)` channels, static IDA ingredients, direct/exchange/Fock
+helpers, a minimal UHF kernel, and dense/sliced atomic export.
+Start with README.md and the [Manual](docs/src/manual/index.md).
 
-## Mature
+## Released bounded interfaces
 
-### Radial / atomic line
+- [Projected q-shells (PQS)](docs/src/manual/projected_q_shells.md) is the
+  standard current Cartesian construction and default base route.
+  `cartesian_base_hamiltonian` constructs an unsupplemented, uncorrected
+  all-electron localized IDA Hamiltonian for origin-centered positive-charge
+  atoms or equal-label/equal-charge homonuclear z-axis diatomics.
+  Both `q` and `ns` are supported: PQS uses `q = ns`; the White-Lindsey
+  alternative uses `q = ns - 2`. Supplying both requires consistency.
+- [Reference-density Hartree screening](docs/src/manual/reference_density_hartree_screening.md)
+  assembles a correction from a supplied field in the same orthonormal basis
+  and order, with a separate energy scalar. It does not generate or fit the
+  field, correct exchange, or run SCF, and is distinct from PQS construction.
+- [External Cartesian GTO transfer](docs/src/manual/external_cartesian_gto_transfer.md)
+  reads validated version-1 packets and preserves raw projection, including
+  capture loss. Closest-determinant cleanup is separate and caller-thresholded.
+  The checkpoint-only PySCF/NumPy exporter is optional; it supplies neither a
+  Hamiltonian nor a complete restart and does not broaden destination geometry.
 
-Trust this as the primary onboarding path.
+Exact Cartesian `cross_overlap`, `basis_projector`, and `transfer_orbitals`
+remain supported on their working representation families. The residual-GTO
+system constructor supports same-construction overlap and external import.
 
-Current mature surface includes:
+## Expert and research workflows
 
-- ordinary 1D, half-line, and radial gausslet bases
-- explicit radial quadrature and diagnostics
-- radial one-body operators
-- explicit atomic `(l,m)` channels
-- static atomic IDA ingredients
-- direct / exchange / Fock helpers
-- minimal UHF kernel
-- dense and sliced atomic export for the current density-density model
+Mapped ordinary and Qiu-White residual-Gaussian routes retain their documented
+backend and supplement restrictions. One-center nested fixed-block and
+bond-aligned diatomic source/fixed-block/geometry workflows are supported
+within their individual contracts; they are not general molecular solvers.
+See the [Current ordinary branch](docs/src/explanations/current_ordinary_branch.md).
 
-Primary docs:
+Angular injection, contraction/hierarchy, and chain/square nested producers
+remain experimental. The sliced hydrogen-chain producer is a separate expert
+Hamiltonian constructor, not a solver. `cartesian_base_working_basis` exposes
+expert/unstable staged state; PRF/injection mechanics remain private.
 
-- `README.md`
-- `docs/src/explanations/current_atomic_branch.md`
-- `docs/src/manual/index.md`
+## Legacy and exclusions
 
-### Exact Cartesian overlap / projector / transfer primitives
-
-Trust this as a real current workflow primitive, not as a side note.
-
-Current mature surface includes:
-
-- `cross_overlap`
-- `basis_projector`
-- `transfer_orbitals`
-
-These exact Cartesian transfer contracts are now part of the real current repo
-story and support both validation and workflow handoff across current Cartesian
-representation families.
-
-## Real but experimental
-
-### Ordinary / Cartesian mapped and Qiu-White routes
-
-This is a real current workflow surface, but newer and less settled than the
-radial line.
-
-Current supported surface includes:
-
-- mapped ordinary Cartesian basis construction
-- exact overlap / projector / transfer primitives
-- current Qiu-White residual-Gaussian route
-- current supplement and compact packet contracts
-
-Primary docs:
-
-- `docs/src/explanations/current_ordinary_branch.md`
-- `docs/src/algorithms/qiu_white_residual_gaussian_route.md`
-
-### One-center nested Cartesian path
-
-This is real code, not a sketch.
-
-Current supported surface includes:
-
-- one-center shell-sequence construction
-- one-center fixed-block construction
-- nested Cartesian operator consumers
-- compact-only packet construction on the production path
-
-This line is still evolving scientifically, especially around frozen-core and
-exactification questions, but it is no longer accurate to describe it as absent
-or purely aspirational.
-
-### Bond-aligned diatomic workflow
-
-This is also real code, not a placeholder.
-
-Current supported surface includes:
-
-- bond-aligned diatomic nested fixed-source construction
-- supported one-build source reuse
-- source-level geometry diagnostics
-- source geometry payloads and plane slices
-- bond-aligned diatomic Qiu-White workflow support
-- current diatomic geometry policy and diagnostics
-
-This line is still experimental in the scientific sense, especially around
-policy and workflow maturation, but it is a real current repo surface.
-
-The three exported fixed-source, fixed-block, and geometry-diagnostics front
-doors remain supported. A bounded maintenance repair is approved for the legal
-unsplit/no-shared-shell packet path and endcap/panel diagnostics; these are
-known implementation defects, not a retirement or policy change.
-
-### Experimental chain / square-lattice nested producers
-
-These routes exist and can be used for producer-side experiments, but they are
-not yet settled as broad public workflows.
-
-### Angular research track
-
-The angular line is real and has:
-
-- shell-local injected basis construction
-- shell-to-atom assembly
-- one-electron, HF-style, and small-ED benchmark paths
-- direct in-memory HFDMRG payload handshake
-
-But it should still be read as experimental/manuscript-facing rather than as a
-stable general user workflow.
-
-## Legacy / quarantined
-
-### Old 1D COMX-cleaned hybrid ordinary route
-
-This should be treated as legacy/internal code for surrogate comparisons and
-historical regression checks.
-
-It is **not** the supported current ordinary / Cartesian workflow.
-
-### Flat supporting-note history in `docs/`
-
-The broader flat `docs/*.md` note tree remains useful as supporting or
-historical material, but it is not the primary current authority for repo
-status. Use the root docs and rendered `docs/src/*` pages first.
-
-## Not yet broad or stable
-
-The following are still outside the current mature/public workflow contract:
-
-- broad exact four-index electron-electron workflows
-- a broad stabilized molecular HF / post-HF workflow
-- a broad stabilized molecule-scale nested workflow beyond the current
-  one-center and bond-aligned diatomic surfaces
-- named chemistry basis-set libraries
-- large solver layers such as DMRG as a native repo workflow
-- Python / Fortran interoperability layers
-
-Those absences are now narrower than the old root docs implied, but they are
-still real.
+The old 1D COMX-cleaned hybrid route is legacy/internal, not the current
+ordinary workflow. Flat supporting-note history does not override current
+manuals and contracts. Broad exact four-index interaction workflows, general
+molecular SCF/post-HF, and native DMRG remain outside the supported package
+workflow; the optional PySCF exporter is not a general interoperability layer.

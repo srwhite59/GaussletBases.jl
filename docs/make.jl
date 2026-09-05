@@ -63,6 +63,8 @@ makedocs(
         "Home" => "index.md",
         "Manual" => [
             "Overview" => "manual/index.md",
+            "First radial workflow" => "tutorials/first_radial_workflow.md",
+            "Recommended atomic setup" => "howto/recommended_atomic_setup.md",
             "Projected q-shells (PQS)" => "manual/projected_q_shells.md",
             "Reference-density Hartree screening" => "manual/reference_density_hartree_screening.md",
             "External Cartesian GTO transfer" => "manual/external_cartesian_gto_transfer.md",
@@ -87,8 +89,6 @@ makedocs(
         hide("Cartesian nested endcap/panel shared-shell route" => "algorithms/cartesian_nested_endcap_panel_shared_shell.md"),
         hide("Cartesian nested diatomic coordinate distortion" => "algorithms/cartesian_nested_diatomic_coordinate_distortion.md"),
         hide("Radial interval-sampled build and extents" => "algorithms/radial_interval_sampled_build_and_extents.md"),
-        hide("First radial workflow" => "tutorials/first_radial_workflow.md"),
-        hide("Recommended atomic setup" => "howto/recommended_atomic_setup.md"),
         hide("Visualization utilities" => "howto/visualization.md"),
         hide("Current atomic branch" => "explanations/current_atomic_branch.md"),
         hide("Angular research track" => "explanations/angular_research_track.md"),

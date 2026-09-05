@@ -1,11 +1,30 @@
 # Current ordinary branch
 
-This page is the shortest current user-facing status read for the newer
-ordinary / Cartesian line.
+PQS is the standard current Cartesian construction and default base route.
+Supported interfaces and experimental backend choices should be distinguished
+from scientific convergence or general molecular solver support.
 
 ## What the ordinary branch is today
 
-The current ordinary story is:
+The [PQS manual](../manual/projected_q_shells.md) is the public starting point.
+`cartesian_base_hamiltonian` builds an unsupplemented, uncorrected all-electron
+localized IDA Hamiltonian for origin-centered positive-charge atoms and
+equal-label/equal-charge homonuclear z-axis diatomics. Both `q` and `ns` are
+supported: PQS uses `q = ns`; White-Lindsey uses `q = ns - 2`. Supplying both
+requires consistency. White-Lindsey remains a matched comparison/alternative.
+
+Separate released guides describe:
+
+- [Reference-density Hartree screening](../manual/reference_density_hartree_screening.md):
+  supplied-field correction assembly in one orthonormal basis/order with a
+  separate energy scalar, not field generation, fitting, exchange, or SCF.
+- [External Cartesian GTO transfer](../manual/external_cartesian_gto_transfer.md):
+  validated version-1 packets, raw projection with capture loss, and optional
+  caller-thresholded determinant cleanup. The checkpoint-only PySCF/NumPy
+  exporter is optional and supplies neither a Hamiltonian nor a full restart;
+  it does not broaden destination-basis geometry.
+
+The lower-level ordinary/Qiu-White routes also provide:
 
 - Coulomb-expansion first, not 3D grid first
 - one-dimensional mapped ordinary bases on each Cartesian axis
@@ -22,13 +41,9 @@ The current ordinary story is:
 - the old COMX-cleaned 1D hybrid route quarantined as legacy/internal code,
   not current workflow
 
-This line is still experimental, but it is now a real second workflow surface
-in the package rather than a hidden side note.
-
-The exported bond-aligned diatomic source, fixed-block, and diagnostics front
-doors remain supported. Their legal no-shared-shell packet path and
-endcap/panel diagnostics have a bounded repair pending under
-`HP-QW-NESTED-DIAT-FN-01`; no ordinary-QW policy or default change is implied.
+The exported bond-aligned diatomic source, fixed-block, and diagnostics entry
+points remain supported within their contracts. Experimental backend and
+geometry policies below do not broaden the public base facade.
 
 ## Start here
 

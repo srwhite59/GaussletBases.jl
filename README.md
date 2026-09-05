@@ -22,20 +22,15 @@ constructing the quadrature grids that go with them, and forming the current
 one-body and integral-diagonal approximation (IDA)-style operators on top of
 them.
 
-Today the package has four real current surfaces:
-
-- a mature **radial / atomic workflow**
-- a real **ordinary Cartesian workflow** with exact basis-to-basis Cartesian
-  `cross_overlap`, `basis_projector`, and `transfer_orbitals` primitives
-- a real **nested Cartesian / diatomic workflow surface** with one-center
-  atomic fixed-block routes, bond-aligned diatomic nested source/fixed-block
-  construction, geometry diagnostics, and geometry payload export
-- an experimental **angular and advanced research track** for injected angular
-  bases, contraction, hierarchy, and prototype PGDG-related work
-
-If you are new, start with the radial path. It is also the most recent
-published line in the repo: the radial gausslet paper is now posted on arXiv,
+Start with the mature **radial / atomic workflow**. Its radial gausslet paper is
 <https://doi.org/10.48550/arXiv.2603.22646>.
+
+**Projected q-shells (PQS)** is the standard current Cartesian construction
+and default base route; White-Lindsey remains a matched alternative. The
+public base facade constructs unsupplemented, uncorrected all-electron IDA
+Hamiltonians for origin-centered atoms and equal-label/equal-charge
+homonuclear z-axis diatomics. These supported interfaces do not establish
+arbitrary molecular geometry, convergence, or general solver support.
 
 Documentation: <https://srwhite59.github.io/GaussletBases.jl/stable/>
 
@@ -43,9 +38,14 @@ Current public capability guides:
 
 - [Projected q-shells](https://srwhite59.github.io/GaussletBases.jl/stable/manual/projected_q_shells/)
 - [Reference-density Hartree screening](https://srwhite59.github.io/GaussletBases.jl/stable/manual/reference_density_hartree_screening/)
+  assembles a supplied-field correction and separate energy scalar in one
+  orthonormal basis/order; it does not generate fields, fit, correct exchange,
+  or run SCF. This is distinct from PQS construction.
 - [External Cartesian GTO transfer](https://srwhite59.github.io/GaussletBases.jl/stable/manual/external_cartesian_gto_transfer/),
   using a checkpoint-only exporter; PySCF and NumPy are optional dependencies
-  of that external command
+  of that external command. Validated version-1 packets support raw projection
+  with capture loss and separate caller-thresholded determinant cleanup, not
+  a Hamiltonian/restart or broader destination geometry.
 
 The rendered docs are now organized into a small set of primary sections:
 Manual, Algorithms, Examples, Reference, and Developer Notes.
@@ -56,8 +56,6 @@ GaussletBases is most useful today for people who want to:
 
 - explore ordinary gausslets as localized basis functions built from explicit Gaussian primitive layers
 - explore radial gausslet bases for atoms and related model problems
-  The most recent posted paper on that line is
-  <https://doi.org/10.48550/arXiv.2603.22646>.
 - experiment with the manuscript-facing angular injected-basis research track
   while treating it as experimental rather than stable workflow surface
 - inspect the underlying Gaussian layer behind a basis
@@ -65,9 +63,8 @@ GaussletBases is most useful today for people who want to:
 - experiment with simple one-dimensional hierarchy and contraction ideas without yet committing to a full molecular workflow
 
 It is **not** yet a complete electronic-structure workflow package. It is a
-basis, quadrature, and operator package, with a mature radial/atomic line, a
-real newer ordinary/cartesian line, a real nested Cartesian/diatomic surface,
-and narrower experimental solver-facing or hierarchy-facing research tracks.
+basis, quadrature, and operator package with bounded Cartesian interfaces
+alongside the radial/atomic workflow and experimental angular/hierarchy work.
 
 ## Installation
 
@@ -146,7 +143,7 @@ library normally owns the internal quadrature extent.
 If you want the same workflow explained more slowly, with diagnostics and
 setup discussion, go next to:
 
-- [First radial workflow](https://srwhite59.github.io/GaussletBases.jl/stable/manual/)
+- [First radial workflow](https://srwhite59.github.io/GaussletBases.jl/stable/tutorials/first_radial_workflow/)
 - [Recommended atomic setup](https://srwhite59.github.io/GaussletBases.jl/stable/howto/recommended_atomic_setup/)
 
 ## What you usually do next
@@ -285,9 +282,10 @@ What is not yet here:
   one-center and bond-aligned diatomic surfaces
 - named Gaussian chemistry basis libraries
 - true many-body DMRG or related workflow layers
-- Python and Fortran interoperability layers
+- general Python and Fortran interoperability beyond the optional checkpoint
+  exporter described above
 
-That is deliberate. The package is still settling its scientific structure before it grows into those directions.
+These limits are not promises of future expansion.
 
 ## Acknowledgments
 

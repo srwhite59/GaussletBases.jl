@@ -40,6 +40,11 @@ The current package-level design contracts are:
 
 - GaussletBases is a **basis, quadrature, and operator** package first.
 - The mature onboarding path is still the **radial / atomic** line.
+- **PQS** is the standard Cartesian construction and default base route;
+  White-Lindsey is a matched alternative. The public facade is bounded to
+  origin-centered atoms and equal-label/equal-charge z-axis diatomics.
+- Supplied-field Hartree screening and validated external Cartesian GTO
+  transfer are separate released interfaces, not a combined solver workflow.
 - The repo now also has a real **ordinary / Cartesian** surface, including:
   - exact Cartesian basis-to-basis `cross_overlap`
   - exact `basis_projector`
@@ -59,10 +64,12 @@ For a new reader:
 
 1. trust `README.md` for the first repo overview
 2. trust `STATUS.md` for what is mature, experimental, or quarantined
-3. trust `ROADMAP.md` for what the project is actually pushing on next
-4. trust the rendered `current_*_branch.md` pages for branch-specific current
+3. use the [Manual](docs/src/manual/index.md) for workflows and the
+   [Reference](docs/src/reference/index.md) for supported calls
+4. use the rendered `current_*_branch.md` pages for branch-specific current
    status
-5. trust algorithm pages for path-specific recipes
+5. use algorithm pages for path-specific recipes; consult `ROADMAP.md` only
+   for optional maintenance/research context, not usage instructions
 
 That ordering is deliberate. It is meant to remove the old ambiguity about
 which top-level note was supposed to be current.

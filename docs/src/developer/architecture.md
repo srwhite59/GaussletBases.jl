@@ -42,8 +42,13 @@ That is a real small atomic line, but not yet a broad atomic workflow package.
 
 ## Ordinary line
 
-The ordinary Cartesian branch is the experimental line for mapped and hybrid
-ordinary gausslets. Its current interpretation is:
+PQS is the standard current Cartesian base construction, with a bounded
+public atom/homonuclear z-axis diatomic Hamiltonian facade and White-Lindsey
+alternative. Supplied-field screening and external Cartesian GTO transfer are
+separate supported interfaces, not a general molecular solver.
+
+The mapped/hybrid ordinary routes retain their expert and experimental
+distinctions. Their internal interpretation is:
 
 - Coulomb-expansion first
 - mild and hybrid regimes as the practical target
@@ -102,5 +107,6 @@ The shortest package-shape summary is:
 - ordinary gausslets are the broad foundation
 - radial gausslets are the mature current workflow
 - the atomic line sits on top of the radial substrate
+- PQS is the standard bounded Cartesian base route
 - the ordinary mapped/hybrid line is promising but still experimental
 - primitive layers and contraction are the structural bridge to later work

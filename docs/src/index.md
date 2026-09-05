@@ -35,8 +35,15 @@ For lightweight point-cloud and path inspection utilities, also see
 That is still the best front door because the radial line is the current
 mature numerical workflow.
 
-For the bounded molecular Cartesian route, continue to
-[Projected q-shells (PQS)](manual/projected_q_shells.md).
+For Cartesian construction, continue to
+[Projected q-shells (PQS)](manual/projected_q_shells.md), the standard default
+base route. The facade constructs unsupplemented, uncorrected all-electron IDA
+Hamiltonians for origin-centered atoms and equal-label/equal-charge z-axis
+diatomics; White-Lindsey is a matched alternative.
+
+Two separate guides cover [Reference-density Hartree screening](manual/reference_density_hartree_screening.md)
+from a supplied field and [External Cartesian GTO transfer](manual/external_cartesian_gto_transfer.md)
+from validated packets. Neither adds a general molecular solver.
 
 ## Primary documents
 
@@ -82,10 +89,11 @@ development record underneath.
 
 ## Current scope
 
-Today the package is strongest in three areas:
+The current package includes:
 
 - a mature radial / atomic workflow
-- a real but newer ordinary Cartesian mapped/hybrid workflow
+- supported bounded PQS, screening, and external-transfer interfaces
+- expert ordinary Cartesian mapped/hybrid workflows
 - a separate advanced/research line for contraction, hierarchy, and supporting
   PGDG-related work
 
