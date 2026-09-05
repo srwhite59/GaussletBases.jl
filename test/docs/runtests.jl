@@ -244,6 +244,32 @@
     end
 
     @testset "Docs Build And Reference Surfaces" begin
+        for (page, expected) in (
+            (docs_site_reference_bases, split("""
+                AbstractFunction1D AbstractPrimitiveFunction1D AbstractBasisFunction1D
+                AbstractCoordinateMapping AbstractBasisSpec Gaussian HalfLineGaussian
+                XGaussian Distorted GaussletFamily Gausslet MappedGausslet BoundaryGausslet
+                RadialGausslet StencilTerm FunctionStencil UniformBasis MappedUniformBasis
+                HalfLineBasis RadialBasis RadialQuadratureGrid PrimitiveSet1D BasisMetadata1D
+                BasisRepresentation1D basis_representation primitive_set primitives
+                stencil_matrix moment_center
+                """)),
+            (docs_site_reference_ops, split("""
+                AbstractDiagonalApproximation IntegralDiagonal position_matrix
+                coulomb_gaussian_expansion
+                """)),
+            (docs_site_reference_atomic, split("""
+                YlmChannel YlmChannelSet ylm_channels channel_range channel_overlap
+                channel_hamiltonian CartesianBasisMetadata3D CartesianBasisRepresentation3D
+                CartesianGaussianShellOrbitalRepresentation3D
+                CartesianGaussianShellSupplementRepresentation3D
+                CartesianBasisTransferDiagnostics CartesianBasisProjector3D
+                CartesianOrbitalTransferResult cross_overlap basis_projector transfer_orbitals
+                """)))
+            entries = [strip(line) for block in eachmatch(r"(?ms)^```@docs\n(.*?)^```", page)
+                for line in split(block.captures[1], '\n')]
+            @test all(name -> count(==(name), entries) == 1, expected)
+        end
         @test occursin("Documenter", docs_project)
 
         @test contains_all(

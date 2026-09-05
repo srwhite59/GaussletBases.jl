@@ -17,6 +17,51 @@ julia> length(basis)
 5
 ```
 
+## Function and basis types
+
+These types describe the primitive functions, stencils, and constructed bases
+used by the tutorials. Use the recipes below for normal basis construction.
+
+```@docs
+AbstractFunction1D
+AbstractPrimitiveFunction1D
+AbstractBasisFunction1D
+AbstractCoordinateMapping
+AbstractBasisSpec
+Gaussian
+HalfLineGaussian
+XGaussian
+Distorted
+GaussletFamily
+Gausslet
+MappedGausslet
+BoundaryGausslet
+RadialGausslet
+StencilTerm
+FunctionStencil
+UniformBasis
+MappedUniformBasis
+HalfLineBasis
+RadialBasis
+RadialQuadratureGrid
+```
+
+## Expert representation inspection
+
+Representation access follows the supported basis families documented by each
+method; it is not a promise of a universal representation or metadata schema.
+
+```@docs
+PrimitiveSet1D
+BasisMetadata1D
+BasisRepresentation1D
+basis_representation
+primitive_set
+primitives
+stencil_matrix
+moment_center
+```
+
 ## Basis recipes and construction
 
 ```@docs

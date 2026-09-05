@@ -22,6 +22,18 @@ This tiny doctest uses `xgaussian_count = 0` to keep the reference example
 lightweight. The recommended public atomic setup still uses the default
 `xgaussian` supplement unless you have a specific reason to turn it off.
 
+## Operator conventions and resources
+
+The diagonal-approximation convention and finite Coulomb expansion are
+operator-construction inputs, not guarantees of continuum accuracy.
+
+```@docs
+AbstractDiagonalApproximation
+IntegralDiagonal
+position_matrix
+coulomb_gaussian_expansion
+```
+
 ## Bond-aligned QW and Coulomb resources
 
 The QW container is a bond-aligned mapped-product basis built through the

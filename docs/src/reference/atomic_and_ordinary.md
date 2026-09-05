@@ -23,6 +23,17 @@ julia> length(orbitals(ida)) == length(rb)
 true
 ```
 
+## Atomic channel inspection
+
+```@docs
+YlmChannel
+YlmChannelSet
+ylm_channels
+channel_range
+channel_overlap
+channel_hamiltonian
+```
+
 ## Atomic one-body and IDA layers
 
 The current exchange helper uses the exchanged angular-sector rule described in
@@ -68,6 +79,28 @@ apply_overlap
 apply_hamiltonian
 ground_state_energy
 lanczos_ground_state
+```
+
+## Expert Cartesian representation and transfer
+
+Transfer is restricted to the representation families documented below.
+For orthonormal final working bases, use cross overlap; self-overlaps are
+construction/debug diagnostics, not generalized-overlap working data.
+The transfer helper's documented cleanup is distinct from
+[external GTO transfer](../manual/external_cartesian_gto_transfer.md), which
+preserves raw projection and separates explicitly thresholded determinant preparation.
+
+```@docs
+CartesianBasisMetadata3D
+CartesianBasisRepresentation3D
+CartesianGaussianShellOrbitalRepresentation3D
+CartesianGaussianShellSupplementRepresentation3D
+CartesianBasisTransferDiagnostics
+CartesianBasisProjector3D
+CartesianOrbitalTransferResult
+cross_overlap
+basis_projector
+transfer_orbitals
 ```
 
 ## Ordinary mapped and hybrid line
