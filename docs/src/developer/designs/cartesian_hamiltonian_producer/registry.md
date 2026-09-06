@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `feba5b94acc2736b3243f6abe970fabf8b344eb51015387327693566a69c9ea0`.
+> [authority.toml](authority.toml), SHA-256 `502ff5c2e5c590d6f6a4b472ca98edcf03a89eca6577c58357902868f4c43748`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -3026,8 +3026,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-ONBOARDING-EXAMPLES-TEST-01 - run recommended onboarding examples in routine CI
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -3035,9 +3035,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `0019cbd5e5fafc91f21c03ec9610262a6c65e24b`
   - `manager_pass`: `608`
+  - `manager_pass`: `609`
 - **Dependencies:** `HP-PUBLIC-PAPER-CI-FN-01`
-- **Scope:** Move only the existing example 02, 03, 04, and 15 assertions from slow to quick selection in test/runtests.jl under Onboarding Example CI Selection, exactly +4/-4. Preserve scripts, runner, all other selections, and numerical behavior. No workflow, timeout, framework, source/API, dependency, fixture, release, or other-example change.
+- **Scope:** Maintain the exact four-assertion relocation accepted at 0019cbd5e5fafc91f21c03ec9610262a6c65e24b under Onboarding Example CI Selection. Preserve once-only quick/slow-enabled execution of examples 02/03/04/15, scripts, runner, other selections, and numerical behavior. No remaining implementation grant, workflow, timeout, framework, source/API, dependency, fixture, release, or other-example change.
 
 ### HP-PUBLIC-PAPER-CI-FN-01 - paper-aligned PQS and screening CI workflow
 

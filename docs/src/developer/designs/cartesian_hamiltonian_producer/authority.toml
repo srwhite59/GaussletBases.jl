@@ -5310,10 +5310,10 @@ title = "validate function evaluation and stencil documentation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-PAPER-CI-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PUBLIC-ONBOARDING-EXAMPLES-TEST-01"
-lifecycle = "approved"
-scope = "Move only the existing example 02, 03, 04, and 15 assertions from slow to quick selection in test/runtests.jl under Onboarding Example CI Selection, exactly +4/-4. Preserve scripts, runner, all other selections, and numerical behavior. No workflow, timeout, framework, source/API, dependency, fixture, release, or other-example change."
+lifecycle = "completed"
+scope = "Maintain the exact four-assertion relocation accepted at 0019cbd5e5fafc91f21c03ec9610262a6c65e24b under Onboarding Example CI Selection. Preserve once-only quick/slow-enabled execution of examples 02/03/04/15, scripts, runner, other selections, and numerical behavior. No remaining implementation grant, workflow, timeout, framework, source/API, dependency, fixture, release, or other-example change."
 surfaces = ["tests"]
 title = "run recommended onboarding examples in routine CI"
 
@@ -5323,8 +5323,14 @@ title = "run recommended onboarding examples in routine CI"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "0019cbd5e5fafc91f21c03ec9610262a6c65e24b"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "608"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "609"
 
     [[records.paths]]
     kind = "test"

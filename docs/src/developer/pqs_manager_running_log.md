@@ -1435,3 +1435,23 @@ PQS release calculation and is not an orphan. Source `+0/-0`; no new numerical
 assertion, helper, file, metadata, or status field. Scripts remain live and
 unchanged; implementation and measured acceptance are the remaining blocker.
 No workflow, release, stable deployment, or follow-on authority is granted.
+
+## Cartesian Hamiltonian Producer Pass 609 - Close Onboarding Selection
+
+Accepted `0019cbd5e5fafc91f21c03ec9610262a6c65e24b` after independent diff
+review: exactly `+4/-4` in the existing runner, moving 02/03/04/15 once into
+quick selection and removing their slow entries. Local quick examples passed
+7/7 in 46.9s; Linux Julia 1.10.12 passed 7/7 in 2m11.4s. Verified full CI
+`34002468513` and Docs `34002468423` passed at that SHA. Supported floor took
+9m21s, with 20m39s before timeout. Its 56s historical increase is not an
+isolated added-script benchmark. Existing package/docs checks were
+`8/8 + 134/134 + 10/10`; manager closeout uses docs-only checks, authority/
+self-test/views, Documenter, log bound, and diff checks without numerical reruns.
+
+No strategic change: MT1/MT6 onboarding reliability improved without changing
+numerics. The test ID is completed/maintenance with no remaining grant or
+blocker. Deleted: four slow-list entries; simplified: recommended scripts use
+the existing quick runner. Quarantined: other example scheduling and duplicate
+01; Example 41 remains intentionally shared with release validation. No live
+script was deleted. Source `+0/-0`; no new assertions, helper, file, metadata,
+or status field. Workflow, timeout, release, stable docs, and handoffs unchanged.
