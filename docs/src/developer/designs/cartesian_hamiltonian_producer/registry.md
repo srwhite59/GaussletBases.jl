@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `502ff5c2e5c590d6f6a4b472ca98edcf03a89eca6577c58357902868f4c43748`.
+> [authority.toml](authority.toml), SHA-256 `4336aa9320309f4388ba8a828f5d9e508b52c2b58f1869c965f00ce91fa3fa88`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2696,6 +2696,26 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `414`
 - **Dependencies:** `HP-PQS-SHELLQ-OVERRIDE-FN-01`
 - **Scope:** Validate route-q 7 to source-q 6 and 5 coarsening, expected retained-count reduction, unchanged parent/support/ownership/cores/slabs/route metadata, orthonormal contraction columns, omitted/empty parity, finite symmetric full construction, and rejection of malformed, below-3, Boolean, equal-route, asymmetric, and unmatched requests. Preserve existing refinement, residual, packet-capture, \`J0/E0\`, correction, dimension, and due-diligence gates. No new accessor, dense baseline-to-variant overlap API, source-pass HF, endpoint energy assertion, or production claim is approved.
+
+### HP-PUBLIC-ALGORITHM-POINTER-DOC-01 - correct algorithm pointers and historical provenance
+
+- **Lifecycle:** `approved`
+- **Grant:** `design`
+- **Surfaces:** `docs`
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `Algorithm Pointer And Provenance Correction`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/algorithms/atomic_ida_exchange_angular_sectors.md`
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_diatomic_box_policy.md`
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_diatomic_coordinate_distortion.md`
+  - `docs` / `existing`: `docs/src/algorithms/cartesian_nested_face_construction.md`
+  - `docs` / `existing`: `docs/src/algorithms/index.md`
+  - `docs` / `existing`: `docs/src/algorithms/radial_interval_sampled_build_and_extents.md`
+- **Evidence:**
+  - `manager_pass`: `610`
+- **Dependencies:** none
+- **Scope:** Correct only the six existing algorithm pages under Algorithm Pointer And Provenance Correction: atomic owners, radial production/oracle roles, private historical provenance, and boundary-level backlink guidance. Preserve numerical contracts and useful oracles. No source/comment, test, parser, API/export, workflow, dependency, release, or unrelated cleanup change.
 
 ### HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01 - document experimental angular profile and sequence producers
 

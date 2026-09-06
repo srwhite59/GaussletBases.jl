@@ -880,6 +880,67 @@ release owner; its absence from the script list is intentional, not a gap.
 No blanket weekly wiring or follow-on implementation is authorized. If the
 exact list move cannot meet this contract, make no implementation commit.
 
+## Algorithm Pointer And Provenance Correction
+
+Pass 610 independently verifies the September 4 review against `977dc3f64`.
+Authorize one docs-only correction, `HP-PUBLIC-ALGORITHM-POINTER-DOC-01`,
+using the existing design grant for documentation, not source/test execution.
+The complete implementation surface is these six existing algorithm pages:
+
+- `docs/src/algorithms/atomic_ida_exchange_angular_sectors.md`
+- `docs/src/algorithms/radial_interval_sampled_build_and_extents.md`
+- `docs/src/algorithms/cartesian_nested_face_construction.md`
+- `docs/src/algorithms/cartesian_nested_diatomic_coordinate_distortion.md`
+- `docs/src/algorithms/cartesian_nested_diatomic_box_policy.md`
+- `docs/src/algorithms/index.md`
+
+Correct the exchange entry pointer to
+`src/atomic/atomic_ida_exchange.jl:exchange_matrix` (currently line 89).
+Replace nonexistent `src/atomic_angular_coulomb.jl` with
+`src/atomic/atomic_angular_sectors.jl`. The latter builds the exchange sectors;
+`_sectorized_exchange_blocks` in the exchange owner performs their contraction.
+Preserve the existing atomic IDA mathematics and scope.
+
+Correct the radial code map, not its algorithm or oracle implementation.
+`_build_radial_coefficients` uses `_sample_shifted_gausslets`,
+`_sample_xgaussian_intervals`, `_interval_gram_matrix`, and
+`_interval_cross_gram_matrix` for setup sampling and Gram/position assembly.
+It later materializes `_interval_sample_matrix` inputs for
+`_finalize_localized_basis`; do not claim the entire build is dense-free.
+`_xgaussian_sample_matrix` is a dense test oracle called only by
+`test/radial/runtests.jl` in tracked src/test/bin, and must be preserved.
+The review also missed that `_seed_scalar_integrals` is not the production
+radial sampler: it remains live in half-line construction/refinement and the
+radial oracle test. Label that distinction without declaring it dead.
+
+Add a short historical-provenance note at the existing legacy references in
+each of the three nested pages. GaussletModules/PureGaussianGausslet,
+getsideu/getside, PGGbackbone3D, and alignAtoms! identify private historical
+implementations, not shipped dependencies or prerequisites to package use.
+Point readers to the existing current-repository code maps. Preserve useful
+scientific provenance, and do not invent public URLs for private material.
+
+In the index's code-comment convention, prefer a concise accurate backlink at
+a meaningful implementation boundary; use stable step references where useful.
+Do not require comment density or one comment per operation. Harmonize the
+radial implementation-notes wording with that guidance. Existing QW/nested
+boundary backlinks already demonstrate the convention. No source-comment
+edit or source-wide backlink campaign is authorized in this packet.
+
+Expected net documentation growth is 20-40 lines; preferred/hard additions
+are 65/90 across the six pages. Use existing docs checks and direct inspection
+that corrected paths exist and named functions belong to the stated owner.
+No new mechanical safeguard is justified for these isolated pointers: a file
+existence check alone misses wrong-owner symbols, while a general Julia parser
+would exceed this correction. Add no test, prose lock, helper, parser, or file.
+Validate package load, docs_fast/full docs, authority/self-test/views, log bound,
+Documenter, and diff checks, then remote docs-only CI markers and Docs.
+No numerical rerun is required: inspection found documentation errors, not an
+implementation defect. If correction requires changing source, mathematics,
+tests, or scope, stop before commit and report. Release, stable deployment,
+API, exports, workflows, dependencies, and unrelated algorithm cleanup remain
+excluded. Repo-manager waits for this authority commit and its required checks.
+
 ## Failure Behavior
 
 Malformed public requests throw, normally with `ArgumentError`, before

@@ -38,6 +38,13 @@ claim.
 
 ## Active And Pending Work
 
+Pass 610 approves the docs-only design grant
+`HP-PUBLIC-ALGORITHM-POINTER-DOC-01` for six existing algorithm pages.
+Correct atomic pointers, radial production/oracle roles, legacy provenance,
+and backlink guidance under Algorithm Pointer And Provenance Correction.
+No source/test execution or numerical rerun is authorized. Repo-manager waits
+for this commit and checks; source comments and broader cleanup remain separate.
+
 Pass 609 closes `HP-PUBLIC-ONBOARDING-EXAMPLES-TEST-01` at `0019cbd5e` as
 completed/maintenance with no remaining implementation grant. Examples
 02/03/04/15 run once in quick or slow-enabled selection; Linux Julia 1.10.12

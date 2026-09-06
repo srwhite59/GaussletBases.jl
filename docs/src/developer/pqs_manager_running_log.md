@@ -1455,3 +1455,29 @@ the existing quick runner. Quarantined: other example scheduling and duplicate
 01; Example 41 remains intentionally shared with release validation. No live
 script was deleted. Source `+0/-0`; no new assertions, helper, file, metadata,
 or status field. Workflow, timeout, release, stable docs, and handoffs unchanged.
+
+## Cartesian Hamiltonian Producer Pass 610 - Algorithm Pointer Correction
+
+At `977dc3f64`, verified exchange_matrix belongs to atomic_ida_exchange.jl,
+and the angular sector owner is atomic_angular_sectors.jl, not the nonexistent
+atomic_angular_coulomb.jl. Radial construction samples intervals and assembles
+Gram/position data before dense final-localization samples. The dense
+_xgaussian_sample_matrix remains a test oracle; _seed_scalar_integrals also
+serves live half-line code, not production radial sampling. Preserve both.
+Three nested pages need brief private historical-provenance clarification.
+
+Authorize six algorithm pages only, expected net +20-40 and preferred/hard
+additions 65/90. A docs-only design record grants no source/test execution.
+Boundary backlinks are useful; source-comment counts and a symbol parser are
+not. Existing docs checks plus direct pointer inspection suffice. No numerical
+issue found or rerun needed. Require package/docs, authority/self-test/views,
+Documenter, log bound, diff checks, remote docs-only CI markers, and Docs.
+Deleted: stale pointer claims; simplified: production/oracle distinction;
+quarantined: source cleanup, comment campaigns, and release work. Live helpers
+are not deleted; source +0/-0, no test, file, helper, metadata, or status field.
+Implementation and separate closeout remain the blocker; stable docs unchanged.
+
+MT checkpoint: MT1 active conformance; MT2 completed; MT3 blocked represented
+Hartree; MT4 active residual/protected boundaries; MT5 active/maintenance;
+MT6 active documentation alignment with reference discovery and onboarding
+coverage completed; MT7 completed/maintenance. No new scientific goal opens.

@@ -113,7 +113,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_one_center_
 sha256 = "57cba2b45fc434cf372885b131ee0198e569527b6977b65168cebff29ee99223"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
-sha256 = "83fa4170e0579e695069eaea92d331a1f6c079517cca798006b9cc3a9e15570d"
+sha256 = "ca3ec0e87a0a07c570396c37e104b57cc14cd538d3e239a5800f81569c316d43"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_homonuclear_diatomic_supplemented_workflow.md"
 sha256 = "36e4007e97e7d32d95ee3fc024e362b71c3fa865ce3b9e0066189b99327b48e9"
@@ -4729,6 +4729,48 @@ title = "semantic source-q override validation"
     [[records.paths]]
     kind = "test"
     path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = []
+grant = "design"
+id = "HP-PUBLIC-ALGORITHM-POINTER-DOC-01"
+lifecycle = "approved"
+scope = "Correct only the six existing algorithm pages under Algorithm Pointer And Provenance Correction: atomic owners, radial production/oracle roles, private historical provenance, and boundary-level backlink guidance. Preserve numerical contracts and useful oracles. No source/comment, test, parser, API/export, workflow, dependency, release, or unrelated cleanup change."
+surfaces = ["docs"]
+title = "correct algorithm pointers and historical provenance"
+
+    [[records.document_refs]]
+    heading = "Algorithm Pointer And Provenance Correction"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "610"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/atomic_ida_exchange_angular_sectors.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_nested_diatomic_box_policy.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_nested_diatomic_coordinate_distortion.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/cartesian_nested_face_construction.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/index.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/radial_interval_sampled_build_and_extents.md"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-ANGULAR-PUBLIC-CI-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-FN-01"]
