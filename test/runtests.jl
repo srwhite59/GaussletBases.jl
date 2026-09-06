@@ -928,6 +928,10 @@ end
 if _test_group_enabled(:examples)
 @testset "Example scripts (quick smoke subset)" begin
     @test _run_example_script("01_first_gausslet.jl")
+    @test _run_example_script("02_radial_basis.jl")
+    @test _run_example_script("03_radial_operators.jl")
+    @test _run_example_script("04_hydrogen_ground_state.jl")
+    @test _run_example_script("15_atomic_hydrogen_ylm.jl")
     @test _run_example_script("39_pqs_h2plus.jl")
     @test _run_example_script("40_screened_hartree_fixed_density.jl")
 end
@@ -935,9 +939,6 @@ end
 if _RUN_SLOW_TESTS
     @testset "Example scripts" begin
         @test _run_example_script("01_first_gausslet.jl")
-        @test _run_example_script("02_radial_basis.jl")
-        @test _run_example_script("03_radial_operators.jl")
-        @test _run_example_script("04_hydrogen_ground_state.jl")
         @test _run_example_script("23_cartesian_hydrogen_coulomb_expansion.jl")
         @test _run_example_script("24_mapped_cartesian_hydrogen.jl")
         @test _run_example_script("25_mapped_cartesian_hydrogen_backends.jl")
@@ -951,7 +952,6 @@ if _RUN_SLOW_TESTS
         @test _run_example_script("12_leaf_pgdg_augmentation.jl")
         @test _run_example_script("13_global_leaf_contraction.jl")
         @test _run_example_script("14_radial_primitive_operators.jl")
-        @test _run_example_script("15_atomic_hydrogen_ylm.jl")
         @test _run_example_script("16_atomic_ida_ingredients.jl")
         @test _run_example_script("19_atomic_ida_direct.jl")
         @test _run_example_script("20_atomic_ida_exchange.jl")
