@@ -1,5 +1,126 @@
 # Documentation Deployment
 
+## Released Documentation Refresh
+
+Pass 614, under `HP-PQS-DOCS-TAGDEPLOY-FN-01/TEST-01`, authorizes one
+documentation-only implementation and publication for released v0.2.0.
+This section supersedes older stable-alias restrictions below and earlier
+maintenance records' stable-preservation wording only for this transaction.
+No package version, tag, release, artifact, API, source, dependency, example,
+or numerical change is authorized.
+
+### Compatibility Evidence
+
+At `a77e483d57f9b018566223f9352d14f95ceb9fac`, all 346 curated reference
+entries resolve against the immutable v0.2.0 source archive, with 279 already
+documented there. The remaining 67 acquire documentation on main, not new API.
+Project.toml and every example are byte-identical to release. Source review
+found documentation, ownership relocations, exact Lanczos consolidation, and
+private retirements; none adds a reader-facing operation absent from release.
+The three post-release removed root names are not promoted by the reference.
+
+Julia 1.12.6 loaded the released source from isolated machine-local scratch,
+using the existing resolved dependency manifest (not a fresh dependency
+resolution). Fresh processes passed examples 01/02/03/04/15/39/40 in
+5.26/7.50/8.06/9.51/10.74/28.07/7.16 seconds, and the public residual-GTO
+interchange owner passed 80/80 in 39.21 seconds including startup.
+No larger matched comparison or full angular suite was rerun. Evidence is in
+`/Users/srw/dmrgtmp/stable_docs_20260907/`; the counts and conclusions here
+are canonical, not dependent on that machine-local location.
+
+### Exact Publication Boundary
+
+Use Documenter's existing deployment mechanism, not a custom site copier.
+Publish a separately built, approved documentation snapshot to the new
+`release-0.2.0` gh-pages folder. Map `stable => release-0.2.0` explicitly
+as the first version-selector entry. Keep the existing v0.2 minor selector,
+RC1, RC2, and dev entries. The snapshot is documentation, not a package tag or
+new package version. Its HTML canonical base is the public `/stable/` URL.
+Preserve the entire original `/v0.2.0/`, both RC folders, and their canonical
+URLs byte-for-byte. Never deploy directly through the existing stable symlink:
+Documenter's copying operation can follow that link into the original folder.
+
+Normal main builds still publish only dev with /dev/ canonical URLs. Future
+tag builds using the amended policy publish only their own new exact version
+folder, retaining the explicit stable mapping; a new release does not silently
+advance stable. Existing version folders must not be overwritten by this
+transaction. A later stable promotion requires its own compatibility decision.
+Old frozen tag-workflow reruns are forbidden: their old policy is immutable and
+cannot be hardened by a main-only edit. This grant neither reruns them nor
+claims repository-setting enforcement against arbitrary historical workflows.
+
+Add a narrowly validated workflow_dispatch context to the existing Docs
+workflow and deployment job, with a required exact expected commit SHA.
+Only dispatch on main at that SHA may request this v0.2.0 snapshot publication.
+Reject wrong branch, SHA, version, mode, or malformed input before deploydocs.
+Use existing deployment-step credentials/permissions; PRs remain build-only.
+Serialize deployment writes with one job-level concurrency group and no
+cancellation of an in-progress deployment. Add no workflow, job, secret,
+credential, polling/chaining infrastructure, or configurable publication target.
+
+The ordinary implementation push may build but must not publish while the
+snapshot is absent: explicitly report this bootstrap hold, preserving the old
+site/selector. The one manual dispatch then creates the snapshot and standard
+Documenter selector/root redirect together. After that, ordinary main/tag
+deployment must require and preserve the snapshot, not silently fall back to
+the original release or dev. Validate a subsequent normal main deployment at
+closeout. A missing snapshot after publication is an operational blocker, not
+permission to regenerate it from arbitrary main. No second manual publication,
+overwrite, force push, deletion, or repair is implicit if the first partially
+succeeds; preserve state and report.
+
+Build from the reviewed implementation revision, keeping the improved current
+docstrings. Add concise reader labeling in docs/src/index.md and
+docs/src/developer/index.md and, if needed, a build-context footer in make.jl:
+this is revised documentation validated for package v0.2.0; Developer Notes,
+private internals, source-layout pointers, and development history describe the
+documented revision, not additional released API. Preserve experimental/expert
+labels and distinguish interface support from scientific maturity. Source/edit
+links must identify the reviewed documentation revision, not falsely pretend
+new source paths or docstrings exist at the release tag. Do not turn the whole
+site into an automatically moving stable alias to dev.
+
+### Budgets And Acceptance
+
+Allowed implementation paths: .github/workflows/docs.yml, docs/make.jl,
+test/docs/runtests.jl, docs/src/index.md, docs/src/developer/index.md.
+Preferred/hard additions: workflow 25/40, make.jl 50/80, focused tests 30/45,
+reader labeling 12/20. No new tracked file, source edit, docs environment
+dependency, general framework, numerical test, prose-lock suite, or public CI
+matrix change. Replace affected old selector tests, do not retain conflicting
+policies. Stop before implementation commit if reliable publication needs
+broader machinery, source changes, or incompatible reader documentation.
+
+Use installed Documenter behavior in isolated fixtures to check main, manual,
+new tag, prerelease, missing snapshot, wrong SHA, canonical URLs, selector,
+root redirect, and untouched original-folder hashes. Preflight already
+simulated refresh/dev/v0.2.1/dev postprocessing with Documenter 1.17:
+stable stayed on the snapshot and the original folder hash did not change.
+Do not patch Documenter or mutate source tags for rehearsal.
+
+Before publication freeze the implementation SHA, snapshot build identity,
+original gh-pages subtrees, and remote annotated v0.2.0 identity:
+object 722e8e8752a9d23f45e95d2f88e1749f9f3002e4, commit
+adfcaba32d4db06d9d796d947276433717bd2d89, tree
+f64ba21e06ff57e2b5e78d91214398115afbe8de. Require local package/docs,
+authority/self-test/views, Documenter, YAML, log bound, and diff checks;
+normal CI classification applies to the workflow edit, with no extra numerical
+reruns beyond existing required CI. Preflight release examples need not repeat
+when their source and reader contract remain unchanged.
+
+After the single dispatch, require Docs/Pages success and verify via rendered
+HTTP pages: stable corrected manual/reference content, exact stable canonicals,
+root redirect to stable, stable/v0.2/RC2/RC1/dev selector, all README
+destinations, and unchanged original v0.2.0/RC folders and tag/release identity.
+Report publication run IDs and gh-pages commit, hashes, and any partial state.
+Close this publication separately; repo-manager waits for this authority
+commit and its checks before implementation.
+
+## Historical Deployment Policy And Evidence
+
+The following records describe previous deployments, not current permission
+to reset stable. Their release identities and historical outcomes are retained.
+
 The rendered Documenter site is the primary documentation surface:
 
 - <https://srwhite59.github.io/GaussletBases.jl/dev/>

@@ -38,6 +38,17 @@ claim.
 
 ## Active And Pending Work
 
+Pass 614 opens `HP-PQS-DOCS-TAGDEPLOY-FN-01/TEST-01` for one
+[released documentation refresh](documentation_deployment.md#released-documentation-refresh).
+The user now authorizes corrected v0.2.0-compatible documentation as the
+default reader surface: stable will point to a separate approved snapshot,
+not automatically moving dev. Original v0.2.0 and RC documentation, tags, and
+releases remain immutable. This supersedes earlier stable-preservation wording
+only for the bounded documentation publication; no package release is granted.
+Compatibility preflight passed 346 reference entries, seven released-package
+examples, and the existing 80-check transfer owner. Implementation/publication
+and live verification remain pending; no later stable refresh is implicit.
+
 Pass 613 closes `HP-PUBLIC-REVIEW-RESIDUAL-DOC-01` at `719e19430` as
 completed/maintenance with no remaining implementation grant under
 [September 4 Review Residual Documentation](r1_public_base_producer.md#september-4-review-residual-documentation):
@@ -95,7 +106,7 @@ internal-submodule promotion, namespace decisions, and releases remain separate.
 | `HP-PQS-PUBLIC-MATCHED/SCREEN-*` | Both public surfaces implemented; matched-H2+ release/example now shares one accepted comparison, screening remains maintenance | Preserve all 18 assertions against Example 41's returned comparison, its standalone TSV/summary, the frozen `12789/1285/1285` result, and absence of the duplicate subprocess; leave screening, release, registration, and citation decisions separate |
 | `HP-PQS-PUBLIC-COMPAT-*` | Exact six-bound root compatibility declaration implemented; validation completed | Preserve the declared ranges, Julia `1.10` floor, untracked-manifest policy, and fresh-resolution evidence contract; final-release, registration, and citation decisions remain separate |
 | `HP-PQS-PUBLIC-DOC-PARITY-*` | Eleven-name curated reference and ten missing public docstrings implemented; focused parity validation completed | Maintain exact export/reference parity, path-free historical provenance, example-28 internal classification, and accessor-only correction documentation; no executable source, API, numerical, citation, or release change |
-| `HP-PQS-DOCS-TAGDEPLOY-*` | Tag-aware deployment and exact RC1/RC2 selector retention implemented; maintenance | Preserve exact main/tag canonical paths, both bounded prerelease self-mappings, prerelease exclusion from the real `stable` alias, and PR/main least privilege |
+| `HP-PQS-DOCS-TAGDEPLOY-*` | Pass 614 approved/implementation | One release-validated snapshot publication, explicit stable pin, unchanged original version folders, manual exact-SHA gate, and main/tag/PR separation |
 | `HP-PQS-PUBLIC-RC1-*` | `v0.2.0-rc1` candidate prepared at `41fa897ae`; clean validation completed; maintenance | Preserve the exact candidate version and concise reader changelog; immutable tag and GitHub prerelease lifecycles are closed, while registration, citation metadata, and final-release decisions remain unauthorized |
 | `HP-PQS-PUBLIC-RC2-*` | Exact `v0.2.0-rc2` candidate prepared at `2b3c23970`; clean validation completed; maintenance | Preserve the three distinct reader links, version/changelog identity, exact RC2/RC1/dev selectors, archive evidence, and absent `/stable/`; immutable tag and GitHub-prerelease lifecycles are closed |
 | `HP-PQS-PUBLIC-V020-*` | Exact final candidate accepted at `adfcaba32`; implementation maintenance and validation completed | Preserve version `0.2.0`, the modest package-nearest-software claim, separate PQS/screening/interchange stories, tree `f64ba21e0`, archive identity, stable-link preparation, and unchanged public numerics |

@@ -82,8 +82,10 @@ archaeology and are not normal startup reading.
   policy remain consumer-owned.
 - Immutable v0.2.0, RC1, and RC2 release transactions are closed. Final
   v0.2.0 remains tied to candidate `adfcaba32`; `/stable/` remains its
-  versioned documentation. Main-branch documentation corrections reach
-  `/dev/` only. Registration, citation, and later releases remain separate.
+  versioned documentation until the separately authorized Pass 614 refresh.
+  That snapshot may become the default reader surface without changing the
+  original versioned folder. Registration, citation, and later releases remain
+  separate; ordinary main deployments remain dev-only.
 - The source-layout moves, Lanczos consolidation, mapped-representation
   relocation, scheduled occupied-first coverage, and HFDMRG test-path repair
   are accepted. Generated execution authority is outside AGENTS.md. Public
@@ -744,3 +746,32 @@ shared release owner remain live. Source +0/-0; no new tests, files, helpers,
 or metadata/status fields. ID completed/maintenance with no remaining grant.
 The September 4 review is addressed; no unresolved user decision blocks it.
 Release/stable policy and unrelated scientific work remain separate.
+
+## Cartesian Hamiltonian Producer Pass 614 - Authorize Released Documentation Refresh
+
+The user chooses corrected documentation as the default reader experience.
+Independent inspection at `a77e483d5` resolved all 346 reference entries in
+released v0.2.0; 67 lacked release docstrings but are existing API. Project and
+examples are byte-identical to release. Seven fresh-process onboarding/PQS/
+screening examples and the 80-check residual-GTO/transfer owner passed on the
+released archive with existing resolved dependencies, not a claimed clean
+dependency resolution. Logs remain in machine-local stable_docs_20260907.
+
+MT5/MT6 advance a bounded publication decision, not a new package release:
+reuse Documenter and the existing Docs job, publish a separate release-0.2.0
+snapshot, and explicitly pin stable. A scratch Documenter 1.17 refresh/main/
+new-tag/main simulation preserved both that pin and the original folder hash.
+Developer history and relocated source pointers must be labeled by documented
+revision, not promoted to released API. Frozen old workflow reruns remain
+forbidden; main-only policy cannot enforce new logic inside immutable history.
+
+Deleted/simplified: replace automatic stable advancement and affected old
+selector assertions, with no second publication framework. Quarantined:
+source/API, numerical policy, tag/release changes, custom credentials, and
+future promotions. Existing versioned docs and Example 41 stay live.
+Source +0/-0; no new tracked file, numerical owner, cache, or metadata field.
+Workflow/make/test/reader hard additions are 40/80/45/20. Authority/self-test,
+docs, deterministic views, package load, Documenter, log bound, diff checks,
+and remote authority gates precede handoff. Exact publication SHA, original
+site hashes, one manual dispatch, and live verification remain repo-manager's
+acceptance work. No numerical rerun is needed for this authority commit.

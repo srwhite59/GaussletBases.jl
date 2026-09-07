@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `cebb817f517f1d36712ec335149bfb54b7648ca65e09ee3e4b877fb1cecd0592`.
+> [authority.toml](authority.toml), SHA-256 `d908f6c1a3f70c1bec0a9ccfcb745ab3ae5614b8610489f5a74d9a4e3954b762`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1724,15 +1724,17 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-DOCS-TAGDEPLOY-FN-01 - tag-aware versioned documentation deployment
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `docs`, `tools`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `Tag-Aware Version Deployment`
+  - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `Released Documentation Refresh`
 - **Owned paths:**
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/current.md`
   - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md`
+  - `docs` / `existing`: `docs/src/index.md`
+  - `docs` / `existing`: `docs/src/developer/index.md`
   - `tool` / `existing`: `.github/workflows/docs.yml`
   - `tool` / `existing`: `docs/make.jl`
 - **Evidence:**
@@ -1747,16 +1749,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `520`
   - `manager_pass`: `522`
 - **Dependencies:** `HP-PQS-PUBLIC-DOC-01`, `HP-PQS-PUBLIC-DOC-PARITY-FN-01`
-- **Scope:** Maintain only the implemented tag-aware deployment in the existing Docs workflow and docs/make.jl. Preserve PR build-only contents:read behavior, main-to-dev deployment, exact canonical full vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-PRERELEASE tag folders without build metadata, fail-closed rejection before deploydocs, and Documenter's standard exclusion of prereleases from the real stable alias. Retain the existing v0.2.0-rc2 and v0.2.0-rc1 folders through their exact self-mappings; neither creates an alias. No other prerelease entry or custom stable policy is authorized. GITHUB\_TOKEN and GAUSSLETBASES\_DOCS\_DEPLOY remain deployment-step-only under the contents:write deployment job. No new file, workflow change, tag mutation, release, source/API/example/scientific-doc/dependency/citation change, custom credential, alternate host, manifest, artifact, arbitrary-tag deployment, dynamic version index, or release framework.
+- **Scope:** Implement and publish one released-v0.2.0 documentation snapshot under Released Documentation Refresh in documentation\_deployment.md. Own the existing Docs workflow, make.jl, and two labeling pages. Preserve original version folders, pin stable across main/new-tag deployments, and fail closed. No source, package release, tag mutation, dependency, new workflow/job, or general deployment framework.
 
 ### HP-PQS-DOCS-TAGDEPLOY-TEST-01 - tag-aware documentation deployment validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `Tag-Aware Version Deployment`
+  - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `Released Documentation Refresh`
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
@@ -1771,7 +1773,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `520`
   - `manager_pass`: `522`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`
-- **Scope:** Maintain only the focused existing docs-test assertions for PR/main/prerelease/final/malformed-tag classification, exact main and tag canonical paths, semantic-version rejection, unchanged least-privilege workflow boundaries, exact v0.2.0-rc1 and v0.2.0-rc2 selector retention, and standard prerelease exclusion from stable. Use an isolated Documenter version-expansion fixture to require RC2, RC1, and dev entries, no self-symlink, and no stable alias without a final release. Add no test file, parser framework, actual tag/deployment, numerical gate, source test, or release behavior.
+- **Scope:** Replace affected selector/context checks in test/docs/runtests.jl under Released Documentation Refresh. Validate snapshot preservation, exact manual SHA, main/tag/PR isolation, original-folder identity, canonical URLs, and bootstrap refusal without numerical additions. No new owner, prose locks, parser framework, public CI policy, or package-release behavior.
 
 ### HP-PQS-MAP-SFACTOR-FN-01 - expert mapping \`s\_factor\` keyword
 
