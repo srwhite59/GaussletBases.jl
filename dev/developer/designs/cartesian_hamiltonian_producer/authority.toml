@@ -5909,10 +5909,6 @@ title = "finish September 4 reader-review residuals"
     state = "existing"
     [[records.paths]]
     kind = "docs"
-    path = "docs/src/explanations/architecture.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "docs"
     path = "docs/src/howto/example_guide.md"
     state = "existing"
     [[records.paths]]
