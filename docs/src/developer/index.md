@@ -1,5 +1,10 @@
 # Developer Notes
 
+These notes describe the documentation revision linked in the footer, including
+development internals, relocated source paths, and history. They are not a
+promise of additional API in released v0.2.0; use the Manual and Reference for
+the release-validated reader interface.
+
 This section is for lower-priority development, architecture, and history
 material.
 

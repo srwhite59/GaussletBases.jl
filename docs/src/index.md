@@ -1,5 +1,10 @@
 # GaussletBases.jl
 
+This revised reader documentation is validated for package v0.2.0. Developer
+Notes, private internals, source-layout pointers, and history describe the
+documentation revision linked in the footer, not additional released API.
+Expert/experimental labels distinguish interface support from scientific maturity.
+
 Gausslets are localized, orthogonal basis functions constructed from short
 linear combinations of Gaussians.
 

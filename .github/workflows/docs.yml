@@ -7,6 +7,16 @@ on:
     tags:
       - "v*"
   pull_request:
+  workflow_dispatch:
+    inputs:
+      mode:
+        type: choice
+        required: true
+        options: [release-0.2.0]
+      expected_sha:
+        description: Exact reviewed documentation commit (40 lowercase hex characters)
+        type: string
+        required: true
 
 jobs:
   cartesian-authority:
@@ -54,8 +64,11 @@ jobs:
         run: julia --project=docs docs/make.jl
 
   docs-deploy:
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))) || github.event_name == 'workflow_dispatch'
     needs: cartesian-authority
+    concurrency:
+      group: documentation-deployment
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -79,4 +92,6 @@ jobs:
         env:
           GAUSSLETBASES_DOCS_DEPLOY: "true"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GAUSSLETBASES_DOCS_REFRESH: ${{ inputs.mode }}
+          GAUSSLETBASES_DOCS_EXPECTED_SHA: ${{ inputs.expected_sha }}
         run: julia --project=docs docs/make.jl

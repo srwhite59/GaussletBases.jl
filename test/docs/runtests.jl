@@ -366,12 +366,39 @@
         @test !isempty(VersionNumber("0.2.0-rc1").prerelease)
         @test isempty(VersionNumber("0.2.0").prerelease)
         @test contains_all(docs_make,
-            "DOCS_DEPLOY && DOCS_TARGET[1] ∉ (:dev, :tag)",
+            "DOCS_DEPLOY && DOCS_TARGET[1] ∉ (:dev, :tag, :refresh)",
             "canonical = DOCS_CANONICAL")
         @test length(findall("GITHUB_TOKEN:", docs_workflow)) == 1
         @test length(findall("GAUSSLETBASES_DOCS_DEPLOY", docs_workflow)) == 1
         @test length(findall("contents: write", docs_workflow)) == 1
         @test length(findall("contents: read", docs_workflow)) == 2
+        @test contains_all(docs_workflow, "workflow_dispatch:", "expected_sha:",
+            "options: [release-0.2.0]", "group: documentation-deployment", "cancel-in-progress: false")
+        sha = repeat("a", 40)
+        @test _documentation_target("workflow_dispatch", "refs/heads/main";
+            mode="release-0.2.0", expected_sha=sha, sha, version="0.2.0") == (:refresh, "release-0.2.0")
+        for (ref, mode, expected_sha, version) in (("refs/heads/other", "release-0.2.0", sha, "0.2.0"),
+            ("refs/heads/main", "dev", sha, "0.2.0"), ("refs/heads/main", "release-0.2.0", "abc", "0.2.0"),
+            ("refs/heads/main", "release-0.2.0", repeat("b", 40), "0.2.0"), ("refs/heads/main", "release-0.2.0", sha, "0.2.1"))
+            @test_throws ErrorException _documentation_target("workflow_dispatch", ref; mode, expected_sha, sha, version)
+        end
+        @test_throws ErrorException _documentation_target("push", "refs/heads/main"; mode="release-0.2.0")
+        mktempdir() do site
+            mkpath(joinpath(site, "v0.2.0")); write(joinpath(site, "v0.2.0", "index.html"), "original")
+            symlink("v0.2.0", joinpath(site, "stable"))
+            @test !_documentation_publishable(:dev, "dev", site)
+            @test _documentation_publishable(:refresh, "release-0.2.0", site)
+            @test_throws ErrorException _documentation_publishable(:tag, "v0.2.1", site)
+            mkpath(joinpath(site, "release-0.2.0")); write(joinpath(site, "release-0.2.0", "index.html"), "snapshot")
+            @test _documentation_publishable(:dev, "dev", site)
+            @test _documentation_publishable(:tag, "v0.2.1", site)
+            @test_throws ErrorException _documentation_publishable(:tag, "v0.2.0", site)
+            @test_throws ErrorException _documentation_publishable(:refresh, "release-0.2.0", site)
+            rm(joinpath(site, "release-0.2.0"); recursive=true)
+            rm(joinpath(site, "stable")); symlink("release-0.2.0", joinpath(site, "stable"))
+            @test_throws ErrorException _documentation_publishable(:dev, "dev", site)
+            @test_throws ErrorException _documentation_publishable(:refresh, "release-0.2.0", site)
+        end
         docs_only_path = path -> path == "AGENTS.md" || startswith(path, "docs/") ||
                                    startswith(path, "test/docs/") ||
                                    path == ".github/workflows/docs.yml"
@@ -420,7 +447,7 @@
         @test !occursin(r"(?m)^  (push|pull_request):", maintenance_workflow)
         @test length(findall("julia --project=. test/nested/", maintenance_workflow)) == 5
         @test _DOCS_VERSIONS == Any[
-            "stable" => "v^",
+            "stable" => "release-0.2.0",
             "v#.#",
             "v0.2.0-rc2" => "v0.2.0-rc2",
             "v0.2.0-rc1" => "v0.2.0-rc1",
@@ -445,13 +472,13 @@
         end
         mktempdir() do directory
             foreach(entry -> mkpath(joinpath(directory, entry)),
-                ("dev", "v0.2.0", "v0.2.0-rc2", "v0.2.0-rc1"))
+                ("dev", "release-0.2.0", "v0.2.0", "v0.2.0-rc2", "v0.2.0-rc1"))
             script = """
                 using Documenter
                 entries, symlinks = Documenter.Writers.HTMLWriter.expand_versions(
                     $(repr(directory)), $(repr(_DOCS_VERSIONS)))
                 @assert entries == ["stable", "v0.2", "v0.2.0-rc2", "v0.2.0-rc1", "dev"]
-                @assert symlinks == ["stable" => "v0.2.0", "v0.2" => "v0.2.0"]
+                @assert symlinks == ["stable" => "release-0.2.0", "v0.2" => "v0.2.0"]
                 """
             command = `$(Base.julia_cmd()) --project=$(joinpath(_PROJECT_ROOT, "docs")) --startup-file=no -e $script`
             @test success(command)
