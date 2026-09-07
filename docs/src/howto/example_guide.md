@@ -59,7 +59,7 @@ The tiny exact-interacting checks are:
 11. `17_atomic_ida_two_electron.jl`
 12. `18_atomic_ida_two_electron_lanczos.jl`
 
-The current export examples are:
+The supported advanced atomic export demonstrations are:
 
 13. `31_atomic_fullida_dense_export.jl`
 14. `32_atomic_sliced_export.jl`
@@ -78,16 +78,16 @@ For the ordinary Cartesian line, use this sequence:
 15. `23_cartesian_hydrogen_coulomb_expansion.jl`
 16. `24_mapped_cartesian_hydrogen.jl`
 17. `25_mapped_cartesian_hydrogen_backends.jl`
-18. `33_ordinary_cartesian_1s2_vee.jl`
-19. `38_qiu_white_reference_vee.jl`
+18. `33_ordinary_cartesian_1s2_vee.jl` - supported bounded 1s2 numerical reference
+19. `38_qiu_white_reference_vee.jl` - expert/manual QW reference
 
-`38_qiu_white_reference_vee.jl` is a slow reference example. Its nearest/GGT
-path is part of the public ordinary workflow; the MWG branch is still
-experimental and is skipped unless you opt in with
-`GAUSSLETBASES_RUN_EXPERIMENTAL_MWG=1`.
+Example 33 is an advanced numerical-reference demonstration, not arbitrary
+molecular validation. Example 38 runs MWG by default; its nearest/GGT
+fallback/debug branch is opt-in with `GAUSSLETBASES_RUN_GGT_NEAREST=1`.
+This does not promote experimental backends or fallback behavior to general support.
 
 The older 1D COMX-cleaned hybrid examples remain in `examples/` only as
-legacy/internal experimental regressions and are intentionally omitted from
+historical/internal experimental regressions and are intentionally omitted from
 the supported ordinary sequence:
 
 - `29_hybrid_mapped_cartesian_hydrogen.jl`
@@ -97,11 +97,11 @@ the supported ordinary sequence:
 - `36_hybrid_cartesian_legacy_he_s_vee.jl`
 - `37_hybrid_cartesian_mwg_vee.jl`
 
-The more diagnostic ordinary examples are:
+The manual ordinary diagnostics are:
 
-20. `26_ordinary_cartesian_ida.jl`
-21. `27_ordinary_cartesian_ida_localized_backends.jl`
-22. `28_ordinary_one_body_fidelity.jl` - internal, non-contractual diagnostic
+20. `26_ordinary_cartesian_ida.jl` - experimental/manual PGDG backend diagnostic
+21. `27_ordinary_cartesian_ida_localized_backends.jl` - experimental/manual localized-backend diagnostic
+22. `28_ordinary_one_body_fidelity.jl` - internal, non-contractual diagnostic; manual fidelity inspection
 
 The bounded public PQS/White-Lindsey molecular example is:
 

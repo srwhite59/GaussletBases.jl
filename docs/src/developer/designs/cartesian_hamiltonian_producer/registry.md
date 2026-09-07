@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `a2f02a072110d0a319376c4c1081c9802fd023fea6adfc959e47ceda06f3df3d`.
+> [authority.toml](authority.toml), SHA-256 `138f6982cd42405032edc132974d12f155c4e7ba0f0bf1c46b443eb0c391635d`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -3312,7 +3312,6 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `September 4 Review Residual Documentation`
 - **Owned paths:**
   - `docs` / `existing`: `docs/src/examples/index.md`
-  - `docs` / `existing`: `docs/src/explanations/architecture.md`
   - `docs` / `existing`: `docs/src/howto/example_guide.md`
   - `docs` / `existing`: `docs/src/manual/reference_density_hartree_screening.md`
 - **Evidence:**

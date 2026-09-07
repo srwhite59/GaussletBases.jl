@@ -38,11 +38,11 @@ For the newer ordinary Cartesian line, continue with:
 - `23_cartesian_hydrogen_coulomb_expansion.jl`
 - `24_mapped_cartesian_hydrogen.jl`
 - `25_mapped_cartesian_hydrogen_backends.jl`
-- `33_ordinary_cartesian_1s2_vee.jl`
-- `38_qiu_white_reference_vee.jl`
+- `33_ordinary_cartesian_1s2_vee.jl` - supported advanced, bounded 1s2 numerical reference
+- `38_qiu_white_reference_vee.jl` - expert/manual QW reference
 
-`38_qiu_white_reference_vee.jl` is a slow reference example. Its nearest/GGT
-path is the default public run; the MWG branch remains opt-in and experimental.
+Example 38 runs MWG by default. Its nearest/GGT fallback/debug branch is
+opt-in with `GAUSSLETBASES_RUN_GGT_NEAREST=1`, not a general supported route.
 
 For the current public Cartesian base Hamiltonian path, run:
 
@@ -63,9 +63,10 @@ second is the slower fixed full-parent/PQS/White-Lindsey H2+ comparison used
 for release validation. See [Reference-density Hartree screening](../manual/reference_density_hartree_screening.md)
 and [Projected q-shells (PQS)](../manual/projected_q_shells.md).
 
-The older 1D COMX-cleaned hybrid examples remain in `examples/` only as
-legacy/internal experimental regressions and are intentionally omitted from
-this public sequence.
+Examples 26-27 are experimental/manual backend diagnostics; 28 is an
+internal/manual fidelity diagnostic. Examples 29-30 and 34-37 remain
+historical/internal experimental COMX-hybrid regressions outside this public
+sequence. Examples 31-32 are supported advanced atomic export demonstrations.
 
 ## Full curated guide
 

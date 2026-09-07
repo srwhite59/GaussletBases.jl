@@ -63,9 +63,17 @@ P0 = reference_coefficients * Diagonal(occupations) *
 q0 = diag(P0).
 ```
 
-No neutrality condition is imposed. `representation_atol` controls orbital,
-trace, and occupation agreement. `density_nonnegativity_atol` only allows
-small negative roundoff in `q0`.
+No neutrality condition is imposed. Both field routes use these defaults:
+
+| Keyword | Default | Check |
+| --- | --- | --- |
+| `representation_atol` | `1e-8` | Represented orbital orthogonality, trace/occupation agreement, and fitted consistency validation. |
+| `density_nonnegativity_atol` | `1e-12` | Small negative roundoff in `q0`, not negative occupations or density clipping. |
+| `symmetry_atol` | `1e-10` | Input `V_IDA` and field-matrix symmetry. |
+| `closure_atol` | `1e-8` | Exact direct-energy and derivative closure. |
+
+All four tolerances must be finite and nonnegative. The fitted route also
+checks the derivative anchor; these tolerances do not control fit accuracy.
 
 The correction is
 
