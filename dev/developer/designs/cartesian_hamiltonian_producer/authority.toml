@@ -113,7 +113,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_one_center_
 sha256 = "57cba2b45fc434cf372885b131ee0198e569527b6977b65168cebff29ee99223"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
-sha256 = "ca3ec0e87a0a07c570396c37e104b57cc14cd538d3e239a5800f81569c316d43"
+sha256 = "d8431755bf72fb8ec37d686be27f4981021cda3425378b83d0e2d4092c660886"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r3_homonuclear_diatomic_supplemented_workflow.md"
 sha256 = "36e4007e97e7d32d95ee3fc024e362b71c3fa865ce3b9e0066189b99327b48e9"
@@ -5884,6 +5884,40 @@ title = "protect focused rendered-reference membership"
     [[records.paths]]
     kind = "test"
     path = "test/docs/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = []
+grant = "design"
+id = "HP-PUBLIC-REVIEW-RESIDUAL-DOC-01"
+lifecycle = "approved"
+scope = "Correct screening defaults and example classifications in the three named reader pages; delete the obsolete explanation architecture page under September 4 Review Residual Documentation. Permit only its exact authority-path removal and regenerated views after deletion. No source, tests, examples, numerical runs, API, workflow, dependency, release, stable-policy, or unrelated reorganization change."
+surfaces = ["docs"]
+title = "finish September 4 reader-review residuals"
+
+    [[records.document_refs]]
+    heading = "September 4 Review Residual Documentation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "612"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/examples/index.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/explanations/architecture.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/howto/example_guide.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/manual/reference_density_hartree_screening.md"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PUBLIC-ATOMIC-IDA-DOC-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-FN-01", "HP-SLICE-HCHAIN-FN-01"]
