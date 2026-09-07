@@ -1,0 +1,2 @@
+var DOCUMENTER_CURRENT_VERSION = "release-0.2.0";
+var DOCUMENTER_IS_DEV_VERSION = true;
