@@ -941,6 +941,84 @@ tests, or scope, stop before commit and report. Release, stable deployment,
 API, exports, workflows, dependencies, and unrelated algorithm cleanup remain
 excluded. Repo-manager waits for this authority commit and its required checks.
 
+## September 4 Review Residual Documentation
+
+Pass 612 authorizes only `HP-PUBLIC-REVIEW-RESIDUAL-DOC-01`.
+The review is audit evidence, not authority. Preflight at `bca42aced`
+verified the remaining reader defects without numerical execution.
+
+Edit only these existing reader pages:
+- `docs/src/manual/reference_density_hartree_screening.md`;
+- `docs/src/examples/index.md`;
+- `docs/src/howto/example_guide.md`.
+Delete `docs/src/explanations/architecture.md` (70 lines): no tracked
+incoming page, test, navigation, or authority reference was found. The current
+developer architecture page already preserves its useful foundation, radial,
+atomic, ordinary, and primitive/contraction account. Preserve that page and
+`docs/architecture.md`; neither is the obsolete target.
+
+Both public screened-Hartree overloads in
+`src/cartesian/cartesian_reference_density/screened_hartree_correction.jl`
+use the following keyword defaults. Document all four in one compact table:
+- `representation_atol=1e-8`: represented orbital orthogonality and
+  trace/occupation agreement, plus fitted consistency validation;
+- `density_nonnegativity_atol=1e-12`: negative-roundoff bound for q0,
+  not permission for negative occupations or a density-clipping operation;
+- `symmetry_atol=1e-10`: input V_IDA and field-matrix symmetry checks;
+- `closure_atol=1e-8`: exact direct-energy and derivative closure.
+All four must be finite and nonnegative. The fitted route still checks the
+derivative anchor but reports rather than rejects its finite fit consistency
+error merely for being nonzero. Do not imply this keyword controls fit accuracy
+or change the exact-versus-fitted convention.
+
+Classify examples from their current code and existing guide/owner evidence:
+| Examples | Disposition and evidence |
+| --- | --- |
+| 26, 27 | Experimental/manual PGDG and localized-backend diagnostics; live mapped/ordinary core contracts, not beginner or general solver routes. |
+| 28 | Internal/manual one-body fidelity diagnostic using private cleanup and localized-oracle helpers. |
+| 29, 30, 34, 35, 36, 37 | Historical/internal experimental COMX-hybrid regressions, already explicitly labeled in their source and guide; retain, do not delete or certify fresh execution. |
+| 31, 32 | Supported advanced atomic export demonstrations; IDA tests cover dense/sliced schemas. Scripts already use temporary JLD2 output directories. |
+| 33 | Supported bounded ordinary numerical-reference 1s2 demonstration, not arbitrary molecular validation. |
+| 38 | Retained expert/manual QW reference demonstration using the current public constructor; MWG is the default. Nearest/GGT is opt-in fallback/debug via GAUSSLETBASES_RUN_GGT_NEAREST=1. |
+
+Correct the reversed Example 38 defaults in both guides; remove their obsolete
+`GAUSSLETBASES_RUN_EXPERIMENTAL_MWG` instruction. Do not promote all of its
+experimental backend or fallback behavior to general support. Prefer compact
+labels in the existing lists over duplicating a tutorial or adding an inventory
+framework. No fresh script-success or runtime claim is made by this audit.
+Absence from routine CI alone is not an unmaintained classification.
+Preserve Example 41's single calculation shared with the 18-assertion release
+owner; it is already covered, not a missing-script defect.
+
+Review disposition: schema/q/ns/d and copyable PQS construction (Pass 599),
+status/onboarding/navigation (603), all 127 verified documented-reference gaps
+(605/607), quick examples 02/03/04/15 (609), and algorithm pointers/oracle
+provenance (611) are closed. README radial tutorial/setup URLs and visible
+navigation remain correct. Global export-check promotion, broad script
+scheduling, a Julia-symbol parser, and comment-count targets were not justified;
+retain existing structural coverage and meaningful implementation backlinks.
+The only remaining review implementation is this residual packet.
+
+Preferred/hard reader additions: 35/50 lines across the three edited pages,
+plus deletion of the 70-line duplicate; require net reader-line reduction.
+No new file, source, test, example, workflow, API/export, tolerance, dependency,
+cache, release, tag, or deployment-policy change. Existing docs checks, pointer
+inspection, package load, authority/self-test, generated parity, log bound,
+Documenter, and diff checks suffice; require remote docs-only markers and Docs.
+Do not run numerical owners or examples. If a current consumer of the deleted
+page, unique missing content, or executable defect requires broader work, stop
+before commit and report.
+
+After deleting the page, remove only its exact path entry from this authority
+record and regenerate both views in the same implementation commit; this is
+mechanical path reconciliation, not lifecycle or scope amendment. Close the
+record separately after acceptance. Corrections reach /dev/; /stable/ remains
+immutable v0.2.0. After acceptance mark the September 4 review addressed:
+no additional user decision is required by its residual findings. Publishing
+these corrections to stable, namespace changes, or new scientific work remain
+separate decisions, not blockers to review closure. Repo-manager must wait for
+this authority commit and its required checks before implementation.
+
 ## Failure Behavior
 
 Malformed public requests throw, normally with `ArgumentError`, before

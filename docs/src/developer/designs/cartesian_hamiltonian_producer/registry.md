@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `a69c2b234b2bf99a4c901e5711b49b6751b645809a7aec36fec73a2a5b9ae829`.
+> [authority.toml](authority.toml), SHA-256 `a2f02a072110d0a319376c4c1081c9802fd023fea6adfc959e47ceda06f3df3d`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -3301,6 +3301,24 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `607`
 - **Dependencies:** `HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01`
 - **Scope:** Maintain the accepted grouped canonical @docs membership checks under Reference Discoverability Completion. Preserve first-subset coverage, public\_surface\_runtests.jl, prose freedom, and mechanical policies. No remaining implementation grant, new inventory machinery, numerical test, source/API, workflow, release, or global coverage-policy change.
+
+### HP-PUBLIC-REVIEW-RESIDUAL-DOC-01 - finish September 4 reader-review residuals
+
+- **Lifecycle:** `approved`
+- **Grant:** `design`
+- **Surfaces:** `docs`
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [r1\_public\_base\_producer.md](r1_public_base_producer.md); heading `September 4 Review Residual Documentation`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/examples/index.md`
+  - `docs` / `existing`: `docs/src/explanations/architecture.md`
+  - `docs` / `existing`: `docs/src/howto/example_guide.md`
+  - `docs` / `existing`: `docs/src/manual/reference_density_hartree_screening.md`
+- **Evidence:**
+  - `manager_pass`: `612`
+- **Dependencies:** none
+- **Scope:** Correct screening defaults and example classifications in the three named reader pages; delete the obsolete explanation architecture page under September 4 Review Residual Documentation. Permit only its exact authority-path removal and regenerated views after deletion. No source, tests, examples, numerical runs, API, workflow, dependency, release, stable-policy, or unrelated reorganization change.
 
 ### HP-PUBLIC-SLICED-HCHAIN-DOC-FN-01 - document experimental sliced hydrogen-chain operators
 

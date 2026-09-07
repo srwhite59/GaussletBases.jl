@@ -38,6 +38,13 @@ claim.
 
 ## Active And Pending Work
 
+Pass 612 authorizes `HP-PUBLIC-REVIEW-RESIDUAL-DOC-01` under
+[September 4 Review Residual Documentation](r1_public_base_producer.md#september-4-review-residual-documentation):
+screening defaults, deletion of the superseded explanation page, and accurate
+example classifications/Example 38 controls. Prior navigation, reference,
+onboarding, and algorithm-pointer repairs are accepted. Review closure awaits
+this bounded implementation; no numerical rerun, release, or stable change.
+
 Pass 611 closes `HP-PUBLIC-ALGORITHM-POINTER-DOC-01` at `f7958ec37` as
 completed/maintenance with no remaining implementation grant. The six-page
 pointer, production/oracle, provenance, and backlink correction is accepted,
