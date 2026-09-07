@@ -59,6 +59,12 @@
 
 ## References
 
+`GaussletModules/PureGaussianGausslet.jl` and its `getsideu`/`getside` family
+identify private historical implementations, not shipped dependencies or
+prerequisites to package use. Use the current-repository code pointers in the
+pseudocode above for implementation details; the legacy references retain
+scientific provenance only.
+
 - Legacy primitive model: `GaussletModules/PureGaussianGausslet.jl`
   - `getsideu(...)`
   - `getside(...)`

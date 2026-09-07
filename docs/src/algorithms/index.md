@@ -31,8 +31,8 @@ algorithm contracts.
 
 ## Code-comment convention
 
-When an algorithm step is implemented in code, the corresponding code block
-should carry a short searchable comment of the form:
+Prefer a concise, accurate algorithm-page backlink at a meaningful
+implementation boundary. A stable step reference can help, for example:
 
 ```julia
 # Alg QW-RG step 4: Define residual Gaussians by orthogonalizing 3D GTOs
@@ -42,10 +42,14 @@ should carry a short searchable comment of the form:
 
 The comment should:
 
-- use the same step number as the algorithm page
-- stay close to the pseudocode wording
+- use accurate, stable step references where useful
+- describe the boundary's role without repeating each operation
 - include the docs path exactly
 - be short enough to remain readable inside the source
+
+This is not a comment-density requirement or a rule for one comment per
+operation. Existing QW/nested boundary backlinks illustrate the convention;
+changes to source comments require their own implementation scope.
 
 ## Current pages
 

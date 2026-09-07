@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `4336aa9320309f4388ba8a828f5d9e508b52c2b58f1869c965f00ce91fa3fa88`.
+> [authority.toml](authority.toml), SHA-256 `9718f84c6c7c8cb636a664827e013917aa2ac26ec0b2db551460b7a3117d5585`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact

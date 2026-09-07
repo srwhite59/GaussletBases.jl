@@ -136,6 +136,12 @@
 
 ## References
 
+The GaussletModules/PureGaussianGausslet mapping code, `PGGbackbone3D`, and
+`alignAtoms!` identify private historical implementations, not shipped
+dependencies or prerequisites to package use. For current-repository entry
+points, use the Code Pointers in the companion box-policy page below; the
+historical references preserve the origin of the mapping policy.
+
 - Companion geometry page:
   [Cartesian nested diatomic box policy](cartesian_nested_diatomic_box_policy.md)
 - Historical provenance:

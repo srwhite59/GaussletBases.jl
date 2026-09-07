@@ -48,6 +48,8 @@
    Code: `src/foundation/bases.jl`
 
 7. Keep the later dense seed-space linear algebra unchanged.
+   Materialize dense samples from the interval layer for final localization;
+   the complete build is not dense-free.
    The present radial build still does:
    - odd/even cleanup
    - delta-direction removal
@@ -128,11 +130,12 @@ The current trusted radial path is split across three files:
 - `src/foundation/bases.jl`
   - `_select_construction_data(...)`
     build-grid selection and refinement framing for steps `3` and `7`
-  - `_seed_scalar_integrals(...)`
-    setup-grid seed sampling used by the interval-sampled layer in steps `4`
-    and `6`
-  - `_xgaussian_sample_matrix(...)`
-    setup-grid `xgaussian` sampling in steps `4` and `6`
+  - `_sample_shifted_gausslets(...)` and `_sample_xgaussian_intervals(...)`
+    production interval sampling for step `4`
+  - `_interval_gram_matrix(...)` and `_interval_cross_gram_matrix(...)`
+    overlap-range Gram and position assembly for step `6`
+  - `_interval_sample_matrix(...)` and `_finalize_localized_basis(...)`
+    dense final-localization samples and cleanup for step `7`
   - `_build_radial_coefficients(...)`
     main radial construction path for steps `3`-`8`
   - `_radial_overlap_deviation(...)`
@@ -146,12 +149,16 @@ The current trusted radial path is split across three files:
   - `basis_diagnostics(basis::RadialBasis; ...)`
     public diagnostics path sharing the same automatic quadrature policy
 
-The code-comment linkage on this line is still lighter than on the QW route.
-This page is the main source-of-truth for tightening it further.
+The dense `_xgaussian_sample_matrix(...)` remains a test oracle in
+`test/radial/runtests.jl`, not the production radial sampler.
+`_seed_scalar_integrals(...)` also supports that oracle comparison and live
+half-line construction/refinement in `src/foundation/bases.jl`; it is not
+dead code or the production radial interval sampler. Both helpers are retained.
 
 ## Implementation Notes
 
-Recommended code-comment style:
+At a meaningful implementation boundary, a concise backlink may use a stable
+step reference, for example:
 
 ```julia
 # Alg Radial-Build step 4: Sample shifted seeds and xgaussians only on their
@@ -161,7 +168,8 @@ Recommended code-comment style:
 
 Guidelines:
 
-- keep step numbers aligned with this page
+- keep any step references accurate; do not require one comment per operation
+- prefer boundary-level backlinks over comment density
 - use this page for the trusted radial build/extents contract
 - keep cache-policy or milestone numerics in supporting notes rather than
   growing this page into a status log

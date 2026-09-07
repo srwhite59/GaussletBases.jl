@@ -244,6 +244,11 @@ committing and return the exact blocker for a new design decision.
 
 ## References
 
+The legacy GaussletModules box-construction references identify private
+historical implementations, not shipped dependencies or prerequisites to
+package use. The current-repository Code Pointers above identify the active
+owners; the historical material remains scientific provenance.
+
 - Primitive shell language:
   [Cartesian nested face construction](cartesian_nested_face_construction.md)
 - Landed atomic subtree route:
