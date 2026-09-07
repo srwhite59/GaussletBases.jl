@@ -4732,10 +4732,10 @@ title = "semantic source-q override validation"
     state = "existing"
 [[records]]
 dependency_ids = []
-grant = "design"
+grant = "maintenance"
 id = "HP-PUBLIC-ALGORITHM-POINTER-DOC-01"
-lifecycle = "approved"
-scope = "Correct only the six existing algorithm pages under Algorithm Pointer And Provenance Correction: atomic owners, radial production/oracle roles, private historical provenance, and boundary-level backlink guidance. Preserve numerical contracts and useful oracles. No source/comment, test, parser, API/export, workflow, dependency, release, or unrelated cleanup change."
+lifecycle = "completed"
+scope = "Maintain the six-page correction accepted at f7958ec37b231b7dc01578d3b1ce4be1ea21ee95 under Algorithm Pointer And Provenance Correction. Preserve accurate owners, production/oracle roles, historical provenance, and boundary-level backlink guidance. No remaining implementation grant, source/comment, test, parser, API/export, numerical, workflow, dependency, release, or unrelated cleanup change."
 surfaces = ["docs"]
 title = "correct algorithm pointers and historical provenance"
 
@@ -4745,8 +4745,14 @@ title = "correct algorithm pointers and historical provenance"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/r1_public_base_producer.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "f7958ec37b231b7dc01578d3b1ce4be1ea21ee95"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "610"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "611"
 
     [[records.paths]]
     kind = "docs"

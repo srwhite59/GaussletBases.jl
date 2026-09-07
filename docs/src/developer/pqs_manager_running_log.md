@@ -1481,3 +1481,15 @@ MT checkpoint: MT1 active conformance; MT2 completed; MT3 blocked represented
 Hartree; MT4 active residual/protected boundaries; MT5 active/maintenance;
 MT6 active documentation alignment with reference discovery and onboarding
 coverage completed; MT7 completed/maintenance. No new scientific goal opens.
+
+## Cartesian Hamiltonian Producer Pass 611 - Close Algorithm Documentation
+
+Accepted `f7958ec37b231b7dc01578d3b1ce4be1ea21ee95` after exact diff review:
+six pages +46/-15 plus the authorized three hash replacements; CI `34071675347`
+and Docs `34071675352` passed at that SHA. Docs 8/8 + 134/134 + 10/10,
+authority/self-test/views, package load, Documenter, log bound, and diff checks
+pass; closeout uses docs-only CI without numerical reruns. No strategic change
+to MT1/MT6: deleted stale claims, simplified pointer/provenance guidance,
+quarantined source cleanup; live oracle helpers retained. Source +0/-0, no new
+test/helper/file/metadata/status field; ID completed/maintenance, no blocker or
+remaining grant. Stable docs, release state, and handoffs remain unchanged.

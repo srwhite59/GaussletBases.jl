@@ -38,12 +38,11 @@ claim.
 
 ## Active And Pending Work
 
-Pass 610 approves the docs-only design grant
-`HP-PUBLIC-ALGORITHM-POINTER-DOC-01` for six existing algorithm pages.
-Correct atomic pointers, radial production/oracle roles, legacy provenance,
-and backlink guidance under Algorithm Pointer And Provenance Correction.
-No source/test execution or numerical rerun is authorized. Repo-manager waits
-for this commit and checks; source comments and broader cleanup remain separate.
+Pass 611 closes `HP-PUBLIC-ALGORITHM-POINTER-DOC-01` at `f7958ec37` as
+completed/maintenance with no remaining implementation grant. The six-page
+pointer, production/oracle, provenance, and backlink correction is accepted,
+including the separately authorized mechanical hash reconciliation. Source,
+tests, useful oracles, releases, and stable documentation remain unchanged.
 
 Pass 609 closes `HP-PUBLIC-ONBOARDING-EXAMPLES-TEST-01` at `0019cbd5e` as
 completed/maintenance with no remaining implementation grant. Examples

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `9718f84c6c7c8cb636a664827e013917aa2ac26ec0b2db551460b7a3117d5585`.
+> [authority.toml](authority.toml), SHA-256 `a69c2b234b2bf99a4c901e5711b49b6751b645809a7aec36fec73a2a5b9ae829`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2699,8 +2699,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-ALGORITHM-POINTER-DOC-01 - correct algorithm pointers and historical provenance
 
-- **Lifecycle:** `approved`
-- **Grant:** `design`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`
 - **Execution whitelist:** `false`
 - **Documents:**
@@ -2713,9 +2713,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/algorithms/index.md`
   - `docs` / `existing`: `docs/src/algorithms/radial_interval_sampled_build_and_extents.md`
 - **Evidence:**
+  - `git_commit`: `f7958ec37b231b7dc01578d3b1ce4be1ea21ee95`
   - `manager_pass`: `610`
+  - `manager_pass`: `611`
 - **Dependencies:** none
-- **Scope:** Correct only the six existing algorithm pages under Algorithm Pointer And Provenance Correction: atomic owners, radial production/oracle roles, private historical provenance, and boundary-level backlink guidance. Preserve numerical contracts and useful oracles. No source/comment, test, parser, API/export, workflow, dependency, release, or unrelated cleanup change.
+- **Scope:** Maintain the six-page correction accepted at f7958ec37b231b7dc01578d3b1ce4be1ea21ee95 under Algorithm Pointer And Provenance Correction. Preserve accurate owners, production/oracle roles, historical provenance, and boundary-level backlink guidance. No remaining implementation grant, source/comment, test, parser, API/export, numerical, workflow, dependency, release, or unrelated cleanup change.
 
 ### HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01 - document experimental angular profile and sequence producers
 
