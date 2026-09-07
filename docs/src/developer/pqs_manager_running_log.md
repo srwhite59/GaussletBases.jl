@@ -91,7 +91,8 @@ archaeology and are not normal startup reading.
 - September 4 review repairs have closed schema/onboarding, all 127 verified
   documented-reference gaps, quick onboarding examples, and algorithm pointers.
   The residual screening/defaults, duplicate-page, and example-guide packet is
-  pending implementation. Absence from routine CI is not evidence of deadness.
+  accepted at `719e19430`; the September 4 review is addressed. Absence from
+  routine CI is not evidence of deadness.
 - Production defaults, public workflows, corrected artifacts, and Cr2 endpoint
   claims remain unchanged unless separately authorized.
 
@@ -180,7 +181,7 @@ The documented-reference gap is zero. Five undocumented exports remain an
 exact reserved set for separately authorized next-minor namespace decisions;
 the associated documented QWRG diagnostic type stays paired with its function.
 No further source, compatibility, or numerical change follows from this review.
-The September 4 reader-review residual packet remains the next bounded task.
+The September 4 reader review is addressed; further work needs a new target.
 
 **MT7 - External Cartesian GTO interchange (completed/maintenance).** The
 strict versioned reader, checkpoint-only PySCF exporter, frozen d-shell
@@ -727,3 +728,19 @@ authority/self-test, deterministic views, package load, Documenter, log bound,
 diff checks, and remote docs-only markers/Docs. The review is not yet closed:
 implementation and acceptance remain. After those, no residual user decision
 blocks marking September 4 addressed; release/stable policy stays separate.
+
+## Cartesian Hamiltonian Producer Pass 613 - Close September 4 Documentation Review
+
+Accepted `719e194305fc2ed746e6f8351789921e352355c3` after exact diff review:
+reader +31/-92, total +33/-99 including only authorized path/view reconciliation.
+CI `34074726960` and Docs `34074726894` passed at that SHA. Local docs
+8/8 + 134/134 + 10/10, package load, authority/self-test, generated parity,
+Documenter, log bound, and diff checks validate the lifecycle-only closeout;
+remote acceptance uses docs-only markers and Docs without numerical reruns.
+No strategic change to MT1/MT6: deleted the duplicate 70-line explanation,
+simplified defaults and example guidance, quarantined broad scheduling and
+stable publication. Existing examples, useful architecture, and Example 41's
+shared release owner remain live. Source +0/-0; no new tests, files, helpers,
+or metadata/status fields. ID completed/maintenance with no remaining grant.
+The September 4 review is addressed; no unresolved user decision blocks it.
+Release/stable policy and unrelated scientific work remain separate.

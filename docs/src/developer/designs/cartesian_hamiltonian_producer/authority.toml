@@ -5887,10 +5887,10 @@ title = "protect focused rendered-reference membership"
     state = "existing"
 [[records]]
 dependency_ids = []
-grant = "design"
+grant = "maintenance"
 id = "HP-PUBLIC-REVIEW-RESIDUAL-DOC-01"
-lifecycle = "approved"
-scope = "Correct screening defaults and example classifications in the three named reader pages; delete the obsolete explanation architecture page under September 4 Review Residual Documentation. Permit only its exact authority-path removal and regenerated views after deletion. No source, tests, examples, numerical runs, API, workflow, dependency, release, stable-policy, or unrelated reorganization change."
+lifecycle = "completed"
+scope = "Maintain the three reader pages accepted at 719e194305fc2ed746e6f8351789921e352355c3 under September 4 Review Residual Documentation. The obsolete explanation page is deleted and the review addressed. No remaining implementation grant, source, test, example, numerical, API, workflow, dependency, release, stable-policy, or unrelated reorganization change."
 surfaces = ["docs"]
 title = "finish September 4 reader-review residuals"
 
@@ -5902,6 +5902,12 @@ title = "finish September 4 reader-review residuals"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "612"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "719e194305fc2ed746e6f8351789921e352355c3"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "613"
 
     [[records.paths]]
     kind = "docs"

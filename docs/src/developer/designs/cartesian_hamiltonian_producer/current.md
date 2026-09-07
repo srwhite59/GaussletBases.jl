@@ -38,12 +38,13 @@ claim.
 
 ## Active And Pending Work
 
-Pass 612 authorizes `HP-PUBLIC-REVIEW-RESIDUAL-DOC-01` under
+Pass 613 closes `HP-PUBLIC-REVIEW-RESIDUAL-DOC-01` at `719e19430` as
+completed/maintenance with no remaining implementation grant under
 [September 4 Review Residual Documentation](r1_public_base_producer.md#september-4-review-residual-documentation):
-screening defaults, deletion of the superseded explanation page, and accurate
-example classifications/Example 38 controls. Prior navigation, reference,
-onboarding, and algorithm-pointer repairs are accepted. Review closure awaits
-this bounded implementation; no numerical rerun, release, or stable change.
+screening defaults, duplicate-page deletion, and example classifications are
+accepted. The September 4 review is addressed, including prior navigation,
+reference, onboarding, and algorithm-pointer repairs. No unresolved user
+decision blocks this review; releases, stable policy, and new work stay separate.
 
 Pass 611 closes `HP-PUBLIC-ALGORITHM-POINTER-DOC-01` at `f7958ec37` as
 completed/maintenance with no remaining implementation grant. The six-page

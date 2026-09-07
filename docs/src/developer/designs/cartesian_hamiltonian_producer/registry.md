@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `138f6982cd42405032edc132974d12f155c4e7ba0f0bf1c46b443eb0c391635d`.
+> [authority.toml](authority.toml), SHA-256 `cebb817f517f1d36712ec335149bfb54b7648ca65e09ee3e4b877fb1cecd0592`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -3304,8 +3304,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PUBLIC-REVIEW-RESIDUAL-DOC-01 - finish September 4 reader-review residuals
 
-- **Lifecycle:** `approved`
-- **Grant:** `design`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`
 - **Execution whitelist:** `false`
 - **Documents:**
@@ -3316,8 +3316,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/manual/reference_density_hartree_screening.md`
 - **Evidence:**
   - `manager_pass`: `612`
+  - `git_commit`: `719e194305fc2ed746e6f8351789921e352355c3`
+  - `manager_pass`: `613`
 - **Dependencies:** none
-- **Scope:** Correct screening defaults and example classifications in the three named reader pages; delete the obsolete explanation architecture page under September 4 Review Residual Documentation. Permit only its exact authority-path removal and regenerated views after deletion. No source, tests, examples, numerical runs, API, workflow, dependency, release, stable-policy, or unrelated reorganization change.
+- **Scope:** Maintain the three reader pages accepted at 719e194305fc2ed746e6f8351789921e352355c3 under September 4 Review Residual Documentation. The obsolete explanation page is deleted and the review addressed. No remaining implementation grant, source, test, example, numerical, API, workflow, dependency, release, stable-policy, or unrelated reorganization change.
 
 ### HP-PUBLIC-SLICED-HCHAIN-DOC-FN-01 - document experimental sliced hydrogen-chain operators
 
