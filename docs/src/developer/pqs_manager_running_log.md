@@ -801,3 +801,28 @@ represented Hartree; MT4 active residual/protected boundaries; MT5 maintenance
 with default reader publication accepted; MT6 active carrying-cost control with
 September 4 review addressed; MT7 completed/maintenance. No new scientific goal
 or unresolved user decision is introduced. Later stable promotion stays separate.
+
+## Cartesian Hamiltonian Producer Pass 616 - Reconcile Coulomb Evidence And Hold Standard60
+
+Reviewed the September 8 report, recovered RHF/integral TSVs, precision log,
+and live determinant/default code at `1c6a4a67d`. The canonical policy records
+report identity and durable numerical evidence: the control was Cr6+, 18e,
+33 s/p orbitals; standard-minus-high was +2.4283508537e-10 Ha. Compact45's
+approximately 5.75 mHa row remains unrecovered historical evidence, not a
+newly verified result. Excellent tested overlapping-density accuracy does not
+establish molecular-extent or diffuse guarantees. High135 is finite too.
+
+MT1 conformance now explicitly holds standard60 implementation/provenance,
+driver exposure, and new validation pending kernel assessment. Existing
+compact/high maintenance stays live; this is not permission to repair the
+new determinant cancellation. Inspection also found whole-matrix discrepancies
+in separated-case TSV rows despite agreement of selected entries, so no blanket
+matrix-parity claim is accepted. Exact K60 parameters/fingerprint stay unchanged.
+Deleted: broad molecular recommendation and pending execution permission;
+simplified: evidence versus retained design; quarantined: retuning and kernel
+work. Existing presets remain because live producers consume them. Source
++0/-0; no new test, file, helper, metadata/status field, numerical run, or
+release action. Validation: existing docs/public-surface checks, package load,
+authority/self-test, deterministic views, Documenter, log bound, diff checks,
+and remote docs-only CI/Docs. Stable remains pinned; kernel assessment is the
+exact next blocker, not an implementation grant.

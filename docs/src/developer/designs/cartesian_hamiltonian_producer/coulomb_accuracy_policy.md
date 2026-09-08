@@ -1,15 +1,20 @@
 # Producer-Wide Coulomb Accuracy Policy
 
-Status: compact/high producer policy implemented; the fixed standard tier and
-narrow canonical-driver exposure are approved for implementation under
+Status: compact/high producer policy implemented and maintenance-only under
 `HP-PQS-COULOMB-ACCURACY-FN-01` and
 `HP-PQS-COULOMB-ACCURACY-TEST-01`.
 
-This authority adds one expert accuracy choice to the Cartesian/PQS producer
-and requires one resolved `CoulombGaussianExpansion` to govern every
-Coulomb-expanded part of that Hamiltonian construction. It does not change the
-default, expose custom expansion parameters, or authorize a solver or
-Cr2-specific workflow.
+Pass 616 places standard60 implementation, fingerprint/provenance additions,
+canonical-driver exposure, and their new tests on hold pending assessment of
+the Gaussian-kernel determinant cancellation reported September 8. The exact
+K60 parameters and fingerprint remain retained design, not execution authority.
+This restriction overrides pending-implementation language and budgets below;
+those portions are deferred specifications, not permission to resume. Kernel
+repair also requires separate review and authority. No preset retuning, default,
+source, test, artifact-format, or release change is granted by this packet.
+
+One resolved `CoulombGaussianExpansion` must still govern every Coulomb-expanded
+part of an existing producer construction. Compact/high behavior is unchanged.
 
 ## Physics Target
 
@@ -18,7 +23,7 @@ The implemented compact/high producer now resolves and carries one expansion
 through parent/PGDG construction, base unit-nuclear and IDA assembly,
 residual-GTO mixed/self and augmented unit-nuclear construction, and residual
 matched-width Gaussian (MWG) interaction assembly. The fixed standard tier is
-the remaining producer extension under this authority.
+the remaining producer extension, now on hold.
 
 Choosing high accuracy at only one of those points would not define one
 Hamiltonian approximation. Parent factor packets, base `V_GG`, augmented
@@ -34,28 +39,28 @@ coulomb_accuracy = :compact  # default
 coulomb_accuracy = :high
 ```
 
-This authority additionally approves, but committed source does not yet
-accept:
+The retained, deferred design names the following option, which committed
+source does not accept and this authority no longer permits implementing:
 
 ```julia
 coulomb_accuracy = :standard
 ```
 
 The option belongs with producer basis/construction inputs. The canonical
-human-facing driver does not yet expose it; the approved pending amendment may
+human-facing driver does not yet expose it; a separately reauthorized amendment may
 add the same policy name and default, but the driver never owns a second policy
 or expansion resolver. The option is route-family-neutral
 wherever current PQS and White-Lindsey constructions share the
 parent/base/supplemented machinery; neither route may re-resolve a different
 expansion.
 
-The only accepted values and exact presets are:
+The existing presets and retained standard60 design are:
 
 | policy | `doacc` | terms | `del` | `s` | `c` | `maxu` | role |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | `:compact` | `false` | 45 | 0.6 | 0.5 | 0.03 | 27.0 | cheapest legacy approximation |
-| `:standard` | `false` | 60 | 1.0 | 0.34257593251905827 | 0.042605721927199074 | 60.0 | normal accuracy/cost balance |
-| `:high` | `true` | 135 | 1.0 | 0.16 | 0.01 | 135.0 | reference-grade production |
+| `:standard` | `false` | 60 | 1.0 | 0.34257593251905827 | 0.042605721927199074 | 60.0 | atomic/local Gaussian-integral accuracy-cost option; implementation held |
+| `:high` | `true` | 135 | 1.0 | 0.16 | 0.01 | 135.0 | higher-accuracy finite reference approximation |
 
 `:compact` and `:high` retain their existing deterministic generator paths.
 `:standard` is the fixed analytic K60 quadrature with the existing implicit
@@ -79,7 +84,7 @@ little-endian Float64 bytes, has SHA-256 fingerprint:
 The fixed operation order above is part of the deterministic preset. Calling
 the generic keyword-override utility with algebraically equivalent parameters
 can differ in final Float64 bits and therefore does not establish preset
-identity. The implementation may add one private fixed-preset constructor in
+identity. The deferred design allows one private fixed-preset constructor in
 the existing Coulomb expansion owner; it must not change compact/high bit
 patterns or expose a new public custom-expansion interface.
 
@@ -89,27 +94,96 @@ the coefficient/exponent fingerprint define a preset. These are fixed
 quadratures, not runtime fits. The default of the general expansion utility is
 outside this lane; the Cartesian/PQS producer default remains `:compact`.
 
-The accepted bounded evidence is:
+Standard60 is an atomic/local Gaussian-integral accuracy-cost option, not a
+monotone intermediate tier for pointwise, diffuse, or long-range accuracy.
+Molecular extent, diffuseness, and PQS use require validation before broader
+recommendation. The controlled Cr2 screened off/on comparison remains `:high`;
+this neither certifies high135 at arbitrary scales nor permits changing that
+comparison. Defaults remain owner-specific: the general expansion utility uses
+high, while the Cartesian producer and pair-matrix utility use compact.
 
-- compact45 misses the Cr closed-shell s/p-only RHF control by about
-  `5.75 mHa`;
-- standard60 differs from high135 by about `2.43e-10 Ha` for that control;
-- H, Be, Ne, and Cr s/p/d integral controls agree closely with high135.
+### September 8 Evidence Reconciliation
 
-Standard60 does not strictly dominate compact45 at extremely long range. It is
-the recommended opt-in for serious atomic and ordinary molecular work, not a
-claim of uniform pointwise superiority. The controlled Cr2 screened off/on
-calculation remains `:high`; changing it to `:standard` would confound that
-comparison. A producer-default change requires separate authority after
-bounded molecular/PQS validation.
+Reviewed at `1c6a4a67da78f1963b0f0ccc6a99b21324b43439` using
+`tmp/reviews/coulomb-review-2026-09-08/REPORT.md` (SHA-256
+`8132de61ad6a08bf6b250a7cea3fb7d09fd6d99b445539b54f98bd426b48eda9`).
+Recovered TSV rows, precision logs, and current source were independently
+inspected; no RHF or numerical suite was rerun for this policy reconciliation.
+
+The recovered RHF control is **Cr6+, 18 electrons, nine doubly occupied
+orbitals, and 33 Cartesian s/p orbitals from cc-pV5Z**, not neutral Cr or Cr2.
+Both attraction and repulsion used the same expansion. High135 gave
+`-1033.8673200814285 Ha`; standard60 gave `-1033.8673200811857 Ha`, a signed
+standard-minus-high difference of `+2.4283508537e-10 Ha`. Both converged with
+electron trace 18. Standard started from converged high density, so the SCF
+timings are not a fair cost comparison. The recorded PySCF value was
+`-1033.8673200862515 Ha`; neither finite expansion is an exact reference.
+Compact45's approximately `5.75 mHa` difference is a historical Pass 364
+claim: its original numerical row was not recovered. Do not label it freshly
+verified or substitute an unrelated extreme-primitive calculation.
+
+Separate nuclear/ERI controls, independent of the single RHF energy, found
+maximum standard-minus-high absolute differences (Ha):
+
+| Bounded control | Orbitals | Nuclear | ERI |
+| --- | ---: | ---: | ---: |
+| Cr full s/p | 33 | 7.28e-9 | 3.07e-10 |
+| Cr selected s/p/d | 10 | 7.28e-9 | 1.89e-10 |
+| H selected 2s+3p | 5 | 1.16e-10 | 1.33e-10 |
+| Be selected 2s+3p | 5 | 3.17e-10 | 4.48e-11 |
+| Ne selected 2s+3p | 5 | 8.55e-10 | 2.46e-10 |
+
+These are selected atomic controls against high135, not full-basis surveys or
+analytic all-integral certification. Historical paired integral construction
+cost was 14.628 s for K60 versus 21.810 s for high135, not a current producer
+performance promise. Offline tuning used a weighted log-grid objective, not a
+uniform-error fit; the exact retained candidate was not a rejected nonlinear fit.
+
+Fresh independent s-Gaussian controls use normalized densities with exponents
+`p,q`, separation `R`, and `beta=p*q/(p+q)`. Their exact interaction is
+`erf(sqrt(beta)*R)/R`, with limit `2sqrt(beta/pi)` at zero; the expansion is
+`sum(c*(beta/(beta+zeta))^(3/2)*exp(-beta*zeta/(beta+zeta)*R^2))`.
+Orbital-product overlaps multiply both expressions; nuclear attraction uses
+`beta=p` and one overlap factor. These formulas bypass the live determinant
+kernel and distinguish quadrature error from implementation error.
+
+For same-center orbital exponents `a,b=2a`, standard60 signed pair errors at
+`a=0.01,1,100` were `+2.45e-13,+8.44e-12,-6.59e-13 Ha`: excellent tested
+overlapping-density accuracy, supported by 256-bit accumulation. For `a=b=1`
+at `R=30,50,100` bohr, errors were `-9.57e-8,+2.49e-7,-1.40e-4 Ha`.
+At `a=1e-4,b=2e-4,R=0`, the independent finite-expansion error was
+`-5.13e-4 Ha` (about 3.94%); broad densities sample the deficient tail even
+at one center. Sampled pointwise relative maxima on `[0.01,50]` were
+`5.229e-7,1.272e-5,1.285e-13` for compact/standard/high respectively, not
+continuous interval bounds. No uniform integrated guarantee follows.
+High135 is also finite: at the artificial normalized `a=1.3554e8,b=2a`
+pair its relative error was `6.23e-7`. This omits contraction weights and is
+not the recovered Cr6+ energy. It rules out an arbitrary-scale exact-oracle claim.
+
+### Kernel Assessment Hold
+
+At `a=1e-4,b=2e-4`, the actual standard/high pair builder rejects its quadratic
+form, although the independent integral is well-defined. In
+`src/foundation/GaussianAnalyticIntegrals.jl`,
+`centered_polynomial_gaussian_pair_factor_integral` computes
+`(beta_left+zeta)*(beta_right+zeta)-zeta^2`; large terms can cancel although
+the exact determinant is positive. This is distinct from the previously
+repaired `gaussian_pair_factor`, and is not evidence for retuning K60.
+Independent inspection also qualifies the report's rounding-level agreement:
+selected `(11|22)` entries agree, but `integrals.tsv` records large complete
+pair-matrix discrepancies at R=100/300 for standard/high. Their cause is not
+established here; do not certify full matrices from the selected-entry result.
+Assess numerical range and these discrepancies separately before reauthorizing
+standard60. No kernel fix, clamping, new regression, or implementation is
+granted here. Existing compact/high maintenance excludes this new repair.
 
 Do not expose `doacc`, `del`, `s`, `c`, `maxu`, coefficient vectors,
 exponent vectors, or custom expansion objects as new user inputs.
 
 ## Canonical Driver Exposure
 
-The canonical driver does not currently expose this input. The approved
-pending amendment may add exactly one expert input:
+The canonical driver does not currently expose this input. The following
+deferred design requires fresh authority after the kernel assessment:
 
 ```julia
 coulomb_accuracy = :compact  # :compact, :standard, or :high
@@ -330,7 +404,8 @@ expansions inside a produced Hamiltonian.
 
 ## Approved Source Surface
 
-Only these files are approved:
+The existing maintenance paths are listed below. Pending additions described
+in this document are held by Pass 616; this list does not reopen them.
 
 ```text
 src/cartesian/cartesian_base_hamiltonian.jl
@@ -356,7 +431,10 @@ No new source file, struct, public export, driver input other than the exact
 
 ## Validation Authority
 
-`HP-PQS-COULOMB-ACCURACY-TEST-01` approves:
+`HP-PQS-COULOMB-ACCURACY-TEST-01` maintains existing compact/high coverage only.
+Its completed/maintenance state does not certify the unimplemented standard60
+or driver extension. The following original acceptance checklist is retained
+for future review, not as an execution grant for new tests or smokes:
 
 - `git diff --check`;
 - package load;

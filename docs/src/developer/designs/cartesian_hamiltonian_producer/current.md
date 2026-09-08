@@ -38,6 +38,15 @@ claim.
 
 ## Active And Pending Work
 
+Pass 616 reconciles the September 8 Coulomb review under
+`HP-PQS-COULOMB-ACCURACY-FN-01/TEST-01`. Only implemented compact/high
+behavior and existing tests retain maintenance authority. Exact standard60
+parameters/fingerprint are preserved as atomic/local design; implementation,
+provenance/driver additions, and new tests are held pending assessment of
+Gaussian-kernel determinant cancellation and separated-matrix discrepancies.
+No preset retuning, default change, or kernel repair is authorized. See
+[evidence and hold](coulomb_accuracy_policy.md#september-8-evidence-reconciliation).
+
 Pass 615 closes `HP-PQS-DOCS-TAGDEPLOY-FN-01/TEST-01` after the
 [released documentation refresh](documentation_deployment.md#released-documentation-refresh).
 Implementation `6fd436cda` and publication `34138301136` are accepted;
@@ -127,7 +136,7 @@ internal-submodule promotion, namespace decisions, and releases remain separate.
 | `HP-PUBLIC-PAPER-CI-*` | Three-gate CI and `docs_fast` source-push integrity owner implemented; maintenance | Preserve the shared mechanical public-surface owner, exact five-name reserved set, Julia 1.10 fallback and Julia 1.12 native parity, once-only docs/full-docs selection, unchanged `fast` alias, all numerical groups, names/rows, classifier, and paper/tag lanes; only `HP-PUBLIC-DOCS-PROSE-CLEANUP-*` may remove classified wording locks |
 | `HP-PUBLIC-DOCS-PROSE-CLEANUP-*` | Exact full-docs wording-lock cleanup implemented/completed; maintenance | Preserve commit `e65075e78`, exact `717 -> 497` and `+19/-239` reduction, all retained mechanical policy/placement checks, four heading boundaries, byte-identical shared owner, and `8/8 + 122/122 + 10/10` results; restore no prose locks or duplicate owner |
 | `HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-*` | Five-suite scheduled/manual workflow implemented; maintenance | Preserve commit `9367afd5a`, atomic-packet then occupied-first then sidecar/R3A/screening order, the `15`-minute Julia `1.12` read-only job, cadence, triggers, permissions, and unchanged public CI; represented Hartree remains standalone and blocked |
-| `HP-PQS-COULOMB-ACCURACY-*` | Standard60 and canonical-driver exposure approved, not implemented | Add the fixed audited K60 resolver and fingerprint provenance; accept compact/standard/high in facade and driver without changing the compact default |
+| `HP-PQS-COULOMB-ACCURACY-*` | Compact/high maintenance only; standard60/driver implementation held by Pass 616 | Preserve exact K60 identity; assess Gaussian determinant cancellation and separated-matrix evidence before separate reauthorization. No retuning, default change, new tests, or kernel repair |
 | `HP-REP-MIXDENS-HARTREE-*` | Bounded exact implementation passed; Cr2 preflight rejected its global component-pair scaling and shared residual/state tolerance | Replace production dispatch with occupied-contracted separable block tensors, apply RG-owned residual validity separately, and pass the actual-plan resource gate before resuming the complete field |
 | `HP-REP-PQS-RG-WORKING-*` | Same-construction augmented working-basis constructor implemented; H2 validation completed; maintenance | Preserve the opaque overlap-only result, native `S_RX = T_G' S_GX + T_A' S_AX`, exact direct-facade/artifact parity, and existing importer behavior; the frozen REQ-101 early import gate may now run |
 | `HP-REP-PQS-RG-WORKING-CI-*` | Public Cartesian owner expanded to `47` checks; lifecycle completed/maintenance | Preserve the public-only matched-`px/py` rotation/spin/metric/fingerprint coverage, the separate `49`-check direct-run protected sidecar, and the net `-43` tracked test reduction; restore no duplicate nested importer testset and add no runner or CI change |

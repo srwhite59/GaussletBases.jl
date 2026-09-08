@@ -44,7 +44,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/contracted_par
 sha256 = "de6d346e8f5abae91343c572fed42006e26d9d07478819e805941d5d10fda63e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
-sha256 = "7c083c3e03606dac52451ff66ad52b4ffb8cfaf6224ecec0cd4b6b214bc2387d"
+sha256 = "eeb0dd4e8c5a36650810feba09375cdc61465a58f74e210c19dea828b1fa02d9"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
 sha256 = "10a14e18f2fd94a4a63adba102fdbed81daf93fbdf857d0a14cbc716759c66f0"
@@ -2824,10 +2824,10 @@ title = "retired polish validation"
 [[records]]
 dependency_ids = []
 evidence_refs = []
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-COULOMB-ACCURACY-FN-01"
 lifecycle = "implemented"
-scope = "source maintenance, including only completion of the already approved Standard60 fingerprint/provenance and canonical-driver exposure."
+scope = "Maintain implemented compact/high behavior under Coulomb Accuracy Policy, Kernel Assessment Hold. Standard60 implementation, fingerprint/provenance additions, canonical-driver exposure, and the newly reported determinant repair are excluded pending separate assessment and reauthorization. Preserve exact K60 parameters/fingerprint, defaults, and existing behavior; no retuning or broader molecular-accuracy claim."
 surfaces = ["artifacts", "driver", "source"]
 title = "producer-wide Coulomb accuracy policy"
 
@@ -2887,10 +2887,10 @@ title = "producer-wide Coulomb accuracy policy"
 [[records]]
 dependency_ids = []
 evidence_refs = []
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-COULOMB-ACCURACY-TEST-01"
-lifecycle = "approved"
-scope = "validation maintenance for implemented compact/high behavior and the already-approved Standard60/driver completion only."
+lifecycle = "completed"
+scope = "Maintain existing compact/high tests under Coulomb Accuracy Policy, Kernel Assessment Hold. Completion applies only to existing coverage, not deferred Standard60 or driver validation. No new standard60, provenance, driver, or determinant-repair tests until separately assessed and reauthorized; preserve existing assertions, defaults, and numerical policy."
 surfaces = ["tests"]
 title = "Coulomb accuracy validation"
 
