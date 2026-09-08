@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `d908f6c1a3f70c1bec0a9ccfcb745ab3ae5614b8610489f5a74d9a4e3954b762`.
+> [authority.toml](authority.toml), SHA-256 `01d5c63cdf37b4cbffeea47d465fb7923aff46032ac8a5b70069617a79ab7008`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1724,8 +1724,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-DOCS-TAGDEPLOY-FN-01 - tag-aware versioned documentation deployment
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `tools`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1738,6 +1738,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `tool` / `existing`: `.github/workflows/docs.yml`
   - `tool` / `existing`: `docs/make.jl`
 - **Evidence:**
+  - `git_commit`: `6fd436cda4953c3886280761556575a5fc4d8660`
+  - `manager_pass`: `615`
   - `git_commit`: `2b3c23970144aa030ae52b875a5cf01b32886b6e`
   - `git_commit`: `31caa87d3b83599de7f7295678ee599209113552`
   - `git_commit`: `abee269eed7028c864fa18ae44b4b946af63dfcf`
@@ -1749,12 +1751,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `520`
   - `manager_pass`: `522`
 - **Dependencies:** `HP-PQS-PUBLIC-DOC-01`, `HP-PQS-PUBLIC-DOC-PARITY-FN-01`
-- **Scope:** Implement and publish one released-v0.2.0 documentation snapshot under Released Documentation Refresh in documentation\_deployment.md. Own the existing Docs workflow, make.jl, and two labeling pages. Preserve original version folders, pin stable across main/new-tag deployments, and fail closed. No source, package release, tag mutation, dependency, new workflow/job, or general deployment framework.
+- **Scope:** Maintain the accepted Docs workflow, make.jl, and revision labels under Released Documentation Refresh in documentation\_deployment.md. Preserve the frozen release-0.2.0 snapshot, stable pin, original version folders, exact-SHA gate, and main/tag/PR separation. No remaining implementation/publication grant, source change, package release, tag mutation, dependency, or deployment framework.
 
 ### HP-PQS-DOCS-TAGDEPLOY-TEST-01 - tag-aware documentation deployment validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1762,6 +1764,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `6fd436cda4953c3886280761556575a5fc4d8660`
+  - `manager_pass`: `615`
   - `git_commit`: `2b3c23970144aa030ae52b875a5cf01b32886b6e`
   - `git_commit`: `31caa87d3b83599de7f7295678ee599209113552`
   - `git_commit`: `abee269eed7028c864fa18ae44b4b946af63dfcf`
@@ -1773,7 +1777,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `520`
   - `manager_pass`: `522`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`
-- **Scope:** Replace affected selector/context checks in test/docs/runtests.jl under Released Documentation Refresh. Validate snapshot preservation, exact manual SHA, main/tag/PR isolation, original-folder identity, canonical URLs, and bootstrap refusal without numerical additions. No new owner, prose locks, parser framework, public CI policy, or package-release behavior.
+- **Scope:** Maintain accepted selector/context checks in test/docs/runtests.jl under Released Documentation Refresh. Preserve snapshot protection, exact manual SHA, main/tag/PR isolation, original-folder identity, canonical URLs, and bootstrap refusal. No remaining implementation/publication grant, numerical additions, new owner, prose locks, parser framework, public CI policy, or package-release behavior.
 
 ### HP-PQS-MAP-SFACTOR-FN-01 - expert mapping \`s\_factor\` keyword
 

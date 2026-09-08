@@ -2,12 +2,27 @@
 
 ## Released Documentation Refresh
 
-Pass 614, under `HP-PQS-DOCS-TAGDEPLOY-FN-01/TEST-01`, authorizes one
-documentation-only implementation and publication for released v0.2.0.
+Pass 615 accepts the Pass 614 documentation-only implementation and publication
+for released v0.2.0 under `HP-PQS-DOCS-TAGDEPLOY-FN-01/TEST-01`.
+The records are implemented/completed, maintenance-only; the single publication
+grant is exhausted. No further snapshot publication or stable promotion is granted.
 This section supersedes older stable-alias restrictions below and earlier
 maintenance records' stable-preservation wording only for this transaction.
 No package version, tag, release, artifact, API, source, dependency, example,
 or numerical change is authorized.
+
+Accepted implementation: `6fd436cda4953c3886280761556575a5fc4d8660`.
+CI `34137792695`, bootstrap-hold Docs `34137792698`, publication
+`34138301136`, and Pages `34138461292` passed. Published gh-pages commit:
+`40912e64c2d66cf8928429b0687e89b787e72034`; frozen `release-0.2.0` tree:
+`c76c64547dfbc2c00ec0a0e5efebee7ccb5cf33a`. Stable points to that snapshot;
+the root redirects to stable. Original v0.2.0/RC1/RC2 trees remain respectively
+`8990d998955e92b2761d8654d24863d578802a4b`,
+`45568ee3d836b68ee8536b21c92f982eab7c35b4`, and
+`255824282cab1670c3e3daed1a7e369a0d6febc0`.
+The 25-URL and 14-README-destination checks passed; tags/releases are unchanged.
+Closeout must verify these trees and the stable pin after its normal-main Docs
+deployment. That deployment may update dev only; it is not another publication.
 
 ### Compatibility Evidence
 

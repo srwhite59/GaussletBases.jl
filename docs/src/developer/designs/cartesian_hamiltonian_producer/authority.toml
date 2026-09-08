@@ -47,7 +47,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accura
 sha256 = "7c083c3e03606dac52451ff66ad52b4ffb8cfaf6224ecec0cd4b6b214bc2387d"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
-sha256 = "5bf9256ad3fac658b414b6d6cdfd14af40f4b1ee507af032faa2cd64aa916b9f"
+sha256 = "10a14e18f2fd94a4a63adba102fdbed81daf93fbdf857d0a14cbc716759c66f0"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_cartesian_gto_interchange.md"
 sha256 = "ad03094c9baa79a724a1b97ea4ac7a1cad1bf336c87dd5d54a49db88989f584e"
@@ -2921,10 +2921,10 @@ title = "Coulomb accuracy validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-PUBLIC-DOC-01", "HP-PQS-PUBLIC-DOC-PARITY-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-DOCS-TAGDEPLOY-FN-01"
-lifecycle = "approved"
-scope = "Implement and publish one released-v0.2.0 documentation snapshot under Released Documentation Refresh in documentation_deployment.md. Own the existing Docs workflow, make.jl, and two labeling pages. Preserve original version folders, pin stable across main/new-tag deployments, and fail closed. No source, package release, tag mutation, dependency, new workflow/job, or general deployment framework."
+lifecycle = "implemented"
+scope = "Maintain the accepted Docs workflow, make.jl, and revision labels under Released Documentation Refresh in documentation_deployment.md. Preserve the frozen release-0.2.0 snapshot, stable pin, original version folders, exact-SHA gate, and main/tag/PR separation. No remaining implementation/publication grant, source change, package release, tag mutation, dependency, or deployment framework."
 surfaces = ["docs", "tools"]
 title = "tag-aware versioned documentation deployment"
 
@@ -2933,6 +2933,12 @@ title = "tag-aware versioned documentation deployment"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
 
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "6fd436cda4953c3886280761556575a5fc4d8660"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "615"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "2b3c23970144aa030ae52b875a5cf01b32886b6e"
@@ -2990,10 +2996,10 @@ title = "tag-aware versioned documentation deployment"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-DOCS-TAGDEPLOY-TEST-01"
-lifecycle = "approved"
-scope = "Replace affected selector/context checks in test/docs/runtests.jl under Released Documentation Refresh. Validate snapshot preservation, exact manual SHA, main/tag/PR isolation, original-folder identity, canonical URLs, and bootstrap refusal without numerical additions. No new owner, prose locks, parser framework, public CI policy, or package-release behavior."
+lifecycle = "completed"
+scope = "Maintain accepted selector/context checks in test/docs/runtests.jl under Released Documentation Refresh. Preserve snapshot protection, exact manual SHA, main/tag/PR isolation, original-folder identity, canonical URLs, and bootstrap refusal. No remaining implementation/publication grant, numerical additions, new owner, prose locks, parser framework, public CI policy, or package-release behavior."
 surfaces = ["tests"]
 title = "tag-aware documentation deployment validation"
 
@@ -3002,6 +3008,12 @@ title = "tag-aware documentation deployment validation"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
 
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "6fd436cda4953c3886280761556575a5fc4d8660"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "615"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "2b3c23970144aa030ae52b875a5cf01b32886b6e"

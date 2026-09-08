@@ -81,10 +81,9 @@ archaeology and are not normal startup reading.
   IntegralDiagonal Vee, and checked long-range continuations. Solver and MPO
   policy remain consumer-owned.
 - Immutable v0.2.0, RC1, and RC2 release transactions are closed. Final
-  v0.2.0 remains tied to candidate `adfcaba32`; `/stable/` remains its
-  versioned documentation until the separately authorized Pass 614 refresh.
-  That snapshot may become the default reader surface without changing the
-  original versioned folder. Registration, citation, and later releases remain
+  v0.2.0 remains tied to candidate `adfcaba32`; `/stable/` now serves the frozen
+  release-0.2.0 documentation snapshot accepted in Pass 615. The original
+  versioned folders remain unchanged. Registration, citation, and later releases remain
   separate; ordinary main deployments remain dev-only.
 - The source-layout moves, Lanczos consolidation, mapped-representation
   relocation, scheduled occupied-first coverage, and HFDMRG test-path repair
@@ -775,3 +774,30 @@ docs, deterministic views, package load, Documenter, log bound, diff checks,
 and remote authority gates precede handoff. Exact publication SHA, original
 site hashes, one manual dispatch, and live verification remain repo-manager's
 acceptance work. No numerical rerun is needed for this authority commit.
+
+## Cartesian Hamiltonian Producer Pass 615 - Close Released Documentation Refresh
+
+Accepted `6fd436cda4953c3886280761556575a5fc4d8660`: five authorized files,
++115/-16, within hard budgets. CI `34137792695`, bootstrap Docs `34137792698`,
+single publication `34138301136`, and Pages `34138461292` passed at the recorded
+identities. Independent API/tree and diff review agrees with the 25-URL and
+14-README-destination evidence. Canonical deployment documentation records the
+published gh-pages commit, snapshot tree, and original version-folder hashes.
+Both records return to maintenance; no implementation/publication grant remains.
+
+MT5/MT6 deliver corrected, release-validated documentation as the default reader
+experience without changing package v0.2.0. Deleted: obsolete automatic stable
+advancement and selector expectations; simplified: one explicit stable pin;
+quarantined: further publication, source/release changes, and old workflow reruns.
+Original version folders remain because they preserve accepted release evidence.
+Source +0/-0; no new file, numerical owner, or metadata/status field; focused
+existing tests +31/-4. Local acceptance uses docs 8/8 + 151/151 + 10/10,
+authority/self-test/views, package load, Documenter, log bound, and diff checks.
+Final closeout verification requires docs-only markers, normal-main Docs/Pages,
+and unchanged snapshot/original trees and stable pin; no numerical rerun.
+
+Medium-term checkpoint: MT1 active conformance; MT2 completed; MT3 blocked
+represented Hartree; MT4 active residual/protected boundaries; MT5 maintenance
+with default reader publication accepted; MT6 active carrying-cost control with
+September 4 review addressed; MT7 completed/maintenance. No new scientific goal
+or unresolved user decision is introduced. Later stable promotion stays separate.
