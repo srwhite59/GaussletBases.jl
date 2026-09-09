@@ -181,6 +181,9 @@ sha256 = "cd375d749be73feb709c2a3905ece4843e0f430bece5cd2abd531141a46011d3"
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_terminal_basis_realization.md"
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
+path = "docs/src/developer/numerical_contracts.md"
+sha256 = "3d7eb16a7a4b049ca01840f29d4d7979044b9f2f9c20b384753ee944008c8446"
+[[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "9cb8b99af42cdaa7e339c80dff79323ee59efbfd8a6dd6e727c34b6d26c12fd3"
 
@@ -7063,6 +7066,66 @@ title = "terminal unit-nuclear validation"
     [[records.paths]]
     kind = "test"
     path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-RADIAL-CONVERGENCE-FN-01"
+lifecycle = "approved"
+scope = "Implement five-attempt construction and truthful exhausted-quadrature warnings in foundation bases/quadrature under Radial Construction And Quadrature Convergence. Update only the owned docstrings and two reader pages. Preserve early exit, explicit controls, quadrature schedules/tolerances, and last-grid return. Respect 45/60 added-source and 20/28 reader budgets. Exclude other numerical findings, presets, stored metadata, frameworks, APIs, workflows, and releases."
+surfaces = ["docs", "source"]
+title = "radial construction convergence and quadrature notification"
+
+    [[records.document_refs]]
+    heading = "Radial Construction And Quadrature Convergence"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "621"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/radial_interval_sampled_build_and_extents.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/howto/recommended_atomic_setup.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/foundation/bases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/foundation/quadrature.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-RADIAL-CONVERGENCE-FN-01"]
+grant = "implementation"
+id = "HP-RADIAL-CONVERGENCE-TEST-01"
+lifecycle = "approved"
+scope = "Add compact core/radial regressions under Radial Construction And Quadrature Convergence for construction exits, fifth-candidate equality, explicit controls, and truthful quadrature measures. Replace two existing quiet expectations with single-warning expectations. Preferred/hard additions 55/70 lines. Preserve numerical assertions and existing owners; no new file, framework, large sweep, workflow, or unrelated test changes."
+surfaces = ["tests"]
+title = "radial convergence and quadrature diagnostic regressions"
+
+    [[records.document_refs]]
+    heading = "Radial Construction And Quadrature Convergence"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "621"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/core/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/radial/runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = []
