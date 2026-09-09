@@ -47,7 +47,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accura
 sha256 = "6d4fb63bd9b76ec2bc948dca58f6108244d1ad006ddd4cd515a29caac25dfa09"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
-sha256 = "10a14e18f2fd94a4a63adba102fdbed81daf93fbdf857d0a14cbc716759c66f0"
+sha256 = "ee9ffd5eef98bbc0c696624e86638f89e1f628f5253406efc074e261f48bacf9"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_cartesian_gto_interchange.md"
 sha256 = "ad03094c9baa79a724a1b97ea4ac7a1cad1bf336c87dd5d54a49db88989f584e"
@@ -83,7 +83,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "02893c3a15acd9fccda4d0419819983b9dc824946c2df3ca6e3db94d07924e42"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "083696e2f7be91544fff083ac3cc9bd9be138cf1bbea780230e8237ad6a3e749"
+sha256 = "dd325e13a2afcfe50d0bf5f36447a779f00013132da0a5848f29859ae87a4738"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "c7fe3a87bf8e70ad88025f66ed4c57d6d19b3961033891fb6a4e431b090c801e"
@@ -4612,6 +4612,100 @@ title = "v0.2.0 final candidate acceptance"
     kind = "manager_pass"
     value = "539"
 [[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-PQS-PUBLIC-V021-FN-01"
+lifecycle = "approved"
+scope = "Prepare only the existing-file compatibility restoration, namespaced annotated-tag verifier, version/changelog and truthful candidate labels specified in v0.2.1 Candidate Preparation. Preserve released definitions, numerical behavior, stable snapshot and old releases. Exact paths and budgets apply; no tagging, publication, promotion, dependency, broader API or numerical work."
+surfaces = ["docs", "source", "tools"]
+title = "v0.2.1 bounded candidate preparation"
+
+    [[records.document_refs]]
+    heading = "v0.2.1 Candidate Preparation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "57e61403262042923605f94a28e910dd2b543550"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "625"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "CHANGELOG.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "README.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/reference/export.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "Project.toml"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_nested_atomic.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_nested_faces.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary/ordinary_qw_types_and_bases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "tool"
+    path = ".github/workflows/ci.yml"
+    state = "existing"
+    [[records.paths]]
+    kind = "tool"
+    path = "docs/make.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-PUBLIC-V021-FN-01"]
+grant = "implementation"
+id = "HP-PQS-PUBLIC-V021-TEST-01"
+lifecycle = "approved"
+scope = "Validate v0.2.1 Candidate Preparation through focused existing compatibility/public-surface/docs owners, bounded local tag-collision/rejection fixtures, one candidate matrix and isolated installation. Preserve the five reserved names and numerical CI. No new owner, broad angular rerun, benchmark campaign, release action or prose locks."
+surfaces = ["tests"]
+title = "v0.2.1 bounded candidate preparation"
+
+    [[records.document_refs]]
+    heading = "v0.2.1 Candidate Preparation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "57e61403262042923605f94a28e910dd2b543550"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "625"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/core/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/docs/public_surface_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/docs/runtests.jl"
+    state = "existing"
+[[records]]
 dependency_ids = ["HP-PQS-ASPECTSHELL-FN-01", "HP-R1-FN-01"]
 grant = "maintenance"
 id = "HP-PQS-READER-DOC-01"
@@ -5302,7 +5396,7 @@ dependency_ids = []
 grant = "maintenance"
 id = "HP-PUBLIC-EXPORT-INTEGRITY-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the post-v0.2 export cleanup implemented by commit 6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468. TimedNestedFixedBlockBuild and its root export remain absent. OneCenterAtomicNestedLayerStructure and QiuWhiteResidualGaussianOperators remain defined but unexported; retain the one-line QiuWhiteResidualGaussianOperators alias to OrdinaryCartesianOperators3D for qualified compatibility. The accepted production delta is +0/-7 across src/GaussletBases.jl and src/cartesian/cartesian_nested_faces.jl, and the undocumented exported-binding backlog is 71. Preserve CartesianBasisBundle3D and nested_fixed_block_timing_report absence, final_units and unit_keys internal-export absence, lowering_recipe, ShellLocalAngularProfileKey, @timeg, CuratedSpherePointSet, LegacySGaussianData, QiuWhiteHybridOrbital3D, every ordinary/QW/nested numerical result, and immutable v0.2.0 tags/releases. Add no shim, warning, replacement API, alias deletion, docstring, test, helper, metadata, file, dependency, numerical change, workflow, version, tag, release, registration, or citation change. Ignored historical probes and conflicted copies remain untouched."
+scope = "Maintain dynamic export integrity and earlier invalid-binding removals under Package Export Integrity. Pass 543's three-name absence condition is superseded exclusively by HP-PQS-PUBLIC-V021-FN-01 for patch compatibility. Preserve its historical evidence and all other exclusions; this maintenance record grants no additional export, numerical, or release change."
 surfaces = ["source"]
 title = "reduce unsupported package exports"
 
@@ -5346,7 +5440,7 @@ dependency_ids = ["HP-PUBLIC-EXPORT-INTEGRITY-FN-01"]
 grant = "maintenance"
 id = "HP-PUBLIC-EXPORT-INTEGRITY-TEST-01"
 lifecycle = "completed"
-scope = "Maintain the compact dynamic regression in test/core/runtests.jl unchanged. It audits GaussletBases and every defined direct package-owned child module discovered with names(GaussletBases; all=true, imported=false) and parentmodule(child) === GaussletBases. For each name returned by names(module; all=false, imported=false), require the binding to be defined; when the value is a Function, require methods(value) to be nonempty. Commit 6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468 passed this owner while runtime inspection proved TimedNestedFixedBlockBuild absent, OneCenterAtomicNestedLayerStructure and QiuWhiteResidualGaussianOperators defined but unexported, and the undocumented export backlog reduced from 74 to 71. Preserve this invariant without editing tests, snapshotting an export list, classifying broader use, traversing external/imported modules, or adding numerical assertions. Add no test file, fixture, dependency, helper, compatibility assertion, version/release check, or broad architecture audit under this record."
+scope = "Maintain the existing dynamic package/child-module binding and method checks under Package Export Integrity. Pass 543's absence observations remain historical evidence, not current compatibility requirements. Focused restoration checks belong exclusively to HP-PQS-PUBLIC-V021-TEST-01. No broader inventory framework, numerical assertions, or API reduction is granted."
 surfaces = ["tests"]
 title = "validate package export integrity"
 
@@ -5534,7 +5628,7 @@ dependency_ids = ["HP-PQS-DOCS-TAGDEPLOY-FN-01", "HP-PQS-PUBLIC-COMPAT-FN-01", "
 grant = "maintenance"
 id = "HP-PUBLIC-PAPER-CI-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the accepted `docs_fast` append from 891bf3e84653197b90b930d7d5787be17d8fb998 in the existing Julia 1.10 Supported-floor row. Preserve every classifier, job/row/name, Julia version, numerical group, timeout, trigger, permission, paper/tag lane, and `fast` alias. No new row, dependency, source/API/export, numerical-policy, or release change."
+scope = "Maintain the accepted docs_fast Supported-floor selection under Paper-Aligned CI Boundary. Preserve classifier, jobs, versions, numerical groups, timeout, triggers, permissions and fast alias. Only HP-PQS-PUBLIC-V021-FN-01 may repair the tag verification reference; other tag/paper behavior remains unchanged. No new row, dependency, source/API/export or numerical-policy work under this maintenance record."
 surfaces = ["tools"]
 title = "paper-aligned PQS and screening CI workflow"
 
