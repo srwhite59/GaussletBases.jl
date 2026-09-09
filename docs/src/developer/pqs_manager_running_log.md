@@ -48,7 +48,7 @@ archaeology and are not normal startup reading.
 - The broad producer-documentation reorganization is complete. Schema-v3
   `authority.toml` is authoritative, generated registry/execution-whitelist
   views are checked one-way outputs, and authority CI is fail-closed.
-- The first complete post-cutover static conformance audit covered all `150`
+- The historical first post-cutover static conformance audit covered `150`
   execution records: `107` matched, `11` documented gaps, `8` numerical gates,
   and `24` discrepancies. Pass 399 closed the atomic-packet fail-fast subset.
 - Current screened-Hartree source and contracts use determinant orbitals for
@@ -88,7 +88,8 @@ archaeology and are not normal startup reading.
 - The source-layout moves, Lanczos consolidation, mapped-representation
   relocation, scheduled occupied-first coverage, and HFDMRG test-path repair
   are accepted. Generated execution authority is outside AGENTS.md. Public
-  mechanical checks run in Supported floor; prose checks remain docs-only.
+  mechanical checks run in Supported floor; structural docs checks stay docs-only.
+  Prose wording locks were removed, not rescheduled.
 - September 4 review repairs have closed schema/onboarding, all 127 verified
   documented-reference gaps, quick onboarding examples, and algorithm pointers.
   The residual screening/defaults, duplicate-page, and example-guide packet is
@@ -118,33 +119,28 @@ archaeology and are not normal startup reading.
 **MT1 - Conformance remediation (active).** Resolve the bounded Pass 398
 discrepancies and demonstrated exported-surface defects under explicit
 authority. The ordinary-QW nested diatomic repair, PRF API de-promotion, and
-four-name package/internal export repair are closed without numerical changes.
-Keep each subsequent repair narrow and evidence-led.
+four-name package/internal export repair are closed. The separately validated
+centered/displaced arithmetic and radial exit/notification repairs are complete;
+near-origin inverse-radius quadrature and finite-expansion limits remain.
+Keep any new repair narrow and evidence-led.
 
 **MT2 - Controlled Cr2 source migration (completed).** The source-backed
 fixed-state and bounded replay reproduced the former consumer-local path. Any
 new Cr2 endpoint, contraction, exchange, or solver interpretation is a
 separate scientific choice.
 
-**MT3 - Approved pending producer facilities (blocked).** The private
-matrix-free parent/PQS/WL H2+ controls, parent capture, supplemented H2
-one-body preflight, fixed-state density-density gate, and matched PQS/WL
-shared-shell construction and explicit charged electron sectors are
-implemented. The external same-density oracle must use the corrected WL
-fingerprints before a method-accuracy claim. RHF, scans, and ladders remain
-separate. Standard60/canonical-driver exposure remains pending.
-The specialized retained-GTO EGOI helper/test are deferred with no execution
-grant; the archived WIP is not a mainline merge candidate.
-The minimal sliced hydrogen-chain producer is implemented and in maintenance
-as a separate G10-plus-transverse operator facility; it is not a
-Cartesian/PQS route or solver lane. Its stable consumer fields are fixed in
-the canonical contract; HFDMRG adaptation remains downstream work.
-Standard60 remains held after the bounded kernel repairs; its genuine
-long-range/diffuse limits require a separate approximation-policy decision.
-The represented mixed-density direct Hartree producer is approved for bounded
-implementation with a streamed/tiled contracted PGDG/Gaussian pair action. Its
-first pass is direct-only; fitted acceleration and Cr2 acceptance remain later,
-separately reviewed gates.
+**MT3 - Deferred proposals and blocked producer work.** Standard60 is an
+unimplemented proposal deferred pending a named consumer and demonstrated
+accuracy/cost benefit. Its exact identity and recovered evidence remain;
+kernel arithmetic is repaired, but diffuse/long-range limits survive.
+Represented molecular Hartree remains scaling-blocked on the nonmaterializing
+contracted pair-product action and full-field certification. Its bounded
+source grant is not completion evidence. Fitting and Cr2 acceptance remain
+separate. Completed H2+ controls, matched shells, charged sectors, and sliced
+chain facilities are maintenance, not pending implementations. External
+same-density oracle interpretation of corrected WL fingerprints and sliced-chain
+HFDMRG adaptation remain consumer work. Specialized retained-GTO EGOI remains
+archived/deferred with no execution grant.
 
 **MT4 - Residual and protected-basis evidence (active).** Keep the residual
 spectral audit measurement-only. Protected atoms, counterpoise, and any new
@@ -155,25 +151,15 @@ Hooke owns the first Be `1s/2s` target study. Selection, transition-density
 exchange, and PRF-to-GTO-residual interactions remain consumer or measurement
 questions.
 
-**MT5 - Documentation and authority maintenance (active).** The broad
-reorganization and cutover are complete. The RC1 candidate, immutable tag,
-versioned folder, explicit selector entry, and package-centered GitHub
-prerelease are accepted. The RC2 candidate, immutable tag, versioned folder,
-selector entry, and exact GitHub prerelease are also accepted. Path-aware CI is
-implemented and accepted as a bounded release-efficiency refinement. The exact
-final candidate, immutable annotated tag, final/latest GitHub release,
-versioned/stable documentation, archives, and clean installation are accepted.
-The tag-lane local-ref collision was recovered through exact namespaced manual
-verification without a numerical rerun. Separate PQS and screening surfaces
-remain fixed. The bounded Julia `1.10` Supported-floor extension to the live
-`radial`, `misc`, and fixed-radial `angular_public` groups is implemented and
-accepted. The complete `angular` research group remains outside per-push CI.
-Future tag-lane repair, registration, citation metadata, and any later release
-are separate decisions. The execution whitelist now lives in its generated
-whole-file view, and `docs_fast` protects mechanical public-surface integrity
-on source pushes. The next bounded maintenance step removes only prose wording
-locks from the full docs owner while retaining all mechanical policy checks;
-that bounded cleanup is now accepted and in maintenance.
+**MT5 - Documentation and authority maintenance (active).** Final v0.2.0,
+RC1, and RC2 publication lifecycles are closed. Preserve immutable identities
+and the accepted release-compatible stable snapshot; normal main deployment
+updates dev. RC-era absent-stable requirements and earlier export counts are
+historical. Future tag-lane repair, registration, citation, and later releases
+remain separate decisions. Path-aware CI, the generated whole-file whitelist,
+Supported-floor mechanical documentation checks, and prose-test cleanup are
+implemented/maintenance. Full angular research remains outside per-push CI.
+Separate PQS and screening surfaces and current group selections stay fixed.
 
 **MT6 - Carrying-cost control (active).** Exact-order performance improvements,
 shared Example 41 release execution, classified public documentation, source
@@ -192,7 +178,7 @@ fixture, and explicit determinant cleanup are implemented. The read-only C2
 replay reproduced the accepted occupied subspace without a permutation ledger.
 No solver, Hamiltonian payload, mandatory PySCF dependency, basis-only/live-mf
 export, or release action belongs to this goal. Reader-facing documentation is
-implemented and included in the immutable RC2 surface.
+implemented and included in immutable RC2 and final v0.2.0.
 
 ## Manager Guardrails
 
@@ -1020,3 +1006,20 @@ deletions, new metadata/types/helpers/files: zero. Validation is limited to
 policy/diff review, package/docs/authority/self-test/views, Documenter, log
 bound, and remote docs-only checks. Defaults, compact/high maintenance,
 released/stable state, and handoffs remain unchanged. This decision is closed.
+
+## Cartesian Hamiltonian Producer Pass 624 - Startup Status Housekeeping
+
+Documentation/evidence maintenance only at `d9ef35c3c`; no strategic change or
+new authority. Condensed duplicate closeout summaries and reconciled startup
+status with accepted standard60 deferral, completed kernel/radial repairs,
+rejected cold-reporting alternatives, completed sidecar/ownership/prose cleanup,
+published v0.2.0, and the pinned stable snapshot. Historical log entries and
+release evidence are unchanged. MT3 distinguishes deferred standard60 from
+scaling-blocked represented Hartree; external consumer work and radial
+near-origin limitations remain unresolved. No successor task.
+
+Deleted/simplified: stale next-step and RC-era requirements in current guidance.
+Retained: live contracts, immutable identities, and historical evidence.
+Source/tests/metadata/grants added or changed: zero. Existing documentation,
+authority/self-test/views, package load, Documenter, log/diff, and remote
+docs-only checks validate this pass; no numerical reruns or stable promotion.

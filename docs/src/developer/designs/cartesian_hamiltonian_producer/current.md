@@ -38,143 +38,89 @@ claim.
 
 ## Active And Pending Work
 
-Pass 623 closes the standard60 decision: retain the exact unimplemented proposal,
-deferred pending a named consumer and demonstrated accuracy/cost benefit.
-The demonstrated kernel discrepancies are closed; genuine diffuse-density and
-long-range limitations remain. Existing compact/high records stay maintenance-only.
-No new calculations, implementation grant, or successor packet. See
-[Standard60 Deferral](coulomb_accuracy_policy.md#standard60-deferral).
+The completed numerical repairs are the centered/displaced Gaussian arithmetic
+fixes (Passes 618/620) and five-attempt radial construction with truthful
+quadrature warnings (Pass 622). Their records are maintenance-only; see
+[Coulomb evidence](coulomb_accuracy_policy.md) and
+[radial convergence](../../numerical_contracts.md#radial-construction-and-quadrature-convergence).
+The near-origin inverse-radius limitation and finite-expansion diffuse/long-range
+limits remain; closing implementation defects does not certify those regimes.
 
-Pass 622 closes `HP-RADIAL-CONVERGENCE-FN-01/TEST-01` at `a7ec77247` under
-[Radial Construction And Quadrature Convergence](../../numerical_contracts.md#radial-construction-and-quadrature-convergence).
-FN implemented/maintenance and TEST completed/maintenance; no implementation
-grant remains. Five construction attempts and truthful exhausted-high warnings
-are accepted with unchanged early exit, opt-out, quadrature schedules/tolerances,
-and last-grid return. Local 2580 checks and full CI/Docs passed. The measured
-fifth-attempt cost is accepted; near-origin inverse-radius convergence remains
-limited. Standard60 stays held; releases and stable documentation are unchanged.
+Standard60 remains an exact, unimplemented proposal, deferred pending a named
+consumer and demonstrated accuracy/cost benefit
+([Pass 623 decision](coulomb_accuracy_policy.md#standard60-deferral)).
+Represented-Hartree scaling and external consumer interpretation remain separate
+unresolved work, detailed below. No successor task is implied by this page.
 
-Pass 620 closes `HP-GAUSSIAN-DISPLACED-ARITH-FN-01/TEST-01` at `e181afca2`:
-FN implemented/maintenance, TEST completed/maintenance, no implementation grant.
-The [displaced arithmetic repair](coulomb_accuracy_policy.md#displaced-gaussian-arithmetic-repair)
-passes the original production reproducers, all 64 complete-matrix entries,
-148 new independent regressions, affected owners, and full CI/Docs. The separated
-complete-matrix arithmetic discrepancies are closed. Standard60 remains held:
-genuine long-range/diffuse limits require a separate approximation-policy decision.
-Represented-Hartree scaling, releases, and stable documentation remain separate.
+Final v0.2.0 is published. Stable serves the accepted frozen release-0.2.0
+snapshot; normal main deployments update dev, not that pin. Original v0.2.0
+and RC tags, releases, and versioned documentation remain immutable. See
+[final publication](pqs_public_surface.md#final-publication-closeout) and
+[stable policy](documentation_deployment.md#released-documentation-refresh).
 
-Pass 618 closes the [centered determinant repair](coulomb_accuracy_policy.md#centered-determinant-repair)
-at `782a07c7a`. `HP-GAUSSIAN-CENTERED-DET-FN-01/TEST-01` are
-implemented/completed, maintenance-only, with no remaining implementation grant.
-The one-assignment fix and 22 independent core assertions are accepted.
-Both displaced copies and separated complete-matrix closure remain outside
-that completed centered repair; Pass 620 accepts their separate bounded work.
-Standard60 implementation remains held.
+The September 4 reader review, all 127 verified reference gaps, quick onboarding
+examples, algorithm pointers, and screening/default guidance are addressed.
+Current mechanical coverage preserves exactly five reserved undocumented names.
+Earlier export counts and RC-era site conditions below are historical evidence,
+not current acceptance requirements. Accepted pass details remain in the
+[manager ledger](../../pqs_manager_running_log.md) and linked contracts.
 
-Pass 616 reconciles the September 8 Coulomb review under
-`HP-PQS-COULOMB-ACCURACY-FN-01/TEST-01`. Only implemented compact/high
-behavior and existing tests retain maintenance authority. Exact standard60
-parameters/fingerprint are preserved as atomic/local design; implementation,
-provenance/driver additions, and new tests remain held pending a separate
-approximation-policy decision, despite closure of the bounded arithmetic defects.
-No preset retuning, default change, or kernel repair is authorized by those
-accuracy records; only the separate repair records permit kernel changes. See
-[evidence and hold](coulomb_accuracy_policy.md#september-8-evidence-reconciliation).
-
-Pass 615 closes `HP-PQS-DOCS-TAGDEPLOY-FN-01/TEST-01` after the
-[released documentation refresh](documentation_deployment.md#released-documentation-refresh).
-Implementation `6fd436cda` and publication `34138301136` are accepted;
-the records are implemented/completed, maintenance-only. Stable is pinned to
-the frozen release-0.2.0 snapshot, not moving dev. Original v0.2.0 and RC
-documentation, tags, and releases remain immutable. Closeout verifies the pin
-through its normal-main deployment. No implementation or publication grant
-remains; later stable promotion requires a separate decision.
-
-Pass 613 closes `HP-PUBLIC-REVIEW-RESIDUAL-DOC-01` at `719e19430` as
-completed/maintenance with no remaining implementation grant under
-[September 4 Review Residual Documentation](r1_public_base_producer.md#september-4-review-residual-documentation):
-screening defaults, duplicate-page deletion, and example classifications are
-accepted. The September 4 review is addressed, including prior navigation,
-reference, onboarding, and algorithm-pointer repairs. No unresolved user
-decision blocks this review; releases, stable policy, and new work stay separate.
-
-Pass 611 closes `HP-PUBLIC-ALGORITHM-POINTER-DOC-01` at `f7958ec37` as
-completed/maintenance with no remaining implementation grant. The six-page
-pointer, production/oracle, provenance, and backlink correction is accepted,
-including the separately authorized mechanical hash reconciliation. Source,
-tests, useful oracles, releases, and stable documentation remain unchanged.
-
-Pass 609 closes `HP-PUBLIC-ONBOARDING-EXAMPLES-TEST-01` at `0019cbd5e` as
-completed/maintenance with no remaining implementation grant. Examples
-02/03/04/15 run once in quick or slow-enabled selection; Linux Julia 1.10.12
-quick examples passed 7/7 in 2m11.4s. Supported floor passed in 9m21s, leaving
-20m39s of headroom. Other examples, workflow, timeout, and Example 41's shared
-calculation remain unchanged; further scheduling requires separate review.
-
-Pass 607 closes Reference Discoverability Completion at `88b081589`:
-`HP-PUBLIC-REFERENCE-DISCOVERY-DOC-FN-01` is implemented/maintenance and
-`HP-PUBLIC-REFERENCE-DISCOVERY-DOC-TEST-01` completed/maintenance, with no
-remaining implementation grant. All 78 entries are rendered; the documented
-root-public reference gap is zero, with the first 49 and five reserved names
-unchanged. Keep the structural safeguard and current Documenter policy;
-internal-submodule promotion, namespace decisions, and releases remain separate.
-
-| Lane | State | Exact next boundary |
+| Lane | State | Maintenance boundary or unresolved decision |
 | --- | --- | --- |
 | `HP-AUTHORITY-EXECUTION-WHITELIST-*` | Whole-file views and root-doc recognition implemented; maintenance | Preserve existing DESIGN.md, ROADMAP.md, and STATUS.md path recognition, planned-state restrictions, deterministic views, and every other fail-closed rule |
 | `HP-PUBLIC-STATUS-ONBOARDING-DOC-01` | Implemented/maintenance at `f75b92544`; Pass 603 closed | Eight summaries reconciled and two existing radial entries visible; bounded interfaces and scientific scope preserved. No remaining implementation grant; `/dev/` corrected, `/stable/` unchanged |
-| `HP-ANGULAR-PUBLIC-CI-*` | Fixed-radial `[10,15,32]` public owner implemented/completed; maintenance | Preserve the `80`-line/`83`-assertion owner, exact Supported-floor append, `all` coverage, exclusion of both angular groups from `fast`, and net `-77` test-line result; full angular research CI, export documentation, and shell-key de-export remain separate |
-| `HP-PUBLIC-ANGULAR-PRODUCER-DOC-*` | Seven durable experimental angular profile/sequence bindings documented; implementation and checks in maintenance | Preserve the accepted experimental producer-only wording, exact `23 -> 16` undocumented-export reduction, and seven curated bindings; keep `ShellLocalAngularProfileKey` exported but undocumented/unreferenced, and grant no de-export or workflow change |
-| `HP-PUBLIC-RADIAL-PARITY-DOC-*` | Four radial paper-parity exports documented; implementation and checks in maintenance | Preserve the accepted cached/read-only expert boundary, exact-width distinction, normal `RadialBasisSpec` front door, and exact `16 -> 12` undocumented-export reduction; grant no artifact, cache, radial implementation, or Supported-floor change |
+| `HP-ANGULAR-PUBLIC-CI-*` | Fixed-radial `[10,15,32]` public owner implemented/completed; maintenance | Preserve the `80`-line/`83`-assertion owner, exact Supported-floor append, `all` coverage, exclusion of both angular groups from `fast`, and net `-77` test-line result; full angular research CI and shell-key de-export remain separate; producer documentation is completed |
+| `HP-PUBLIC-ANGULAR-PRODUCER-DOC-*` | Seven durable experimental angular profile/sequence bindings documented; implementation and checks in maintenance | Preserve the accepted experimental producer-only wording, historical `23 -> 16` undocumented-export reduction, and seven curated bindings; keep `ShellLocalAngularProfileKey` exported but undocumented/unreferenced, and grant no de-export or workflow change |
+| `HP-PUBLIC-RADIAL-PARITY-DOC-*` | Four radial paper-parity exports documented; implementation and checks in maintenance | Preserve the accepted cached/read-only expert boundary, exact-width distinction, normal `RadialBasisSpec` front door, and historical `16 -> 12` undocumented-export reduction; grant no artifact, cache, radial implementation, or Supported-floor change |
 | `HP-ANGULAR-TEST-CONTROL-*` | Pass 559 control-flow and Pass 597 HFDMRG test-path portability implemented/completed; maintenance | Preserve blank-as-absent `GAUSSLETBASES_HFDMRG_SRC`, clear invalid-path failure, propagated configured-directory import errors, the existing cache and visible skip, later tests, explicit `angular` selection, and exclusion from `fast` and public CI |
 | `HP-PQS-ASPECTSHELL-*` | Implemented/completed maintenance; eligible PQS/WL shells share `(ns,ns,L)` and equal aggregate dimensions | Preserve parent/PQS parity and fail on missing shape, axis-count, aggregate-column, or Gram inconsistencies |
-| `HP-FN-00` / `HP-MCOMX-TERM-FN-01` | Direct support-local PQS shell-seed assembly implemented; maintenance | Preserve byte-identical ordinary/mapped atomic/diatomic coefficients and all public endpoints without restoring global-full helpers; cold compilation, scalar-loop optimization, Gram policy, and compatibility cleanup remain separate |
-| `HP-FN-03` / `HP-DRV-STAGE-FN-01` | Exact-order four-element terminal Gaussian-sum reduction implemented; call-local buffers and staged producer remain maintenance | Preserve four explicit accumulators, each element's original 135-term order, bitwise PQS/WL matrices, and all endpoint facts; eight-lane batching and further loop restructuring remain unauthorized, while the next separate performance investigation is the cold reporting boundary |
+| `HP-FN-00` / `HP-MCOMX-TERM-FN-01` | Direct support-local PQS shell-seed assembly implemented; maintenance | Preserve byte-identical ordinary/mapped atomic/diatomic coefficients and all public endpoints without restoring global-full helpers; no further optimization, Gram-policy change, or compatibility cleanup is implied |
+| `HP-FN-03` / `HP-DRV-STAGE-FN-01` | Exact-order four-element terminal Gaussian-sum reduction implemented; call-local buffers and staged producer remain maintenance | Preserve four explicit accumulators, each element's original 135-term order, bitwise PQS/WL matrices, and all endpoint facts; eight-lane batching and further loop restructuring remain unauthorized; cold-reporting alternatives were investigated and rejected, with no implementation authority |
 | `HP-PQS-PAPER-H2-DRV-FN-01` | Five-row fixed-state measurement replayed with matched bare/supplemented dimensions | Rerun the external same-density Coulomb oracle against the new WL fingerprints before interpreting method accuracy |
 | `HP-R1-ESECTOR-*` | Explicit charged sectors implemented; maintenance | Preserve exact basis/operator independence from `nup`/`ndn`, positive nonzero sectors, neutral compatibility, supplemented parity, and charged artifact readback |
 | `HP-PQS-PRF-CONSUMER-*` | Implemented/completed internal maintenance | Preserve six unexported PRF definitions, nine qualified nested-test uses, exact diagnostics and numerics, and the separately owned `cartesian_base_working_basis` export; no PRF public compatibility promise remains |
-| `HP-RETIRE-PQS-STAGED-DESCRIPTOR-*` | Inert projected-q-shell staged descriptor retired; validation completed and grants closed | Preserve the accepted `+2/-593` deletion, byte-identical active projected-q-shell coefficients/packets/fingerprints, and unchanged ordinary/matched H2 endpoints; generic by-center-sidecar retirement remains separate |
+| `HP-RETIRE-PQS-STAGED-DESCRIPTOR-*` | Inert projected-q-shell staged descriptor retired; validation completed and grants closed | Preserve the accepted `+2/-593` deletion, byte-identical active projected-q-shell coefficients/packets/fingerprints, and unchanged ordinary/matched H2 endpoints; generic by-center-sidecar retirement is also completed |
 | `HP-RETIRE-BYCENTER-SIDECAR-*` | Orphaned generic staged by-center sidecar retired; validation completed and grants closed | Preserve the accepted `+0/-210` source deletion, product-staged, factorized-final, dense-fallback, fixed-block cache, exact ordinary/product-staged H1 parity, and unchanged current PQS behavior; the archived high-order worktree remains physically retained and untouched behind its separate evidence-preservation gate |
 | `HP-PACKAGE-ROOT-PATH-*` | Package-root data/include indirection implemented; validation completed; maintenance | Preserve the accepted private root/helper, exactly five data paths and one parent-qualified nested include, all six target hashes, and the `+8/-8` source result; grant no test edit, file move, path framework, or later source-layout step |
 | `HP-SOURCE-LAYOUT-RADIAL-ATOMIC-*` | Exact 14-file radial/atomic path-only relocation implemented; validation completed; maintenance | Preserve the relocation targets, include positions, pointers, and frozen evidence; the accepted shared-Lanczos wrapper is the only atomic body exception |
 | `HP-SOURCE-LAYOUT-ANGULAR-*` | Exact five-file angular path-only relocation implemented; validation completed; maintenance | Preserve the five owners, include positions, and current pointers; the accepted shared-Lanczos move is the only helper-placement exception |
-| `HP-SOURCE-LAYOUT-FOUNDATION-*` | Exact 16-file foundation relocation plus accepted shared-Lanczos owner/include; maintenance | Preserve accepted order and package behavior; only the mapped-Ordinary ownership grant may remove its exact unchanged block from `primitive_sets.jl` |
+| `HP-SOURCE-LAYOUT-FOUNDATION-*` | Exact 16-file foundation relocation plus accepted shared-Lanczos owner/include; maintenance | Preserve accepted order and package behavior; the mapped-Ordinary block relocation is completed under its own maintenance record |
 | `HP-FOUNDATION-LANCZOS-*` | Shared private apply-based reference kernel implemented; focused validation completed; maintenance | Preserve commit `99c489026`, its byte-identical 81-line kernel, thin atomic wrapper, exact public behavior, four callers, normalized include identity, and net `-58` source result |
 | `HP-MAPPED-ORDINARY-REP-*` | Exact two-function Foundation-to-Ordinary ownership move implemented/completed; maintenance | Preserve commit `3f173f63f`, the frozen 25-line block hash, unchanged sole Cartesian caller and load order, exact `+25/-25` source move, 14-line focused test extension, and serialized representation parity; grant no redesign or new execution |
-| `HP-SOURCE-LAYOUT-ORDINARY-*` | Exact 15-file Ordinary path-only relocation implemented/completed; maintenance | Preserve commit `96802b00c`, its include positions, pointers, hashes, and R100 identities; only the mapped-Ordinary ownership grant may append the exact unchanged representation block |
+| `HP-SOURCE-LAYOUT-ORDINARY-*` | Exact 15-file Ordinary path-only relocation implemented/completed; maintenance | Preserve commit `96802b00c`, its include positions, pointers, hashes, and R100 identities; the accepted mapped-Ordinary representation block is now owned here |
 | `HP-SOURCE-LAYOUT-CARTESIAN-*` | Exact 76-file Cartesian/PQS path-only relocation implemented/completed; maintenance | Preserve commit `64d8d65b6`, its 76 R100 owners, 39 moved includes, pointers, and relative order; the accepted Lanczos include has a separate 89-entry identity |
 | `HP-PQS-READER-*` | Reader documentation and one public H2+ PQS/WL example implemented/completed; zero source/API delta | Maintain the public-only `293/293` fixture, visible algorithm links, `1e-10` numerical gates, and radial-first onboarding without importing private or paper-driver surfaces |
-| `HP-PQS-PUBLIC-MATCHED/SCREEN-*` | Both public surfaces implemented; matched-H2+ release/example now shares one accepted comparison, screening remains maintenance | Preserve all 18 assertions against Example 41's returned comparison, its standalone TSV/summary, the frozen `12789/1285/1285` result, and absence of the duplicate subprocess; leave screening, release, registration, and citation decisions separate |
-| `HP-PQS-PUBLIC-COMPAT-*` | Exact six-bound root compatibility declaration implemented; validation completed | Preserve the declared ranges, Julia `1.10` floor, untracked-manifest policy, and fresh-resolution evidence contract; final-release, registration, and citation decisions remain separate |
+| `HP-PQS-PUBLIC-MATCHED/SCREEN-*` | Both public surfaces implemented; matched-H2+ release/example now shares one accepted comparison, screening remains maintenance | Preserve all 18 assertions against Example 41's returned comparison, its standalone TSV/summary, the frozen `12789/1285/1285` result, and absence of the duplicate subprocess; leave screening, future releases, registration, and citation decisions separate |
+| `HP-PQS-PUBLIC-COMPAT-*` | Exact six-bound root compatibility declaration implemented; validation completed | Preserve the declared ranges, Julia `1.10` floor, untracked-manifest policy, and fresh-resolution evidence contract; final v0.2.0 is published; future releases, registration, and citation remain separate |
 | `HP-PQS-PUBLIC-DOC-PARITY-*` | Eleven-name curated reference and ten missing public docstrings implemented; focused parity validation completed | Maintain exact export/reference parity, path-free historical provenance, example-28 internal classification, and accessor-only correction documentation; no executable source, API, numerical, citation, or release change |
 | `HP-PQS-DOCS-TAGDEPLOY-*` | Pass 615 implemented/completed maintenance | Preserve frozen release-0.2.0 snapshot and stable pin, original version folders, exact-SHA refusal of repeat publication, and main/tag/PR separation; no further publication grant |
-| `HP-PQS-PUBLIC-RC1-*` | `v0.2.0-rc1` candidate prepared at `41fa897ae`; clean validation completed; maintenance | Preserve the exact candidate version and concise reader changelog; immutable tag and GitHub prerelease lifecycles are closed, while registration, citation metadata, and final-release decisions remain unauthorized |
-| `HP-PQS-PUBLIC-RC2-*` | Exact `v0.2.0-rc2` candidate prepared at `2b3c23970`; clean validation completed; maintenance | Preserve the three distinct reader links, version/changelog identity, exact RC2/RC1/dev selectors, archive evidence, and absent `/stable/`; immutable tag and GitHub-prerelease lifecycles are closed |
-| `HP-PQS-PUBLIC-V020-*` | Exact final candidate accepted at `adfcaba32`; implementation maintenance and validation completed | Preserve version `0.2.0`, the modest package-nearest-software claim, separate PQS/screening/interchange stories, tree `f64ba21e0`, archive identity, stable-link preparation, and unchanged public numerics |
+| `HP-PQS-PUBLIC-RC1-*` | `v0.2.0-rc1` candidate prepared at `41fa897ae`; clean validation completed; maintenance | Preserve the exact candidate version and concise reader changelog; immutable tag and GitHub prerelease lifecycles are closed, while future releases, registration, and citation require separate authority |
+| `HP-PQS-PUBLIC-RC2-*` | Exact `v0.2.0-rc2` candidate prepared at `2b3c23970`; clean validation completed; maintenance | Preserve the three distinct reader links, version/changelog identity, exact RC2/RC1/dev selectors, and historical archive/site evidence; immutable tag and GitHub-prerelease lifecycles are closed |
+| `HP-PQS-PUBLIC-V020-*` | Exact final candidate accepted at `adfcaba32`; implementation maintenance and validation completed | Preserve version `0.2.0`, the modest package-nearest-software claim, separate PQS/screening/interchange stories, tree `f64ba21e0`, archive identity, accepted release evidence, and unchanged public numerics |
 | `HP-PQS-PUBLIC-V020-RELEASE-*` | Final GitHub release `378216554`, immutable tag `722e8e875`, stable documentation, archives, and clean installation accepted; lifecycle closed | Preserve tag target `adfcaba32`, tree `f64ba21e0`, exact `2,278`-byte final/latest release with zero assets, `/v0.2.0/` and `/stable/`, and the recorded manual recovery evidence; future tag-lane repair, registration, citation, and later releases remain separate |
-| `HP-PQS-PUBLIC-RC2-RELEASE-*` | Package-centered GitHub prerelease published and validated; lifecycle closed | Preserve release `376503169`, exact `2,200`-byte narrative, prerelease/non-latest status, zero uploaded assets, accepted archives/install evidence, and absent `/stable/`; no release mutation is authorized |
-| `HP-PQS-PUBLIC-RC2-TAG-*` | Immutable annotated tag and versioned documentation accepted; lifecycle closed | Preserve object `7c8a21b99`, frozen target `2b3c23970`, RC2/RC1/dev selector entries, and absent `/stable/`; the separate GitHub-prerelease lifecycle is also closed |
-| `HP-PQS-PUBLIC-RC1-RELEASE-*` | Package-centered GitHub prerelease published and validated; lifecycle closed | Preserve release `373460389`, exact separate PQS/screening narrative, prerelease/non-latest status, zero uploaded assets, accepted archives/install evidence, and absent `/stable/`; no release mutation is authorized |
-| `HP-PQS-PUBLIC-RC1-TAG-*` | Immutable annotated tag and versioned documentation accepted; lifecycle closed | Preserve object `a4284f0bf`, frozen target `1546c18d3`, RC1/dev selector entries, and absent `/stable/`; the separate GitHub-prerelease lifecycle is also closed |
+| `HP-PQS-PUBLIC-RC2-RELEASE-*` | Package-centered GitHub prerelease published and validated; lifecycle closed | Preserve release `376503169`, exact `2,200`-byte narrative, prerelease/non-latest status, zero uploaded assets, accepted archives/install evidence; no release mutation is authorized |
+| `HP-PQS-PUBLIC-RC2-TAG-*` | Immutable annotated tag and versioned documentation accepted; lifecycle closed | Preserve object `7c8a21b99`, frozen target `2b3c23970`, RC2/RC1/dev selector entries; the separate GitHub-prerelease lifecycle is also closed |
+| `HP-PQS-PUBLIC-RC1-RELEASE-*` | Package-centered GitHub prerelease published and validated; lifecycle closed | Preserve release `373460389`, exact separate PQS/screening narrative, prerelease/non-latest status, zero uploaded assets, accepted archives/install evidence; no release mutation is authorized |
+| `HP-PQS-PUBLIC-RC1-TAG-*` | Immutable annotated tag and versioned documentation accepted; lifecycle closed | Preserve object `a4284f0bf`, frozen target `1546c18d3`, RC1/dev selector entries; the separate GitHub-prerelease lifecycle is also closed |
 | `HP-PUBLIC-EXPORT-INTEGRITY-*` | Three-name post-v0.2 export cleanup implemented and validated; maintenance | Keep `TimedNestedFixedBlockBuild` absent; retain unexported `OneCenterAtomicNestedLayerStructure` and the qualified QW operator alias; preserve `ShellLocalAngularProfileKey`, numerical behavior, dynamic integrity coverage, and immutable releases |
-| `HP-PUBLIC-FOUNDATION-DOC-*` | Ten foundational basis/mapping generics documented; implementation and focused validation in maintenance | Preserve their exact map/derivative/introspection semantics, compact existing reference section, family-scoped checks, and accepted undocumented-export count of `61` without changing behavior or global docs policy |
-| `HP-PUBLIC-FUNCTION-STENCIL-DOC-*` | Nine function-evaluation/stencil generics documented; implementation and focused validation in maintenance | Preserve their exact evaluation, derivative, center, integral, and ordered-stencil semantics, compact existing reference section, family-scoped checks, and accepted undocumented-export count of `52` without changing behavior or global docs policy |
-| `HP-PUBLIC-PARTITION-LEAF-DOC-*` | Twelve partition-hierarchy and leaf-local accessors documented; implementation and focused validation in maintenance | Preserve stored ordering and hierarchy semantics, copied `Float64` blocks versus stored/read-only vectors and records, the compact existing reference section, family-scoped checks, and accepted undocumented-export count of `40` without behavior or global docs-policy changes |
+| `HP-PUBLIC-FOUNDATION-DOC-*` | Ten foundational basis/mapping generics documented; implementation and focused validation in maintenance | Preserve their exact map/derivative/introspection semantics, compact existing reference section, family-scoped checks, and historical undocumented-export count of `61` without changing behavior or global docs policy |
+| `HP-PUBLIC-FUNCTION-STENCIL-DOC-*` | Nine function-evaluation/stencil generics documented; implementation and focused validation in maintenance | Preserve their exact evaluation, derivative, center, integral, and ordered-stencil semantics, compact existing reference section, family-scoped checks, and historical undocumented-export count of `52` without changing behavior or global docs policy |
+| `HP-PUBLIC-PARTITION-LEAF-DOC-*` | Twelve partition-hierarchy and leaf-local accessors documented; implementation and focused validation in maintenance | Preserve stored ordering and hierarchy semantics, copied `Float64` blocks versus stored/read-only vectors and records, the compact existing reference section, family-scoped checks, and historical undocumented-export count of `40` without behavior or global docs-policy changes |
 | `HP-PUBLIC-ATOMIC-IDA-DOC-*` | Ten atomic-IDA inspection and tiny two-electron reference bindings documented; implementation and focused validation in maintenance | Preserve dense-reference/read-only semantics, the compact reference section, focused checks, and accepted historical undocumented-export count of `30`; follow-on supported-surface and read-only de-export audits own the refined classification |
 | `HP-PUBLIC-BASE-WORKING-DOC-*` | Retained expert staged Cartesian constructor documented; implementation and focused validation in maintenance | Preserve the accepted expert/unstable non-schema boundary, ordinary-user Hamiltonian facade, private PRFs, and exact five-name undocumented-export set; authorize no namespace, API, numerical, workflow, release, or v0.3 change |
-| `HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-*` | Public facade documentation implemented/completed; maintenance | Preserve the accepted schemas/defaults/geometry, supported `q`/`ns`, corrected `d`, parsed PQS snippet and `Vee` identity; Example 39 owns numerical execution, `/dev/` carries the repair, and immutable v0.2.0 `/stable/` remains unchanged |
-| `HP-PUBLIC-EXPERT-GEOMETRY-DOC-*` | Expert bond-aligned geometry inspection documented; implementation and focused validation in maintenance | Preserve the accepted eight-binding expert section, inspection-only/read-only limits, and undocumented-export count of `23`; both next-minor namespace reservations remain non-executable, with no source deletion, performance, v0.2.x, version, changelog, release, or automatic v0.3 work |
-| `HP-PUBLIC-QW-GEOMETRY-DOC-*` | Three experimental QW geometry-diagnostic bindings documented; implementation and focused validation in maintenance | Preserve the accepted route-specific/read-only boundary, nested source-reuse versus basis-construction distinction, lightweight chain/square inspection distinction, one compact reference section, and exact undocumented-export reduction `12 -> 9`; grant no behavior, API, workflow, working-basis, sliced-chain, or namespace change |
-| `HP-PUBLIC-SLICED-HCHAIN-DOC-*` | Three sliced-chain operator functions documented; implementation and focused validation in maintenance | Preserve the accepted six-export expert section, lazy/read-only views, separate nuclear repulsion, two-index Vee, private view types, zero-allocation compatible-buffer rows, and exact undocumented-export reduction `9 -> 6`; grant no behavior, storage, allocation, API, workflow, working-basis, or namespace change |
-| `HP-PUBLIC-SUPPORTED-SURFACE-DOC-*` | Six classified supported-public bindings documented; implementation and focused validation in maintenance | Preserve the concrete QW docstring, finite Coulomb representation, owner-specific metadata, narrow base facade, strict external-GTO hashes, and accepted undocumented-export count of `24`; the follow-on audit retains geometry as expert and reserves four original de-export candidates in two future transactions |
-| `HP-PUBLIC-PAPER-CI-*` | Three-gate CI and `docs_fast` source-push integrity owner implemented; maintenance | Preserve the shared mechanical public-surface owner, exact five-name reserved set, Julia 1.10 fallback and Julia 1.12 native parity, once-only docs/full-docs selection, unchanged `fast` alias, all numerical groups, names/rows, classifier, and paper/tag lanes; only `HP-PUBLIC-DOCS-PROSE-CLEANUP-*` may remove classified wording locks |
+| `HP-PUBLIC-CARTESIAN-FRONTDOOR-DOC-*` | Public facade documentation implemented/completed; maintenance | Preserve the accepted schemas/defaults/geometry, supported `q`/`ns`, corrected `d`, parsed PQS snippet and `Vee` identity; Example 39 owns numerical execution, `/dev/` carries the repair, and the accepted release-compatible stable snapshot is pinned |
+| `HP-PUBLIC-EXPERT-GEOMETRY-DOC-*` | Expert bond-aligned geometry inspection documented; implementation and focused validation in maintenance | Preserve the accepted eight-binding expert section, inspection-only/read-only limits, and historical undocumented-export count of `23`; both next-minor namespace reservations remain non-executable, with no source deletion, performance, v0.2.x, version, changelog, release, or automatic v0.3 work |
+| `HP-PUBLIC-QW-GEOMETRY-DOC-*` | Three experimental QW geometry-diagnostic bindings documented; implementation and focused validation in maintenance | Preserve the accepted route-specific/read-only boundary, nested source-reuse versus basis-construction distinction, lightweight chain/square inspection distinction, one compact reference section, and historical undocumented-export reduction `12 -> 9`; grant no behavior, API, workflow, working-basis, sliced-chain, or namespace change |
+| `HP-PUBLIC-SLICED-HCHAIN-DOC-*` | Three sliced-chain operator functions documented; implementation and focused validation in maintenance | Preserve the accepted six-export expert section, lazy/read-only views, separate nuclear repulsion, two-index Vee, private view types, zero-allocation compatible-buffer rows, and historical undocumented-export reduction `9 -> 6`; grant no behavior, storage, allocation, API, workflow, working-basis, or namespace change |
+| `HP-PUBLIC-SUPPORTED-SURFACE-DOC-*` | Six classified supported-public bindings documented; implementation and focused validation in maintenance | Preserve the concrete QW docstring, finite Coulomb representation, owner-specific metadata, narrow base facade, strict external-GTO hashes, and historical undocumented-export count of `24`; the follow-on audit retains geometry as expert and reserves four original de-export candidates in two future transactions |
+| `HP-PUBLIC-PAPER-CI-*` | Three-gate CI and `docs_fast` source-push integrity owner implemented; maintenance | Preserve the shared mechanical public-surface owner, exact five-name reserved set, Julia 1.10 fallback and Julia 1.12 native parity, once-only docs/full-docs selection, unchanged `fast` alias, all numerical groups, names/rows, classifier, and paper/tag lanes; the classified prose-lock cleanup is completed under its own maintenance record |
 | `HP-PUBLIC-DOCS-PROSE-CLEANUP-*` | Exact full-docs wording-lock cleanup implemented/completed; maintenance | Preserve commit `e65075e78`, exact `717 -> 497` and `+19/-239` reduction, all retained mechanical policy/placement checks, four heading boundaries, byte-identical shared owner, and `8/8 + 122/122 + 10/10` results; restore no prose locks or duplicate owner |
 | `HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-*` | Five-suite scheduled/manual workflow implemented; maintenance | Preserve commit `9367afd5a`, atomic-packet then occupied-first then sidecar/R3A/screening order, the `15`-minute Julia `1.12` read-only job, cadence, triggers, permissions, and unchanged public CI; represented Hartree remains standalone and blocked |
 | `HP-PQS-COULOMB-ACCURACY-*` | Compact/high maintenance only; standard60 deferred pending a named consumer and demonstrated accuracy/cost benefit | Preserve exact K60 identity and recovered evidence. Kernel discrepancies closed; diffuse/long-range limits remain. No implementation, new tests, default change, or successor packet |
 | `HP-REP-MIXDENS-HARTREE-*` | Bounded exact implementation passed; Cr2 preflight rejected its global component-pair scaling and shared residual/state tolerance | Replace production dispatch with occupied-contracted separable block tensors, apply RG-owned residual validity separately, and pass the actual-plan resource gate before resuming the complete field |
-| `HP-REP-PQS-RG-WORKING-*` | Same-construction augmented working-basis constructor implemented; H2 validation completed; maintenance | Preserve the opaque overlap-only result, native `S_RX = T_G' S_GX + T_A' S_AX`, exact direct-facade/artifact parity, and existing importer behavior; the frozen REQ-101 early import gate may now run |
+| `HP-REP-PQS-RG-WORKING-*` | Same-construction augmented working-basis constructor implemented; H2 validation completed; maintenance | Preserve the opaque overlap-only result, native `S_RX = T_G' S_GX + T_A' S_AX`, exact direct-facade/artifact parity, and existing importer behavior; external campaign status is not inferred from this maintained importer |
 | `HP-REP-PQS-RG-WORKING-CI-*` | Public Cartesian owner expanded to `47` checks; lifecycle completed/maintenance | Preserve the public-only matched-`px/py` rotation/spin/metric/fingerprint coverage, the separate `49`-check direct-run protected sidecar, and the net `-43` tracked test reduction; restore no duplicate nested importer testset and add no runner or CI change |
-| `HP-REP-XGTO-INTERCHANGE/PYSCF-EXPORT/CLOSESTDET-*` | Strict Cartesian-GTO reader, checkpoint-only PySCF exporter, frozen d-shell fixture, explicit closest-determinant cleanup, and reader manual implemented; direct C2/aug-cc-pV6Z replay accepted | Maintain exact AO order, full source-overlap parity, unchanged raw import, explicit caller-thresholded cleanup, and checkpoint-only scope; basis-only/live-mean-field export remains outside v1, while the prepared RC2 candidate has a separate lifecycle |
+| `HP-REP-XGTO-INTERCHANGE/PYSCF-EXPORT/CLOSESTDET-*` | Strict Cartesian-GTO reader, checkpoint-only PySCF exporter, frozen d-shell fixture, explicit closest-determinant cleanup, and reader manual implemented; direct C2/aug-cc-pV6Z replay accepted | Maintain exact AO order, full source-overlap parity, unchanged raw import, explicit caller-thresholded cleanup, and checkpoint-only scope; basis-only/live-mean-field export remains outside v1, RC2 and final v0.2.0 publication lifecycles are closed |
 | `HP-REP-XGTO-READER-DOC-*` | Reader-facing interchange manual implemented; focused documentation checks completed; maintenance | Preserve the bounded workflow page, Manual/index navigation, seven curated API entries, checkpoint attestation, explicit capture thresholds, and unsupported-case boundaries without broadening release scope |
 | `HP-SLICE-HCHAIN-*` | Six-export producer implemented; validation completed; maintenance | Preserve the O(1), zero-allocation structural-bandwidth query, exact represented off-band zeros, compact operator physics, and existing consumer contract; no further export, field, solver, or dense matrix |
 | `HP-QW-NESTED-DIAT-*` | Three root-exported ordinary-QW nested diatomic front doors repaired; implementation and regressions are in maintenance | Preserve legal no-shared-shell packet construction, actual endcap/panel provenance, and existing policy/`q`/`L` diagnostics forwarding without changing defaults or current PQS/WL production |
@@ -221,9 +167,10 @@ driver, public facade, producer default, artifact schema family, or solver API.
    maps before global pair enumeration. Residual validity follows the RG
    `1e-10` cross and scale-aware `5e-8` identity contract; state charge/Gram
    remains a separate `1e-10` gate. No molecular-full result exists yet.
-3. **Standard Coulomb implementation.** The analytic K60 preset and artifact
-   fingerprint are approved but not source-backed. The controlled Cr2
-   screened comparison stays `:high` and must not be changed mid-comparison.
+3. **Deferred standard60 proposal.** Exact K60 identity and evidence are
+   retained, not implementation authority. Reconsider only for a named consumer
+   and demonstrated accuracy/cost benefit. The controlled Cr2 comparison stays
+   `:high`; diffuse/long-range limits and high135's finite nature remain.
 4. **Parent-backed consumer studies.** The compact in-memory expert PRF API is
    accepted with exact descriptor-to-PRF source binding. Hooke and other
    consumers must still construct and justify their own parent-space targets,
@@ -253,12 +200,15 @@ driver, public facade, producer default, artifact schema family, or solver API.
    pair-product action; result wrappers alone are incomplete scaffolding. An
    AO-projected field, occupied action, random probes, IDA transition-product
    substitute, or auxiliary fit cannot close this blocker.
-10. **Supplemented PQS external import.** The opaque same-construction result
-    and exact native `gto_overlap_matrix` dispatch are implemented under
-    `HP-REP-PQS-RG-WORKING-*`; the bounded H2 source/import gate passed. The
-    frozen REQ-101 `R=2.35`, `ns=5` early case may now run. Reconstruction from
-    the opaque Hamiltonian, a consumer-local map, and a dense
-    parent-by-terminal matrix remain forbidden.
+10. **External transfer consumers.** The public same-construction import and
+    accepted C2 interchange replay are complete; this does not close other
+    external campaigns. Preserve opaque-result access and exact public overlap
+    transfer; no consumer-local reconstruction or dense parent-by-terminal
+    substitute is authorized.
+11. **Radial near-origin integration.** Construction and warning repairs are
+    complete, but the reported (1,1) inverse-radius quadrature changes remain
+    a limitation, not energy-error estimates or an authorization to refine
+    defaults. See the radial convergence contract above.
 
 Durable numerical and workflow guardrails live in
 [invariants](invariants.md); the task-specific contract map lives in

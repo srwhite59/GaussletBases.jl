@@ -88,8 +88,8 @@ ID or subsystem.
   implemented same-parent member, cross-overlap, native restart, manifest,
   and target-evaluation contract
 - [Occupied-first injection geometry](occupied_first_injection.md)
-  for mandatory occupied protection, physical capture validation, optional
-  supplement selection, and the current unwired-consumer boundary
+  for occupied protection and physical validation, including the maintained
+  weekly owner; downstream consumer work is not implied complete
 - [Protected additive atomic reference correction](protected_additive_reference_correction.md)
   for the internal occupied-union, additive packet `P0/J0/E0`, and native
   protected-localized screened-Hartree correction lane
@@ -99,8 +99,8 @@ ID or subsystem.
 - [Reference Hartree numerics](reference_hartree_numerics.md) for implemented
   neutral exact `GG/GA/AA` kernels and protected fixed/localized transforms
 - [Represented mixed-density Hartree](represented_mixed_density_hartree.md) for
-  the approved internal direct reconstruction and complete multicenter
-  `GG/GA/AA` field contract
+  the internal `GG/GA/AA` field contract and unresolved contracted-action
+  scaling blocker, not a completed molecular-full producer
 - [Rho0 and reference-density correction history](rho0_reference_density_matrix.md)
   for superseded fixed-`P0` experiments and the deferred XPAIR question
 - [Terminal shellification due diligence](terminal_shellification_due_diligence.md)
@@ -141,11 +141,10 @@ ID or subsystem.
   for the implemented internal `Delta_J0`/`C` correction API built from
   represented references and same-basis `V_IDA`
 - [PQS v0.2 public surface](pqs_public_surface.md) for the implemented bounded
-  matched-H2+ comparison and typed supplied-field screened-Hartree assembly;
-  its isolated Julia `1.12.6` candidate replay and bounded dependency
-  compatibility declaration are accepted, and the RC1 and RC2 tags and
-  package-centered GitHub prereleases are published and validated; final release
-  remains separate
+  matched-H2+ comparison and separate supplied-field screening surface.
+  Final v0.2.0 is published; RC-era candidate requirements are historical.
+  [Stable documentation](documentation_deployment.md#released-documentation-refresh)
+  is pinned to the accepted release-compatible snapshot, not moving main
 - [Cartesian/PQS source relocation](cartesian_pqs_source_relocation.md) for the
   exact path-only Step 4B inventory, selective pointer migration, and unchanged
   runtime/include-order contract
@@ -161,9 +160,9 @@ ID or subsystem.
   for the expert mapping-strength scalar that preserves default behavior while
   allowing CR2-style scans
 - [Producer-wide Coulomb accuracy](coulomb_accuracy_policy.md)
-  for the expert compact/standard/high presets and one-expansion
-  construction/provenance
-  contract
+  for implemented compact/high and one-expansion construction. Standard60 is
+  unimplemented, deferred pending a named consumer and demonstrated accuracy/cost
+  benefit; repaired kernel arithmetic does not remove finite-expansion limits
 - [Cartesian driver usability workflow](cartesian_driver_usability_workflow.md)
   for the compact artifact-producing canonical driver lane
 - [R1 one-center base atoms](r1_one_center_base_atoms.md)
@@ -235,8 +234,8 @@ available for restoration guardrails, not as active implementation authority.
 
 Candidate amendments:
 
-- Translated atoms, Cr2-specific workflow, public supplemented
-  workflow/export, basis/supplement-realism beyond explicit supplied
+- Translated atoms, Cr2-specific workflow, broader supplemented
+  workflows beyond the accepted public facade, basis/supplement-realism beyond explicit supplied
   labels/files, and broad driver diagnostics remain candidate-only until
   separately approved. Supplemented atoms and supplemented WL z-axis diatomics
   are already implemented internal composition cells.
