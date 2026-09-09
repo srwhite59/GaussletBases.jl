@@ -826,3 +826,27 @@ release action. Validation: existing docs/public-surface checks, package load,
 authority/self-test, deterministic views, Documenter, log bound, diff checks,
 and remote docs-only CI/Docs. Stable remains pinned; kernel assessment is the
 exact next blocker, not an implementation grant.
+
+## Cartesian Hamiltonian Producer Pass 617 - Authorize Centered Determinant Repair
+
+At `66634c9f8`, independently reproduced the high135 diffuse public failure:
+the centered determinant rounded to zero despite a positive 256-bit reference.
+An isolated exact-method copy with only the positive-sum assignment passed
+21 explicit moment/contraction checks. Reviewed the audit reference formula,
+caller chain, raw matrix/timing rows, and both excluded displaced copies.
+No failing default fixture was established; no molecular result is invalidated
+or newly certified. The 20,160-case sweep remains evidence, not CI material.
+
+MT1 advances a real supported-input correctness repair through a separate
+FN/TEST pair; MT3 and the standard60 hold do not change. Production budget
+is exactly +2/-1 (or one-line +1/-1), existing core tests preferred/hard +25/35.
+Deleted: only subtractive determinant evaluation; simplified: direct positive
+sum; quarantined: displaced kernels, complete-matrix discrepancies, and preset
+work. Guard and Wick computation remain because they serve live callers.
+No new file, helper, API, cache, metadata/status field, or policy/default change.
+The audit reports zero scalar allocation and approximately +0.55 ns/call;
+no end-to-end performance claim follows. Authority validation uses existing
+docs/public-surface checks, package load, authority/self-test/views, Documenter,
+log bound, diff checks, and remote docs-only CI/Docs. Implementation additionally
+requires core, public screening, atomic packet, and normal full CI. Stop on
+broader repair needs; later acceptance must not silently clear Pass 616 holds.

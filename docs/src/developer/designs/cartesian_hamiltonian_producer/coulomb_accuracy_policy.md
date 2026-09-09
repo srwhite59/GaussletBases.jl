@@ -11,7 +11,9 @@ K60 parameters and fingerprint remain retained design, not execution authority.
 This restriction overrides pending-implementation language and budgets below;
 those portions are deferred specifications, not permission to resume. Kernel
 repair also requires separate review and authority. No preset retuning, default,
-source, test, artifact-format, or release change is granted by this packet.
+source, test, artifact-format, or release change is granted by Pass 616.
+Pass 617's separate Centered Determinant Repair below permits only that exact
+assignment and compact regression; it does not release the standard60 hold.
 
 One resolved `CoulombGaussianExpansion` must still govern every Coulomb-expanded
 part of an existing producer construction. Compact/high behavior is unchanged.
@@ -175,10 +177,82 @@ pair-matrix discrepancies at R=100/300 for standard/high. Their cause is not
 established here; do not certify full matrices from the selected-entry result.
 Assess numerical range and these discrepancies separately before reauthorizing
 standard60. No kernel fix, clamping, new regression, or implementation is
-granted here. Existing compact/high maintenance excludes this new repair.
+granted by the accuracy-policy records. Only the separate Pass 617 records
+below permit the centered repair; existing compact/high maintenance does not.
 
 Do not expose `doacc`, `del`, `s`, `c`, `maxu`, coefficient vectors,
 exponent vectors, or custom expansion objects as new user inputs.
+
+## Centered Determinant Repair
+
+Pass 617 independently reviewed the bounded audit at `66634c9f8`:
+`tmp/reviews/determinant-audit-2026-09-08/REPORT.md`, SHA-256
+`6f37a8aa575240f55754c66006d5405468605c5a4975709247b95de72c41f37c`.
+The minimal reproducer confirmed both the low-level exception and public
+`gaussian_coulomb_pair_matrix` failure for a normalized origin s orbital with
+exponent `1e-4` and implemented high135. No failing default molecular/PQS
+fixture was established; no molecular-energy consequence is claimed.
+
+At `beta_left=beta_right=2e-4`, high135 term 123 has coupling exponent
+`2.6441354529083574e12`. Float64 subtraction gives zero; the independent
+256-bit determinant is approximately `1.0576541811633431e9`. An isolated
+exact-method copy with only the proposed assignment passed 21 checks against
+explicit s, (1,1), (2,0), (2,2), and odd-zero moments at diffuse, unequal,
+benign, and tight scales. Its diffuse high135 contraction is
+`0.011283791670955126 Ha`, checked against the same finite expansion.
+The audit's 20,160-case independent combinatorial 256-bit sweep had no corrected
+failures and worst nonzero relative error `1.24e-15`; retain it as audit
+evidence, not a CI workload or arbitrary-scale accuracy guarantee.
+
+`HP-GAUSSIAN-CENTERED-DET-FN-01` permits changing only the determinant
+assignment in `centered_polynomial_gaussian_pair_factor_integral` in
+`src/foundation/GaussianAnalyticIntegrals.jl` to:
+
+```julia
+determinant = beta_left * beta_right +
+              coupling_exponent * (beta_left + beta_right)
+```
+
+Source budget: exactly +2/-1 (or +1/-1 on one line). Preserve the positivity
+guard, input validation, diagonal/covariance values, powers, Wick recursion,
+prefactor, signature, and dispatch. Add no comment, helper, type, cache, scaling
+framework, clamping, fallback, dependency, new file, or other source edit.
+This avoids cancellation, not all unbounded Float64 overflow/underflow.
+
+`HP-GAUSSIAN-CENTERED-DET-TEST-01` permits additions only to the existing
+Gaussian-integral testset in `test/core/runtests.jl`, preferred/hard 25/35
+added lines. Existing endpoints miss this exponent ratio. Cover the exact
+high135 failing term, unequal-beta even polynomial moments, odd-zero, and
+benign/tight cases. Use local 256-bit explicit moments, for example
+`E[x^2*y^2]=sigma_xx*sigma_yy+2sigma_xy^2`, not package Wick recursion as
+oracle. A relative tolerance such as `5e-14`, zero absolute tolerance, and
+exact odd-zero checks suffice. No shared helper or audit-sweep copy is needed.
+The public regression must construct the normalized s orbital (`a=1e-4`)
+through `CartesianGaussianShellOrbitalRepresentation3D` and call
+`gaussian_coulomb_pair_matrix` with `coulomb_gaussian_expansion(doacc=true)`.
+Compare the finite 1x1 result to the independent BigFloat finite-expansion
+integral `sum(c*(a/(a+zeta))^(3/2))`, not only a private-kernel assertion.
+
+Require focused checks, complete core, existing public screening and atomic
+reference-packet owners, package load, docs_fast/full docs, authority/self-test,
+deterministic views, Documenter, log bound, diff checks, normal full three-job
+source-push CI, and Docs. Preserve existing tolerances/golden rows; old inaccurate
+results need not remain bitwise identical. Do not rerun full angular, new RHF,
+or duplicate paper examples. Report exact deltas/counts and a bounded warmed
+zero-allocation scalar check. The audit's alternating 960,000-call samples
+measured 15.501 versus 16.032 ms, zero allocation: approximately +0.55 ns/call.
+This is isolated overhead, not an end-to-end performance or energy claim.
+
+The displaced polynomial copy in `GaussianAnalyticIntegrals.jl` and compressed
+displaced-axis copy in `src/cartesian/gaussian_coulomb_reference.jl` require
+their own reference validation and receive no authority here. Pass 616's
+separated complete-matrix discrepancies and standard60 hold remain open.
+Parameters/defaults, provenance/driver work, radial-warning policy, workflows,
+exports, releases, and stable documentation remain outside this grant.
+Stop without an implementation commit if the two-file budget, independent
+reference, or existing validation requires a broader repair. Repo-manager waits
+for this authority commit and its required checks before implementation;
+lifecycle closeout follows independent review of the result.
 
 ## Canonical Driver Exposure
 

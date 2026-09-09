@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `0a85d9a8e5be086a71dec57c8ca65aaa6d57abd86f3240f5eb43f16fa0bf7473`.
+> [authority.toml](authority.toml), SHA-256 `d326f460ab99bceebb6b776d9e3b7a50070da775c7ee8ed4a96cfc0caa829275`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1225,6 +1225,36 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `594`
 - **Dependencies:** `HP-FOUNDATION-LANCZOS-FN-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PUBLIC-ATOMIC-IDA-DOC-TEST-01`
 - **Scope:** Maintain the 19-line focused IDA extension accepted in commit 99c4890261c5fae8bdc9ed1d1c66e9270d2f66a2 for supplied-v0, maximum-step, breakdown, return-shape, public-error, and malformed-problem parity. Exact dual-revision snapshots, focused atomic/angular/PQS consumers, allocation/compile checks, and CI 33825308690 passed. Add no file, fixture, helper, policy, workflow, or complete-angular rerun.
+
+### HP-GAUSSIAN-CENTERED-DET-FN-01 - centered Gaussian determinant cancellation repair
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [coulomb\_accuracy\_policy.md](coulomb_accuracy_policy.md); heading `Centered Determinant Repair`
+- **Owned paths:**
+  - `source` / `existing`: `src/foundation/GaussianAnalyticIntegrals.jl`
+- **Evidence:**
+  - `manager_pass`: `617`
+- **Dependencies:** `HP-PQS-COULOMB-ACCURACY-FN-01`
+- **Scope:** Replace only the centered\_polynomial\_gaussian\_pair\_factor\_integral determinant assignment in src/foundation/GaussianAnalyticIntegrals.jl under Centered Determinant Repair. Preserve the guard and remaining computation. Exclude displaced kernels, standard60, complete-matrix discrepancy resolution, defaults, APIs, and other repairs.
+
+### HP-GAUSSIAN-CENTERED-DET-TEST-01 - centered Gaussian determinant regression
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [coulomb\_accuracy\_policy.md](coulomb_accuracy_policy.md); heading `Centered Determinant Repair`
+- **Owned paths:**
+  - `test` / `existing`: `test/core/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `617`
+- **Dependencies:** `HP-GAUSSIAN-CENTERED-DET-FN-01`
+- **Scope:** Add compact independent centered-moment and public diffuse high135 pair-matrix regressions only in test/core/runtests.jl under Centered Determinant Repair. Preferred/hard additions 25/35 lines. Preserve existing assertions; exclude the full audit sweep, new helpers/files, displaced validation, standard60 implementation, and workflow changes.
 
 ### HP-HAM-MANIFEST-FN-01 - compact Hamiltonian artifact manifest
 

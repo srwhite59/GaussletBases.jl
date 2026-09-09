@@ -38,6 +38,13 @@ claim.
 
 ## Active And Pending Work
 
+Pass 617 authorizes only the [centered determinant repair](coulomb_accuracy_policy.md#centered-determinant-repair)
+under `HP-GAUSSIAN-CENTERED-DET-FN-01/TEST-01`: one assignment in the
+existing foundation kernel and a compact core regression. Independent review
+reproduced the valid diffuse high135 public failure and passed 21 scratch
+moment/contraction checks. Both displaced copies, standard60 implementation,
+and the open separated complete-matrix discrepancies remain outside this grant.
+
 Pass 616 reconciles the September 8 Coulomb review under
 `HP-PQS-COULOMB-ACCURACY-FN-01/TEST-01`. Only implemented compact/high
 behavior and existing tests retain maintenance authority. Exact standard60
