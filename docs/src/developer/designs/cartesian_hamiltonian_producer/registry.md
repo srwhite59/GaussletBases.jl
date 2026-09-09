@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `84761bfedfb011020edac14a26437b46358b4578bc1ca07c32d1d2fa040e1a0d`.
+> [authority.toml](authority.toml), SHA-256 `3a5bcefccac864d4f5f9fcdd6a86326d0e8f6c2d7cb6a4b5aa0355beced4992a`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -4030,8 +4030,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-RADIAL-CONVERGENCE-FN-01 - radial construction convergence and quadrature notification
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -4043,13 +4043,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/foundation/quadrature.jl`
 - **Evidence:**
   - `manager_pass`: `621`
+  - `git_commit`: `a7ec77247b9bc45a349771e58cb76cb8019e08f8`
+  - `manager_pass`: `622`
 - **Dependencies:** none
-- **Scope:** Implement five-attempt construction and truthful exhausted-quadrature warnings in foundation bases/quadrature under Radial Construction And Quadrature Convergence. Update only the owned docstrings and two reader pages. Preserve early exit, explicit controls, quadrature schedules/tolerances, and last-grid return. Respect 45/60 added-source and 20/28 reader budgets. Exclude other numerical findings, presets, stored metadata, frameworks, APIs, workflows, and releases.
+- **Scope:** Maintain the accepted foundation bases/quadrature repair under Radial Construction And Quadrature Convergence. Preserve five construction attempts, early exit, explicit controls, truthful warnings, quadrature schedules/tolerances, and last-grid return. No implementation grant remains. Exclude near-origin accuracy changes, other numerical findings, presets, stored metadata, frameworks, APIs, workflows, and releases; standard60 remains held.
 
 ### HP-RADIAL-CONVERGENCE-TEST-01 - radial convergence and quadrature diagnostic regressions
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -4059,8 +4061,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/radial/runtests.jl`
 - **Evidence:**
   - `manager_pass`: `621`
+  - `git_commit`: `a7ec77247b9bc45a349771e58cb76cb8019e08f8`
+  - `manager_pass`: `622`
 - **Dependencies:** `HP-RADIAL-CONVERGENCE-FN-01`
-- **Scope:** Add compact core/radial regressions under Radial Construction And Quadrature Convergence for construction exits, fifth-candidate equality, explicit controls, and truthful quadrature measures. Replace two existing quiet expectations with single-warning expectations. Preferred/hard additions 55/70 lines. Preserve numerical assertions and existing owners; no new file, framework, large sweep, workflow, or unrelated test changes.
+- **Scope:** Maintain accepted core/radial coverage under Radial Construction And Quadrature Convergence: construction exits, fifth-candidate equality, explicit controls, truthful quadrature diagnostics, and two single-warning expectations. Preserve numerical assertions and existing owners. No implementation grant, new file/framework, large sweep, workflow, or unrelated test change.
 
 ### HP-RAW-SRCMODE-FN-01 - raw product source-mode inventory
 

@@ -964,3 +964,32 @@ them. Exact blocker: production implementation and existing core/radial plus
 full CI acceptance. This authority pass runs only package/docs/authority,
 self-test/views, Documenter, log/diff and remote docs-only checks; releases,
 stable pin, handoffs, and quadrature schedules/tolerances remain unchanged.
+
+## Cartesian Hamiltonian Producer Pass 622 - Close Radial Exit Repair
+
+Accepted `a7ec77247b9bc45a349771e58cb76cb8019e08f8` after independent diff,
+source-hash equality with the reviewed candidate, test-preservation, budget,
+evidence, and exact-head CI/Docs review. Source +38/-31, tests +50/-2 and
+reader +15/-1 meet preferred limits. Local implementation validation passed
+2580 checks including 44 new regressions; CI `34392873423` executed Supported
+floor, PQS, and Screening successfully, and Docs `34392873459` passed.
+Closeout runs package/docs/authority/self-test/views, Documenter, log/diff,
+and docs-only remote checks, not another numerical sweep.
+
+MT1 closes this bounded convergence/notification defect. Five attempts reach
+3.54e-9 for the 9/35-function fixtures; accepted warm costs are 0.81-0.87 and
+4.07 seconds. The first H call followed Example 02, not an independent cold
+H measurement. Early exits/opt-out and quadrature schedules remain intact.
+Near-origin (1,1) refine64-to-512 inverse-radius changes remain
+0.0024226465/0.0036160909 bohr^-1, not energy-error estimates. Standard60/MT3
+remain held; no new medium-term goal, preset, or accuracy grant.
+
+Deleted: obsolete quiet-high bypass and duplicate warning branches.
+Simplified: actual penultimate bookkeeping and one truthful warning.
+Quarantined: larger sweeps and unrelated numerical findings. Existing builders
+and quality checks remain for live radial/half-line consumers. Added/deleted
+source lines: 38/31; new tests: 44 checks in existing owners; new stored
+metadata/status fields, types, helpers, or files: zero. Exact implementation
+blocker: none; both records are maintenance-only. Further near-origin work
+requires separate evidence and authority. Releases, stable pin, and handoffs
+remain unchanged.

@@ -6,8 +6,10 @@ manual.
 
 ## Radial Construction And Quadrature Convergence
 
-Pass 621 authorizes the following bounded repair under
-`HP-RADIAL-CONVERGENCE-FN-01/TEST-01`; implementation is pending. Construction
+Pass 622 accepts `a7ec77247b9bc45a349771e58cb76cb8019e08f8`, implementing
+the Pass 621 repair under `HP-RADIAL-CONVERGENCE-FN-01/TEST-01`. The records
+are implemented/completed, maintenance-only; no implementation grant remains.
+The implementation boundary below records the completed grant. Construction
 accuracy and quadrature convergence are separate tests, neither an energy-error
 estimate. This supersedes the quiet exhausted-`:high` quadrature fallback,
 not the existing refinement schedules or tolerances.

@@ -38,14 +38,14 @@ claim.
 
 ## Active And Pending Work
 
-Pass 621 authorizes `HP-RADIAL-CONVERGENCE-FN-01/TEST-01` under
+Pass 622 closes `HP-RADIAL-CONVERGENCE-FN-01/TEST-01` at `a7ec77247` under
 [Radial Construction And Quadrature Convergence](../../numerical_contracts.md#radial-construction-and-quadrature-convergence).
-Implementation is pending: five construction attempts with unchanged early exit
-and explicit opt-out, plus honest exhausted-high quadrature warnings retaining
-the actual penultimate measures. Quadrature schedules/tolerances and last-grid
-return remain unchanged. The roughly doubled cost for fifth-attempt fixtures
-is accepted explicitly; near-origin inverse-radius convergence remains limited.
-No standard60, other numerical finding, release, or stable change is granted.
+FN implemented/maintenance and TEST completed/maintenance; no implementation
+grant remains. Five construction attempts and truthful exhausted-high warnings
+are accepted with unchanged early exit, opt-out, quadrature schedules/tolerances,
+and last-grid return. Local 2580 checks and full CI/Docs passed. The measured
+fifth-attempt cost is accepted; near-origin inverse-radius convergence remains
+limited. Standard60 stays held; releases and stable documentation are unchanged.
 
 Pass 620 closes `HP-GAUSSIAN-DISPLACED-ARITH-FN-01/TEST-01` at `e181afca2`:
 FN implemented/maintenance, TEST completed/maintenance, no implementation grant.
