@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `8c462ab8434198dff627bfb5bae3458ca0a2892226ac8aa7f0c90b49c0b38b34`.
+> [authority.toml](authority.toml), SHA-256 `203ed1ec6fe73ed241a63be628876581d4fbe375dc37ca5809c17375d894b87d`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1259,6 +1259,37 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `618`
 - **Dependencies:** `HP-GAUSSIAN-CENTERED-DET-FN-01`
 - **Scope:** Maintain the accepted 28-line, 22-assertion centered-moment and public diffuse high135 regression in test/core/runtests.jl under Centered Determinant Repair. No implementation grant remains. Preserve independent references and existing tolerances; exclude the audit sweep, new helpers/files, displaced validation, standard60 implementation, and workflow changes.
+
+### HP-GAUSSIAN-DISPLACED-ARITH-FN-01 - displaced Gaussian arithmetic and compressed construction repair
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [coulomb\_accuracy\_policy.md](coulomb_accuracy_policy.md); heading `Displaced Gaussian Arithmetic Repair`
+- **Owned paths:**
+  - `source` / `existing`: `src/foundation/GaussianAnalyticIntegrals.jl`
+  - `source` / `existing`: `src/cartesian/gaussian_coulomb_reference.jl`
+- **Evidence:**
+  - `manager_pass`: `619`
+- **Dependencies:** `HP-GAUSSIAN-CENTERED-DET-FN-01`, `HP-PQS-COULOMB-ACCURACY-FN-01`
+- **Scope:** Repair displaced polynomial integrals and compressed descriptor construction in the two owned files under Displaced Gaussian Arithmetic Repair: positive determinant, nonnegative damping, product-local moments, shared origins, and two private scalar-field replacements. Source additions preferred/hard 50/60, net at most +17. Preserve centered repair and callers; exclude presets, APIs, new carriers/helpers/caches, other kernels, workflows, and releases.
+
+### HP-GAUSSIAN-DISPLACED-ARITH-TEST-01 - displaced Gaussian independent arithmetic regressions
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [coulomb\_accuracy\_policy.md](coulomb_accuracy_policy.md); heading `Displaced Gaussian Arithmetic Repair`
+- **Owned paths:**
+  - `test` / `existing`: `test/core/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `619`
+- **Dependencies:** `HP-GAUSSIAN-DISPLACED-ARITH-FN-01`
+- **Scope:** Add compact independent finite-expansion regressions only in test/core/runtests.jl under Displaced Gaussian Arithmetic Repair. Cover public onsite/translation parity, large displacements, nonnegative polynomial integrands, unequal exponents, and diffuse/ordinary/tight compact/high cases. Additions preferred/hard 75/90. Preserve centered tests and existing tolerances; exclude sweep imports, new owners/frameworks, numerical policy, preset implementation, and workflow changes.
 
 ### HP-HAM-MANIFEST-FN-01 - compact Hamiltonian artifact manifest
 

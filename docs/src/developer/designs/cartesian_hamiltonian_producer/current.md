@@ -38,12 +38,21 @@ claim.
 
 ## Active And Pending Work
 
+Pass 619 authorizes `HP-GAUSSIAN-DISPLACED-ARITH-FN-01/TEST-01` for the
+[displaced arithmetic repair](coulomb_accuracy_policy.md#displaced-gaussian-arithmetic-repair):
+two source owners and compact independent core regressions only. Independent
+scratch validation explains the separated complete-matrix discrepancies by
+kernel arithmetic; closure requires the production repair to pass the original
+reproducers. Standard60 remains held, with genuine long-range/diffuse limits.
+Repo-manager must wait for this authority commit and its required checks.
+
 Pass 618 closes the [centered determinant repair](coulomb_accuracy_policy.md#centered-determinant-repair)
 at `782a07c7a`. `HP-GAUSSIAN-CENTERED-DET-FN-01/TEST-01` are
 implemented/completed, maintenance-only, with no remaining implementation grant.
 The one-assignment fix and 22 independent core assertions are accepted.
-Both displaced copies, standard60 implementation, and the open separated
-complete-matrix discrepancies remain outside this completed repair.
+Both displaced copies and separated complete-matrix closure remain outside
+that completed centered repair; Pass 619 owns their separate bounded work.
+Standard60 implementation remains held.
 
 Pass 616 reconciles the September 8 Coulomb review under
 `HP-PQS-COULOMB-ACCURACY-FN-01/TEST-01`. Only implemented compact/high
@@ -51,7 +60,8 @@ behavior and existing tests retain maintenance authority. Exact standard60
 parameters/fingerprint are preserved as atomic/local design; implementation,
 provenance/driver additions, and new tests are held pending assessment of
 Gaussian-kernel determinant cancellation and separated-matrix discrepancies.
-No preset retuning, default change, or kernel repair is authorized. See
+No preset retuning, default change, or kernel repair is authorized by those
+accuracy records; only the separate repair records permit kernel changes. See
 [evidence and hold](coulomb_accuracy_policy.md#september-8-evidence-reconciliation).
 
 Pass 615 closes `HP-PQS-DOCS-TAGDEPLOY-FN-01/TEST-01` after the

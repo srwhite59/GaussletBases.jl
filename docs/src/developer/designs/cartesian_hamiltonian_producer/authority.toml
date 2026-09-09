@@ -44,7 +44,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/contracted_par
 sha256 = "de6d346e8f5abae91343c572fed42006e26d9d07478819e805941d5d10fda63e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
-sha256 = "4cf3f398cf7cb0faa5f22d91f14fd88a6496dc8c8760fc3b54ae8407e0984968"
+sha256 = "e147a8d53ecade641fc38a4b3c1bb0ba32943732b2b3e9829b69b4105c2920eb"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
 sha256 = "10a14e18f2fd94a4a63adba102fdbed81daf93fbdf857d0a14cbc716759c66f0"
@@ -2131,6 +2131,54 @@ title = "centered Gaussian determinant regression"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "618"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/core/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-GAUSSIAN-CENTERED-DET-FN-01", "HP-PQS-COULOMB-ACCURACY-FN-01"]
+grant = "implementation"
+id = "HP-GAUSSIAN-DISPLACED-ARITH-FN-01"
+lifecycle = "approved"
+scope = "Repair displaced polynomial integrals and compressed descriptor construction in the two owned files under Displaced Gaussian Arithmetic Repair: positive determinant, nonnegative damping, product-local moments, shared origins, and two private scalar-field replacements. Source additions preferred/hard 50/60, net at most +17. Preserve centered repair and callers; exclude presets, APIs, new carriers/helpers/caches, other kernels, workflows, and releases."
+surfaces = ["source"]
+title = "displaced Gaussian arithmetic and compressed construction repair"
+
+    [[records.document_refs]]
+    heading = "Displaced Gaussian Arithmetic Repair"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "619"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/foundation/GaussianAnalyticIntegrals.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/gaussian_coulomb_reference.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-GAUSSIAN-DISPLACED-ARITH-FN-01"]
+grant = "implementation"
+id = "HP-GAUSSIAN-DISPLACED-ARITH-TEST-01"
+lifecycle = "approved"
+scope = "Add compact independent finite-expansion regressions only in test/core/runtests.jl under Displaced Gaussian Arithmetic Repair. Cover public onsite/translation parity, large displacements, nonnegative polynomial integrands, unequal exponents, and diffuse/ordinary/tight compact/high cases. Additions preferred/hard 75/90. Preserve centered tests and existing tolerances; exclude sweep imports, new owners/frameworks, numerical policy, preset implementation, and workflow changes."
+surfaces = ["tests"]
+title = "displaced Gaussian independent arithmetic regressions"
+
+    [[records.document_refs]]
+    heading = "Displaced Gaussian Arithmetic Repair"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "619"
 
     [[records.paths]]
     kind = "test"

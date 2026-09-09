@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Execution Whitelist
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `8c462ab8434198dff627bfb5bae3458ca0a2892226ac8aa7f0c90b49c0b38b34`.
+> [authority.toml](authority.toml), SHA-256 `203ed1ec6fe73ed241a63be628876581d4fbe375dc37ca5809c17375d894b87d`.
 
 Cartesian Hamiltonian producer source work is currently authorized only for
 these approved design IDs:
@@ -65,6 +65,8 @@ these approved design IDs:
 - `HP-FOUNDATION-LANCZOS-TEST-01`
 - `HP-GAUSSIAN-CENTERED-DET-FN-01`
 - `HP-GAUSSIAN-CENTERED-DET-TEST-01`
+- `HP-GAUSSIAN-DISPLACED-ARITH-FN-01`
+- `HP-GAUSSIAN-DISPLACED-ARITH-TEST-01`
 - `HP-HAM-MANIFEST-FN-01`
 - `HP-HAM-MANIFEST-SRC-FN-01`
 - `HP-HAM-MANIFEST-SRC-TEST-01`

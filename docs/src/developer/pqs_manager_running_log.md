@@ -871,3 +871,34 @@ change. No failing default fixture was established; +0.55 ns/call remains
 isolated audit evidence, not an end-to-end or molecular-energy claim. Both
 records are maintenance-only with no remaining implementation grant. No strategic
 change to MT3 or Pass 616 holds; further assessment requires separate authority.
+
+## Cartesian Hamiltonian Producer Pass 619 - Authorize Displaced Arithmetic Repair
+
+At `6611a60ef`, independently reproduced the reported diffuse exception, huge
+translated onsite interaction, default-compact d diagnostic, and negative even
+polynomial integral. The isolated source-shaped replacement passes 148 checks
+in 1.4 s plus all 64 entries in the original four standard/high matrices.
+This explains Pass 616's matrix discrepancies by kernel arithmetic; production
+closure remains contingent on those original reproducers, not this design proof.
+Standard60's real extent/diffuseness limitations and implementation hold survive.
+
+MT1 advances a demonstrated correctness repair; MT3's represented-Hartree
+scaling blocker is unchanged. Both displaced kernels need positive determinant,
+nonnegative damping, and product-local moments. Compressed construction needs
+common axis origins before information is lost. Measured candidate source
++47/-43 (two files), test body 69 lines/148 assertions; source preferred/hard
+50/60 and tests 75/90. Two private scalar fields change meaning/name, without
+adding fields. No new source helper, type, cache, API, file, or metadata/status.
+Deleted/simplified: unstable completed-square/global-polynomial arithmetic;
+quarantined: preset/precision frameworks and unrelated repairs. Existing Wick
+recursion and skips remain because live pair-matrix/mixed-Hartree callers need
+them. Raw/cached microbenchmarks retain 384/1120/0/0 bytes; raw-s cost varies
+between audit and candidate timings, so no end-to-end claim is accepted.
+
+Authority validation uses package load, docs, authority/self-test/views,
+Documenter, log/diff checks, and remote docs-only CI/Docs. Implementation must
+add independent finite-expansion regressions, validate affected existing owners,
+repeat the original reproducers and bounded costs, and pass normal full CI/Docs.
+Stable, releases, centered repair, and all preset parameters remain unchanged.
+Repo-manager waits for the pushed authority and green checks; stop on broader
+scope, failed references, or material unexplained cost regression.

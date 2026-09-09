@@ -14,6 +14,8 @@ repair also requires separate review and authority. No preset retuning, default,
 source, test, artifact-format, or release change is granted by Pass 616.
 Pass 617's separate Centered Determinant Repair below permits only that exact
 assignment and compact regression; it does not release the standard60 hold.
+Pass 619 separately authorizes Displaced Gaussian Arithmetic Repair below.
+Neither repair reauthorizes standard60 implementation or preset changes.
 
 One resolved `CoulombGaussianExpansion` must still govern every Coulomb-expanded
 part of an existing producer construction. Compact/high behavior is unchanged.
@@ -173,12 +175,13 @@ the exact determinant is positive. This is distinct from the previously
 repaired `gaussian_pair_factor`, and is not evidence for retuning K60.
 Independent inspection also qualifies the report's rounding-level agreement:
 selected `(11|22)` entries agree, but `integrals.tsv` records large complete
-pair-matrix discrepancies at R=100/300 for standard/high. Their cause is not
-established here; do not certify full matrices from the selected-entry result.
+pair-matrix discrepancies at R=100/300 for standard/high. Pass 619 below
+explains them by displaced-kernel arithmetic; production closure remains
+contingent on the repair passing the original complete-matrix reproducers.
 Assess numerical range and these discrepancies separately before reauthorizing
 standard60. No kernel fix, clamping, new regression, or implementation is
-granted by the accuracy-policy records. Only the separate Pass 617 records
-below permit the centered repair; existing compact/high maintenance does not.
+granted by the accuracy-policy records. Separate Pass 617 and Pass 619 records
+own the centered and displaced repairs; existing compact/high maintenance does not.
 
 Do not expose `doacc`, `del`, `s`, `c`, `maxu`, coefficient vectors,
 exponent vectors, or custom expansion objects as new user inputs.
@@ -263,6 +266,129 @@ exports, releases, and stable documentation remain outside this grant.
 Stop if maintenance would require a broader repair or weakened reference.
 The implementation transaction is closed; no further repair or test expansion
 is implicitly authorized by its completed budget.
+
+## Displaced Gaussian Arithmetic Repair
+
+Pass 619 authorizes `HP-GAUSSIAN-DISPLACED-ARITH-FN-01/TEST-01` after
+independent review at `6611a60efd70400ee4dbcffaac9bd0d62379974c`.
+Evidence: `tmp/reviews/displaced-audit-2026-09-09/REPORT.md`, SHA-256
+`b1d56d2f049196a40e69afbdf780f45de54ca9568b9e788eba5f83d70fcec8bf`;
+its `displaced_minimal_20260909.jl` reproducer has SHA-256
+`92adb22f45fea17b7c5eedc68b50a9c23980eb6096436f6e7d9c6da8b19c8c97`.
+The original reproducer independently failed in all reported ways. An isolated
+source-shaped candidate passed 148 independent checks and all 64 entries of
+the four original standard60/high135 matrices at R=100/300. The complete-matrix
+discrepancies are explained by kernel arithmetic, not expansion error; their
+closure is conditional on the production repair passing those reproducers.
+
+High135 onsite `(22|22)` at R=300 changed from `8.275719707631439e86` to
+`1.1283791670955101`, agreeing with the single-center finite-expansion path.
+The default compact d-orbital onsite diagnostic at centers 100/102 changed
+from `1418.1353374572802` to `0.8544188513612182`. The nonnegative integrand
+`(x-100)^4 (y-100)^4`, four unit primitive exponents and unit coupling,
+changed from `-24.435856159871015` to `0.023744503007354242`, versus independent
+256-bit `0.023744503007354246`. This establishes a default-expansion public
+diagnostic failure, not a failing default molecular-energy fixture.
+
+### Exact Replacement Boundary
+
+Only two existing source files may change:
+
+- `src/foundation/GaussianAnalyticIntegrals.jl`: the parameter, damping,
+  mean, polynomial-shift, and exponential expressions inside
+  `polynomial_gaussian_pair_factor_integral`.
+- `src/cartesian/gaussian_coulomb_reference.jl`: `_gaussian_coulomb_axis_integral`
+  for cached terms and its raw-pair forwarding overload,
+  `_gaussian_coulomb_axis_kernel_term`, `_gaussian_coulomb_axis_term_indices`,
+  and the two existing scalar fields of `_GaussianCoulombAxisKernelTerm`.
+
+For primitive exponents `a,b,c,d`, centers `A,B,C,E`, coupling `z >= 0`, and
+`p=a+b`, `q=c+d`, use these algebraically equivalent identities:
+
+```text
+D = p*q + z*(p+q)
+deltaL = B-A; deltaR = E-C
+separation = (A-C) + (b/p)*deltaL - (d/q)*deltaR
+damping = (a/p)*b*deltaL^2 + (c/q)*d*deltaR^2
+          + (z*p*q/D)*separation^2
+local_mean_x = -(z*q/D)*separation
+local_mean_y =  (z*p/D)*separation
+left polynomial shifts  = (b/p)*deltaL, -(a/p)*deltaL
+right polynomial shifts = (d/q)*deltaR, -(c/q)*deltaR
+```
+
+Evaluate `exp(-damping)`, never a difference of large completed squares.
+Preserve the determinant positivity guard, primitive validation, prefactors,
+covariances, Wick recurrence, and existing zero-coefficient skips. Polynomial
+moments are about each Gaussian-product center. No clamping, absolute-value
+repair, alternative precision production path, or changed integral convention.
+The centered method and its accepted regression remain unchanged.
+
+The compressed descriptor must retain product-center and nonnegative internal
+damping information before cancellation occurs. Replace private `center_weight`
+and `constant` with `product_center` and `internal_damping`; preserve the
+five-field types/order and all other fields. No new carrier or retained field.
+Translate raw axis centers by one common origin per Cartesian axis before the
+existing term deduplication; take origins from the first descriptor, with a
+fixed three-zero empty case. This is call-local coordinate arithmetic, not
+persistent provenance or a new cache. Build local polynomials in the existing
+builder. Its private optional Float64 origin argument and raw-pair forwarding
+must use the same origin for both members. Never infer internal variance from
+the old aggregated constant. Keep public inputs, output ordering, normalization,
+and callers unchanged; private transient cache keys are not numerical identity.
+
+The measured source-shaped replacement is +47/-43: foundation +19/-18,
+Cartesian +28/-25. Preferred/hard added-source budgets: 50/60, net at most +17.
+Delete the replaced unstable expressions; no fallback, new helper, type,
+file, API, dependency, metadata, cache, or unrelated source edit is allowed.
+
+### Regression And Acceptance
+
+Only `test/core/runtests.jl` may gain tests. The measured standalone test body
+is 69 lines excluding its two loading lines, 148 assertions, about 1.4 seconds
+on Julia 1.12.6. Preferred/hard additions: 75/90 lines for idiomatic formatting;
+no new test owner, fixture, shared reference framework, or sweep copy.
+Use one test-local independent BigFloat binomial/central-moment reference,
+not package Wick recursion or the corrected kernel as oracle. This catches
+wrong polynomial signs and origin loss that existing bounded endpoints miss.
+
+Cover onsite single-center/multicenter public agreement; complete common-shift
+matrix invariance; the reported large centers and R=100/300 cases; nonnegative
+even-polynomial integrands; unequal primitive exponents; s/p/d probes at
+`1e-4,1,1e5`; and existing compact/high expansions. Use exactly representable
+separations for strict common-translation checks, so input rounding is not
+misclassified as arithmetic error. Compare against the same finite expansion
+(representative `rtol=1e-12`, `atol=1e-300`), not exact Coulomb. Preserve current
+tolerances and golden rows; erroneous old values need not be bitwise preserved.
+Keep the original standard60/high135 complete matrices and wider sweep as
+ignored acceptance evidence, not a standard60 implementation or CI preset.
+
+Require the original reproducers on production; focused/new and complete core;
+existing public Cartesian/residual-GTO and screening owners; atomic packet and
+screened-Hartree direct owners; and the bounded represented-molecular-Hartree
+owner, which exercises the raw mixed-Hartree caller. That last validation neither
+closes its scaling-blocked lifecycle nor wires it into CI. Require package load,
+docs_fast/full docs, authority/self-test/views, Documenter, log bound, diff
+checks, all three normal source-push numerical jobs and Docs. Do not repeat full
+angular, RHF, or duplicate paper examples. Inspect due diligence for any endpoint.
+
+Record warmed scalar and cached-kernel allocation/time separately, including
+descriptor construction as a separate cost rather than hiding it in cached
+timing. Audit raw s: 70.55 to 99.80 ns, 384 B; raw four-d: 3.256 to 3.257 us,
+1120 B; cached s: 16.99 to 15.53 ns; cached four-d: 2.548 to 1.868 us, both
+zero allocation. Independent source-shaped medians were 71.58 to 71.78 ns,
+3.288 to 3.258 us, 16.72 to 16.48 ns, and 2.593 to 1.934 us respectively,
+with unchanged allocations. These noisy microbenchmarks exclude cached
+construction and establish no molecular-energy or end-to-end speedup claim.
+
+Standard60 remains held with exact parameters/fingerprint retained. Its real
+R=300 separated-density error (about -0.00320121 Ha) and diffuse limitations
+survive this repair; high135 also remains finite, not an arbitrary-scale oracle.
+No preset retuning/default, driver/provenance, artifact, workflow, release,
+stable-doc, or represented-Hartree completion authority is granted. Stop without
+an implementation commit if reference failures persist, scope/budgets expand,
+or a broader descriptor/precision mechanism is required. Report material cost
+regressions for review; do not hide them by weakening the reference or caching.
 
 ## Canonical Driver Exposure
 
