@@ -615,6 +615,34 @@ end
     @test sprint(show, expansion) |> x -> occursin("CoulombGaussianExpansion", x)
     @test maximum(abs.(expansion.(sample_points) .* sample_points .- 1.0)) ≤ 1.0e-6
 
+    high = coulomb_gaussian_expansion(doacc = true)
+    centered = GaussletBases.GaussianAnalyticIntegrals.centered_polynomial_gaussian_pair_factor_integral
+    setprecision(BigFloat, 256) do
+        for (b, d, z) in ((2e-4, 2e-4, high.exponents[123]),
+            (2e-4, 4e-4, last(high.exponents)), (0.7, 1.3, 0.5),
+            (2.5e5, 5e5, last(high.exponents)))
+            B, D, Z = BigFloat(b), BigFloat(d), BigFloat(z)
+            determinant = B * D + Z * (B + D)
+            vx, vy, vxy = (D + Z) / (2determinant),
+                (B + Z) / (2determinant), Z / (2determinant)
+            prefactor = big(pi) / sqrt(determinant)
+            for (m, n, moment) in ((0, 0, one(B)), (1, 1, vxy),
+                (2, 0, vx), (2, 2, vx * vy + 2vxy^2))
+                @test centered(b, m, d, n, z) ≈ prefactor * moment rtol = 5e-14 atol = 0.0
+            end
+            @test centered(b, 1, d, 0, z) == 0.0
+        end
+        a = 1e-4
+        diffuse = CartesianGaussianShellOrbitalRepresentation3D(
+            "diffuse_s", (0, 0, 0), (0.0, 0.0, 0.0), [a], [1.0],
+            :axiswise_normalized_cartesian_gaussian)
+        pair = gaussian_coulomb_pair_matrix([diffuse]; expansion = high)
+        reference = sum(BigFloat(c) * (BigFloat(a) / (BigFloat(a) + BigFloat(z)))^(big(3) / 2)
+            for (c, z) in zip(high.coefficients, high.exponents))
+        @test size(pair) == (1, 1) && isfinite(only(pair))
+        @test only(pair) ≈ reference rtol = 5e-14 atol = 0.0
+    end
+
     ub = build_basis(UniformBasisSpec(:G10; xmin = -1.0, xmax = 1.0, spacing = 1.0))
     gaussian_basis_matrix = gaussian_factor_matrix(ub; exponent = 0.7, center = 0.25)
     gaussian_reference = _midpoint_reference_gaussian_factor_matrix(ub; exponent = 0.7, center = 0.25)

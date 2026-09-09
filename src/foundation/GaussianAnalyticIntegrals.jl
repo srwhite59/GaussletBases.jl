@@ -164,7 +164,7 @@ function centered_polynomial_gaussian_pair_factor_integral(
     a11 = beta_left + coupling_exponent
     a22 = beta_right + coupling_exponent
     a12 = -coupling_exponent
-    determinant = a11 * a22 - a12^2
+    determinant = beta_left * beta_right + coupling_exponent * (beta_left + beta_right)
     determinant > 0.0 ||
         throw(ArgumentError("centered Gaussian pair quadratic form must be positive definite"))
 
