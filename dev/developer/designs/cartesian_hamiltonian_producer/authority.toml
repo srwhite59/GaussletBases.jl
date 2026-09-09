@@ -44,7 +44,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/contracted_par
 sha256 = "de6d346e8f5abae91343c572fed42006e26d9d07478819e805941d5d10fda63e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
-sha256 = "eeb0dd4e8c5a36650810feba09375cdc61465a58f74e210c19dea828b1fa02d9"
+sha256 = "755b7a612c0235a14efe580f307545809fcda87019277647b9c3b06750430617"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
 sha256 = "10a14e18f2fd94a4a63adba102fdbed81daf93fbdf857d0a14cbc716759c66f0"
@@ -2079,6 +2079,50 @@ title = "validate shared reference Lanczos consolidation"
     [[records.paths]]
     kind = "test"
     path = "test/ida/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-PQS-COULOMB-ACCURACY-FN-01"]
+grant = "implementation"
+id = "HP-GAUSSIAN-CENTERED-DET-FN-01"
+lifecycle = "approved"
+scope = "Replace only the centered_polynomial_gaussian_pair_factor_integral determinant assignment in src/foundation/GaussianAnalyticIntegrals.jl under Centered Determinant Repair. Preserve the guard and remaining computation. Exclude displaced kernels, standard60, complete-matrix discrepancy resolution, defaults, APIs, and other repairs."
+surfaces = ["source"]
+title = "centered Gaussian determinant cancellation repair"
+
+    [[records.document_refs]]
+    heading = "Centered Determinant Repair"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "617"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/foundation/GaussianAnalyticIntegrals.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-GAUSSIAN-CENTERED-DET-FN-01"]
+grant = "implementation"
+id = "HP-GAUSSIAN-CENTERED-DET-TEST-01"
+lifecycle = "approved"
+scope = "Add compact independent centered-moment and public diffuse high135 pair-matrix regressions only in test/core/runtests.jl under Centered Determinant Repair. Preferred/hard additions 25/35 lines. Preserve existing assertions; exclude the full audit sweep, new helpers/files, displaced validation, standard60 implementation, and workflow changes."
+surfaces = ["tests"]
+title = "centered Gaussian determinant regression"
+
+    [[records.document_refs]]
+    heading = "Centered Determinant Repair"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "617"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/core/runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = []
