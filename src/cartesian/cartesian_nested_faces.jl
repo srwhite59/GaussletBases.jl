@@ -922,6 +922,17 @@ struct CartesianNestedSequenceContractAudit
 end
 
 
+"""
+    TimedNestedFixedBlockBuild(fixed_block, timings::TimeG.TimingReport)
+
+Compatibility carrier retained from v0.2.0 for a fixed block and its timing
+report. This is not a new construction interface or an active builder result.
+"""
+struct TimedNestedFixedBlockBuild{F}
+    fixed_block::F
+    timings::TimeG.TimingReport
+end
+
 struct _CartesianNestedSupportAxes3D
     x::Vector{Int}
     y::Vector{Int}

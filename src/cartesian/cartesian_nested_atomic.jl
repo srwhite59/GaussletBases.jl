@@ -80,6 +80,13 @@ function _one_center_atomic_term_coefficients(
     return Float64[Float64(value) for value in expansion.coefficients]
 end
 
+"""
+    OneCenterAtomicNestedLayerStructure
+
+Compatibility record retained from v0.2.0 for one layer of one-center nested
+structure diagnostics: retained face, edge, corner and total counts, together
+with layer provenance. Treat returned records as read-only diagnostic data.
+"""
 struct OneCenterAtomicNestedLayerStructure
     layer_index::Int
     face_retained_count::Int

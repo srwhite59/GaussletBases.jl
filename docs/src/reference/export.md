@@ -25,6 +25,17 @@ and does not store route diagnostics or solver results.
 
 ## Cartesian Base Hamiltonian
 
+### v0.2 compatibility records
+
+These names are retained for compatibility with v0.2.0, not as new producer
+interfaces. Prefer the current constructors described below for new work.
+
+```@docs
+QiuWhiteResidualGaussianOperators
+OneCenterAtomicNestedLayerStructure
+TimedNestedFixedBlockBuild
+```
+
 `cartesian_base_hamiltonian(system; basis, hamfile=nothing)` is the current
 public producer for the base Cartesian IDA Hamiltonian. It returns a
 `CartesianIDAHamiltonian{Float64}` directly. If `hamfile` is not `nothing`, it

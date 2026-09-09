@@ -20,6 +20,22 @@
     end
 end
 
+@testset "v0.2 compatibility bindings" begin
+    @test all(name -> name in names(GaussletBases), (:QiuWhiteResidualGaussianOperators,
+        :OneCenterAtomicNestedLayerStructure, :TimedNestedFixedBlockBuild))
+    @test QiuWhiteResidualGaussianOperators === OrdinaryCartesianOperators3D
+    @test fieldnames(OneCenterAtomicNestedLayerStructure) == (:layer_index,
+        :face_retained_count, :edge_retained_count, :corner_retained_count,
+        :retained_dimension, :provenance)
+    report = GaussletBases.TimeG.TimingReport(GaussletBases.TimeG.TimingNode[])
+    block = zeros(1, 1)
+    timed = TimedNestedFixedBlockBuild(block, report)
+    @test typeof(timed) === TimedNestedFixedBlockBuild{Matrix{Float64}}
+    @test fieldnames(typeof(timed)) == (:fixed_block, :timings)
+    @test fieldtypes(typeof(timed)) == (Matrix{Float64}, GaussletBases.TimeG.TimingReport)
+    @test timed.fixed_block === block && timed.timings === report
+end
+
 @testset "Uniform basis" begin
     ub = build_basis(UniformBasisSpec(:G10; xmin = -2.0, xmax = 2.0, spacing = 1.0))
     primitive_data = primitives(ub)

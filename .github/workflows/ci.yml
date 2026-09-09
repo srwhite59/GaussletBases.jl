@@ -127,12 +127,14 @@ jobs:
         run: |
           set -euo pipefail
           tag="$GITHUB_REF_NAME"
-          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]] || exit 1
           test "$tag" = "v$(julia --startup-file=no -e 'print(VersionNumber(ARGS[1]))' "${tag#v}")"
-          git fetch --no-tags origin "refs/tags/${tag}:refs/tags/${tag}"
-          tag_object="$(git rev-parse --verify "refs/tags/${tag}^{tag}")"
+          verification_ref="refs/verification/release-tag"
+          if git show-ref --verify --quiet "$verification_ref"; then exit 1; fi
+          git fetch --no-tags origin "refs/tags/${tag}:${verification_ref}"
+          tag_object="$(git rev-parse --verify "${verification_ref}^{tag}")"
           test "$(git cat-file -t "$tag_object")" = tag
-          commit="$(git rev-parse "refs/tags/${tag}^{commit}")"
+          commit="$(git rev-parse "${verification_ref}^{commit}")"
           test "$commit" = "$GITHUB_SHA"
           test "$(git rev-parse "${commit}^{tree}")" = "$(git rev-parse 'HEAD^{tree}')"
           test "$tag" = "v$(julia --project=. -e 'using TOML; print(TOML.parsefile("Project.toml")["version"])')"

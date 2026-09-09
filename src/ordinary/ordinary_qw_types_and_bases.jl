@@ -118,6 +118,12 @@ struct OrdinaryCartesianOperators3D{B,D}
     nuclear_term_storage::Symbol
 end
 
+"""
+    QiuWhiteResidualGaussianOperators
+
+Compatibility alias for [`OrdinaryCartesianOperators3D`](@ref), retained from
+v0.2.0. It introduces no distinct operator representation or numerical route.
+"""
 const QiuWhiteResidualGaussianOperators = OrdinaryCartesianOperators3D
 
 function OrdinaryCartesianOperators3D(

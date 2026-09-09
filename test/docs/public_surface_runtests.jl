@@ -50,6 +50,8 @@ const _DOCUMENTED_PUBLIC_SURFACE = (
         :SlicedHydrogenChain, :sliced_hydrogen_chain, :sliced_h1,
         :sliced_h1_bandwidth, :sliced_vee, Symbol("sliced_row!")),
     working_basis = (:cartesian_base_working_basis,),
+    compatibility = (:QiuWhiteResidualGaussianOperators,
+        :OneCenterAtomicNestedLayerStructure, :TimedNestedFixedBlockBuild),
 )
 
 const _RESERVED_UNDOCUMENTED_PUBLIC_SURFACE = Set((
@@ -79,7 +81,7 @@ end
 @testset "Public surface documentation" begin
     public_names = names(GaussletBases)
     documented_names = collect(Iterators.flatten(values(_DOCUMENTED_PUBLIC_SURFACE)))
-    @test length(documented_names) == 95
+    @test length(documented_names) == 98
     @test allunique(documented_names)
     @test all(name -> name in public_names, documented_names)
     @test all(name -> _public_surface_hasdoc(GaussletBases, name), documented_names)

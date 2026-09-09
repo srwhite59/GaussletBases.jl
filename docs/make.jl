@@ -81,6 +81,8 @@ DOCS_DEPLOY && DOCS_TARGET[1] ∉ (:dev, :tag, :refresh) &&
     error("documentation deployment is not allowed for context $(DOCS_TARGET[1])")
 const DOCS_CANONICAL = DOCS_CI && !isnothing(DOCS_TARGET[2]) ?
     "$(_DOCS_SITE)/$(DOCS_TARGET[1] == :refresh ? "stable" : DOCS_TARGET[2])/" : nothing
+const DOCS_API_LABEL = DOCS_TARGET[1] == :refresh ? "Released API: v0.2.0" :
+    "Unreleased v0.2.1 candidate; published release: v0.2.0"
 @info "Documentation build context" context = DOCS_TARGET[1] canonical = DOCS_CANONICAL deploy = DOCS_DEPLOY
 
 makedocs(
@@ -91,7 +93,7 @@ makedocs(
     format = Documenter.HTML(
         prettyurls = DOCS_CI,
         edit_link = DOCS_REVISION,
-        footer = "Documentation revision [`$(DOCS_REVISION[1:12])`](https://github.com/srwhite59/GaussletBases.jl/tree/$(DOCS_REVISION)). Released API: v0.2.0; developer internals describe this revision.",
+        footer = "Documentation revision [`$(DOCS_REVISION[1:12])`](https://github.com/srwhite59/GaussletBases.jl/tree/$(DOCS_REVISION)). $(DOCS_API_LABEL); developer internals describe this revision.",
         canonical = DOCS_CANONICAL,
         size_threshold_ignore = [
             "developer/designs/cartesian_hamiltonian_producer/history/manager_log/pqs_manager_running_log_through_pass_379.md",

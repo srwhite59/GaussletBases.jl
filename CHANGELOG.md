@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.2.1 (unreleased)
+
+### Fixed
+
+- Stabilized centered and displaced Gaussian Coulomb arithmetic, including
+  determinant cancellation, damping, and product-local polynomial moments.
+- Restored three v0.2.0 compatibility exports and the original timing carrier.
+- Isolated annotated-tag verification from checkout's local tag references.
+
+### Changed
+
+- Allow five radial construction attempts, retaining early exit and explicit
+  no-refinement behavior. Construction cost roughly doubles for affected setups.
+- Report unmet construction and quadrature convergence criteria on exhaustion.
+  Quadrature schedules and tolerances remain unchanged; returned grids are best
+  effort, not a guarantee of whole-matrix convergence or energy accuracy.
+- Expanded public documentation and validation. The near-origin inverse-radius
+  limitation remains; source relocations do not introduce new numerical methods.
+
 ## v0.2.0
 
 ### Changed
