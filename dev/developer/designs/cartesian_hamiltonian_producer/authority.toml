@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "3d7eb16a7a4b049ca01840f29d4d7979044b9f2f9c20b384753ee944008c8446"
+sha256 = "34239b85b693cc389050388b640356986ac2d17ced147d629ff22df31398ebee"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "9cb8b99af42cdaa7e339c80dff79323ee59efbfd8a6dd6e727c34b6d26c12fd3"
@@ -7069,10 +7069,10 @@ title = "terminal unit-nuclear validation"
     state = "existing"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "maintenance"
 id = "HP-RADIAL-CONVERGENCE-FN-01"
-lifecycle = "approved"
-scope = "Implement five-attempt construction and truthful exhausted-quadrature warnings in foundation bases/quadrature under Radial Construction And Quadrature Convergence. Update only the owned docstrings and two reader pages. Preserve early exit, explicit controls, quadrature schedules/tolerances, and last-grid return. Respect 45/60 added-source and 20/28 reader budgets. Exclude other numerical findings, presets, stored metadata, frameworks, APIs, workflows, and releases."
+lifecycle = "implemented"
+scope = "Maintain the accepted foundation bases/quadrature repair under Radial Construction And Quadrature Convergence. Preserve five construction attempts, early exit, explicit controls, truthful warnings, quadrature schedules/tolerances, and last-grid return. No implementation grant remains. Exclude near-origin accuracy changes, other numerical findings, presets, stored metadata, frameworks, APIs, workflows, and releases; standard60 remains held."
 surfaces = ["docs", "source"]
 title = "radial construction convergence and quadrature notification"
 
@@ -7084,6 +7084,12 @@ title = "radial construction convergence and quadrature notification"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "621"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "a7ec77247b9bc45a349771e58cb76cb8019e08f8"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "622"
 
     [[records.paths]]
     kind = "docs"
@@ -7103,10 +7109,10 @@ title = "radial construction convergence and quadrature notification"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-RADIAL-CONVERGENCE-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-RADIAL-CONVERGENCE-TEST-01"
-lifecycle = "approved"
-scope = "Add compact core/radial regressions under Radial Construction And Quadrature Convergence for construction exits, fifth-candidate equality, explicit controls, and truthful quadrature measures. Replace two existing quiet expectations with single-warning expectations. Preferred/hard additions 55/70 lines. Preserve numerical assertions and existing owners; no new file, framework, large sweep, workflow, or unrelated test changes."
+lifecycle = "completed"
+scope = "Maintain accepted core/radial coverage under Radial Construction And Quadrature Convergence: construction exits, fifth-candidate equality, explicit controls, truthful quadrature diagnostics, and two single-warning expectations. Preserve numerical assertions and existing owners. No implementation grant, new file/framework, large sweep, workflow, or unrelated test change."
 surfaces = ["tests"]
 title = "radial convergence and quadrature diagnostic regressions"
 
@@ -7118,6 +7124,12 @@ title = "radial convergence and quadrature diagnostic regressions"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "621"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "a7ec77247b9bc45a349771e58cb76cb8019e08f8"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "622"
 
     [[records.paths]]
     kind = "test"
