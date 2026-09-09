@@ -185,6 +185,17 @@ exponent vectors, or custom expansion objects as new user inputs.
 
 ## Centered Determinant Repair
 
+Pass 618 accepts `782a07c7a3cf702698ff281952d642ab311655d7`:
+source +1/-1, existing core tests +28/-0 (22 independent assertions), within
+the authorized limits. FN is implemented/maintenance; TEST completed/maintenance.
+No implementation grant remains; the specification below now bounds maintenance.
+Core 1,897/1,897, public screening 22/22 plus example, atomic packet 117/117,
+docs 8/8 + 151/151 + 10/10, and zero-allocation warmed scalar checks passed.
+CI `34364324843` and Docs `34364324814` passed at that implementation SHA.
+Both displaced kernels, standard60, and complete-matrix discrepancies remain
+unresolved and outside this completed repair. No default-fixture failure or
+molecular-energy/end-to-end performance claim has been established.
+
 Pass 617 independently reviewed the bounded audit at `66634c9f8`:
 `tmp/reviews/determinant-audit-2026-09-08/REPORT.md`, SHA-256
 `6f37a8aa575240f55754c66006d5405468605c5a4975709247b95de72c41f37c`.
@@ -204,9 +215,9 @@ The audit's 20,160-case independent combinatorial 256-bit sweep had no corrected
 failures and worst nonzero relative error `1.24e-15`; retain it as audit
 evidence, not a CI workload or arbitrary-scale accuracy guarantee.
 
-`HP-GAUSSIAN-CENTERED-DET-FN-01` permits changing only the determinant
+`HP-GAUSSIAN-CENTERED-DET-FN-01` maintains the corrected determinant
 assignment in `centered_polynomial_gaussian_pair_factor_integral` in
-`src/foundation/GaussianAnalyticIntegrals.jl` to:
+`src/foundation/GaussianAnalyticIntegrals.jl` as:
 
 ```julia
 determinant = beta_left * beta_right +
@@ -219,9 +230,9 @@ prefactor, signature, and dispatch. Add no comment, helper, type, cache, scaling
 framework, clamping, fallback, dependency, new file, or other source edit.
 This avoids cancellation, not all unbounded Float64 overflow/underflow.
 
-`HP-GAUSSIAN-CENTERED-DET-TEST-01` permits additions only to the existing
-Gaussian-integral testset in `test/core/runtests.jl`, preferred/hard 25/35
-added lines. Existing endpoints miss this exponent ratio. Cover the exact
+`HP-GAUSSIAN-CENTERED-DET-TEST-01` maintains the accepted regression in the
+Gaussian-integral testset in `test/core/runtests.jl`; its 28 added lines met
+the preferred/hard 25/35 budget. Existing endpoints missed this ratio. Cover the exact
 high135 failing term, unequal-beta even polynomial moments, odd-zero, and
 benign/tight cases. Use local 256-bit explicit moments, for example
 `E[x^2*y^2]=sigma_xx*sigma_yy+2sigma_xy^2`, not package Wick recursion as
@@ -249,10 +260,9 @@ their own reference validation and receive no authority here. Pass 616's
 separated complete-matrix discrepancies and standard60 hold remain open.
 Parameters/defaults, provenance/driver work, radial-warning policy, workflows,
 exports, releases, and stable documentation remain outside this grant.
-Stop without an implementation commit if the two-file budget, independent
-reference, or existing validation requires a broader repair. Repo-manager waits
-for this authority commit and its required checks before implementation;
-lifecycle closeout follows independent review of the result.
+Stop if maintenance would require a broader repair or weakened reference.
+The implementation transaction is closed; no further repair or test expansion
+is implicitly authorized by its completed budget.
 
 ## Canonical Driver Exposure
 

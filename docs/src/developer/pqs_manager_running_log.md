@@ -850,3 +850,24 @@ docs/public-surface checks, package load, authority/self-test/views, Documenter,
 log bound, diff checks, and remote docs-only CI/Docs. Implementation additionally
 requires core, public screening, atomic packet, and normal full CI. Stop on
 broader repair needs; later acceptance must not silently clear Pass 616 holds.
+
+## Cartesian Hamiltonian Producer Pass 618 - Close Centered Determinant Repair
+
+Accepted `782a07c7a3cf702698ff281952d642ab311655d7` after exact source/test
+diff and evidence review. Source +1/-1 replaces only the determinant; tests
++28/-0 add 22 independent assertions within the hard budget. Core 1,897/1,897,
+screening 22/22 plus example, atomic packet 117/117, and zero-allocation warmed
+scalar checks passed. Remote CI `34364324843` and Docs `34364324814` passed
+at that SHA. Closeout uses existing docs 8/8 + 151/151 + 10/10, package load,
+authority/self-test/views, Documenter, log bound, diff checks, and docs-only
+remote checks, without numerical reruns.
+
+MT1 closes the legal diffuse-input exception, not all Gaussian-kernel range
+questions. Deleted/simplified: subtractive centered determinant; quarantined:
+displaced kernels, standard60, and separated complete-matrix discrepancies.
+The positivity guard and remaining computation stay because live callers need
+them. No new file, API, helper, cache, metadata/status field, default, or release
+change. No failing default fixture was established; +0.55 ns/call remains
+isolated audit evidence, not an end-to-end or molecular-energy claim. Both
+records are maintenance-only with no remaining implementation grant. No strategic
+change to MT3 or Pass 616 holds; further assessment requires separate authority.

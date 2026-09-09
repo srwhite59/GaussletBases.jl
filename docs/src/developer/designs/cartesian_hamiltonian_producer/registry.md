@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `d326f460ab99bceebb6b776d9e3b7a50070da775c7ee8ed4a96cfc0caa829275`.
+> [authority.toml](authority.toml), SHA-256 `8c462ab8434198dff627bfb5bae3458ca0a2892226ac8aa7f0c90b49c0b38b34`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1228,8 +1228,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-GAUSSIAN-CENTERED-DET-FN-01 - centered Gaussian determinant cancellation repair
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1238,13 +1238,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/foundation/GaussianAnalyticIntegrals.jl`
 - **Evidence:**
   - `manager_pass`: `617`
+  - `git_commit`: `782a07c7a3cf702698ff281952d642ab311655d7`
+  - `manager_pass`: `618`
 - **Dependencies:** `HP-PQS-COULOMB-ACCURACY-FN-01`
-- **Scope:** Replace only the centered\_polynomial\_gaussian\_pair\_factor\_integral determinant assignment in src/foundation/GaussianAnalyticIntegrals.jl under Centered Determinant Repair. Preserve the guard and remaining computation. Exclude displaced kernels, standard60, complete-matrix discrepancy resolution, defaults, APIs, and other repairs.
+- **Scope:** Maintain the accepted positive-sum determinant in centered\_polynomial\_gaussian\_pair\_factor\_integral under Centered Determinant Repair. Preserve the guard and remaining computation. No implementation grant remains; exclude displaced kernels, standard60, complete-matrix discrepancy resolution, defaults, APIs, and other repairs.
 
 ### HP-GAUSSIAN-CENTERED-DET-TEST-01 - centered Gaussian determinant regression
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1253,8 +1255,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/core/runtests.jl`
 - **Evidence:**
   - `manager_pass`: `617`
+  - `git_commit`: `782a07c7a3cf702698ff281952d642ab311655d7`
+  - `manager_pass`: `618`
 - **Dependencies:** `HP-GAUSSIAN-CENTERED-DET-FN-01`
-- **Scope:** Add compact independent centered-moment and public diffuse high135 pair-matrix regressions only in test/core/runtests.jl under Centered Determinant Repair. Preferred/hard additions 25/35 lines. Preserve existing assertions; exclude the full audit sweep, new helpers/files, displaced validation, standard60 implementation, and workflow changes.
+- **Scope:** Maintain the accepted 28-line, 22-assertion centered-moment and public diffuse high135 regression in test/core/runtests.jl under Centered Determinant Repair. No implementation grant remains. Preserve independent references and existing tolerances; exclude the audit sweep, new helpers/files, displaced validation, standard60 implementation, and workflow changes.
 
 ### HP-HAM-MANIFEST-FN-01 - compact Hamiltonian artifact manifest
 
