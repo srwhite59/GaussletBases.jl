@@ -4,9 +4,10 @@ Status: compact/high producer policy implemented and maintenance-only under
 `HP-PQS-COULOMB-ACCURACY-FN-01` and
 `HP-PQS-COULOMB-ACCURACY-TEST-01`.
 
-Pass 616 places standard60 implementation, fingerprint/provenance additions,
-canonical-driver exposure, and their new tests on hold pending assessment of
-the Gaussian-kernel determinant cancellation reported September 8. The exact
+Pass 616 placed standard60 implementation, fingerprint/provenance additions,
+canonical-driver exposure, and their new tests on hold following the
+Gaussian-kernel cancellation report. Pass 620 closes the bounded arithmetic
+repairs, not that hold: a separate approximation-policy decision is required. The exact
 K60 parameters and fingerprint remain retained design, not execution authority.
 This restriction overrides pending-implementation language and budgets below;
 those portions are deferred specifications, not permission to resume. Kernel
@@ -14,7 +15,7 @@ repair also requires separate review and authority. No preset retuning, default,
 source, test, artifact-format, or release change is granted by Pass 616.
 Pass 617's separate Centered Determinant Repair below permits only that exact
 assignment and compact regression; it does not release the standard60 hold.
-Pass 619 separately authorizes Displaced Gaussian Arithmetic Repair below.
+Pass 620 closes Pass 619's Displaced Gaussian Arithmetic Repair below.
 Neither repair reauthorizes standard60 implementation or preset changes.
 
 One resolved `CoulombGaussianExpansion` must still govern every Coulomb-expanded
@@ -166,20 +167,20 @@ not the recovered Cr6+ energy. It rules out an arbitrary-scale exact-oracle clai
 
 ### Kernel Assessment Hold
 
-At `a=1e-4,b=2e-4`, the actual standard/high pair builder rejects its quadratic
+At `a=1e-4,b=2e-4`, Pass 616 found the standard/high pair builder rejecting its quadratic
 form, although the independent integral is well-defined. In
 `src/foundation/GaussianAnalyticIntegrals.jl`,
-`centered_polynomial_gaussian_pair_factor_integral` computes
+`centered_polynomial_gaussian_pair_factor_integral` then computed
 `(beta_left+zeta)*(beta_right+zeta)-zeta^2`; large terms can cancel although
 the exact determinant is positive. This is distinct from the previously
 repaired `gaussian_pair_factor`, and is not evidence for retuning K60.
 Independent inspection also qualifies the report's rounding-level agreement:
 selected `(11|22)` entries agree, but `integrals.tsv` records large complete
 pair-matrix discrepancies at R=100/300 for standard/high. Pass 619 below
-explains them by displaced-kernel arithmetic; production closure remains
-contingent on the repair passing the original complete-matrix reproducers.
-Assess numerical range and these discrepancies separately before reauthorizing
-standard60. No kernel fix, clamping, new regression, or implementation is
+explains them by displaced-kernel arithmetic; Pass 620 accepts production
+replay of all four complete matrices and closes those arithmetic discrepancies.
+Reassess approximation limits separately before reauthorizing standard60.
+No further kernel fix, clamping, new regression, or implementation is
 granted by the accuracy-policy records. Separate Pass 617 and Pass 619 records
 own the centered and displaced repairs; existing compact/high maintenance does not.
 
@@ -258,9 +259,9 @@ measured 15.501 versus 16.032 ms, zero allocation: approximately +0.55 ns/call.
 This is isolated overhead, not an end-to-end performance or energy claim.
 
 The displaced polynomial copy in `GaussianAnalyticIntegrals.jl` and compressed
-displaced-axis copy in `src/cartesian/gaussian_coulomb_reference.jl` require
-their own reference validation and receive no authority here. Pass 616's
-separated complete-matrix discrepancies and standard60 hold remain open.
+displaced-axis copy in `src/cartesian/gaussian_coulomb_reference.jl` received
+their separate reference validation and repair under Pass 619, accepted below
+in Pass 620. The centered records grant no displaced work. Standard60 remains held.
 Parameters/defaults, provenance/driver work, radial-warning policy, workflows,
 exports, releases, and stable documentation remain outside this grant.
 Stop if maintenance would require a broader repair or weakened reference.
@@ -269,8 +270,27 @@ is implicitly authorized by its completed budget.
 
 ## Displaced Gaussian Arithmetic Repair
 
-Pass 619 authorizes `HP-GAUSSIAN-DISPLACED-ARITH-FN-01/TEST-01` after
-independent review at `6611a60efd70400ee4dbcffaac9bd0d62379974c`.
+Pass 620 accepts `e181afca2d02b23abd40d9791b73f38f84b9acd2` under
+`HP-GAUSSIAN-DISPLACED-ARITH-FN-01/TEST-01`: FN implemented/maintenance,
+TEST completed/maintenance, with no remaining implementation grant. The
+specification below bounds maintenance; its implementation budgets are spent.
+Exact source +47/-43 matches the independently reviewed candidate byte-for-byte;
+core tests +70/-0 preserve every prior assertion and add 148 independent checks.
+All original reproducers and 64 complete-matrix entries pass on production.
+Core 2045/2045, Cartesian 232/232, residual-GTO 80/80, public screening 22/22
+plus example, atomic packet 117/117, screened Hartree 85/85, and represented
+Hartree 50/50 passed. CI `34377518052` ran all three numerical jobs and passed;
+Docs `34377518011` passed at that SHA. No represented-Hartree scaling closure follows.
+
+Production medians (before -> after), with allocation unchanged: raw s
+88.615 -> 87.823 ns/384 B; raw four-d 3.417 -> 3.389 us/1120 B; cached s
+17.808 -> 17.583 ns/0 B; cached four-d 2.699 -> 2.055 us/0 B. Descriptor
+construction was measured separately: s 21.891 -> 22.012 ns/192 B,
+d 86.080 -> 87.113 ns/560 B. No material local regression or end-to-end claim.
+Implementation evidence is `tmp/reviews/pass619-implementation/RESULT.md`;
+durable results and exact acceptance identities are recorded here.
+
+Pass 619's independent review was at `6611a60efd70400ee4dbcffaac9bd0d62379974c`.
 Evidence: `tmp/reviews/displaced-audit-2026-09-09/REPORT.md`, SHA-256
 `b1d56d2f049196a40e69afbdf780f45de54ca9568b9e788eba5f83d70fcec8bf`;
 its `displaced_minimal_20260909.jl` reproducer has SHA-256
@@ -278,8 +298,9 @@ its `displaced_minimal_20260909.jl` reproducer has SHA-256
 The original reproducer independently failed in all reported ways. An isolated
 source-shaped candidate passed 148 independent checks and all 64 entries of
 the four original standard60/high135 matrices at R=100/300. The complete-matrix
-discrepancies are explained by kernel arithmetic, not expansion error; their
-closure is conditional on the production repair passing those reproducers.
+discrepancies are explained by kernel arithmetic, not expansion error. Pass 620
+closes that bounded issue after successful production replay; it does not
+certify arbitrary scales or remove genuine finite-expansion approximation errors.
 
 High135 onsite `(22|22)` at R=300 changed from `8.275719707631439e86` to
 `1.1283791670955101`, agreeing with the single-center finite-expansion path.

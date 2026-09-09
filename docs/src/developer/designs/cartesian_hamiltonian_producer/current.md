@@ -38,28 +38,29 @@ claim.
 
 ## Active And Pending Work
 
-Pass 619 authorizes `HP-GAUSSIAN-DISPLACED-ARITH-FN-01/TEST-01` for the
-[displaced arithmetic repair](coulomb_accuracy_policy.md#displaced-gaussian-arithmetic-repair):
-two source owners and compact independent core regressions only. Independent
-scratch validation explains the separated complete-matrix discrepancies by
-kernel arithmetic; closure requires the production repair to pass the original
-reproducers. Standard60 remains held, with genuine long-range/diffuse limits.
-Repo-manager must wait for this authority commit and its required checks.
+Pass 620 closes `HP-GAUSSIAN-DISPLACED-ARITH-FN-01/TEST-01` at `e181afca2`:
+FN implemented/maintenance, TEST completed/maintenance, no implementation grant.
+The [displaced arithmetic repair](coulomb_accuracy_policy.md#displaced-gaussian-arithmetic-repair)
+passes the original production reproducers, all 64 complete-matrix entries,
+148 new independent regressions, affected owners, and full CI/Docs. The separated
+complete-matrix arithmetic discrepancies are closed. Standard60 remains held:
+genuine long-range/diffuse limits require a separate approximation-policy decision.
+Represented-Hartree scaling, releases, and stable documentation remain separate.
 
 Pass 618 closes the [centered determinant repair](coulomb_accuracy_policy.md#centered-determinant-repair)
 at `782a07c7a`. `HP-GAUSSIAN-CENTERED-DET-FN-01/TEST-01` are
 implemented/completed, maintenance-only, with no remaining implementation grant.
 The one-assignment fix and 22 independent core assertions are accepted.
 Both displaced copies and separated complete-matrix closure remain outside
-that completed centered repair; Pass 619 owns their separate bounded work.
+that completed centered repair; Pass 620 accepts their separate bounded work.
 Standard60 implementation remains held.
 
 Pass 616 reconciles the September 8 Coulomb review under
 `HP-PQS-COULOMB-ACCURACY-FN-01/TEST-01`. Only implemented compact/high
 behavior and existing tests retain maintenance authority. Exact standard60
 parameters/fingerprint are preserved as atomic/local design; implementation,
-provenance/driver additions, and new tests are held pending assessment of
-Gaussian-kernel determinant cancellation and separated-matrix discrepancies.
+provenance/driver additions, and new tests remain held pending a separate
+approximation-policy decision, despite closure of the bounded arithmetic defects.
 No preset retuning, default change, or kernel repair is authorized by those
 accuracy records; only the separate repair records permit kernel changes. See
 [evidence and hold](coulomb_accuracy_policy.md#september-8-evidence-reconciliation).

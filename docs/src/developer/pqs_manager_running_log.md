@@ -139,6 +139,8 @@ The minimal sliced hydrogen-chain producer is implemented and in maintenance
 as a separate G10-plus-transverse operator facility; it is not a
 Cartesian/PQS route or solver lane. Its stable consumer fields are fixed in
 the canonical contract; HFDMRG adaptation remains downstream work.
+Standard60 remains held after the bounded kernel repairs; its genuine
+long-range/diffuse limits require a separate approximation-policy decision.
 The represented mixed-density direct Hartree producer is approved for bounded
 implementation with a streamed/tiled contracted PGDG/Gaussian pair action. Its
 first pass is direct-only; fitted acceleration and Cr2 acceptance remain later,
@@ -902,3 +904,37 @@ repeat the original reproducers and bounded costs, and pass normal full CI/Docs.
 Stable, releases, centered repair, and all preset parameters remain unchanged.
 Repo-manager waits for the pushed authority and green checks; stop on broader
 scope, failed references, or material unexplained cost regression.
+
+## Cartesian Hamiltonian Producer Pass 620 - Close Displaced Arithmetic Repair
+
+Accepted `e181afca2d02b23abd40d9791b73f38f84b9acd2` after exact diff,
+candidate byte-identity, original-reproducer logs, independent reference, cost,
+and exact-head remote review. Both source files match the reviewed candidate;
+old core bytes and centered method are preserved. Source +47/-43 and tests
++70/-0 (148 checks) meet the budgets. Production passes the original failures
+and 64 complete-matrix entries, core 2045, Cartesian 232, residual-GTO 80,
+public screening 22 plus example, atomic packet 117, screened Hartree 85,
+and represented Hartree 50. CI `34377518052` ran all three numerical jobs;
+Docs `34377518011` passed. Due-diligence interpretation remains bounded to the
+reported fixtures. Closeout reruns only docs/package/authority/self-test/views,
+Documenter, log/diff checks, and remote docs-only checks, not numerical owners.
+
+MT1 closes the arithmetic explanation of Pass 616's matrix discrepancies,
+not finite-expansion limitations. Both records are maintenance-only with no
+implementation grant. Deleted/simplified: unstable determinants, completed
+squares, and global polynomial shifts. Quarantined: broader precision and
+preset work. Kernels remain because public pair-matrix and raw mixed-Hartree
+callers are live. No new source helper/type/field count/cache/API/file or
+metadata/status field; two private scalar fields were replaced. Scalar/cached
+allocations and separately measured descriptor allocations are unchanged;
+no material local cost regression, molecular-energy claim, or end-to-end
+speedup is accepted. Standard60 and represented-Hartree scaling remain held
+or blocked separately. Centered repair, stable snapshot, releases, and handoffs
+are preserved.
+
+Medium-term checkpoint: MT1 active, with these bounded arithmetic repairs
+completed; MT2 completed; MT3 blocked (standard60 policy and represented-Hartree
+scaling remain separate); MT4 active evidence; MT5 active maintenance;
+MT6 active carrying-cost control; MT7 completed/maintenance. No new medium-term
+goal or implementation is authorized. The next decision is whether and how to
+reassess standard60's validated range, not another implicit kernel grant.

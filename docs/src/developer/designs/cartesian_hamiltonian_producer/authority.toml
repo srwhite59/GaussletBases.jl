@@ -44,7 +44,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/contracted_par
 sha256 = "de6d346e8f5abae91343c572fed42006e26d9d07478819e805941d5d10fda63e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
-sha256 = "e147a8d53ecade641fc38a4b3c1bb0ba32943732b2b3e9829b69b4105c2920eb"
+sha256 = "bed257d7a6567990c7f4878fb18a25080260a3d912fdd2b1400250fffc4ad987"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
 sha256 = "10a14e18f2fd94a4a63adba102fdbed81daf93fbdf857d0a14cbc716759c66f0"
@@ -2138,10 +2138,10 @@ title = "centered Gaussian determinant regression"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-GAUSSIAN-CENTERED-DET-FN-01", "HP-PQS-COULOMB-ACCURACY-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-GAUSSIAN-DISPLACED-ARITH-FN-01"
-lifecycle = "approved"
-scope = "Repair displaced polynomial integrals and compressed descriptor construction in the two owned files under Displaced Gaussian Arithmetic Repair: positive determinant, nonnegative damping, product-local moments, shared origins, and two private scalar-field replacements. Source additions preferred/hard 50/60, net at most +17. Preserve centered repair and callers; exclude presets, APIs, new carriers/helpers/caches, other kernels, workflows, and releases."
+lifecycle = "implemented"
+scope = "Maintain the accepted displaced kernels and compressed descriptor construction under Displaced Gaussian Arithmetic Repair. Preserve positive determinant, nonnegative damping, product-local moments, shared origins, centered repair, and callers. No implementation grant remains. Exclude presets, APIs, new carriers/helpers/caches, other kernels, workflows, and releases; standard60 remains held."
 surfaces = ["source"]
 title = "displaced Gaussian arithmetic and compressed construction repair"
 
@@ -2153,6 +2153,12 @@ title = "displaced Gaussian arithmetic and compressed construction repair"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "619"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "e181afca2d02b23abd40d9791b73f38f84b9acd2"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "620"
 
     [[records.paths]]
     kind = "source"
@@ -2164,10 +2170,10 @@ title = "displaced Gaussian arithmetic and compressed construction repair"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-GAUSSIAN-DISPLACED-ARITH-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-GAUSSIAN-DISPLACED-ARITH-TEST-01"
-lifecycle = "approved"
-scope = "Add compact independent finite-expansion regressions only in test/core/runtests.jl under Displaced Gaussian Arithmetic Repair. Cover public onsite/translation parity, large displacements, nonnegative polynomial integrands, unequal exponents, and diffuse/ordinary/tight compact/high cases. Additions preferred/hard 75/90. Preserve centered tests and existing tolerances; exclude sweep imports, new owners/frameworks, numerical policy, preset implementation, and workflow changes."
+lifecycle = "completed"
+scope = "Maintain the accepted 70-line, 148-assertion independent finite-expansion regression in test/core/runtests.jl under Displaced Gaussian Arithmetic Repair. Preserve public onsite/translation, polynomial and range coverage, centered tests, and existing tolerances. No implementation grant remains; exclude sweep imports, new owners/frameworks, numerical policy, preset implementation, and workflow changes."
 surfaces = ["tests"]
 title = "displaced Gaussian independent arithmetic regressions"
 
@@ -2179,6 +2185,12 @@ title = "displaced Gaussian independent arithmetic regressions"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "619"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "e181afca2d02b23abd40d9791b73f38f84b9acd2"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "620"
 
     [[records.paths]]
     kind = "test"
