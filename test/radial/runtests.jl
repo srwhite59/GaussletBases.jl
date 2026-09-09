@@ -319,6 +319,36 @@ end
     @test sampled_x_interval ≈ sampled_x_dense atol = 1.0e-12 rtol = 1.0e-12
 end
 
+@testset "Quadrature notification" begin
+    spec = RadialBasisSpec(:G10;count=9,mapping=AsinhMapping(c=.15,s=.15))
+    basis = @test_logs min_level=Logging.Warn build_basis(spec)
+    @test stencil_matrix(basis) == stencil_matrix(build_basis(spec;grid_h=.00125,refine_grid_h=false))
+    @test GaussletBases._radial_overlap_deviation(GaussletBases._build_radial_coefficients(spec;grid_h=.00125)) <= 1e-6
+    for options in ((;), (;refine=1), (;quadrature_rmax=1.), (;accuracy=:medium), (;accuracy=:veryhigh))
+        logger = Test.TestLogger(min_level=Logging.Warn)
+        grid = with_logger(logger) do; radial_quadrature(basis;options...); end
+        @test length(logger.logs) == 1
+        @test occursin("truncating basis tails", string(only(logger.logs).message)) == haskey(options,:quadrature_rmax)
+        data = Dict(only(logger.logs).kwargs)
+        profile = GaussletBases._quadrature_accuracy_profile(get(options,:accuracy,:high))
+        schedule = GaussletBases._quadrature_refine_schedule(profile;refine=get(options,:refine,nothing))
+        cutoff = get(options,:quadrature_rmax,GaussletBases._radial_quadrature_tail_bound(basis))
+        previous_grid = GaussletBases._radial_quadrature_grid(basis,cutoff;refine=schedule[end-1])
+        previous = GaussletBases._quadrature_quality_metrics(basis,quadrature_points(previous_grid),quadrature_weights(previous_grid))
+        latest = GaussletBases._quadrature_quality_metrics(basis,quadrature_points(grid),quadrature_weights(grid))
+        expected = (latest.overlap_error,norm(latest.overlap-previous.overlap,Inf),
+            norm(latest.inverse_radius_matrix-previous.inverse_radius_matrix,Inf),maximum(abs.(latest.moment_centers-previous.moment_centers)))
+        @test data[:achieved] == expected && data[:last_refine] == schedule[end]
+        @test data[:unmet_criteria] == [data[:criteria][i] for i=1:4 if (i==1||profile.use_stability)&&!(expected[i]<=data[:targets][i])]
+        @test data[:targets] == (profile.overlap_tol,profile.overlap_change_tol,profile.inverse_radius_change_tol,profile.moment_center_change_tol)
+        @test quadrature_points(grid) == quadrature_points(GaussletBases._radial_quadrature_grid(basis,cutoff;refine=last(schedule)))
+    end
+    grid = @test_logs min_level=Logging.Warn radial_quadrature(basis;refine=64)
+    @test quadrature_points(grid) == quadrature_points(GaussletBases._radial_quadrature_grid(basis,GaussletBases._radial_quadrature_tail_bound(basis);refine=512))
+    control = build_basis(RadialBasisSpec(:G10;rmax=30.,mapping=AsinhMapping(c=.01,s=.2),xgaussians=XGaussian[]))
+    @test_logs min_level=Logging.Warn radial_quadrature(control)
+end
+
 @testset "Recommended radial front-door hydrogen" begin
     Z = 1.0
     s = 0.2
@@ -326,8 +356,8 @@ end
         rmax = 30.0,
         mapping = AsinhMapping(c = s / (2Z), s = s),
     ))
-    diag = @test_logs min_level = Logging.Warn basis_diagnostics(rb)
-    grid = @test_logs min_level = Logging.Warn radial_quadrature(rb)
+    diag = @test_logs (:warn, r"radial_quadrature did not reach") basis_diagnostics(rb)
+    grid = @test_logs (:warn, r"radial_quadrature did not reach") radial_quadrature(rb)
     hamiltonian = kinetic_matrix(rb, grid) +
                   nuclear_matrix(rb, grid; Z = Z) +
                   centrifugal_matrix(rb, grid; l = 0)

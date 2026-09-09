@@ -429,6 +429,24 @@ if _RUN_SLOW_TESTS
     end
 end
 
+@testset "Construction exits" begin
+    steps = Float64[]
+    build = h -> (push!(steps, h); h)
+    select = GaussletBases._select_construction_data
+    result = @test_logs min_level=Logging.Warn select(build, h -> h == .01 ? 1e-6 : 1.0, .02; refine_grid_h=true)
+    @test result == .01 && steps == [.02,.01]
+    empty!(steps)
+    log = Test.TestLogger(min_level=Logging.Warn)
+    result = with_logger(log) do; select(build, h -> h == .005 ? 2e-6 : 1.0, .02; refine_grid_h=true); end
+    @test result == .005 && steps == [.02,.01,.005,.0025,.00125]
+    @test length(log.logs) == 1
+    @test Dict(only(log.logs).kwargs)[:best_deviation] == 2e-6
+    @test Dict(only(log.logs).kwargs)[:target] == 1e-6
+    empty!(steps)
+    result = @test_logs min_level=Logging.Warn select(build, _ -> error("must not evaluate quality"), .02; refine_grid_h=false)
+    @test result == .02 && steps == [.02]
+end
+
 if _RUN_SLOW_TESTS
     @testset "Construction grid controls" begin
         rspec = RadialBasisSpec(:G10;

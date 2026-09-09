@@ -137,6 +137,16 @@ For the normal workflow, let the package choose the internal quadrature extent:
 grid = radial_quadrature(rb)
 ```
 
+Construction tries at most five setup grids, stopping at half-grid overlap
+deviation `<=1e-6`; exhaustion warns and returns the best attempt.
+`build_basis(spec; refine_grid_h=false)` intentionally skips that check.
+Physical quadrature is separate: exhausted `:high` or `:veryhigh` refinement
+returns the last grid with a warning naming unmet criteria, values, and targets.
+These are maximum-entry overlap/inverse-radius changes and moment-center
+changes, not energy-error estimates (inverse radius: bohr^-1; centers: bohr).
+`radial_quadrature(rb; accuracy=:high, refine=128)` requests more work through
+the existing doubling schedule; it is not a fixed grid or convergence promise.
+
 The expert keyword `quadrature_rmax` still exists for compatibility, but it is
 not part of the recommended front-door story.
 

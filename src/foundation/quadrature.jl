@@ -208,10 +208,15 @@ pushes the same checks farther. `refine` is an optional expert starting
 resolution hint. `quadrature_rmax` is an optional explicit physical-space
 cutoff override kept for expert compatibility. If an explicit cutoff is too
 short to cover the retained basis support, the routine warns rather than
-silently reporting good overlap on a truncated grid. On the automatic default
-path, the routine returns quietly once it reaches the repo's public-quality
-overlap regime even if the stricter internal refinement-stability target has
-not been met yet.
+silently reporting good overlap on a truncated grid. Exhausted `:high` and
+`:veryhigh` schedules return the last best-effort grid with one warning listing
+unmet criteria, achieved values, and targets. `refine` changes the starting
+resolution, not that notification policy; it is not a no-refinement switch.
+The historical no-explicit-cutoff overlap-only fallback remains for `:medium`.
+To request more work, use e.g. `radial_quadrature(basis; refine=128)`; this starts
+the existing doubling schedule, not a fixed-grid request or convergence promise.
+Matrix changes are maximum-entry changes, not energy-error estimates; the
+inverse-radius measure is in bohr^-1 and the moment-center measure is in bohr.
 """
 function radial_quadrature(
     basis::RadialBasis;
@@ -242,6 +247,7 @@ function radial_quadrature(
             quadrature_points(grid),
             quadrature_weights(grid),
         )
+        previous_metrics = latest_metrics
         latest_grid = grid
         latest_metrics = metrics
         latest_refine = refine_try
@@ -249,35 +255,31 @@ function radial_quadrature(
         if _quadrature_profile_satisfied(metrics, previous_metrics, profile)
             return grid
         end
-        previous_metrics = metrics
     end
 
     if !explicit_cutoff &&
-       profile.name != :veryhigh &&
+       profile.name == :medium &&
        latest_metrics.overlap_error <= _QUADRATURE_PUBLIC_OVERLAP_TOL
         return latest_grid
     end
 
-    if explicit_cutoff && cutoff < tail_bound
-        @warn(
-            "radial_quadrature did not reach the requested accuracy; the requested quadrature_rmax may be truncating basis tails",
-            accuracy = profile.name,
-            refine_start = first(refines),
-            best_refine = latest_refine,
-            best_overlap_error = latest_metrics.overlap_error,
-            requested_quadrature_rmax = cutoff,
-            conservative_tail_bound = tail_bound,
-        )
-    else
-        @warn(
-            "radial_quadrature did not reach the requested accuracy",
-            accuracy = profile.name,
-            refine_start = first(refines),
-            best_refine = latest_refine,
-            best_overlap_error = latest_metrics.overlap_error,
-            used_quadrature_rmax = cutoff,
-        )
-    end
+    changes = previous_metrics === nothing ? (Inf, Inf, Inf) : (
+        norm(latest_metrics.overlap - previous_metrics.overlap, Inf),
+        norm(latest_metrics.inverse_radius_matrix - previous_metrics.inverse_radius_matrix, Inf),
+        maximum(abs.(latest_metrics.moment_centers .- previous_metrics.moment_centers)))
+    criteria = (:overlap_error, :overlap_change, :inverse_radius_change, :moment_center_change)
+    achieved = (latest_metrics.overlap_error, changes...)
+    targets = (profile.overlap_tol, profile.overlap_change_tol,
+               profile.inverse_radius_change_tol, profile.moment_center_change_tol)
+    unmet = [criteria[i] for i in eachindex(criteria)
+             if (i == 1 || profile.use_stability) && !(achieved[i] <= targets[i])]
+    message = explicit_cutoff && cutoff < tail_bound ?
+        "radial_quadrature did not reach the requested accuracy; the requested quadrature_rmax may be truncating basis tails" :
+        "radial_quadrature did not reach the requested accuracy; returning the last best-effort grid"
+    @warn(message, accuracy = profile.name, refine_start = first(refines),
+        last_refine = latest_refine, unmet_criteria = unmet, criteria = criteria,
+        achieved = achieved, targets = targets, used_quadrature_rmax = cutoff,
+        conservative_tail_bound = tail_bound)
     return latest_grid
 end
 

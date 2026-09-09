@@ -3,7 +3,7 @@ const _BASIS_GRID_S0 = 6.5
 const _BASIS_GRID_MARGIN = 20.0
 const _BASIS_EIG_TOL = 1.0e-10
 const _CONSTRUCTION_GRID_TOL = 1.0e-6
-const _CONSTRUCTION_GRID_MAXITER = 4
+const _CONSTRUCTION_GRID_MAXITER = 5
 
 _as_family(family_value::GaussletFamily) = family_value
 _as_family(family_value::Symbol) = GaussletFamily(family_value)
@@ -44,6 +44,7 @@ function _select_construction_data(
         deviation <= _CONSTRUCTION_GRID_TOL && return data
         h_try /= 2.0
     end
+    @warn "basis construction exhausted its half-grid overlap refinement; returning the best attempt" best_deviation target = _CONSTRUCTION_GRID_TOL
     return best_data
 end
 
@@ -1319,8 +1320,10 @@ Build the concrete half-line basis described by `spec`.
 `grid_h` controls the internal construction-grid spacing used while
 orthonormalizing and localizing the basis. It is a build-time control, not part
 of `HalfLineBasisSpec`. When `refine_grid_h=true`, construction starts from the
-supplied or default `grid_h` and internally halves it until an overlap check on
-a finer reference grid is acceptable.
+supplied or default `grid_h`, evaluating at most five candidates separated by
+halvings. It exits once the half-grid overlap deviation is at most `1e-6`;
+exhaustion warns and returns the best attempt. `refine_grid_h=false` builds
+once without evaluating that quality check or issuing its exhaustion warning.
 """
 function build_basis(spec::HalfLineBasisSpec; grid_h = nothing, refine_grid_h::Bool = true)
     start_h = _basis_grid_h(spec.reference_spacing, grid_h)
@@ -1357,8 +1360,10 @@ Build the concrete radial basis described by `spec`.
 `grid_h` controls the internal construction-grid spacing used while building
 and localizing the reference-coordinate basis. It is a build-time control, not
 part of `RadialBasisSpec`. When `refine_grid_h=true`, construction starts from
-the supplied or default `grid_h` and internally halves it until an overlap
-check on a finer reference grid is acceptable.
+the supplied or default `grid_h`, evaluating at most five candidates separated
+by halvings. It exits once the half-grid overlap deviation is at most `1e-6`;
+exhaustion warns and returns the best attempt. `refine_grid_h=false` builds
+once without evaluating that quality check or issuing its exhaustion warning.
 """
 function build_basis(spec::RadialBasisSpec; grid_h = nothing, refine_grid_h::Bool = true)
     start_h = _basis_grid_h(spec.reference_spacing, grid_h)

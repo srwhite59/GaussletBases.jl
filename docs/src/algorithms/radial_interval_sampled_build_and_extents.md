@@ -75,7 +75,11 @@
 
 10. Build the physical quadrature grid from that retained-support extent.
     The automatic default path maps `quadrature_umax` to physical space and
-    refines until the public-quality quadrature checks are satisfied.
+    uses a bounded refinement schedule. Exhausted `:high` and `:veryhigh`
+    return the last grid with achieved measures, targets, and unmet criteria
+    in one warning; only `:medium` retains the quiet overlap-only fallback.
+    Construction separately tries at most five setup grids and warns if its
+    half-grid overlap target remains unmet, returning the best attempt.
     `quadrature_rmax` remains only as an expert override.
     Code: `src/foundation/quadrature.jl`, `src/foundation/diagnostics.jl`
 
