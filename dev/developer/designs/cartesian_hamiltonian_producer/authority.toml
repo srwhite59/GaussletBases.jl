@@ -44,7 +44,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/contracted_par
 sha256 = "de6d346e8f5abae91343c572fed42006e26d9d07478819e805941d5d10fda63e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
-sha256 = "755b7a612c0235a14efe580f307545809fcda87019277647b9c3b06750430617"
+sha256 = "4cf3f398cf7cb0faa5f22d91f14fd88a6496dc8c8760fc3b54ae8407e0984968"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
 sha256 = "10a14e18f2fd94a4a63adba102fdbed81daf93fbdf857d0a14cbc716759c66f0"
@@ -2082,10 +2082,10 @@ title = "validate shared reference Lanczos consolidation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-COULOMB-ACCURACY-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-GAUSSIAN-CENTERED-DET-FN-01"
-lifecycle = "approved"
-scope = "Replace only the centered_polynomial_gaussian_pair_factor_integral determinant assignment in src/foundation/GaussianAnalyticIntegrals.jl under Centered Determinant Repair. Preserve the guard and remaining computation. Exclude displaced kernels, standard60, complete-matrix discrepancy resolution, defaults, APIs, and other repairs."
+lifecycle = "implemented"
+scope = "Maintain the accepted positive-sum determinant in centered_polynomial_gaussian_pair_factor_integral under Centered Determinant Repair. Preserve the guard and remaining computation. No implementation grant remains; exclude displaced kernels, standard60, complete-matrix discrepancy resolution, defaults, APIs, and other repairs."
 surfaces = ["source"]
 title = "centered Gaussian determinant cancellation repair"
 
@@ -2097,6 +2097,12 @@ title = "centered Gaussian determinant cancellation repair"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "617"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "782a07c7a3cf702698ff281952d642ab311655d7"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "618"
 
     [[records.paths]]
     kind = "source"
@@ -2104,10 +2110,10 @@ title = "centered Gaussian determinant cancellation repair"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-GAUSSIAN-CENTERED-DET-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-GAUSSIAN-CENTERED-DET-TEST-01"
-lifecycle = "approved"
-scope = "Add compact independent centered-moment and public diffuse high135 pair-matrix regressions only in test/core/runtests.jl under Centered Determinant Repair. Preferred/hard additions 25/35 lines. Preserve existing assertions; exclude the full audit sweep, new helpers/files, displaced validation, standard60 implementation, and workflow changes."
+lifecycle = "completed"
+scope = "Maintain the accepted 28-line, 22-assertion centered-moment and public diffuse high135 regression in test/core/runtests.jl under Centered Determinant Repair. No implementation grant remains. Preserve independent references and existing tolerances; exclude the audit sweep, new helpers/files, displaced validation, standard60 implementation, and workflow changes."
 surfaces = ["tests"]
 title = "centered Gaussian determinant regression"
 
@@ -2119,6 +2125,12 @@ title = "centered Gaussian determinant regression"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "617"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "782a07c7a3cf702698ff281952d642ab311655d7"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "618"
 
     [[records.paths]]
     kind = "test"
