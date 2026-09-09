@@ -605,6 +605,76 @@ function _big_factor_axis_integral(alpha_l, center_l, power_l, prefactor_l,
     end
 end
 
+@testset "Displaced finite-expansion arithmetic" begin
+    GI = GaussletBases.GaussianAnalyticIntegrals
+    Pair = GaussletBases._GaussianCoulombAxisPairTerm
+    axis(a,A,b,B,p=0) = Pair(a,A,p,1.0,b,B,p,1.0)
+    function reference(l,r,z)
+        a,b,c,d = BigFloat.((l.alpha_left,l.alpha_right,r.alpha_left,r.alpha_right))
+        A,B,C,E = BigFloat.((l.center_left,l.center_right,r.center_left,r.center_right))
+        Z = BigFloat(z); p,q = a+b,c+d; det = p*q+Z*(p+q)
+        P,Q = (a*A+b*B)/p,(c*C+d*E)/q
+        mx,my = P-Z*q/det*(P-Q),Q+Z*p/det*(P-Q)
+        shifts = (mx-A,mx-B,my-C,my-E)
+        powers = (l.power_left,l.power_right,r.power_left,r.power_right)
+        vx,vy,xy = (q+Z)/(2det),(p+Z)/(2det),Z/(2det)
+        moment = big(0.0)
+        for i=0:powers[1],j=0:powers[2],k=0:powers[3],h=0:powers[4]
+            indices = (i,j,k,h); m,n = i+j,k+h; central = big(0.0)
+            for t=0:min(m,n)
+                (isodd(m-t)||isodd(n-t)) && continue
+                u,v = (m-t)÷2,(n-t)÷2
+                central += factorial(big(m))*factorial(big(n)) /
+                    (factorial(big(t))*factorial(big(u))*factorial(big(v))*big(2)^(u+v))*vx^u*vy^v*xy^t
+            end
+            moment += prod(binomial(powers[s],indices[s])*shifts[s]^(powers[s]-indices[s]) for s=1:4)*central
+        end
+        big(pi)/sqrt(det)*exp(-a*b/p*(A-B)^2-c*d/q*(C-E)^2-Z*p*q/det*(P-Q)^2)*moment
+    end
+    raw(l,r,z) = GI.polynomial_gaussian_pair_factor_integral(
+        l.alpha_left,l.center_left,l.power_left,l.prefactor_left,l.alpha_right,l.center_right,l.power_right,l.prefactor_right,
+        r.alpha_left,r.center_left,r.power_left,r.prefactor_left,r.alpha_right,r.center_right,r.power_right,r.prefactor_right,z)
+    for offset in (0.,100.,1e6), p in (0,1,2)
+        l,r = axis(0.7,offset,1.3,offset+.125,p),axis(2.1,offset+.25,0.9,offset+.375,p)
+        ref = reference(l,r,1.)
+        @test raw(l,r,1.) ≈ ref rtol=1e-12 atol=1e-300
+        @test GaussletBases._gaussian_coulomb_axis_integral(l,r,1.) ≈ ref rtol=1e-12 atol=1e-300
+    end
+    high = coulomb_gaussian_expansion(doacc=true)
+    for (a,A,B,C,E,p,z) in ((1.,100.,100.,100.,100.,2,1.),
+        (1.,1e6,1e6+.1,1e6+.2,1e6+.3,0,1.), (1e-4,0.,0.,2.,2.,1,high.exponents[123]),
+        (1e5,1e6,1e6+.0001,1e6+.0002,1e6+.0003,2,1.))
+        l,r = axis(a,A,a,B,p),axis(a,C,a,E,p); ref = reference(l,r,z)
+        @test raw(l,r,z) ≈ ref rtol=1e-12 atol=1e-300
+        @test GaussletBases._gaussian_coulomb_axis_integral(l,r,z) ≈ ref rtol=1e-12 atol=1e-300
+        @test raw(l,r,z) >= 0
+    end
+    for ex in (coulomb_gaussian_expansion(doacc=false),high), a in (1e-4,1.,1e5), power in (0,1,2)
+        R = a==1e5 ? 0.001953125 : 2.0
+        orbital(z) = CartesianGaussianShellOrbitalRepresentation3D("g",(0,0,power),(0.,0.,z),[a],[1.],:axiswise_normalized_cartesian_gaussian)
+        base = gaussian_coulomb_pair_matrix([orbital(0.),orbital(R)];expansion=ex)
+        moved = gaussian_coulomb_pair_matrix([orbital(100.),orbital(100.0 + R)];expansion=ex)
+        @test moved ≈ base rtol=1e-12 atol=1e-300
+        @test moved[4,4] ≈ only(gaussian_coulomb_pair_matrix([orbital(100.0 + R)];expansion=ex)) rtol=1e-12
+        zaxis,zeroaxis = axis(a,0.,a,0.,power),axis(a,0.,a,0.)
+        norm = ((2big(a)/big(pi))^big(1.5)*(4big(a))^power/
+            (power==0 ? 1 : prod(big(2k-1) for k=1:power)))^2
+        ref = norm*sum(BigFloat(c)*reference(zeroaxis,zeroaxis,z)^2*reference(zaxis,zaxis,z) for (c,z) in zip(ex.coefficients,ex.exponents))
+        @test moved[4,4] ≈ ref rtol=1e-12 atol=1e-300
+    end
+    for ex in (coulomb_gaussian_expansion(doacc=false),high), R in (100.,300.)
+        orbital(z) = CartesianGaussianShellOrbitalRepresentation3D("s",(0,0,0),(0.,0.,z),[1.],[1.],:axiswise_normalized_cartesian_gaussian)
+        matrix = gaussian_coulomb_pair_matrix([orbital(0.),orbital(R)];expansion=ex)
+        for i=1:2,j=1:2,k=1:2,l=1:2
+            A,B,C,E = BigFloat.(((i-1)*R,(j-1)*R,(k-1)*R,(l-1)*R))
+            P,Q = (A+B)/2,(C+E)/2
+            ref = exp(-((A-B)^2+(C-E)^2)/2)*sum(BigFloat(c)/(1+BigFloat(z))^big(1.5)*
+                exp(-BigFloat(z)/(1+BigFloat(z))*(P-Q)^2) for (c,z) in zip(ex.coefficients,ex.exponents))
+            @test matrix[2(i-1)+j,2(k-1)+l] ≈ ref rtol=1e-12 atol=1e-300
+        end
+    end
+end
+
 @testset "Ordinary Coulomb expansion and Gaussian factors" begin
     expansion = coulomb_gaussian_expansion()
     sample_points = [1.0e-3, 1.0e-2, 0.1, 1.0, 5.0, 20.0]

@@ -209,33 +209,34 @@ function polynomial_gaussian_pair_factor_integral(
     coupling_exponent >= 0.0 ||
         throw(ArgumentError("polynomial Gaussian pair coupling exponent must be nonnegative"))
 
-    a11 = alpha_left_a + alpha_left_b + coupling_exponent
-    a22 = alpha_right_a + alpha_right_b + coupling_exponent
+    p = alpha_left_a + alpha_left_b
+    q = alpha_right_a + alpha_right_b
+    a11 = p + coupling_exponent
+    a22 = q + coupling_exponent
     a12 = -coupling_exponent
-    determinant = a11 * a22 - a12^2
+    determinant = p * q + coupling_exponent * (p + q)
     determinant > 0.0 ||
         throw(ArgumentError("polynomial Gaussian pair quadratic form must be positive definite"))
 
-    d1 = alpha_left_a * center_left_a + alpha_left_b * center_left_b
-    d2 = alpha_right_a * center_right_a + alpha_right_b * center_right_b
-    constant =
-        alpha_left_a * center_left_a^2 +
-        alpha_left_b * center_left_b^2 +
-        alpha_right_a * center_right_a^2 +
-        alpha_right_b * center_right_b^2
-    quadratic_term = (a22 * d1^2 - 2.0 * a12 * d1 * d2 + a11 * d2^2) / determinant
-    mean_x = (a22 * d1 - a12 * d2) / determinant
-    mean_y = (-a12 * d1 + a11 * d2) / determinant
+    left_delta = center_left_b - center_left_a
+    right_delta = center_right_b - center_right_a
+    separation = (center_left_a - center_right_a) +
+        (alpha_left_b / p) * left_delta - (alpha_right_b / q) * right_delta
+    damping = (alpha_left_a / p) * alpha_left_b * left_delta^2 +
+        (alpha_right_a / q) * alpha_right_b * right_delta^2 +
+        (coupling_exponent * p * q / determinant) * separation^2
+    mean_x = -(coupling_exponent * q / determinant) * separation
+    mean_y = (coupling_exponent * p / determinant) * separation
     sigma_xx = 0.5 * a22 / determinant
     sigma_yy = 0.5 * a11 / determinant
     sigma_xy = -0.5 * a12 / determinant
 
     polynomial_x = Float64[1.0]
-    polynomial_x = polynomial_shift_multiply(polynomial_x, -center_left_a, power_left_a)
-    polynomial_x = polynomial_shift_multiply(polynomial_x, -center_left_b, power_left_b)
+    polynomial_x = polynomial_shift_multiply(polynomial_x, (alpha_left_b / p) * left_delta, power_left_a)
+    polynomial_x = polynomial_shift_multiply(polynomial_x, -(alpha_left_a / p) * left_delta, power_left_b)
     polynomial_y = Float64[1.0]
-    polynomial_y = polynomial_shift_multiply(polynomial_y, -center_right_a, power_right_a)
-    polynomial_y = polynomial_shift_multiply(polynomial_y, -center_right_b, power_right_b)
+    polynomial_y = polynomial_shift_multiply(polynomial_y, (alpha_right_b / q) * right_delta, power_right_a)
+    polynomial_y = polynomial_shift_multiply(polynomial_y, -(alpha_right_a / q) * right_delta, power_right_b)
 
     moment_value = 0.0
     for degree_x in eachindex(polynomial_x), degree_y in eachindex(polynomial_y)
@@ -258,7 +259,7 @@ function polynomial_gaussian_pair_factor_integral(
            prefactor_right_a *
            prefactor_right_b *
            (pi / sqrt(determinant)) *
-           exp(-constant + quadratic_term) *
+           exp(-damping) *
            moment_value
 end
 

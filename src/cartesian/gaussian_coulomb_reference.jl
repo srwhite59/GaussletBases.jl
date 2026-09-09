@@ -11,8 +11,8 @@ end
 
 struct _GaussianCoulombAxisKernelTerm
     alpha_sum::Float64
-    center_weight::Float64
-    constant::Float64
+    product_center::Float64
+    internal_damping::Float64
     prefactor::Float64
     polynomial_coefficients::Vector{Float64}
 end
@@ -435,13 +435,17 @@ function _gaussian_coulomb_axis_term_indices(
     axis_index_by_term = Dict{_GaussianCoulombAxisPairTerm,Int}()
     axis_terms = _GaussianCoulombAxisPairTerm[]
     descriptor_axis_indices = Vector{NTuple{3,Int}}(undef, length(term_descriptors))
+    origins = isempty(term_descriptors) ? (0.0, 0.0, 0.0) :
+        (first(term_descriptors).x.center_left, first(term_descriptors).y.center_left,
+         first(term_descriptors).z.center_left)
     for descriptor_index in eachindex(term_descriptors)
         descriptor = term_descriptors[descriptor_index]
-        descriptor_axis_indices[descriptor_index] = (
-            _gaussian_coulomb_axis_term_index!(axis_index_by_term, axis_terms, descriptor.x),
-            _gaussian_coulomb_axis_term_index!(axis_index_by_term, axis_terms, descriptor.y),
-            _gaussian_coulomb_axis_term_index!(axis_index_by_term, axis_terms, descriptor.z),
-        )
+        descriptor_axis_indices[descriptor_index] = map((descriptor.x, descriptor.y, descriptor.z), origins) do term, origin
+            shifted = _GaussianCoulombAxisPairTerm(
+                term.alpha_left, term.center_left - origin, term.power_left, term.prefactor_left,
+                term.alpha_right, term.center_right - origin, term.power_right, term.prefactor_right)
+            _gaussian_coulomb_axis_term_index!(axis_index_by_term, axis_terms, shifted)
+        end
     end
     return axis_terms, descriptor_axis_indices
 end
@@ -465,24 +469,24 @@ function _gaussian_coulomb_axis_kernel_terms(
     return [_gaussian_coulomb_axis_kernel_term(axis_term) for axis_term in axis_terms]
 end
 
-function _gaussian_coulomb_axis_kernel_term(axis_term::_GaussianCoulombAxisPairTerm)
+function _gaussian_coulomb_axis_kernel_term(axis_term::_GaussianCoulombAxisPairTerm, origin::Float64 = 0.0)
+    p = axis_term.alpha_left + axis_term.alpha_right
+    delta = axis_term.center_right - axis_term.center_left
     polynomial_coefficients = Float64[1.0]
     polynomial_coefficients = GaussianAnalyticIntegrals.polynomial_shift_multiply(
         polynomial_coefficients,
-        -axis_term.center_left,
+        (axis_term.alpha_right / p) * delta,
         axis_term.power_left,
     )
     polynomial_coefficients = GaussianAnalyticIntegrals.polynomial_shift_multiply(
         polynomial_coefficients,
-        -axis_term.center_right,
+        -(axis_term.alpha_left / p) * delta,
         axis_term.power_right,
     )
     return _GaussianCoulombAxisKernelTerm(
-        axis_term.alpha_left + axis_term.alpha_right,
-        axis_term.alpha_left * axis_term.center_left +
-        axis_term.alpha_right * axis_term.center_right,
-        axis_term.alpha_left * axis_term.center_left^2 +
-        axis_term.alpha_right * axis_term.center_right^2,
+        p,
+        (axis_term.center_left - origin) + (axis_term.alpha_right / p) * delta,
+        (axis_term.alpha_left / p) * axis_term.alpha_right * delta^2,
         axis_term.prefactor_left * axis_term.prefactor_right,
         polynomial_coefficients,
     )
@@ -516,16 +520,15 @@ function _gaussian_coulomb_axis_integral(
     a11 = left.alpha_sum + coupling_exponent
     a22 = right.alpha_sum + coupling_exponent
     a12 = -coupling_exponent
-    determinant = a11 * a22 - a12^2
+    determinant = left.alpha_sum * right.alpha_sum + coupling_exponent * (left.alpha_sum + right.alpha_sum)
     determinant > 0.0 ||
         throw(ArgumentError("polynomial Gaussian pair quadratic form must be positive definite"))
 
-    d1 = left.center_weight
-    d2 = right.center_weight
-    constant = left.constant + right.constant
-    quadratic_term = (a22 * d1^2 - 2.0 * a12 * d1 * d2 + a11 * d2^2) / determinant
-    mean_x = (a22 * d1 - a12 * d2) / determinant
-    mean_y = (-a12 * d1 + a11 * d2) / determinant
+    separation = left.product_center - right.product_center
+    damping = left.internal_damping + right.internal_damping +
+        (coupling_exponent * left.alpha_sum * right.alpha_sum / determinant) * separation^2
+    mean_x = -(coupling_exponent * right.alpha_sum / determinant) * separation
+    mean_y = (coupling_exponent * left.alpha_sum / determinant) * separation
     sigma_xx = 0.5 * a22 / determinant
     sigma_yy = 0.5 * a11 / determinant
     sigma_xy = -0.5 * a12 / determinant
@@ -557,7 +560,7 @@ function _gaussian_coulomb_axis_integral(
     return left.prefactor *
            right.prefactor *
            (pi / sqrt(determinant)) *
-           exp(-constant + quadratic_term) *
+           exp(-damping) *
            moment_value
 end
 
@@ -567,8 +570,8 @@ function _gaussian_coulomb_axis_integral(
     coupling_exponent::Float64,
 )
     return _gaussian_coulomb_axis_integral(
-        _gaussian_coulomb_axis_kernel_term(left),
-        _gaussian_coulomb_axis_kernel_term(right),
+        _gaussian_coulomb_axis_kernel_term(left, left.center_left),
+        _gaussian_coulomb_axis_kernel_term(right, left.center_left),
         coupling_exponent,
     )
 end
