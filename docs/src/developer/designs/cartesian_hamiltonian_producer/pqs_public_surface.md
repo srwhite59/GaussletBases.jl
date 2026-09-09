@@ -806,7 +806,11 @@ passed. Docs passed `115/115` plus `10/10`; CI run `33143556046` passed all
 three gates and Docs run `33143556067` passed. Package load, authority
 check/self-test, Documenter, and diff checks also passed.
 
-Maintenance adds no shim, warning, replacement API, alias deletion, docstring,
+The three-export absence requirement above is historical, superseded only by
+the compatibility restoration in `v0.2.1 Candidate Preparation` below. The
+accepted Pass 543 evidence remains unchanged; no further de-export is granted.
+
+Other export-integrity maintenance adds no shim, warning, replacement API, alias deletion, docstring,
 test, helper, metadata, file, or numerical behavior. `ShellLocalAngularProfileKey`,
 `@timeg`, `CuratedSpherePointSet`, `LegacySGaussianData`, and
 `QiuWhiteHybridOrbital3D` remain unchanged. Package versions, immutable v0.2.0
@@ -1990,7 +1994,9 @@ test group. An absent or invalid classifier output is not a third lane.
 
 `v*` pushes use a separate tag-CI lane and do not rerun the numerical matrix.
 That lane must explicitly fetch the remote tag ref and prove that
-`refs/tags/<tag>^{tag}` exists as an annotated tag object. It may only then
+the fetched verification reference's `^{tag}` exists as an annotated tag
+object. Pass 625 moves this check outside the local tag namespace; the
+remote source remains `refs/tags/<tag>`. It may only then
 check the `^{commit}` peel, tree, canonical semantic-version and
 `Project.toml` agreement, fresh installation from the remote tag, and package
 load. Checkout `HEAD` and the event SHA are not substitutes for preserving or
@@ -2734,3 +2740,10 @@ delete, recreate, retarget, move, add assets to, or silently retry either one.
 General registration, `CITATION.cff`, package/paper citations, paper titles or
 journal status, large reproduction bundles, future tag-lane repair, and any
 later patch release remain separate decisions.
+
+## v0.2.1 Candidate Preparation
+
+The bounded patch-candidate grant, compatibility restoration, tag-verifier
+repair, budgets and acceptance gates are in the
+[deployment contract](documentation_deployment.md#v021-Candidate-Preparation).
+No tagging, publication or stable promotion is authorized.

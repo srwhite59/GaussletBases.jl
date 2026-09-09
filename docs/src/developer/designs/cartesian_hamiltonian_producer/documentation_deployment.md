@@ -276,3 +276,119 @@ No custom credential, repository-setting change, alternate deployment
 framework, source/API change, or documentation-navigation redesign is part of
 this contract. GitHub's repository browser remains a raw-file view; the
 published site provides the intended rendered navigation.
+
+## v0.2.1 Candidate Preparation
+
+Pass 625 authorizes candidate preparation only under
+`HP-PQS-PUBLIC-V021-FN-01` and `HP-PQS-PUBLIC-V021-TEST-01`.
+Reviewed main is `57e61403262042923605f94a28e910dd2b543550`; released
+v0.2.0 is `adfcaba32d4db06d9d796d947276433717bd2d89`.
+Repo-manager's conversation-delivered readiness review is audit evidence, not
+an independent grant. Comparison confirms unchanged Project declarations and
+examples, the seven-line compatibility removal, and the local-tag fetch
+collision. No additional RC is required absent a concrete candidate blocker.
+
+### Compatibility restoration
+
+Restore exactly the original three root exports:
+`QiuWhiteResidualGaussianOperators`, `OneCenterAtomicNestedLayerStructure`,
+and `TimedNestedFixedBlockBuild`. Preserve the existing alias and diagnostic
+type unchanged; restore the original four-line parametric timing carrier from
+v0.2.0, including `fixed_block::F` and `timings::TimeG.TimingReport`.
+This supersedes the absence condition in export-integrity maintenance, not
+the historical evidence. No renewed development, warning, shim, replacement
+interface, field, method, or numerical behavior is authorized.
+
+Add concise compatibility-only documentation at existing definitions/alias,
+curate the three names in the existing export reference, and extend existing
+mechanical public-surface and core owners. Verify exports, alias identity,
+original type/field/constructor behavior, and documentation resolution.
+Keep the exact five reserved undocumented names unchanged. Compare the
+candidate export inventory to released v0.2.0; report any additional
+compatibility discrepancy rather than inferring that private layout changes
+are public guarantees.
+
+### Tag verification repair
+
+Only the tag-identity step of `.github/workflows/ci.yml` may change.
+Fetch `refs/tags/${tag}` with `--no-tags` into a dedicated non-tag reference,
+preferably `refs/verification/release-tag`. Resolve that reference's
+`^{tag}`, verify its object type, then its `^{commit}` peel, event SHA,
+tree against checkout HEAD, canonical version spelling and Project version.
+Preserve the existing remote installation/package-load step and all other
+CI behavior. A preexisting verification reference must fail closed; no force,
+tag replacement, tag deletion, or silently trusted checkout tag is permitted.
+
+Rehearse the actual verification commands using bounded disposable local Git
+repositories: annotated remote with a colliding local lightweight tag succeeds
+without changing it; missing remote tag, lightweight remote tag, wrong commit,
+tree or version, malformed tag, and preexisting verification ref fail.
+Use existing focused docs checks for the production wiring; keep temporary
+fixtures outside the repository, with no new framework or checked-in owner.
+
+### Candidate and documentation boundaries
+
+Change only Project version to `0.2.1`. Add a concise `v0.2.1 (unreleased)`
+changelog section above byte-identical release history: centered/displaced
+kernel arithmetic repairs, fifth radial construction attempt with early exit
+and opt-out, affected-case increased cost, truthful exhausted-refinement
+warnings, and documentation/validation improvements. Relocations are not new
+numerical implementations. Neither whole-matrix convergence nor energy-error
+control is promised; preserve the near-origin inverse-radius limitation.
+
+Keep the README's available installation pinned to v0.2.0 until publication;
+at most add a clearly unreleased v0.2.1 candidate note. Never present an absent
+tag as installable. Update docs footer/version checks to distinguish candidate
+documentation from released API; retain the frozen refresh context's v0.2.0
+label. Preserve `stable => release-0.2.0`, site-root behavior, original
+version folders, and all refresh safeguards. No Docs workflow edit is needed.
+
+### Exact implementation surfaces and budgets
+
+No new implementation file. Added-line preferred/hard budgets:
+- `src/GaussletBases.jl`: exactly three restored export lines.
+- `src/cartesian/cartesian_nested_faces.jl`: original four-line definition
+  plus documentation; `src/cartesian/cartesian_nested_atomic.jl` and
+  `src/ordinary/ordinary_qw_types_and_bases.jl`: documentation only.
+  Combined source documentation: 24/36 lines; executable restoration: seven.
+- `.github/workflows/ci.yml`: 6/10 added lines, tag step only.
+- `Project.toml`: one version substitution, no dependency/compat change.
+- `CHANGELOG.md`: 18/24 added lines; `README.md`: 4/8.
+- `docs/make.jl`: 5/8 added lines for truthful version labeling only.
+- `docs/src/reference/export.md`: 10/16 added lines.
+- `test/core/runtests.jl`: 12/20 added compatibility lines.
+- `test/docs/public_surface_runtests.jl`: 4/6 added inventory lines.
+- `test/docs/runtests.jl`: 30/50 added mechanical checks/substitutions.
+Normal lifecycle evidence and mechanically required generated-view/digest
+reconciliation are separate from these implementation budgets.
+
+### Acceptance and handback
+
+Repo-manager waits for this authority commit and its checks. Prefer one
+implementation/candidate push so source/workflow/version changes receive one
+full existing matrix. Reuse centered CI 34364324843, displaced CI 34377518052
+(148 regressions and 64 complete-matrix checks), and radial CI 34392873423.
+No new numerical policy, broad angular run, repeated paper example, or
+benchmark campaign is authorized.
+
+Require focused compatibility checks, tag-fixture rejection evidence, existing
+three numerical gates (including Julia 1.10 Supported floor), package load,
+docs_fast/full docs, authority/self-test, deterministic views, Documenter,
+manager-log bound, YAML inspection and diff checks. Perform one isolated
+Julia 1.12.6 candidate-archive installation/load and small public Example 01.
+Freeze commit, tree, archive entry/byte counts and SHA-256; exclude a root
+Manifest and both protected handoffs. Record exact deltas and workflow IDs.
+Candidate acceptance awaits independent review; no tag identity exists yet.
+
+Stop without an implementation commit if restoration changes original
+definitions, another compatibility defect appears, tag checks weaken, stable
+moves, budgets are exceeded, or broader machinery is necessary.
+
+Tagging, publication, registration, release assets, stable promotion, and
+old-tag reruns are not authorized. A later separate bounded promotion may
+change the stable pin and associated selector/root-policy checks only after
+the new immutable versioned documentation exists, is verified release-compatible,
+and its canonical URLs, source links, README destinations and preserved old
+folders pass review. That later transaction must keep future main/tag
+deployments from undoing the selected pin. Standard60, represented-Hartree,
+arbitrary-position work and other cleanup remain outside this packet.

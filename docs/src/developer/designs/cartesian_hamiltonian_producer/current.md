@@ -3,6 +3,12 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
+Pass 625 authorizes only [v0.2.1 candidate preparation](pqs_public_surface.md#v021-Candidate-Preparation)
+under HP-PQS-PUBLIC-V021-FN-01/TEST-01: restore three released bindings,
+repair tag-reference collision handling, and prepare truthful candidate labels.
+No candidate is accepted yet; no tag, publication, or stable promotion is granted.
+The stable pin remains release-0.2.0. Standard60 and other deferred work stay separate.
+
 Start with [README](README.md), this page, and [invariants](invariants.md), then
 read only the assigned generated registry entry and linked canonical contract.
 `authority.toml` remains the record-level source. Silence here is neutral; an
@@ -102,7 +108,7 @@ not current acceptance requirements. Accepted pass details remain in the
 | `HP-PQS-PUBLIC-RC2-TAG-*` | Immutable annotated tag and versioned documentation accepted; lifecycle closed | Preserve object `7c8a21b99`, frozen target `2b3c23970`, RC2/RC1/dev selector entries; the separate GitHub-prerelease lifecycle is also closed |
 | `HP-PQS-PUBLIC-RC1-RELEASE-*` | Package-centered GitHub prerelease published and validated; lifecycle closed | Preserve release `373460389`, exact separate PQS/screening narrative, prerelease/non-latest status, zero uploaded assets, accepted archives/install evidence; no release mutation is authorized |
 | `HP-PQS-PUBLIC-RC1-TAG-*` | Immutable annotated tag and versioned documentation accepted; lifecycle closed | Preserve object `a4284f0bf`, frozen target `1546c18d3`, RC1/dev selector entries; the separate GitHub-prerelease lifecycle is also closed |
-| `HP-PUBLIC-EXPORT-INTEGRITY-*` | Three-name post-v0.2 export cleanup implemented and validated; maintenance | Keep `TimedNestedFixedBlockBuild` absent; retain unexported `OneCenterAtomicNestedLayerStructure` and the qualified QW operator alias; preserve `ShellLocalAngularProfileKey`, numerical behavior, dynamic integrity coverage, and immutable releases |
+| `HP-PUBLIC-EXPORT-INTEGRITY-*` | Dynamic integrity maintained; three-name absence rule superseded | Restore only the three released bindings under V021 candidate authority; preserve the five reserved names, numerical behavior and immutable releases |
 | `HP-PUBLIC-FOUNDATION-DOC-*` | Ten foundational basis/mapping generics documented; implementation and focused validation in maintenance | Preserve their exact map/derivative/introspection semantics, compact existing reference section, family-scoped checks, and historical undocumented-export count of `61` without changing behavior or global docs policy |
 | `HP-PUBLIC-FUNCTION-STENCIL-DOC-*` | Nine function-evaluation/stencil generics documented; implementation and focused validation in maintenance | Preserve their exact evaluation, derivative, center, integral, and ordered-stencil semantics, compact existing reference section, family-scoped checks, and historical undocumented-export count of `52` without changing behavior or global docs policy |
 | `HP-PUBLIC-PARTITION-LEAF-DOC-*` | Twelve partition-hierarchy and leaf-local accessors documented; implementation and focused validation in maintenance | Preserve stored ordering and hierarchy semantics, copied `Float64` blocks versus stored/read-only vectors and records, the compact existing reference section, family-scoped checks, and historical undocumented-export count of `40` without behavior or global docs-policy changes |

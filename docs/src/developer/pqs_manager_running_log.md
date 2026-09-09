@@ -1023,3 +1023,27 @@ Retained: live contracts, immutable identities, and historical evidence.
 Source/tests/metadata/grants added or changed: zero. Existing documentation,
 authority/self-test/views, package load, Documenter, log/diff, and remote
 docs-only checks validate this pass; no numerical reruns or stable promotion.
+
+### Pass 625: Bounded v0.2.1 Candidate Authority
+
+- Reviewed repo-manager's conversation-delivered readiness audit against
+  57e61403262042923605f94a28e910dd2b543550 and released adfcaba32d.
+  Project declarations and public examples are unchanged. Independently
+  confirmed the seven-line export/type removal and the tag-namespace collision.
+- Authorized HP-PQS-PUBLIC-V021-FN-01/TEST-01 for one candidate push:
+  compatibility restoration, namespaced tag verification, honest unreleased
+  version/changelog documentation and focused checks. No additional RC absent
+  a concrete blocker. Superseded only the three-name absence maintenance
+  condition; historical cleanup evidence remains intact.
+- LT public-package reliability advances; MT7 remains completed/maintenance.
+  Reuse accepted centered/displaced/radial evidence; the final candidate still
+  requires one full matrix and isolated install/example. No numerical runs in
+  this authority pass. Source restoration is seven lines, source documentation
+  at most 36; bounded test/CI/documentation budgets live in the canonical heading.
+- Deleted: obsolete absence requirement. Simplified: one candidate transaction.
+  Quarantined: none. Not deleted because: released bindings need compatibility.
+  Remaining blocker: implementation and independent candidate acceptance.
+  Added/deleted src: 0/0; new tests/files/metadata: none in this pass.
+- Validation: authority/self-test, generated views, package load, docs,
+  Documenter and diff checks required before repo-manager proceeds. Tagging,
+  publication and stable promotion remain separate; release-0.2.0 stays pinned.

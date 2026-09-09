@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `ef6958fe35ade77fa27b963be5535b07da83153d94fe7db69d1eb36c12c583b3`.
+> [authority.toml](authority.toml), SHA-256 `decb56efc991cc66418458887bb8c1f5ef0a7a1b2f5a3c67b550c223a44e8836`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2613,6 +2613,49 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PQS-PUBLIC-V020-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-PAPER-CI-TEST-01`, `HP-REP-PQS-RG-WORKING-CI-TEST-01`, `HP-REP-XGTO-INTERCHANGE-TEST-01`, `HP-REP-XGTO-READER-DOC-TEST-01`
 - **Scope:** Completed final-candidate acceptance evidence only; this record grants no test, workflow, source, docs, tag, or release edit. Candidate adfcaba32d4db06d9d796d947276433717bd2d89 and tree f64ba21e06ff57e2b5e78d91214398115afbe8de changed only Project.toml, CHANGELOG.md, README.md, and test/docs/runtests.jl. Direct GitHub install/load passed on Julia 1.10.12 and 1.12.6; fresh archive installation passed on 1.12.6; examples 01/39/40/41, H2+ 18/18, screening, export integrity, residual-GTO/external-transfer frozen fixture, authority, docs 114/114 + 10/10, Documenter, and diff checks passed. CI 33126022579 passed all three numerical gates and Docs 33126022531 passed. The clean archive has 677 entries, 10137600 bytes, SHA-256 df09cc6fd7dc144daa168c9feb4a41be9b974ef450e1e81bf586787318ad1566, no root Manifest, and neither handoff. The accepted exact ASCII release body has 2278 bytes including its final newline and SHA-256 e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2. The docs-test diff was +38/-9: nine one-for-one replacements and 29 substantive additions within the hard 30-line bound. The exact conditional final transaction is separately owned by HP-PQS-PUBLIC-V020-RELEASE-FN-01.
 
+### HP-PQS-PUBLIC-V021-FN-01 - v0.2.1 bounded candidate preparation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`, `tools`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `v0.2.1 Candidate Preparation`
+- **Owned paths:**
+  - `docs` / `existing`: `CHANGELOG.md`
+  - `docs` / `existing`: `README.md`
+  - `docs` / `existing`: `docs/src/reference/export.md`
+  - `source` / `existing`: `Project.toml`
+  - `source` / `existing`: `src/GaussletBases.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_nested_atomic.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_nested_faces.jl`
+  - `source` / `existing`: `src/ordinary/ordinary_qw_types_and_bases.jl`
+  - `tool` / `existing`: `.github/workflows/ci.yml`
+  - `tool` / `existing`: `docs/make.jl`
+- **Evidence:**
+  - `git_commit`: `57e61403262042923605f94a28e910dd2b543550`
+  - `manager_pass`: `625`
+- **Dependencies:** none
+- **Scope:** Prepare only the existing-file compatibility restoration, namespaced annotated-tag verifier, version/changelog and truthful candidate labels specified in v0.2.1 Candidate Preparation. Preserve released definitions, numerical behavior, stable snapshot and old releases. Exact paths and budgets apply; no tagging, publication, promotion, dependency, broader API or numerical work.
+
+### HP-PQS-PUBLIC-V021-TEST-01 - v0.2.1 bounded candidate preparation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `v0.2.1 Candidate Preparation`
+- **Owned paths:**
+  - `test` / `existing`: `test/core/runtests.jl`
+  - `test` / `existing`: `test/docs/public_surface_runtests.jl`
+  - `test` / `existing`: `test/docs/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `57e61403262042923605f94a28e910dd2b543550`
+  - `manager_pass`: `625`
+- **Dependencies:** `HP-PQS-PUBLIC-V021-FN-01`
+- **Scope:** Validate v0.2.1 Candidate Preparation through focused existing compatibility/public-surface/docs owners, bounded local tag-collision/rejection fixtures, one candidate matrix and isolated installation. Preserve the five reserved names and numerical CI. No new owner, broad angular rerun, benchmark campaign, release action or prose locks.
+
 ### HP-PQS-READER-DOC-01 - reader-facing PQS documentation entrance
 
 - **Lifecycle:** `implemented`
@@ -3030,7 +3073,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `543`
   - `manager_pass`: `545`
 - **Dependencies:** none
-- **Scope:** Maintain the post-v0.2 export cleanup implemented by commit 6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468. TimedNestedFixedBlockBuild and its root export remain absent. OneCenterAtomicNestedLayerStructure and QiuWhiteResidualGaussianOperators remain defined but unexported; retain the one-line QiuWhiteResidualGaussianOperators alias to OrdinaryCartesianOperators3D for qualified compatibility. The accepted production delta is +0/-7 across src/GaussletBases.jl and src/cartesian/cartesian\_nested\_faces.jl, and the undocumented exported-binding backlog is 71. Preserve CartesianBasisBundle3D and nested\_fixed\_block\_timing\_report absence, final\_units and unit\_keys internal-export absence, lowering\_recipe, ShellLocalAngularProfileKey, @timeg, CuratedSpherePointSet, LegacySGaussianData, QiuWhiteHybridOrbital3D, every ordinary/QW/nested numerical result, and immutable v0.2.0 tags/releases. Add no shim, warning, replacement API, alias deletion, docstring, test, helper, metadata, file, dependency, numerical change, workflow, version, tag, release, registration, or citation change. Ignored historical probes and conflicted copies remain untouched.
+- **Scope:** Maintain dynamic export integrity and earlier invalid-binding removals under Package Export Integrity. Pass 543's three-name absence condition is superseded exclusively by HP-PQS-PUBLIC-V021-FN-01 for patch compatibility. Preserve its historical evidence and all other exclusions; this maintenance record grants no additional export, numerical, or release change.
 
 ### HP-PUBLIC-EXPORT-INTEGRITY-TEST-01 - validate package export integrity
 
@@ -3051,7 +3094,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `543`
   - `manager_pass`: `545`
 - **Dependencies:** `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`
-- **Scope:** Maintain the compact dynamic regression in test/core/runtests.jl unchanged. It audits GaussletBases and every defined direct package-owned child module discovered with names(GaussletBases; all=true, imported=false) and parentmodule(child) === GaussletBases. For each name returned by names(module; all=false, imported=false), require the binding to be defined; when the value is a Function, require methods(value) to be nonempty. Commit 6e7bcbb7dae4e865dbdc0362b8f39ffd23f0a468 passed this owner while runtime inspection proved TimedNestedFixedBlockBuild absent, OneCenterAtomicNestedLayerStructure and QiuWhiteResidualGaussianOperators defined but unexported, and the undocumented export backlog reduced from 74 to 71. Preserve this invariant without editing tests, snapshotting an export list, classifying broader use, traversing external/imported modules, or adding numerical assertions. Add no test file, fixture, dependency, helper, compatibility assertion, version/release check, or broad architecture audit under this record.
+- **Scope:** Maintain the existing dynamic package/child-module binding and method checks under Package Export Integrity. Pass 543's absence observations remain historical evidence, not current compatibility requirements. Focused restoration checks belong exclusively to HP-PQS-PUBLIC-V021-TEST-01. No broader inventory framework, numerical assertions, or API reduction is granted.
 
 ### HP-PUBLIC-FOUNDATION-DOC-FN-01 - document foundational basis and mapping bindings
 
@@ -3177,7 +3220,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `585`
   - `manager_pass`: `586`
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-FN-01`, `HP-PQS-PUBLIC-COMPAT-FN-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`
-- **Scope:** Maintain the accepted \`docs\_fast\` append from 891bf3e84653197b90b930d7d5787be17d8fb998 in the existing Julia 1.10 Supported-floor row. Preserve every classifier, job/row/name, Julia version, numerical group, timeout, trigger, permission, paper/tag lane, and \`fast\` alias. No new row, dependency, source/API/export, numerical-policy, or release change.
+- **Scope:** Maintain the accepted docs\_fast Supported-floor selection under Paper-Aligned CI Boundary. Preserve classifier, jobs, versions, numerical groups, timeout, triggers, permissions and fast alias. Only HP-PQS-PUBLIC-V021-FN-01 may repair the tag verification reference; other tag/paper behavior remains unchanged. No new row, dependency, source/API/export or numerical-policy work under this maintenance record.
 
 ### HP-PUBLIC-PAPER-CI-TEST-01 - paper-aligned PQS and screening release validation
 
