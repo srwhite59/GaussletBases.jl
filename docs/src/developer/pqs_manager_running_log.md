@@ -993,3 +993,30 @@ metadata/status fields, types, helpers, or files: zero. Exact implementation
 blocker: none; both records are maintenance-only. Further near-origin work
 requires separate evidence and authority. Releases, stable pin, and handoffs
 remain unchanged.
+
+## Cartesian Hamiltonian Producer Pass 623 - Standard60 Decision Closed
+
+At `8112f09a4`, retain the exact unimplemented K60 proposal, parameters,
+fingerprint, and recovered evidence. Defer pending a named consumer and
+demonstrated accuracy/cost benefit; no successor or implementation grant.
+Pass 620 closed the demonstrated arithmetic discrepancies. Independent
+finite-expansion references still establish diffuse/long-range limitations;
+Pass 622's radial repair does not change that conclusion. No numerical reruns.
+
+The recovered Cr6+ 18-electron, 33-s/p-orbital control and independent integral
+evidence support atomic/local usefulness, not general molecular accuracy.
+Historical 32.9% integral-build savings warrant retaining the proposal but
+not another supported option without a current consumer. Neither the missing
+compact45 historical row nor repetition of the Cr6+ control blocks this
+decision. MT3 is deferred on consumer justification, not unresolved kernel
+arithmetic; represented-Hartree scaling remains separately blocked. No new MT.
+
+Deleted/simplified: obsolete kernel-assessment blocker and implied next-step
+implementation wording. Quarantined: deferred standard60/driver/provenance
+specification; retained because bounded accuracy/cost evidence is useful.
+Exact remaining prerequisite: named consumer, acceptance scale/error, and
+demonstrated benefit before separate authority. Source/test additions and
+deletions, new metadata/types/helpers/files: zero. Validation is limited to
+policy/diff review, package/docs/authority/self-test/views, Documenter, log
+bound, and remote docs-only checks. Defaults, compact/high maintenance,
+released/stable state, and handoffs remain unchanged. This decision is closed.

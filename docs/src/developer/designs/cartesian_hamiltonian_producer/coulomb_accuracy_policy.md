@@ -4,19 +4,16 @@ Status: compact/high producer policy implemented and maintenance-only under
 `HP-PQS-COULOMB-ACCURACY-FN-01` and
 `HP-PQS-COULOMB-ACCURACY-TEST-01`.
 
-Pass 616 placed standard60 implementation, fingerprint/provenance additions,
-canonical-driver exposure, and their new tests on hold following the
-Gaussian-kernel cancellation report. Pass 620 closes the bounded arithmetic
-repairs, not that hold: a separate approximation-policy decision is required. The exact
-K60 parameters and fingerprint remain retained design, not execution authority.
-This restriction overrides pending-implementation language and budgets below;
-those portions are deferred specifications, not permission to resume. Kernel
-repair also requires separate review and authority. No preset retuning, default,
-source, test, artifact-format, or release change is granted by Pass 616.
-Pass 617's separate Centered Determinant Repair below permits only that exact
-assignment and compact regression; it does not release the standard60 hold.
-Pass 620 closes Pass 619's Displaced Gaussian Arithmetic Repair below.
-Neither repair reauthorizes standard60 implementation or preset changes.
+Pass 623 retains standard60 as an unimplemented proposal, deferred pending a
+named consumer and demonstrated accuracy/cost benefit. The demonstrated kernel
+discrepancies are closed by the separately accepted centered and displaced
+repairs; genuine diffuse-density and long-range approximation limits remain.
+Exact K60 parameters, fingerprint, and recovered evidence are preserved.
+This restriction overrides pending-implementation language and budgets below:
+those are deferred specifications, not permission to resume source, test,
+fingerprint/provenance, or canonical-driver additions. No implementation grant,
+new numerical run, preset retuning, default change, release action, or successor
+packet is opened. Compact/high maintenance continues unchanged.
 
 One resolved `CoulombGaussianExpansion` must still govern every Coulomb-expanded
 part of an existing producer construction. Compact/high behavior is unchanged.
@@ -27,8 +24,8 @@ Cr and Cr2 consumers need internally consistent high-accuracy Hamiltonians.
 The implemented compact/high producer now resolves and carries one expansion
 through parent/PGDG construction, base unit-nuclear and IDA assembly,
 residual-GTO mixed/self and augmented unit-nuclear construction, and residual
-matched-width Gaussian (MWG) interaction assembly. The fixed standard tier is
-the remaining producer extension, now on hold.
+matched-width Gaussian (MWG) interaction assembly. Standard60 is a retained
+candidate, not a committed next producer extension.
 
 Choosing high accuracy at only one of those points would not define one
 Hamiltonian approximation. Parent factor packets, base `V_GG`, augmented
@@ -165,7 +162,22 @@ High135 is also finite: at the artificial normalized `a=1.3554e8,b=2a`
 pair its relative error was `6.23e-7`. This omits contraction weights and is
 not the recovered Cr6+ energy. It rules out an arbitrary-scale exact-oracle claim.
 
-### Kernel Assessment Hold
+### Standard60 Deferral
+
+Pass 623 replaces the obsolete kernel-assessment blocker with a consumer-led
+decision. The recovered Cr6+ control and independent Gaussian integrals support
+qualified atomic/local usefulness, not arbitrary molecular accuracy; even a
+same-center diffuse density can exceed the tested useful range. Historical
+32.9% integral-build savings justify retaining the proposal, not assuming a
+current end-to-end benefit or adding another supported option automatically.
+
+Reconsider only for a named current consumer with explicit density/separation
+scales, acceptable observable error, and demonstrated accuracy/cost benefit
+against existing options. If needed then, use one bounded consumer-specific
+comparison, reusing the recovered evidence; no repeat Cr6+ calculation, broad
+sweep, or search for the missing compact45 row is required now. High135 remains
+a finite reference, not an arbitrary-scale oracle. Separate implementation
+authority would still be required. This decision closes without a successor.
 
 At `a=1e-4,b=2e-4`, Pass 616 found the standard/high pair builder rejecting its quadratic
 form, although the independent integral is well-defined. In
@@ -179,7 +191,7 @@ selected `(11|22)` entries agree, but `integrals.tsv` records large complete
 pair-matrix discrepancies at R=100/300 for standard/high. Pass 619 below
 explains them by displaced-kernel arithmetic; Pass 620 accepts production
 replay of all four complete matrices and closes those arithmetic discrepancies.
-Reassess approximation limits separately before reauthorizing standard60.
+The finite-expansion limitations above survive those arithmetic repairs.
 No further kernel fix, clamping, new regression, or implementation is
 granted by the accuracy-policy records. Separate Pass 617 and Pass 619 records
 own the centered and displaced repairs; existing compact/high maintenance does not.
@@ -196,8 +208,9 @@ No implementation grant remains; the specification below now bounds maintenance.
 Core 1,897/1,897, public screening 22/22 plus example, atomic packet 117/117,
 docs 8/8 + 151/151 + 10/10, and zero-allocation warmed scalar checks passed.
 CI `34364324843` and Docs `34364324814` passed at that implementation SHA.
-Both displaced kernels, standard60, and complete-matrix discrepancies remain
-unresolved and outside this completed repair. No default-fixture failure or
+Displaced kernels and complete-matrix discrepancies were outside this centered
+repair and subsequently closed in Pass 620; standard60 remains deferred.
+No default-fixture failure or
 molecular-energy/end-to-end performance claim has been established.
 
 Pass 617 independently reviewed the bounded audit at `66634c9f8`:
@@ -414,7 +427,7 @@ regressions for review; do not hide them by weakening the reference or caching.
 ## Canonical Driver Exposure
 
 The canonical driver does not currently expose this input. The following
-deferred design requires fresh authority after the kernel assessment:
+deferred design requires fresh authority after a consumer-specific accuracy/cost decision:
 
 ```julia
 coulomb_accuracy = :compact  # :compact, :standard, or :high

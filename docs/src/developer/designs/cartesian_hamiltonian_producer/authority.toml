@@ -44,7 +44,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/contracted_par
 sha256 = "de6d346e8f5abae91343c572fed42006e26d9d07478819e805941d5d10fda63e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
-sha256 = "bed257d7a6567990c7f4878fb18a25080260a3d912fdd2b1400250fffc4ad987"
+sha256 = "6d4fb63bd9b76ec2bc948dca58f6108244d1ad006ddd4cd515a29caac25dfa09"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
 sha256 = "10a14e18f2fd94a4a63adba102fdbed81daf93fbdf857d0a14cbc716759c66f0"
@@ -2942,11 +2942,10 @@ title = "retired polish validation"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/atomic_hf_reference_packets.md"
 [[records]]
 dependency_ids = []
-evidence_refs = []
 grant = "maintenance"
 id = "HP-PQS-COULOMB-ACCURACY-FN-01"
 lifecycle = "implemented"
-scope = "Maintain implemented compact/high behavior under Coulomb Accuracy Policy, Kernel Assessment Hold. Standard60 implementation, fingerprint/provenance additions, canonical-driver exposure, and the newly reported determinant repair are excluded pending separate assessment and reauthorization. Preserve exact K60 parameters/fingerprint, defaults, and existing behavior; no retuning or broader molecular-accuracy claim."
+scope = "Maintain compact/high behavior under Coulomb Accuracy Policy, Standard60 Deferral. Standard60 remains unimplemented, deferred pending a named consumer and demonstrated accuracy/cost benefit. Preserve exact parameters/fingerprint and recovered evidence. Demonstrated kernel discrepancies are closed; diffuse/long-range limits remain. No implementation, provenance/driver additions, default change, retuning, or successor packet."
 surfaces = ["artifacts", "driver", "source"]
 title = "producer-wide Coulomb accuracy policy"
 
@@ -2954,6 +2953,10 @@ title = "producer-wide Coulomb accuracy policy"
     heading = "Producer-Wide Coulomb Accuracy Policy"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "623"
 
     [[records.paths]]
     kind = "driver"
@@ -3005,11 +3008,10 @@ title = "producer-wide Coulomb accuracy policy"
     state = "existing"
 [[records]]
 dependency_ids = []
-evidence_refs = []
 grant = "maintenance"
 id = "HP-PQS-COULOMB-ACCURACY-TEST-01"
 lifecycle = "completed"
-scope = "Maintain existing compact/high tests under Coulomb Accuracy Policy, Kernel Assessment Hold. Completion applies only to existing coverage, not deferred Standard60 or driver validation. No new standard60, provenance, driver, or determinant-repair tests until separately assessed and reauthorized; preserve existing assertions, defaults, and numerical policy."
+scope = "Maintain existing compact/high tests under Coulomb Accuracy Policy, Standard60 Deferral. Completion does not certify unimplemented standard60. Preserve existing assertions and numerical policy; no new standard60, provenance, driver, or kernel-repair tests, implementation grant, or successor packet. Reconsider only after a named consumer demonstrates accuracy/cost benefit under separate authority."
 surfaces = ["tests"]
 title = "Coulomb accuracy validation"
 
@@ -3017,6 +3019,10 @@ title = "Coulomb accuracy validation"
     heading = "Producer-Wide Coulomb Accuracy Policy"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accuracy_policy.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "623"
 
     [[records.paths]]
     kind = "test"

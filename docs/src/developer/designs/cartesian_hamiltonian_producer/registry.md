@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `3a5bcefccac864d4f5f9fcdd6a86326d0e8f6c2d7cb6a4b5aa0355beced4992a`.
+> [authority.toml](authority.toml), SHA-256 `ef6958fe35ade77fa27b963be5535b07da83153d94fe7db69d1eb36c12c583b3`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1769,9 +1769,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/ordinary/ordinary_coulomb.jl`
   - `source` / `existing`: `src/cartesian/pqs_source_box_low_order_materialization.jl`
   - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
-- **Evidence:** none
+- **Evidence:**
+  - `manager_pass`: `623`
 - **Dependencies:** none
-- **Scope:** Maintain implemented compact/high behavior under Coulomb Accuracy Policy, Kernel Assessment Hold. Standard60 implementation, fingerprint/provenance additions, canonical-driver exposure, and the newly reported determinant repair are excluded pending separate assessment and reauthorization. Preserve exact K60 parameters/fingerprint, defaults, and existing behavior; no retuning or broader molecular-accuracy claim.
+- **Scope:** Maintain compact/high behavior under Coulomb Accuracy Policy, Standard60 Deferral. Standard60 remains unimplemented, deferred pending a named consumer and demonstrated accuracy/cost benefit. Preserve exact parameters/fingerprint and recovered evidence. Demonstrated kernel discrepancies are closed; diffuse/long-range limits remain. No implementation, provenance/driver additions, default change, retuning, or successor packet.
 
 ### HP-PQS-COULOMB-ACCURACY-TEST-01 - Coulomb accuracy validation
 
@@ -1787,9 +1788,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
   - `test` / `existing`: `test/nested/cartesian_atomic_hf_reference_packet_runtests.jl`
   - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
-- **Evidence:** none
+- **Evidence:**
+  - `manager_pass`: `623`
 - **Dependencies:** none
-- **Scope:** Maintain existing compact/high tests under Coulomb Accuracy Policy, Kernel Assessment Hold. Completion applies only to existing coverage, not deferred Standard60 or driver validation. No new standard60, provenance, driver, or determinant-repair tests until separately assessed and reauthorized; preserve existing assertions, defaults, and numerical policy.
+- **Scope:** Maintain existing compact/high tests under Coulomb Accuracy Policy, Standard60 Deferral. Completion does not certify unimplemented standard60. Preserve existing assertions and numerical policy; no new standard60, provenance, driver, or kernel-repair tests, implementation grant, or successor packet. Reconsider only after a named consumer demonstrates accuracy/cost benefit under separate authority.
 
 ### HP-PQS-DOCS-TAGDEPLOY-FN-01 - tag-aware versioned documentation deployment
 
