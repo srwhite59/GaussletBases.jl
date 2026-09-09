@@ -938,3 +938,29 @@ scaling remain separate); MT4 active evidence; MT5 active maintenance;
 MT6 active carrying-cost control; MT7 completed/maintenance. No new medium-term
 goal or implementation is authorized. The next decision is whether and how to
 reassess standard60's validated range, not another implicit kernel grant.
+
+## Cartesian Hamiltonian Producer Pass 621 - Radial Exit Repair Authority
+
+Independently reviewed both September 9 radial reports against `52e166acf`
+and a scratch candidate. The fifth attempt reaches the existing overlap target
+for the supplemented 9/35-function fixtures, but roughly doubles construction
+cost: 0.406-0.466 to 0.804-0.900 seconds and 1.970-2.030 to 4.049-4.063
+seconds. This is an intentional numerical change, not a warning-only pass.
+MT1 gains honest construction/convergence behavior; no new medium-term goal.
+Quadrature remains a separate limitation: fixed improved-basis refine 64 to
+512 changes entry (1,1) by 0.0024226465/0.0036160909 bohr^-1. These are
+matrix changes, not energy-error estimates. Standard60/MT3 remain held.
+
+Authorize only `HP-RADIAL-CONVERGENCE-FN-01/TEST-01`. Independent scratch
+regressions passed 8/8 construction and 36/36 quadrature checks, including
+actual penultimate metrics and explicit hints/cutoffs. Source proposal +38/-31
+includes docstrings; executable part +21/-23. Tests estimate +48/-2; source,
+test, reader preferred/hard additions are 45/60, 55/70, 20/28. Deleted:
+obsolete quiet-high fallback and false latest-as-previous bookkeeping.
+Simplified: one truthful exhaustion warning; no result/cache/metadata/framework
+addition. Quarantined: larger sweeps and other numerical findings. Existing
+builders/quality checks remain because live radial/half-line consumers need
+them. Exact blocker: production implementation and existing core/radial plus
+full CI acceptance. This authority pass runs only package/docs/authority,
+self-test/views, Documenter, log/diff and remote docs-only checks; releases,
+stable pin, handoffs, and quadrature schedules/tolerances remain unchanged.
