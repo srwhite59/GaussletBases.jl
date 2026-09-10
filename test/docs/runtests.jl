@@ -81,10 +81,17 @@
         @test occursin("rev = \"v0.2.0\"", readme)
         @test !occursin("https://srwhite59.github.io/GaussletBases.jl/dev/", readme)
         @test occursin("version = \"0.2.1\"", root_project)
-        @test startswith(changelog, "# Changelog\n\n## v0.2.1 (unreleased)\n")
-        @test !occursin("rev = \"v0.2.1\"", readme)
-        @test contains_all(docs_make, "DOCS_TARGET[1] == :refresh ? \"Released API: v0.2.0\"",
-            "Unreleased v0.2.1 candidate; published release: v0.2.0", "\$(DOCS_API_LABEL)")
+        @test startswith(changelog, "# Changelog\n\n## v0.2.1\n")
+        @test occursin("rev = \"v0.2.1\"", readme)
+        @test _documentation_api_label(_documentation_target("push", "refs/tags/v0.2.1")) == "Versioned API: v0.2.1"
+        @test _documentation_api_label(_documentation_target("push", "refs/tags/v0.2.0-rc2")) == "Versioned API: v0.2.0-rc2"
+        sha = repeat("a", 40)
+        @test _documentation_api_label(_documentation_target("workflow_dispatch", "refs/heads/main";
+            mode="release-0.2.0", expected_sha=sha, sha, version="0.2.0")) == "Released API: v0.2.0"
+        for (event, ref) in (("push", "refs/heads/main"), ("pull_request", "refs/pull/1/merge"), ("", ""))
+            @test _documentation_api_label(_documentation_target(event, ref)) ==
+                "Unreleased v0.2.1 candidate; published release: v0.2.0"
+        end
         @test all(name -> occursin(Regex("(?m)^" * string(name) * "\$"), docs_site_reference_export),
             (:QiuWhiteResidualGaussianOperators, :OneCenterAtomicNestedLayerStructure, :TimedNestedFixedBlockBuild))
         @test contains_all(changelog, "cartesian_residual_gto_mwg_system",

@@ -34,6 +34,12 @@ function _documentation_target(event::String, ref::String;
     return (:tag, tag)
 end
 
+function _documentation_api_label(target)
+    target[1] == :refresh && return "Released API: v0.2.0"
+    target[1] == :tag && return "Versioned API: $(target[2])"
+    return "Unreleased v0.2.1 candidate; published release: v0.2.0"
+end
+
 function _documentation_publishable(context, target, site)
     snapshot = joinpath(site, "release-0.2.0")
     present = ispath(snapshot) || islink(snapshot)
@@ -81,8 +87,7 @@ DOCS_DEPLOY && DOCS_TARGET[1] ∉ (:dev, :tag, :refresh) &&
     error("documentation deployment is not allowed for context $(DOCS_TARGET[1])")
 const DOCS_CANONICAL = DOCS_CI && !isnothing(DOCS_TARGET[2]) ?
     "$(_DOCS_SITE)/$(DOCS_TARGET[1] == :refresh ? "stable" : DOCS_TARGET[2])/" : nothing
-const DOCS_API_LABEL = DOCS_TARGET[1] == :refresh ? "Released API: v0.2.0" :
-    "Unreleased v0.2.1 candidate; published release: v0.2.0"
+const DOCS_API_LABEL = _documentation_api_label(DOCS_TARGET)
 @info "Documentation build context" context = DOCS_TARGET[1] canonical = DOCS_CANONICAL deploy = DOCS_DEPLOY
 
 makedocs(

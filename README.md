@@ -68,11 +68,12 @@ alongside the radial/atomic workflow and experimental angular/hierarchy work.
 
 ## Installation
 
-At present, install the package directly from GitHub:
+After the v0.2.1 tag is published, install that version directly from GitHub:
+Before publication, use `rev = "v0.2.0"` instead in the command below.
 
 ```julia
 using Pkg
-Pkg.add(url = "https://github.com/srwhite59/GaussletBases.jl", rev = "v0.2.0")
+Pkg.add(url = "https://github.com/srwhite59/GaussletBases.jl", rev = "v0.2.1")
 ```
 
 Then load it with:
