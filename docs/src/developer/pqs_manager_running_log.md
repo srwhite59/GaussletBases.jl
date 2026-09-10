@@ -1047,3 +1047,25 @@ docs-only checks validate this pass; no numerical reruns or stable promotion.
 - Validation: authority/self-test, generated views, package load, docs,
   Documenter and diff checks required before repo-manager proceeds. Tagging,
   publication and stable promotion remain separate; release-0.2.0 stays pinned.
+
+### Pass 626: Candidate Context And Metadata Correction Authority
+
+Reviewed 3d26994f8dc5b7d5116ea2bc113a3e4fdf58f7d7: exact 354-export
+compatibility, restoration, archive hash and remote CI/Docs evidence agree.
+Actual production tag-label evaluation still says unreleased; final acceptance
+is withheld. The existing V021 pair is narrowed to five files for context-aware
+labels and coherent changelog, landing-page and conditional installation text.
+This supersedes initial candidate-only metadata instructions, not accepted
+source or tag-verifier behavior. LT public reliability advances; MT7 stays
+maintenance, with no new numerical or release goal. Root README/CHANGELOG
+changes require a full matrix under the unchanged classifier, despite the
+documentation-only substance; this authority commit uses docs-only checks.
+
+Deleted/simplified: replace phrase-presence checking with actual label-context
+evaluation; no parallel implementation. Quarantined: none. Retain released
+bindings and prior numerical evidence, contingent on explicit unchanged
+source/test comparison. Remaining blocker: corrected commit/tree/archive and
+rendered tag-context verification, then independent candidate review.
+Added/deleted src: 0/0; new tests/files/metadata: none in this authority pass.
+Authority/self-test, generated views, docs/package/build/log/diff and remote
+checks are required. No publication, tag or stable promotion is granted.

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `decb56efc991cc66418458887bb8c1f5ef0a7a1b2f5a3c67b550c223a44e8836`.
+> [authority.toml](authority.toml), SHA-256 `f1b40e2cc70e27dedc47148e2f30142ac135e902c07687a2d7790802d5d3d44d`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2617,26 +2617,20 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 - **Lifecycle:** `approved`
 - **Grant:** `implementation`
-- **Surfaces:** `docs`, `source`, `tools`
+- **Surfaces:** `docs`, `tools`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `v0.2.1 Candidate Preparation`
 - **Owned paths:**
   - `docs` / `existing`: `CHANGELOG.md`
   - `docs` / `existing`: `README.md`
-  - `docs` / `existing`: `docs/src/reference/export.md`
-  - `source` / `existing`: `Project.toml`
-  - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian/cartesian_nested_atomic.jl`
-  - `source` / `existing`: `src/cartesian/cartesian_nested_faces.jl`
-  - `source` / `existing`: `src/ordinary/ordinary_qw_types_and_bases.jl`
-  - `tool` / `existing`: `.github/workflows/ci.yml`
+  - `docs` / `existing`: `docs/src/index.md`
   - `tool` / `existing`: `docs/make.jl`
 - **Evidence:**
   - `git_commit`: `57e61403262042923605f94a28e910dd2b543550`
   - `manager_pass`: `625`
 - **Dependencies:** none
-- **Scope:** Prepare only the existing-file compatibility restoration, namespaced annotated-tag verifier, version/changelog and truthful candidate labels specified in v0.2.1 Candidate Preparation. Preserve released definitions, numerical behavior, stable snapshot and old releases. Exact paths and budgets apply; no tagging, publication, promotion, dependency, broader API or numerical work.
+- **Scope:** Correct only candidate footer contexts and final version metadata under v0.2.1 Candidate Preparation, Pass 626 amendment. Freeze the accepted restoration, tag verifier, numerical source and stable pin. Exact remaining paths/budgets apply; no release, tag, promotion, workflow, API or numerical edit.
 
 ### HP-PQS-PUBLIC-V021-TEST-01 - v0.2.1 bounded candidate preparation
 
@@ -2647,14 +2641,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Documents:**
   - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `v0.2.1 Candidate Preparation`
 - **Owned paths:**
-  - `test` / `existing`: `test/core/runtests.jl`
-  - `test` / `existing`: `test/docs/public_surface_runtests.jl`
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
   - `git_commit`: `57e61403262042923605f94a28e910dd2b543550`
   - `manager_pass`: `625`
 - **Dependencies:** `HP-PQS-PUBLIC-V021-FN-01`
-- **Scope:** Validate v0.2.1 Candidate Preparation through focused existing compatibility/public-surface/docs owners, bounded local tag-collision/rejection fixtures, one candidate matrix and isolated installation. Preserve the five reserved names and numerical CI. No new owner, broad angular rerun, benchmark campaign, release action or prose locks.
+- **Scope:** Evaluate actual production footer logic and rendered tag output; replace the source-string assertion in the existing docs owner under Pass 626. Validate the actual diff, unchanged implementation evidence and new archive identity before candidate acceptance. No numerical-test edits, classifier bypass, new owner or release action.
 
 ### HP-PQS-READER-DOC-01 - reader-facing PQS documentation entrance
 

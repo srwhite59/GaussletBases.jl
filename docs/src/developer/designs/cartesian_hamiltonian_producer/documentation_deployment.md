@@ -328,6 +328,10 @@ fixtures outside the repository, with no new framework or checked-in owner.
 
 ### Candidate and documentation boundaries
 
+The following initial metadata choices are superseded by the Pass 626
+correction below; they describe the reviewed first candidate, not the final
+tag target's remaining implementation grant.
+
 Change only Project version to `0.2.1`. Add a concise `v0.2.1 (unreleased)`
 changelog section above byte-identical release history: centered/displaced
 kernel arithmetic repairs, fifth radial construction attempt with early exit
@@ -392,3 +396,65 @@ and its canonical URLs, source links, README destinations and preserved old
 folders pass review. That later transaction must keep future main/tag
 deployments from undoing the selected pin. Standard60, represented-Hartree,
 arbitrary-position work and other cleanup remain outside this packet.
+
+### Pass 626: Final candidate metadata correction
+
+Independent review of candidate 3d26994f8dc5b7d5116ea2bc113a3e4fdf58f7d7
+(tree 28680f50bc9fd5ae1888178795b2234e0c031d6a) verified all 354 exports
+against v0.2.0, exact seven-line restoration, unchanged Project declarations
+except version, preserved changelog history and archive SHA-256
+5e76587aba8dee689b0e8af8a232985f855a028a30f89c2fe1b2292dcd463430.
+CI 34417435558 and Docs 34417435509 passed at that exact commit. However,
+evaluating the production footer for (:tag, "v0.2.1") still calls it an
+unreleased candidate. Final candidate acceptance remains pending correction.
+
+The existing V021 FN/TEST pair now grants only these five existing files:
+- `docs/make.jl`: label refresh exactly `Released API: v0.2.0`; label tag
+  `Versioned API: <validated tag>`, using the validated documentation target,
+  never raw environment text. Development, PR and local contexts retain
+  candidate wording. One small testable label function is permitted in this
+  existing file before its build guard, replacing the inline logic; no parallel
+  implementation, production-source helper or new framework. Preferred/hard
+  added lines: 10/16.
+- `test/docs/runtests.jl`: replace the source-string label assertion with
+  evaluations of the actual production logic for refresh, tag, dev, PR and
+  local contexts. Obtain contexts through the existing target validator;
+  retain malformed-tag rejection. Update only affected version/install checks.
+  Preferred/hard added lines: 16/24; no new owner or descriptive phrase locks.
+- `CHANGELOG.md`: replace only `v0.2.1 (unreleased)` with `v0.2.1` (one line).
+  This is a version-scoped change record, not a publication claim. No release
+  date or availability assertion; all change notes and old history unchanged.
+- `docs/src/index.md`: identify the documented API as package v0.2.1 without
+  claiming release/publication. Preserve expert/internal distinctions and
+  onboarding; preferred/hard additions 4/6 lines. The frozen stable snapshot
+  is not rebuilt and remains the v0.2.0 reader contract.
+- `README.md`: use `rev = "v0.2.1"` in the installation example, explicitly
+  conditioned on publication of that tag. Retain a concise prepublication
+  fallback to `rev = "v0.2.0"`. This wording remains true in immutable files;
+  no claim that v0.2.1 is available now. Keep existing stable links and all other
+  onboarding content unchanged; preferred/hard additions 4/6 lines.
+
+These correction budgets are incremental from 3d26994f, not a fresh grant
+to alter previously accepted compatibility/source/workflow implementation.
+All src files, Project.toml, non-doc tests, shared public-surface owner,
+examples, dependencies, workflows and tag verifier must remain byte-identical.
+Keep stable => release-0.2.0 and every deployment safeguard unchanged.
+
+Group the required metadata corrections into one push. Root README/CHANGELOG
+edits require the existing full matrix; do not bypass the classifier or call
+the implementation docs-only. The authority amendment itself is docs-only.
+Reuse previous kernel/compatibility/rehearsal evidence only after explicit
+unchanged-source/test comparisons. No full angular run or benchmark campaign.
+Require package load, docs_fast/full docs, authority/self-test, generated-view
+parity, Documenter, log/diff checks and normal CI/Docs on the corrected head.
+Build tag-context documentation locally with deployment disabled; inspect the
+rendered footer and canonical URL, not just a mocked label or source strings.
+
+Recreate the corrected archive from the new commit; record its commit, tree,
+entry/byte counts and SHA-256, exclusions, and exact tree reconstruction.
+Do not reuse the old archive hash. Verify an isolated archive installation/load
+and small Example 01; this is not a numerical benchmark rerun. Repo-manager
+hands back these identities and run IDs for independent review. Do not mark
+the candidate accepted or close the lifecycle beforehand. Stop on any scope
+expansion, failed context, changed protected implementation or budget overrun.
+No new RC, tag, publication, stable promotion or unrelated work is authorized.

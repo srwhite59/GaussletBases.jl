@@ -3,10 +3,11 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
-Pass 625 authorizes only [v0.2.1 candidate preparation](pqs_public_surface.md#v021-Candidate-Preparation)
-under HP-PQS-PUBLIC-V021-FN-01/TEST-01: restore three released bindings,
-repair tag-reference collision handling, and prepare truthful candidate labels.
-No candidate is accepted yet; no tag, publication, or stable promotion is granted.
+Pass 626 amends [v0.2.1 candidate preparation](documentation_deployment.md#Pass-626:-Final-candidate-metadata-correction)
+under HP-PQS-PUBLIC-V021-FN-01/TEST-01 for footer-context and final metadata
+correction only. Candidate 3d26994f passed compatibility and numerical gates,
+but its tag footer still says unreleased. Final acceptance awaits correction;
+no tag, publication, or stable promotion is granted.
 The stable pin remains release-0.2.0. Standard60 and other deferred work stay separate.
 
 Start with [README](README.md), this page, and [invariants](invariants.md), then
