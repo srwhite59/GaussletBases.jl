@@ -47,7 +47,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accura
 sha256 = "6d4fb63bd9b76ec2bc948dca58f6108244d1ad006ddd4cd515a29caac25dfa09"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
-sha256 = "ee9ffd5eef98bbc0c696624e86638f89e1f628f5253406efc074e261f48bacf9"
+sha256 = "1e2080582b200ccfb0fc0946c339ee462abceb8cc8dae5c9ffb48d2fbd99e046"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_cartesian_gto_interchange.md"
 sha256 = "ad03094c9baa79a724a1b97ea4ac7a1cad1bf336c87dd5d54a49db88989f584e"
@@ -4616,8 +4616,8 @@ dependency_ids = []
 grant = "implementation"
 id = "HP-PQS-PUBLIC-V021-FN-01"
 lifecycle = "approved"
-scope = "Prepare only the existing-file compatibility restoration, namespaced annotated-tag verifier, version/changelog and truthful candidate labels specified in v0.2.1 Candidate Preparation. Preserve released definitions, numerical behavior, stable snapshot and old releases. Exact paths and budgets apply; no tagging, publication, promotion, dependency, broader API or numerical work."
-surfaces = ["docs", "source", "tools"]
+scope = "Correct only candidate footer contexts and final version metadata under v0.2.1 Candidate Preparation, Pass 626 amendment. Freeze the accepted restoration, tag verifier, numerical source and stable pin. Exact remaining paths/budgets apply; no release, tag, promotion, workflow, API or numerical edit."
+surfaces = ["docs", "tools"]
 title = "v0.2.1 bounded candidate preparation"
 
     [[records.document_refs]]
@@ -4642,31 +4642,7 @@ title = "v0.2.1 bounded candidate preparation"
     state = "existing"
     [[records.paths]]
     kind = "docs"
-    path = "docs/src/reference/export.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "Project.toml"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/GaussletBases.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_nested_atomic.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_nested_faces.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/ordinary/ordinary_qw_types_and_bases.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "tool"
-    path = ".github/workflows/ci.yml"
+    path = "docs/src/index.md"
     state = "existing"
     [[records.paths]]
     kind = "tool"
@@ -4677,7 +4653,7 @@ dependency_ids = ["HP-PQS-PUBLIC-V021-FN-01"]
 grant = "implementation"
 id = "HP-PQS-PUBLIC-V021-TEST-01"
 lifecycle = "approved"
-scope = "Validate v0.2.1 Candidate Preparation through focused existing compatibility/public-surface/docs owners, bounded local tag-collision/rejection fixtures, one candidate matrix and isolated installation. Preserve the five reserved names and numerical CI. No new owner, broad angular rerun, benchmark campaign, release action or prose locks."
+scope = "Evaluate actual production footer logic and rendered tag output; replace the source-string assertion in the existing docs owner under Pass 626. Validate the actual diff, unchanged implementation evidence and new archive identity before candidate acceptance. No numerical-test edits, classifier bypass, new owner or release action."
 surfaces = ["tests"]
 title = "v0.2.1 bounded candidate preparation"
 
@@ -4693,14 +4669,6 @@ title = "v0.2.1 bounded candidate preparation"
     kind = "manager_pass"
     value = "625"
 
-    [[records.paths]]
-    kind = "test"
-    path = "test/core/runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/docs/public_surface_runtests.jl"
-    state = "existing"
     [[records.paths]]
     kind = "test"
     path = "test/docs/runtests.jl"
