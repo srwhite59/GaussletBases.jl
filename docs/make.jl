@@ -2,7 +2,7 @@ const _DOCS_SITE = "https://srwhite59.github.io/GaussletBases.jl"
 const _DOCS_VERSION_TAG =
     r"^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$"
 const _DOCS_VERSIONS = [
-    "stable" => "release-0.2.0",
+    "stable" => "v0.2.1",
     "v#.#",
     "v0.2.0-rc2" => "v0.2.0-rc2",
     "v0.2.0-rc1" => "v0.2.0-rc1",
@@ -37,7 +37,7 @@ end
 function _documentation_api_label(target)
     target[1] == :refresh && return "Released API: v0.2.0"
     target[1] == :tag && return "Versioned API: $(target[2])"
-    return "Unreleased v0.2.1 candidate; published release: v0.2.0"
+    return "Development API: v0.2.1; published release: v0.2.1"
 end
 
 function _documentation_publishable(context, target, site)

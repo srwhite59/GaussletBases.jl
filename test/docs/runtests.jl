@@ -90,7 +90,7 @@
             mode="release-0.2.0", expected_sha=sha, sha, version="0.2.0")) == "Released API: v0.2.0"
         for (event, ref) in (("push", "refs/heads/main"), ("pull_request", "refs/pull/1/merge"), ("", ""))
             @test _documentation_api_label(_documentation_target(event, ref)) ==
-                "Unreleased v0.2.1 candidate; published release: v0.2.0"
+                "Development API: v0.2.1; published release: v0.2.1"
         end
         @test all(name -> occursin(Regex("(?m)^" * string(name) * "\$"), docs_site_reference_export),
             (:QiuWhiteResidualGaussianOperators, :OneCenterAtomicNestedLayerStructure, :TimedNestedFixedBlockBuild))
@@ -465,7 +465,7 @@
         @test !occursin(r"(?m)^  (push|pull_request):", maintenance_workflow)
         @test length(findall("julia --project=. test/nested/", maintenance_workflow)) == 5
         @test _DOCS_VERSIONS == Any[
-            "stable" => "release-0.2.0",
+            "stable" => "v0.2.1",
             "v#.#",
             "v0.2.0-rc2" => "v0.2.0-rc2",
             "v0.2.0-rc1" => "v0.2.0-rc1",
@@ -490,13 +490,13 @@
         end
         mktempdir() do directory
             foreach(entry -> mkpath(joinpath(directory, entry)),
-                ("dev", "release-0.2.0", "v0.2.0", "v0.2.0-rc2", "v0.2.0-rc1"))
+                ("dev", "release-0.2.0", "v0.2.0", "v0.2.1", "v0.2.0-rc2", "v0.2.0-rc1"))
             script = """
                 using Documenter
                 entries, symlinks = Documenter.Writers.HTMLWriter.expand_versions(
                     $(repr(directory)), $(repr(_DOCS_VERSIONS)))
                 @assert entries == ["stable", "v0.2", "v0.2.0-rc2", "v0.2.0-rc1", "dev"]
-                @assert symlinks == ["stable" => "release-0.2.0", "v0.2" => "v0.2.0"]
+                @assert symlinks == ["stable" => "v0.2.1", "v0.2" => "v0.2.1"]
                 """
             command = `$(Base.julia_cmd()) --project=$(joinpath(_PROJECT_ROOT, "docs")) --startup-file=no -e $script`
             @test success(command)
