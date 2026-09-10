@@ -1096,3 +1096,32 @@ objects and documentation snapshots. Exact blocker: successful ordered execution
 any failure preserves completed objects and stops. Added/deleted src: 0/0;
 new tests/files/metadata: none in authority. Validation is authority/self-test,
 generated views, package/docs/build/log/diff and docs-only remote checks.
+
+### Pass 628: v0.2.1 Release And Stable Closeout
+
+Accepted publication 386324250 (final/latest, zero assets) at candidate
+2ad8441efe8328b4f325bf42994925d8f2a491c9, tree
+4343ba110ada71fe7085fb9d2c504886a2e7a1e9; annotated object
+c95f8868afc7a0b703f2fd97bb7b5c4af17416b8. The frozen 1,677-byte body
+retains SHA-256 e13082c0bcff9e89c11157a94de31d1898ee02a50f8ed814f324bd691ae00c10.
+Automatic tar/zip reconstruct the exact tree: hashes
+afa1eb012dac8adb5a872296910b421c6a1a5ce16ce122dc5a0715d6b4a4294d and
+fe03ec8fe3346d4b62b02f875c85d545774b52eedac314925f5eefeb11da82be.
+Remote installation/load and Example 01 passed. Tag CI/Docs
+34434227579/34434227566 passed. Promotion
+1d440f8f78c052b41e86a93651d4268d5080388d matches the frozen +6/-6 patch;
+CI/Docs 34485494842/34485494779 passed without numerical reruns.
+
+Reviewed completed HTTP evidence: all 14 README destinations, canonical/footer
+checks, reference source pins, stable/versioned byte equality, root, selectors,
+dev and unchanged protected trees. Sandbox DNS and scratch-parser stops were
+resolved by explicit read-only resumptions, never by changing published objects.
+Evidence SHA-256: 70139f388a131790729230b3e06abb12b0d0fa820adbee89b96fe160fcfb4c2f.
+LT public reliability advances; MT7 stays maintenance. Deleted: temporary
+execution grants. Simplified: stable points directly to verified v0.2.1.
+Quarantined: none; immutable release evidence is retained. Added/deleted source:
+0/0; new tests/files/metadata: none. Remaining gate is this docs-only closeout's
+normal-main deployment and stable-pin persistence check. Existing scientific
+limitations remain; no successor task is opened.
+Local closeout checks passed: authority/self-test and generated parity,
+package load, docs 8/8 +162/162 +10/10, Documenter, log bound and diff checks.

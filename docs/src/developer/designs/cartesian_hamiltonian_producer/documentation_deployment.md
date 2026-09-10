@@ -461,6 +461,15 @@ No new RC, tag, publication, stable promotion or unrelated work is authorized.
 
 ## v0.2.1 Conditional Release And Stable Promotion
 
+Pass 628 closeout: the transaction below is completed historical authority,
+not a reusable execution grant. Release 386324250 is final/latest with zero
+assets. Annotated object c95f8868afc7a0b703f2fd97bb7b5c4af17416b8 peels to
+the accepted candidate below. Promotion 1d440f8f78c052b41e86a93651d4268d5080388d
+pins stable to the unchanged v0.2.1 directory
+e8e78d37dc6576f4b54d2166b4d1a014e59881ab. Preserve that pin on normal
+deployments; the older release-0.2.0 pin instructions are historical.
+Both temporary records are completed/none. The frozen payloads remain evidence.
+
 Pass 627 closes candidate preparation and records the user's explicit combined
 release/promotion authorization. This is the sole version-specific exception
 to prior candidate no-release/no-promotion language and the v0.2.0 stable-pin

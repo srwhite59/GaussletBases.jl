@@ -47,7 +47,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/coulomb_accura
 sha256 = "6d4fb63bd9b76ec2bc948dca58f6108244d1ad006ddd4cd515a29caac25dfa09"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
-sha256 = "f5cc8beb26ea88eaaafab8465484b9c30325d89dbb600ef1c1ec94ebfdc679b5"
+sha256 = "c7192b74924035e1e38ae714f7cb9179a26470f61ba40ff2924893a1066a7e85"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_cartesian_gto_interchange.md"
 sha256 = "ad03094c9baa79a724a1b97ea4ac7a1cad1bf336c87dd5d54a49db88989f584e"
@@ -3049,7 +3049,7 @@ dependency_ids = ["HP-PQS-PUBLIC-DOC-01", "HP-PQS-PUBLIC-DOC-PARITY-FN-01"]
 grant = "maintenance"
 id = "HP-PQS-DOCS-TAGDEPLOY-FN-01"
 lifecycle = "implemented"
-scope = "Maintain the Docs workflow and deployment safeguards under Released Documentation Refresh. Preserve frozen snapshots, old version folders, exact-SHA gate and main/tag/PR separation. Only the V021-RELEASE pair may execute its conditional stable-pin and label patch; thereafter preserve that accepted pin. This maintenance record grants no publication, source change, tag mutation, dependency or deployment framework."
+scope = "Maintain the Docs workflow and deployment safeguards under Released Documentation Refresh. Preserve frozen snapshots, old version folders, exact-SHA gate and main/tag/PR separation. Preserve the accepted v0.2.1 stable pin; the conditional promotion grant is exhausted. This maintenance record grants no publication, source change, tag mutation, dependency or deployment framework."
 surfaces = ["docs", "tools"]
 title = "tag-aware versioned documentation deployment"
 
@@ -4617,7 +4617,7 @@ grant = "none"
 id = "HP-PQS-PUBLIC-V021-FN-01"
 lifecycle = "completed"
 paths = []
-scope = "Completed exact v0.2.1 candidate acceptance under v0.2.1 Candidate Preparation. Commit 2ad8441efe8328b4f325bf42994925d8f2a491c9 and tree 4343ba110ada71fe7085fb9d2c504886a2e7a1e9 passed independent review. No preparation grant remains; conditional publication and promotion belong only to the V021-RELEASE pair. Preserve the candidate and prior evidence."
+scope = "Completed exact v0.2.1 candidate acceptance under v0.2.1 Candidate Preparation. Commit 2ad8441efe8328b4f325bf42994925d8f2a491c9 and tree 4343ba110ada71fe7085fb9d2c504886a2e7a1e9 passed independent review. No preparation, publication or promotion grant remains. Preserve the candidate and prior evidence."
 surfaces = []
 title = "v0.2.1 accepted candidate"
 
@@ -4640,11 +4640,12 @@ title = "v0.2.1 accepted candidate"
     value = "627"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-PQS-PUBLIC-V021-RELEASE-FN-01"
-lifecycle = "approved"
-scope = "Execute only the exact v0.2.1 annotated tag, frozen final/latest zero-asset GitHub release and conditional post-publication stable patch in v0.2.1 Conditional Release And Stable Promotion. Frozen target, body hash, order, checks and stop rule are mandatory. No numerical/source work, other release, retry, tag movement, registration or successor grant."
-surfaces = ["docs", "tools"]
+lifecycle = "completed"
+paths = []
+scope = "Completed v0.2.1 publication and stable promotion under v0.2.1 Conditional Release And Stable Promotion. Preserve immutable candidate, tag, release, protected folders and accepted stable pin. All temporary execution authority is exhausted; no further publication, promotion, retry or successor work is granted."
+surfaces = []
 title = "v0.2.1 conditional release and stable promotion"
 
     [[records.document_refs]]
@@ -4658,22 +4659,14 @@ title = "v0.2.1 conditional release and stable promotion"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "627"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "tool"
-    path = "docs/make.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-PUBLIC-V021-RELEASE-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-PQS-PUBLIC-V021-RELEASE-TEST-01"
-lifecycle = "approved"
-scope = "Verify exact tag/release/archive and deployed documentation identities, apply only the frozen selector/context test substitutions, and validate stable persistence under v0.2.1 Conditional Release And Stable Promotion. Preserve numerical tests, source, workflows and all immutable folders. Stop on any failure or partial state; remove this temporary grant after final acceptance."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Completed v0.2.1 publication and stable promotion under v0.2.1 Conditional Release And Stable Promotion. Preserve immutable candidate, tag, release, protected folders and accepted stable pin. All temporary execution authority is exhausted; no further publication, promotion, retry or successor work is granted."
+surfaces = []
 title = "v0.2.1 conditional release and stable promotion"
 
     [[records.document_refs]]
@@ -4687,18 +4680,13 @@ title = "v0.2.1 conditional release and stable promotion"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "627"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/docs/runtests.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-PUBLIC-V021-FN-01"]
 grant = "none"
 id = "HP-PQS-PUBLIC-V021-TEST-01"
 lifecycle = "completed"
 paths = []
-scope = "Completed exact v0.2.1 candidate acceptance under v0.2.1 Candidate Preparation. Commit 2ad8441efe8328b4f325bf42994925d8f2a491c9 and tree 4343ba110ada71fe7085fb9d2c504886a2e7a1e9 passed independent review. No preparation grant remains; conditional publication and promotion belong only to the V021-RELEASE pair. Preserve the candidate and prior evidence."
+scope = "Completed exact v0.2.1 candidate acceptance under v0.2.1 Candidate Preparation. Commit 2ad8441efe8328b4f325bf42994925d8f2a491c9 and tree 4343ba110ada71fe7085fb9d2c504886a2e7a1e9 passed independent review. No preparation, publication or promotion grant remains. Preserve the candidate and prior evidence."
 surfaces = []
 title = "v0.2.1 accepted candidate"
 

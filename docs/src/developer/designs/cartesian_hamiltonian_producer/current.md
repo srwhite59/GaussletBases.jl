@@ -3,13 +3,12 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
-Pass 627 closes v0.2.1 candidate preparation at accepted commit
-2ad8441efe8328b4f325bf42994925d8f2a491c9 and authorizes the exact
-[conditional release and stable promotion](documentation_deployment.md#v021-Conditional-Release-And-Stable-Promotion)
-under HP-PQS-PUBLIC-V021-RELEASE-FN-01/TEST-01. Execution waits for this
-authority commit and its checks; tag, publication and promotion have not run.
-Stable remains release-0.2.0 until the ordered post-publication condition holds.
-No numerical rerun or successor task is authorized.
+v0.2.1 is published at accepted commit
+2ad8441efe8328b4f325bf42994925d8f2a491c9. Stable now targets its verified
+versioned documentation; prior release folders remain unchanged.
+Pass 628 closes the [release transaction](documentation_deployment.md#v021-Conditional-Release-And-Stable-Promotion)
+and removes both temporary execution grants. Normal-main deployment must
+preserve this pin. No numerical rerun, further release or successor is authorized.
 
 Start with [README](README.md), this page, and [invariants](invariants.md), then
 read only the assigned generated registry entry and linked canonical contract.

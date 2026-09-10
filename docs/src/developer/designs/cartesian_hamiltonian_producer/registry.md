@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `d7a0537d7ad3a423e911bfd62213dedaa5584a8625dfdf45493a8bcb391e303d`.
+> [authority.toml](authority.toml), SHA-256 `a5b2c8b13c79dc0602d3d13ec2c235d19ab5d5980c6232c8340ad1027c09a9f1`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1822,7 +1822,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `520`
   - `manager_pass`: `522`
 - **Dependencies:** `HP-PQS-PUBLIC-DOC-01`, `HP-PQS-PUBLIC-DOC-PARITY-FN-01`
-- **Scope:** Maintain the Docs workflow and deployment safeguards under Released Documentation Refresh. Preserve frozen snapshots, old version folders, exact-SHA gate and main/tag/PR separation. Only the V021-RELEASE pair may execute its conditional stable-pin and label patch; thereafter preserve that accepted pin. This maintenance record grants no publication, source change, tag mutation, dependency or deployment framework.
+- **Scope:** Maintain the Docs workflow and deployment safeguards under Released Documentation Refresh. Preserve frozen snapshots, old version folders, exact-SHA gate and main/tag/PR separation. Preserve the accepted v0.2.1 stable pin; the conditional promotion grant is exhausted. This maintenance record grants no publication, source change, tag mutation, dependency or deployment framework.
 
 ### HP-PQS-DOCS-TAGDEPLOY-TEST-01 - tag-aware documentation deployment validation
 
@@ -2628,40 +2628,37 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `625`
   - `manager_pass`: `627`
 - **Dependencies:** none
-- **Scope:** Completed exact v0.2.1 candidate acceptance under v0.2.1 Candidate Preparation. Commit 2ad8441efe8328b4f325bf42994925d8f2a491c9 and tree 4343ba110ada71fe7085fb9d2c504886a2e7a1e9 passed independent review. No preparation grant remains; conditional publication and promotion belong only to the V021-RELEASE pair. Preserve the candidate and prior evidence.
+- **Scope:** Completed exact v0.2.1 candidate acceptance under v0.2.1 Candidate Preparation. Commit 2ad8441efe8328b4f325bf42994925d8f2a491c9 and tree 4343ba110ada71fe7085fb9d2c504886a2e7a1e9 passed independent review. No preparation, publication or promotion grant remains. Preserve the candidate and prior evidence.
 
 ### HP-PQS-PUBLIC-V021-RELEASE-FN-01 - v0.2.1 conditional release and stable promotion
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `docs`, `tools`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `v0.2.1 Conditional Release And Stable Promotion`
-- **Owned paths:**
-  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md`
-  - `tool` / `existing`: `docs/make.jl`
+- **Owned paths:** none
 - **Evidence:**
   - `git_commit`: `2ad8441efe8328b4f325bf42994925d8f2a491c9`
   - `manager_pass`: `627`
 - **Dependencies:** none
-- **Scope:** Execute only the exact v0.2.1 annotated tag, frozen final/latest zero-asset GitHub release and conditional post-publication stable patch in v0.2.1 Conditional Release And Stable Promotion. Frozen target, body hash, order, checks and stop rule are mandatory. No numerical/source work, other release, retry, tag movement, registration or successor grant.
+- **Scope:** Completed v0.2.1 publication and stable promotion under v0.2.1 Conditional Release And Stable Promotion. Preserve immutable candidate, tag, release, protected folders and accepted stable pin. All temporary execution authority is exhausted; no further publication, promotion, retry or successor work is granted.
 
 ### HP-PQS-PUBLIC-V021-RELEASE-TEST-01 - v0.2.1 conditional release and stable promotion
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `v0.2.1 Conditional Release And Stable Promotion`
-- **Owned paths:**
-  - `test` / `existing`: `test/docs/runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
   - `git_commit`: `2ad8441efe8328b4f325bf42994925d8f2a491c9`
   - `manager_pass`: `627`
 - **Dependencies:** `HP-PQS-PUBLIC-V021-RELEASE-FN-01`
-- **Scope:** Verify exact tag/release/archive and deployed documentation identities, apply only the frozen selector/context test substitutions, and validate stable persistence under v0.2.1 Conditional Release And Stable Promotion. Preserve numerical tests, source, workflows and all immutable folders. Stop on any failure or partial state; remove this temporary grant after final acceptance.
+- **Scope:** Completed v0.2.1 publication and stable promotion under v0.2.1 Conditional Release And Stable Promotion. Preserve immutable candidate, tag, release, protected folders and accepted stable pin. All temporary execution authority is exhausted; no further publication, promotion, retry or successor work is granted.
 
 ### HP-PQS-PUBLIC-V021-TEST-01 - v0.2.1 accepted candidate
 
@@ -2678,7 +2675,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `625`
   - `manager_pass`: `627`
 - **Dependencies:** `HP-PQS-PUBLIC-V021-FN-01`
-- **Scope:** Completed exact v0.2.1 candidate acceptance under v0.2.1 Candidate Preparation. Commit 2ad8441efe8328b4f325bf42994925d8f2a491c9 and tree 4343ba110ada71fe7085fb9d2c504886a2e7a1e9 passed independent review. No preparation grant remains; conditional publication and promotion belong only to the V021-RELEASE pair. Preserve the candidate and prior evidence.
+- **Scope:** Completed exact v0.2.1 candidate acceptance under v0.2.1 Candidate Preparation. Commit 2ad8441efe8328b4f325bf42994925d8f2a491c9 and tree 4343ba110ada71fe7085fb9d2c504886a2e7a1e9 passed independent review. No preparation, publication or promotion grant remains. Preserve the candidate and prior evidence.
 
 ### HP-PQS-READER-DOC-01 - reader-facing PQS documentation entrance
 
