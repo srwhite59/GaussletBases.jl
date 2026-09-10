@@ -1069,3 +1069,30 @@ rendered tag-context verification, then independent candidate review.
 Added/deleted src: 0/0; new tests/files/metadata: none in this authority pass.
 Authority/self-test, generated views, docs/package/build/log/diff and remote
 checks are required. No publication, tag or stable promotion is granted.
+
+### Pass 627: Candidate Closeout And Conditional v0.2.1 Release
+
+The user explicitly authorized this combined transition, overriding the usual
+separate release-authority review boundary for this transaction only. Accepted
+candidate 2ad8441efe8328b4f325bf42994925d8f2a491c9 has tree
+4343ba110ada71fe7085fb9d2c504886a2e7a1e9; its 690-entry, 10,854,400-byte
+archive hash is 8db862e58e083fca604b2e10ec297fede7ea69422f5543cd4f87060ff6eae198.
+Independent archive/tree/exclusion, protected implementation and rendered-tag
+review passed; docs 8/8 +162/162 +10/10 and exact-head CI 34429827030/Docs
+34429827052 passed. Candidate FN/TEST grants are exhausted, not reopened.
+
+The new temporary V021-RELEASE pair owns the exact annotated tag, frozen
+1,677-byte body/final/latest/no-assets publication, then the frozen six-line
+stable/label/selector substitution patch. Scratch substitution and actual
+Documenter/label checks passed 11/11. Stable changes only after publication
+and live versioned-doc verification; no copy through a symlink. One final
+docs-only closeout removes the temporary grants and verifies pin persistence.
+LT public-package reliability advances; MT7 remains maintenance. No new RC or
+scientific goal: Standard60 and existing radial/molecular limitations remain.
+
+Deleted: temporary candidate execution surfaces. Simplified: one ordered grant
+without another approval cycle. Quarantined: none. Retained: all old release
+objects and documentation snapshots. Exact blocker: successful ordered execution;
+any failure preserves completed objects and stops. Added/deleted src: 0/0;
+new tests/files/metadata: none in authority. Validation is authority/self-test,
+generated views, package/docs/build/log/diff and docs-only remote checks.

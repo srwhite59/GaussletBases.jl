@@ -3,12 +3,13 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
-Pass 626 amends [v0.2.1 candidate preparation](documentation_deployment.md#Pass-626:-Final-candidate-metadata-correction)
-under HP-PQS-PUBLIC-V021-FN-01/TEST-01 for footer-context and final metadata
-correction only. Candidate 3d26994f passed compatibility and numerical gates,
-but its tag footer still says unreleased. Final acceptance awaits correction;
-no tag, publication, or stable promotion is granted.
-The stable pin remains release-0.2.0. Standard60 and other deferred work stay separate.
+Pass 627 closes v0.2.1 candidate preparation at accepted commit
+2ad8441efe8328b4f325bf42994925d8f2a491c9 and authorizes the exact
+[conditional release and stable promotion](documentation_deployment.md#v021-Conditional-Release-And-Stable-Promotion)
+under HP-PQS-PUBLIC-V021-RELEASE-FN-01/TEST-01. Execution waits for this
+authority commit and its checks; tag, publication and promotion have not run.
+Stable remains release-0.2.0 until the ordered post-publication condition holds.
+No numerical rerun or successor task is authorized.
 
 Start with [README](README.md), this page, and [invariants](invariants.md), then
 read only the assigned generated registry entry and linked canonical contract.

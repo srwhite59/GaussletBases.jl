@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `f1b40e2cc70e27dedc47148e2f30142ac135e902c07687a2d7790802d5d3d44d`.
+> [authority.toml](authority.toml), SHA-256 `d7a0537d7ad3a423e911bfd62213dedaa5584a8625dfdf45493a8bcb391e303d`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1822,7 +1822,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `520`
   - `manager_pass`: `522`
 - **Dependencies:** `HP-PQS-PUBLIC-DOC-01`, `HP-PQS-PUBLIC-DOC-PARITY-FN-01`
-- **Scope:** Maintain the accepted Docs workflow, make.jl, and revision labels under Released Documentation Refresh in documentation\_deployment.md. Preserve the frozen release-0.2.0 snapshot, stable pin, original version folders, exact-SHA gate, and main/tag/PR separation. No remaining implementation/publication grant, source change, package release, tag mutation, dependency, or deployment framework.
+- **Scope:** Maintain the Docs workflow and deployment safeguards under Released Documentation Refresh. Preserve frozen snapshots, old version folders, exact-SHA gate and main/tag/PR separation. Only the V021-RELEASE pair may execute its conditional stable-pin and label patch; thereafter preserve that accepted pin. This maintenance record grants no publication, source change, tag mutation, dependency or deployment framework.
 
 ### HP-PQS-DOCS-TAGDEPLOY-TEST-01 - tag-aware documentation deployment validation
 
@@ -2613,40 +2613,72 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Dependencies:** `HP-PQS-DOCS-TAGDEPLOY-TEST-01`, `HP-PQS-PUBLIC-MATCHED-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PQS-PUBLIC-V020-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`, `HP-PUBLIC-PAPER-CI-TEST-01`, `HP-REP-PQS-RG-WORKING-CI-TEST-01`, `HP-REP-XGTO-INTERCHANGE-TEST-01`, `HP-REP-XGTO-READER-DOC-TEST-01`
 - **Scope:** Completed final-candidate acceptance evidence only; this record grants no test, workflow, source, docs, tag, or release edit. Candidate adfcaba32d4db06d9d796d947276433717bd2d89 and tree f64ba21e06ff57e2b5e78d91214398115afbe8de changed only Project.toml, CHANGELOG.md, README.md, and test/docs/runtests.jl. Direct GitHub install/load passed on Julia 1.10.12 and 1.12.6; fresh archive installation passed on 1.12.6; examples 01/39/40/41, H2+ 18/18, screening, export integrity, residual-GTO/external-transfer frozen fixture, authority, docs 114/114 + 10/10, Documenter, and diff checks passed. CI 33126022579 passed all three numerical gates and Docs 33126022531 passed. The clean archive has 677 entries, 10137600 bytes, SHA-256 df09cc6fd7dc144daa168c9feb4a41be9b974ef450e1e81bf586787318ad1566, no root Manifest, and neither handoff. The accepted exact ASCII release body has 2278 bytes including its final newline and SHA-256 e9ae9bcdad74b33bb66fb3e7e6a149d26285cb9bcc2f4c9555ac713be8bc90d2. The docs-test diff was +38/-9: nine one-for-one replacements and 29 substantive additions within the hard 30-line bound. The exact conditional final transaction is separately owned by HP-PQS-PUBLIC-V020-RELEASE-FN-01.
 
-### HP-PQS-PUBLIC-V021-FN-01 - v0.2.1 bounded candidate preparation
+### HP-PQS-PUBLIC-V021-FN-01 - v0.2.1 accepted candidate
+
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `v0.2.1 Candidate Preparation`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `2ad8441efe8328b4f325bf42994925d8f2a491c9`
+  - `git_commit`: `57e61403262042923605f94a28e910dd2b543550`
+  - `manager_pass`: `625`
+  - `manager_pass`: `627`
+- **Dependencies:** none
+- **Scope:** Completed exact v0.2.1 candidate acceptance under v0.2.1 Candidate Preparation. Commit 2ad8441efe8328b4f325bf42994925d8f2a491c9 and tree 4343ba110ada71fe7085fb9d2c504886a2e7a1e9 passed independent review. No preparation grant remains; conditional publication and promotion belong only to the V021-RELEASE pair. Preserve the candidate and prior evidence.
+
+### HP-PQS-PUBLIC-V021-RELEASE-FN-01 - v0.2.1 conditional release and stable promotion
 
 - **Lifecycle:** `approved`
 - **Grant:** `implementation`
 - **Surfaces:** `docs`, `tools`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `v0.2.1 Candidate Preparation`
+  - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `v0.2.1 Conditional Release And Stable Promotion`
 - **Owned paths:**
-  - `docs` / `existing`: `CHANGELOG.md`
-  - `docs` / `existing`: `README.md`
-  - `docs` / `existing`: `docs/src/index.md`
+  - `docs` / `existing`: `docs/src/developer/designs/cartesian_hamiltonian_producer/documentation_deployment.md`
   - `tool` / `existing`: `docs/make.jl`
 - **Evidence:**
-  - `git_commit`: `57e61403262042923605f94a28e910dd2b543550`
-  - `manager_pass`: `625`
+  - `git_commit`: `2ad8441efe8328b4f325bf42994925d8f2a491c9`
+  - `manager_pass`: `627`
 - **Dependencies:** none
-- **Scope:** Correct only candidate footer contexts and final version metadata under v0.2.1 Candidate Preparation, Pass 626 amendment. Freeze the accepted restoration, tag verifier, numerical source and stable pin. Exact remaining paths/budgets apply; no release, tag, promotion, workflow, API or numerical edit.
+- **Scope:** Execute only the exact v0.2.1 annotated tag, frozen final/latest zero-asset GitHub release and conditional post-publication stable patch in v0.2.1 Conditional Release And Stable Promotion. Frozen target, body hash, order, checks and stop rule are mandatory. No numerical/source work, other release, retry, tag movement, registration or successor grant.
 
-### HP-PQS-PUBLIC-V021-TEST-01 - v0.2.1 bounded candidate preparation
+### HP-PQS-PUBLIC-V021-RELEASE-TEST-01 - v0.2.1 conditional release and stable promotion
 
 - **Lifecycle:** `approved`
 - **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `v0.2.1 Candidate Preparation`
+  - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `v0.2.1 Conditional Release And Stable Promotion`
 - **Owned paths:**
   - `test` / `existing`: `test/docs/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `2ad8441efe8328b4f325bf42994925d8f2a491c9`
+  - `manager_pass`: `627`
+- **Dependencies:** `HP-PQS-PUBLIC-V021-RELEASE-FN-01`
+- **Scope:** Verify exact tag/release/archive and deployed documentation identities, apply only the frozen selector/context test substitutions, and validate stable persistence under v0.2.1 Conditional Release And Stable Promotion. Preserve numerical tests, source, workflows and all immutable folders. Stop on any failure or partial state; remove this temporary grant after final acceptance.
+
+### HP-PQS-PUBLIC-V021-TEST-01 - v0.2.1 accepted candidate
+
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [documentation\_deployment.md](documentation_deployment.md); heading `v0.2.1 Candidate Preparation`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `2ad8441efe8328b4f325bf42994925d8f2a491c9`
   - `git_commit`: `57e61403262042923605f94a28e910dd2b543550`
   - `manager_pass`: `625`
+  - `manager_pass`: `627`
 - **Dependencies:** `HP-PQS-PUBLIC-V021-FN-01`
-- **Scope:** Evaluate actual production footer logic and rendered tag output; replace the source-string assertion in the existing docs owner under Pass 626. Validate the actual diff, unchanged implementation evidence and new archive identity before candidate acceptance. No numerical-test edits, classifier bypass, new owner or release action.
+- **Scope:** Completed exact v0.2.1 candidate acceptance under v0.2.1 Candidate Preparation. Commit 2ad8441efe8328b4f325bf42994925d8f2a491c9 and tree 4343ba110ada71fe7085fb9d2c504886a2e7a1e9 passed independent review. No preparation grant remains; conditional publication and promotion belong only to the V021-RELEASE pair. Preserve the candidate and prior evidence.
 
 ### HP-PQS-READER-DOC-01 - reader-facing PQS documentation entrance
 

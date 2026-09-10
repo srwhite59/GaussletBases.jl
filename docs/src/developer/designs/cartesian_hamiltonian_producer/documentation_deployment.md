@@ -458,3 +458,192 @@ hands back these identities and run IDs for independent review. Do not mark
 the candidate accepted or close the lifecycle beforehand. Stop on any scope
 expansion, failed context, changed protected implementation or budget overrun.
 No new RC, tag, publication, stable promotion or unrelated work is authorized.
+
+## v0.2.1 Conditional Release And Stable Promotion
+
+Pass 627 closes candidate preparation and records the user's explicit combined
+release/promotion authorization. This is the sole version-specific exception
+to prior candidate no-release/no-promotion language and the v0.2.0 stable-pin
+maintenance restriction. It overrides the usual separate-transition rule only
+for this expressly requested transaction. No additional user approval is needed
+when every condition below holds; failures stop the transaction.
+
+Candidate FN/TEST records are completed with no remaining execution grant.
+The temporary execution pair is HP-PQS-PUBLIC-V021-RELEASE-FN-01/TEST-01.
+
+### Accepted immutable target
+
+- Commit: 2ad8441efe8328b4f325bf42994925d8f2a491c9.
+- Tree: 4343ba110ada71fe7085fb9d2c504886a2e7a1e9.
+- Candidate archive: 690 entries, 10,854,400 bytes; SHA-256
+  8db862e58e083fca604b2e10ec297fede7ea69422f5543cd4f87060ff6eae198.
+- Independent review confirmed exact archive tree/exclusions, unchanged source
+  and non-doc tests relative to 3d26994f, restored 354-export inventory,
+  evaluated label contexts and the actual non-deploying tag build. Candidate
+  docs passed 8/8 + 162/162 + 10/10. CI 34429827030 and Docs 34429827052
+  passed on the exact target. Earlier numerical evidence remains reusable.
+- The five-file correction was +23/-10 within budgets; the obsolete inline
+  label and phrase check were removed. Isolated archive install/Example 01
+  passed using the accepted isolated dependency depot, not an empty-depot
+  replay. No scientific defect or additional RC is outstanding.
+
+The later authority and stable-promotion commits must never become the tag
+target. Tag object identity cannot be known before creation; record it afterward.
+
+### Exact tag and publication specification
+
+One annotated tag: v0.2.1, message exactly `GaussletBases v0.2.1`
+(with the normal single final LF stored by Git), target as above.
+Verify local and remote absence before creation. Use an explicit target in the
+annotation command and push only that exact tag ref, never --tags or force.
+
+One GitHub release against that existing tag in srwhite59/GaussletBases.jl:
+title `GaussletBases v0.2.1`; draft=false; prerelease=false; make_latest=true;
+zero uploaded assets. Disable generated notes and do not append text to the body.
+Use --verify-tag or an equivalent API preflight so publication cannot create a
+missing tag. Latest selection may supersede v0.2.0's latest designation; no
+existing release body, assets, title or prerelease flag may be edited.
+
+The exact ASCII release body below is 1,677 bytes including one final LF.
+SHA-256: e13082c0bcff9e89c11157a94de31d1898ee02a50f8ed814f324bd691ae00c10.
+Extract only the fenced payload, retaining its final LF; compare byte count
+and hash before publication and the fetched API body afterward.
+
+### Exact release body
+
+````markdown
+GaussletBases v0.2.1 is a compatibility-preserving patch release.
+
+## Fixes and improvements
+
+- Repairs centered and displaced Gaussian Coulomb arithmetic: determinant
+  cancellation, damping, and product-local polynomial moments.
+- Allows a fifth radial construction attempt while preserving early exit and
+  explicit no-refinement behavior. Construction cost roughly doubles for
+  affected setups.
+- Reports unmet construction and quadrature criteria on exhaustion. Quadrature
+  schedules and tolerances are unchanged; best-effort returns do not guarantee
+  whole-matrix convergence or energy accuracy. The near-origin inverse-radius
+  limitation remains.
+- Expands public documentation, onboarding, and supported-floor validation.
+- Restores the three v0.2.0 compatibility exports and original timing carrier.
+- Isolates annotated-tag verification from checkout's local tag references.
+
+PQS construction, reference-density Hartree screening, and external GTO orbital
+transfer remain distinct interfaces with their documented scope limitations.
+This release is not an exact archive of either paper's computational history.
+Finite Coulomb expansions still require validation for diffuse densities and
+large separations; the arithmetic repairs do not establish general molecular
+accuracy. Standard60 remains an unimplemented, deferred proposal.
+
+## Installation
+
+Julia 1.10 remains the supported minimum.
+
+```julia
+using Pkg
+Pkg.add(url = "https://github.com/srwhite59/GaussletBases.jl", rev = "v0.2.1")
+```
+
+- [Versioned documentation](https://srwhite59.github.io/GaussletBases.jl/v0.2.1/)
+- [Changelog](https://github.com/srwhite59/GaussletBases.jl/blob/v0.2.1/CHANGELOG.md)
+````
+
+### Ordered fail-closed execution
+
+1. Wait for this authority commit and its CI/Docs checks. Verify both execution
+   IDs, canonical digest, accepted candidate identity/archive/version and passed
+   validation, clean tracked worktree, synchronized main/origin/main, and both
+   protected handoffs. Capture branch heads and protected documentation hashes.
+   Require local/remote v0.2.1 tag absence, release absence (distinguish genuine
+   404 from API/auth/network errors), and versioned folder absence. Unexpected
+   existing or partial state stops without mutation.
+2. Create exactly one annotated tag at the frozen commit and push its exact
+   ref. Fetch the remote object into an unused non-tag verification ref; require
+   annotated type, message, object identity, peel, tree and version agreement.
+   Wait for the existing tag CI identity/remote-install lane and independent
+   Docs/Pages workflows, without changing workflows or rerunning numerical
+   gates. Verify live /v0.2.1/ and its Versioned API footer, exact canonical URL,
+   revision-pinned source URLs, version selector and dev. Stable remains pinned
+   to release-0.2.0 at this stage. Record workflow IDs and protected tree hashes.
+   A failed tag workflow is not bypassed by manual evidence or silent retry.
+3. Recheck release absence and tag identity immediately before publishing the
+   single exact release. Verify API and rendered page, body bytes/hash, title,
+   flags, latest endpoint, zero assets and unchanged tag/tree. Download both
+   automatic source archives and reconstruct the accepted Git tree; record their
+   sizes/hashes, which need not equal the candidate tar hash. Verify a fresh
+   isolated consumer install/load from the remote tag and small Example 01.
+   Reuse the isolated dependency depot; no benchmark or broad numerical rerun.
+4. Only after steps 1-3 succeed, apply the exact post-publication patch below
+   on synchronized main. Require the existing /v0.2.1/ to be a complete real
+   directory with the verified tree, not a symlink; recheck all old folders.
+   Commit and push only the two patched files plus mechanically necessary
+   authority digest/views if any. Use ordinary main Documenter deployment:
+   publish dev and regenerate selectors/root redirect, changing stable's symlink
+   to the existing v0.2.1 folder. Never copy/build/deploy through stable.
+5. Require docs-only CI markers, full docs/authority/self-test, package load,
+   Documenter, log bound and diff checks. Verify Pages and public HTTP: root
+   redirects to stable; stable resolves to the byte-identical v0.2.1 tree and
+   canonicalizes to /v0.2.1/; versioned footer/source links, all 14 README
+   destinations, selectors and dev are correct. Preserve release-0.2.0,
+   original v0.2.0, RC1 and RC2 byte-for-byte. No HTTP bypass by API-only
+   evidence; unavailable public verification is a stop, not implicit acceptance.
+6. Repo-design-manager performs one compact final docs-only lifecycle closeout
+   after the execution handback. Record tag object, peel/tree, release ID/URL,
+   body/archive hashes, run IDs, stable-promotion commit and protected docs
+   identities; set the temporary release pair to completed/none with no paths
+   or execution membership. Candidate records remain completed/none. Its normal
+   main deployment must preserve the stable pin, verified again afterward.
+   This supplies the required persistence check; no empty push is authorized.
+
+Other than the specified promotion and final documentation closeout commits,
+main and origin/main remain unchanged during remote release operations.
+Existing tags/releases, protected handoffs and unrelated work remain untouched.
+On any failed check, identity mismatch, budget deviation, unexpected existing
+state or partial success: preserve completed immutable objects, stop and report
+exact IDs and completed steps. No move, deletion, recreation, overwrite,
+automatic retry, alternate workflow or inferred permission. No new RC, source,
+API, dependency, numerical run, registration, citation, Standard60,
+represented-Hartree, arbitrary-position or successor work.
+
+### Frozen post-publication patch
+
+Independent scratch review applied each substitution exactly once in memory:
+six substitution checks plus five actual label/Documenter-selector checks
+passed. This patch is +6/-6 across exactly docs/make.jl and
+test/docs/runtests.jl. No helper, workflow, new file, root README/CHANGELOG edit,
+snapshot rebuild, refresh change, canonical-rule change or numerical test edit.
+Historical initial-refresh fixtures remain historical; only the populated
+selector fixture acquires the now-existing v0.2.1 folder.
+
+The following apply_patch payload is 872 ASCII bytes including final LF;
+SHA-256: 02cb7a009238967a6c6ede041b8541954f9f3d6c96f32e4275081230859f2789.
+If it no longer applies exactly, stop; do not adapt its scope. Development,
+PR and local documentation lose the stale candidate/publication wording only
+after publication; tag and frozen-refresh labels remain unchanged. Existing
+README instructions are conditional and remain true without a root-file edit.
+
+```text
+*** Begin Patch
+*** Update File: docs/make.jl
+@@
+-    "stable" => "release-0.2.0",
++    "stable" => "v0.2.1",
+@@
+-    return "Unreleased v0.2.1 candidate; published release: v0.2.0"
++    return "Development API: v0.2.1; published release: v0.2.1"
+*** Update File: test/docs/runtests.jl
+@@
+-                "Unreleased v0.2.1 candidate; published release: v0.2.0"
++                "Development API: v0.2.1; published release: v0.2.1"
+@@
+-            "stable" => "release-0.2.0",
++            "stable" => "v0.2.1",
+@@
+-                ("dev", "release-0.2.0", "v0.2.0", "v0.2.0-rc2", "v0.2.0-rc1"))
++                ("dev", "release-0.2.0", "v0.2.0", "v0.2.1", "v0.2.0-rc2", "v0.2.0-rc1"))
+@@
+-                @assert symlinks == ["stable" => "release-0.2.0", "v0.2" => "v0.2.0"]
++                @assert symlinks == ["stable" => "v0.2.1", "v0.2" => "v0.2.1"]
+*** End Patch
+```
