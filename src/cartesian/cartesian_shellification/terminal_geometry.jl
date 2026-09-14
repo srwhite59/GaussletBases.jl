@@ -1,3 +1,76 @@
+function _outer_mismatch_pieces(parent_box, inner_box, shell_side)
+    pieces = NamedTuple[]
+    for axis in 1:3, side in (:low, :high)
+        interval = side === :low ?
+            (first(parent_box[axis]):first(inner_box[axis])-1) :
+            (last(inner_box[axis])+1:last(parent_box[axis]))
+        isempty(interval) && continue
+        box = ntuple(a -> a < axis ? inner_box[a] :
+            a == axis ? interval : parent_box[a], 3)
+        push!(pieces, (role = Symbol((:x, :y, :z)[axis], "_", side, "_outer_mismatch_slab"),
+            box, metadata = (slab_kind = :outer_mismatch_slab,
+                slab_normal_axis = (:x, :y, :z)[axis], slab_side = side,
+                slab_thickness = length(interval), slab_stack_index = 1,
+                slab_stack_count = 1, thin_slab_retained_count_1d = shell_side)))
+    end
+    return pieces
+end
+
+function _collinear_terminal_geometry(direct!, shell!, slab!, axes, z, core_side, outer_count)
+    dims = ntuple(a -> length(axes[a]), 3)
+    parent = ntuple(a -> 1:dims[a], 3)
+    hull(boxes) = ntuple(a -> minimum(first(b[a]) for b in boxes):
+        maximum(last(b[a]) for b in boxes), 3)
+    inside(b) = all(first(b[a]) >= 1 && last(b[a]) <= dims[a] for a in 1:3)
+    expand(b) = ntuple(a -> first(b[a])-1:last(b[a])+1, 3)
+    # Ordered collinear boxes have identical transverse intervals and monotone
+    # longitudinal endpoints. This partitions the overlap graph without mutating pairs.
+    function components(boxes)
+        groups = UnitRange{Int}[]
+        first_index = 1
+        for i in 2:length(boxes)
+            if first(boxes[i][3]) > last(boxes[i-1][3])
+                push!(groups, first_index:i-1)
+                first_index = i
+            end
+        end
+        push!(groups, first_index:length(boxes))
+        return groups
+    end
+    radius = div(core_side - 1, 2)
+    centers = [(argmin(abs.(axes[1])), argmin(abs.(axes[2])),
+        argmin(abs.(axes[3] .- position))) for position in z]
+    initial = [ntuple(a -> c[a]-radius:c[a]+radius, 3) for c in centers]
+    all(inside, initial) || throw(ArgumentError("collinear core lies outside parent"))
+    boxes = [hull(@view initial[g]) for g in components(initial)]
+    for box in boxes
+        direct!(box, empty(boxes))
+    end
+    while true
+        grown = expand.(boxes)
+        all(inside, grown) || break
+        groups = components(grown)
+        next = empty(boxes)
+        for group in groups
+            previous = @view boxes[group]
+            inner, outer = hull(previous), hull(@view grown[group])
+            direct!(inner, previous)
+            shell!(outer, inner)
+            push!(next, outer)
+        end
+        boxes = next
+    end
+    inner = hull(boxes)
+    direct!(inner, boxes)
+    for piece in _outer_mismatch_pieces(parent, inner, outer_count)
+        normal = findfirst(==(piece.metadata.slab_normal_axis), (:x, :y, :z))
+        all(a == normal || outer_count <= length(piece.box[a]) for a in 1:3) ||
+            throw(ArgumentError("outer_face_count exceeds an in-plane slab length"))
+        slab!(piece)
+    end
+    return nothing
+end
+
 """
     raw_terminal_geometry(parent_axes, nuclear_positions; kwargs...)
 
@@ -309,82 +382,8 @@ function raw_terminal_geometry(
         return gap_box
     end
 
-    function outer_mismatch_pieces(inner_box)
-        same_box(inner_box, parent_box) && return ()
-        pieces = NamedTuple[]
-
-        # Axis-ordered disjoint decomposition of parent_box minus inner_box.
-        # Earlier axes absorb edges/corners, so later slabs use the inner
-        # intervals of earlier axes.
-        for axis in 1:3
-            low_range = first(parent_box[axis]):(first(inner_box[axis]) - 1)
-            if !isempty(low_range)
-                box = ntuple(
-                    a -> begin
-                        if a < axis
-                            inner_box[a]
-                        elseif a == axis
-                            low_range
-                        else
-                            parent_box[a]
-                        end
-                    end,
-                    3,
-                )
-                push!(
-                    pieces,
-                    (;
-                        role =
-                            Symbol((:x, :y, :z)[axis], "_low_outer_mismatch_slab"),
-                        box,
-                        metadata = (;
-                            slab_kind = :outer_mismatch_slab,
-                            slab_normal_axis = axis_symbol(axis),
-                            slab_side = :low,
-                            slab_thickness = length(low_range),
-                            slab_stack_index = 1,
-                            slab_stack_count = 1,
-                            thin_slab_retained_count_1d = shell_side,
-                        ),
-                    ),
-                )
-            end
-
-            high_range = (last(inner_box[axis]) + 1):last(parent_box[axis])
-            if !isempty(high_range)
-                box = ntuple(
-                    a -> begin
-                        if a < axis
-                            inner_box[a]
-                        elseif a == axis
-                            high_range
-                        else
-                            parent_box[a]
-                        end
-                    end,
-                    3,
-                )
-                push!(
-                    pieces,
-                    (;
-                        role =
-                            Symbol((:x, :y, :z)[axis], "_high_outer_mismatch_slab"),
-                        box,
-                        metadata = (;
-                            slab_kind = :outer_mismatch_slab,
-                            slab_normal_axis = axis_symbol(axis),
-                            slab_side = :high,
-                            slab_thickness = length(high_range),
-                            slab_stack_index = 1,
-                            slab_stack_count = 1,
-                            thin_slab_retained_count_1d = shell_side,
-                        ),
-                    ),
-                )
-            end
-        end
-        return Tuple(pieces)
-    end
+    outer_mismatch_pieces(inner_box) =
+        Tuple(_outer_mismatch_pieces(parent_box, inner_box, shell_side))
 
     function push_diatomic_outer_remainder!(current, axis, shell_index)
         for piece in outer_mismatch_pieces(current)

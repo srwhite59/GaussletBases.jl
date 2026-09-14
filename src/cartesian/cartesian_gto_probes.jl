@@ -708,3 +708,15 @@ function _cartesian_same_supplement_raw_identity(
     end
     return true
 end
+
+function gto_overlap_matrix(working::_CartesianCollinearWorkingBasis, probes; block_indices = nothing)
+    probe = _gto_probe_representation(probes)
+    all(o -> all(isfinite, o.center) && all(isfinite, o.exponents) &&
+        all(isfinite, o.coefficients), probe.orbitals) ||
+        throw(ArgumentError("GTO probe orbitals must be finite"))
+    overlap = CartesianFinalBasisRealization._terminal_residual_mixed_overlap(
+        working.terminal_basis, working.parent_axis_bundles, probe)
+    all(isfinite, overlap) || throw(ArgumentError("collinear GTO overlap is not finite"))
+    indices = _gto_block_indices(working.terminal_basis.final_dimension, block_indices)
+    return isnothing(indices) ? overlap : Matrix{Float64}(overlap[indices, :])
+end

@@ -1501,3 +1501,97 @@ function cartesian_residual_gto_mwg_hamiltonian_assembly(base, base_ham::Cartesi
         route = _cartesian_supplemented_route_label(input))
     return ham
 end
+
+struct _CartesianCollinearWorkingBasis{B<:_CartesianNestedAxisBundles3D}
+    terminal_basis::CartesianFinalBasisRealization.CartesianTerminalBasisRealization
+    parent_axis_bundles::B
+end
+
+function _collinear_nuclei(z, Z)
+    z isa AbstractVector{<:Real} && Z isa AbstractVector{<:Real} ||
+        throw(ArgumentError("z and Z must be real vectors"))
+    !isempty(z) && length(z) == length(Z) ||
+        throw(ArgumentError("z and Z must have equal nonzero length"))
+    positions, charges = Float64.(z), Float64.(Z)
+    all(isfinite, positions) && all(diff(positions) .> 0) ||
+        throw(ArgumentError("z must be finite and strictly increasing"))
+    all(x -> isfinite(x) && x > 0, charges) ||
+        throw(ArgumentError("nuclear charges must be finite and positive"))
+    return positions, charges
+end
+
+"""
+    cartesian_collinear_working_basis(z, Z; core_spacing, transverse_spacing,
+        padding_parallel, padding_transverse, core_side, angular_reference_count,
+        outer_face_count, tail_spacing, angular_resolution_scale, expansion)
+
+Construct an expert finite, open, three-dimensional PQS basis for ordered z-axis
+nuclei (positions in bohr, positive charges). Every keyword is required.
+Existing G10/PGDG mapping validity rules apply; invalid fits are not repaired.
+Spacing and padding are positive lengths; realized bounds can exceed requested
+padding. Core side is a positive odd index count. Angular reference count
+calibrates existing all-nucleus retention, not a constant source q.
+Outer face count controls both in-plane axes and must fit each actual slab.
+Converge transverse padding/spacing and retention separately; no chemical
+accuracy or long-chain scaling is promised. Truncated slabs can break transverse
+symmetry slightly. Cores and contact sectors remain direct.
+
+The opaque bare-basis handle supports `gto_overlap_matrix`,
+`import_external_gto_orbitals` (raw projection, no cleanup), and
+`cartesian_collinear_operators`. Its fields are not a public result schema.
+No residual functions, artifact, solver, or periodic boundary is constructed.
+"""
+function cartesian_collinear_working_basis(z, Z; core_spacing, transverse_spacing,
+    padding_parallel, padding_transverse, core_side, angular_reference_count,
+    outer_face_count, tail_spacing, angular_resolution_scale, expansion::CoulombGaussianExpansion)
+    z, Z = _collinear_nuclei(z, Z)
+    for value in (core_spacing, transverse_spacing, padding_parallel,
+        padding_transverse, tail_spacing, angular_resolution_scale)
+        value isa Real && isfinite(value) && value > 0 ||
+            throw(ArgumentError("spacing, padding, tail and angular scale must be finite and positive"))
+    end
+    for count in (core_side, angular_reference_count, outer_face_count)
+        count isa Integer && !(count isa Bool) && count > 0 ||
+            throw(ArgumentError("collinear counts must be positive integers, not Bool"))
+    end
+    isodd(core_side) || throw(ArgumentError("core_side must be odd"))
+    atoms = [(location = (0.0, 0.0, p), nuclear_charge = charge) for (p, charge) in zip(z, Z)]
+    axes = ntuple(3) do a
+        spacing = a == 3 ? core_spacing : transverse_spacing
+        padding = a == 3 ? padding_parallel : padding_transverse
+        xs, rs, hs = _cartesian_center_list_axis_records(atoms, a, spacing, 1.0)
+        mapping = fit_combined_invsqrt_mapping(;
+            centers = xs, core_ranges = rs, target_spacings = hs, tail_spacing)
+        count = _qwrg_mapped_odd_count_for_interval(
+            mapping, minimum(xs) - padding, maximum(xs) + padding)
+        build_basis(MappedUniformBasisSpec(:G10; count, mapping))
+    end
+    bundle(axis) = _mapped_ordinary_gausslet_1d_bundle(axis;
+        exponents = expansion.exponents, center = 0.0, backend = :pgdg_localized_experimental)
+    bx, bz = bundle(axes[1]), bundle(axes[3])
+    bundles = _CartesianNestedAxisBundles3D(bx, bx, bz)
+    terminal = _collinear_terminal_basis(centers.(axes), bundles, z,
+        core_side, angular_reference_count, outer_face_count, angular_resolution_scale)
+    return _CartesianCollinearWorkingBasis(terminal, bundles)
+end
+
+"""
+    cartesian_collinear_operators(working, z, Z; expansion)
+
+Return `(; one_body, electron_electron_ida, nuclear_repulsion)` for the unchanged
+bare collinear basis. Explicit ordered positions and positive charges define the
+potential; they need not be the nuclei used to construct the basis. Units are
+atomic. The expansion exponents must match the parent factors.
+
+The two matrices are complete dense Float64 arrays. Nuclear attraction is
+accumulated without retaining one dense matrix per nucleus. IDA is not the exact
+four-index electron interaction. This result does not provide
+`CartesianIDAHamiltonian` reweighting or artifact semantics. Dense storage is
+quadratic; no many-body solver, screening, or long-chain scaling is implied.
+"""
+function cartesian_collinear_operators(working::_CartesianCollinearWorkingBasis,
+    z, Z; expansion::CoulombGaussianExpansion)
+    z, Z = _collinear_nuclei(z, Z)
+    return _collinear_complete_operators(
+        working.terminal_basis, working.parent_axis_bundles, z, Z, expansion)
+end

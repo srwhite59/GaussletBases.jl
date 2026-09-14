@@ -79,6 +79,34 @@ convergence or publication evidence. SCF and correlated solvers, Gaussian
 supplements, parent residual functions, screening, and paper-scale campaigns
 remain consumer or external workflows.
 
+## Expert finite collinear systems
+
+`cartesian_collinear_working_basis(z, Z; ...)` accepts strictly ordered z-axis
+positions and positive nuclear charges, subject to the existing mapping's
+validity limits. Electrons remain three-dimensional; boundaries are finite/open.
+All construction controls are explicit, with no new accuracy defaults:
+
+```julia
+expansion = coulomb_gaussian_expansion(doacc=false)
+z, Z = [-2.4, 0.0, 2.4], ones(3)
+working = cartesian_collinear_working_basis(z, Z;
+    core_spacing=0.6, transverse_spacing=0.45,
+    padding_parallel=3.0, padding_transverse=6.0, core_side=3,
+    angular_reference_count=5, outer_face_count=9,
+    tail_spacing=2.8, angular_resolution_scale=1.4, expansion)
+operators = cartesian_collinear_operators(working, z, Z; expansion)
+```
+
+This small construction returns complete `one_body` and `electron_electron_ida`
+matrices plus `nuclear_repulsion`, not a reweightable/artifact Hamiltonian.
+The opaque working handle supports existing GTO overlap and raw orbital import.
+Converge parent padding/spacing and retention independently. Angular reference
+count is not a constant source q; outer count applies to both slab-face axes
+and must fit each face. Truncation can introduce transverse asymmetry. These
+controls are a tested fixture, not chemical accuracy or long-chain scaling
+claims. Dense operators remain quadratic; no solver or periodic extension is
+included. The compact sliced-chain approximation remains a separate capability.
+
 ## Matched H2+ comparison
 
 [`examples/41_pqs_h2plus_table1.jl`](https://github.com/srwhite59/GaussletBases.jl/blob/main/examples/41_pqs_h2plus_table1.jl)

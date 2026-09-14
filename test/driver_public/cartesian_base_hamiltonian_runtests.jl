@@ -335,3 +335,166 @@ end
     @test_throws ArgumentError cartesian_base_hamiltonian(
         merge(he, (; nup = -1, ndn = 1)); basis = H_ACCURACY_BASIS)
 end
+
+@testset "Finite collinear PQS" begin
+    GB = GaussletBases; C = GB.CartesianFinalBasisRealization
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    controls = (; core_spacing = .6, transverse_spacing = .6, padding_parallel = 3.,
+        padding_transverse = 3., core_side = 3, angular_reference_count = 5,
+        outer_face_count = 3, tail_spacing = 2.8, angular_resolution_scale = 1.4, expansion)
+    build(z, Z; kw...) = cartesian_collinear_working_basis(z, Z; merge(controls, (; kw...))...)
+    function dense_map(basis, n)
+        Q = zeros(n, basis.final_dimension)
+        for b in basis.blocks
+            Q[b.support_indices, b.column_range] = isnothing(b.coefficients) ?
+                Matrix{Float64}(I, length(b.support_indices), length(b.column_range)) : b.coefficients
+        end
+        return Q
+    end
+    function action(v, A, B, D)
+        nx, ny, nz = size(A, 1), size(B, 1), size(D, 1)
+        a = reshape(D * reshape(v, nz, :), nz, ny, nx)
+        b = reshape(B * reshape(permutedims(a, (2, 1, 3)), ny, :), ny, nz, nx)
+        c = reshape(A * reshape(permutedims(b, (3, 1, 2)), nx, :), nx, ny, nz)
+        return vec(permutedims(c, (3, 2, 1)))
+    end
+    function oracle(Q, X, pgdg, z, Z)
+        A = Q * X; Y = zeros(size(A))
+        S = ntuple(i -> pgdg[i].overlap, 3); T = ntuple(i -> pgdg[i].kinetic, 3)
+        for j in axes(X, 2), a in 1:3
+            Y[:, j] += action(A[:, j], ntuple(i -> i == a ? T[i] : S[i], 3)...)
+        end
+        for (p, charge) in zip(z, Z)
+            f = ntuple(i -> C._terminal_factor_terms(
+                GB._pqs_source_box_route_driver_centered_factor_terms(pgdg[i], expansion, i == 3 ? p : 0.)), 3)
+            for j in axes(X, 2), k in eachindex(expansion.coefficients)
+                Y[:, j] -= charge * expansion.coefficients[k] * action(A[:, j], ntuple(i -> view(f[i], k, :, :), 3)...)
+            end
+        end
+        w = Q' * kron(pgdg[1].weights, pgdg[2].weights, pgdg[3].weights)
+        @test all(w .> 1e-14)
+        d = Q * (abs2.(X) ./ w); J = zeros(size(d))
+        f = ntuple(i -> C._terminal_factor_terms(pgdg[i].pair_factor_terms_raw), 3)
+        for j in axes(X, 2), k in eachindex(expansion.coefficients)
+            J[:, j] += expansion.coefficients[k] * action(d[:, j], ntuple(i -> view(f[i], k, :, :), 3)...)
+        end
+        return X' * X, A' * Y, vec(sum(d .* J; dims = 1))
+    end
+    frozen = [
+        ([.9999318254176067, .9997143222148448, .999713629868302],
+         [-1.0801855049207716, -.6346238526272604, -.6346287143129328],
+         [.35703227688764216, .2922260619143036, .29222484997191683]),
+        ([.9997552845017766, .9982742935176115, .9982742028183909],
+         [-1.2389311176399211, -.40792441475173197, -.407925743648283],
+         [.7138968614711348, .5824489517158751, .5824489088945304]),
+        ([.9988312030379334, .9911419746798421, .9911418012690119],
+         [-1.0333535251547958, -.6019525037733703, -.6019518302045384],
+         [.35666597897711483, .2888277307699443, .28882756100434104]),
+        ([.9992927651276439, .9977624440489838, .9977623957328754],
+         [-.9527395973938828, -.2826529501398075, -.2826553910092518],
+         [.7123320035040893, .580175574336601, .5801755502698565])]
+    limits = [(1.1e-6, 4.4e-6, 9.3e-6), (1.7e-7, 3.0e-6, 6.3e-8),
+        (8.9e-6, 1.1e-5, 6.1e-5), (1.2e-7, 3.4e-6, 4.7e-8)]
+    fixtures = [([-2.4, 0., 2.4], ones(3), .45, 6., 9),
+        ([-2.4, -1.2, 2.4], ones(3), .6, 3., 7),
+        ([-2.4, 0., 2.4], ones(3), .6, 3., 3),
+        ([-3.6, -1.2, 1.2, 3.6], ones(4), .6, 3., 3),
+        ([-1.2, 0., 1.2], ones(3), .6, 3., 3),
+        ([-2.4, 0., 2.4], [1., 2., 1.], .6, 3., 3)]
+    for (fixture, (z, Z, spacing, padding, outer)) in enumerate(fixtures)
+        w = build(z, Z; transverse_spacing = spacing, padding_transverse = padding,
+            outer_face_count = outer, angular_reference_count = fixture <= 2 ? 5 : 3)
+        basis, bundles = w.terminal_basis, w.parent_axis_bundles
+        pgdg = ntuple(i -> GB._nested_axis_pgdg(bundles, (:x, :y, :z)[i]), 3)
+        dims = ntuple(i -> length(pgdg[i].weights), 3); n = prod(dims)
+        counts = zeros(Int, n)
+        for b in basis.blocks
+            counts[b.support_indices] .+= 1
+            @test issorted(b.support_indices)
+        end
+        @test all(==(1), counts)
+        Q = dense_map(basis, n)
+        @test maximum(abs, Q' * kron(pgdg[1].overlap, pgdg[2].overlap, pgdg[3].overlap) * Q - I) <= 1e-10
+        ops = cartesian_collinear_operators(w, z, Z; expansion)
+        @test keys(ops) == (:one_body, :electron_electron_ida, :nuclear_repulsion)
+        @test all(isfinite, ops.one_body) && all(isfinite, ops.electron_electron_ida)
+        @test maximum(abs, ops.one_body - ops.one_body') <= 1e-10
+        @test maximum(abs, ops.electron_electron_ida - ops.electron_electron_ida') <= 1e-10
+        @test ops.nuclear_repulsion ≈ sum(Z[i]*Z[j]/(z[j]-z[i]) for i in eachindex(z) for j in i+1:length(z)) atol=1e-12 rtol=0
+        states = [GB._cartesian_unflat_index(i, dims) for i in 1:n]
+        parent = C.CartesianTerminalBasisRealization([C.CartesianTerminalBasisBlock(:parent,
+            collect(1:n), states, nothing, 1:n)], n, 0.)
+        if fixture <= 2
+            @test (dims, basis.final_dimension) == (fixture == 1 ? ((13,13,17),1265) : ((9,9,15),619))
+            @test Base.summarysize((w, ops)) < 512*1024^2
+        end
+        for (a, alpha) in enumerate((.1, .4))
+            probes = CartesianGaussianShellSupplementRepresentation3D(:test,
+                [CartesianGaussianShellOrbitalRepresentation3D(string(p), p, (0.,0.,0.), [alpha], [1.],
+                 :axiswise_normalized_cartesian_gaussian) for p in ((0,0,0),(1,0,0),(0,1,0))], (;))
+            X = gto_overlap_matrix(w, probes)
+            Xp = C._terminal_residual_mixed_overlap(parent, bundles, probes)
+            @test maximum(abs, X-Q'*Xp) <= 1e-12
+            @test gto_overlap_matrix(w, probes; block_indices = [1,3]) == X[[1,3],:]
+            packet = ExternalGTOOrbitalPacket(probes, Matrix{Float64}(I,3,3),
+                ExternalGTOOrbitalSpinBlock(:restricted, Matrix{Float64}(I,3,3), ones(3)))
+            @test import_external_gto_orbitals(w, packet).alpha.imported_coefficients == X
+            gram, H, selfs = oracle(Q, X, pgdg, z, Z)
+            @test maximum(abs, X'*ops.one_body*X-H) <= 1e-10
+            @test maximum(abs, vec(sum(abs2.(X).*(ops.electron_electron_ida*abs2.(X));dims=1))-selfs) <= 1e-10
+            if fixture <= 2
+                index = 2*(fixture-1)+a; target = frozen[index]
+                @test maximum(abs, diag(gram)-target[1]) <= 1e-8
+                @test maximum(abs, H-Diagonal(target[2])) <= 1e-8
+                @test maximum(abs, selfs-target[3]) <= 1e-8
+                # Direct completion is an oracle only; unchanged inner columns are reused.
+                inner = filter(b -> !startswith(string(b.unit_key), "outer_"), basis.blocks)
+                outer_rows = sort(vcat([b.support_indices for b in basis.blocks if startswith(string(b.unit_key), "outer_")]...))
+                inner_n = last(last(inner).column_range)
+                @test inner_n == (fixture == 1 ? 617 : 423)
+                Qd = [Q[:,1:inner_n] Matrix{Float64}(I,n,n)[:,outer_rows]]
+                gd, hd, sd = oracle(Qd, Qd'*Xp, pgdg, z, Z)
+                @test maximum(abs, diag(gd)-diag(gram)) <= limits[index][1]
+                @test maximum(abs, hd-H) <= limits[index][2]
+                @test maximum(abs, sd-selfs) <= limits[index][3]
+            end
+        end
+        @test_throws ArgumentError cartesian_collinear_operators(w, z, Z; expansion = coulomb_gaussian_expansion())
+    end
+    # Three surviving groups: test exact direct gaps and realize the exterior slabs.
+    grid_axes = (collect(-3.:3.), collect(-3.:3.), collect(-12.:12.))
+    dims = (7,7,25); coverage = zeros(Int, dims); gap_count = Ref(0); exterior = Ref(0)
+    bs = [build_basis(MappedUniformBasisSpec(:G10; count=n, mapping=IdentityMapping())) for n in (7,25)]
+    bundle(b) = GB._mapped_ordinary_gausslet_1d_bundle(b; exponents=expansion.exponents,
+        center=0., backend=:pgdg_localized_experimental)
+    bx, bz = bundle(bs[1]), bundle(bs[2]); bundles = GB._CartesianNestedAxisBundles3D(bx,bx,bz)
+    function mark(box, excluded)
+        ss = [(x,y,z) for x in box[1] for y in box[2] for z in box[3]
+            if !any(all((x,y,z)[a] in b[a] for a in 1:3) for b in excluded)]
+        for s in ss; coverage[s...] += 1; end
+        return length(ss)
+    end
+    direct(box, excluded) = (n=mark(box,excluded); isempty(excluded) || (gap_count[]+=n))
+    shell(outer, inner) = mark(outer,[inner])
+    function slab(piece)
+        exterior[] += mark(piece.box, [])
+        indices, states, coefficients = C._terminal_compact_thin_slab_block(
+            [GB.CartesianCPB.cpb(piece.box)],piece.metadata,bundles)
+        S = ntuple(a -> GB._nested_axis_pgdg(bundles,(:x,:y,:z)[a]).overlap,3)
+        @test size(coefficients) == (49,9)
+        @test maximum(abs, coefficients'*C._support_action(states,states,coefficients,S)-I) <= 1e-10
+    end
+    GB.CartesianShellification._collinear_terminal_geometry(direct,shell,slab,grid_axes,[-8.,0.,8.],3,3)
+    @test (sum(coverage)-gap_count[]-exterior[],gap_count[],exterior[]) == (1029,98,98)
+    @test all(==(1),coverage)
+    @test_throws ArgumentError GB.CartesianShellification._collinear_terminal_geometry(direct,shell,slab,grid_axes,[-8.,0.,8.],3,8)
+    for (z,Z) in [([],[]),([0.],[1.,1.]),([0.,0.],[1.,1.]),([NaN],[1.]),([0.],[-1.])]
+        @test_throws ArgumentError build(z,Z)
+    end
+    for kw in [(core_side=true,), (core_side=2,), (angular_reference_count=0,),
+        (outer_face_count=false,), (tail_spacing=Inf,), (transverse_spacing=0.,)]
+        @test_throws ArgumentError build([-2.4,0.,2.4],ones(3);kw...)
+    end
+    @test_throws ArgumentError build([-.2,0.,.2],ones(3))
+    @test_throws ArgumentError build([-2.4,0.,2.4],ones(3);outer_face_count=99, padding_transverse=6.)
+end

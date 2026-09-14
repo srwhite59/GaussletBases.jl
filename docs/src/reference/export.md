@@ -52,6 +52,17 @@ H and H2 are examples, not element restrictions. The facade does not support
 translated atoms, arbitrary molecular orientation, heteronuclear diatomics,
 supplements, corrections, solver controls, or public route-stage selection.
 
+### Expert finite collinear construction
+
+The bare basis and complete operators are separate from the atom/diatomic
+Hamiltonian and its artifact/reweighting contract. All controls are required;
+see the [finite-chain example](../manual/projected_q_shells.md#Expert-finite-collinear-systems).
+
+```@docs
+cartesian_collinear_working_basis
+cartesian_collinear_operators
+```
+
 ### Expert staged Cartesian construction
 
 `cartesian_base_working_basis` is an expert/unstable staged-construction

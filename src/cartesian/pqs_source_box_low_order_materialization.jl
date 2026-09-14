@@ -58,3 +58,23 @@ function _pqs_source_box_route_driver_terminal_vee(terminal_basis_realization, e
         pgdg[1].weights, pgdg[2].weights, pgdg[3].weights)
     return V
 end
+
+function _collinear_complete_operators(terminal, bundles, z, Z, expansion)
+    pgdg = ntuple(a -> _nested_axis_pgdg(bundles, (:x, :y, :z)[a]), 3)
+    _pqs_source_box_route_driver_validate_pgdg_expansion(pgdg, expansion)
+    one_body = _pqs_source_box_route_driver_terminal_products(terminal, pgdg).kinetic
+    C = CartesianFinalBasisRealization
+    buffers = C._terminal_operator_buffers(terminal)
+    for (position, charge) in zip(z, Z)
+        factors = ntuple(a -> _pqs_source_box_route_driver_centered_factor_terms(
+            pgdg[a], expansion, a == 3 ? position : 0.0), 3)
+        C._accumulate_terminal_gaussian_sum!(
+            one_body, terminal, charge .* expansion.coefficients, factors..., buffers...)
+    end
+    electron_electron_ida = _pqs_source_box_route_driver_terminal_vee(terminal, expansion, pgdg)
+    nuclear_repulsion = sum((Z[i] * Z[j] / (z[j] - z[i])
+        for i in eachindex(z) for j in i+1:length(z)); init = 0.0)
+    all(isfinite, one_body) && all(isfinite, electron_electron_ida) && isfinite(nuclear_repulsion) ||
+        throw(ArgumentError("collinear operators are not finite"))
+    return (; one_body, electron_electron_ida, nuclear_repulsion)
+end

@@ -2084,3 +2084,57 @@ function cartesian_report(system, parent, assembly, recipe)
         axis_bundle_backend = parent.parent_inputs.parent_axis_bundle_backend,
     )
 end
+
+function _collinear_terminal_basis(axes, bundles, z, core_side, nref, outer_count, scale)
+    C = CartesianFinalBasisRealization
+    dims = ntuple(a -> length(axes[a]), 3)
+    overlaps = ntuple(a -> _nested_axis_pgdg(bundles, (:x, :y, :z)[a]).overlap, 3)
+    blocks = C.CartesianTerminalBasisBlock[]
+    retention = _nested_resolve_complete_shell_retention(nref)
+    nuclei = [(0.0, 0.0, position) for position in z]
+    function append_block!(kind, indices, states, coefficients)
+        isempty(indices) && return
+        start = isempty(blocks) ? 1 : last(last(blocks).column_range) + 1
+        n = isnothing(coefficients) ? length(indices) : size(coefficients, 2)
+        push!(blocks, C.CartesianTerminalBasisBlock(Symbol(kind, "_", length(blocks) + 1),
+            indices, states, coefficients, start:start+n-1))
+    end
+    function support(box, excluded)
+        states = [(x, y, zz) for x in box[1] for y in box[2] for zz in box[3]
+            if !any(all((x, y, zz)[a] in b[a] for a in 1:3) for b in excluded)]
+        return [_cartesian_flat_index(s..., dims) for s in states], states
+    end
+    direct!(box, excluded) = append_block!(:direct, support(box, excluded)..., nothing)
+    function shell!(outer, inner)
+        indices, states = support(outer, [inner])
+        shape = _nested_diatomic_source_box_dimension_plan((; nuclei), bundles,
+            outer, inner, retention; bond_axis = :z, nside = nref, selected_q = nref,
+            shared_shell_angular_resolution_scale = scale,
+            support_count = length(states)).source_mode_dims
+        modes = _nested_projected_q_shell_boundary_comx_product_modes(shape)
+        record = (unit_key = Symbol("shell_", length(blocks) + 1),
+            support_indices = indices, support_states = states,
+            outer_box = outer, source_mode_shape = shape)
+        rule = (retained_rule_kind = :boundary_comx_product_mode_selection,
+            transform_kind = :source_mode_column_selector, source_mode_dims = shape,
+            source_mode_ordering = :x_major_y_major_z_fast,
+            retained_column_indices = modes.column_indices,
+            retained_mode_indices = modes.mode_indices, retained_count = length(modes.column_indices))
+        result = C._realize_shell((support_record = record,),
+            (metadata = (raw_product_source_retained_rule = rule,),),
+            bundles, overlaps, 1e-10, 1e-14)
+        append_block!(:shell, result...)
+    end
+    function slab!(piece)
+        result = C._terminal_compact_thin_slab_block(
+            [CartesianCPB.cpb(piece.box)], piece.metadata, bundles)
+        _, states, coefficients = result
+        C._matrix_identity_error(coefficients' *
+            C._support_action(states, states, coefficients, overlaps)) <= 1e-10 ||
+            throw(ArgumentError("collinear outer slab overlap is not identity"))
+        append_block!(:outer, result...)
+    end
+    CartesianShellification._collinear_terminal_geometry(
+        direct!, shell!, slab!, axes, z, core_side, outer_count)
+    return C.CartesianTerminalBasisRealization(blocks, last(last(blocks).column_range), 0.0)
+end
