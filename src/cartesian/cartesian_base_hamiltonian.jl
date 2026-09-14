@@ -1547,14 +1547,20 @@ function cartesian_collinear_working_basis(z, Z; core_spacing, transverse_spacin
     z, Z = _collinear_nuclei(z, Z)
     for value in (core_spacing, transverse_spacing, padding_parallel,
         padding_transverse, tail_spacing, angular_resolution_scale)
-        value isa Real && isfinite(value) && value > 0 ||
+        value isa Real && isfinite(Float64(value)) && Float64(value) > 0 ||
             throw(ArgumentError("spacing, padding, tail and angular scale must be finite and positive"))
     end
     for count in (core_side, angular_reference_count, outer_face_count)
-        count isa Integer && !(count isa Bool) && count > 0 ||
+        count isa Integer && !(count isa Bool) && 0 < count <= typemax(Int) ||
             throw(ArgumentError("collinear counts must be positive integers, not Bool"))
     end
     isodd(core_side) || throw(ArgumentError("core_side must be odd"))
+    core_side, angular_reference_count, outer_face_count =
+        Int.((core_side, angular_reference_count, outer_face_count))
+    core_spacing, transverse_spacing, padding_parallel, padding_transverse,
+        tail_spacing, angular_resolution_scale = Float64.((core_spacing,
+        transverse_spacing, padding_parallel, padding_transverse,
+        tail_spacing, angular_resolution_scale))
     atoms = [(location = (0.0, 0.0, p), nuclear_charge = charge) for (p, charge) in zip(z, Z)]
     axes = ntuple(3) do a
         spacing = a == 3 ? core_spacing : transverse_spacing

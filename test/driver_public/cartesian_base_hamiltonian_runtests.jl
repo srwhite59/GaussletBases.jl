@@ -403,7 +403,9 @@ end
         ([-2.4, 0., 2.4], [1., 2., 1.], .6, 3., 3)]
     for (fixture, (z, Z, spacing, padding, outer)) in enumerate(fixtures)
         w = build(z, Z; transverse_spacing = spacing, padding_transverse = padding,
-            outer_face_count = outer, angular_reference_count = fixture <= 2 ? 5 : 3)
+            outer_face_count = outer, core_side = UInt(3),
+            angular_reference_count = Int32(fixture <= 2 ? 5 : 3),
+            angular_resolution_scale = fixture == 3 ? Float32(1.4) : 1.4)
         basis, bundles = w.terminal_basis, w.parent_axis_bundles
         pgdg = ntuple(i -> GB._nested_axis_pgdg(bundles, (:x, :y, :z)[i]), 3)
         dims = ntuple(i -> length(pgdg[i].weights), 3); n = prod(dims)
