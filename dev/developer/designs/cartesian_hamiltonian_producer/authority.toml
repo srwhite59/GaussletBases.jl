@@ -35,7 +35,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pqs_
 sha256 = "1eb1fcf74b441212bea6bf914f6a8413b963b3c1c83dce112b8bd321aa1e7093"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
-sha256 = "e9dcddca7f57fca714d345ad07b4cf7e0fe1702eb3ec0556def396a38bdfda2d"
+sha256 = "d56c60a420ae5ceb700bcb95f0325b413d5839d6b9cf43ae2b6d611575a68ab3"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/complete_core_shell_rhf_retirement.md"
 sha256 = "99520abb40f2d828f9cd80fb56517259fb20c37310a58924380d3d6c2e00f4be"
@@ -749,6 +749,84 @@ title = "return shell overlap from existing shell plan — rejected/deferred"
     heading = "Terminal Basis And Base Assembly"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-COLLINEAR-PQS-FN-01"
+lifecycle = "approved"
+scope = "Implement only the six source owners and two reader pages under Finite Collinear PQS: synchronous ownership, compact exterior, existing adaptive retention, bare transfer and accumulated complete operators. User-approved hard cap 450 added source lines includes relocations/docstrings. No other source, kernel change, solver, periodic geometry, legacy revival, cache, retirement or release work."
+surfaces = ["docs", "source"]
+title = "finite collinear PQS construction and operators"
+
+    [[records.document_refs]]
+    heading = "Finite Collinear PQS"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "d6b92c4232070872267d15ff22757140b562bbb1"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "629"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_shellification/terminal_geometry.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_base_hamiltonian.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/pqs_source_box_route_driver_helpers.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/pqs_source_box_low_order_materialization.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_gto_probes.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/manual/projected_q_shells.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/reference/export.md"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-COLLINEAR-PQS-FN-01"]
+grant = "implementation"
+id = "HP-COLLINEAR-PQS-TEST-01"
+lifecycle = "approved"
+scope = "Implement bounded finite-chain tests in the existing public Cartesian owner under Finite Collinear PQS. Freeze component ownership, multi-group termination, raw transfer, separate px/py capture and complete operators against independent references. Preserve existing assertions, workflows, budgets and released behavior; no broad angular run, new owner or numerical-policy relaxation."
+surfaces = ["tests"]
+title = "finite collinear PQS validation"
+
+    [[records.document_refs]]
+    heading = "Finite Collinear PQS"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "d6b92c4232070872267d15ff22757140b562bbb1"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "629"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 evidence_refs = []
