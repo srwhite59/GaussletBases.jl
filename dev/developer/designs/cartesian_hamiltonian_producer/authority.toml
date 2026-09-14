@@ -35,7 +35,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pqs_
 sha256 = "1eb1fcf74b441212bea6bf914f6a8413b963b3c1c83dce112b8bd321aa1e7093"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
-sha256 = "d56c60a420ae5ceb700bcb95f0325b413d5839d6b9cf43ae2b6d611575a68ab3"
+sha256 = "924a777be1eaf60e617ae625b746e248c3602a808381ecc3ff78162e7291a4e4"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/complete_core_shell_rhf_retirement.md"
 sha256 = "99520abb40f2d828f9cd80fb56517259fb20c37310a58924380d3d6c2e00f4be"
@@ -751,10 +751,10 @@ title = "return shell overlap from existing shell plan — rejected/deferred"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "maintenance"
 id = "HP-COLLINEAR-PQS-FN-01"
-lifecycle = "approved"
-scope = "Implement only the six source owners and two reader pages under Finite Collinear PQS: synchronous ownership, compact exterior, existing adaptive retention, bare transfer and accumulated complete operators. User-approved hard cap 450 added source lines includes relocations/docstrings. No other source, kernel change, solver, periodic geometry, legacy revival, cache, retirement or release work."
+lifecycle = "implemented"
+scope = "Maintain the accepted six source owners and two reader pages under Finite Collinear PQS. Preserve synchronous ownership, compact exterior, adaptive retention, bare transfer, accumulated operators and frozen validation. No new capability, kernel change, solver, periodic geometry, legacy revival, cache, retirement or release work; the implementation-only 450-line exception is exhausted."
 surfaces = ["docs", "source"]
 title = "finite collinear PQS construction and operators"
 
@@ -765,10 +765,13 @@ title = "finite collinear PQS construction and operators"
 
     [[records.evidence_refs]]
     kind = "git_commit"
-    value = "d6b92c4232070872267d15ff22757140b562bbb1"
+    value = "cf608bd0e151f95ea2f88960959f463184325151"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "3e32d7e50e9a232d8545fa313d2f06ac83565031"
     [[records.evidence_refs]]
     kind = "manager_pass"
-    value = "629"
+    value = "630"
 
     [[records.paths]]
     kind = "source"
@@ -804,10 +807,10 @@ title = "finite collinear PQS construction and operators"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-COLLINEAR-PQS-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-COLLINEAR-PQS-TEST-01"
-lifecycle = "approved"
-scope = "Implement bounded finite-chain tests in the existing public Cartesian owner under Finite Collinear PQS. Freeze component ownership, multi-group termination, raw transfer, separate px/py capture and complete operators against independent references. Preserve existing assertions, workflows, budgets and released behavior; no broad angular run, new owner or numerical-policy relaxation."
+lifecycle = "completed"
+scope = "Maintain the existing public Cartesian finite-chain owner under Finite Collinear PQS: exact ownership, multi-group termination, raw transfer, separate px/py and independent complete-operator checks. Preserve frozen tolerances, existing assertions and released behavior. No new owner, broad angular run, workflow change or numerical-policy relaxation."
 surfaces = ["tests"]
 title = "finite collinear PQS validation"
 
@@ -818,10 +821,13 @@ title = "finite collinear PQS validation"
 
     [[records.evidence_refs]]
     kind = "git_commit"
-    value = "d6b92c4232070872267d15ff22757140b562bbb1"
+    value = "cf608bd0e151f95ea2f88960959f463184325151"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "3e32d7e50e9a232d8545fa313d2f06ac83565031"
     [[records.evidence_refs]]
     kind = "manager_pass"
-    value = "629"
+    value = "630"
 
     [[records.paths]]
     kind = "test"
