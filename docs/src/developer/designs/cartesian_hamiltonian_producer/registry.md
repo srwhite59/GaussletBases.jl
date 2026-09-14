@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `a5b2c8b13c79dc0602d3d13ec2c235d19ab5d5980c6232c8340ad1027c09a9f1`.
+> [authority.toml](authority.toml), SHA-256 `04036c58036cce4372720bfc5a4f64e22934bb2f13e231085a8c3494e9610cae`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -338,6 +338,45 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** rejected as standalone authority; returning shell overlap may exist only as a private implementation detail under \`HP-FN-00\` and creates no independent source surface.
+
+### HP-COLLINEAR-PQS-FN-01 - finite collinear PQS construction and operators
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Finite Collinear PQS`
+- **Owned paths:**
+  - `source` / `existing`: `src/cartesian/cartesian_shellification/terminal_geometry.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_low_order_materialization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gto_probes.jl`
+  - `source` / `existing`: `src/GaussletBases.jl`
+  - `docs` / `existing`: `docs/src/manual/projected_q_shells.md`
+  - `docs` / `existing`: `docs/src/reference/export.md`
+- **Evidence:**
+  - `git_commit`: `d6b92c4232070872267d15ff22757140b562bbb1`
+  - `manager_pass`: `629`
+- **Dependencies:** none
+- **Scope:** Implement only the six source owners and two reader pages under Finite Collinear PQS: synchronous ownership, compact exterior, existing adaptive retention, bare transfer and accumulated complete operators. User-approved hard cap 450 added source lines includes relocations/docstrings. No other source, kernel change, solver, periodic geometry, legacy revival, cache, retirement or release work.
+
+### HP-COLLINEAR-PQS-TEST-01 - finite collinear PQS validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Finite Collinear PQS`
+- **Owned paths:**
+  - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
+- **Evidence:**
+  - `git_commit`: `d6b92c4232070872267d15ff22757140b562bbb1`
+  - `manager_pass`: `629`
+- **Dependencies:** `HP-COLLINEAR-PQS-FN-01`
+- **Scope:** Implement bounded finite-chain tests in the existing public Cartesian owner under Finite Collinear PQS. Freeze component ownership, multi-group termination, raw transfer, separate px/py capture and complete operators against independent references. Preserve existing assertions, workflows, budgets and released behavior; no broad angular run, new owner or numerical-policy relaxation.
 
 ### HP-COMP-ANGBOX-AUDIT-01 - angular-balanced shellification geometry audit
 

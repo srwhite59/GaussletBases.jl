@@ -434,3 +434,212 @@ that choice.
 Any change that requires route-specific first-step geometry, new report or
 artifact fields, full-identity slabs, label-inferred slab geometry, or a new
 source/retention policy requires separate authority.
+
+## Finite Collinear PQS
+
+Pass 629 authorizes only HP-COLLINEAR-PQS-FN-01/TEST-01 at baseline
+d6b92c4232070872267d15ff22757140b562bbb1. This is an additive expert finite-chain
+producer, not an amendment to existing atom/diatomic geometry or public defaults.
+It is the explicit exception to the preceding no-new-geometry guardrail.
+Implementation waits for the authority commit and its required CI/Docs checks.
+
+### Public boundary and storage
+
+Authorize exactly two new exports, documented at their definitions:
+
+- `cartesian_collinear_working_basis(z, Z; core_spacing, transverse_spacing,
+  padding_parallel, padding_transverse, core_side, angular_reference_count,
+  outer_face_count, tail_spacing, angular_resolution_scale, expansion)`.
+  All listed controls are required. Use G10, reference spacing 1 and existing
+  PGDG mapped-axis construction; no alternative backend, mapping or preset.
+- `cartesian_collinear_operators(working, z, Z; expansion)` returns exactly
+  `(; one_body, electron_electron_ida, nuclear_repulsion)`: two complete dense
+  Float64 matrices and the scalar nuclear repulsion. The explicit operator
+  nuclei/charges define the potential on the supplied, unchanged working basis.
+
+Validate nonempty equal-length real vectors, finite strictly increasing z,
+finite positive charges, positive finite spacing/padding/tail/angular controls,
+positive integer counts (not Bool), and odd core_side. Physical centers are
+distinct although snapped sites may coincide. General positive charges are
+allowed only where existing mapping validity checks succeed. No clipping,
+charge replacement, amplitude repair or silently substituted mapping.
+Use actual min/max z plus requested end padding; retain current coincident
+transverse-center rules. Do not confuse requested padding with realized bounds.
+
+Allow one private, unexported bare working type with exactly terminal basis and
+parent axis bundles; no molecule-size-dependent type parameters or inventories.
+Existing `gto_overlap_matrix` and `import_external_gto_orbitals` accept it by
+delegating to existing terminal/parent mixed-overlap mathematics and packet
+validation. Preserve block selection and finite-probe validation. Raw import is
+X*C without renormalization or determinant cleanup. No residual/injected carrier,
+global parent-by-final coefficient map, general representation engine or solver.
+
+Accumulate each charge-weighted nuclear contribution into the kinetic matrix
+using existing kernels and lexical buffers. Check expansion/axis exponent
+agreement with the existing validator. Do not allocate a mandatory list of
+per-center dense matrices, change CartesianIDAHamiltonian, place a sum in a
+fake center slot, or claim its reweighting/artifact semantics. Retain existing
+positive IDA integration-weight validation and finite output checks.
+The result is small-chain numerical data, not a general Hamiltonian facade.
+
+### Ownership and retained space
+
+1. Start from equal-index-width odd cores snapped to the mapped parent. Reject
+   cores outside the parent. Merge their overlap connected components
+   simultaneously, preserving each initial component hull as a direct sector.
+2. Expand all current boxes by one index on every axis only while all proposed
+   boxes fit. Determine all proposed overlap components before updating any
+   group; no greedy pair mutation or odd/even recipe.
+3. For each component, I is the hull of its previous boxes and O the hull of
+   proposed boxes. Emit I minus previous boxes as direct contact sectors and
+   O minus I as the existing PQS complete shell. Do not contract cores/contacts.
+4. At termination, assign interior gaps between surviving groups directly:
+   hull(groups) minus union(groups). Then decompose parent minus hull(groups)
+   into the existing axis-ordered outer slabs. Never confuse interior gaps with
+   exterior faces or drop them when multiple groups remain.
+5. Consolidate outer_mismatch_pieces into one callable private routine in its
+   present owner, replacing the nested implementation. Preserve exact existing
+   diatomic output, metadata, order and numerical behavior. Earlier axes own
+   edges/corners; later axes use earlier axes' inner intervals.
+6. Apply the unchanged compact thin-slab kernel: direct normal indices and
+   outer_face_count retained functions on each in-plane axis. Validate the
+   positive count against BOTH actual in-plane lengths before realization.
+   Reject incompatibility; no clamp, direct-completion fallback or map change.
+7. Use canonical ascending-z group order and x-major/y-major/z-fast support
+   order. Inventories are vectors; spatial triples alone have fixed tuple shape.
+   Production retains local blocks/ranges, not dense occupancy or Q/S oracles.
+
+Reuse the all-nucleus angular-spacing dimension calculation, boundary COMX
+selection and existing shell Lowdin/gauge/weight checks unchanged.
+angular_reference_count calibrates that calculation; it is NOT a constant
+source q or the existing H/H2 q/ns contract. Record actual source shapes in
+acceptance evidence. outer_face_count is separate from angular calibration,
+parent spacing and padding. Counts 9 and 7 below are fixture controls, not
+chemically certified defaults. Scalar face counts cannot independently refine
+a long in-plane direction beyond the shorter interval; reject requests that
+need per-axis counts/subdivision rather than broadening this packet.
+
+### Frozen evidence and acceptance
+
+Reviewed reports (ignored evidence, not execution authority):
+`tmp/reviews/collinear-pqs-design-2026-09-14/REPORT.md`, SHA-256
+b27161c0cbb5ab65976a7076b97bde17b71c8f00ee4e003957a4ef4897a50880;
+`tmp/reviews/collinear-pqs-completion-2026-09-14/REPORT.md`, SHA-256
+5c2e4bd47fc3058deefbdd7e45e581ee1f7a45445832de432dea4dfb4f0f6a40.
+Their passing logs and independent parent-action references were inspected.
+No broad numerical replay is required for authorization.
+
+Reuse uniform H3 (-2.4,0,2.4), H4 (-3.6,-1.2,1.2,3.6),
+unequal H3 (-2.4,-1.2,2.4), contact H3 (-1.2,0,1.2), and H-He-H
+(-2.4,0,2.4; charges 1,2,1). Report controls: core_side=3,
+longitudinal spacing .6, tail_spacing=2.8, angular scale=1.4,
+reference counts 3/5, compact45 expansion. Baseline transverse spacing/padding
+are .6/3 with longitudinal padding 3. Preserve initial/growth components,
+existing inner blocks/columns and source shapes; compact exterior replaces
+the direct remainder, so do not assert unchanged total direct-baseline size.
+
+Freeze enlarged H3 at transverse .45/padding 6, reference count 5,
+outer count 9: parent 13x13x17, inner 617, final 1265.
+Freeze unequal H3 at transverse .6/padding 3, reference count 5,
+outer count 7: parent 9x9x15, inner 423, final 619.
+Use direct-completion scratch references only as test oracles, never as an
+alternate production mode. Complete operators must be exercised, not merely
+selected blocks; at least the enlarged q_outer=9 full output must match the
+independent parent-action projected checks.
+
+Numerical acceptance is frozen as follows (absolute tolerances, rtol=0):
+- Discrete coverage, ordering, group membership, direct core/contact coefficients
+  and existing inner blocks/columns: exact. No missing or duplicate parent sites.
+- Max-entry sampled-parent orthogonality error <=1e-10; finite positive IDA
+  weights with the existing 1e-14 validity floor unchanged.
+- H1/IDA symmetry and independent finite-expansion H1/IDA contraction agreement
+  <=1e-10; nuclear repulsion agreement <=1e-12 Ha. Use actual positive charges.
+- GTO overlap vs independent Q'X_parent <=1e-12; importer vs its X*C exactly.
+- Origin-centered normalized s, px, py probes at exponents .1 and .4:
+  compare each component separately, never average px/py. For the two frozen
+  compact configurations, match logged captures within 1e-8 and projected
+  H/IDA entries within 1e-8 Ha. Other fixtures use independent comparisons
+  in their actual retained space, not direct-completion total capture targets.
+- At exponent .1, enlarged compact capture is
+  (.9999318254,.9997143222,.9997136299); unequal compact capture is
+  (.9988312030,.9911419747,.9911418013).
+- Added direct-to-compact max capture/H/IDA-self changes at exponent .1:
+  enlarged <=1.1e-6 / 4.4e-6 Ha / 9.3e-6 Ha;
+  unequal <=8.9e-6 / 1.1e-5 Ha / 6.1e-5 Ha.
+  At exponent .4: enlarged <=1.7e-7 / 3.0e-6 Ha / 6.3e-8 Ha;
+  unequal <=1.2e-7 / 3.4e-6 Ha / 4.7e-8 Ha.
+These are fixture parity/approximation gates, not chemical accuracy promises.
+Preserve parent loss, inner retention loss, outer truncation loss and raw
+projected-operator changes as separate quantities. None is an energy-error
+estimate; IDA is not exact four-index ERI. Preserve observed transverse
+asymmetry, actual bounds and snap errors. No new persistent diagnostics schema.
+
+Add one focused multiple-group termination case: index parent 7x7x25,
+core_side=3, nuclear indices (4,4,5),(4,4,13),(4,4,21).
+Two synchronous expansions leave three disjoint 7x7x7 boxes, 1029 sites;
+termination leaves 98 direct interior-gap sites (z=9,17) and 98 exterior
+sites (z=1,25). Total 1225 exactly once. Outer count 3 fits the two z-normal
+7x7 faces. Check decomposition, direct gaps and slab realization using a
+bounded existing-factor or synthetic orthogonal-factor fixture. This is not a
+new geometry campaign. Also reject invalid outer counts and mapping-invalid
+inputs without fallback; preserve tests for simultaneous/transitive merges.
+
+Production uses only local basis storage. Dense global Q/S and independent
+tensor-action oracles are allowed only in bounded tests/scratch.
+For the enlarged acceptance fixture, record fresh/warm construction, transfer,
+and complete-operator time/allocation separately. Complete operator build
+ceilings: Nfinal<=2300, retained basis/parent/output <=512 MiB, cumulative
+allocation <=4 GiB, first call <=180 s and warm <=120 s on the documented
+reference environment. Do not turn machine-dependent times into universal
+CI assertions or infer end-to-end cost by summing unrelated compiled phases.
+Dense outputs remain quadratic; support-pair work still depends on parent size
+and center count. No long-chain scaling or many-body claim.
+
+### Exact surfaces and budgets
+
+Only these six existing source files may change (added lines include docstrings
+and relocated decomposition, not net delta):
+- src/cartesian/cartesian_shellification/terminal_geometry.jl: preferred 160.
+- src/cartesian/cartesian_base_hamiltonian.jl: preferred 125.
+- src/cartesian/pqs_source_box_route_driver_helpers.jl: preferred 70.
+- src/cartesian/pqs_source_box_low_order_materialization.jl: preferred 40.
+- src/cartesian/cartesian_gto_probes.jl: preferred 20.
+- src/GaussletBases.jl: preferred 2, only the two exports.
+Total preferred 417; USER-APPROVED HARD EXCEPTION 450 added source lines,
+for this feature only. Existing kernel bodies and all other source owners
+remain unchanged; no source file, public type, cache or framework is added.
+
+The independently selected existing test owner is
+test/driver_public/cartesian_base_hamiltonian_runtests.jl, already in public
+Cartesian/Supported-floor CI. Preferred/hard added test lines: 170/220,
+including compact local oracles, malformed-input and multi-group checks.
+No other test edits, new test owner, fixture file or runner change.
+Tests must embed only compact reference values or compute bounded independent
+oracles; CI must not read ignored reports or machine-local scratch files.
+Reader guidance only in docs/src/manual/projected_q_shells.md and
+docs/src/reference/export.md: preferred/hard total additions 40/55; curate both
+docstrings, clearly label expert finite chains and required convergence controls.
+Do not duplicate manuals or imply changed stable/released documentation.
+
+Run the focused owner, existing residual-GTO public owner, matched H2+ release
+owner once, relevant common-shell/compact-slab owners, package load,
+docs_fast/full docs, authority/self-test, generated parity, Documenter and diff
+checks. Existing atom/diatomic fingerprints and released interfaces must remain
+unchanged. Normal source-bearing CI must classify full and pass all three
+unchanged jobs plus Docs. No full angular suite, repeated paper example,
+workflow change or benchmark campaign.
+
+Delete duplicated outer decomposition when making it callable; do not create a
+parallel completion implementation. Retain private recursive chains until
+matched-parent multi-group/odd-even/contact/outer/operator/transfer evidence and
+external-owner caller clearance justify separate retirement. Preserve all
+released ordinary-chain interfaces and the distinct sliced-chain capability.
+No periodic/off-axis extension, solver, screening, artifact change, new
+contraction mathematics, legacy revival, de-export, retirement, Standard60,
+release or stable promotion is granted.
+
+Failure rule: if exact ownership, frozen approximation gates, storage,
+unchanged atom/diatomic behavior or the 450-line limit cannot be met, or broader
+semantics/kernel edits are needed, make no implementation commit and report the
+specific obstacle. No clamp, hidden fallback, tolerance relaxation or planner-only
+delivery. Close implementation separately after full acceptance evidence.

@@ -180,6 +180,12 @@ No solver, Hamiltonian payload, mandatory PySCF dependency, basis-only/live-mf
 export, or release action belongs to this goal. Reader-facing documentation is
 implemented and included in immutable RC2 and final v0.2.0.
 
+**MT8 - Finite collinear PQS (active).** Pass 629 targets usable small-chain
+bases, complete operators and raw transfer with general ordered z/positive
+charges, subject to mapping validity. Compact outer retention is explicitly
+converged, not a long-chain or chemical-accuracy claim. Preserve MT7, all released
+interfaces and the distinct sliced model; no legacy retirement is coupled.
+
 ## Manager Guardrails
 
 - `authority.toml` grants execution; this ledger records interpretation only.
@@ -1125,3 +1131,38 @@ normal-main deployment and stable-pin persistence check. Existing scientific
 limitations remain; no successor task is opened.
 Local closeout checks passed: authority/self-test and generated parity,
 package load, docs 8/8 +162/162 +10/10, Documenter, log bound and diff checks.
+
+### Pass 629: Finite Collinear PQS Implementation Authority
+
+Independent review of both September 14 design/completion reports and their
+passing scripts/logs supports one usable feature, not another general audit.
+Existing all-nucleus angular calibration, shell/slab realization, GTO overlap,
+kinetic, nuclear and IDA kernels suffice. General positive charges are retained
+with unchanged mapping rejection. Complete enlarged H3 outputs (1265 squared)
+were demonstrated at 30.33 MB retained payload and 2.36/0.485 s first/warm
+operator build; these are fixture evidence, not end-to-end scaling promises.
+No broad probes were repeated for authorization. Independent integer-set
+inspection confirms the missing three-group termination fixture: 1029 group,
+98 interior-gap and 98 exterior sites, totaling 1225 exactly once.
+
+The new pair freezes two expert operations, a two-field private bare basis,
+accumulated nuclear attraction and a three-field numerical return. User's
+450-added-source-line exception is feature-specific; preferred 417 includes
+relocated decomposition/docstrings. Existing public Cartesian tests have
+170/220 preferred/hard additions; two existing reader pages have 40/55.
+Separate px/py capture and projected H/IDA bounds retain the measured slab
+asymmetry; they do not certify energy accuracy. Source-bearing implementation
+must pass all three existing CI jobs; this authority uses docs-only checks.
+
+MT8 opens for finite-chain construction; MT7 remains maintenance. Deleted:
+duplicated outer decomposition must be removed when made callable. Simplified:
+no odd/even recursion, dense global coefficient map or per-center dense list.
+Quarantined: dense Q/S are bounded test oracles only. Not deleted: released
+ordinary/sliced interfaces and private recursive paths still require separate
+replacement evidence and external-owner clearance. Remaining blocker: bounded
+implementation and frozen acceptance, including unmerged termination. Source
+changes in this authority pass: 0/0; new files/tests/metadata: none. No release,
+Standard60, solver or retirement authority follows from this grant.
+Local authority/self-test, deterministic generated views, package load,
+docs 8/8 +162/162 +10/10, Documenter, log bound and diff checks passed.
+Repo-manager waits for this commit's docs-only CI and Docs before implementation.

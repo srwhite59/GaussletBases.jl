@@ -54,6 +54,8 @@ task-specific contract index; read only the documents relevant to the assigned
 ID or subsystem.
 
 - [current.md](current.md)
+- [Finite collinear PQS](common_terminal_shell_decomposition.md#Finite-Collinear-PQS)
+  for the bounded expert chain implementation grant and frozen acceptance gates
 - [registry.md](registry.md)
 - [execution_whitelist.md](execution_whitelist.md)
 - [invariants.md](invariants.md)

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Execution Whitelist
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `a5b2c8b13c79dc0602d3d13ec2c235d19ab5d5980c6232c8340ad1027c09a9f1`.
+> [authority.toml](authority.toml), SHA-256 `04036c58036cce4372720bfc5a4f64e22934bb2f13e231085a8c3494e9610cae`.
 
 Cartesian Hamiltonian producer source work is currently authorized only for
 these approved design IDs:
@@ -21,6 +21,8 @@ these approved design IDs:
 - `HP-CGRB-NN-WIRE-01`
 - `HP-CGRB-TEST-01`
 - `HP-CGRB-WIRE-01`
+- `HP-COLLINEAR-PQS-FN-01`
+- `HP-COLLINEAR-PQS-TEST-01`
 - `HP-COMP-ANGBOX-FN-01`
 - `HP-COMP-ATOMBOX-FN-01`
 - `HP-COMP-ATOMBOX-TEST-01`
