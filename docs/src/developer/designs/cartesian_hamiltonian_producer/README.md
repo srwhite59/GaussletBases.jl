@@ -55,7 +55,7 @@ ID or subsystem.
 
 - [current.md](current.md)
 - [Finite collinear PQS](common_terminal_shell_decomposition.md#Finite-Collinear-PQS)
-  for the bounded expert chain implementation grant and frozen acceptance gates
+  for the implemented expert chain contract and frozen maintenance gates
 - [registry.md](registry.md)
 - [execution_whitelist.md](execution_whitelist.md)
 - [invariants.md](invariants.md)

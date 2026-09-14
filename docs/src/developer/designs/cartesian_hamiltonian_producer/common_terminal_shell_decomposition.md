@@ -437,11 +437,13 @@ source/retention policy requires separate authority.
 
 ## Finite Collinear PQS
 
-Pass 629 authorizes only HP-COLLINEAR-PQS-FN-01/TEST-01 at baseline
-d6b92c4232070872267d15ff22757140b562bbb1. This is an additive expert finite-chain
-producer, not an amendment to existing atom/diatomic geometry or public defaults.
-It is the explicit exception to the preceding no-new-geometry guardrail.
-Implementation waits for the authority commit and its required CI/Docs checks.
+Pass 630 accepts Pass 629 implementation cf608bd0e151f95ea2f88960959f463184325151
+and input normalization 3e32d7e50e9a232d8545fa313d2f06ac83565031.
+HP-COLLINEAR-PQS-FN-01/TEST-01 are maintenance only. This additive expert
+finite-chain producer is the explicit exception to the preceding no-new-geometry
+guardrail; atom/diatomic geometry and public defaults remain unchanged.
+The following frozen implementation boundaries remain maintenance constraints,
+not authority for another capability or another 450-line extension.
 
 ### Public boundary and storage
 

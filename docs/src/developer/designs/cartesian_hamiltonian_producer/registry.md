@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `04036c58036cce4372720bfc5a4f64e22934bb2f13e231085a8c3494e9610cae`.
+> [authority.toml](authority.toml), SHA-256 `88fe4a956d3202c49489903879a642494fb738c9c1233b419f88e5b82da51f50`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -341,8 +341,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-COLLINEAR-PQS-FN-01 - finite collinear PQS construction and operators
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -357,15 +357,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/manual/projected_q_shells.md`
   - `docs` / `existing`: `docs/src/reference/export.md`
 - **Evidence:**
-  - `git_commit`: `d6b92c4232070872267d15ff22757140b562bbb1`
-  - `manager_pass`: `629`
+  - `git_commit`: `cf608bd0e151f95ea2f88960959f463184325151`
+  - `git_commit`: `3e32d7e50e9a232d8545fa313d2f06ac83565031`
+  - `manager_pass`: `630`
 - **Dependencies:** none
-- **Scope:** Implement only the six source owners and two reader pages under Finite Collinear PQS: synchronous ownership, compact exterior, existing adaptive retention, bare transfer and accumulated complete operators. User-approved hard cap 450 added source lines includes relocations/docstrings. No other source, kernel change, solver, periodic geometry, legacy revival, cache, retirement or release work.
+- **Scope:** Maintain the accepted six source owners and two reader pages under Finite Collinear PQS. Preserve synchronous ownership, compact exterior, adaptive retention, bare transfer, accumulated operators and frozen validation. No new capability, kernel change, solver, periodic geometry, legacy revival, cache, retirement or release work; the implementation-only 450-line exception is exhausted.
 
 ### HP-COLLINEAR-PQS-TEST-01 - finite collinear PQS validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -373,10 +374,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
 - **Evidence:**
-  - `git_commit`: `d6b92c4232070872267d15ff22757140b562bbb1`
-  - `manager_pass`: `629`
+  - `git_commit`: `cf608bd0e151f95ea2f88960959f463184325151`
+  - `git_commit`: `3e32d7e50e9a232d8545fa313d2f06ac83565031`
+  - `manager_pass`: `630`
 - **Dependencies:** `HP-COLLINEAR-PQS-FN-01`
-- **Scope:** Implement bounded finite-chain tests in the existing public Cartesian owner under Finite Collinear PQS. Freeze component ownership, multi-group termination, raw transfer, separate px/py capture and complete operators against independent references. Preserve existing assertions, workflows, budgets and released behavior; no broad angular run, new owner or numerical-policy relaxation.
+- **Scope:** Maintain the existing public Cartesian finite-chain owner under Finite Collinear PQS: exact ownership, multi-group termination, raw transfer, separate px/py and independent complete-operator checks. Preserve frozen tolerances, existing assertions and released behavior. No new owner, broad angular run, workflow change or numerical-policy relaxation.
 
 ### HP-COMP-ANGBOX-AUDIT-01 - angular-balanced shellification geometry audit
 

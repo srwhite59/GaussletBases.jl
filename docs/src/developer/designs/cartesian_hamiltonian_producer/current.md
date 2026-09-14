@@ -10,12 +10,13 @@ Pass 628 closes the [release transaction](documentation_deployment.md#v021-Condi
 and removes both temporary execution grants. Normal-main deployment must
 preserve this pin. That release transaction grants no numerical or successor work.
 
-Pass 629 separately authorizes the [finite collinear PQS feature](common_terminal_shell_decomposition.md#Finite-Collinear-PQS)
-under HP-COLLINEAR-PQS-FN-01/TEST-01, after this authority commit passes checks.
-General ordered z positions/positive charges remain subject to existing mapping
-validity. The feature-only source cap is 450 added lines; compact outer-face
-counts are explicit convergence controls, not certified defaults. No legacy
-retirement, solver, periodic extension or release change is granted.
+Pass 630 closes the [finite collinear PQS feature](common_terminal_shell_decomposition.md#Finite-Collinear-PQS)
+at 3e32d7e50e9a232d8545fa313d2f06ac83565031. The two expert constructors,
+complete operators and raw GTO transfer are implemented/maintenance under
+HP-COLLINEAR-PQS-FN-01/TEST-01. General ordered z positions/positive charges
+remain subject to mapping validity. Outer-face counts require convergence;
+diffuse parent loss, transverse asymmetry and dense scaling remain limitations.
+No legacy retirement, solver, periodic extension or release change follows.
 
 Start with [README](README.md), this page, and [invariants](invariants.md), then
 read only the assigned generated registry entry and linked canonical contract.

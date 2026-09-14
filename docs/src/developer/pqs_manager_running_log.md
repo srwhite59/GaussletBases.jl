@@ -180,7 +180,7 @@ No solver, Hamiltonian payload, mandatory PySCF dependency, basis-only/live-mf
 export, or release action belongs to this goal. Reader-facing documentation is
 implemented and included in immutable RC2 and final v0.2.0.
 
-**MT8 - Finite collinear PQS (active).** Pass 629 targets usable small-chain
+**MT8 - Finite collinear PQS (completed/maintenance).** Pass 630 accepts small-chain
 bases, complete operators and raw transfer with general ordered z/positive
 charges, subject to mapping validity. Compact outer retention is explicitly
 converged, not a long-chain or chemical-accuracy claim. Preserve MT7, all released
@@ -1166,3 +1166,37 @@ Standard60, solver or retirement authority follows from this grant.
 Local authority/self-test, deterministic generated views, package load,
 docs 8/8 +162/162 +10/10, Documenter, log bound and diff checks passed.
 Repo-manager waits for this commit's docs-only CI and Docs before implementation.
+
+### Pass 630: Finite Collinear PQS Closeout
+
+Accepted cf608bd0e151f95ea2f88960959f463184325151 and normalization
+3e32d7e50e9a232d8545fa313d2f06ac83565031, tree
+6ad007c2d52bc9c095c23de350f1ea834199a256. Small finite chains now produce
+complete H1/IDA matrices, nuclear repulsion and raw GTO transfer without a
+global coefficient map or retained per-nucleus matrix list. Independent diff,
+oracle and evidence review found no blocking issue; the focused owner passed
+222/222 locally in 17.1 s. Exact-head CI 34897836745 and Docs 34897836789
+passed. Reused accepted core, Cartesian, residual-GTO and matched-H2+ owners
+without another angular suite or duplicate paper example.
+
+Frozen dimensions 1265/619, inner coefficients, six old geometries and the
+1029+98+98 three-group ownership partition passed. Reviewed equivalent due
+diligence: enlarged parent 13x13x17, transverse bounds +/-6.43929, longitudinal
+bounds +/-6.62135 bohr, requested padding 6/3, inner 617 and outer 648.
+Measured warm construction/operators were .078/.557 s; operators allocated
+210 MB with 30.3 MB retained. These are small-fixture costs, not scaling claims.
+
+MT8 is maintenance; MT7 and release/stable identities remain unchanged.
+Deleted: duplicate outer decomposition. Simplified: one shared decomposition
+and direct nuclear accumulation. Quarantined: dense oracles stay test-only.
+Not deleted: ordinary/sliced interfaces and private recursive paths; exact
+remaining retirement blocker is matched replacement evidence and external-owner
+clearance. Added/deleted source: 263/76 (265 cumulative additions across commits);
+tests: 165 added lines (166 cumulative), no new owner; reader docs: 39 added.
+New files/persistent metadata/status fields: none. Existing local shell records
+reuse the established kernel contract. Frozen tolerances, diffuse parent loss,
+px/py asymmetry and quadratic storage remain constraints, not energy accuracy
+claims. No successor task or renewed feature-size exception is opened.
+Local closeout checks passed: package load, docs 8/8 +162/162 +10/10,
+authority/self-test, generated parity, Documenter, log bound and diff checks.
+The closeout uses docs-only CI/Docs; numerical implementation evidence is reused.
