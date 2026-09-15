@@ -86,7 +86,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_sur
 sha256 = "dd325e13a2afcfe50d0bf5f36447a779f00013132da0a5848f29859ae87a4738"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
-sha256 = "c7fe3a87bf8e70ad88025f66ed4c57d6d19b3961033891fb6a4e431b090c801e"
+sha256 = "ba31b44a424a10addc86b924eb11d15098884d68fab1659c7b3efd2f7f0e315e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "e147f315224dd644b01e587d3cc2d2210ec563512d08e7fd7a7724dae87d4cfb"
@@ -804,6 +804,64 @@ title = "finite collinear PQS construction and operators"
     [[records.paths]]
     kind = "docs"
     path = "docs/src/reference/export.md"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-COLLINEAR-PQS-FN-01", "HP-REP-PQS-RG-WORKING-FN-01"]
+grant = "implementation"
+id = "HP-COLLINEAR-PQS-RG-FN-01"
+lifecycle = "approved"
+scope = "Connect the collinear working handle to existing residual selection, complete accumulated H1/MWG and raw transfer under Finite Collinear Supplementation. Parameterize only the existing carrier and restrict validation to two representations. Preserve old atom/diatomic behavior, thresholds and kernels. Source cap 130 added lines; no solver, campaign, fallback, cache, release or retirement."
+surfaces = ["docs", "source"]
+title = "finite collinear residual-GTO supplementation"
+
+    [[records.document_refs]]
+    heading = "Finite Collinear Supplementation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "4cf1c7b125f6a8f11f3559f835eab24e70798f89"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "631"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_base_hamiltonian.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/manual/projected_q_shells.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/reference/export.md"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-COLLINEAR-PQS-RG-FN-01"]
+grant = "implementation"
+id = "HP-COLLINEAR-PQS-RG-TEST-01"
+lifecycle = "approved"
+scope = "Validate the finite-collinear supplemented connection in the existing public residual-GTO owner under Finite Collinear Supplementation. Cover independent H1/MWG, complete metric, contracted candidates, distinct potential geometry, raw transfer and rejection with frozen tolerances. Preserve old tests; 220 added lines maximum. No new owner, broad campaign, workflow change or consumer clearance."
+surfaces = ["tests"]
+title = "finite collinear supplementation validation"
+
+    [[records.document_refs]]
+    heading = "Finite Collinear Supplementation"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "4cf1c7b125f6a8f11f3559f835eab24e70798f89"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "631"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-COLLINEAR-PQS-FN-01"]
