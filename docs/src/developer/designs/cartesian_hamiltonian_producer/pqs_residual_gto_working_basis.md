@@ -11,8 +11,8 @@ This contract closes one representation boundary. It does not change residual
 selection, one-body or interaction physics, external-packet semantics, or the
 opaque `CartesianIDAHamiltonian` contract.
 
-Pass 631 separately authorizes the [finite-collinear connection](#Finite-Collinear-Supplementation)
-under HP-COLLINEAR-PQS-RG-FN-01/TEST-01. The original atom/diatomic contract
+Pass 633 accepts the [finite-collinear connection](#Finite-Collinear-Supplementation)
+under HP-COLLINEAR-PQS-RG-FN-01/TEST-01 as maintenance. The original atom/diatomic contract
 below remains unchanged; only that new overload returns accumulated matrices.
 
 ## Consumer Need
@@ -302,11 +302,13 @@ fall back to a private consumer map, or add partial scaffolding.
 
 ## Finite Collinear Supplementation
 
-Pass 631 authorizes HP-COLLINEAR-PQS-RG-FN-01/TEST-01 at
-4cf1c7b125f6a8f11f3559f835eab24e70798f89. Named consumer hchain-doer remains
-paused until implementation is independently accepted. All scientific H-chain
-calculations must be supplemented; bare matrices here are intermediate data,
-not permission for a bare scientific campaign.
+Pass 633 accepts cb1b2c7829f4f10e3a653cd541c1998f1d65bf64 under the
+Pass 631 boundary and Pass 632 load-order amendment. HP-COLLINEAR-PQS-RG-FN-01
+and TEST-01 now grant maintenance only. The following frozen boundaries remain
+constraints, not a new implementation grant. hchain-doer's implementation
+prerequisite is cleared; scientific runs still require their own consumer
+authority. All scientific H-chain calculations must be supplemented. Bare
+matrices here are intermediate data, not permission for a bare campaign.
 
 ### Target and interface
 
@@ -328,8 +330,9 @@ defined after this source owner loads. Keep supplement required and perform
 the exact type assertion as the first body statement, before numerical work.
 Wrong types must fail; no conversion or broader accepted representation.
 Do not reorder includes, move the type, or add eval/delayed registration.
-The preserved Pass 631 draft is unvalidated, not accepted implementation.
-All original paths, budgets, acceptance gates and consumer pause remain intact.
+The stopped draft was unvalidated; the accepted production commit applies this
+assertion and passes package, numerical and public-interface checks. No include
+reorder, type move or broadening of accepted candidate types was required.
 
 Keep the spelling private to the existing opaque working type; add no export.
 Reuse the existing five-field _CartesianResidualGTOMWGSystem, adding a concrete
@@ -455,7 +458,7 @@ budget; no shared numerical helper or new carrier is needed.
 Failure rule: stop without an implementation commit if budgets, frozen
 tolerances, rank rejection, old behavior, storage or two-representation validation
 cannot be preserved, or another file/kernel/semantic change is needed.
-Do not relax tolerances, clamp, silently fall back, add compatibility machinery
-or release hchain-doer. Repo-manager begins only after this authority commit
-and required checks pass; independent implementation acceptance is a separate
-gate before any consumer resumption. No scientific campaign is authorized here.
+Do not relax tolerances, clamp, silently fall back or add compatibility machinery.
+The implementation and independent-acceptance gates were completed in Pass 633.
+Consumer resumption remains governed by its own scope; no scientific campaign
+is authorized here.

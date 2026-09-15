@@ -186,10 +186,10 @@ charges, subject to mapping validity. Compact outer retention is explicitly
 converged, not a long-chain or chemical-accuracy claim. Preserve MT7, all released
 interfaces and the distinct sliced model; no legacy retirement is coupled.
 
-Pass 631 opens only the residual-GTO/MWG connection for this basis; the bare
-construction remains maintenance. hchain-doer is paused until independent
-implementation acceptance; no scientific bare H-chain or H10/H20 campaign is
-authorized. Supplemented capture still requires consumer convergence evidence.
+Pass 633 closes the residual-GTO/MWG connection to maintenance. hchain-doer's
+implementation prerequisite is cleared; consumer scope and supplemented
+convergence remain separate. No bare scientific H-chain or H10/H20 campaign
+is authorized by this repository closeout.
 
 ## Manager Guardrails
 
@@ -1260,3 +1260,39 @@ Repo-manager waits for amendment CI/Docs, then resumes and validates the origina
 packet. No implementation acceptance or consumer authorization is implied.
 Local package/docs 8/8 +162/162 +10/10, authority/self-test, generated parity,
 Documenter, manager-log bound and diff checks passed. No numerical suite ran.
+
+### Pass 633: Finite Collinear Supplementation Closeout
+
+Accepted cb1b2c7829f4f10e3a653cd541c1998f1d65bf64, tree
+287d9453d8cde0bcfa868f1f52ce01c577c67f01, under Passes 631-632.
+Independent source/oracle review found no blocking issue; the focused
+supplemented tests passed 77/77 locally in 35.6 s. Exact-head full CI
+34934021767 and Docs 34934021540 passed. Reused accepted original owner
+80/80, core/IDA, Cartesian 232/232 plus collinear 222/222, and old atomic
+smoke evidence rather than repeat broad numerical owners.
+
+The required first-body type assertion works; the existing carrier concretely
+supports only the old Hamiltonian and new accumulated matrix representation.
+Contracted candidates and different potential geometry are covered by shared
+independent oracles. Actual supplemented metric, H1 congruence, MWG convolution,
+unchanged base IDA and raw transfer pass frozen gates. Raw-block near-roundoff
+agreement is not complete transformed-matrix precision or chemical accuracy.
+Due diligence: H3 parent 9x9x13, padding 3/3, bounds +/-4.335003225 transverse
+and +/-5.206143805 longitudinal; 1053 support sites, 231 base plus 12 residuals.
+No construction warning; H-He-H final dimension 235. Warm supplementation
+.102 s/111.9 MB allocated/2.10 MB retained is bounded evidence, not H10 scaling.
+
+MT8 including supplementation is maintenance. The implementation prerequisite
+for hchain-doer is cleared; scientific calculations still require supplemented
+construction and separate consumer scope/convergence. Deleted: no live facade.
+Simplified: existing residual/MWG composition with streamed nuclear raw blocks.
+Quarantined: stopped draft is superseded evidence. Not deleted: old facades own
+released artifact/sector/reweighting semantics. Remaining blocker: no repository
+connection blocker; diffuse-space/observable convergence remains consumer work.
+Added/deleted source 79/3; tests +220 at the hard cap; reader docs +34.
+New files/types/fields/metadata: none; the existing carrier gains one concrete
+type parameter. No numerical policy, release, stable or retirement change and
+no successor task is opened.
+Local closeout package/docs 8/8 +162/162 +10/10, authority/self-test,
+generated parity, Documenter, log bound and diff checks passed. Remote closeout
+uses docs-only CI/Docs; no broad numerical suite is repeated.

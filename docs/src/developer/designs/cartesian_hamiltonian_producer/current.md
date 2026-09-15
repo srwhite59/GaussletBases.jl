@@ -18,15 +18,14 @@ remain subject to mapping validity. Outer-face counts require convergence;
 diffuse parent loss, transverse asymmetry and dense scaling remain limitations.
 No legacy retirement, solver, periodic extension or release change follows.
 
-Pass 631 authorizes only the [finite-collinear supplementation connection](pqs_residual_gto_working_basis.md#Finite-Collinear-Supplementation)
-under HP-COLLINEAR-PQS-RG-FN-01/TEST-01 once its authority checks pass.
-The old atom/diatomic Hamiltonian semantics remain unchanged; the new overload
-uses explicit potential/ownership nuclei and a three-field matrix result.
-hchain-doer remains paused until implementation acceptance. Scientific H-chain
-work must be supplemented; this grants no H10/H20 calculation or accuracy claim.
-Pass 632 corrects only the required supplement keyword's exact type assertion
-to the first function-body statement, resolving declaration order. Resume only
-after the amendment's checks pass; the archived draft still requires validation.
+Pass 633 accepts the [finite-collinear supplementation connection](pqs_residual_gto_working_basis.md#Finite-Collinear-Supplementation)
+at cb1b2c7829f4f10e3a653cd541c1998f1d65bf64. HP-COLLINEAR-PQS-RG-FN-01/TEST-01
+are maintenance. The old atom/diatomic Hamiltonian semantics remain unchanged;
+the new overload uses explicit potential/ownership nuclei and a three-field
+matrix result. The load-order correction is implemented and validated.
+hchain-doer's implementation prerequisite is cleared, not its scientific
+convergence decisions. Scientific H-chain work must be supplemented and remain
+within separate consumer authority; no H10/H20 campaign is granted here.
 
 Start with [README](README.md), this page, and [invariants](invariants.md), then
 read only the assigned generated registry entry and linked canonical contract.

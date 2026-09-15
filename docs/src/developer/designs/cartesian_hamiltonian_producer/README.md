@@ -57,7 +57,7 @@ ID or subsystem.
 - [Finite collinear PQS](common_terminal_shell_decomposition.md#Finite-Collinear-PQS)
   for the implemented expert chain contract and frozen maintenance gates
 - [Finite collinear supplementation](pqs_residual_gto_working_basis.md#Finite-Collinear-Supplementation)
-  for the bounded existing-kernel connection; consumer execution remains paused
+  for the implemented expert connection and its scientific-use limitations
 - [registry.md](registry.md)
 - [execution_whitelist.md](execution_whitelist.md)
 - [invariants.md](invariants.md)
