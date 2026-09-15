@@ -86,7 +86,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_sur
 sha256 = "dd325e13a2afcfe50d0bf5f36447a779f00013132da0a5848f29859ae87a4738"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
-sha256 = "ba31b44a424a10addc86b924eb11d15098884d68fab1659c7b3efd2f7f0e315e"
+sha256 = "2dc34c1557cb2cdfbd5961b4c83827720a1b3408ca702a26be66b394bf98e9ab"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "e147f315224dd644b01e587d3cc2d2210ec563512d08e7fd7a7724dae87d4cfb"
@@ -825,6 +825,9 @@ title = "finite collinear residual-GTO supplementation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "631"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "632"
 
     [[records.paths]]
     kind = "source"
@@ -858,6 +861,9 @@ title = "finite collinear supplementation validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "631"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "632"
 
     [[records.paths]]
     kind = "test"

@@ -316,10 +316,20 @@ small H3 and H-He-H supplemented matrices, not H10 accuracy or scaling.
 Add exactly this overload, with both keywords required:
 
 ```julia
-cartesian_residual_gto_mwg_system(working::_CartesianCollinearWorkingBasis,
-    z, Z; supplement::CartesianGaussianShellSupplementRepresentation3D,
-    expansion::CoulombGaussianExpansion)
+function cartesian_residual_gto_mwg_system(working::_CartesianCollinearWorkingBasis,
+    z, Z; supplement, expansion::CoulombGaussianExpansion)
+    supplement::CartesianGaussianShellSupplementRepresentation3D
+    # Existing-kernel composition follows this exact type assertion.
+end
 ```
+
+Pass 632 corrects only type-check placement: the supplement representation is
+defined after this source owner loads. Keep supplement required and perform
+the exact type assertion as the first body statement, before numerical work.
+Wrong types must fail; no conversion or broader accepted representation.
+Do not reorder includes, move the type, or add eval/delayed registration.
+The preserved Pass 631 draft is unvalidated, not accepted implementation.
+All original paths, budgets, acceptance gates and consumer pause remain intact.
 
 Keep the spelling private to the existing opaque working type; add no export.
 Reuse the existing five-field _CartesianResidualGTOMWGSystem, adding a concrete

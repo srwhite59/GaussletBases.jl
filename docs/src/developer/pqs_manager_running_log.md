@@ -1238,3 +1238,25 @@ screening, release, legacy retirement or scientific H10/H20 campaign is granted.
 Local authority/self-test, generated parity, package load, docs
 8/8 +162/162 +10/10, Documenter, log bound and diff checks passed.
 Repo-manager waits for this docs-only authority commit's CI/Docs success.
+
+### Pass 632: Supplement Keyword Load-Order Amendment
+
+Accepted the reported declaration-order obstruction, not the draft implementation.
+Independent inspection confirms cartesian_base_hamiltonian.jl loads at root
+line 942, before the representation definition included at line 960. The
+scratch study ran after package loading and could not expose this restriction.
+Permit only a required unannotated supplement keyword followed by its exact
+CartesianGaussianShellSupplementRepresentation3D assertion as the first body
+statement. A separate minimal Julia probe passed 3/3: late type resolution,
+wrong-type TypeError, and missing-keyword rejection. No numerical run was needed.
+
+No strategic change: MT8's supplementation connection remains active and
+hchain-doer paused. Existing atom/diatomic behavior, accepted representation,
+four-file scope, budgets and numerical gates are unchanged. Deleted/simplified:
+the invalid declaration-time annotation becomes an invocation-time assertion.
+Quarantined: archived draft remains unvalidated. No source, tests, new files,
+metadata or grant expansion in this amendment; no include reorder or type move.
+Repo-manager waits for amendment CI/Docs, then resumes and validates the original
+packet. No implementation acceptance or consumer authorization is implied.
+Local package/docs 8/8 +162/162 +10/10, authority/self-test, generated parity,
+Documenter, manager-log bound and diff checks passed. No numerical suite ran.

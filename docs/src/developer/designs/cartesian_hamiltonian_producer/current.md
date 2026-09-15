@@ -24,6 +24,9 @@ The old atom/diatomic Hamiltonian semantics remain unchanged; the new overload
 uses explicit potential/ownership nuclei and a three-field matrix result.
 hchain-doer remains paused until implementation acceptance. Scientific H-chain
 work must be supplemented; this grants no H10/H20 calculation or accuracy claim.
+Pass 632 corrects only the required supplement keyword's exact type assertion
+to the first function-body statement, resolving declaration order. Resume only
+after the amendment's checks pass; the archived draft still requires validation.
 
 Start with [README](README.md), this page, and [invariants](invariants.md), then
 read only the assigned generated registry entry and linked canonical contract.

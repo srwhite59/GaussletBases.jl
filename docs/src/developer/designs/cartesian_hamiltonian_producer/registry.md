@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `422306badf9dd5afe54edacea7f5d07756727283aa772bd6cbc3bb2e6ecbb8e5`.
+> [authority.toml](authority.toml), SHA-256 `25ebbed3a26406e6382d80d0c7a386951eedd1a20144c253aa0e4c12652876f0`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -378,6 +378,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `git_commit`: `4cf1c7b125f6a8f11f3559f835eab24e70798f89`
   - `manager_pass`: `631`
+  - `manager_pass`: `632`
 - **Dependencies:** `HP-COLLINEAR-PQS-FN-01`, `HP-REP-PQS-RG-WORKING-FN-01`
 - **Scope:** Connect the collinear working handle to existing residual selection, complete accumulated H1/MWG and raw transfer under Finite Collinear Supplementation. Parameterize only the existing carrier and restrict validation to two representations. Preserve old atom/diatomic behavior, thresholds and kernels. Source cap 130 added lines; no solver, campaign, fallback, cache, release or retirement.
 
@@ -394,6 +395,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `git_commit`: `4cf1c7b125f6a8f11f3559f835eab24e70798f89`
   - `manager_pass`: `631`
+  - `manager_pass`: `632`
 - **Dependencies:** `HP-COLLINEAR-PQS-RG-FN-01`
 - **Scope:** Validate the finite-collinear supplemented connection in the existing public residual-GTO owner under Finite Collinear Supplementation. Cover independent H1/MWG, complete metric, contracted candidates, distinct potential geometry, raw transfer and rejection with frozen tolerances. Preserve old tests; 220 added lines maximum. No new owner, broad campaign, workflow change or consumer clearance.
 
