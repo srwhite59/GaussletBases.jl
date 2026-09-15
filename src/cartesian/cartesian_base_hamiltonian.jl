@@ -1312,8 +1312,8 @@ function _cartesian_r3_h2_validation_fixture(input, supplement_input)
            isnothing(supplement_input.width_filtering)
 end
 
-struct _CartesianResidualGTOMWGSystem{D,S}
-    hamiltonian::CartesianIDAHamiltonian{Float64}
+struct _CartesianResidualGTOMWGSystem{H,D,S}
+    hamiltonian::H
     terminal_basis::CartesianFinalBasisRealization.CartesianTerminalBasisRealization
     parent_axis_bundles::D
     supplement::S
@@ -1333,7 +1333,20 @@ function _validate_cartesian_residual_gto_mwg_system(
         throw(DimensionMismatch("supplemented-system T_G shape mismatch"))
     size(residual.T_A) == (nA, nR) ||
         throw(DimensionMismatch("supplemented-system T_A shape mismatch"))
-    size(hamiltonian.kinetic) == (nG + nR, nG + nR) ||
+    matrix = if hamiltonian isa CartesianIDAHamiltonian{Float64}
+        hamiltonian.kinetic
+    elseif hamiltonian isa NamedTuple{(:one_body, :electron_electron_ida, :nuclear_repulsion),
+            Tuple{Matrix{Float64},Matrix{Float64},Float64}}
+        size(hamiltonian.electron_electron_ida) == (nG + nR, nG + nR) ||
+            throw(DimensionMismatch("supplemented-system interaction dimension mismatch"))
+        all(isfinite, hamiltonian.one_body) && all(isfinite, hamiltonian.electron_electron_ida) &&
+            isfinite(hamiltonian.nuclear_repulsion) ||
+            throw(ArgumentError("supplemented-system operators must be finite"))
+        hamiltonian.one_body
+    else
+        throw(ArgumentError("unsupported supplemented-system Hamiltonian representation"))
+    end
+    size(matrix) == (nG + nR, nG + nR) ||
         throw(DimensionMismatch("supplemented-system Hamiltonian dimension mismatch"))
     all(isfinite, residual.T_G) && all(isfinite, residual.T_A) ||
         throw(ArgumentError("supplemented-system residual transforms must be finite"))
@@ -1600,4 +1613,67 @@ function cartesian_collinear_operators(working::_CartesianCollinearWorkingBasis,
     z, Z = _collinear_nuclei(z, Z)
     return _collinear_complete_operators(
         working.terminal_basis, working.parent_axis_bundles, z, Z, expansion)
+end
+
+"""
+    cartesian_residual_gto_mwg_system(working, z, Z; supplement, expansion)
+
+Supplement a finite-collinear working basis with explicit
+`CartesianGaussianShellSupplementRepresentation3D` candidates. Ordered `z` and
+positive `Z` define the potential and candidate ownership independently of the
+basis-construction nuclei. Each candidate center must match one supplied nucleus.
+Contracted axiswise-normalized Cartesian Gaussians are supported.
+
+The opaque result supports `result.hamiltonian`, `gto_overlap_matrix(result, probes)`
+and `import_external_gto_orbitals(result, packet)`. Its Hamiltonian is exactly
+`(; one_body, electron_electron_ida, nuclear_repulsion)`, with two complete dense
+Float64 matrices and a Float64 scalar in atomic units, in native terminal/residual
+order. It has no electron-sector, artifact or reweighting semantics. The existing
+atom/diatomic overload still returns a `CartesianIDAHamiltonian` through this field.
+
+Residual selection uses the existing 1e-6 occupation cutoff and final merge;
+no surviving residual is an error, not a bare-basis fallback. One-body assembly
+uses the supplied finite Coulomb expansion. Base IDA is unchanged; residual blocks
+use the existing integral-normalized moment-matched Gaussian (MWG) approximation,
+not exact four-index ERIs or exact represented-density Hartree. Expansion exponents
+must match the parent. Nuclear terms are accumulated without per-center final
+matrices. Raw import does not repair capture loss or orthonormalize a determinant.
+Dense scaling and primitive capture tests do not establish long-chain accuracy.
+"""
+function cartesian_residual_gto_mwg_system(working::_CartesianCollinearWorkingBasis,
+    z, Z; supplement, expansion::CoulombGaussianExpansion)
+    supplement::CartesianGaussianShellSupplementRepresentation3D
+    z, Z = _collinear_nuclei(z, Z)
+    isempty(supplement.orbitals) && throw(ArgumentError("supplement must not be empty"))
+    for orbital in supplement.orbitals
+        !isempty(orbital.exponents) && length(orbital.exponents) == length(orbital.coefficients) &&
+            all(x -> isfinite(x) && x > 0, orbital.exponents) &&
+            all(isfinite, orbital.coefficients) && all(isfinite, orbital.center) &&
+            all(>=(0), orbital.angular_powers) &&
+            orbital.primitive_normalization === :axiswise_normalized_cartesian_gaussian ||
+            throw(ArgumentError("invalid Cartesian Gaussian supplement candidate"))
+    end
+    C, R = CartesianFinalBasisRealization, CartesianResidualGaussians
+    terminal, bundles = working.terminal_basis, working.parent_axis_bundles
+    locations = [(0.0, 0.0, value) for value in z]
+    C._r3_validate_pgdg_expansion(bundles, expansion)
+    residual = C.pqs_terminal_residual_gto_augmentation(terminal, bundles, supplement, locations)
+    base = cartesian_collinear_operators(working, z, Z; expansion)
+    raw = C._r3a_qw_blocks(terminal, bundles, supplement, NTuple{3,Float64}[], expansion)
+    products = C.pqs_terminal_residual_gto_augmented_products(terminal, bundles, nothing,
+        supplement, residual, locations, Z; expansion, supplement_blocks = raw)
+    H_GA, H_AA = copy(raw.mixed.kinetic), copy(raw.self.kinetic)
+    proxy, donor = C._r3a_qw_proxy_layers(bundles), C._r3a_qw_supplement(supplement)
+    for (center, charge) in zip(locations, Z)
+        unit = CartesianGaussianRawBlocks.gaussian_nuclear_raw_blocks_by_center(
+            proxy, donor, expansion, [center])
+        H_GA .+= charge .* C._r3a_project_parent_ga(terminal, only(unit.ga))
+        H_AA .+= charge .* only(unit.aa)
+    end
+    one_body = R.transform_augmented_operator(base.one_body, H_GA, H_AA, residual)
+    electron_electron_ida = R.assemble_residual_ida_interaction(base.electron_electron_ida,
+        terminal, bundles, residual, products; expansion)
+    hamiltonian = (; one_body, electron_electron_ida, nuclear_repulsion = base.nuclear_repulsion)
+    return _cartesian_residual_gto_mwg_system_result(
+        hamiltonian, terminal, bundles, supplement, residual, locations)
 end

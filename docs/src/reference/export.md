@@ -220,6 +220,12 @@ with the ordinary Cartesian probe API.
 External-GTO fingerprints are strict packet-integrity hashes, not numerical-
 equivalence, permutation-, tolerance-, or convention-invariant comparisons.
 
+The collinear overload of `cartesian_residual_gto_mwg_system` accepts explicit
+Gaussian candidates and returns complete accumulated operators through
+`.hamiltonian`, with raw transfer in the actual supplemented basis. Its matrix-only
+result is distinct from the unchanged atom/diatomic `CartesianIDAHamiltonian`.
+Residual-containing interactions retain the existing MWG approximation.
+
 ```@docs
 cartesian_base_hamiltonian
 cartesian_base_working_basis

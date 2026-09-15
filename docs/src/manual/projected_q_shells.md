@@ -107,6 +107,34 @@ controls are a tested fixture, not chemical accuracy or long-chain scaling
 claims. Dense operators remain quadratic; no solver or periodic extension is
 included. The compact sliced-chain approximation remains a separate capability.
 
+### Gaussian-supplemented collinear systems
+
+Use explicit Cartesian Gaussian candidates with the same working basis:
+
+```julia
+packet = read_external_cartesian_gto_packet("state.toml")
+system = cartesian_residual_gto_mwg_system(working, z, Z;
+    supplement=packet.probes, expansion)
+ham = system.hamiltonian
+raw = import_external_gto_orbitals(system, packet)
+```
+
+The supplied ordered positions and positive charges define the potential and
+candidate ownership independently of the construction geometry. Each candidate
+must lie exactly on one supplied nucleus; contracted candidates are supported.
+The result retains the actual terminal-plus-residual basis for cross overlaps
+and raw import. `ham` contains complete `one_body`, `electron_electron_ida` and
+`nuclear_repulsion`, not electron-sector, artifact or reweighting operations.
+The existing atom/diatomic constructor keeps its `CartesianIDAHamiltonian` return.
+
+Residual selection and orthonormalization use the existing cutoff and merge.
+Nuclear contributions are accumulated without per-center final matrices.
+Base IDA is unchanged; residual-containing interactions use integral-normalized
+moment-matched Gaussians (MWG), not exact four-index Coulomb integrals. Raw import
+does not clean up a determinant or repair capture loss. Small primitive tests
+do not establish diffuse-space convergence or H-chain accuracy; converge the
+supplement and parent/retained spaces for scientific calculations.
+
 ## Matched H2+ comparison
 
 [`examples/41_pqs_h2plus_table1.jl`](https://github.com/srwhite59/GaussletBases.jl/blob/main/examples/41_pqs_h2plus_table1.jl)
