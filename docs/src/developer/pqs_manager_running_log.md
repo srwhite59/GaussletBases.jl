@@ -186,6 +186,11 @@ charges, subject to mapping validity. Compact outer retention is explicitly
 converged, not a long-chain or chemical-accuracy claim. Preserve MT7, all released
 interfaces and the distinct sliced model; no legacy retirement is coupled.
 
+Pass 631 opens only the residual-GTO/MWG connection for this basis; the bare
+construction remains maintenance. hchain-doer is paused until independent
+implementation acceptance; no scientific bare H-chain or H10/H20 campaign is
+authorized. Supplemented capture still requires consumer convergence evidence.
+
 ## Manager Guardrails
 
 - `authority.toml` grants execution; this ledger records interpretation only.
@@ -1200,3 +1205,36 @@ claims. No successor task or renewed feature-size exception is opened.
 Local closeout checks passed: package load, docs 8/8 +162/162 +10/10,
 authority/self-test, generated parity, Documenter, log bound and diff checks.
 The closeout uses docs-only CI/Docs; numerical implementation evidence is reused.
+
+### Pass 631: Finite Collinear Supplementation Authority
+
+Independent inspection of the report, corrected GH/convolution oracle, logs,
+carrier callers and numerical owners supports one four-file connection.
+The actual restriction is old frontend/carrier composition, not new residual
+mathematics. The two-center guard and old CartesianIDAHamiltonian behavior stay
+intact. The new overload uses supplied potential/ownership nuclei independently
+of the basis geometry, with exactly H1, IDA and nuclear repulsion in .hamiltonian.
+Only the existing carrier gains a concrete Hamiltonian parameter; validation
+recognizes two explicit representations. No unrelated consumer clearance follows.
+
+Evidence H3/H-He-H final dimensions 243/235 and actual supplemented metrics
+3.23e-12/7.07e-12 are distinct from raw-block 1e-15-level agreement and complete
+transformed H1 2.08e-12/5.81e-12. Reviewed the corrected integral-normalized MWG
+width convention; the initial squared-Gaussian oracle was wrong, not production.
+Warm assembly .111/.071 s and about 2 MB retained justify bounded use, not
+H10 scaling. Existing contracted cc-pVTZ checks remain; a shared compact
+contracted-candidate oracle and different-potential case protect the new overload.
+No numerical campaign was rerun for authority. Source/test/reader added-line
+budgets are 100/130, 190/220 and 25/40 preferred/hard, respectively.
+
+LT usable numerical construction advances; MT8 bare construction stays
+maintenance while the supplementation connection is active. Deleted: no live
+old facade; it owns released semantics. Simplified: reuse residual/MWG assembly
+and stream nuclear raw blocks. Quarantined: scratch specialization is evidence,
+not a consumer adapter. Exact remaining blocker: implementation and independent
+acceptance before hchain-doer resumes. Added/deleted source in this authority:
+0/0; new tests/files/metadata: none. No new kernels, approximation, solver,
+screening, release, legacy retirement or scientific H10/H20 campaign is granted.
+Local authority/self-test, generated parity, package load, docs
+8/8 +162/162 +10/10, Documenter, log bound and diff checks passed.
+Repo-manager waits for this docs-only authority commit's CI/Docs success.

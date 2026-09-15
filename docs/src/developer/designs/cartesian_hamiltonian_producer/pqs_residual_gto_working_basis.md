@@ -11,6 +11,10 @@ This contract closes one representation boundary. It does not change residual
 selection, one-body or interaction physics, external-packet semantics, or the
 opaque `CartesianIDAHamiltonian` contract.
 
+Pass 631 separately authorizes the [finite-collinear connection](#Finite-Collinear-Supplementation)
+under HP-COLLINEAR-PQS-RG-FN-01/TEST-01. The original atom/diatomic contract
+below remains unchanged; only that new overload returns accumulated matrices.
+
 ## Consumer Need
 
 Before this boundary was implemented,
@@ -54,7 +58,8 @@ gto_overlap_matrix(result, probes; block_indices = nothing)
 import_external_gto_orbitals(result, packet)
 ```
 
-`result.hamiltonian` is the existing `CartesianIDAHamiltonian{Float64}`. The
+For this NamedTuple-input overload, `result.hamiltonian` is the existing
+`CartesianIDAHamiltonian{Float64}`. The
 result retains only the terminal realization, factorized parent-axis donor,
 explicit supplement representation, and existing residual object needed by
 the overlap action. It must not retain the full base stage, operator stages,
@@ -294,3 +299,153 @@ the existing factorized and supplement kernels, or if direct-facade parity,
 the H2 gate, metric identities, or resource boundary fails, make no source
 commit. Report the exact missing seam; do not reconstruct from the Hamiltonian,
 fall back to a private consumer map, or add partial scaffolding.
+
+## Finite Collinear Supplementation
+
+Pass 631 authorizes HP-COLLINEAR-PQS-RG-FN-01/TEST-01 at
+4cf1c7b125f6a8f11f3559f835eab24e70798f89. Named consumer hchain-doer remains
+paused until implementation is independently accepted. All scientific H-chain
+calculations must be supplemented; bare matrices here are intermediate data,
+not permission for a bare scientific campaign.
+
+### Target and interface
+
+Target: connect the existing finite-collinear basis to residual-GTO selection,
+complete supplemented H1/MWG operators and raw transfer. Physics endpoint:
+small H3 and H-He-H supplemented matrices, not H10 accuracy or scaling.
+Add exactly this overload, with both keywords required:
+
+```julia
+cartesian_residual_gto_mwg_system(working::_CartesianCollinearWorkingBasis,
+    z, Z; supplement::CartesianGaussianShellSupplementRepresentation3D,
+    expansion::CoulombGaussianExpansion)
+```
+
+Keep the spelling private to the existing opaque working type; add no export.
+Reuse the existing five-field _CartesianResidualGTOMWGSystem, adding a concrete
+Hamiltonian type parameter, not an Any field or new result type. Its new
+.hamiltonian is exactly (; one_body, electron_electron_ida, nuclear_repulsion):
+two Matrix{Float64} values and a Float64 scalar. Validate only this exact
+three-field representation and CartesianIDAHamiltonian{Float64}, not arbitrary
+duck-typed objects or generic NamedTuples. Preserve old dimension/error behavior;
+check both new matrices' final square dimensions and finite values.
+Reuse _cartesian_residual_gto_mwg_system_result and all same-construction checks.
+
+The existing NamedTuple-input overload, two-center guard, construction and
+CartesianIDAHamiltonian return, electron-sector and artifact/reweighting
+semantics remain unchanged. The new overload provides none of those latter
+semantics. No determinant cleanup is added or implied. Cross overlap and raw
+import bodies remain byte-identical; the shared validator serves both carriers.
+
+Use existing z/Z validation. Supplied ordered finite z and positive Z define
+the potential AND candidate-center ownership, not the original basis geometry.
+Do not compare them with the basis-construction nuclei or rebuild the basis.
+Each candidate must exactly match one supplied center. Require nonempty,
+consistent primitive arrays, finite coefficients/centers, positive finite
+exponents, nonnegative Cartesian powers and supported axiswise normalization.
+Support contracted candidates, not only one-primitive orbitals. Preserve existing
+rank/metric failures, including no surviving residual direction; no bare fallback.
+
+### Numerical and storage invariants
+
+Use existing residual selection with occupation cutoff 1e-6, injection disabled,
+negative/merge absolute and relative thresholds 1e-12, cross orthogonality 1e-10,
+identity tolerance 5e-8. Expose no new threshold or approximation control.
+Expansion/parent exponents must match under the existing validator.
+
+Reuse the non-nuclear raw blocks and augmented kinetic/moment assembly.
+The unused parent_basis_object argument may receive nothing; create no old
+parent-stage wrapper. Process one nucleus at a time through the existing raw
+nuclear kernel. Accumulate charged terminal/candidate and candidate/candidate
+blocks, then apply the existing residual transform. Base H1 already includes
+the potential; do not double-count it. Build MWG through the existing assembler.
+Do not retain per-nucleus final matrices or a global parent-to-final map.
+One temporary parent-by-candidate block, candidate self block and existing
+moment workspace are allowed. Final data retain only existing five carrier
+fields, with two complete operator matrices and scalar nuclear repulsion.
+
+Preserve MWG w=sqrt(2*(<x^2>-<x>^2)), Gaussian exp(-(x-c)^2/(2*w^2)),
+division by its integral, and terminal integral-weighted projection. Independent
+R-R convolution uses 1+2*t*(w_i^2+w_j^2), not squared Gaussians. Preserve the
+base G-G IDA block exactly. MWG is approximate two-index interaction, not
+four-index ERIs or exact represented-density Hartree.
+
+### Evidence and frozen acceptance
+
+Reviewed report tmp/reviews/collinear-supplement-connection-2026-09-14/REPORT.md
+SHA-256 7694dcd9a6cd0c44d6789c057072b05fdacef1b700d44d425dd9b72585b6cc08;
+probe.jl SHA-256 c3f4dcd482ef487b02b5a2403cab073404e6c4639d978c71ebfe259cb39fd4f4.
+The corrected independent oracle, not its initial squared-Gaussian mistake,
+is evidence. No production change follows from that oracle correction.
+
+Reuse compact45, spacing .6, padding 3/3, core_side=3, angular reference 3,
+outer count 3, tail_spacing=2.8 and angular scale 1.4. H3 positions [-1.2,0,1.2],
+charges [1,1,1]; H-He-H [-2.4,0,2.4], charges [1,2,1]. Normalized s/px/py/pz
+candidates at each center with exponent .8 retain 12 residuals, four per owner.
+Base/final dimensions 231/243 and 223/235; repulsion 2.0833333333333335/1.875 Ha.
+
+Freeze max-entry absolute tolerances, rtol=0: actual complete supplemented metric
+against identity <=5e-8; H1/MWG symmetry and complete H1 block-congruence <=1e-10;
+independent AA/all-pair and selected GA overlap <=1e-12, H1 <=1e-10;
+independent all R-R and selected all-row G-R MWG <=1e-10; repulsion <=1e-12 Ha.
+Preserve all-row GA tests for representative s/px/py/pz and all 144 AA/R-R pairs.
+Reuse compact GH/local-support and Gaussian-convolution oracles, not copies of
+production contractions. Raw-block observed errors (~1e-15 to 1e-14) are distinct
+from complete transformed H1 (~2.1e-12/5.8e-12) and metric (~3.2e-12/7.1e-12).
+Do not advertise raw-block precision for complete transformed matrices.
+
+Raw import equals cross overlap times input coefficients exactly; cross overlap
+agrees with the independent augmented transform within 1e-10. The normalized
+primitive px/py capture deviation <=5e-8 is only this fixture, not certification
+of diffuse virtual-space convergence. Preserve separate px and py results.
+Add one compact nontrivial contracted-candidate case using the shared
+primitive-sum oracle and the same tolerances. Existing contracted cc-pVTZ
+atom/diatomic evidence is reusable but does not alone test the new connection.
+Add one case using a fixed working basis with different valid potential z/Z
+and matching candidate centers; compare against the same independent blocks.
+Do not require every nucleus to supply candidates if the existing selection
+allows a subset. Check invalid nuclear data, off-center/invalid candidates,
+mismatched expansion, failed residual selection and unsupported carrier shapes.
+
+Reuse existing atom/diatomic residual-GTO owner and transfer fixture, finite-chain
+public owner, relevant atomic/diatomic regression endpoints, package load,
+authority/self-test/generated parity, docs and Documenter. Full source-bearing
+CI must execute all three unchanged numerical jobs plus Docs. Do not repeat
+the complete angular suite or duplicate Example 41's shared release calculation.
+No test may depend on ignored scratch files. Inspect actual terminal bounds,
+counts, ownership, residual counts, metric and warnings, not invented diagnostics.
+
+Record one fresh/warm bounded fixture cost separately from reference checks.
+Evidence: H3 supplemented assembly 6.354/.111 s, 1.502 GB/114 MB allocated;
+retained 2.10 MB, H-He-H warm .071 s/98.6 MB, retained 1.93 MB. Keep final
+dimension below 600 and retained storage below 512 MiB for these fixtures.
+Investigate material regressions; no end-to-end or long-chain speed claim.
+Parent-by-candidate storage and dense final quadratic scaling remain limitations.
+
+### Exact scope, budgets and stop rule
+
+Source: only src/cartesian/cartesian_base_hamiltonian.jl, preferred/hard
+100/130 added lines including docstrings and relocated code.
+Tests: only test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl,
+190/220 added lines. Shared compact oracles should cover primitive and contracted
+cases without duplicated test bodies; preserve existing tests.
+Reader guidance: docs/src/manual/projected_q_shells.md (20/30) and
+docs/src/reference/export.md (5/10), total 25/40 added lines.
+Normal authority/current/generated/log updates are documentation-only.
+No new tracked file, public binding/type, field, helper framework, cache,
+metadata, kernel, parser, dependency, workflow, approximation, threshold,
+solver, screening, H10/H20 campaign, release, stable promotion or retirement.
+
+Must simplify: connect through existing numerical owners and stream nuclear
+blocks rather than adapt the old staged frontend. No deletion of live old
+facades, ordinary/sliced capabilities or recursive code is authorized.
+Private file-local composition/validation is allowed within the single source
+budget; no shared numerical helper or new carrier is needed.
+
+Failure rule: stop without an implementation commit if budgets, frozen
+tolerances, rank rejection, old behavior, storage or two-representation validation
+cannot be preserved, or another file/kernel/semantic change is needed.
+Do not relax tolerances, clamp, silently fall back, add compatibility machinery
+or release hchain-doer. Repo-manager begins only after this authority commit
+and required checks pass; independent implementation acceptance is a separate
+gate before any consumer resumption. No scientific campaign is authorized here.

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `88fe4a956d3202c49489903879a642494fb738c9c1233b419f88e5b82da51f50`.
+> [authority.toml](authority.toml), SHA-256 `422306badf9dd5afe54edacea7f5d07756727283aa772bd6cbc3bb2e6ecbb8e5`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -362,6 +362,40 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `630`
 - **Dependencies:** none
 - **Scope:** Maintain the accepted six source owners and two reader pages under Finite Collinear PQS. Preserve synchronous ownership, compact exterior, adaptive retention, bare transfer, accumulated operators and frozen validation. No new capability, kernel change, solver, periodic geometry, legacy revival, cache, retirement or release work; the implementation-only 450-line exception is exhausted.
+
+### HP-COLLINEAR-PQS-RG-FN-01 - finite collinear residual-GTO supplementation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `Finite Collinear Supplementation`
+- **Owned paths:**
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `docs` / `existing`: `docs/src/manual/projected_q_shells.md`
+  - `docs` / `existing`: `docs/src/reference/export.md`
+- **Evidence:**
+  - `git_commit`: `4cf1c7b125f6a8f11f3559f835eab24e70798f89`
+  - `manager_pass`: `631`
+- **Dependencies:** `HP-COLLINEAR-PQS-FN-01`, `HP-REP-PQS-RG-WORKING-FN-01`
+- **Scope:** Connect the collinear working handle to existing residual selection, complete accumulated H1/MWG and raw transfer under Finite Collinear Supplementation. Parameterize only the existing carrier and restrict validation to two representations. Preserve old atom/diatomic behavior, thresholds and kernels. Source cap 130 added lines; no solver, campaign, fallback, cache, release or retirement.
+
+### HP-COLLINEAR-PQS-RG-TEST-01 - finite collinear supplementation validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `Finite Collinear Supplementation`
+- **Owned paths:**
+  - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
+- **Evidence:**
+  - `git_commit`: `4cf1c7b125f6a8f11f3559f835eab24e70798f89`
+  - `manager_pass`: `631`
+- **Dependencies:** `HP-COLLINEAR-PQS-RG-FN-01`
+- **Scope:** Validate the finite-collinear supplemented connection in the existing public residual-GTO owner under Finite Collinear Supplementation. Cover independent H1/MWG, complete metric, contracted candidates, distinct potential geometry, raw transfer and rejection with frozen tolerances. Preserve old tests; 220 added lines maximum. No new owner, broad campaign, workflow change or consumer clearance.
 
 ### HP-COLLINEAR-PQS-TEST-01 - finite collinear PQS validation
 

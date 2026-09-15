@@ -18,6 +18,13 @@ remain subject to mapping validity. Outer-face counts require convergence;
 diffuse parent loss, transverse asymmetry and dense scaling remain limitations.
 No legacy retirement, solver, periodic extension or release change follows.
 
+Pass 631 authorizes only the [finite-collinear supplementation connection](pqs_residual_gto_working_basis.md#Finite-Collinear-Supplementation)
+under HP-COLLINEAR-PQS-RG-FN-01/TEST-01 once its authority checks pass.
+The old atom/diatomic Hamiltonian semantics remain unchanged; the new overload
+uses explicit potential/ownership nuclei and a three-field matrix result.
+hchain-doer remains paused until implementation acceptance. Scientific H-chain
+work must be supplemented; this grants no H10/H20 calculation or accuracy claim.
+
 Start with [README](README.md), this page, and [invariants](invariants.md), then
 read only the assigned generated registry entry and linked canonical contract.
 `authority.toml` remains the record-level source. Silence here is neutral; an
