@@ -140,7 +140,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/reference_hart
 sha256 = "c02a6b58f0490482f16502fb0c2ef3ff9f40d14dea8cff5bc936fc995d8773e8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/represented_mixed_density_hartree.md"
-sha256 = "61895f258ccf49c0237681e215fdcaef366149787878c1993f0cc9e6be425448"
+sha256 = "dee7a89608ebe542ea5b3ca20e3ae04032a6bb1eb4d2b2922ed9953fc4312338"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md"
 sha256 = "7ae7b5666d5ed464619b2607b1ef590a035b368c7b4e5da23930b050490f3568"
@@ -7460,12 +7460,12 @@ dependency_ids = ["HP-RG-FN-01", "HP-RG-FN-02", "HP-RHO0-MIXH-GAAA-FN-01", "HP-R
 grant = "implementation"
 id = "HP-REP-MIXDENS-HARTREE-FN-01"
 lifecycle = "approved"
-scope = "Replace the bounded global component-pair production loop with the exact occupied-contracted block/separable action for complete GG, GA/AG, and AA source and target sectors under every expansion term. Revalidate residual cross/identity with the authoritative RG 1e-10/scale-aware 5e-8 contract while keeping state charge/Gram at 1e-10. The correction may add 650 preferred/800 hard source lines but must delete or hard-bound the old unbounded path in the same commit. No fit, screening, truncation, IDA substitute, residual mutation, public API, Cr2 branch, or partial scaffolding."
+scope = "Repair only represented_mixed_density residual validation in represented_molecular_hartree.jl under Constructor Contract Reconciliation. Separate existing residual-owner cross/scale-aware identity checks from unchanged occupied-state Gram/charge checks; 20 preferred/30 hard added source lines. No evaluator, consumer run, threshold override, basis repair, rank change, API, new field/helper/file, or numerical policy. Broader contraction implementation is deferred."
 surfaces = ["source"]
 title = "represented multicenter mixed-density direct Hartree producer"
 
     [[records.document_refs]]
-    heading = "Represented Mixed-Density Hartree Producer"
+    heading = "Constructor Contract Reconciliation"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/represented_mixed_density_hartree.md"
 
@@ -7499,49 +7499,37 @@ title = "represented multicenter mixed-density direct Hartree producer"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "462"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "634"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "5563bce8f5b917c44baf674ab770460f3c668e76"
 
-    [[records.paths]]
-    kind = "source"
-    path = "src/foundation/GaussianAnalyticIntegrals.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_reference_density/CartesianReferenceDensity.jl"
-    state = "existing"
     [[records.paths]]
     kind = "source"
     path = "src/cartesian/cartesian_reference_density/represented_molecular_hartree.jl"
     state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_reference_density/represented_hartree_contractions.jl"
-    state = "planned"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_residual_gaussians/residual_basis.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/gaussian_coulomb_reference.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-REP-MIXDENS-HARTREE-FN-01"]
-evidence_refs = []
 grant = "implementation"
 id = "HP-REP-MIXDENS-HARTREE-TEST-01"
 lifecycle = "approved"
-scope = "Extend only the existing bounded mixed-basis test owner by 120 preferred/180 hard lines, with final length at most 360: compare occupied-contracted block/separable GG, GA/AG, and AA sectors and complete native fields with the bounded component and independent Gaussian oracles; distinguish residual 1e-10 cross/scale-aware 5e-8 identity validity from strict 1e-10 state recovery; and validate deterministic two-size contraction/resource accounting plus unchanged atomic and screened owners. No Cr2 fixture, fit, solver, or metadata/status test."
+scope = "Extend only cartesian_represented_molecular_hartree_runtests.jl under Constructor Contract Reconciliation; 25 preferred/35 hard added lines. Reuse small fixtures to distinguish owner-valid unused residuals with accurate states, invalid cross/identity, and inaccurate occupied states. Preserve existing valid field checks. No H10 run, Gaussian-source evaluator, fixture file, workflow, or broader contraction tests."
 surfaces = ["tests"]
 title = "represented multicenter mixed-density Hartree validation"
 
     [[records.document_refs]]
-    heading = "Represented Mixed-Density Hartree Producer"
+    heading = "Constructor Contract Reconciliation"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/represented_mixed_density_hartree.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "634"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "5563bce8f5b917c44baf674ab770460f3c668e76"
 
     [[records.paths]]
     kind = "test"
