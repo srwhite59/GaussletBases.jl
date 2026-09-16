@@ -1482,3 +1482,34 @@ bounded H3 realization, existing owners and full CI/Docs. This authority pass
 passed local package/docs 8/8 +162/162 +10/10, authority/self-test, generated
 parity, Documenter, log bound and diff checks. Remote validation uses docs-only
 CI/Docs; repo-manager waits for its commit and checks.
+
+### Pass 640: Scientific-q Entrance Accepted
+
+Accepted 2dd316f6aae255c8013833e73daa91579e5b4c42 after independent diff,
+scope and exact-head remote review. General hydrogen q now resolves the scaled
+parent and odd core recipe; explicit transverse (q,q) preserves selected L.
+H3 q4/5/6 successfully realizes 797/1371/2569 columns, not just a rejection
+guard. Manager rerun passed 126/126 full-overlap, ownership, positive-weight,
+fixed-parent and input checks in 14.9s (13.12 GiB cumulative allocation,
+compilation-dominated). Explicit expert blocks reproduced the frozen
+419cf3be... serialized SHA-256 byte-for-byte. Production construction timings
+remain the bounded implementation report's measurements, not H10 forecasts.
+
+MT8 translation moves to maintenance; LT2's paper-first convention is now an
+executable entrance. Scientific q remains distinct from angular calibration,
+outer completion and a fixed-parent comparison. Preserve all pilot evidence.
+Hchain-doer remains paused: supplemented, atomically screened H10 q5/R1.8,
+padding10 needs a separate physical assignment; no energy-accuracy or diffuse
+convergence claim follows. Constructor repair and MT3 remain separate.
+
+Deleted: obsolete required-keyword signature/doc wording. Simplified: one
+normalization path and a local transverse substitution. Quarantined: none.
+Not deleted: live explicit expert and atom/diatomic routes. Remaining blocker:
+physical qualification, not general-q translation. Source +44/-9, tests +52,
+reader docs +26/-2; no new files, helpers, types, exports or metadata fields.
+Mechanical diff and suspicious-addition review passed. Accepted existing owner
+evidence plus full numerical CI 35154687776 and Docs 35154687653 are reused;
+no full numerical rerun or H10 construction for closeout. Both FN/TEST records
+return to maintenance. Local package/docs, authority/self-test, generated parity,
+Documenter, log bound and diff checks plus docs-only CI/Docs gate this closeout.
+No successor implementation or consumer grant is opened.

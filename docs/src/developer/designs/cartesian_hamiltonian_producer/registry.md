@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `df31e9fc66d99687b39861135d142b5ff1303ec31dcfa43ef300914382c322f3`.
+> [authority.toml](authority.toml), SHA-256 `ef80e5351f459aef70a16903ca8e4535da1f86518409813a83e87048512b7520`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -382,8 +382,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-COLLINEAR-PQS-FN-01 - finite collinear PQS construction and operators
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -398,8 +398,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `3e32d7e50e9a232d8545fa313d2f06ac83565031`
   - `manager_pass`: `630`
   - `manager_pass`: `639`
+  - `git_commit`: `2dd316f6aae255c8013833e73daa91579e5b4c42`
+  - `manager_pass`: `640`
 - **Dependencies:** none
-- **Scope:** Implement the Scientific Collinear Q Entrance in the two existing collinear constructor/realization owners and reader pages. Resolve hydrogen scaled-q inputs, prescribe transverse (q,q), preserve selected L and explicit expert behavior. Respect 80 added-source lines. No shared-kernel, geometry, operator, solver, screening, metadata, workflow, release or physical H10 work.
+- **Scope:** Maintain the accepted Scientific Collinear Q Entrance in the two collinear source owners and reader pages: hydrogen scaled-q resolution, explicit transverse (q,q), unchanged longitudinal selection and expert behavior. Preserve fixed-parent distinction, outer controls and released interfaces. No new capability, shared-kernel, geometry, operator, solver, screening, metadata, workflow, release or physical H10 work.
 
 ### HP-RETIRE-RECURSIVE-CHAIN-FN-01 - retire orphaned private recursive chain
 
@@ -477,8 +479,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-COLLINEAR-PQS-TEST-01 - finite collinear PQS validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -490,8 +492,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `3e32d7e50e9a232d8545fa313d2f06ac83565031`
   - `manager_pass`: `630`
   - `manager_pass`: `639`
+  - `git_commit`: `2dd316f6aae255c8013833e73daa91579e5b4c42`
+  - `manager_pass`: `640`
 - **Dependencies:** `HP-COLLINEAR-PQS-FN-01`
-- **Scope:** Extend the existing public Cartesian owner under Scientific Collinear Q Entrance, at most 80 added lines: successful odd/even requested-order construction, unchanged longitudinal selection, fixed-parent resolution, invalid inputs and expert parity. Preserve existing numerical tolerances and owners. No new test file, physical H10, broad angular run, workflow change or policy relaxation.
+- **Scope:** Maintain the existing public Cartesian owner under Scientific Collinear Q Entrance: successful odd/even construction, unchanged L, full overlap, positive weights, exact ownership, fixed-parent resolution, invalid inputs and expert parity. Preserve numerical tolerances and existing owners. No new test owner, physical H10, broad angular run, workflow change or policy relaxation.
 
 ### HP-COMP-ANGBOX-AUDIT-01 - angular-balanced shellification geometry audit
 

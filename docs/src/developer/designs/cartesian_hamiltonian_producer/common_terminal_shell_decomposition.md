@@ -439,8 +439,8 @@ source/retention policy requires separate authority.
 
 Pass 630 accepts Pass 629 implementation cf608bd0e151f95ea2f88960959f463184325151
 and input normalization 3e32d7e50e9a232d8545fa313d2f06ac83565031.
-The accepted expert route remains maintenance; Pass 639 below grants only
-the scientific-q entrance under HP-COLLINEAR-PQS-FN-01/TEST-01. This additive expert
+Pass 640 accepts the scientific-q entrance below; both it and the original
+expert route are maintenance under HP-COLLINEAR-PQS-FN-01/TEST-01. This additive expert
 finite-chain producer is the explicit exception to the preceding no-new-geometry
 guardrail; atom/diatomic geometry and public defaults remain unchanged.
 The following frozen implementation boundaries remain maintenance constraints,
@@ -649,7 +649,16 @@ delivery. Close implementation separately after full acceptance evidence.
 
 ## Scientific Collinear Q Entrance
 
-Pass 639 implements Steven's paper-first direction, not a new choice of
+Pass 640 accepts implementation 2dd316f6aae255c8013833e73daa91579e5b4c42.
+The prescription below is maintenance-only; the original implementation budgets
+and validation boundary are retained as evidence, not another capability grant.
+H3 q4/5/6 realized 797/1371/2569 columns and passed all 126 focused checks.
+Independent review reproduced complete-overlap/ownership/weight/input checks
+and the frozen expert coefficient fingerprint; full CI 35154687776 and Docs
+35154687653 passed at the exact implementation. H10 physical qualification and
+consumer assignment remain separate and unauthorized.
+
+Pass 639 recorded Steven's paper-first direction, not a new choice of
 scientific baseline. General scientific q is the COMX source order; q=5 is
 the first later H10 qualification, not a special branch. Preserve the original
 coarse H10 calculations as pilot evidence, never a standard scaled-q ladder.
