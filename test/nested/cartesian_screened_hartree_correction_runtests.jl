@@ -5,6 +5,64 @@ using GaussletBases
 
 const CRD = GaussletBases.CartesianReferenceDensity
 
+@testset "Collinear one-electron fitted screening" begin
+    GB=GaussletBases; F=GB.CartesianFinalBasisRealization; R=GB.CartesianGaussianRawBlocks
+    orbital(p,z,a)=CartesianGaussianShellOrbitalRepresentation3D("$p/$z/$a",p,(0.,0.,z),[a],[1.],:axiswise_normalized_cartesian_gaussian)
+    atom=CartesianGaussianShellSupplementRepresentation3D(:H_s,[orbital((0,0,0),0.,a) for a in (.8,1.6,3.2,6.4,12.8,25.6)],(;))
+    C=reshape([1.,0.,0.,0.,0.,0.],:,1); z=[-1.2,0.,1.2]; e=coulomb_gaussian_expansion(doacc=false)
+    w=cartesian_collinear_working_basis(z,ones(3);core_spacing=.6,transverse_spacing=.6,
+        padding_parallel=3.,padding_transverse=3.,core_side=3,angular_reference_count=3,
+        outer_face_count=3,tail_spacing=2.8,angular_resolution_scale=1.4,expansion=e)
+    probes=CartesianGaussianShellSupplementRepresentation3D(:sp,
+        [orbital(p,x,.8) for x in z for p in ((0,0,0),(1,0,0),(0,1,0))],(;))
+    system=cartesian_residual_gto_mwg_system(w,z,ones(3);supplement=probes,expansion=e)
+    field, correction=GB._collinear_atomic_fit_screening(system,z,atom,C,[1.])
+    fit,pot=CRD._one_electron_h_reference_fits(atom,C,[1.])
+    pe=CoulombGaussianExpansion(pot.coefficients,pot.exponents;del=e.del,s=e.s,c=e.c,maxu=e.maxu)
+    B=gto_overlap_matrix(system,probes); blocks=[B[:,i:i] for i in (1,4,7)]
+    @test B'B ≈ GB._cartesian_supplement_cross_overlap(probes,probes) atol=1e-10
+    @test abs(dot(blocks[1],blocks[2])) > .1
+    oracle=sum(CRD._nuclear_matrix(probes,-1.,(0.,0.,x),pe) for x in z)
+    @test B'*field.matrix*B ≈ oracle atol=1e-10
+    for i in (2,3,5,6,8,9) # Separate px/py checks after the sensitive residual transform.
+        @test dot(B[:,i],field.matrix*B[:,i]) ≈ oracle[i,i] atol=1e-10
+    end
+    proxy,donor=F._r3a_qw_proxy_layers(w.parent_axis_bundles),F._r3a_qw_supplement(probes)
+    percenter=zeros(size(field.matrix))
+    for x in z
+        raw=R.placed_spherical_gaussian_potential_raw_blocks(w.terminal_basis,w.parent_axis_bundles,proxy,donor,pe,(0.,0.,x))
+        percenter .+= GB.CartesianResidualGaussians.transform_augmented_operator(
+            raw.GG,F._r3a_project_parent_ga(w.terminal_basis,raw.GA),raw.AA,system.residual)
+    end
+    @test field.matrix ≈ percenter atol=1e-10
+    @test field.matrix*B ≈ percenter*B atol=1e-10
+    @test field.matrix ≈ field.matrix' atol=1e-12
+    expectations=[sum(c*(1.6/(1.6+a))^1.5*exp(-1.6*a/(1.6+a)*(x-y)^2)
+        for (a,c) in zip(pot.exponents,pot.coefficients)) for x in z,y in z]
+    energies=[sum(u*v*sum(c*(b*a/(b*a+t*(b+a)))^1.5*exp(-t*b*a/(b*a+t*(b+a))*(x-y)^2)
+        for (t,c) in zip(e.exponents,e.coefficients)) for (b,u) in zip(fit.betas,fit.weights),
+        (a,v) in zip(fit.betas,fit.weights)) for x in z,y in z]
+    @test field.density_coulomb_self_integral ≈ sum(energies) atol=1e-10
+    @test sum(energies) ≈ tr(energies)+2sum(energies[i,j] for i in 1:3 for j in i+1:3) atol=1e-12
+    @test screened_hartree_consistency_error(correction) ≈ sum(expectations-energies) atol=1e-10
+    @test screened_hartree_field_kind(correction) == :fitted_reference
+    q=vec(sum(abs2,hcat(blocks...);dims=2)); V=system.hamiltonian.electron_electron_ida
+    delta=screened_hartree_delta_one_body(correction); constant=screened_hartree_energy_constant(correction)
+    @test Diagonal(V*q)+delta ≈ field.matrix atol=1e-10
+    @test .5dot(q,V*q)+sum(dot(b,delta*b) for b in blocks)+constant ≈
+        .5sum(energies)+screened_hartree_consistency_error(correction) atol=1e-10
+    build(E,J=expectations)=CRD.build_additive_screened_hartree_correction(V,field,field.density_coulomb_self_integral,blocks,[[1.] for _ in z];
+        component_field_expectations=J,density_pair_energies=E)
+    @test build(energies).delta_one_body ≈ delta atol=1e-10
+    @test_throws ArgumentError build(energies,expectations .+ 1e-4)
+    bad=copy(energies); bad[1,2]+=1e-4; bad[2,1]-=1e-4
+    @test_throws ArgumentError build(bad)
+    @test_throws ArgumentError build(2energies)
+    @test_throws ArgumentError build(fill(NaN,3,3))
+    @test_throws DimensionMismatch build(energies[1:2,1:2])
+    @test_throws ArgumentError CRD.build_additive_screened_hartree_correction(V,field,field.density_coulomb_self_integral,blocks,[[1.] for _ in z])
+end
+
 function _unconverged_packet(packet)
     diagnostics = merge(packet.rhf_diagnostics, (; converged = false))
     return typeof(packet)(packet.spec, packet.supplement, packet.overlap,

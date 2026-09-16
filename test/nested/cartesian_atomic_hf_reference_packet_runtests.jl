@@ -6,6 +6,37 @@ using GaussletBases
 
 const CRD = GaussletBases.CartesianReferenceDensity
 
+@testset "Supplied one-electron H fits" begin
+    exponents = [1776.776,254.0177,54.69804,15.01834,4.915078,1.794924,.710716,.304802,.138046,.062157]
+    contractions = zeros(10, 6)
+    for (j,i,v) in ((1,6,.9999999999999998),(2,7,.9999999999999994),(3,8,1.),(5,9,.9999999999999997),(6,10,.9999999999999998))
+        contractions[i,j] = v
+    end
+    contractions[:,4] = [4.4000002007683176e-5,.0003720000169740487,.0020940000955474674,.00886300040441127,
+        .030540001393514645,.09034200412222987,.21323900972991713,.3523500160774356,.3396570154982647,.10733000489737807]
+    C = reshape([-2.9086287303116368e-6,-2.9855364969718728e-6,-7.91109648200595e-6,
+        1.0000192332273252,-5.461690547814211e-6,-2.5657458301368656e-6], :, 1)
+    atom = CartesianGaussianShellSupplementRepresentation3D(:supplied_H,
+        [CartesianGaussianShellOrbitalRepresentation3D("H_s$i",(0,0,0),(0.,0.,0.),
+            copy(exponents),contractions[:,i],:axiswise_normalized_cartesian_gaussian) for i in 1:6],(;))
+    fit, potential = CRD._one_electron_h_reference_fits(atom, C, [1.])
+    S, T = CRD._supplement_overlap_kinetic(atom)
+    @test only(C' * S * C) ≈ 1 atol=1e-12
+    V = CRD._nuclear_matrix(atom, 1., (0.,0.,0.), coulomb_gaussian_expansion(doacc=true))
+    @test only(C' * (T+V) * C) ≈ -.4999992445099803 atol=1e-12
+    @test length(fit.betas) == 56 && fit.row.retained_rank == 55
+    @test length(potential.coefficients) == 33 && abs(fit.row.charge_error) < 1e-10
+    analytic = sum(w*v*2sqrt(b*a/(b+a)/pi) for (b,w) in zip(fit.betas,fit.weights), (a,v) in zip(fit.betas,fit.weights))
+    @test fit.row.fit_self_energy ≈ analytic atol=2e-9
+    @test fit.row.exact_self_energy ≈ .6250015905142128 atol=2e-9
+    @test potential.row.consistency_error ≈ -2.0689679947e-7 atol=1e-10
+    @test_throws ArgumentError CRD.atomic_hf_reference_packet_spec(atom="H", nuclear_charge=1., electron_count=1, core_spacing=.3, fill_shell_convention="occupation one")
+    @test_throws ArgumentError CRD._one_electron_h_reference_fits(atom, C, [2.])
+    @test_throws ArgumentError CRD._one_electron_h_reference_fits(atom, 2C, [1.])
+    @test_throws ArgumentError CRD._one_electron_h_reference_fits(atom, fill(NaN,6,1), [1.])
+    @test_throws DimensionMismatch CRD._one_electron_h_reference_fits(atom, C[1:5,:], [1.])
+end
+
 function _packet_with_convergence(packet, converged::Bool)
     diagnostics = merge(packet.rhf_diagnostics, (; converged))
     return typeof(packet)(packet.spec, packet.supplement, packet.overlap,

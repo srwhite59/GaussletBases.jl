@@ -549,7 +549,7 @@ function _supplement_self_energy(supplement, density, expansion)
     return Float64(value)
 end
 
-function _cloud_supplement(betas, spec::AtomicHFReferencePacketSpec; center = spec.center)
+function _cloud_supplement(betas, spec; center = isnothing(spec) ? (0.0, 0.0, 0.0) : spec.center)
     orbitals = _GB_PARENT.CartesianGaussianShellOrbitalRepresentation3D[
         _GB_PARENT.CartesianGaussianShellOrbitalRepresentation3D(
             "fit_s$(i)", (0, 0, 0), center,
@@ -557,7 +557,8 @@ function _cloud_supplement(betas, spec::AtomicHFReferencePacketSpec; center = sp
             :axiswise_normalized_cartesian_gaussian)
         for (i, beta) in pairs(betas)]
     metadata = (; source_kind = :atomic_hf_reference_density_fit_cloud,
-        atom = spec.atom, basis_name = "$(spec.basis_name)_density_fit",
+        atom = isnothing(spec) ? "H" : spec.atom,
+        basis_name = isnothing(spec) ? "one_electron_H_density_fit" : "$(spec.basis_name)_density_fit",
         lmax = 0, nuclei = NTuple{3,Float64}[center])
     return _GB_PARENT.CartesianGaussianShellSupplementRepresentation3D(
         :atomic_hf_reference_density_fit_cloud, orbitals, metadata)
@@ -574,18 +575,10 @@ _density_cloud_terms_energy(left, right, expansion) = Float64(sum(
     lw * rw * getfield(_GB_PARENT, :_gaussian_coulomb_pair_integral)(lt, rt, expansion)
     for (lw, lt) in left, (rw, rt) in right))
 
-function _cloud_self_energy(betas, weights, spec::AtomicHFReferencePacketSpec,
-    expansion)
-    cloud = _cloud_supplement(betas, spec)
-    pair = getfield(_GB_PARENT, :gaussian_coulomb_pair_matrix)(
-        cloud; expansion, max_orbitals = length(betas))
-    n = length(betas)
-    value = 0.0
-    for a in 1:n, b in 1:n
-        value += weights[a] * weights[b] *
-            pair[_pair_index(a, a, n), _pair_index(b, b, n)]
-    end
-    return Float64(value)
+function _cloud_self_energy(betas, weights, spec, expansion)
+    terms = _density_fit_cloud_terms((; betas, weights), spec,
+        isnothing(spec) ? (0.0, 0.0, 0.0) : spec.center)
+    return _density_cloud_terms_energy(terms, terms, expansion)
 end
 
 function _width_grid(width_min, width_max, ratio)
@@ -701,14 +694,20 @@ function fit_atomic_reference_density(
     spec::AtomicHFReferencePacketSpec;
     options::AtomicDensityFitOptions = AtomicDensityFitOptions(),
 )
+    return _fit_atomic_reference_density(supplement, rhf.occupied_orbitals,
+        rhf.occupations, rhf.density_total, spec; options)
+end
+
+function _fit_atomic_reference_density(supplement, coefficients, occupations, density,
+    spec; options::AtomicDensityFitOptions = AtomicDensityFitOptions())
     widths = _fit_widths(options)
     betas = 1.0 ./ (widths .^ 2)
     r = _radial_grid(options)
     target = Float64[_reference_radial_density(
-        supplement, rhf.occupied_orbitals, rhf.occupations, radius) for radius in r]
-    target_charge = sum(rhf.occupations)
+        supplement, coefficients, occupations, radius) for radius in r]
+    target_charge = sum(occupations)
     expansion = _atomic_reference_coulomb_expansion(:compact)
-    exact_self = _supplement_self_energy(supplement, rhf.density_total, expansion)
+    exact_self = _supplement_self_energy(supplement, density, expansion)
     A0 = Matrix{Float64}(undef, length(r), length(betas))
     for (j, beta) in pairs(betas)
         A0[:, j] .= _normalized_s_density.(beta, r)
@@ -774,6 +773,36 @@ function fit_atomic_reference_density(
     return AtomicReferenceDensityFit(Vector{Float64}(betas), Vector{Float64}(widths),
         Vector{Float64}(weights), Vector{Float64}(r), Vector{Float64}(target),
         Vector{Float64}(fit), row)
+end
+
+function _one_electron_h_reference_fits(supplement, coefficients, occupations;
+    density_options::AtomicDensityFitOptions = AtomicDensityFitOptions(),
+    potential_options::AtomicPotentialFitOptions = AtomicPotentialFitOptions())
+    supplement::_GB_PARENT.CartesianGaussianShellSupplementRepresentation3D
+    length(supplement.orbitals) == 6 && size(coefficients) == (6, 1) ||
+        throw(DimensionMismatch("H reference requires six s contractions and one column"))
+    occupations == [1.0] && all(isfinite, coefficients) ||
+        throw(ArgumentError("H reference requires finite coefficients and occupation one"))
+    for orbital in supplement.orbitals
+        orbital.center == (0.0, 0.0, 0.0) && orbital.angular_powers == (0, 0, 0) &&
+            orbital.primitive_normalization === :axiswise_normalized_cartesian_gaussian &&
+            !isempty(orbital.exponents) && length(orbital.exponents) == length(orbital.coefficients) &&
+            all(x -> isfinite(x) && x > 0, orbital.exponents) &&
+            all(isfinite, orbital.coefficients) || throw(ArgumentError("invalid origin-centered H s contraction"))
+    end
+    S, _ = _supplement_overlap_kinetic(supplement)
+    abs(only(transpose(coefficients) * S * coefficients) - 1.0) <= 1.0e-10 ||
+        throw(ArgumentError("H reference orbital must be normalized"))
+    density = coefficients * transpose(coefficients)
+    fit = _fit_atomic_reference_density(supplement, coefficients, occupations, density,
+        nothing; options = density_options)
+    abs(fit.row.charge_error) <= 1.0e-10 || throw(ArgumentError("H density fit charge mismatch"))
+    potential = fit_atomic_reference_potential(fit; options = potential_options)
+    consistency = _ordinary_potential_fit_consistency(
+        supplement, density, fit, potential, (0.0, 0.0, 0.0))
+    return fit, AtomicReferencePotentialFit(potential.coefficients, potential.exponents,
+        potential.radial_grid, potential.radial_exact, potential.radial_fit,
+        potential.radial_error, merge(potential.row, consistency))
 end
 
 function _potential_fit_grid(options::AtomicPotentialFitOptions)

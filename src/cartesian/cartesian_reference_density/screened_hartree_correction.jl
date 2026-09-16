@@ -491,8 +491,15 @@ function build_additive_screened_hartree_correction(
     isfinite(tolerance) && tolerance >= 0 || throw(ArgumentError(
         "additive consistency_atol must be finite and nonnegative"))
     packet_backed = !isnothing(packets)
-    if packet_backed
-        length(packets) == length(coefficient_blocks) ||
+    fitted_backed = J0_G isa FittedReferenceHartreeField
+    if fitted_backed
+        packet_backed && throw(ArgumentError("explicit fitted field must not supply RHF packets"))
+        E0_G == J0_G.density_coulomb_self_integral ||
+            throw(ArgumentError("fitted field density energy mismatch"))
+        J0_G = J0_G.matrix
+    end
+    if packet_backed || fitted_backed
+        (!packet_backed || length(packets) == length(coefficient_blocks)) ||
             throw(DimensionMismatch("additive packet and coefficient block counts differ"))
         component_field_expectations !== nothing && density_pair_energies !== nothing ||
             throw(ArgumentError(
@@ -514,7 +521,7 @@ function build_additive_screened_hartree_correction(
         block_traces = reference.block_traces,
         interpacket_occupied_overlap_max = reference.cross_overlap_max)
     expected_fit_consistency = nothing
-    if packet_backed
+    if packet_backed || fitted_backed
         fields = Matrix{Float64}(component_field_expectations)
         energies = Matrix{Float64}(density_pair_energies)
         n = length(coefficient_blocks)
@@ -522,9 +529,14 @@ function build_additive_screened_hartree_correction(
             throw(DimensionMismatch("additive consistency matrix dimensions differ"))
         all(isfinite, fields) && all(isfinite, energies) || throw(ArgumentError(
             "additive consistency matrices must be finite"))
+        if fitted_backed
+            norm(energies - transpose(energies), Inf) <= tolerance &&
+                abs(sum(energies) - E0_G) <= tolerance || throw(ArgumentError(
+                    "fitted density energies must be symmetric and sum to the field energy"))
+        end
         self_errors = diag(fields - energies)
-        expected_self_errors = [_packet_potential_fit_consistency_error(packet,
-            "additive screened-Hartree packet consumption") for packet in packets]
+        expected_self_errors = packet_backed ? [_packet_potential_fit_consistency_error(packet,
+            "additive screened-Hartree packet consumption") for packet in packets] : copy(self_errors)
         self_validation_errors = self_errors - expected_self_errors
         maximum(abs, self_validation_errors) <= tolerance || throw(ArgumentError(
             "additive packet self-consistency mismatch exceeds $(tolerance)"))
@@ -549,7 +561,7 @@ function build_additive_screened_hartree_correction(
     end
     return _build_screened_hartree_correction(V_IDA, J0_G, E0_G,
         reference, additive_reference, expected_fit_consistency;
-        source = packet_backed ? :additive_atomic_packets :
+        source = fitted_backed ? :fitted_reference : packet_backed ? :additive_atomic_packets :
             :explicit_additive_same_basis_inputs,
         kwargs...)
 end

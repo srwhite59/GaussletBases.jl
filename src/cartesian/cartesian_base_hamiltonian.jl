@@ -1677,3 +1677,53 @@ function cartesian_residual_gto_mwg_system(working::_CartesianCollinearWorkingBa
     return _cartesian_residual_gto_mwg_system_result(
         hamiltonian, terminal, bundles, supplement, residual, locations)
 end
+
+function _collinear_atomic_fit_screening(system::_CartesianResidualGTOMWGSystem,
+    z, atomic_supplement, coefficients, occupations; fit_options...)
+    D, F, R = CartesianReferenceDensity, CartesianFinalBasisRealization, CartesianGaussianRawBlocks
+    propertynames(system.hamiltonian) == (:one_body, :electron_electron_ida, :nuclear_repulsion) ||
+        throw(ArgumentError("atomic-fit consumption requires a collinear supplemented system"))
+    _validate_cartesian_residual_gto_mwg_system(system.hamiltonian, system.terminal_basis, system.supplement, system.residual)
+    z, _ = _collinear_nuclei(z, ones(length(z)))
+    fit, potential = D._one_electron_h_reference_fits(atomic_supplement, coefficients, occupations; fit_options...)
+    compact = D._atomic_reference_coulomb_expansion(:compact)
+    expansion = CoulombGaussianExpansion(potential.coefficients, potential.exponents;
+        del = compact.del, s = compact.s, c = compact.c, maxu = compact.maxu)
+    terminal, bundles = system.terminal_basis, system.parent_axis_bundles
+    proxy, donor = F._r3a_qw_proxy_layers(bundles), F._r3a_qw_supplement(system.supplement)
+    centers = [(0.0, 0.0, value) for value in z]
+    terms = [D._density_fit_cloud_terms(fit, nothing, center) for center in centers]
+    energies, fields = zeros(length(z), length(z)), zeros(length(z), length(z))
+    density = coefficients * transpose(coefficients)
+    for i in eachindex(z), j in i:length(z)
+        energies[i, j] = energies[j, i] = D._density_cloud_terms_energy(terms[i], terms[j], compact)
+        fields[i, j] = fields[j, i] = sum(density .* D._nuclear_matrix(
+            atomic_supplement, -1.0, (0.0, 0.0, z[j] - z[i]), expansion))
+    end
+    blocks = Matrix{Float64}[]
+    GG = GA = AA = nothing
+    for center in centers
+        translated = CartesianGaussianShellSupplementRepresentation3D(atomic_supplement.supplement_kind,
+            [CartesianGaussianShellOrbitalRepresentation3D(o.label, o.angular_powers, center,
+                o.exponents, o.coefficients, o.primitive_normalization) for o in atomic_supplement.orbitals],
+            atomic_supplement.metadata)
+        push!(blocks, gto_overlap_matrix(system, translated) * coefficients)
+        raw = R.placed_spherical_gaussian_potential_raw_blocks(
+            terminal, bundles, proxy, donor, expansion, center)
+        if isnothing(GG)
+            GG, GA, AA = raw.GG, raw.GA, raw.AA
+        else
+            GG .+= raw.GG
+            GA .+= raw.GA
+            AA .+= raw.AA
+        end
+    end
+    matrix = CartesianResidualGaussians.transform_augmented_operator(
+        GG, F._r3a_project_parent_ga(terminal, GA), AA, system.residual)
+    field = D.FittedReferenceHartreeField(matrix, sum(energies);
+        provenance = "translated supplied one-electron H s references; separate density/potential fits; occupation one")
+    correction = D.build_additive_screened_hartree_correction(system.hamiltonian.electron_electron_ida,
+        field, sum(energies), blocks, [copy(occupations) for _ in z];
+        component_field_expectations = fields, density_pair_energies = energies)
+    return field, correction
+end
