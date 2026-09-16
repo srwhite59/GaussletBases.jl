@@ -1431,3 +1431,21 @@ grant and checks. Scratch static audit: /private/tmp/pass637_closure_audit.jl.
 Local package/docs 8/8 +162/162 +10/10, authority/self-test, deterministic views,
 Documenter, log bound and diff checks passed. No numerical owner ran for this
 authorization; its remote checks use the docs-only route.
+
+### Pass 638: Private Recursive Chain Retirement Closed
+
+Accepted 4b6e1c9dab7696a4a6b9f8198b225450de8924a9: one file, source +0/-708,
+three private carriers and seventeen methods deleted. Independent review matched
+the frozen retained-file/deleted-range/helper hashes, reran the 12-check package
+and x/y/z helper probe, and found only the preserved square-helper definition
+and caller. Exact-head full CI 35136279056 and Docs 35136278883 passed; accepted
+core, Cartesian 232/232 and collinear 222/222 evidence was not rerun.
+No strategic change: MT8 construction/atomic-fit maintenance, separate consumer
+authority and the constructor-repair boundary remain unchanged. Deleted: orphaned
+recursive chain closure. Simplified: mixed owner 1488 to 780 lines. Quarantined:
+none. Not deleted: square/shared helper, released product/sliced chains and
+archives. Remaining blocker: none for this retirement; hchain-doer remains
+paused for separate assignment. New tests/files/metadata/status fields: zero.
+Both temporary grants are closed; no successor or numerical campaign is opened.
+Local package/docs 8/8 +162/162 +10/10, authority/self-test, generated parity,
+Documenter, log bound and diff checks passed. Closeout uses docs-only CI/Docs.

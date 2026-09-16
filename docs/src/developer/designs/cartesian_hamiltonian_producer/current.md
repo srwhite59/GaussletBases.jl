@@ -42,11 +42,10 @@ molecular-field study is not a prerequisite. Hchain-doer remains paused pending
 a separate assignment; Pass 634 constructor repair remains independent. No
 screened HF, molecular matching, basis rebuild or new reference is authorized.
 
-Pass 637 authorizes [private recursive-chain retirement](common_terminal_shell_decomposition.md#Private-Recursive-Chain-Retirement)
-under HP-RETIRE-RECURSIVE-CHAIN-FN-01/TEST-01:
-exactly 708 deleted source lines, zero additions; square/shared helpers,
-released product chains and sliced chains remain unchanged. No consumer or
-screening assignment follows.
+Pass 638 closes [private recursive-chain retirement](common_terminal_shell_decomposition.md#Private-Recursive-Chain-Retirement)
+at 4b6e1c9dab7696a4a6b9f8198b225450de8924a9: 708 deleted lines, zero additions.
+Both retirement grants are closed. Square/shared helpers, released product
+chains, sliced chains and archives remain unchanged; no successor is granted.
 
 Start with [README](README.md), this page, and [invariants](invariants.md), then
 read only the assigned generated registry entry and linked canonical contract.

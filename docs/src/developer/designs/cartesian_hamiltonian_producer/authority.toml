@@ -35,7 +35,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pqs_
 sha256 = "1eb1fcf74b441212bea6bf914f6a8413b963b3c1c83dce112b8bd321aa1e7093"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
-sha256 = "8dd526533ebd03cc047ccf3b24b9d5b96b4f0e91efd155cbfd7c5fe482057641"
+sha256 = "4074a2b9b552bc5377e8d56a90c05a64273b4ddd2435e19e4a57da55c1502802"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/complete_core_shell_rhf_retirement.md"
 sha256 = "99520abb40f2d828f9cd80fb56517259fb20c37310a58924380d3d6c2e00f4be"
@@ -887,11 +887,12 @@ title = "finite collinear PQS construction and operators"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-COLLINEAR-PQS-FN-01"]
-grant = "retirement"
+grant = "none"
 id = "HP-RETIRE-RECURSIVE-CHAIN-FN-01"
-lifecycle = "approved"
-scope = "Delete only the frozen 708-line private closure in cartesian_nested_experimental_geometries.jl under Private Recursive Chain Retirement. Zero additions; preserve the exact retained-file hash, shared three-child helper, square implementation, released chain interfaces and archives. No adapter, replacement, other source edit, numerical policy, API, workflow or release change. Stop on any live consumer or changed kept byte."
-surfaces = ["source"]
+lifecycle = "retired"
+paths = []
+scope = "Private Recursive Chain Retirement completed at 4b6e1c9dab7696a4a6b9f8198b225450de8924a9: exactly 708 deleted lines, zero additions in one file. Frozen retained-file and shared-helper hashes match. Square code, released interfaces, tests and historical evidence remain unchanged. No further execution grant."
+surfaces = []
 title = "retire orphaned private recursive chain"
 
     [[records.document_refs]]
@@ -901,22 +902,24 @@ title = "retire orphaned private recursive chain"
 
     [[records.evidence_refs]]
     kind = "git_commit"
+    value = "4b6e1c9dab7696a4a6b9f8198b225450de8924a9"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "638"
+    [[records.evidence_refs]]
+    kind = "git_commit"
     value = "5a770a571d9527838aaaf540fed515cd03380b97"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "637"
-
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_nested_experimental_geometries.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-RETIRE-RECURSIVE-CHAIN-FN-01"]
-grant = "retirement"
+grant = "none"
 id = "HP-RETIRE-RECURSIVE-CHAIN-TEST-01"
-lifecycle = "approved"
-scope = "Run unchanged core and public Cartesian owners for Private Recursive Chain Retirement; repeat caller, hash, package/export, docs and authority checks plus full CI/Docs. No test edits, assertions, fixture, runner or workflow change. Preserve square/shared helper and finite-collinear contracts. No H10, archived recursion or angular campaign; no new consumer assignment."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Private Recursive Chain Retirement validated by unchanged core, Cartesian 232/232 and collinear 222/222 owners, frozen hashes, package/helper checks and exact-head full CI 35136279056 plus Docs 35136278883. No test changes. Validation completed; no further execution or consumer grant."
+surfaces = []
 title = "validate private recursive chain deletion"
 
     [[records.document_refs]]
@@ -926,19 +929,16 @@ title = "validate private recursive chain deletion"
 
     [[records.evidence_refs]]
     kind = "git_commit"
+    value = "4b6e1c9dab7696a4a6b9f8198b225450de8924a9"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "638"
+    [[records.evidence_refs]]
+    kind = "git_commit"
     value = "5a770a571d9527838aaaf540fed515cd03380b97"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "637"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/core/runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-COLLINEAR-PQS-FN-01", "HP-REP-PQS-RG-WORKING-FN-01"]
 grant = "maintenance"

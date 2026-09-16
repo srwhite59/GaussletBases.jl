@@ -648,8 +648,12 @@ delivery. Close implementation separately after full acceptance evidence.
 
 ## Private Recursive Chain Retirement
 
-Pass 637 grants HP-RETIRE-RECURSIVE-CHAIN-FN-01/TEST-01 for pure deletion at
-baseline 5a770a571d9527838aaaf540fed515cd03380b97. The existing public Cartesian
+Pass 638 accepts 4b6e1c9dab7696a4a6b9f8198b225450de8924a9: exactly 708 lines
+deleted, zero added, with the retained-file/shared-helper hashes below exact.
+HP-RETIRE-RECURSIVE-CHAIN-FN-01 is retired and TEST-01 completed; both grants
+are closed. The following Pass 637 boundary is preserved acceptance evidence,
+not renewed authority, at baseline 5a770a571d9527838aaaf540fed515cd03380b97.
+The existing public Cartesian
 owner already covers H3/H4, unequal gaps, contact, mixed charges, matched-parent
 operators, raw transfer, separate s/px/py capture and three unmerged groups with
 1029 group +98 interior-gap +98 exterior sites, exactly once. These construction
@@ -708,4 +712,4 @@ Failure rule: if any live caller, changed kept byte, required test adaptation,
 added source line or broader dependency is found, make no implementation commit
 and report. No source decomposition, other retirement, numerical policy,
 workflow, dependency, API, export, release, stable or consumer-assignment change.
-Repo-manager waits for this recorded grant and required checks before deletion.
+The deletion and its required validation are complete; no successor is granted.
