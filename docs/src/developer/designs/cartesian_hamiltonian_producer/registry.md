@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `6145b341f7f0606749df6ffd3c3c03a6377000b6a76e87559aa7770a400a2e9b`.
+> [authority.toml](authority.toml), SHA-256 `df31e9fc66d99687b39861135d142b5ff1303ec31dcfa43ef300914382c322f3`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -382,27 +382,24 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-COLLINEAR-PQS-FN-01 - finite collinear PQS construction and operators
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Finite Collinear PQS`
+  - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Scientific Collinear Q Entrance`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian/cartesian_shellification/terminal_geometry.jl`
   - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
   - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
-  - `source` / `existing`: `src/cartesian/pqs_source_box_low_order_materialization.jl`
-  - `source` / `existing`: `src/cartesian/cartesian_gto_probes.jl`
-  - `source` / `existing`: `src/GaussletBases.jl`
   - `docs` / `existing`: `docs/src/manual/projected_q_shells.md`
   - `docs` / `existing`: `docs/src/reference/export.md`
 - **Evidence:**
   - `git_commit`: `cf608bd0e151f95ea2f88960959f463184325151`
   - `git_commit`: `3e32d7e50e9a232d8545fa313d2f06ac83565031`
   - `manager_pass`: `630`
+  - `manager_pass`: `639`
 - **Dependencies:** none
-- **Scope:** Maintain the accepted six source owners and two reader pages under Finite Collinear PQS. Preserve synchronous ownership, compact exterior, adaptive retention, bare transfer, accumulated operators and frozen validation. No new capability, kernel change, solver, periodic geometry, legacy revival, cache, retirement or release work; the implementation-only 450-line exception is exhausted.
+- **Scope:** Implement the Scientific Collinear Q Entrance in the two existing collinear constructor/realization owners and reader pages. Resolve hydrogen scaled-q inputs, prescribe transverse (q,q), preserve selected L and explicit expert behavior. Respect 80 added-source lines. No shared-kernel, geometry, operator, solver, screening, metadata, workflow, release or physical H10 work.
 
 ### HP-RETIRE-RECURSIVE-CHAIN-FN-01 - retire orphaned private recursive chain
 
@@ -480,20 +477,21 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-COLLINEAR-PQS-TEST-01 - finite collinear PQS validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Finite Collinear PQS`
+  - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Scientific Collinear Q Entrance`
 - **Owned paths:**
   - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
 - **Evidence:**
   - `git_commit`: `cf608bd0e151f95ea2f88960959f463184325151`
   - `git_commit`: `3e32d7e50e9a232d8545fa313d2f06ac83565031`
   - `manager_pass`: `630`
+  - `manager_pass`: `639`
 - **Dependencies:** `HP-COLLINEAR-PQS-FN-01`
-- **Scope:** Maintain the existing public Cartesian finite-chain owner under Finite Collinear PQS: exact ownership, multi-group termination, raw transfer, separate px/py and independent complete-operator checks. Preserve frozen tolerances, existing assertions and released behavior. No new owner, broad angular run, workflow change or numerical-policy relaxation.
+- **Scope:** Extend the existing public Cartesian owner under Scientific Collinear Q Entrance, at most 80 added lines: successful odd/even requested-order construction, unchanged longitudinal selection, fixed-parent resolution, invalid inputs and expert parity. Preserve existing numerical tolerances and owners. No new test file, physical H10, broad angular run, workflow change or policy relaxation.
 
 ### HP-COMP-ANGBOX-AUDIT-01 - angular-balanced shellification geometry audit
 

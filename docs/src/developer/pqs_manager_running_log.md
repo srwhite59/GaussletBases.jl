@@ -1449,3 +1449,36 @@ paused for separate assignment. New tests/files/metadata/status fields: zero.
 Both temporary grants are closed; no successor or numerical campaign is opened.
 Local package/docs 8/8 +162/162 +10/10, authority/self-test, generated parity,
 Documenter, log bound and diff checks passed. Closeout uses docs-only CI/Docs.
+
+### Pass 639: General Scientific-q Chain Entrance
+
+Steven's paper-first baseline settles the scientific direction; MT8 now needs
+software translation, not an energy-tolerance decision or another fixture
+family. Preserve the coarse anisotropic H10 runs as pilots. General q, not a
+q5 branch, resolves hydrogen spacing 1.2/(q-1) and the established odd core
+width. Fixed-parent comparisons remain explicitly distinct.
+
+Independent production geometry/selector probes at 0386affc used H3/H10 R1.8,
+q4/5/6, padding10, tail2.8 and scale1.4. H3 transverse orders drifted to q+1
+on 4/7, 2/8 and 3/8 shells; H10 matched on every shell. No parent limitation,
+but existing lower-band/upper-safe fallbacks occurred in all cases. The exact
+longitudinal sequences and bounds are in the canonical amendment and ignored
+standard-q-selector-2026-09-16 report. No terminal or complete operators ran.
+The minimal correction explicitly sets transverse q while preserving selected L;
+all prescribed dimensions fit the probed boxes. Actual realization still gates
+implementation acceptance. First-call probe 1.94s; remaining cases .08-.56s,
+not physical construction timings.
+
+Authorize only two existing source owners (80 added lines), the existing public
+test owner (80), and two reader pages (35). Outer count starts at q but remains
+an independent convergence control. Deleted: none required. Simplified: one
+entrance resolves the standard recipe; no duplicated constructor. Quarantined:
+none. Not deleted: live explicit expert and released atom/diatomic paths.
+Remaining blocker: implementation/qualification; no H10 operators, screening,
+SCF or consumer assignment. Added/deleted source here 0/0; no new committed
+tests/files/metadata. Tests will catch odd/even source-order drift that the
+existing pilot coefficient checks cannot. Required implementation validation:
+bounded H3 realization, existing owners and full CI/Docs. This authority pass
+passed local package/docs 8/8 +162/162 +10/10, authority/self-test, generated
+parity, Documenter, log bound and diff checks. Remote validation uses docs-only
+CI/Docs; repo-manager waits for its commit and checks.

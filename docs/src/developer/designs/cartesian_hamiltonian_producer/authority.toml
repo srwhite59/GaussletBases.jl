@@ -35,7 +35,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pqs_
 sha256 = "1eb1fcf74b441212bea6bf914f6a8413b963b3c1c83dce112b8bd321aa1e7093"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
-sha256 = "4074a2b9b552bc5377e8d56a90c05a64273b4ddd2435e19e4a57da55c1502802"
+sha256 = "065fa89c693a2173d8071f6cbc0772ebe9c3e10b60a37b886b4df7fd49cf587a"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/complete_core_shell_rhf_retirement.md"
 sha256 = "99520abb40f2d828f9cd80fb56517259fb20c37310a58924380d3d6c2e00f4be"
@@ -831,15 +831,15 @@ title = "atomic-fit connection and bounded field acceptance"
     state = "existing"
 [[records]]
 dependency_ids = []
-grant = "maintenance"
+grant = "implementation"
 id = "HP-COLLINEAR-PQS-FN-01"
-lifecycle = "implemented"
-scope = "Maintain the accepted six source owners and two reader pages under Finite Collinear PQS. Preserve synchronous ownership, compact exterior, adaptive retention, bare transfer, accumulated operators and frozen validation. No new capability, kernel change, solver, periodic geometry, legacy revival, cache, retirement or release work; the implementation-only 450-line exception is exhausted."
+lifecycle = "approved"
+scope = "Implement the Scientific Collinear Q Entrance in the two existing collinear constructor/realization owners and reader pages. Resolve hydrogen scaled-q inputs, prescribe transverse (q,q), preserve selected L and explicit expert behavior. Respect 80 added-source lines. No shared-kernel, geometry, operator, solver, screening, metadata, workflow, release or physical H10 work."
 surfaces = ["docs", "source"]
 title = "finite collinear PQS construction and operators"
 
     [[records.document_refs]]
-    heading = "Finite Collinear PQS"
+    heading = "Scientific Collinear Q Entrance"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
 
@@ -852,11 +852,10 @@ title = "finite collinear PQS construction and operators"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "630"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "639"
 
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_shellification/terminal_geometry.jl"
-    state = "existing"
     [[records.paths]]
     kind = "source"
     path = "src/cartesian/cartesian_base_hamiltonian.jl"
@@ -864,18 +863,6 @@ title = "finite collinear PQS construction and operators"
     [[records.paths]]
     kind = "source"
     path = "src/cartesian/pqs_source_box_route_driver_helpers.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/pqs_source_box_low_order_materialization.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_gto_probes.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/GaussletBases.jl"
     state = "existing"
     [[records.paths]]
     kind = "docs"
@@ -1017,15 +1004,15 @@ title = "finite collinear supplementation validation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-COLLINEAR-PQS-FN-01"]
-grant = "maintenance"
+grant = "implementation"
 id = "HP-COLLINEAR-PQS-TEST-01"
-lifecycle = "completed"
-scope = "Maintain the existing public Cartesian finite-chain owner under Finite Collinear PQS: exact ownership, multi-group termination, raw transfer, separate px/py and independent complete-operator checks. Preserve frozen tolerances, existing assertions and released behavior. No new owner, broad angular run, workflow change or numerical-policy relaxation."
+lifecycle = "approved"
+scope = "Extend the existing public Cartesian owner under Scientific Collinear Q Entrance, at most 80 added lines: successful odd/even requested-order construction, unchanged longitudinal selection, fixed-parent resolution, invalid inputs and expert parity. Preserve existing numerical tolerances and owners. No new test file, physical H10, broad angular run, workflow change or policy relaxation."
 surfaces = ["tests"]
 title = "finite collinear PQS validation"
 
     [[records.document_refs]]
-    heading = "Finite Collinear PQS"
+    heading = "Scientific Collinear Q Entrance"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
 
@@ -1038,6 +1025,9 @@ title = "finite collinear PQS validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "630"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "639"
 
     [[records.paths]]
     kind = "test"

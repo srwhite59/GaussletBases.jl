@@ -439,11 +439,12 @@ source/retention policy requires separate authority.
 
 Pass 630 accepts Pass 629 implementation cf608bd0e151f95ea2f88960959f463184325151
 and input normalization 3e32d7e50e9a232d8545fa313d2f06ac83565031.
-HP-COLLINEAR-PQS-FN-01/TEST-01 are maintenance only. This additive expert
+The accepted expert route remains maintenance; Pass 639 below grants only
+the scientific-q entrance under HP-COLLINEAR-PQS-FN-01/TEST-01. This additive expert
 finite-chain producer is the explicit exception to the preceding no-new-geometry
 guardrail; atom/diatomic geometry and public defaults remain unchanged.
 The following frozen implementation boundaries remain maintenance constraints,
-not authority for another capability or another 450-line extension.
+not authority beyond that amendment or for another 450-line extension.
 
 ### Public boundary and storage
 
@@ -645,6 +646,113 @@ unchanged atom/diatomic behavior or the 450-line limit cannot be met, or broader
 semantics/kernel edits are needed, make no implementation commit and report the
 specific obstacle. No clamp, hidden fallback, tolerance relaxation or planner-only
 delivery. Close implementation separately after full acceptance evidence.
+
+## Scientific Collinear Q Entrance
+
+Pass 639 implements Steven's paper-first direction, not a new choice of
+scientific baseline. General scientific q is the COMX source order; q=5 is
+the first later H10 qualification, not a special branch. Preserve the original
+coarse H10 calculations as pilot evidence, never a standard scaled-q ladder.
+The earlier expert-control contract above remains unchanged outside this
+explicit amendment. Its 450-line exception is not renewed.
+
+### Prescription and minimal change
+
+Extend cartesian_collinear_working_basis with optional scientific q, a finite
+integer >=3 (not Bool). The new standard translation is hydrogen-only: require
+unit charges; general positive-charge explicit expert calls remain unchanged.
+For q mode resolve omitted core_spacing and transverse_spacing together to
+1.2/(q-1), core_side to q if odd or q+1 if even, angular_reference_count to q,
+angular_resolution_scale to 1.4, tail_spacing to 2.8, both paddings to 10,
+and outer_face_count to q. Expansion remains explicitly supplied and validated;
+the later H10 qualification uses the accepted high135 expansion.
+
+Permit an explicitly fixed-parent comparison by supplying BOTH spacings;
+do not call that a standard scaled-q ladder. Preserve existing positive-input
+validation. Explicit core_side/reference-count/angular-scale values in q mode
+must agree with the resolved prescription; reject conflicts rather than ignore
+them. Padding, tail spacing and outer-face count remain explicit controls.
+With q absent, retain the existing required expert controls and their behavior.
+No ns keyword, new export, result field, helper framework or preset registry.
+
+Keep the all-nucleus angular selector and its longitudinal count unchanged:
+compute the existing plan with nside=q, selected_q=q and scale 1.4. In the new
+q mode only, use source_mode_dims=(q,q,plan.source_mode_dims[3]). This is an
+explicit transverse-order prescription, not acceptance of another raw order
+under the q label. Check all dimensions against actual source intervals before
+COMX realization. Preserve boundary selection, projection, Lowdin, rank/metric
+and positive-weight checks. Do not clamp, repair rank, tune mapping/scale,
+change the shared diatomic selector or adapt the released atom/diatomic route.
+The unchanged explicit expert path still uses the full adaptive shape.
+
+Outer-face count starts at q, following the existing compact H2-style choice,
+but remains independent of scientific shell q and longitudinal L. It controls
+both in-plane axes; normal indices stay direct. Reject incompatible lengths.
+Retain simultaneous growth, direct cores/contact/interior gaps and exactly-once
+support ownership. No shellification or compact-slab kernel edit is authorized.
+Neither this starting rule nor 10-bohr padding certifies diffuse convergence.
+
+### Evidence and qualification boundary
+
+Independent geometry/selector evidence at 0386affc is recorded in ignored
+tmp/reviews/standard-q-selector-2026-09-16.md and its machine-local script/log.
+H3 and H10 at R=1.8, q=4,5,6 used production mapping, PGDG moments, geometry
+and selector, without terminal realization, Coulomb tables or complete operators.
+H3 has 4/7, 2/8 and 3/8 transverse mismatches respectively; the raw outer
+orders become q+1. H10 has none. Every prescribed (q,q,L) fits its source box.
+No parent-limited flag occurred; existing lower-band-limited/upper-safe fallbacks
+did occur in all cases and are preserved, not presented as two-sided success.
+
+Freeze longitudinal sequences, in emission order:
+- H3 q4: 5,5,5,5,4,4,4; q5: 9,7,6,5,5,5,5,5; q6: 9,8,7,7,7,7,6,6.
+- H10 q4: 15,10,8,7,5,5,5; q5: 25,17,12,10,8,7,7,6;
+  q6: 27,18,14,11,10,8,7,7.
+H10 q5 parent axes are 21x21x79, actual bounds x/y +/-11.0997335105707,
+z +/-18.9514450313667; 1375 direct sites and two thickness-four z slabs.
+Counting the prescribed columns predicts 3191 bare columns. This is not a
+realized-rank or supplemented-dimension certification.
+
+Acceptance must construct bounded H3 q4/5/6 terminal bases successfully, check
+actual (q,q,L), unchanged L and exact support ownership, metric <=1e-10,
+positive finite integral weights under the existing floor, and invalid inputs.
+Protect explicit-expert coefficient/fingerprint parity and fixed-parent spacing
+resolution. Reuse existing collinear numerical, public Cartesian, residual-GTO
+and matched-H2+ owners; no new full-operator ladder or broad angular run.
+H10 here is only the six-case geometry/selector evidence, not a CI physical test.
+Normal source-bearing three-gate CI, Docs, package, authority/self-test,
+generated parity, docs tests, Documenter and diff checks must pass.
+
+The subsequent physical target remains supplemented, atomically screened H10,
+R=1.8, q=5, padding 10, accepted cc-pV6Z(s,p) and occupation-one atomic fits.
+Preserve separate px/py capture, parent/retention loss, projected-operator changes,
+signed fitted consistency and actual-state outer-shell occupations. No new
+energy tolerance is a prerequisite for the baseline. Hchain-doer remains paused;
+operators, supplementation, field assembly, SCF and any physical ladder on that
+H10 target require a separate assignment after implementation acceptance.
+
+### Exact authority and budgets
+
+Implementation source only: src/cartesian/cartesian_base_hamiltonian.jl and
+src/cartesian/pqs_source_box_route_driver_helpers.jl, specifically the collinear
+entrance and private collinear realization. Preferred/hard added source lines
+60/80 total, including docstrings and relocations. Two existing functions own
+the necessary normalization and transverse substitution; no new source file.
+Existing test owner test/driver_public/cartesian_base_hamiltonian_runtests.jl:
+preferred/hard 60/80 added lines; compact table-driven odd/even and input checks.
+Reader docs only docs/src/manual/projected_q_shells.md and
+docs/src/reference/export.md: preferred/hard 25/35 added lines combined.
+
+Must simplify: resolve the standard hydrogen recipe once at the entrance and
+reuse the existing realization; no duplicate construction path. Delete no pilot
+evidence or expert interface. Exclude new contraction mathematics, source-q
+overrides on released paths, screening/solver changes, charge-aware standard
+recipes, periodic/off-axis extension, caches, persistent metadata, workflows,
+releases and legacy revival. Before implementation repo-manager must wait for
+this documentation grant commit and its required checks.
+Failure rule: if successful requested-order construction, preserved L, existing
+numerical gates, expert/released parity or these budgets require broader changes,
+make no implementation commit and report the exact obstacle. A mismatch-only
+rejector is not an implementation of the new entrance.
 
 ## Private Recursive Chain Retirement
 

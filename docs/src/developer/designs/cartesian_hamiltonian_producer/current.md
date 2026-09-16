@@ -18,6 +18,16 @@ remain subject to mapping validity. Outer-face counts require convergence;
 diffuse parent loss, transverse asymmetry and dense scaling remain limitations.
 No legacy retirement, solver, periodic extension or release change follows.
 
+Pass 639 amends HP-COLLINEAR-PQS-FN-01/TEST-01 only for the
+[scientific-q entrance](common_terminal_shell_decomposition.md#Scientific-Collinear-Q-Entrance).
+The paper-first hydrogen baseline is settled: standard scaled spacing and odd
+cores, explicit transverse (q,q), unchanged angular-selected L. The unchanged
+selector failed transverse-q agreement on H3 q4/5/6, though H10 agreed; a
+mismatch-only rejection is insufficient. Two source owners, 80 added-source
+and 80 test-line hard limits; explicit expert and released behavior unchanged.
+No H10 physical run is granted. Hchain-doer remains paused for implementation
+acceptance and a separate supplemented, atomically screened q5/R1.8 assignment.
+
 Pass 633 accepts the [finite-collinear supplementation connection](pqs_residual_gto_working_basis.md#Finite-Collinear-Supplementation)
 at cb1b2c7829f4f10e3a653cd541c1998f1d65bf64. HP-COLLINEAR-PQS-RG-FN-01/TEST-01
 are maintenance. The old atom/diatomic Hamiltonian semantics remain unchanged;
