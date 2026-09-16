@@ -27,6 +27,12 @@ hchain-doer's implementation prerequisite is cleared, not its scientific
 convergence decisions. Scientific H-chain work must be supplemented and remain
 within separate consumer authority; no H10/H20 campaign is granted here.
 
+Pass 634 authorizes only the [constructor validation reconciliation](represented_mixed_density_hartree.md#Constructor-Contract-Reconciliation)
+under HP-REP-MIXDENS-HARTREE-FN-01/TEST-01: existing residual-owner validity
+separate from unchanged occupied-state checks. The broader contraction grant
+is deferred. No Gaussian-source evaluator or H10 screening run is authorized;
+hchain-doer's Hartree calculation remains paused.
+
 Start with [README](README.md), this page, and [invariants](invariants.md), then
 read only the assigned generated registry entry and linked canonical contract.
 `authority.toml` remains the record-level source. Silence here is neutral; an
@@ -218,8 +224,8 @@ driver, public facade, producer default, artifact schema family, or solver API.
    `J0/E0` would be a new scientific amendment, not a conformance repair; do
    not interpret a run under the other convention without deciding this first.
 9. **Complete molecular represented Hartree.** REQ-084 correctly stopped before
-   molecular-full Cr2 interpretation. The direct internal producer is approved,
-   but source and its complete-field certificate are pending. The first
+   molecular-full Cr2 interpretation. The direct internal producer design is
+   deferred; source and its complete-field certificate are pending. The first
    implementation preflight identified the absent nonmaterializing contracted
    pair-product action; result wrappers alone are incomplete scaffolding. An
    AO-projected field, occupied action, random probes, IDA transition-product

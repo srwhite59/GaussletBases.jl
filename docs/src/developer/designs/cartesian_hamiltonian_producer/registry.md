@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `2c7df2eaede91b948a269c5b1675c05edc816474fb661cceb2f24d409375e25c`.
+> [authority.toml](authority.toml), SHA-256 `83d875f7af72af581ebf068833dfb7ca305b10f30fefaba3329f48fc5dc71c23`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -4252,15 +4252,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [represented\_mixed\_density\_hartree.md](represented_mixed_density_hartree.md); heading `Represented Mixed-Density Hartree Producer`
+  - `canonical` [represented\_mixed\_density\_hartree.md](represented_mixed_density_hartree.md); heading `Constructor Contract Reconciliation`
 - **Owned paths:**
-  - `source` / `existing`: `src/foundation/GaussianAnalyticIntegrals.jl`
-  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
-  - `source` / `existing`: `src/cartesian/cartesian_reference_density/CartesianReferenceDensity.jl`
   - `source` / `existing`: `src/cartesian/cartesian_reference_density/represented_molecular_hartree.jl`
-  - `source` / `planned`: `src/cartesian/cartesian_reference_density/represented_hartree_contractions.jl`
-  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
-  - `source` / `existing`: `src/cartesian/gaussian_coulomb_reference.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/cr2_req084_molecular_full_hartree_capability_2026-08-13.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/Papers/PQS/validation/work/REQ-084/repo_design_manager_assignment.md`
@@ -4272,8 +4266,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/cr2/reports/req084_cr2_molecular_full_hartree_continuation_preflight_2026-08-14.md`
   - `manager_pass`: `461`
   - `manager_pass`: `462`
+  - `manager_pass`: `634`
+  - `git_commit`: `5563bce8f5b917c44baf674ab770460f3c668e76`
 - **Dependencies:** `HP-RG-FN-01`, `HP-RG-FN-02`, `HP-RHO0-MIXH-GAAA-FN-01`, `HP-RHO0-MIXH-GG-FN-01`
-- **Scope:** Replace the bounded global component-pair production loop with the exact occupied-contracted block/separable action for complete GG, GA/AG, and AA source and target sectors under every expansion term. Revalidate residual cross/identity with the authoritative RG 1e-10/scale-aware 5e-8 contract while keeping state charge/Gram at 1e-10. The correction may add 650 preferred/800 hard source lines but must delete or hard-bound the old unbounded path in the same commit. No fit, screening, truncation, IDA substitute, residual mutation, public API, Cr2 branch, or partial scaffolding.
+- **Scope:** Repair only represented\_mixed\_density residual validation in represented\_molecular\_hartree.jl under Constructor Contract Reconciliation. Separate existing residual-owner cross/scale-aware identity checks from unchanged occupied-state Gram/charge checks; 20 preferred/30 hard added source lines. No evaluator, consumer run, threshold override, basis repair, rank change, API, new field/helper/file, or numerical policy. Broader contraction implementation is deferred.
 
 ### HP-REP-MIXDENS-HARTREE-TEST-01 - represented multicenter mixed-density Hartree validation
 
@@ -4282,12 +4278,14 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [represented\_mixed\_density\_hartree.md](represented_mixed_density_hartree.md); heading `Represented Mixed-Density Hartree Producer`
+  - `canonical` [represented\_mixed\_density\_hartree.md](represented_mixed_density_hartree.md); heading `Constructor Contract Reconciliation`
 - **Owned paths:**
   - `test` / `existing`: `test/nested/cartesian_represented_molecular_hartree_runtests.jl`
-- **Evidence:** none
+- **Evidence:**
+  - `manager_pass`: `634`
+  - `git_commit`: `5563bce8f5b917c44baf674ab770460f3c668e76`
 - **Dependencies:** `HP-REP-MIXDENS-HARTREE-FN-01`
-- **Scope:** Extend only the existing bounded mixed-basis test owner by 120 preferred/180 hard lines, with final length at most 360: compare occupied-contracted block/separable GG, GA/AG, and AA sectors and complete native fields with the bounded component and independent Gaussian oracles; distinguish residual 1e-10 cross/scale-aware 5e-8 identity validity from strict 1e-10 state recovery; and validate deterministic two-size contraction/resource accounting plus unchanged atomic and screened owners. No Cr2 fixture, fit, solver, or metadata/status test.
+- **Scope:** Extend only cartesian\_represented\_molecular\_hartree\_runtests.jl under Constructor Contract Reconciliation; 25 preferred/35 hard added lines. Reuse small fixtures to distinguish owner-valid unused residuals with accurate states, invalid cross/identity, and inaccurate occupied states. Preserve existing valid field checks. No H10 run, Gaussian-source evaluator, fixture file, workflow, or broader contraction tests.
 
 ### HP-REP-PQS-RG-WORKING-CI-FN-01 - PQS residual-GTO public Cartesian CI wiring
 

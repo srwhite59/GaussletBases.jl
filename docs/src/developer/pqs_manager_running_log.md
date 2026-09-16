@@ -57,8 +57,9 @@ archaeology and are not normal startup reading.
   convention requires a separate scientific amendment.
 - REQ-084 stopped correctly before molecular-full Cr2 interpretation because
   no repo owner constructs the complete Hartree field of a represented density
-  containing terminal and supplement components. A direct, typed internal
-  producer is approved. Pass 459 implementation preflight established that the
+  containing terminal and supplement components. The direct internal producer
+  design is deferred; Pass 634 grants only constructor validation repair.
+  Pass 459 implementation preflight established that the
   missing operation is the contracted source pair-product action itself, not
   the existing target evaluators; source and full-space certification remain
   pending.
@@ -135,8 +136,8 @@ accuracy/cost benefit. Its exact identity and recovered evidence remain;
 kernel arithmetic is repaired, but diffuse/long-range limits survive.
 Represented molecular Hartree remains scaling-blocked on the nonmaterializing
 contracted pair-product action and full-field certification. Its bounded
-source grant is not completion evidence. Fitting and Cr2 acceptance remain
-separate. Completed H2+ controls, matched shells, charged sectors, and sliced
+constructor-only grant is not evaluator authority. Fitting and Cr2 acceptance
+remain separate. Completed H2+ controls, matched shells, charged sectors, and sliced
 chain facilities are maintenance, not pending implementations. External
 same-density oracle interpretation of corrected WL fingerprints and sliced-chain
 HFDMRG adaptation remain consumer work. Specialized retained-GTO EGOI remains
@@ -1296,3 +1297,35 @@ no successor task is opened.
 Local closeout package/docs 8/8 +162/162 +10/10, authority/self-test,
 generated parity, Documenter, log bound and diff checks passed. Remote closeout
 uses docs-only CI/Docs; no broad numerical suite is repeated.
+
+### Pass 634: Separate Residual Validity From Occupied-State Accuracy
+
+Independently reviewed tmp/reviews/h10-gaussian-hartree-qualification-2026-09-16.md
+at 5563bce8f5b917c44baf674ab770460f3c668e76. Source inspection confirms the
+constructor wrongly applies its state tolerance to the whole residual metric;
+the canonical contract already separates these checks. An independent bounded
+probe passed 11/11 in 8.5 s including compilation: unused residual error
+2.0e-8 satisfies its roughly 1.0e-7 owner bound, accurate occupied recovery is
+exact, yet construction rejects. Occupying the perturbed direction fails the
+unchanged state check. Invalid cross/identity cases remain independently tested.
+Scratch: /private/tmp/pass634_constructor_review.jl; no H10 calculation ran.
+
+Reused and restricted HP-REP-MIXDENS-HARTREE-FN-01/TEST-01 to one constructor
+file and its existing test owner. Source 20/30 preferred/hard added lines;
+tests 25/35. MT1 gains a contract-conformance repair; MT3 scaling and complete
+field certification remain blocked. The report's source-contraction estimates
+do not meet the consumer envelope and grant no evaluator or screening work.
+hchain-doer's Hartree calculation stays paused. No new scientific policy.
+
+Deleted (required implementation): conflated residual/state tolerance gate.
+Simplified: reuse existing residual overlap and scale-aware owner rule.
+Quarantined: broader contraction design is deferred, not executable authority.
+Not deleted: bounded field oracle and strict spin recovery serve existing callers.
+Exact remaining blocker: implementation/acceptance here; molecular field cost
+and independent complete-field closure separately. Added/deleted source in this
+grant 0/0; new tests/files/metadata none. Validation for implementation includes
+bounded owners, unchanged valid outputs, constructor cost, full CI and Docs.
+Repo-manager waits for the recorded grant and its checks; no successor is implied.
+Local package/docs 8/8 +162/162 +10/10, authority/self-test, generated parity,
+Documenter, log bound and diff checks passed. This authority uses docs-only
+CI/Docs; implementation must use the unchanged full source-bearing matrix.

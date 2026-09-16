@@ -1,11 +1,11 @@
 # Represented Mixed-Density Hartree Producer
 
-Status: the bounded exact implementation at `a77ceed5d` is accepted as a small
-oracle, but its production contraction and residual revalidation are not
-Cr2-usable. Their replacement remains approved under
-`HP-REP-MIXDENS-HARTREE-FN-01` and
-`HP-REP-MIXDENS-HARTREE-TEST-01`. No public API, artifact, solver, or Cr2
-endpoint is authorized.
+Status: the bounded exact implementation at `a77ceed5d` remains a small oracle,
+not a molecular-scale producer. Pass 634 restricts
+`HP-REP-MIXDENS-HARTREE-FN-01/TEST-01` to the constructor reconciliation below.
+The wider contraction design and budgets retained here are deferred, not an
+execution grant. Neither a Gaussian-source evaluator nor H10/Cr2 screening is
+authorized; hchain-doer's Hartree calculation remains paused.
 
 ## Purpose
 
@@ -132,7 +132,49 @@ energy closure, and derivatives retain their own later tolerances. No consumer
 may pass a looser residual override to weaken charge, state, field, or
 derivative gates. Diagnostics report the residual cross error, residual
 identity maximum and infinity norms, scale-aware bound, state Gram errors, and
-spin charges separately.
+spin charges separately. That fuller diagnostic inventory belongs to the
+deferred producer design; the current repair preserves existing result fields.
+
+### Constructor Contract Reconciliation
+
+Pass 634 permits only the residual-validity block in
+`src/cartesian/cartesian_reference_density/represented_molecular_hartree.jl`
+and compact regressions in the existing
+`test/nested/cartesian_represented_molecular_hartree_runtests.jl` owner.
+Replace the combined residual/state tolerance gate, not the constructor API.
+Reuse `residual_gaussian_overlap` and the residual owner's symmetric identity
+evaluation with fixed cross `1e-10` and scale-aware identity `5e-8` checks.
+Preserve empty-residual handling, finiteness, dimensions, non-injected ordering,
+and existing rejection checks. Retain the state `tolerance` keyword/default
+and all spin Gram/charge calculations unchanged; it must not control residual
+validity. No new tolerance override, helper, result field or diagnostic schema.
+
+The report's frozen H10 residual passes its owner's bound while accurate
+occupied orbitals pass strict recovery; this is not complete-field evidence.
+An independent small-fixture probe at `5563bce8f` reproduces the mismatch:
+unused residual identity error `2.0e-8`, owner bound about `1.0e-7`, and exact
+occupied terminal-state recovery. Existing construction nevertheless rejects.
+
+Reuse the small fixture to protect acceptance of that case, independent cross
+and identity failures, and rejection of inaccurate occupied states (including
+occupying the perturbed direction). Preserve charge tests and all existing
+valid field/fingerprint behavior. Fixture perturbations are test-only; no
+production basis repair, reselection, rank/orientation change or new policy.
+
+Budgets are added source lines `20` preferred/`30` hard and existing-owner test
+lines `25` preferred/`35` hard. Add no file or reader prose. Delete the conflated
+gate; do not add parallel validation paths or change residual-owner source.
+Run the complete bounded represented owner, relevant existing residual and
+screened-Hartree owners, package/docs, authority/self-test, Documenter and full
+three-job source CI plus Docs. Record bounded constructor timing/allocation
+before/after; no H10 evaluation, broad angular suite or benchmark campaign.
+Preserve reconstruction, fingerprints, downstream field arithmetic and old
+valid outputs; report any diagnostic rounding difference explicitly.
+
+Repo-manager waits for this authority commit and required checks. If the repair
+requires more files/lines, threshold changes, consumer overrides, basis mutation,
+or evaluator changes, make no implementation commit and report. Acceptance
+closes only this constructor repair, not the deferred producer or consumer gate.
 
 ## Layer 2: Direct Coulomb Potential
 
