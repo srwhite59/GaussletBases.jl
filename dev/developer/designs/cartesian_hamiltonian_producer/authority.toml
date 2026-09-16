@@ -92,7 +92,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_s
 sha256 = "e147f315224dd644b01e587d3cc2d2210ec563512d08e7fd7a7724dae87d4cfb"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_additive_reference_correction.md"
-sha256 = "c8326902c51580930a8d5ae7e819d38705b7f5a6bc326e3402c3ee4bf8adb36f"
+sha256 = "f4346e208c175b5ff34015440099aa12de68a59f6735491f8901812902938a7c"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_artifact.md"
 sha256 = "885a178058230ac17359a2241f2d8c4c50bff3f74e4ca7b2201dab5196f7f5c7"
@@ -749,6 +749,74 @@ title = "return shell overlap from existing shell plan — rejected/deferred"
     heading = "Terminal Basis And Base Assembly"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
+[[records]]
+dependency_ids = ["HP-COLLINEAR-PQS-RG-FN-01", "HP-PQS-ATOMREF-PACKET-FN-01", "HP-PQS-SCREEN-HARTREE-CORR-FN-01"]
+grant = "implementation"
+id = "HP-COLLINEAR-ATOMIC-FIT-FN-01"
+lifecycle = "approved"
+scope = "Implement only Finite Collinear Atomic-Fit Connection: truthful supplied one-electron H inputs, shared occupation-generic fits, validated additive fitted consumption and streamed collinear assembly in the three owned files. Hard source additions 140 with per-owner ceilings 65/25/50. Preserve RHF packets, controls and thresholds. No solver, public API, molecular evaluator, field framework, moment polish, screening-policy or release change."
+surfaces = ["source"]
+title = "one-electron atomic-fit collinear connection"
+
+    [[records.document_refs]]
+    heading = "Finite Collinear Atomic-Fit Connection"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_additive_reference_correction.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "635"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "a276afe636527fb15ad8fa07ea541969f368d2d7"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/h10-atomic-fit-screening-qualification-2026-09-16.md"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_reference_density/screened_hartree_correction.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_base_hamiltonian.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-COLLINEAR-ATOMIC-FIT-FN-01"]
+grant = "implementation"
+id = "HP-COLLINEAR-ATOMIC-FIT-TEST-01"
+lifecycle = "approved"
+scope = "Validate Finite Collinear Atomic-Fit Connection in the two existing owners; hard additions 105 total, 40 atomic/65 screened. Preserve separate atomic blocks, independent self/cross energies, fit consistency, post-transform matrix/action accuracy and RHF behavior. One frozen-artifact H10 field-only acceptance: 600 seconds, 16 GiB RSS, 512 MiB additional scratch. No routine H10 CI, SCF, matching, rebuild or new reference."
+surfaces = ["tests"]
+title = "atomic-fit connection and bounded field acceptance"
+
+    [[records.document_refs]]
+    heading = "Finite Collinear Atomic-Fit Connection"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_additive_reference_correction.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "635"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "a276afe636527fb15ad8fa07ea541969f368d2d7"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/h10-atomic-fit-screening-qualification-2026-09-16.md"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/nested/cartesian_atomic_hf_reference_packet_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/nested/cartesian_screened_hartree_correction_runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "maintenance"
