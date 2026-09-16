@@ -181,7 +181,7 @@ No solver, Hamiltonian payload, mandatory PySCF dependency, basis-only/live-mf
 export, or release action belongs to this goal. Reader-facing documentation is
 implemented and included in immutable RC2 and final v0.2.0.
 
-**MT8 - Finite collinear PQS (completed/maintenance).** Pass 630 accepts small-chain
+**MT8 - Finite collinear PQS (construction maintenance; atomic-fit connection active).** Pass 630 accepts small-chain
 bases, complete operators and raw transfer with general ordered z/positive
 charges, subject to mapping validity. Compact outer retention is explicitly
 converged, not a long-chain or chemical-accuracy claim. Preserve MT7, all released
@@ -191,6 +191,11 @@ Pass 633 closes the residual-GTO/MWG connection to maintenance. hchain-doer's
 implementation prerequisite is cleared; consumer scope and supplemented
 convergence remain separate. No bare scientific H-chain or H10/H20 campaign
 is authorized by this repository closeout.
+
+Pass 635 separately authorizes a narrow occupation-one atomic-fit connection
+and one capped frozen H10 field acceptance. It does not authorize a consumer
+screened-HF or matching run; hchain-doer remains paused pending acceptance and
+subsequent assignment. Molecular-field optimization is not a prerequisite.
 
 ## Manager Guardrails
 
@@ -1329,3 +1334,40 @@ Repo-manager waits for the recorded grant and its checks; no successor is implie
 Local package/docs 8/8 +162/162 +10/10, authority/self-test, generated parity,
 Documenter, log bound and diff checks passed. This authority uses docs-only
 CI/Docs; implementation must use the unchanged full source-bearing matrix.
+
+### Pass 635: Practical Atomic-Fit Collinear Connection
+
+Accepted the bounded design in
+tmp/reviews/h10-atomic-fit-screening-qualification-2026-09-16.md, not an H10
+screening result. Independent code/contract review and 18/18 saved-input checks
+(0.8 s including compilation) reproduced H normalization, analytic energy,
+independent self/cross factors and signed consistency -1.03338551014e-5 Ha.
+Both evidence hashes match. Frozen contractions differ from the legacy basis
+entry: preserve exact arrays, not a basis-name substitution. Scratch review:
+/private/tmp/pass635_atomic_fit_review.jl. No complete field or SCF was run.
+
+The screening paper's translated spherical atomic fits are the practical route.
+Density self/cross energies and potential-fit consistency remain independent;
+do not force their nonzero difference to zero. Preserve the molecular 6Z(s,p)
+reference for optional separate HF matching. The stopped molecular Gaussian
+optimization evidence remains, but is not an H10 prerequisite. H needs a truthful
+occupation-one input, not an RHF packet. Existing kernels and fit records suffice.
+
+New paired authority owns exactly three source files (95/140 preferred/hard
+additions, per-owner 65/25/50) and two existing test owners (65/105, caps 40/65).
+Required deletion/simplification: one shared numerical fitter, no H copy; remove
+unnecessary dense four-index cloud-self construction through existing pair terms.
+Not deleted: RHF spec/packet/writer and all exact/fitted validation branches.
+Quarantined: no molecular evaluator implementation. Added/deleted source here
+0/0; no new type, file, metadata schema or numerical policy. MT8 gains the
+bounded screening connection; MT3's represented-density scaling stays separate.
+
+One field-only production acceptance may load frozen H10 artifacts under
+600 s/16 GiB RSS/512 MiB additional-scratch limits, verify full fitted-field
+consistency against independently predicted self/cross data, and record actual
+cost. The forecast is not acceptance. Hchain-doer remains paused until independent
+implementation acceptance and subsequent consumer authority. Pass 634 remains
+separate; no new SCF, matching, basis rebuild, Gaussian reference or release work.
+Local package/docs 8/8 +162/162 +10/10, authority/self-test, generated parity,
+Documenter, log bound and diff checks passed. Repo-manager waits for this
+docs-only grant's required CI/Docs; source implementation requires full CI.

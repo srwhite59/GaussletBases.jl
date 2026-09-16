@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `83d875f7af72af581ebf068833dfb7ca305b10f30fefaba3329f48fc5dc71c23`.
+> [authority.toml](authority.toml), SHA-256 `654098c86b57490017bfb3d8f52663c2ef4366c5f78ee71037d16950973804dc`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -338,6 +338,43 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:** none
 - **Dependencies:** none
 - **Scope:** rejected as standalone authority; returning shell overlap may exist only as a private implementation detail under \`HP-FN-00\` and creates no independent source surface.
+
+### HP-COLLINEAR-ATOMIC-FIT-FN-01 - one-electron atomic-fit collinear connection
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [protected\_additive\_reference\_correction.md](protected_additive_reference_correction.md); heading `Finite Collinear Atomic-Fit Connection`
+- **Owned paths:**
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+- **Evidence:**
+  - `manager_pass`: `635`
+  - `git_commit`: `a276afe636527fb15ad8fa07ea541969f368d2d7`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/h10-atomic-fit-screening-qualification-2026-09-16.md`
+- **Dependencies:** `HP-COLLINEAR-PQS-RG-FN-01`, `HP-PQS-ATOMREF-PACKET-FN-01`, `HP-PQS-SCREEN-HARTREE-CORR-FN-01`
+- **Scope:** Implement only Finite Collinear Atomic-Fit Connection: truthful supplied one-electron H inputs, shared occupation-generic fits, validated additive fitted consumption and streamed collinear assembly in the three owned files. Hard source additions 140 with per-owner ceilings 65/25/50. Preserve RHF packets, controls and thresholds. No solver, public API, molecular evaluator, field framework, moment polish, screening-policy or release change.
+
+### HP-COLLINEAR-ATOMIC-FIT-TEST-01 - atomic-fit connection and bounded field acceptance
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [protected\_additive\_reference\_correction.md](protected_additive_reference_correction.md); heading `Finite Collinear Atomic-Fit Connection`
+- **Owned paths:**
+  - `test` / `existing`: `test/nested/cartesian_atomic_hf_reference_packet_runtests.jl`
+  - `test` / `existing`: `test/nested/cartesian_screened_hartree_correction_runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `635`
+  - `git_commit`: `a276afe636527fb15ad8fa07ea541969f368d2d7`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/h10-atomic-fit-screening-qualification-2026-09-16.md`
+- **Dependencies:** `HP-COLLINEAR-ATOMIC-FIT-FN-01`
+- **Scope:** Validate Finite Collinear Atomic-Fit Connection in the two existing owners; hard additions 105 total, 40 atomic/65 screened. Preserve separate atomic blocks, independent self/cross energies, fit consistency, post-transform matrix/action accuracy and RHF behavior. One frozen-artifact H10 field-only acceptance: 600 seconds, 16 GiB RSS, 512 MiB additional scratch. No routine H10 CI, SCF, matching, rebuild or new reference.
 
 ### HP-COLLINEAR-PQS-FN-01 - finite collinear PQS construction and operators
 

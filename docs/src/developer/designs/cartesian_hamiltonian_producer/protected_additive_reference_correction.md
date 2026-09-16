@@ -400,3 +400,138 @@ compares `X`, `S_AA`, compact residual geometry, protected `G_L/A_L`, native
 ordering, and exact final-basis cross overlap. Coulomb accuracy changes PGDG
 factor tables but does not by itself establish a basis change. Historical row
 count differences are not transfer evidence.
+
+## Finite Collinear Atomic-Fit Connection
+
+Pass 635 authorizes HP-COLLINEAR-ATOMIC-FIT-FN-01/TEST-01 only. This separate
+connection leaves the protected packet path above unchanged. The practical
+screening reference is a translated sum of spherical atomic density/potential
+fits, not the molecular Gaussian determinant. The full-molecular Gaussian-field
+optimization study is stopped; preserve its evidence, but it is not an H10
+prerequisite. Molecular 6Z(s,p) HF matching remains optional, separate work.
+
+Target: complete fitted-field construction and validated additive consumption
+on an existing supplemented finite-collinear basis, using truthful one-electron
+H references. Reuse the September 16 atomic-fit qualification, not a new SCF
+or basis campaign. No screened-HF or molecular HF-matching calculation is granted.
+
+### Exact Implementation Boundary
+
+Only these existing source owners may change (preferred/hard added lines,
+including docstrings and relocated code):
+
+- `src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl`:
+  `45/65`. Separate occupation-generic density-fit ingredients from the RHF
+  packet wrapper. Accept the supplied six origin-centered H s contractions,
+  one normalized occupied column and occupation exactly one through a narrow
+  private input/fit function. Validate finite arrays, dimensions, s character,
+  common center, normalization and charge using existing checks. Use the frozen
+  orbital, not a production SCF/eigensolver or manufactured RHF result. Reuse
+  existing density/potential fit records and options. Preserve the RHF spec,
+  constructors, rejection behavior, writer and schema. The shared numerical
+  fit body must have one implementation, not a copied H fitter. Cloud self/cross
+  scalars may reuse the existing pair-term energy kernel instead of a dense
+  four-index cloud matrix; preserve ordinary fit arrays and accepted RHF results
+  within their existing tolerances. Do not screen signed weights or coefficients.
+- `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl`:
+  `15/25`. Extend the existing additive owner for explicitly validated
+  `FittedReferenceHartreeField` inputs without requiring RHF packets. Require
+  independent component-field expectations and density self/cross energies;
+  check dimensions, finiteness, energy symmetry, totals and consistency
+  decomposition. Reuse existing correction algebra and diagnostics. Preserve
+  exact packetless behavior and all RHF packet validations. No untyped field
+  bypass or free scalar override of the expected consistency is allowed.
+- `src/cartesian/cartesian_base_hamiltonian.jl`: `35/50`. Add one private
+  collinear consumer of the existing supplemented handle, explicit ordered
+  placements and the validated H input/fits. Reuse raw overlap transfer,
+  placed spherical-potential kernels, parent-GA projection and residual
+  transformation. Stream and sum raw GG/parent-GA/AA contributions, project GA
+  and transform once; retain no per-atom native matrices or global parent-to-
+  final map. Return the existing fitted field and correction objects as a
+  fixed pair, not a new carrier. Late-loaded types must not appear in invalid
+  declaration-time annotations; preserve include order and old facades.
+
+Total source ceiling: `95` preferred, `140` hard; per-owner ceilings also apply.
+Private numerical helpers implementing this boundary are allowed within these
+owners; no new type, export, file, field framework, cache or metadata schema.
+Provenance must identify one-electron input truthfully through existing fit
+fields and the fitted-field provenance string, never closed-shell flags.
+
+The six frozen contractions are not interchangeable with the legacy BasisSets
+entry bearing the same cc-pV6Z name. Preserve their exact arrays, normalization
+and order, including stored zero coefficients. The accepted orbital has
+occupation one and energy about -0.49999924450998 Ha. Translation changes only
+centers. Fit terms are evaluation data, not supplement orbitals. Keep each
+atomic occupied block separate; intentional interatomic overlap must survive.
+No global orthogonalization, residual repair, rank change or bare fallback.
+
+The ordinary defaults remain 56 signed density terms/rank 55 and 33 potential
+terms from compact45, five broad terms, twelve tight terms dropped, no refit
+or moment polish. Existing options, SVD controls and thresholds are unchanged.
+Density-fit error, potential-fit error and finite-kernel error are distinct.
+Do not reinterpret a fit-quality observation as a new universal tolerance.
+
+### Validation And Field-Only Acceptance
+
+Use only existing test owners, with `65` preferred/`105` hard added lines total:
+`test/nested/cartesian_atomic_hf_reference_packet_runtests.jl` at most `40`, and
+`test/nested/cartesian_screened_hartree_correction_runtests.jl` at most `65`.
+Compact inline frozen H numerical data are permitted; no new fixture file,
+test owner, private artifact dependency, workflow or routine H10 gate.
+
+Tests must distinguish truthful occupation-one input from RHF rejection and
+preserve the old packet roundtrip/consumption checks. Reuse small supplemented
+fixtures and compact analytic Gaussian oracles for density self/cross energies,
+factor-of-two accounting, translated recovery, nonzero interatomic overlap,
+and independent fitted expectations. Check px and py separately, complete
+post-transform small-fixture matrices/actions, symmetry, derivative accounting,
+and deliberate inconsistency rejection. Compare assembly errors at existing
+`1e-10` numerical precision and consistency decomposition/representation at
+existing `1e-8`; keep density nonnegativity `1e-12` and all residual-owner
+thresholds unchanged. A nonzero fitted consistency is not exact-field failure.
+Run both complete owners, existing residual/collinear and public screening
+owners, package/docs, authority/self-test, Documenter, diff checks and normal
+full three-job CI/Docs. No full angular suite or repeated paper calculation.
+
+After implementation, exactly one ignored field-only acceptance may load the
+frozen H10 artifacts. Cap cumulative numerical elapsed time at `600` seconds
+(including load/compilation is a safe stricter stop), peak RSS at `16 GiB`,
+and additional scratch at `512 MiB`. Use machine-local scratch and the existing
+bounded monitor; enforce limits, retain PID/log/timing evidence and stop/report
+on exhaustion rather than silently retrying. Existing frozen inputs are not
+additional scratch; do not copy or overwrite them.
+
+Frozen working SHA-256:
+`5300a127eb46a585504bbfdbf8ff21fdb74a09c401b90e6f06da7d846e4572f6`;
+supplemented system:
+`76647c2e97b78fc86609733104751a15fb119ee7b53cde9b4f291a0bb9a541da`;
+accepted atomic ingredients (`qualify/atomic_fit_result.jls`):
+`aab7b63c3b7b24cb48bc59c4b100bb430ce08a95cb18d0c9f53338c853b9244d`.
+These files are in `/Users/srw/dmrgtmp/hchain_hartree_owner_20260916/` and its
+`qualify/` directory. Check hashes before and after; preserve the molecular
+6Z(s,p) packet and its seal from the qualification report.
+
+Assemble the complete 2151-dimensional fitted field on the unchanged
+1941-terminal/210-residual target. Check finite symmetric output, raw transfer
+of ten separate atomic columns, and actual signed `Tr(P0*Jfit)-E0` against the
+independently predicted self/cross result within `1e-8 Ha`. Independently
+computed compact no-half `E0` is about `25.72310856784681 Ha`; predicted signed
+consistency is `-1.03338551014e-5 Ha`, not zero. Never obtain the prediction or
+E0 from the assembled trace. Verify the decomposition and derivative/energy
+accounting, and report observed elapsed time, peak memory and scratch use.
+Reuse selected post-transform qualification as evidence, not a full-operator
+approximation bound. The 20-30 second forecast is not completed acceptance.
+
+Preserve the observed no-half density-fit error `+2.12870e-5 Ha` and compact
+expansion error `-1.61e-8 Ha` separately from potential-fit consistency. Report
+radial/potential accuracy against both analytic source and density-fit
+comparators; do not hide the different cumulative-quadrature diagnostic.
+
+No new reference, basis rebuild, SCF, screened HF, molecular HF matching,
+6Z(s,p)+TZ(d) campaign, exact molecular evaluator, public API, release, screening
+policy, moment polish or coefficient screening is authorized. The constructor
+reconciliation remains under its separate Pass 634 grant and is not part of
+this diff. Hchain-doer stays paused until independent implementation acceptance
+and a subsequent consumer assignment. If budgets, existing fit controls,
+validation semantics or resource caps cannot hold, stop without an implementation
+commit and report; do not widen the connection or treat partial fields as success.
