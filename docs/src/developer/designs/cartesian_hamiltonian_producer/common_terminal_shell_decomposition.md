@@ -632,9 +632,9 @@ unchanged jobs plus Docs. No full angular suite, repeated paper example,
 workflow change or benchmark campaign.
 
 Delete duplicated outer decomposition when making it callable; do not create a
-parallel completion implementation. Retain private recursive chains until
-matched-parent multi-group/odd-even/contact/outer/operator/transfer evidence and
-external-owner caller clearance justify separate retirement. Preserve all
+parallel completion implementation. The recursive-chain retirement conditions
+are satisfied for the separately bounded Pass 637 deletion below; this original
+construction grant itself authorizes no retirement. Preserve all
 released ordinary-chain interfaces and the distinct sliced-chain capability.
 No periodic/off-axis extension, solver, screening, artifact change, new
 contraction mathematics, legacy revival, de-export, retirement, Standard60,
@@ -645,3 +645,67 @@ unchanged atom/diatomic behavior or the 450-line limit cannot be met, or broader
 semantics/kernel edits are needed, make no implementation commit and report the
 specific obstacle. No clamp, hidden fallback, tolerance relaxation or planner-only
 delivery. Close implementation separately after full acceptance evidence.
+
+## Private Recursive Chain Retirement
+
+Pass 637 grants HP-RETIRE-RECURSIVE-CHAIN-FN-01/TEST-01 for pure deletion at
+baseline 5a770a571d9527838aaaf540fed515cd03380b97. The existing public Cartesian
+owner already covers H3/H4, unequal gaps, contact, mixed charges, matched-parent
+operators, raw transfer, separate s/px/py capture and three unmerged groups with
+1029 group +98 interior-gap +98 exterior sites, exactly once. These construction
+conditions do not require H10 convergence, screening or correlated DMRG.
+
+Independent tracked-main and bounded HFDMRG, paper, hchain, grid-study and codex
+tree scans found no executable consumer outside the private closure. No dynamic
+symbol construction occurs in its owner. This is bounded local clearance, not
+proof about unpublished downstream code. The high-order checkout at ed43ff241
+retains old callers and its own implementation. The September 2 high-order owner
+closure classifies that lane as archived, not a maintained future import target;
+its sidecar permission alone does not authorize this distinct deletion. Preserve
+the archived worktree and all its evidence. Stop on any new non-archived caller.
+
+Only src/cartesian/cartesian_nested_experimental_geometries.jl may change.
+Delete baseline line ranges 1-63, 135-179, 227-230, 266-857 and 1482-1485,
+including separator lines: exactly 708 source deletions, zero additions.
+These are three private chain carriers with docstrings, three display methods,
+the chain contract-audit overload, odd/even policy and candidate selection,
+chain diagnostics/recursive nodes/source construction, and the chain fixed-block
+overload. No replacement, alias, helper rename, fallback or relocated copy.
+
+Frozen baseline SHA-256:
+`26aba50390ce4ecb66516b700cc1c1097270d1fc20f95e5537d5744daf452c68`.
+Exact concatenated deleted ranges SHA-256:
+`1263baccc959ecef3b032652cb96ea34bdaf6d17f295a23e22d527772b11e0de`.
+Required complete retained file (780 lines) SHA-256:
+`43b987efc0478a026ac3de8fd8d70d579ad9e7a495e12ea7d1853592657ecb46`.
+Preserve baseline lines 235-265, including the separator, for
+`_nested_chain_three_child_boxes` SHA-256:
+`a532bdb18b62e081c42876b969dc3c84ca2fcf61252a893f9a198a9497840844`.
+The square-lattice ternary candidate calls this helper; preserve all square
+carriers, methods and the mixed file byte-for-byte outside the deleted ranges.
+
+Preserve ordinary product-chain exports, existing generic/prebuilt fixed-block
+dispatch, sliced-chain capability, multisliced evidence, current PQS and all
+atom/diatomic behavior. Released private definitions do not make these symbols
+public exports; do not touch any release or tag. The sole developer symbol
+reference in cartesian_nested_decomposition_plan.md is explicitly historical:
+leave it and all archived evidence unchanged. No reader-document edit is needed.
+Implementation scope is one source file; test/documentation additions are zero.
+Normal lifecycle records and generated views belong to separate closeout.
+
+Acceptance: repeat caller scans; verify exact removal/retained hashes and
+unchanged root exports; load the package; run unchanged test/core/runtests.jl
+through its existing runner and test/driver_public/cartesian_base_hamiltonian_runtests.jl.
+These cover preserved ordinary chain/square geometry and finite-collinear
+contracts. A bounded ignored direct check of the retained three-child helper
+on x/y/z axes is permitted; no committed test or new test owner. No need to
+rerun archived recursion, H10, supplementation, screening or angular campaigns
+solely for orphanhood. Run docs_fast/full docs, authority/self-test, generated
+parity, Documenter, log/diff checks, and unchanged source-bearing three-job CI
+plus Docs. CI must classify full; do not change the classifier or selected jobs.
+
+Failure rule: if any live caller, changed kept byte, required test adaptation,
+added source line or broader dependency is found, make no implementation commit
+and report. No source decomposition, other retirement, numerical policy,
+workflow, dependency, API, export, release, stable or consumer-assignment change.
+Repo-manager waits for this recorded grant and required checks before deletion.

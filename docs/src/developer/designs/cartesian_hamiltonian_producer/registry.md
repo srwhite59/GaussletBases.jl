@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `c2706083dffa38ee3009bebceb2aae67941ec744064a254eaf1ff2e5587214ea`.
+> [authority.toml](authority.toml), SHA-256 `f90146084f45553fddfa4c07b7753d665b0c5d7d9f76fde361a02b4cd9377d62`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -403,6 +403,39 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `630`
 - **Dependencies:** none
 - **Scope:** Maintain the accepted six source owners and two reader pages under Finite Collinear PQS. Preserve synchronous ownership, compact exterior, adaptive retention, bare transfer, accumulated operators and frozen validation. No new capability, kernel change, solver, periodic geometry, legacy revival, cache, retirement or release work; the implementation-only 450-line exception is exhausted.
+
+### HP-RETIRE-RECURSIVE-CHAIN-FN-01 - retire orphaned private recursive chain
+
+- **Lifecycle:** `approved`
+- **Grant:** `retirement`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Private Recursive Chain Retirement`
+- **Owned paths:**
+  - `source` / `existing`: `src/cartesian/cartesian_nested_experimental_geometries.jl`
+- **Evidence:**
+  - `git_commit`: `5a770a571d9527838aaaf540fed515cd03380b97`
+  - `manager_pass`: `637`
+- **Dependencies:** `HP-COLLINEAR-PQS-FN-01`
+- **Scope:** Delete only the frozen 708-line private closure in cartesian\_nested\_experimental\_geometries.jl under Private Recursive Chain Retirement. Zero additions; preserve the exact retained-file hash, shared three-child helper, square implementation, released chain interfaces and archives. No adapter, replacement, other source edit, numerical policy, API, workflow or release change. Stop on any live consumer or changed kept byte.
+
+### HP-RETIRE-RECURSIVE-CHAIN-TEST-01 - validate private recursive chain deletion
+
+- **Lifecycle:** `approved`
+- **Grant:** `retirement`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Private Recursive Chain Retirement`
+- **Owned paths:**
+  - `test` / `existing`: `test/core/runtests.jl`
+  - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
+- **Evidence:**
+  - `git_commit`: `5a770a571d9527838aaaf540fed515cd03380b97`
+  - `manager_pass`: `637`
+- **Dependencies:** `HP-RETIRE-RECURSIVE-CHAIN-FN-01`
+- **Scope:** Run unchanged core and public Cartesian owners for Private Recursive Chain Retirement; repeat caller, hash, package/export, docs and authority checks plus full CI/Docs. No test edits, assertions, fixture, runner or workflow change. Preserve square/shared helper and finite-collinear contracts. No H10, archived recursion or angular campaign; no new consumer assignment.
 
 ### HP-COLLINEAR-PQS-RG-FN-01 - finite collinear residual-GTO supplementation
 

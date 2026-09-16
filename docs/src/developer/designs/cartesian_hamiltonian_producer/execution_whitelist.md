@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Execution Whitelist
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `c2706083dffa38ee3009bebceb2aae67941ec744064a254eaf1ff2e5587214ea`.
+> [authority.toml](authority.toml), SHA-256 `f90146084f45553fddfa4c07b7753d665b0c5d7d9f76fde361a02b4cd9377d62`.
 
 Cartesian Hamiltonian producer source work is currently authorized only for
 these approved design IDs:
@@ -211,6 +211,8 @@ these approved design IDs:
 - `HP-REP-XGTO-PROTECT-SIDECAR-TEST-01`
 - `HP-REP-XGTO-PYSCF-EXPORT-FN-01`
 - `HP-REP-XGTO-READER-DOC-TEST-01`
+- `HP-RETIRE-RECURSIVE-CHAIN-FN-01`
+- `HP-RETIRE-RECURSIVE-CHAIN-TEST-01`
 - `HP-RG-CUTOFF-FN-02`
 - `HP-RG-CUTOFF-TEST-02`
 - `HP-RG-FILE-01`

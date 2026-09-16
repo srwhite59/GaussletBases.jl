@@ -1400,3 +1400,34 @@ validation reuses the two small owners; no full H10 rerun or angular campaign.
 Manager reruns passed 12+117 and 25+85 checks (28.7 s and 46.8 s). Local
 package/docs 8/8 +162/162 +10/10, authority/self-test, generated parity,
 Documenter, log bound and diff checks passed. Closeout uses docs-only CI/Docs.
+
+### Pass 637: Private Recursive Chain Deletion Grant
+
+Independent read-only audit at 5a770a571d9527838aaaf540fed515cd03380b97 accepts
+the bounded repo-manager caller report. Main has no executable consumer outside
+the three-carrier/seventeen-method closure. Repeated local HFDMRG source/test/
+validation and detached snapshot, PQS/Hartree/angular paper, H-chain, multisliced,
+grid-study and codex-tree scans found no matching caller. Archived high-order
+callers remain in their own preserved source; the owner closure makes that lane
+historical, not a future import target. This is not universal downstream proof.
+
+The existing finite-collinear owner supplies the recorded H3/H4, contact,
+mixed-charge, operator/transfer and three-group ownership evidence. MT8 does not
+need H10 convergence to remove unused recursion. Freeze exactly 708 deletions,
+zero additions in one file, with baseline/deleted/retained hashes. Preserve the
+shared three-child helper and all square-lattice code. The remaining developer
+reference is already labeled historical: no documentation cleanup is granted.
+
+Deleted (required): private recursive chain closure. Simplified: no competing
+odd/even chain construction. Quarantined: archives unchanged. Not deleted:
+released product chains, prebuilt fixed-block consumers, sliced-chain capability
+and square code. Exact remaining blocker: implementation and full acceptance;
+stop on any newly found live caller. Added/deleted source here 0/0; planned
+0/708; new tests/files/metadata none. Existing core/public Cartesian owners,
+hash/caller checks and full source-bearing CI/Docs are required after deletion.
+No H10, supplementation or screening rerun solely for orphanhood, no consumer
+assignment, release or other retirement. Repo-manager waits for the recorded
+grant and checks. Scratch static audit: /private/tmp/pass637_closure_audit.jl.
+Local package/docs 8/8 +162/162 +10/10, authority/self-test, deterministic views,
+Documenter, log bound and diff checks passed. No numerical owner ran for this
+authorization; its remote checks use the docs-only route.
