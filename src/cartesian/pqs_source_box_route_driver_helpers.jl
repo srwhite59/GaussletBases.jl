@@ -2085,7 +2085,7 @@ function cartesian_report(system, parent, assembly, recipe)
     )
 end
 
-function _collinear_terminal_basis(axes, bundles, z, core_side, nref, outer_count, scale)
+function _collinear_terminal_basis(axes, bundles, z, core_side, nref, outer_count, scale; q=nothing)
     C = CartesianFinalBasisRealization
     dims = ntuple(a -> length(axes[a]), 3)
     overlaps = ntuple(a -> _nested_axis_pgdg(bundles, (:x, :y, :z)[a]).overlap, 3)
@@ -2111,6 +2111,11 @@ function _collinear_terminal_basis(axes, bundles, z, core_side, nref, outer_coun
             outer, inner, retention; bond_axis = :z, nside = nref, selected_q = nref,
             shared_shell_angular_resolution_scale = scale,
             support_count = length(states)).source_mode_dims
+        if !isnothing(q)
+            shape = (q, q, shape[3])
+            all(0 < shape[a] <= length(outer[a]) for a in 1:3) ||
+                throw(ArgumentError("prescribed q shell dimensions exceed source intervals"))
+        end
         modes = _nested_projected_q_shell_boundary_comx_product_modes(shape)
         record = (unit_key = Symbol("shell_", length(blocks) + 1),
             support_indices = indices, support_states = states,

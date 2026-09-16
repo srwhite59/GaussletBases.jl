@@ -336,6 +336,58 @@ end
         merge(he, (; nup = -1, ndn = 1)); basis = H_ACCURACY_BASIS)
 end
 
+@testset "Scientific collinear q" begin
+    G = GaussletBases; C = G.CartesianFinalBasisRealization
+    z = [-1.8, 0., 1.8]; expansion = coulomb_gaussian_expansion(doacc=false)
+    frozen_L = ([5,5,5,5,4,4,4], [9,7,6,5,5,5,5,5], [9,8,7,7,7,7,6,6])
+    for q in 4:6
+        w = cartesian_collinear_working_basis(z, ones(3); q, expansion)
+        pg = ntuple(a -> G._nested_axis_pgdg(w.parent_axis_bundles, (:x,:y,:z)[a]), 3)
+        dims = length.(getproperty.(pg, :weights)); S = getproperty.(pg, :overlap)
+        @test dims == ((19,19,29), (21,21,35), (23,23,41))[q-3]
+        @test w.terminal_basis.final_dimension == (797,1371,2569)[q-3]
+        counts = zeros(Int, prod(dims)); shell_counts = Int[]
+        for b in w.terminal_basis.blocks
+            counts[b.support_indices] .+= 1
+            Q = isnothing(b.coefficients) ? Matrix{Float64}(I, length(b.support_states), length(b.support_states)) : b.coefficients
+            metric = C._prf_terminal_overlap(w.terminal_basis, b.support_states, Q, S)
+            metric[b.column_range, :] -= I
+            @test maximum(abs, metric) <= 1e-10
+            weights = Q' * [prod(pg[a].weights[s[a]] for a in 1:3) for s in b.support_states]
+            @test all(x -> isfinite(x) && x > 1e-14, weights)
+            startswith(string(b.unit_key), "shell_") && push!(shell_counts, size(Q, 2))
+        end
+        @test all(==(1), counts)
+        selected = Int[]; retention = G._nested_resolve_complete_shell_retention(q)
+        function shell!(outer, inner)
+            plan = G._nested_diatomic_source_box_dimension_plan((; nuclei=[(0.,0.,p) for p in z]),
+                w.parent_axis_bundles, outer, inner, retention; bond_axis=:z, nside=q,
+                selected_q=q, shared_shell_angular_resolution_scale=1.4)
+            push!(selected, plan.source_mode_dims[3])
+            @test all((q,q,last(selected))[a] <= length(outer[a]) for a in 1:3)
+        end
+        G.CartesianShellification._collinear_terminal_geometry((a,b)->nothing,
+            shell!, p->nothing, getproperty.(pg, :centers), z, isodd(q) ? q : q+1, q)
+        @test selected == frozen_L[q-3]
+        @test shell_counts == [q*q*L - (q-2)^2*(L-2) for L in selected]
+        if q == 5
+            fixed = cartesian_collinear_working_basis(z, ones(3); q=4,
+                core_spacing=.3, transverse_spacing=.3, expansion)
+            @test all(G._nested_axis_pgdg(fixed.parent_axis_bundles, a).centers == pg[i].centers
+                for (i,a) in enumerate((:x,:y,:z)))
+        end
+    end
+    for q in (true, 2, 4.0, Inf, NaN, big(typemax(Int))+1)
+        @test_throws ArgumentError cartesian_collinear_working_basis(z, ones(3); q, expansion)
+    end
+    for kw in ((; core_spacing=.3), (; transverse_spacing=.3), (; core_side=7),
+        (; angular_reference_count=4), (; angular_resolution_scale=1.5),
+        (; padding_parallel=0), (; tail_spacing=Inf), (; outer_face_count=0))
+        @test_throws ArgumentError cartesian_collinear_working_basis(z, ones(3); q=5, expansion, kw...)
+    end
+    @test_throws ArgumentError cartesian_collinear_working_basis(z, [1.,2.,1.]; q=5, expansion)
+end
+
 @testset "Finite collinear PQS" begin
     GB = GaussletBases; C = GB.CartesianFinalBasisRealization
     expansion = coulomb_gaussian_expansion(doacc = false)

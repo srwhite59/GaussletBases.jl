@@ -84,7 +84,7 @@ remain consumer or external workflows.
 `cartesian_collinear_working_basis(z, Z; ...)` accepts strictly ordered z-axis
 positions and positive nuclear charges, subject to the existing mapping's
 validity limits. Electrons remain three-dimensional; boundaries are finite/open.
-All construction controls are explicit, with no new accuracy defaults:
+Without `q`, all construction controls remain explicit; for example:
 
 ```julia
 expansion = coulomb_gaussian_expansion(doacc=false)
@@ -106,6 +106,28 @@ and must fit each face. Truncation can introduce transverse asymmetry. These
 controls are a tested fixture, not chemical accuracy or long-chain scaling
 claims. Dense operators remain quadratic; no solver or periodic extension is
 included. The compact sliced-chain approximation remains a separate capability.
+
+For hydrogen, the scientific-q entrance resolves the standard source recipe:
+
+```julia
+working = cartesian_collinear_working_basis([-1.8, 0.0, 1.8], ones(3);
+    q=5, expansion=coulomb_gaussian_expansion(doacc=true))
+```
+
+Integer `q >= 3` sets both spacings to `1.2/(q-1)` bohr, odd core width to
+`q` (odd) or `q+1` (even), angular reference to `q`, and angular scale to 1.4.
+Shell transverse orders are exactly `(q,q)`; longitudinal order remains the
+existing all-nucleus selector's result, including its lower-band-limited
+fallbacks. This is not a guarantee that both angular-band criteria succeed.
+Tail spacing defaults to 2.8 and both paddings to 10 bohr. Outer-face count
+starts at `q` but is a separate convergence control for both in-plane axes;
+it must fit the source intervals. Padding, tail spacing and outer count may
+be supplied explicitly. Neither these defaults nor successful construction
+certifies diffuse convergence.
+Supplying **both** spacings selects a fixed-parent comparison, not a standard
+scaled-q ladder. Explicit core/reference/scale values must match the recipe.
+Scientific q currently requires unit charges; mixed positive charges retain
+the fully explicit expert entrance. Mapping rejection is unchanged.
 
 ### Gaussian-supplemented collinear systems
 

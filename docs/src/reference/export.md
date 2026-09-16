@@ -55,7 +55,9 @@ supplements, corrections, solver controls, or public route-stage selection.
 ### Expert finite collinear construction
 
 The bare basis and complete operators are separate from the atom/diatomic
-Hamiltonian and its artifact/reweighting contract. All controls are required;
+Hamiltonian and its artifact/reweighting contract. Hydrogen `q` resolves the
+standard scaled source recipe; without `q`, all expert controls are required.
+Outer-face count remains a separate convergence control;
 see the [finite-chain example](../manual/projected_q_shells.md#Expert-finite-collinear-systems).
 
 ```@docs

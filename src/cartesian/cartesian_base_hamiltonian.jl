@@ -1534,16 +1534,23 @@ function _collinear_nuclei(z, Z)
 end
 
 """
-    cartesian_collinear_working_basis(z, Z; core_spacing, transverse_spacing,
+    cartesian_collinear_working_basis(z, Z; q=nothing, core_spacing, transverse_spacing,
         padding_parallel, padding_transverse, core_side, angular_reference_count,
         outer_face_count, tail_spacing, angular_resolution_scale, expansion)
 
 Construct an expert finite, open, three-dimensional PQS basis for ordered z-axis
-nuclei (positions in bohr, positive charges). Every keyword is required.
+nuclei (positions in bohr, positive charges). Without `q`, all controls are required.
+For hydrogen, integer `q >= 3` prescribes spacing `1.2/(q-1)`, odd core width
+`q` or `q+1`, angular reference `q`, scale 1.4, tail spacing 2.8, both paddings
+10 bohr, and outer-face count `q`. Expansion is always required. Shell transverse
+orders are exactly `(q,q)`; the existing selector still determines longitudinal
+resolution. Explicit core/reference/scale controls must match this prescription.
+Supply both spacings for a fixed-parent comparison, not a standard scaled-q
+ladder. Padding, tail spacing and outer-face count remain independent controls.
 Existing G10/PGDG mapping validity rules apply; invalid fits are not repaired.
 Spacing and padding are positive lengths; realized bounds can exceed requested
-padding. Core side is a positive odd index count. Angular reference count
-calibrates existing all-nucleus retention, not a constant source q.
+padding. Core side is a positive odd index count. Without `q`, angular reference
+count calibrates existing all-nucleus retention, not a constant source q.
 Outer face count controls both in-plane axes and must fit each actual slab.
 Converge transverse padding/spacing and retention separately; no chemical
 accuracy or long-chain scaling is promised. Truncated slabs can break transverse
@@ -1554,10 +1561,33 @@ The opaque bare-basis handle supports `gto_overlap_matrix`,
 `cartesian_collinear_operators`. Its fields are not a public result schema.
 No residual functions, artifact, solver, or periodic boundary is constructed.
 """
-function cartesian_collinear_working_basis(z, Z; core_spacing, transverse_spacing,
-    padding_parallel, padding_transverse, core_side, angular_reference_count,
-    outer_face_count, tail_spacing, angular_resolution_scale, expansion::CoulombGaussianExpansion)
+function cartesian_collinear_working_basis(z, Z; q=nothing,
+    core_spacing=nothing, transverse_spacing=nothing, padding_parallel=nothing,
+    padding_transverse=nothing, core_side=nothing, angular_reference_count=nothing,
+    outer_face_count=nothing, tail_spacing=nothing, angular_resolution_scale=nothing,
+    expansion::CoulombGaussianExpansion)
     z, Z = _collinear_nuclei(z, Z)
+    if !isnothing(q)
+        q isa Integer && !(q isa Bool) && 3 <= q <= typemax(Int) ||
+            throw(ArgumentError("q must be an integer >= 3, not Bool"))
+        q = Int(q)
+        all(==(1.0), Z) || throw(ArgumentError("scientific q requires hydrogen charges"))
+        isnothing(core_spacing) == isnothing(transverse_spacing) ||
+            throw(ArgumentError("fixed-parent q comparisons require both spacings"))
+        for (value, expected) in ((core_side, isodd(q) ? q : q+1),
+            (angular_reference_count, q), (angular_resolution_scale, 1.4))
+            isnothing(value) || (value isa Real && value == expected) ||
+                throw(ArgumentError("core side, angular reference and scale must agree with q"))
+        end
+        isnothing(core_spacing) && (core_spacing = transverse_spacing = 1.2 / (q-1))
+        isnothing(core_side) && (core_side = isodd(q) ? q : q+1)
+        isnothing(angular_reference_count) && (angular_reference_count = q)
+        isnothing(angular_resolution_scale) && (angular_resolution_scale = 1.4)
+        isnothing(padding_parallel) && (padding_parallel = 10.0)
+        isnothing(padding_transverse) && (padding_transverse = 10.0)
+        isnothing(tail_spacing) && (tail_spacing = 2.8)
+        isnothing(outer_face_count) && (outer_face_count = q)
+    end
     for value in (core_spacing, transverse_spacing, padding_parallel,
         padding_transverse, tail_spacing, angular_resolution_scale)
         value isa Real && isfinite(Float64(value)) && Float64(value) > 0 ||
@@ -1590,7 +1620,7 @@ function cartesian_collinear_working_basis(z, Z; core_spacing, transverse_spacin
     bx, bz = bundle(axes[1]), bundle(axes[3])
     bundles = _CartesianNestedAxisBundles3D(bx, bx, bz)
     terminal = _collinear_terminal_basis(centers.(axes), bundles, z,
-        core_side, angular_reference_count, outer_face_count, angular_resolution_scale)
+        core_side, angular_reference_count, outer_face_count, angular_resolution_scale; q)
     return _CartesianCollinearWorkingBasis(terminal, bundles)
 end
 
