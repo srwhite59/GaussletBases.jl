@@ -33,15 +33,14 @@ separate from unchanged occupied-state checks. The broader contraction grant
 is deferred. No Gaussian-source evaluator or H10 screening run is authorized;
 hchain-doer's Hartree calculation remains paused.
 
-Pass 635 authorizes the [atomic-fit connection](protected_additive_reference_correction.md#Finite-Collinear-Atomic-Fit-Connection)
-under HP-COLLINEAR-ATOMIC-FIT-FN-01/TEST-01: truthful occupation-one H input,
-ordinary fits, additive fitted-field validation and streamed collinear assembly.
-The molecular-field optimization study is stopped, not a screening prerequisite.
-One post-implementation frozen H10 field-only acceptance is capped at 600 seconds,
-16 GiB RSS and 512 MiB additional scratch. No screened HF, molecular matching,
-basis rebuild, new reference or wider evaluator is authorized. Hchain-doer
-remains paused pending acceptance and a separate consumer assignment; Pass 634
-retains its independent constructor-only boundary.
+Pass 636 accepts the [atomic-fit connection](protected_additive_reference_correction.md#Finite-Collinear-Atomic-Fit-Connection)
+at bf97c94b5652e6588f113122ff0a93662f718e45. HP-COLLINEAR-ATOMIC-FIT-FN-01/TEST-01
+are maintenance. The complete frozen H10 fitted field agrees with independent
+signed consistency to 6.04e-14 Ha; its one-shot acceptance grant is consumed.
+This is field assembly, not H10 screening or scientific convergence. The stopped
+molecular-field study is not a prerequisite. Hchain-doer remains paused pending
+a separate assignment; Pass 634 constructor repair remains independent. No
+screened HF, molecular matching, basis rebuild or new reference is authorized.
 
 Start with [README](README.md), this page, and [invariants](invariants.md), then
 read only the assigned generated registry entry and linked canonical contract.

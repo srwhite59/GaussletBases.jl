@@ -181,7 +181,7 @@ No solver, Hamiltonian payload, mandatory PySCF dependency, basis-only/live-mf
 export, or release action belongs to this goal. Reader-facing documentation is
 implemented and included in immutable RC2 and final v0.2.0.
 
-**MT8 - Finite collinear PQS (construction maintenance; atomic-fit connection active).** Pass 630 accepts small-chain
+**MT8 - Finite collinear PQS (construction and atomic-fit connection maintenance).** Pass 630 accepts small-chain
 bases, complete operators and raw transfer with general ordered z/positive
 charges, subject to mapping validity. Compact outer retention is explicitly
 converged, not a long-chain or chemical-accuracy claim. Preserve MT7, all released
@@ -1371,3 +1371,32 @@ separate; no new SCF, matching, basis rebuild, Gaussian reference or release wor
 Local package/docs 8/8 +162/162 +10/10, authority/self-test, generated parity,
 Documenter, log bound and diff checks passed. Repo-manager waits for this
 docs-only grant's required CI/Docs; source implementation requires full CI.
+
+### Pass 636: Atomic-Fit Connection Accepted
+
+Accepted bf97c94b5652e6588f113122ff0a93662f718e45 after independent source/test
+review, saved acceptance script/log/resource inspection and source-hash matching.
+Exact-head CI 35115844724 and Docs 35115844994 passed. The complete H10 field
+took 22.53 s (33.35 s monitored process), peak RSS 2.41 GiB, and 16,208 bytes
+additional scratch. Signed consistency -1.03338551618e-5 Ha agrees with the
+independently predicted self/cross result to 6.04e-14 Ha. This accepts assembly,
+not exact fitted-field closure or H10 scientific accuracy. Density-fit,
+potential-fit and finite-expansion errors remain separate. Frozen source hashes
+bind the evidence to production; physical matrices and frozen inputs survived.
+
+MT8's atomic-fit connection moves to maintenance; the one-shot H10 execution
+grant is consumed, not renewable. Hchain-doer stays paused pending a separate
+consumer assignment. Pass 634 constructor repair and MT3 scaling remain separate;
+no SCF, HF matching, new reference, release work or successor task is granted.
+
+Deleted: dense four-index density-cloud self-energy construction. Simplified:
+one shared occupation-generic fitter and streamed raw-block accumulation.
+Quarantined: none. Not deleted: RHF packet/writer and exact-field branches serve
+live consumers. Exact remaining blocker: separate consumer authority, not atomic
+field assembly. Added/deleted source 114/23; tests +89 in two existing owners;
+new files/types/metadata fields none. The fixed betas/weights tuple is an
+ephemeral existing-kernel argument, not a staged inventory. Independent manager
+validation reuses the two small owners; no full H10 rerun or angular campaign.
+Manager reruns passed 12+117 and 25+85 checks (28.7 s and 46.8 s). Local
+package/docs 8/8 +162/162 +10/10, authority/self-test, generated parity,
+Documenter, log bound and diff checks passed. Closeout uses docs-only CI/Docs.

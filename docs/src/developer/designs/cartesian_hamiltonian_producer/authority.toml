@@ -92,7 +92,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_s
 sha256 = "e147f315224dd644b01e587d3cc2d2210ec563512d08e7fd7a7724dae87d4cfb"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_additive_reference_correction.md"
-sha256 = "f4346e208c175b5ff34015440099aa12de68a59f6735491f8901812902938a7c"
+sha256 = "ccfeea98d72511048919fa0891138322793e5fa72202e9d722b55a95689e26d0"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_artifact.md"
 sha256 = "885a178058230ac17359a2241f2d8c4c50bff3f74e4ca7b2201dab5196f7f5c7"
@@ -751,10 +751,10 @@ title = "return shell overlap from existing shell plan — rejected/deferred"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
 [[records]]
 dependency_ids = ["HP-COLLINEAR-PQS-RG-FN-01", "HP-PQS-ATOMREF-PACKET-FN-01", "HP-PQS-SCREEN-HARTREE-CORR-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-COLLINEAR-ATOMIC-FIT-FN-01"
-lifecycle = "approved"
-scope = "Implement only Finite Collinear Atomic-Fit Connection: truthful supplied one-electron H inputs, shared occupation-generic fits, validated additive fitted consumption and streamed collinear assembly in the three owned files. Hard source additions 140 with per-owner ceilings 65/25/50. Preserve RHF packets, controls and thresholds. No solver, public API, molecular evaluator, field framework, moment polish, screening-policy or release change."
+lifecycle = "implemented"
+scope = "Maintain the accepted Finite Collinear Atomic-Fit Connection in the three owned files: truthful occupation-one H input, shared fits, validated additive consumption and streamed assembly. Preserve RHF packets, fit controls, thresholds and separate atomic blocks. No new capability, solver, public API, evaluator, field framework, moment polish, screening-policy or release change."
 surfaces = ["source"]
 title = "one-electron atomic-fit collinear connection"
 
@@ -763,6 +763,12 @@ title = "one-electron atomic-fit collinear connection"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_additive_reference_correction.md"
 
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "bf97c94b5652e6588f113122ff0a93662f718e45"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "636"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "635"
@@ -787,10 +793,10 @@ title = "one-electron atomic-fit collinear connection"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-COLLINEAR-ATOMIC-FIT-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-COLLINEAR-ATOMIC-FIT-TEST-01"
-lifecycle = "approved"
-scope = "Validate Finite Collinear Atomic-Fit Connection in the two existing owners; hard additions 105 total, 40 atomic/65 screened. Preserve separate atomic blocks, independent self/cross energies, fit consistency, post-transform matrix/action accuracy and RHF behavior. One frozen-artifact H10 field-only acceptance: 600 seconds, 16 GiB RSS, 512 MiB additional scratch. No routine H10 CI, SCF, matching, rebuild or new reference."
+lifecycle = "implemented"
+scope = "Maintain the two existing Finite Collinear Atomic-Fit Connection owners: separate atomic blocks, independent self/cross energies, fitted consistency, post-transform matrix/action accuracy and RHF behavior. The one-shot frozen H10 field acceptance is completed and consumed. No renewed H10 run, routine H10 CI, SCF, matching, rebuild, new reference or consumer assignment."
 surfaces = ["tests"]
 title = "atomic-fit connection and bounded field acceptance"
 
@@ -799,6 +805,12 @@ title = "atomic-fit connection and bounded field acceptance"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_additive_reference_correction.md"
 
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "bf97c94b5652e6588f113122ff0a93662f718e45"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "636"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "635"

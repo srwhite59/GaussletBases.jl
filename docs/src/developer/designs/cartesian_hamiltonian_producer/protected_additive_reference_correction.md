@@ -403,7 +403,13 @@ count differences are not transfer evidence.
 
 ## Finite Collinear Atomic-Fit Connection
 
-Pass 635 authorizes HP-COLLINEAR-ATOMIC-FIT-FN-01/TEST-01 only. This separate
+Pass 636 accepts bf97c94b5652e6588f113122ff0a93662f718e45 and transitions
+HP-COLLINEAR-ATOMIC-FIT-FN-01/TEST-01 to maintenance. The Pass 635 implementation
+budgets and one-shot H10 acceptance below are completed historical bounds, not
+renewed execution grants. Actual signed consistency -1.03338551618e-5 Ha agrees
+with independent prediction to 6.04e-14 Ha; field construction took 22.53 seconds,
+with peak process RSS 2.41 GiB and 16,208 bytes additional acceptance scratch.
+No screening solve or consumer assignment follows. This separate
 connection leaves the protected packet path above unchanged. The practical
 screening reference is a translated sum of spherical atomic density/potential
 fits, not the molecular Gaussian determinant. The full-molecular Gaussian-field
