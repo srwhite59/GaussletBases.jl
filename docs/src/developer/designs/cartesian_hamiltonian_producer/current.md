@@ -28,18 +28,20 @@ are byte-identical and released atom/diatomic behavior is preserved.
 No H10 physical run is granted. Hchain-doer remains paused for a separate
 supplemented, atomically screened q5/R1.8 assignment with 10-bohr padding.
 
-Pass 641 grants only [collinear cutoff forwarding](pqs_residual_gto_working_basis.md#Collinear-Residual-Cutoff-Forwarding)
-under HP-COLLINEAR-PQS-RG-FN-01/TEST-01. Expose the existing selector's validated
-optional residual_occupation_cutoff, preserving default 1e-6 and every validity
-threshold. Completed standard-q5 H10 evidence supports 210 directions at 1e-8
+Pass 642 amends [residual cutoff forwarding](pqs_residual_gto_working_basis.md#Collinear-Residual-Cutoff-Forwarding)
+under HP-COLLINEAR-PQS-RG-FN-01/TEST-01. Steven sets the shared standard
+residual_occupation_cutoff to 1e-8; retain explicit 1e-10 and 1e-6 choices and
+every validity threshold. The earlier forwarding implementation 7f9dbfd1e
+awaits correction and combined acceptance. Completed standard-q5 H10 evidence supports 210 directions at 1e-8
 with unchanged metric/recovery gates; preserve the 208-direction result.
-Source/docstrings hard 16, existing tests 25, manual 6 added lines. No H10
+Correction beyond 7f9dbfd1e: source/docstrings hard 16, existing tests 25,
+manual 6 added lines across the exact shared-default owners. No H10
 rerun, complete-operator, field or HF qualification follows. Hchain-doer stays
 paused until implementation acceptance and a separate bounded continuation.
 
 Pass 633 accepts the [finite-collinear supplementation connection](pqs_residual_gto_working_basis.md#Finite-Collinear-Supplementation)
 at cb1b2c7829f4f10e3a653cd541c1998f1d65bf64. HP-COLLINEAR-PQS-RG-FN-01/TEST-01
-maintain that connection except for Pass 641's bounded forwarding grant.
+maintain that connection except for Pass 642's amended forwarding/default grant.
 The old atom/diatomic Hamiltonian semantics remain unchanged;
 the new overload uses explicit potential/ownership nuclei and a three-field
 matrix result. The load-order correction is implemented and validated.
@@ -88,7 +90,7 @@ source/contract findings, not another migration campaign.
 | Composition and driver | PQS/WL, base/supplemented composition through shared producer boundaries; canonical artifact-producing driver; terminal inventory and due-diligence reporting | [Composition contract](nesting_supplement_composition_plan.md), [driver workflow](cartesian_driver_usability_workflow.md), [due diligence](terminal_shellification_due_diligence.md) |
 | Mapping and source span | Expert `s_factor` and opt-in mapped-COMX source spans with provenance; defaults remain unchanged | [Mapping s_factor](pqs_mapping_s_factor.md), [mapped COMX](mapped_comx_source_span.md) |
 | Coulomb policy | One producer-wide expansion reaches parent/PGDG, base IDA, residual-GTO, and MWG. Compact45 and high135 are implemented | [Coulomb accuracy](coulomb_accuracy_policy.md) |
-| Residual Gaussians | Owner-local residual selection, one final merge, exact augmented one-body operators, final-basis MWG/IDA, current `1e-6` production cutoff, and opt-in numerical-complete `[G,R_num]` additive composition | [Residual Gaussian domain](residual_gaussian_domain_module.md), [numerical-complete basis](numerical_complete_residual_basis.md), [orthogonality/cutoff](residual_gaussian_orthogonality_robustness.md) |
+| Residual Gaussians | Owner-local residual selection, one final merge, exact augmented operators, final-basis MWG/IDA; `1e-8` standard authorized by Pass 642, implementation pending; explicit numerical-complete `[G,R_num]` composition unchanged | [Residual Gaussian domain](residual_gaussian_domain_module.md), [numerical-complete basis](numerical_complete_residual_basis.md), [orthogonality/cutoff](residual_gaussian_orthogonality_robustness.md) |
 | Parent-backed functions | PRF mechanics and exact descriptor-to-PRF source binding remain implemented as private diagnostic/provenance code; six unsupported root exports are removed while `cartesian_base_working_basis` remains exported | [Parent residual functions](parent_residual_functions.md), [parent-backed injected composition](parent_backed_injected_composition.md) |
 | Direct-G injection | Default-off in-memory compatibility path; ordinary behavior is invariant and enabled artifacts remain unsupported | [Direct-G injection](residual_gaussian_injection_hybrid.md) |
 | Protected-localized basis | Compact-main protected replacement, exact localized one-body matrices, inherited-site `Vee_L`; direct `C' V C` is rejected | [Protected-localized basis](protected_localized_basis.md) |

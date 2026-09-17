@@ -19,13 +19,13 @@ The basis algorithm itself is canonical in
 | `HP-RG-IDTOL-TEST-01` | Completed historical evidence | Be high-zeta identity-tolerance audit |
 | `HP-RG-CUTOFF-FN-01` | Implemented historical; cutoff superseded | Former `5e-8` cutoff; current `identity_atol = 5e-8` originated here |
 | `HP-RG-CUTOFF-TEST-01` | Completed historical evidence | Cr marginal-direction and H2 assertion validation |
-| `HP-RG-CUTOFF-FN-02` | Implemented current production policy | `residual_occupation_cutoff = 1e-6` |
+| `HP-RG-CUTOFF-FN-02` | Implemented historical default; superseded by Pass 642 | Former `residual_occupation_cutoff = 1e-6`; robustness unchanged |
 | `HP-RG-CUTOFF-TEST-02` | Completed evidence; active maintenance | H2 cutoff/provenance assertions and residual-only Cr2 audit |
 
 Implementation commits are `76453cc39` for robust final identity,
 `47e56593c` for the historical `1e-8` identity default, `f0b662dca` for the
 historical `5e-8` cutoff/current identity value, and `1f7f04e56` for the
-current `1e-6` cutoff. Manager-log Passes 131-132, 155-156, 171-172, and
+former `1e-6` cutoff. Manager-log Passes 131-132, 155-156, 171-172, and
 183-185 preserve the evidence and policy transitions.
 
 The IDTOL and CUTOFF-01 IDs no longer grant source or test work. They remain
@@ -34,10 +34,12 @@ be interpreted without treating their defaults as current.
 
 ## Current Defaults
 
-The ordinary production builder and terminal compatibility entry point use:
+Pass 642 authorizes these shared defaults; implementation is pending. The
+ordinary builder, terminal augmentation, collinear facade and protected-ladder
+missing-key fallback must agree:
 
 ```text
-residual_occupation_cutoff = 1e-6
+residual_occupation_cutoff = 1e-8
 tau_neg_abs                = 1e-12
 tau_neg_rel                = 1e-12
 tau_merge_abs              = 1e-12
@@ -46,9 +48,13 @@ orthogonality_atol         = 1e-10
 identity_atol              = 5e-8
 ```
 
-`HP-RG-CUTOFF-FN-02` owns the current production occupation cutoff. It changed
-neither `identity_atol` nor the negative-metric, merge, or orthogonality
-policies.
+Steven's explicit policy supersedes the former 1e-6 default, not its recorded
+evidence. The bounded implementation belongs to HP-COLLINEAR-PQS-RG-FN-01/TEST-01
+under [cutoff forwarding](pqs_residual_gto_working_basis.md#Collinear-Residual-Cutoff-Forwarding).
+The completed H10 selection comparison supports 1e-8 without another campaign.
+Explicit 1e-6 comparisons and tighter 1e-10 requests remain valid inputs; all
+negative-metric, merge, orthogonality, identity, representation and screening
+checks still apply. This does not qualify Cr2, complete H10 operators or HF.
 
 The explicit `1e-10` cutoff in
 [Numerical-complete residual basis](numerical_complete_residual_basis.md) is a
@@ -117,6 +123,7 @@ early owner-local path     occupation 1e-8; identity policy then current
 HP-RG-IDTOL-FN-01          identity_atol 1e-8
 HP-RG-CUTOFF-FN-01         occupation 5e-8; identity_atol 5e-8
 HP-RG-CUTOFF-FN-02         occupation 1e-6; identity_atol remains 5e-8
+Pass 642                  standard occupation 1e-8 authorized; identity unchanged
 ```
 
 The ORTHO pass addressed small final-identity overshoots with healthy spectra;

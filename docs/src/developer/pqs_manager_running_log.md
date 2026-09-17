@@ -1537,3 +1537,32 @@ assignment; hchain-doer remains paused. Added/deleted source here 0/0; no new
 files/helpers/types/metadata or physical grant. Local package/docs, authority/
 self-test, generated parity, Documenter, log and diff checks plus docs-only
 CI/Docs gate this authority; implementation requires normal full CI/Docs.
+
+### Pass 642: Shared Residual Selection Default Amendment
+
+Steven supersedes Pass 641's default-preservation rule: use 1e-8 as the standard
+Gaussian-residual occupation cutoff, retain explicit tighter 1e-10 and deliberate
+1e-6 comparisons. Forwarding already landed at 7f9dbfd1e; this amendment is not
+implementation acceptance. Repo-manager is paused pending the amended grant's
+checks. Audit found four default sites: collinear facade, terminal augmentation,
+residual builder and protected-ladder recipe fallback. Atom/diatomic construction
+inherits this numerical policy; signatures, guards and Hamiltonian meanings stay.
+Explicit stored recipe cutoffs and numerical-complete 1e-10 routes stay unchanged.
+
+Reuse the reviewed H10 208/210-direction evidence; no new scientific-default
+campaign, operators or physical run. Historical Cr/Cr2 cutoff evidence remains
+visible, not newly qualified. Merge, metric, representation, screening and solver
+thresholds do not change. MT8 advances the standard selection connection, not
+physical acceptance. Incremental hard budgets beyond 7f9dbfd1e: source/docstrings
+16, two existing test owners 25, manual 6 added lines. Reuse small-fixture default
+parity, explicit overrides and invalid-input checks; update only nested default
+provenance assertions, not numerical expectations. Full implementation CI/Docs
+and affected existing owners remain required; no H10 or broad angular rerun.
+
+Deleted: obsolete current-default claims, not historical evidence. Simplified:
+one shared policy across existing defaults. Quarantined: none. Not deleted:
+explicit comparison and numerical-complete choices. Source changes here 0/0;
+no new tests/files/helpers/metadata. Package/docs, authority/self-test, generated
+parity, Documenter, log bound, diff and docs-only remote checks gate this grant.
+Hchain-doer remains paused; after acceptance its separate continuation uses 1e-8
+and the saved standard-q5 basis, preserving all 208-direction evidence.

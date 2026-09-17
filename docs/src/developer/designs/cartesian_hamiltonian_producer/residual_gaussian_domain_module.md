@@ -186,8 +186,9 @@ norm(T_G + X*T_A, Inf) <= orthogonality_atol
 
 Current production defaults and the exact scale-aware identity check are in
 the [orthogonality and cutoff contract](residual_gaussian_orthogonality_robustness.md).
-The production cutoff is `1e-6`. The separate numerical-complete opt-in uses
-an explicit `1e-10`; it does not alter this default.
+Pass 642 authorizes the shared standard cutoff `1e-8`, replacing `1e-6`.
+Implementation is pending; explicit `1e-6` comparisons remain available. The
+separate numerical-complete opt-in keeps its explicit `1e-10`.
 
 ## Exact Augmented Operators
 
@@ -285,7 +286,8 @@ test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl
 It currently checks:
 
 - owner-local candidate and retained-owner metadata;
-- the production `occupation_cutoff == 1e-6`;
+- the production cutoff/provenance (Pass 642 updates only these assertions from
+  `1e-6` to `1e-8`; the following numerical expectations are not relaxed);
 - base/residual/final dimensions `487 / 18 / 505`;
 - `G-R` orthogonality and residual identity;
 - exact kinetic, unit-nuclear, coordinate, and second-moment transforms;

@@ -362,7 +362,7 @@ rank/metric failures, including no surviving residual direction; no bare fallbac
 
 ### Numerical and storage invariants
 
-Use existing residual selection with default occupation cutoff 1e-6, injection disabled,
+Use existing residual selection with occupation cutoff 1e-8 under Pass 642, injection disabled,
 negative/merge absolute and relative thresholds 1e-12, cross orthogonality 1e-10,
 identity tolerance 5e-8. Only Pass 641's selection-cutoff keyword is excepted;
 expose no numerical-validity threshold or other approximation control.
@@ -467,7 +467,8 @@ is authorized here.
 
 ## Collinear Residual Cutoff Forwarding
 
-Pass 641 grants only an optional residual_occupation_cutoff::Real=1.0e-6 on
+Pass 642 supersedes Pass 641's default-preservation instruction: use
+residual_occupation_cutoff::Real=1.0e-8 on
 the existing collinear cartesian_residual_gto_mwg_system overload. Preserve the
 required supplement/expansion and first-body supplement type assertion. Validate
 that the Float64 cutoff used by the selector is finite and nonnegative before
@@ -491,23 +492,51 @@ overlap remains. The full metric row-sum is a distinct 8.022538e-8; do not
 mislabel it as failing the max-entry test or claim unmeasured MWG positivity.
 This qualifies selection only, not complete operators, screening or HF.
 
-Source/docstring: only src/cartesian/cartesian_base_hamiltonian.jl's collinear
-supplemented overload, preferred 8-12 and hard 16 added lines total.
+Pass 641 forwarding landed at 7f9dbfd1e before this policy amendment; this is
+not its acceptance or a consumer release. Apply the following small correction
+against that commit, then review the combined result. Steven's standard cutoff
+is 1e-8; explicit 1e-10 and deliberate 1e-6 comparisons remain available.
+The exact shared default sites are:
+
+- src/cartesian/cartesian_base_hamiltonian.jl: collinear supplemented overload.
+- src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl:
+  pqs_terminal_residual_gto_augmentation.
+- src/cartesian/cartesian_residual_gaussians/residual_basis.jl:
+  build_residual_gaussian_basis.
+- src/cartesian/cartesian_protected_ladder_bundle.jl:
+  _plb_compact_residual's missing-recipe-key fallback only.
+
+Change these four defaults, not their algorithms. Existing atom/diatomic facades
+and augmented-Hamiltonian construction inherit the new default; their signatures,
+two-center guard and Hamiltonian semantics remain unchanged. Preserve explicit
+artifact cutoffs, numerical-complete 1e-10 calls, injection controls and unrelated
+1e-6 values. No new keyword on an otherwise keyword-free facade is required.
+Source/docstrings: hard 16 added lines beyond 7f9dbfd1e, including substitutions;
+no helper or shared-constant framework. Update the existing collinear docstring.
 Tests: existing test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl,
-preferred 15-25, hard 25 added lines. Reuse the existing small fixture: omitted
-versus explicit default parity, nondefault forwarding against the existing
+and test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl, hard 25 added
+lines combined beyond 7f9dbfd1e. Reuse the existing small fixture: omitted
+versus explicit 1e-8 parity, 1e-10 and deliberate 1e-6 forwarding against the existing
 selector, negative/NaN/infinite rejection, and overlap/raw import. Include a
 cutoff-sensitive check (changed selection or existing no-direction rejection)
 so an ignored keyword cannot pass. Preserve existing metric/operator assertions;
-no new numerical tolerance, H10 fixture or duplicated oracle.
+no new numerical tolerance, H10 fixture or duplicated oracle. Reconcile only the
+two nested-owner default/provenance assertions (currently 1e-6); preserve its
+explicit 1e-6 injection fixture and explicit 1e-10 numerical-complete checks.
+Do not change expected ranks, energies or tolerances to force a pass: report
+any changed numerical fixture for review. Inspect the four default substitutions
+directly, including the protected-ladder fallback; no new expensive ladder run.
 Manual: only docs/src/manual/projected_q_shells.md, 4-6 added lines, hard 6.
-Explain selection cutoff versus validity tolerances; lower cutoff still must
+Replace the old default wording; state the 1e-8 standard, tighter 1e-10 option
+and explicit 1e-6 comparison. Explain selection cutoff versus validity tolerances;
+lower cutoff still must
 pass unchanged recovery/metric checks. No reference-page expansion or new file.
 
 Reuse completed H10 evidence, retaining both 208- and 210-direction results and
 all frozen inputs. Run the existing small supplemented/public owners, package,
 docs, authority/self-test, generated parity, Documenter and diff checks, plus
-normal full source-bearing three-gate CI and Docs. Do not repeat H10 or broad
+normal full source-bearing three-gate CI and Docs, plus the existing nested
+augmented owner because its inherited default changes. Do not repeat H10 or broad
 angular calculations. No helpers, types, metadata, caches, selector algorithm,
 determinant-transfer, screening, workflow, release or unrelated change.
 Failure rule: if forwarding needs another owner, budgets or numerical checks

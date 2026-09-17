@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `96c395f7baec4fac508cd9b21482f185dddc1fc8d980b7b32c0139f2b2e9fdb1`.
+> [authority.toml](authority.toml), SHA-256 `faf689384787543b134677820097624c7a11b751f387fff0efd1d7cbd3898752`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -447,6 +447,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `Collinear Residual Cutoff Forwarding`
 - **Owned paths:**
   - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_protected_ladder_bundle.jl`
   - `docs` / `existing`: `docs/src/manual/projected_q_shells.md`
 - **Evidence:**
   - `git_commit`: `4cf1c7b125f6a8f11f3559f835eab24e70798f89`
@@ -455,8 +458,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `633`
   - `git_commit`: `cb1b2c7829f4f10e3a653cd541c1998f1d65bf64`
   - `manager_pass`: `641`
+  - `manager_pass`: `642`
 - **Dependencies:** `HP-COLLINEAR-PQS-FN-01`, `HP-REP-PQS-RG-WORKING-FN-01`
-- **Scope:** Implement Collinear Residual Cutoff Forwarding only in the existing collinear supplemented overload and PQS manual: validated optional cutoff, unchanged 1e-6 default, existing selector forwarding. Source/docstrings at most 16 added lines; manual 6. Preserve all validity thresholds and other interfaces. No new helper, type, metadata, selector, determinant transfer, H10 run or release.
+- **Scope:** Amend Collinear Residual Cutoff Forwarding: set the four named shared defaults to 1e-8, preserving explicit overrides and every validity threshold. Existing facade docstring/manual only; incremental source/docstrings 16, manual 6 added lines beyond 7f9dbfd1e. Preserve algorithms, stored recipes and numerical-complete calls. No helper, type, metadata, new interface, H10 run, determinant transfer or release.
 
 ### HP-COLLINEAR-PQS-RG-TEST-01 - finite collinear supplementation validation
 
@@ -468,6 +472,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `Collinear Residual Cutoff Forwarding`
 - **Owned paths:**
   - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
+  - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Evidence:**
   - `git_commit`: `4cf1c7b125f6a8f11f3559f835eab24e70798f89`
   - `manager_pass`: `631`
@@ -475,8 +480,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `633`
   - `git_commit`: `cb1b2c7829f4f10e3a653cd541c1998f1d65bf64`
   - `manager_pass`: `641`
+  - `manager_pass`: `642`
 - **Dependencies:** `HP-COLLINEAR-PQS-RG-FN-01`
-- **Scope:** Extend the existing public residual-GTO owner under Collinear Residual Cutoff Forwarding, at most 25 added lines: default parity, cutoff-sensitive forwarding, invalid inputs and overlap/raw import. Preserve existing assertions and tolerances; reuse small fixtures and completed H10 evidence. No new file, helper, H10 fixture, broad run, workflow or consumer grant.
+- **Scope:** Amend the two existing residual-GTO owners under Collinear Residual Cutoff Forwarding: omitted/explicit 1e-8 parity, explicit 1e-10/1e-6 forwarding, invalid inputs, overlap/import and nested default provenance. At most 25 added lines beyond 7f9dbfd1e. Preserve numerical expectations and tolerances; reuse completed H10 evidence. No new file, helper, H10 fixture, broad run, workflow or consumer grant.
 
 ### HP-COLLINEAR-PQS-TEST-01 - finite collinear PQS validation
 
@@ -4980,7 +4986,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
 - **Evidence:** none
 - **Dependencies:** none
-- **Scope:** source maintenance.
+- **Scope:** Maintain residual cutoff robustness under Residual Gaussian Orthogonality And Cutoff Policy. The former 1e-6 default is superseded by Pass 642 under HP-COLLINEAR-PQS-RG-FN-01; preserve historical evidence and all metric/merge thresholds. This maintenance grant does not independently authorize further default changes.
 
 ### HP-RG-CUTOFF-TEST-01 - residual cutoff/tolerance validation
 

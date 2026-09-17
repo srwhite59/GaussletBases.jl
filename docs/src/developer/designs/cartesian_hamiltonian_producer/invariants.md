@@ -221,12 +221,12 @@ The canonical RG algorithm contract is
   tolerance to `1.0e-8` in the older Be tolerance lane. It is superseded for
   production defaults by `HP-RG-CUTOFF-FN-01` and then
   `HP-RG-CUTOFF-FN-02`;
-- `HP-RG-CUTOFF-FN-02` supersedes the RG residual occupation default:
-  `residual_occupation_cutoff = 1.0e-6`; `identity_atol = 5.0e-8` remains
-  unchanged. Occupations below the new default cutoff, including the Cr atom
-  `3.637e-8` marginal direction and the cited Cr2 `1.27e-7` to `8.98e-7`
-  directions, are not production-retained residual directions by default.
-  Owner-local grouping, merge checks,
+- Pass 642 supersedes `HP-RG-CUTOFF-FN-02`'s former RG occupation default:
+  standard `residual_occupation_cutoff = 1.0e-8`, explicit tighter `1e-10`
+  and deliberate `1e-6` comparisons allowed. Implementation remains gated by
+  HP-COLLINEAR-PQS-RG-FN-01/TEST-01. Preserve the historical Cr/Cr2 evidence;
+  lower selection cutoff is not qualification of those residual sectors.
+  `identity_atol = 5.0e-8`, owner-local grouping, merge checks,
   `G' S R` validation, width/zeta filtering, MWG/IDA, artifacts, driver
   workflow, and public API remain unchanged;
 - RG does not own artifact writing, artifact provenance, basis loading, facade

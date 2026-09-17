@@ -495,6 +495,10 @@ basisfile = nothing
 residual_occupation_cutoff = 1.0e-6
 ```
 
+That cutoff records the original preflight prescription. For current implicit
+selection defaults, Pass 642 supersedes it with 1e-8; archived results and
+explicit artifact/recipe cutoffs remain unchanged. No new driver control follows.
+
 Omitting `basisfile` means the bundled trusted legacy `BasisSets` data. The
 same ordered raw supplement must be used for both routes. Validate and report
 its labels, Cartesian angular powers, centers, owner assignment, primitive
