@@ -194,6 +194,25 @@ using TOML
     data=reference(w,z2,Z2,A,e); validate(w,data,z2,Z2,e;primitive_case=false)
     packet=ExternalGTOOrbitalPacket(A,data.raw.self.overlap,ExternalGTOOrbitalSpinBlock(:restricted,inv(cholesky(Symmetric(data.raw.self.overlap)).U),ones(3)))
     @test import_external_gto_orbitals(data.result,packet).alpha.imported_coefficients==gto_overlap_matrix(data.result,A)*packet.alpha.coefficients
+    explicit=cartesian_residual_gto_mwg_system(w,z2,Z2;supplement=A,expansion=e,residual_occupation_cutoff=1e-6)
+    @test explicit.hamiltonian==data.result.hamiltonian
+    @test explicit.residual.T_G==data.result.residual.T_G
+    @test explicit.residual.T_A==data.result.residual.T_A
+    selected=cartesian_residual_gto_mwg_system(w,z2,Z2;supplement=A,expansion=e,residual_occupation_cutoff=1e-8)
+    expected=C.pqs_terminal_residual_gto_augmentation(w.terminal_basis,w.parent_axis_bundles,A,
+        [(0.,0.,v) for v in z2];residual_occupation_cutoff=1e-8)
+    @test selected.residual.occupation_cutoff==1e-8
+    @test selected.residual.T_G==expected.T_G
+    @test selected.residual.T_A==expected.T_A
+    cross=gto_overlap_matrix(selected,A)
+    @test cross==gto_overlap_matrix(data.result,A)
+    @test import_external_gto_orbitals(selected,packet).alpha.imported_coefficients==cross*packet.alpha.coefficients
+    @test_throws ArgumentError cartesian_residual_gto_mwg_system(w,z2,Z2;
+        supplement=A,expansion=e,residual_occupation_cutoff=1e6)
+    for cutoff in (-1.,NaN,Inf,big"1e1000")
+        @test_throws ArgumentError cartesian_residual_gto_mwg_system(w,z2,Z2;
+            supplement=A,expansion=e,residual_occupation_cutoff=cutoff)
+    end
     A=candidates(z); call(zv,Zv,a=A,exp=e)=cartesian_residual_gto_mwg_system(w,zv,Zv;supplement=a,expansion=exp)
     for (zv,Zv) in ((reverse(z),Z),(z,[-1.,1.,1.]),(z,[1.,NaN,1.]),([0.,0.,1.],Z))
         @test_throws ArgumentError call(zv,Zv)

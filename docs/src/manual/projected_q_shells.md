@@ -149,7 +149,11 @@ and raw import. `ham` contains complete `one_body`, `electron_electron_ida` and
 `nuclear_repulsion`, not electron-sector, artifact or reweighting operations.
 The existing atom/diatomic constructor keeps its `CartesianIDAHamiltonian` return.
 
-Residual selection and orthonormalization use the existing cutoff and merge.
+The optional `residual_occupation_cutoff=1e-6` controls owner-local selection;
+its Float64 value must be finite and nonnegative. For example,
+`residual_occupation_cutoff=1e-8` retains smaller residual directions without
+changing merge, metric or reference-recovery tolerances. Lower cutoffs must
+still pass those checks; they do not guarantee a rank or accurate capture.
 Nuclear contributions are accumulated without per-center final matrices.
 Base IDA is unchanged; residual-containing interactions use integral-normalized
 moment-matched Gaussians (MWG), not exact four-index Coulomb integrals. Raw import
