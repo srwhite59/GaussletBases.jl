@@ -404,7 +404,7 @@ count differences are not transfer evidence.
 ## Finite Collinear Atomic-Fit Connection
 
 Pass 636 accepts bf97c94b5652e6588f113122ff0a93662f718e45 and transitions
-HP-COLLINEAR-ATOMIC-FIT-FN-01/TEST-01 to maintenance, except for the separately
+HP-COLLINEAR-ATOMIC-FIT-FN-01/TEST-01 to maintenance; Pass 645 also closes the
 bounded Pass 644 early-longitudinal-sum grant below. The Pass 635 implementation
 budgets and one-shot H10 acceptance below are completed historical bounds, not
 renewed execution grants. Actual signed consistency -1.03338551618e-5 Ha agrees
@@ -545,7 +545,12 @@ commit and report; do not widen the connection or treat partial fields as succes
 
 ## Collinear Early Longitudinal Sum
 
-Pass 644 authorizes production integration, not a new physical H10 result.
+Pass 645 accepts production integration at
+6663d392258e5372e018fd8081cd19c3f9a6ed57; both IDs are maintenance.
+The implementation and one-shot acceptance grants below are completed, not
+permission to replay q7 or start a physical campaign. Preserve the replacement
+acceptance and interrupted-attempt evidence recorded in the manager ledger.
+Pass 644's frozen boundary follows; this is not new basis-convergence evidence.
 Independent review at 70be38742386398f59cf8f5b35aebd6022f401d0 inspected the
 September 17 early-z-sum README, benchmark_snapshot.jl, contraction/parity
 records and live callers. Evidence directory:

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `40b1b4fbbb0172b099841df96279e70ea8f04b49b9273096d2e7c4aaaba691df`.
+> [authority.toml](authority.toml), SHA-256 `e3f76b0af6d5019ea25c52cd534f77c51d218e73cbc8a78e3df76d70b799f45e`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -341,8 +341,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-COLLINEAR-ATOMIC-FIT-FN-01 - one-electron atomic-fit collinear connection
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -359,13 +359,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/h10-atomic-fit-screening-qualification-2026-09-16.md`
   - `manager_pass`: `644`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/hchain/runs/h10_early_z_sum_20260917/README.md`
+  - `git_commit`: `6663d392258e5372e018fd8081cd19c3f9a6ed57`
+  - `manager_pass`: `645`
 - **Dependencies:** `HP-COLLINEAR-PQS-FN-01`, `HP-COLLINEAR-PQS-RG-FN-01`, `HP-PQS-ATOMREF-PACKET-FN-01`, `HP-PQS-SCREEN-HARTREE-CORR-FN-01`
-- **Scope:** Implement Collinear Early Longitudinal Sum in the three named owners: replace collinear nuclear/identical-H GG loops, extract only placed-potential GA/AA reuse, add existing TimeG annotations. At most 65 added source lines. Preserve kernels, other callers, fits, thresholds and public interfaces. No cache, fallback framework, approximation, solver, basis rebuild or release.
+- **Scope:** Maintain Collinear Early Longitudinal Sum in the three named owners: weighted nuclear and identical-H fitted GG sums, shared placed-potential GA/AA and existing TimeG. Preserve kernels, other callers, fits, thresholds and interfaces. Implementation and one-shot acceptance are complete; no new optimization, approximation, cache, basis rebuild, solver, physical campaign or release is granted.
 
 ### HP-COLLINEAR-ATOMIC-FIT-TEST-01 - atomic-fit connection and bounded field acceptance
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -381,8 +383,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/h10-atomic-fit-screening-qualification-2026-09-16.md`
   - `manager_pass`: `644`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/hchain/runs/h10_early_z_sum_20260917/README.md`
+  - `git_commit`: `6663d392258e5372e018fd8081cd19c3f9a6ed57`
+  - `manager_pass`: `645`
 - **Dependencies:** `HP-COLLINEAR-ATOMIC-FIT-FN-01`
-- **Scope:** Validate Collinear Early Longitudinal Sum in two existing owners, at most 45 added lines. Preserve current tolerances; check weighted nuclear and fitted post-transform closure plus GA/AA split. One adviser-coordinated frozen q7 complete build against saved baseline, within stated resource caps. No routine H10 CI, baseline replay, basis rebuild, HF, new framework or physical campaign.
+- **Scope:** Maintain Collinear Early Longitudinal Sum coverage in the two existing test owners: weighted nuclear, fitted post-transform closure, borrowed factors and GA/AA split. Preserve numerical gates and accepted q7 evidence, including interrupted-attempt and timing qualifications. One-shot acceptance is consumed; no q7 replay, routine H10 CI, basis rebuild, HF, framework or physical campaign.
 
 ### HP-COLLINEAR-PQS-FN-01 - finite collinear PQS construction and operators
 

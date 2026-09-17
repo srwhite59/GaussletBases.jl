@@ -1624,3 +1624,33 @@ self/cross accounting. No production edits here; no new metadata/status fields.
 Remaining gate: grant checks, implementation, adviser-mediated acceptance and
 independent closeout. Package/docs, authority/self-test, generated parity,
 Documenter, log bound, diff and docs-only CI/Docs gate this authorization.
+
+### Pass 645: Early Longitudinal Sum Accepted
+
+Accept 6663d392258e5372e018fd8081cd19c3f9a6ed57 after independent diff/hash,
+consumer-script/results and exact-head CI/Docs review. All five files match the
+frozen candidate; kernel unchanged. MT8 advances complete construction cost,
+not H10 convergence or scalable-chain accuracy. Saved q7/8509+210 inputs give
+operators 1361.52->499.73s and fitted field/correction 358.78->75.90s: observed
+2.99x subtotal, not a controlled cold/warm benchmark. Compilation/cache and
+validation/I/O remain separately reported; nested TimeG is not additive.
+
+Energy changes7.11e-15 Ha and maximum complete action9.92e-12 pass unchanged
+1e-8/1e-10 gates. Residual-block H1/field differences6.05e-9/9.31e-10 are retained,
+not hidden by bitwise claims. V, residual, transfer and fit arrays are exact;
+nonzero fitted consistency remains. The interrupted scalar-audit typo attempt
+is preserved, followed by the reviewed corrected replacement; cumulative951.93s,
+peak15.83GiB and39.46MiB scratch fit original caps without reset.
+
+Evidence: tmp/reviews/pass644-implementation-2026-09-17.md and consumer
+h10_pass644_acceptance_20260917/replacement/README.md (SHA256
+c85cb62e9afc5f577fa4c5f03fac044573b3be6d91b19d5dc42c8c1aed7bcf5e).
+Reuse 1032 local numerical assertions and exact-head full CI35285875675 /
+Docs35285875678; no closeout numerical replay. Local package/docs,
+authority/self-test, deterministic views, Documenter/log/diff and docs-only
+remote gates validate closeout. Deleted: per-center collinear GG loops.
+Simplified: early z sum and one GA/AA owner. Quarantined: none. Not deleted:
+general placed wrapper for live off-axis/RHF callers. Added/deleted src46/23;
+tests21 added in existing owners; new files/metadata/status fields0.
+Both grants return to maintenance; acceptance is consumed. Remaining blocker:
+separate consumer assignment. Hchain-doer stays paused; no successor opened.

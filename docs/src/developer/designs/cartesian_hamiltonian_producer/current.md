@@ -3,15 +3,14 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
-Pass 644 authorizes [collinear early longitudinal sums](protected_additive_reference_correction.md#Collinear-Early-Longitudinal-Sum)
-under HP-COLLINEAR-ATOMIC-FIT-FN-01/TEST-01: three existing source owners,
-65 added source lines and 45 test lines maximum. Preserve the buffered kernel,
-other callers and all numerical gates. The reviewed q7 benchmark establishes
-roughly tenfold GG component savings, not a complete-build speedup. Exactly one
-production supplemented-operator plus screening acceptance may use saved Mac
-Studio q7 inputs through the adviser; no basis rebuild, baseline replay or HF.
-Earlier paused-consumer statements below record those passes' limited grants;
-this pass grants only the named implementation/acceptance, not a physical campaign.
+Pass 645 accepts [collinear early longitudinal sums](protected_additive_reference_correction.md#Collinear-Early-Longitudinal-Sum)
+at 6663d392258e5372e018fd8081cd19c3f9a6ed57. Both atomic-fit IDs return to
+maintenance; the one-shot q7 acceptance is consumed. Complete operator plus
+field calls measured 1720.30 -> 575.62 seconds, not a controlled cold/warm
+benchmark. Amplified matrix roundoff passes unchanged energy/action gates;
+kernel, other callers and scientific inputs remain unchanged. Interrupted-attempt
+evidence is preserved. No replay, HF, physical campaign or successor is granted;
+hchain-doer remains paused pending a separate assignment.
 
 v0.2.1 is published at accepted commit
 2ad8441efe8328b4f325bf42994925d8f2a491c9. Stable now targets its verified
@@ -64,7 +63,7 @@ hchain-doer's Hartree calculation remains paused.
 
 Pass 636 accepts the [atomic-fit connection](protected_additive_reference_correction.md#Finite-Collinear-Atomic-Fit-Connection)
 at bf97c94b5652e6588f113122ff0a93662f718e45. HP-COLLINEAR-ATOMIC-FIT-FN-01/TEST-01
-are maintenance except for Pass 644's narrow integration grant. The complete frozen H10 fitted field agrees with independent
+are maintenance, including the accepted Pass 644 optimization. The complete frozen H10 fitted field agrees with independent
 signed consistency to 6.04e-14 Ha; its one-shot acceptance grant is consumed.
 This is field assembly, not H10 screening or scientific convergence. The stopped
 molecular-field study is not a prerequisite. Hchain-doer remains paused pending
