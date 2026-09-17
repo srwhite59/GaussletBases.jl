@@ -1592,3 +1592,35 @@ none. Not deleted: deliberate overrides, stored recipes, validity checks and
 historical Cr/Cr2 evidence. Remaining blocker: separate bounded Hchain assignment
 at1e-8 using the saved standard-q5 basis; preserve208 evidence. Hchain-doer remains
 paused. No successor implementation, physical run, release or stable change.
+
+### Pass 644: Early Longitudinal Sum Integration Grant
+
+Independent source and evidence review accepts the September17 q7 component
+benchmark as integration evidence: nuclear GG948.57->94.64s, identical-H fitted
+GG311.50->31.05s, not a measured complete-build speedup. Common transverse
+factors permit exact distributivity before contraction; reassociation changes
+raw entries near9e-15 and residual-transformed entries up to4.53e-10. Full signed
+energy1e-8 Ha and relative action1e-10 gates passed; never substitute a large
+cancelling GG-only denominator or claim bitwise equality. Snapshot/README hashes
+and frozen q7 identities are in the canonical grant. No local numerical replay.
+
+Authorize only two collinear call sites and the small existing placed-potential
+GA/AA separation: three source owners, 40-55 preferred/65 hard added lines
+including TimeG; two test owners, 20-35 preferred/45 hard. Existing weighted
+nuclear and fitted post-transform oracles cover the live contract. Delete the
+per-center collinear GG loops; do not retain a selectable duplicate. The general
+placed wrapper remains for RHF/off-axis callers. No kernel, cache, public API,
+fallback machinery, fit policy or approximation change. MT8 advances measured
+operator construction cost, not new scientific accuracy or long-chain scaling.
+
+One complete q7 supplemented operator+field acceptance is allowed through adviser
+coordination on Mac Studio, using saved8509/8719 basis/system/field and unchanged
+210-direction reference. Require input/runtime receipt and feasible memory plan;
+45min/48GiB/2GiB hard resource caps. Separate construction stage timings from
+validation/I/O. No basis rebuild, baseline replay or HF. Deleted: required old
+GG loops in implementation. Simplified: sum before expensive contraction.
+Quarantined: none. Not deleted: other placed-potential callers and atomic
+self/cross accounting. No production edits here; no new metadata/status fields.
+Remaining gate: grant checks, implementation, adviser-mediated acceptance and
+independent closeout. Package/docs, authority/self-test, generated parity,
+Documenter, log bound, diff and docs-only CI/Docs gate this authorization.

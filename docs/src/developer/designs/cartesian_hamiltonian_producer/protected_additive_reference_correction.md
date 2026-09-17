@@ -404,7 +404,8 @@ count differences are not transfer evidence.
 ## Finite Collinear Atomic-Fit Connection
 
 Pass 636 accepts bf97c94b5652e6588f113122ff0a93662f718e45 and transitions
-HP-COLLINEAR-ATOMIC-FIT-FN-01/TEST-01 to maintenance. The Pass 635 implementation
+HP-COLLINEAR-ATOMIC-FIT-FN-01/TEST-01 to maintenance, except for the separately
+bounded Pass 644 early-longitudinal-sum grant below. The Pass 635 implementation
 budgets and one-shot H10 acceptance below are completed historical bounds, not
 renewed execution grants. Actual signed consistency -1.03338551618e-5 Ha agrees
 with independent prediction to 6.04e-14 Ha; field construction took 22.53 seconds,
@@ -541,3 +542,147 @@ this diff. Hchain-doer stays paused until independent implementation acceptance
 and a subsequent consumer assignment. If budgets, existing fit controls,
 validation semantics or resource caps cannot hold, stop without an implementation
 commit and report; do not widen the connection or treat partial fields as success.
+
+## Collinear Early Longitudinal Sum
+
+Pass 644 authorizes production integration, not a new physical H10 result.
+Independent review at 70be38742386398f59cf8f5b35aebd6022f401d0 inspected the
+September 17 early-z-sum README, benchmark_snapshot.jl, contraction/parity
+records and live callers. Evidence directory:
+/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/hchain/runs/h10_early_z_sum_20260917/.
+README SHA-256 90713d09c5fd490580655bef8a0bccad411618d186659d9e2745d63e88a52d0c;
+snapshot SHA-256 749180a584369457b72350b5ba274cb10111af5f67d356929d8cf40b0866b4c6.
+No benchmark or legacy search was repeated. The measured nuclear GG interval
+948.573880 -> 94.639754 seconds and fitted GG 311.502250 -> 31.051003 seconds
+include candidate symmetrization but not a complete production build. Do not
+claim a measured tenfold total-Hamiltonian speedup.
+
+Target: remove repeated GG contractions for the same transverse factors while
+preserving the exact finite-expansion operator, apart from reassociation.
+For each expansion independently, form Fz_sum[t] = sum_A Z_A Fz_A[t], then
+contract c[t], Fx[t], Fy[t], Fz_sum[t] once. Nuclear scale remains -1;
+identical-H fitted potential uses unit weights and scale +1, symmetrized once.
+Nuclear and fitted exponent/normalization sequences must never be interchanged.
+Stream center factors into one call-local accumulator; do not mutate borrowed
+PGDG factor tables or retain all per-center packets/matrices.
+
+### Implementation Boundary And Budgets
+
+Exactly three existing source owners, 40-55 preferred and 65 hard added lines
+total, including moved code, docstrings and timing annotations:
+
+- src/cartesian/pqs_source_box_low_order_materialization.jl:
+  replace only _collinear_complete_operators' nuclear GG loop with the weighted
+  longitudinal sum. Preserve expansion validation, kinetic, IDA, nuclear
+  repulsion and finite-output checks. Unequal positive charges and nonuniform
+  ordered z positions remain supported; potential geometry remains independent
+  of the geometry that originally built the basis.
+- src/cartesian/cartesian_base_hamiltonian.jl:
+  replace _collinear_atomic_fit_screening's per-center GG work with one summed
+  contraction using the same validated common H fit. Stream GA/AA as before;
+  preserve atomic translations, occupation one, intentional interatomic overlap,
+  density self/cross energies, independently fitted expectations, residual
+  projection/transform, scalar and derivative accounting. Existing assembly
+  call expressions in the collinear supplemented overload may receive TimeG
+  annotations only, without changing their algorithms or return objects.
+- src/cartesian/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl:
+  extract the existing placed-potential GA/AA body into one module-private
+  placed_spherical_gaussian_potential_ga_aa_blocks function returning only GA/AA.
+  The existing raw_blocks wrapper delegates to it and still returns GG/GA/AA.
+  Keep placement validation, kernels, ordering and symmetrization; no duplicated
+  GA/AA implementation, optional-GG flag, carrier, export or new public API.
+
+The current collinear signatures already guarantee common transverse centers
+and one expansion per sum. Restrict the optimization to them; preserve general
+placed-potential callers (including off-axis and RHF packet use) unchanged.
+No generic eligibility dispatcher or new fallback. Delete the replaced
+per-center GG loops, retaining the general wrapper for its other live callers.
+Keep pqs_terminal_one_body.jl and its buffered contraction kernel byte-identical.
+No new file, cache, helper beyond the exact GA/AA split, metadata, framework,
+kernel arithmetic, fit/default/threshold change or expansion retuning.
+
+### Focused Integration Gates
+
+Use test/driver_public/cartesian_base_hamiltonian_runtests.jl and
+test/nested/cartesian_screened_hartree_correction_runtests.jl only for edits:
+20-35 preferred, 45 hard added test lines combined. Reuse existing fixtures
+and oracles; no new owner, fixture file, routine H10 gate or broad phrase test.
+The non-obvious risks are incorrect charge/sign weighting, unintended aliasing
+of borrowed factor data, GG being recomputed through the split, and amplified
+error after residual transformation. Extend existing checks only as needed:
+unequal-charge/nonuniform potential on an existing basis; positive fitted field
+against the unchanged per-center raw wrapper; GA/AA split equality including an
+off-axis center; full supplemented matrix/action, atomic blocks, scalar and
+derivative closure. Preserve existing small-fixture tolerances (including
+1e-10 assembly and 1e-8 consistency/representation), not bitwise GG equality.
+Inspect the call graph for exactly one GG contraction per optimized call and
+no changed contraction kernel. Run existing Cartesian/collinear, residual-GTO,
+screened-correction and atomic-packet owners, package/docs, authority/self-test,
+generated parity, Documenter and diff checks, plus full three-job CI and Docs.
+No broad angular suite or repeated paper example.
+
+### One-Shot q7 Production Acceptance
+
+After small-fixture validation, coordinate through the adviser for a bounded
+Mac Studio execution. Repo-manager must obtain the adviser's receipt for exact
+artifact paths/hashes, candidate source revision, runtime pins and resource plan
+before launch; this grants no external owner edits or standing-role delegation.
+Load frozen q7 working/system/field artifacts from the existing hchain scratch:
+
+- R1.8_standardq7_20260917_working.jls:
+  c37077aae5e91d7e798f75ea71b0ffeb910498f1df8b13ef90c00af63cb24161
+- R1.8_standardq7_physical_20260917_system.jls:
+  8a07d3624200e847b3887f51b746b7a53f47520b2a095a39390cec451bafa4c2
+- R1.8_standardq7_physical_20260917_field.jls:
+  c6e39ab7c68f6d3d76364a250f67ac2f2dadcc13c0d97d835a681cdfe85c723d
+
+Check the benchmark's frozen_inputs.json and input_receipt.json for the atomic
+ingredients, original raw molecular columns and saved plain/history endpoints.
+Target stays 8509 terminal/8719 supplemented, parent25x25x109, q7/R1.8/pad10,
+210 cc-pV6Z(s,p) residuals at1e-8, high135 nuclear and supplied33-term H fit.
+Preserve all input hashes, residual selection and fit settings; verify the
+ordinary fitting call reproduces frozen fit arrays, not a new fit study.
+
+Build exactly one complete production supplemented operator system plus fitted
+screening field/correction on the saved working basis, and compare to the saved
+baseline. Do not rerun the baseline contraction, rebuild the basis, rerun HF,
+or substitute scratch GG matrices for the production call. Report absolute
+matrix differences (including amplified residual blocks), relative norms,
+finiteness and symmetry; unchanged V/Enn, fit/E0 and transfer contracts apply.
+For the original raw molecular columns and both saved endpoints, use the
+unchanged determinant oracle and eight-RHS deterministic panel from the
+benchmark. Require absolute signed energy changes <=1e-8 Ha and occupied/panel
+relative-action errors <=1e-10 on the complete screened operators. Report signed
+linear expectations too. Require fitted expectation/consistency change <=1e-8 Ha,
+separate atomic norm and total-charge errors <=1e-8, intentional overlaps intact.
+The existing fitted discrepancy near -1.03338551085e-5 Ha remains nonzero;
+do not impose exact-field closure or change E0/C_H to absorb differences.
+Raw benchmark errors near9e-15 amplified to4.53e-10/2.69e-10 through T_G;
+no bitwise requirement or invented 1e-10 transformed-entry gate is imposed.
+Do not normalize action errors by the huge cancelling GG-only contribution.
+
+Use existing TimeG, with top-level production Hamiltonian and screening times
+separate from input loading, validation/oracles and output I/O. Include kinetic,
+factor preparation/z sum, nuclear GG, IDA, Gaussian mixed/self assembly,
+residual transformation, fitted GG/GA-AA and correction stages as available
+within the source budget. Report allocations, peak RSS and compilation caveats;
+do not add nested times twice or rerun just to improve timing statistics.
+Measure complete construction rather than extrapolating component savings.
+
+Reuse the existing bounded monitor: 45 minutes total, 48 GiB RSS and 2 GiB
+additional machine-local scratch hard limits, with 2640s/46 GiB/1.9 GiB guards.
+Adviser must confirm a feasible live-memory plan before launch. Avoid matrix
+copies/serialization not needed for validation; freeze checksums and reduced
+results. Preserve originals and both handoffs. No silent retry on exhaustion
+or failed numerical gates; report exact completed stages and stop.
+
+Failure rule: broader semantics, kernel edits, exceeded line/resource budgets,
+unavailable frozen inputs, lost accuracy or material performance regression
+stop acceptance and require renewed review, not a fallback or relaxed check.
+Complete focused and q7 acceptance before the implementation commit; if the
+goal cannot be met within these constraints, make no implementation commit and
+report the obstacle. Adviser-mediated candidate transport may use a frozen
+source snapshot without committing or changing the heavy-input environment.
+No far-field approximation, chi crossover, sparse representation, arbitrary-3D
+construction, solver, physical campaign, legacy archaeology or release work.
+Repo-manager waits for the recorded grant and required checks before editing.

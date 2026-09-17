@@ -477,8 +477,9 @@ validation. Preserve block selection and finite-probe validation. Raw import is
 X*C without renormalization or determinant cleanup. No residual/injected carrier,
 global parent-by-final coefficient map, general representation engine or solver.
 
-Accumulate each charge-weighted nuclear contribution into the kinetic matrix
-using existing kernels and lexical buffers. Check expansion/axis exponent
+Accumulate the charge-weighted nuclear sum into the kinetic matrix using existing
+kernels and lexical buffers. Pass 644's [early longitudinal sum](protected_additive_reference_correction.md#Collinear-Early-Longitudinal-Sum)
+may sum common-transverse z factors before one unchanged contraction. Check expansion/axis exponent
 agreement with the existing validator. Do not allocate a mandatory list of
 per-center dense matrices, change CartesianIDAHamiltonian, place a sum in a
 fake center slot, or claim its reweighting/artifact semantics. Retain existing

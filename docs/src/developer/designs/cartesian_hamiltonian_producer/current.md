@@ -3,6 +3,16 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
+Pass 644 authorizes [collinear early longitudinal sums](protected_additive_reference_correction.md#Collinear-Early-Longitudinal-Sum)
+under HP-COLLINEAR-ATOMIC-FIT-FN-01/TEST-01: three existing source owners,
+65 added source lines and 45 test lines maximum. Preserve the buffered kernel,
+other callers and all numerical gates. The reviewed q7 benchmark establishes
+roughly tenfold GG component savings, not a complete-build speedup. Exactly one
+production supplemented-operator plus screening acceptance may use saved Mac
+Studio q7 inputs through the adviser; no basis rebuild, baseline replay or HF.
+Earlier paused-consumer statements below record those passes' limited grants;
+this pass grants only the named implementation/acceptance, not a physical campaign.
+
 v0.2.1 is published at accepted commit
 2ad8441efe8328b4f325bf42994925d8f2a491c9. Stable now targets its verified
 versioned documentation; prior release folders remain unchanged.
@@ -54,7 +64,7 @@ hchain-doer's Hartree calculation remains paused.
 
 Pass 636 accepts the [atomic-fit connection](protected_additive_reference_correction.md#Finite-Collinear-Atomic-Fit-Connection)
 at bf97c94b5652e6588f113122ff0a93662f718e45. HP-COLLINEAR-ATOMIC-FIT-FN-01/TEST-01
-are maintenance. The complete frozen H10 fitted field agrees with independent
+are maintenance except for Pass 644's narrow integration grant. The complete frozen H10 fitted field agrees with independent
 signed consistency to 6.04e-14 Ha; its one-shot acceptance grant is consumed.
 This is field assembly, not H10 screening or scientific convergence. The stopped
 molecular-field study is not a prerequisite. Hchain-doer remains paused pending

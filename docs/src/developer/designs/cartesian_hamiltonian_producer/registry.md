@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `4c1cf89a1baf9fd1ffff6934a7ab060ada89bdd5b4618953806651f1ac6324cd`.
+> [authority.toml](authority.toml), SHA-256 `40b1b4fbbb0172b099841df96279e70ea8f04b49b9273096d2e7c4aaaba691df`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -341,15 +341,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-COLLINEAR-ATOMIC-FIT-FN-01 - one-electron atomic-fit collinear connection
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [protected\_additive\_reference\_correction.md](protected_additive_reference_correction.md); heading `Finite Collinear Atomic-Fit Connection`
+  - `canonical` [protected\_additive\_reference\_correction.md](protected_additive_reference_correction.md); heading `Collinear Early Longitudinal Sum`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl`
-  - `source` / `existing`: `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_low_order_materialization.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_gaussian_raw_blocks/mixed_hartree_blocks.jl`
   - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
 - **Evidence:**
   - `git_commit`: `bf97c94b5652e6588f113122ff0a93662f718e45`
@@ -357,19 +357,21 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `635`
   - `git_commit`: `a276afe636527fb15ad8fa07ea541969f368d2d7`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/h10-atomic-fit-screening-qualification-2026-09-16.md`
-- **Dependencies:** `HP-COLLINEAR-PQS-RG-FN-01`, `HP-PQS-ATOMREF-PACKET-FN-01`, `HP-PQS-SCREEN-HARTREE-CORR-FN-01`
-- **Scope:** Maintain the accepted Finite Collinear Atomic-Fit Connection in the three owned files: truthful occupation-one H input, shared fits, validated additive consumption and streamed assembly. Preserve RHF packets, fit controls, thresholds and separate atomic blocks. No new capability, solver, public API, evaluator, field framework, moment polish, screening-policy or release change.
+  - `manager_pass`: `644`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/hchain/runs/h10_early_z_sum_20260917/README.md`
+- **Dependencies:** `HP-COLLINEAR-PQS-FN-01`, `HP-COLLINEAR-PQS-RG-FN-01`, `HP-PQS-ATOMREF-PACKET-FN-01`, `HP-PQS-SCREEN-HARTREE-CORR-FN-01`
+- **Scope:** Implement Collinear Early Longitudinal Sum in the three named owners: replace collinear nuclear/identical-H GG loops, extract only placed-potential GA/AA reuse, add existing TimeG annotations. At most 65 added source lines. Preserve kernels, other callers, fits, thresholds and public interfaces. No cache, fallback framework, approximation, solver, basis rebuild or release.
 
 ### HP-COLLINEAR-ATOMIC-FIT-TEST-01 - atomic-fit connection and bounded field acceptance
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [protected\_additive\_reference\_correction.md](protected_additive_reference_correction.md); heading `Finite Collinear Atomic-Fit Connection`
+  - `canonical` [protected\_additive\_reference\_correction.md](protected_additive_reference_correction.md); heading `Collinear Early Longitudinal Sum`
 - **Owned paths:**
-  - `test` / `existing`: `test/nested/cartesian_atomic_hf_reference_packet_runtests.jl`
+  - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
   - `test` / `existing`: `test/nested/cartesian_screened_hartree_correction_runtests.jl`
 - **Evidence:**
   - `git_commit`: `bf97c94b5652e6588f113122ff0a93662f718e45`
@@ -377,8 +379,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `635`
   - `git_commit`: `a276afe636527fb15ad8fa07ea541969f368d2d7`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/h10-atomic-fit-screening-qualification-2026-09-16.md`
+  - `manager_pass`: `644`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/hchain/runs/h10_early_z_sum_20260917/README.md`
 - **Dependencies:** `HP-COLLINEAR-ATOMIC-FIT-FN-01`
-- **Scope:** Maintain the two existing Finite Collinear Atomic-Fit Connection owners: separate atomic blocks, independent self/cross energies, fitted consistency, post-transform matrix/action accuracy and RHF behavior. The one-shot frozen H10 field acceptance is completed and consumed. No renewed H10 run, routine H10 CI, SCF, matching, rebuild, new reference or consumer assignment.
+- **Scope:** Validate Collinear Early Longitudinal Sum in two existing owners, at most 45 added lines. Preserve current tolerances; check weighted nuclear and fitted post-transform closure plus GA/AA split. One adviser-coordinated frozen q7 complete build against saved baseline, within stated resource caps. No routine H10 CI, baseline replay, basis rebuild, HF, new framework or physical campaign.
 
 ### HP-COLLINEAR-PQS-FN-01 - finite collinear PQS construction and operators
 
