@@ -86,7 +86,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_sur
 sha256 = "dd325e13a2afcfe50d0bf5f36447a779f00013132da0a5848f29859ae87a4738"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
-sha256 = "c1c0993c4233b859fbfce04f067273830bebe86c7b9e467df402396b127175c2"
+sha256 = "334565392cdfc88f360875c7922b94ebf4d22b3c989abd08886c324de89e42da"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "e147f315224dd644b01e587d3cc2d2210ec563512d08e7fd7a7724dae87d4cfb"
@@ -143,13 +143,13 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/represented_mi
 sha256 = "dee7a89608ebe542ea5b3ca20e3ae04032a6bb1eb4d2b2922ed9953fc4312338"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md"
-sha256 = "4f8ec18cc8496ee4cc6eb0b4f0ab52c5acc3855d93ad457216d5730548a07893"
+sha256 = "aea022b22dd1560e326ed5067988995f9418515d0b8a077c5b59e00fb98fd4a1"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_injection_hybrid.md"
 sha256 = "6d8dcc37dd7afc8df833f06e458068409a79fed67c08ee3cd9826994218fe0ec"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
-sha256 = "0d1efefa876fcf96706f8608ee3788c9b1e811283d48d2c2b9cf29b2336e544c"
+sha256 = "48c9ba8bba9d5ae91d37e6b0d9dc5d93c345b4751ef463ec2bf04daaa5b5acb7"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/retained_gto_egoi.md"
 sha256 = "66567e19f01e34c4146b02999b8fba035811ad9e9ad8364db2ec7c77d9457945"
@@ -934,10 +934,10 @@ title = "validate private recursive chain deletion"
     value = "637"
 [[records]]
 dependency_ids = ["HP-COLLINEAR-PQS-FN-01", "HP-REP-PQS-RG-WORKING-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-COLLINEAR-PQS-RG-FN-01"
-lifecycle = "approved"
-scope = "Amend Collinear Residual Cutoff Forwarding: set the four named shared defaults to 1e-8, preserving explicit overrides and every validity threshold. Existing facade docstring/manual only; incremental source/docstrings 16, manual 6 added lines beyond 7f9dbfd1e. Preserve algorithms, stored recipes and numerical-complete calls. No helper, type, metadata, new interface, H10 run, determinant transfer or release."
+lifecycle = "implemented"
+scope = "Maintain accepted Collinear Residual Cutoff Forwarding: four shared defaults at 1e-8, validated facade forwarding, explicit overrides, stored recipes and numerical-complete calls. Preserve algorithms and all validity thresholds. No new default, interface, helper, metadata, H10 run, determinant transfer, consumer or release authority."
 surfaces = ["docs", "source"]
 title = "finite collinear residual-GTO supplementation"
 
@@ -967,6 +967,15 @@ title = "finite collinear residual-GTO supplementation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "642"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "7f9dbfd1e48f8fdd080a1eeaf33420506643bab8"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "b64499918bf7a43e806b37aef72dfa69ef49c2e4"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "643"
 
     [[records.paths]]
     kind = "source"
@@ -990,10 +999,10 @@ title = "finite collinear residual-GTO supplementation"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-COLLINEAR-PQS-RG-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-COLLINEAR-PQS-RG-TEST-01"
-lifecycle = "approved"
-scope = "Amend the two existing residual-GTO owners under Collinear Residual Cutoff Forwarding: omitted/explicit 1e-8 parity, explicit 1e-10/1e-6 forwarding, invalid inputs, overlap/import and nested default provenance. At most 25 added lines beyond 7f9dbfd1e. Preserve numerical expectations and tolerances; reuse completed H10 evidence. No new file, helper, H10 fixture, broad run, workflow or consumer grant."
+lifecycle = "completed"
+scope = "Maintain the two existing residual-GTO owners under Collinear Residual Cutoff Forwarding: omitted/explicit 1e-8 parity, explicit overrides, invalid inputs, overlap/import and nested provenance. Preserve numerical expectations and tolerances. No new owner, H10 fixture, broad run, workflow, numerical-policy or consumer authority."
 surfaces = ["tests"]
 title = "finite collinear supplementation validation"
 
@@ -1023,6 +1032,15 @@ title = "finite collinear supplementation validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "642"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "7f9dbfd1e48f8fdd080a1eeaf33420506643bab8"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "b64499918bf7a43e806b37aef72dfa69ef49c2e4"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "643"
 
     [[records.paths]]
     kind = "test"
