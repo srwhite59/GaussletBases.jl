@@ -1646,7 +1646,7 @@ function cartesian_collinear_operators(working::_CartesianCollinearWorkingBasis,
 end
 
 """
-    cartesian_residual_gto_mwg_system(working, z, Z; supplement, expansion, residual_occupation_cutoff=1e-6)
+    cartesian_residual_gto_mwg_system(working, z, Z; supplement, expansion, residual_occupation_cutoff=1e-8)
 
 Supplement a finite-collinear working basis with explicit
 `CartesianGaussianShellSupplementRepresentation3D` candidates. Ordered `z` and
@@ -1661,7 +1661,7 @@ Float64 matrices and a Float64 scalar in atomic units, in native terminal/residu
 order. It has no electron-sector, artifact or reweighting semantics. The existing
 atom/diatomic overload still returns a `CartesianIDAHamiltonian` through this field.
 
-`residual_occupation_cutoff` defaults to 1e-6; its Float64 value must be finite
+`residual_occupation_cutoff` defaults to 1e-8; its Float64 value must be finite
 and nonnegative. It controls owner-local selection, not merge or metric tolerances.
 Lower cutoffs must still satisfy unchanged metric and reference-recovery checks.
 Residual selection uses the existing final merge;
@@ -1675,7 +1675,7 @@ Dense scaling and primitive capture tests do not establish long-chain accuracy.
 """
 function cartesian_residual_gto_mwg_system(working::_CartesianCollinearWorkingBasis,
     z, Z; supplement, expansion::CoulombGaussianExpansion,
-    residual_occupation_cutoff::Real = 1.0e-6)
+    residual_occupation_cutoff::Real = 1.0e-8)
     supplement::CartesianGaussianShellSupplementRepresentation3D
     cutoff = Float64(residual_occupation_cutoff)
     isfinite(cutoff) && cutoff >= 0 || throw(ArgumentError(

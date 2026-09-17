@@ -775,7 +775,7 @@ function build_injected_residual_gaussian_basis(base_dimension, X, S_AA, labels,
 end
 function build_residual_gaussian_basis(base_dimension::Integer, X, S_AA,
     candidate_labels::Vector{String}, candidate_centers::Vector{NTuple{3,Float64}},
-    candidate_owner_indices::Vector{Int}; residual_occupation_cutoff::Real = 1.0e-6,
+    candidate_owner_indices::Vector{Int}; residual_occupation_cutoff::Real = 1.0e-8,
     residual_injection_cutoff::Real = 0.0, candidate_overlap_atol::Real = 1.0e-12,
     candidate_overlap_rtol::Real = 1.0e-8, injected_overlap_atol::Real = 1.0e-12,
     injected_overlap_rtol::Real = 1.0e-10,

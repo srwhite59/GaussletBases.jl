@@ -179,7 +179,7 @@ function _plb_compact_residual(inputs, stages)
             inputs.base.terminal_basis.final_dimension,
             inputs.X, inputs.S_AA, inputs.labels, inputs.centers, inputs.owners;
             residual_occupation_cutoff =
-                _plb_get(recipe, :residual_occupation_cutoff, 1.0e-6),
+                _plb_get(recipe, :residual_occupation_cutoff, 1.0e-8),
             tau_neg_abs = _plb_get(recipe, :tau_neg_abs, 1.0e-12),
             tau_neg_rel = _plb_get(recipe, :tau_neg_rel, 1.0e-12),
             tau_merge_abs = _plb_get(recipe, :tau_merge_abs, 1.0e-12),

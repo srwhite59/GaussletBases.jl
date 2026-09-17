@@ -577,7 +577,7 @@ function pqs_terminal_residual_gto_augmentation(
     bundles,
     supplement,
     nuclei;
-    residual_occupation_cutoff::Real = 1.0e-6,
+    residual_occupation_cutoff::Real = 1.0e-8,
     tau_neg_abs::Real = 1.0e-12,
     tau_neg_rel::Real = 1.0e-12,
     tau_merge_abs::Real = 1.0e-12,
