@@ -28,9 +28,19 @@ are byte-identical and released atom/diatomic behavior is preserved.
 No H10 physical run is granted. Hchain-doer remains paused for a separate
 supplemented, atomically screened q5/R1.8 assignment with 10-bohr padding.
 
+Pass 641 grants only [collinear cutoff forwarding](pqs_residual_gto_working_basis.md#Collinear-Residual-Cutoff-Forwarding)
+under HP-COLLINEAR-PQS-RG-FN-01/TEST-01. Expose the existing selector's validated
+optional residual_occupation_cutoff, preserving default 1e-6 and every validity
+threshold. Completed standard-q5 H10 evidence supports 210 directions at 1e-8
+with unchanged metric/recovery gates; preserve the 208-direction result.
+Source/docstrings hard 16, existing tests 25, manual 6 added lines. No H10
+rerun, complete-operator, field or HF qualification follows. Hchain-doer stays
+paused until implementation acceptance and a separate bounded continuation.
+
 Pass 633 accepts the [finite-collinear supplementation connection](pqs_residual_gto_working_basis.md#Finite-Collinear-Supplementation)
 at cb1b2c7829f4f10e3a653cd541c1998f1d65bf64. HP-COLLINEAR-PQS-RG-FN-01/TEST-01
-are maintenance. The old atom/diatomic Hamiltonian semantics remain unchanged;
+maintain that connection except for Pass 641's bounded forwarding grant.
+The old atom/diatomic Hamiltonian semantics remain unchanged;
 the new overload uses explicit potential/ownership nuclei and a three-field
 matrix result. The load-order correction is implemented and validated.
 hchain-doer's implementation prerequisite is cleared, not its scientific

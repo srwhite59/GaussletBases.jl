@@ -1513,3 +1513,27 @@ no full numerical rerun or H10 construction for closeout. Both FN/TEST records
 return to maintenance. Local package/docs, authority/self-test, generated parity,
 Documenter, log bound and diff checks plus docs-only CI/Docs gate this closeout.
 No successor implementation or consumer grant is opened.
+
+### Pass 641: Collinear Residual Cutoff Forwarding
+
+Independent review of the H10 standard-q5 cutoff report, selector call chain,
+probe source and hash-matched final log supports one missing facade keyword.
+At 1e-8 the existing algorithm naturally retains 210 rather than 208 directions:
+occupied Gram error 1.23e-14, atomic norm/charge errors 7.77e-15/1.95e-14,
+residual metric max-entry 1.23e-8. All existing gates remain unchanged. The
+full-metric row-sum is different and is not substituted for the max-entry gate.
+Preserve both outcomes, intentional atomic overlap and frozen inputs. No H10
+rerun; the report's 26.34s task/3.42 GiB peak RSS is selection evidence, not
+complete-operator, field or HF acceptance. MT8 advances only the input connection.
+
+Authorize the existing collinear supplemented overload (16 added source/docstring
+lines), small public test owner (25) and manual (6). Default remains 1e-6;
+finite nonnegative validation and direct forwarding suffice. A cutoff-sensitive
+regression must catch silently ignored input; existing fixture/oracles suffice.
+Deleted: none required. Simplified: expose an existing numerical choice without
+a new selector. Quarantined: none. Not deleted: valid default and all other
+interfaces. Remaining blocker: implementation acceptance and separate consumer
+assignment; hchain-doer remains paused. Added/deleted source here 0/0; no new
+files/helpers/types/metadata or physical grant. Local package/docs, authority/
+self-test, generated parity, Documenter, log and diff checks plus docs-only
+CI/Docs gate this authority; implementation requires normal full CI/Docs.

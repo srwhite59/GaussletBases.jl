@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `ef80e5351f459aef70a16903ca8e4535da1f86518409813a83e87048512b7520`.
+> [authority.toml](authority.toml), SHA-256 `96c395f7baec4fac508cd9b21482f185dddc1fc8d980b7b32c0139f2b2e9fdb1`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -439,33 +439,33 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-COLLINEAR-PQS-RG-FN-01 - finite collinear residual-GTO supplementation
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `Finite Collinear Supplementation`
+  - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `Collinear Residual Cutoff Forwarding`
 - **Owned paths:**
   - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
   - `docs` / `existing`: `docs/src/manual/projected_q_shells.md`
-  - `docs` / `existing`: `docs/src/reference/export.md`
 - **Evidence:**
   - `git_commit`: `4cf1c7b125f6a8f11f3559f835eab24e70798f89`
   - `manager_pass`: `631`
   - `manager_pass`: `632`
   - `manager_pass`: `633`
   - `git_commit`: `cb1b2c7829f4f10e3a653cd541c1998f1d65bf64`
+  - `manager_pass`: `641`
 - **Dependencies:** `HP-COLLINEAR-PQS-FN-01`, `HP-REP-PQS-RG-WORKING-FN-01`
-- **Scope:** Maintain the accepted collinear supplementation overload and two reader pages under Finite Collinear Supplementation. Preserve the two concrete Hamiltonian representations, required body type assertion, distinct potential geometry, residual/MWG conventions, streamed accumulation and raw transfer. No new capability, kernel, solver, campaign, fallback, cache, release or retirement.
+- **Scope:** Implement Collinear Residual Cutoff Forwarding only in the existing collinear supplemented overload and PQS manual: validated optional cutoff, unchanged 1e-6 default, existing selector forwarding. Source/docstrings at most 16 added lines; manual 6. Preserve all validity thresholds and other interfaces. No new helper, type, metadata, selector, determinant transfer, H10 run or release.
 
 ### HP-COLLINEAR-PQS-RG-TEST-01 - finite collinear supplementation validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `Finite Collinear Supplementation`
+  - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `Collinear Residual Cutoff Forwarding`
 - **Owned paths:**
   - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
 - **Evidence:**
@@ -474,8 +474,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `632`
   - `manager_pass`: `633`
   - `git_commit`: `cb1b2c7829f4f10e3a653cd541c1998f1d65bf64`
+  - `manager_pass`: `641`
 - **Dependencies:** `HP-COLLINEAR-PQS-RG-FN-01`
-- **Scope:** Maintain the existing public residual-GTO owner's accepted primitive/contracted supplementation, distinct-potential, independent H1/MWG, metric, transfer and rejection checks under Finite Collinear Supplementation. Preserve frozen tolerances and old owner coverage. No new owner, workflow, broad campaign, numerical-policy relaxation or consumer authorization.
+- **Scope:** Extend the existing public residual-GTO owner under Collinear Residual Cutoff Forwarding, at most 25 added lines: default parity, cutoff-sensitive forwarding, invalid inputs and overlap/raw import. Preserve existing assertions and tolerances; reuse small fixtures and completed H10 evidence. No new file, helper, H10 fixture, broad run, workflow or consumer grant.
 
 ### HP-COLLINEAR-PQS-TEST-01 - finite collinear PQS validation
 

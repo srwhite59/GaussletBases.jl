@@ -304,7 +304,8 @@ fall back to a private consumer map, or add partial scaffolding.
 
 Pass 633 accepts cb1b2c7829f4f10e3a653cd541c1998f1d65bf64 under the
 Pass 631 boundary and Pass 632 load-order amendment. HP-COLLINEAR-PQS-RG-FN-01
-and TEST-01 now grant maintenance only. The following frozen boundaries remain
+and TEST-01 maintain that connection; Pass 641 below grants only optional
+selection-cutoff forwarding. The following frozen boundaries otherwise remain
 constraints, not a new implementation grant. hchain-doer's implementation
 prerequisite is cleared; scientific runs still require their own consumer
 authority. All scientific H-chain calculations must be supplemented. Bare
@@ -361,9 +362,10 @@ rank/metric failures, including no surviving residual direction; no bare fallbac
 
 ### Numerical and storage invariants
 
-Use existing residual selection with occupation cutoff 1e-6, injection disabled,
+Use existing residual selection with default occupation cutoff 1e-6, injection disabled,
 negative/merge absolute and relative thresholds 1e-12, cross orthogonality 1e-10,
-identity tolerance 5e-8. Expose no new threshold or approximation control.
+identity tolerance 5e-8. Only Pass 641's selection-cutoff keyword is excepted;
+expose no numerical-validity threshold or other approximation control.
 Expansion/parent exponents must match under the existing validator.
 
 Reuse the non-nuclear raw blocks and augmented kinetic/moment assembly.
@@ -462,3 +464,55 @@ Do not relax tolerances, clamp, silently fall back or add compatibility machiner
 The implementation and independent-acceptance gates were completed in Pass 633.
 Consumer resumption remains governed by its own scope; no scientific campaign
 is authorized here.
+
+## Collinear Residual Cutoff Forwarding
+
+Pass 641 grants only an optional residual_occupation_cutoff::Real=1.0e-6 on
+the existing collinear cartesian_residual_gto_mwg_system overload. Preserve the
+required supplement/expansion and first-body supplement type assertion. Validate
+that the Float64 cutoff used by the selector is finite and nonnegative before
+numerical construction, then forward it to pqs_terminal_residual_gto_augmentation.
+Do not change the selector, ordering, injection setting, merge/rank/metric
+tolerances, representation/screening checks, raw transfer or atom/diatomic facade.
+No requested-rank mechanism, bare fallback or determinant cleanup is allowed.
+
+Independent review at 84b37b0cc accepts the existing H10 selection evidence in
+tmp/reviews/h10-standardq5-residual-cutoff-qualification-2026-09-16.md.
+Probe SHA-256 f9a6107c572f072789049ff5d7b31fd78872e6a065d896c00c4f6fb5d658c990;
+final log SHA-256 22cc645c0e1bd7537ec26f59c7b4df86368a3b929eb048e14f2a285049883ab7.
+The reviewer inspected both source and output and verified these identities;
+no H10 rerun was needed. With the same 3191-function standard-q5 basis and
+candidate overlaps, 1e-6 retains 208 directions; 1e-8 naturally retains 210.
+The two added owner occupations are about 9.624692e-7, not forced rank targets.
+Residual physical metric max-entry error is 1.232002e-8 (<5e-8); occupied raw
+Gram row-sum error 1.234902e-14, atomic norm error 7.77e-15 and total atomic
+charge error 1.95e-14 satisfy unchanged recovery checks. Intentional atomic
+overlap remains. The full metric row-sum is a distinct 8.022538e-8; do not
+mislabel it as failing the max-entry test or claim unmeasured MWG positivity.
+This qualifies selection only, not complete operators, screening or HF.
+
+Source/docstring: only src/cartesian/cartesian_base_hamiltonian.jl's collinear
+supplemented overload, preferred 8-12 and hard 16 added lines total.
+Tests: existing test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl,
+preferred 15-25, hard 25 added lines. Reuse the existing small fixture: omitted
+versus explicit default parity, nondefault forwarding against the existing
+selector, negative/NaN/infinite rejection, and overlap/raw import. Include a
+cutoff-sensitive check (changed selection or existing no-direction rejection)
+so an ignored keyword cannot pass. Preserve existing metric/operator assertions;
+no new numerical tolerance, H10 fixture or duplicated oracle.
+Manual: only docs/src/manual/projected_q_shells.md, 4-6 added lines, hard 6.
+Explain selection cutoff versus validity tolerances; lower cutoff still must
+pass unchanged recovery/metric checks. No reference-page expansion or new file.
+
+Reuse completed H10 evidence, retaining both 208- and 210-direction results and
+all frozen inputs. Run the existing small supplemented/public owners, package,
+docs, authority/self-test, generated parity, Documenter and diff checks, plus
+normal full source-bearing three-gate CI and Docs. Do not repeat H10 or broad
+angular calculations. No helpers, types, metadata, caches, selector algorithm,
+determinant-transfer, screening, workflow, release or unrelated change.
+Failure rule: if forwarding needs another owner, budgets or numerical checks
+cannot be preserved, stop without implementation commit and report the obstacle.
+Repo-manager waits for this grant commit and checks before implementing.
+Hchain-doer remains paused until implementation acceptance and a separate bounded
+continuation at 1e-8, reusing the saved standard-q5 basis and preserving the
+208-direction evidence. No physical continuation is authorized by this packet.
