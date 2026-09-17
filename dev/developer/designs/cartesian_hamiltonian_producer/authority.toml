@@ -86,7 +86,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_sur
 sha256 = "dd325e13a2afcfe50d0bf5f36447a779f00013132da0a5848f29859ae87a4738"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
-sha256 = "5493c630387b1ac225d0c91a2272de07b92f61cca25481ada370658c62dc6824"
+sha256 = "395da271c8504dc40a290c125812f7bca9dfec6dd39b5fb15ca02e30685540ce"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "e147f315224dd644b01e587d3cc2d2210ec563512d08e7fd7a7724dae87d4cfb"
@@ -934,15 +934,15 @@ title = "validate private recursive chain deletion"
     value = "637"
 [[records]]
 dependency_ids = ["HP-COLLINEAR-PQS-FN-01", "HP-REP-PQS-RG-WORKING-FN-01"]
-grant = "maintenance"
+grant = "implementation"
 id = "HP-COLLINEAR-PQS-RG-FN-01"
-lifecycle = "implemented"
-scope = "Maintain the accepted collinear supplementation overload and two reader pages under Finite Collinear Supplementation. Preserve the two concrete Hamiltonian representations, required body type assertion, distinct potential geometry, residual/MWG conventions, streamed accumulation and raw transfer. No new capability, kernel, solver, campaign, fallback, cache, release or retirement."
+lifecycle = "approved"
+scope = "Implement Collinear Residual Cutoff Forwarding only in the existing collinear supplemented overload and PQS manual: validated optional cutoff, unchanged 1e-6 default, existing selector forwarding. Source/docstrings at most 16 added lines; manual 6. Preserve all validity thresholds and other interfaces. No new helper, type, metadata, selector, determinant transfer, H10 run or release."
 surfaces = ["docs", "source"]
 title = "finite collinear residual-GTO supplementation"
 
     [[records.document_refs]]
-    heading = "Finite Collinear Supplementation"
+    heading = "Collinear Residual Cutoff Forwarding"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 
@@ -961,6 +961,9 @@ title = "finite collinear residual-GTO supplementation"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "cb1b2c7829f4f10e3a653cd541c1998f1d65bf64"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "641"
 
     [[records.paths]]
     kind = "source"
@@ -970,21 +973,17 @@ title = "finite collinear residual-GTO supplementation"
     kind = "docs"
     path = "docs/src/manual/projected_q_shells.md"
     state = "existing"
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/reference/export.md"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-COLLINEAR-PQS-RG-FN-01"]
-grant = "maintenance"
+grant = "implementation"
 id = "HP-COLLINEAR-PQS-RG-TEST-01"
-lifecycle = "completed"
-scope = "Maintain the existing public residual-GTO owner's accepted primitive/contracted supplementation, distinct-potential, independent H1/MWG, metric, transfer and rejection checks under Finite Collinear Supplementation. Preserve frozen tolerances and old owner coverage. No new owner, workflow, broad campaign, numerical-policy relaxation or consumer authorization."
+lifecycle = "approved"
+scope = "Extend the existing public residual-GTO owner under Collinear Residual Cutoff Forwarding, at most 25 added lines: default parity, cutoff-sensitive forwarding, invalid inputs and overlap/raw import. Preserve existing assertions and tolerances; reuse small fixtures and completed H10 evidence. No new file, helper, H10 fixture, broad run, workflow or consumer grant."
 surfaces = ["tests"]
 title = "finite collinear supplementation validation"
 
     [[records.document_refs]]
-    heading = "Finite Collinear Supplementation"
+    heading = "Collinear Residual Cutoff Forwarding"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 
@@ -1003,6 +1002,9 @@ title = "finite collinear supplementation validation"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "cb1b2c7829f4f10e3a653cd541c1998f1d65bf64"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "641"
 
     [[records.paths]]
     kind = "test"
