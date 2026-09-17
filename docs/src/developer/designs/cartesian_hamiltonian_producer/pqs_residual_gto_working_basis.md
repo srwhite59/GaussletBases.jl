@@ -467,6 +467,12 @@ is authorized here.
 
 ## Collinear Residual Cutoff Forwarding
 
+Pass 643 accepts forwarding 7f9dbfd1e48f8fdd080a1eeaf33420506643bab8 and
+shared defaults b64499918bf7a43e806b37aef72dfa69ef49c2e4. Both FN/TEST records
+now grant maintenance only. The implementation limits below are completed
+acceptance history, not an open grant. Hchain-doer's implementation prerequisite
+is cleared, but its separate physical continuation remains unauthorized.
+
 Pass 642 supersedes Pass 641's default-preservation instruction: use
 residual_occupation_cutoff::Real=1.0e-8 on
 the existing collinear cartesian_residual_gto_mwg_system overload. Preserve the
@@ -492,9 +498,8 @@ overlap remains. The full metric row-sum is a distinct 8.022538e-8; do not
 mislabel it as failing the max-entry test or claim unmeasured MWG positivity.
 This qualifies selection only, not complete operators, screening or HF.
 
-Pass 641 forwarding landed at 7f9dbfd1e before this policy amendment; this is
-not its acceptance or a consumer release. Apply the following small correction
-against that commit, then review the combined result. Steven's standard cutoff
+Pass 641 forwarding landed at 7f9dbfd1e before the policy amendment. Pass 642's
+correction against that commit is now accepted with the forwarding. Steven's standard cutoff
 is 1e-8; explicit 1e-10 and deliberate 1e-6 comparisons remain available.
 The exact shared default sites are:
 
@@ -521,7 +526,7 @@ selector, negative/NaN/infinite rejection, and overlap/raw import. Include a
 cutoff-sensitive check (changed selection or existing no-direction rejection)
 so an ignored keyword cannot pass. Preserve existing metric/operator assertions;
 no new numerical tolerance, H10 fixture or duplicated oracle. Reconcile only the
-two nested-owner default/provenance assertions (currently 1e-6); preserve its
+two nested-owner default/provenance assertions (formerly 1e-6); preserve its
 explicit 1e-6 injection fixture and explicit 1e-10 numerical-complete checks.
 Do not change expected ranks, energies or tolerances to force a pass: report
 any changed numerical fixture for review. Inspect the four default substitutions
@@ -541,7 +546,7 @@ angular calculations. No helpers, types, metadata, caches, selector algorithm,
 determinant-transfer, screening, workflow, release or unrelated change.
 Failure rule: if forwarding needs another owner, budgets or numerical checks
 cannot be preserved, stop without implementation commit and report the obstacle.
-Repo-manager waits for this grant commit and checks before implementing.
-Hchain-doer remains paused until implementation acceptance and a separate bounded
+The implementation and review gates are complete; no further implementation is granted.
+Hchain-doer remains paused pending a separate bounded
 continuation at 1e-8, reusing the saved standard-q5 basis and preserving the
 208-direction evidence. No physical continuation is authorized by this packet.

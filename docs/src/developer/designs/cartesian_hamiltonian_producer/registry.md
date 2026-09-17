@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `faf689384787543b134677820097624c7a11b751f387fff0efd1d7cbd3898752`.
+> [authority.toml](authority.toml), SHA-256 `4c1cf89a1baf9fd1ffff6934a7ab060ada89bdd5b4618953806651f1ac6324cd`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -439,8 +439,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-COLLINEAR-PQS-RG-FN-01 - finite collinear residual-GTO supplementation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -459,13 +459,16 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `cb1b2c7829f4f10e3a653cd541c1998f1d65bf64`
   - `manager_pass`: `641`
   - `manager_pass`: `642`
+  - `git_commit`: `7f9dbfd1e48f8fdd080a1eeaf33420506643bab8`
+  - `git_commit`: `b64499918bf7a43e806b37aef72dfa69ef49c2e4`
+  - `manager_pass`: `643`
 - **Dependencies:** `HP-COLLINEAR-PQS-FN-01`, `HP-REP-PQS-RG-WORKING-FN-01`
-- **Scope:** Amend Collinear Residual Cutoff Forwarding: set the four named shared defaults to 1e-8, preserving explicit overrides and every validity threshold. Existing facade docstring/manual only; incremental source/docstrings 16, manual 6 added lines beyond 7f9dbfd1e. Preserve algorithms, stored recipes and numerical-complete calls. No helper, type, metadata, new interface, H10 run, determinant transfer or release.
+- **Scope:** Maintain accepted Collinear Residual Cutoff Forwarding: four shared defaults at 1e-8, validated facade forwarding, explicit overrides, stored recipes and numerical-complete calls. Preserve algorithms and all validity thresholds. No new default, interface, helper, metadata, H10 run, determinant transfer, consumer or release authority.
 
 ### HP-COLLINEAR-PQS-RG-TEST-01 - finite collinear supplementation validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -481,8 +484,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `cb1b2c7829f4f10e3a653cd541c1998f1d65bf64`
   - `manager_pass`: `641`
   - `manager_pass`: `642`
+  - `git_commit`: `7f9dbfd1e48f8fdd080a1eeaf33420506643bab8`
+  - `git_commit`: `b64499918bf7a43e806b37aef72dfa69ef49c2e4`
+  - `manager_pass`: `643`
 - **Dependencies:** `HP-COLLINEAR-PQS-RG-FN-01`
-- **Scope:** Amend the two existing residual-GTO owners under Collinear Residual Cutoff Forwarding: omitted/explicit 1e-8 parity, explicit 1e-10/1e-6 forwarding, invalid inputs, overlap/import and nested default provenance. At most 25 added lines beyond 7f9dbfd1e. Preserve numerical expectations and tolerances; reuse completed H10 evidence. No new file, helper, H10 fixture, broad run, workflow or consumer grant.
+- **Scope:** Maintain the two existing residual-GTO owners under Collinear Residual Cutoff Forwarding: omitted/explicit 1e-8 parity, explicit overrides, invalid inputs, overlap/import and nested provenance. Preserve numerical expectations and tolerances. No new owner, H10 fixture, broad run, workflow, numerical-policy or consumer authority.
 
 ### HP-COLLINEAR-PQS-TEST-01 - finite collinear PQS validation
 

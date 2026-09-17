@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Execution Whitelist
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `faf689384787543b134677820097624c7a11b751f387fff0efd1d7cbd3898752`.
+> [authority.toml](authority.toml), SHA-256 `4c1cf89a1baf9fd1ffff6934a7ab060ada89bdd5b4618953806651f1ac6324cd`.
 
 Cartesian Hamiltonian producer source work is currently authorized only for
 these approved design IDs:

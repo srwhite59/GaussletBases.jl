@@ -34,7 +34,7 @@ be interpreted without treating their defaults as current.
 
 ## Current Defaults
 
-Pass 642 authorizes these shared defaults; implementation is pending. The
+Pass 643 accepts these shared defaults at b64499918. The
 ordinary builder, terminal augmentation, collinear facade and protected-ladder
 missing-key fallback must agree:
 
@@ -123,7 +123,7 @@ early owner-local path     occupation 1e-8; identity policy then current
 HP-RG-IDTOL-FN-01          identity_atol 1e-8
 HP-RG-CUTOFF-FN-01         occupation 5e-8; identity_atol 5e-8
 HP-RG-CUTOFF-FN-02         occupation 1e-6; identity_atol remains 5e-8
-Pass 642                  standard occupation 1e-8 authorized; identity unchanged
+Passes 642-643             standard occupation 1e-8 implemented; identity unchanged
 ```
 
 The ORTHO pass addressed small final-identity overshoots with healthy spectra;

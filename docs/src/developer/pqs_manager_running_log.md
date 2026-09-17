@@ -1566,3 +1566,29 @@ no new tests/files/helpers/metadata. Package/docs, authority/self-test, generate
 parity, Documenter, log bound, diff and docs-only remote checks gate this grant.
 Hchain-doer remains paused; after acceptance its separate continuation uses 1e-8
 and the saved standard-q5 basis, preserving all 208-direction evidence.
+
+### Pass 643: Residual Selection Connection Accepted
+
+Accept forwarding 7f9dbfd1e48f8fdd080a1eeaf33420506643bab8 and default correction
+b64499918bf7a43e806b37aef72dfa69ef49c2e4 after independent diff, scope and
+exact-head remote review. The four shared defaults are 1e-8; stored choices,
+explicit 1e-10/1e-6, first-body type assertion and all validity gates remain.
+Default parity, overrides, rejection and raw-import coverage protect the actual
+connection. Incremental source/docstrings +6/-6, tests +15/-12, manual +4/-4
+fit the grant. No new file, helper, type, metadata/status field or algorithm.
+
+Reuse reported supplementation 96/96 +80/80, Cartesian 232/232 +126/126 +222/222,
+and nested 464/464 +64/64. Nested 487+18=505 dimensions, energies and self-Coulomb
+expectations are unchanged; reviewed due-diligence retains axes9x9x15, padding4,
+counts275/114/98 and existing warnings. Exact-head CI35185034012 ran all three
+numerical jobs; Docs35185033953 passed. No closeout numerical rerun. Local
+package/docs, authority/self-test, generated parity, Documenter, log and diff
+checks plus docs-only remote gates validate this lifecycle change.
+
+MT8's selection-connection prerequisite is complete, not H10 physical acceptance.
+Both RG FN/TEST grants return to maintenance. Deleted: stale default literals
+and pending-grant wording. Simplified: one shared selection policy. Quarantined:
+none. Not deleted: deliberate overrides, stored recipes, validity checks and
+historical Cr/Cr2 evidence. Remaining blocker: separate bounded Hchain assignment
+at1e-8 using the saved standard-q5 basis; preserve208 evidence. Hchain-doer remains
+paused. No successor implementation, physical run, release or stable change.

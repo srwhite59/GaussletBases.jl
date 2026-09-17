@@ -186,8 +186,8 @@ norm(T_G + X*T_A, Inf) <= orthogonality_atol
 
 Current production defaults and the exact scale-aware identity check are in
 the [orthogonality and cutoff contract](residual_gaussian_orthogonality_robustness.md).
-Pass 642 authorizes the shared standard cutoff `1e-8`, replacing `1e-6`.
-Implementation is pending; explicit `1e-6` comparisons remain available. The
+Pass 643 accepts the shared standard cutoff `1e-8`, replacing `1e-6`.
+Explicit `1e-6` comparisons remain available. The
 separate numerical-complete opt-in keeps its explicit `1e-10`.
 
 ## Exact Augmented Operators
