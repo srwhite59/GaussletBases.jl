@@ -1697,19 +1697,19 @@ function cartesian_residual_gto_mwg_system(working::_CartesianCollinearWorkingBa
     residual = C.pqs_terminal_residual_gto_augmentation(terminal, bundles, supplement, locations;
         residual_occupation_cutoff = cutoff)
     base = cartesian_collinear_operators(working, z, Z; expansion)
-    raw = C._r3a_qw_blocks(terminal, bundles, supplement, NTuple{3,Float64}[], expansion)
-    products = C.pqs_terminal_residual_gto_augmented_products(terminal, bundles, nothing,
+    raw = @timeg "collinear.Gaussian_raw_blocks" C._r3a_qw_blocks(terminal, bundles, supplement, NTuple{3,Float64}[], expansion)
+    products = @timeg "collinear.Gaussian_products" C.pqs_terminal_residual_gto_augmented_products(terminal, bundles, nothing,
         supplement, residual, locations, Z; expansion, supplement_blocks = raw)
     H_GA, H_AA = copy(raw.mixed.kinetic), copy(raw.self.kinetic)
     proxy, donor = C._r3a_qw_proxy_layers(bundles), C._r3a_qw_supplement(supplement)
     for (center, charge) in zip(locations, Z)
-        unit = CartesianGaussianRawBlocks.gaussian_nuclear_raw_blocks_by_center(
+        unit = @timeg "collinear.nuclear_GA_AA" CartesianGaussianRawBlocks.gaussian_nuclear_raw_blocks_by_center(
             proxy, donor, expansion, [center])
         H_GA .+= charge .* C._r3a_project_parent_ga(terminal, only(unit.ga))
         H_AA .+= charge .* only(unit.aa)
     end
-    one_body = R.transform_augmented_operator(base.one_body, H_GA, H_AA, residual)
-    electron_electron_ida = R.assemble_residual_ida_interaction(base.electron_electron_ida,
+    one_body = @timeg "collinear.residual_one_body" R.transform_augmented_operator(base.one_body, H_GA, H_AA, residual)
+    electron_electron_ida = @timeg "collinear.residual_MWG" R.assemble_residual_ida_interaction(base.electron_electron_ida,
         terminal, bundles, residual, products; expansion)
     hamiltonian = (; one_body, electron_electron_ida, nuclear_repulsion = base.nuclear_repulsion)
     return _cartesian_residual_gto_mwg_system_result(
@@ -1739,28 +1739,41 @@ function _collinear_atomic_fit_screening(system::_CartesianResidualGTOMWGSystem,
             atomic_supplement, -1.0, (0.0, 0.0, z[j] - z[i]), expansion))
     end
     blocks = Matrix{Float64}[]
-    GG = GA = AA = nothing
+    pgdg = ntuple(a -> _nested_axis_pgdg(bundles, (:x, :y, :z)[a]), 3)
+    factors = @timeg "collinear.fitted_factors_z_sum" begin
+        transverse = ntuple(a -> F._r3a_centered_factor_terms(pgdg[a], expansion, 0.0), 2)
+        longitudinal = zeros(Float64, length(expansion), size(pgdg[3].overlap)...)
+        for position in z
+            longitudinal .+= F._terminal_factor_terms(F._r3a_centered_factor_terms(pgdg[3], expansion, position))
+        end
+        (transverse..., longitudinal)
+    end
+    GG = @timeg "collinear.fitted_GG" begin
+        matrix = zeros(Float64, terminal.final_dimension, terminal.final_dimension)
+        F._accumulate_terminal_gaussian_sum!(matrix, terminal, expansion.coefficients, factors...; scale = 1.0)
+        R._symmetrize_raw_block(matrix)
+    end
+    GA = AA = nothing
     for center in centers
         translated = CartesianGaussianShellSupplementRepresentation3D(atomic_supplement.supplement_kind,
             [CartesianGaussianShellOrbitalRepresentation3D(o.label, o.angular_powers, center,
                 o.exponents, o.coefficients, o.primitive_normalization) for o in atomic_supplement.orbitals],
             atomic_supplement.metadata)
         push!(blocks, gto_overlap_matrix(system, translated) * coefficients)
-        raw = R.placed_spherical_gaussian_potential_raw_blocks(
-            terminal, bundles, proxy, donor, expansion, center)
-        if isnothing(GG)
-            GG, GA, AA = raw.GG, raw.GA, raw.AA
+        raw = @timeg "collinear.fitted_GA_AA" R.placed_spherical_gaussian_potential_ga_aa_blocks(
+            proxy, donor, expansion, center)
+        if isnothing(GA)
+            GA, AA = raw.GA, raw.AA
         else
-            GG .+= raw.GG
             GA .+= raw.GA
             AA .+= raw.AA
         end
     end
-    matrix = CartesianResidualGaussians.transform_augmented_operator(
+    matrix = @timeg "collinear.fitted_residual_transform" CartesianResidualGaussians.transform_augmented_operator(
         GG, F._r3a_project_parent_ga(terminal, GA), AA, system.residual)
     field = D.FittedReferenceHartreeField(matrix, sum(energies);
         provenance = "translated supplied one-electron H s references; separate density/potential fits; occupation one")
-    correction = D.build_additive_screened_hartree_correction(system.hamiltonian.electron_electron_ida,
+    correction = @timeg "collinear.screening_correction" D.build_additive_screened_hartree_correction(system.hamiltonian.electron_electron_ida,
         field, sum(energies), blocks, [copy(occupations) for _ in z];
         component_field_expectations = fields, density_pair_energies = energies)
     return field, correction

@@ -460,6 +460,7 @@ end
             angular_resolution_scale = fixture == 3 ? Float32(1.4) : 1.4)
         basis, bundles = w.terminal_basis, w.parent_axis_bundles
         pgdg = ntuple(i -> GB._nested_axis_pgdg(bundles, (:x, :y, :z)[i]), 3)
+        borrowed_factors = map(axis -> deepcopy(axis.gaussian_factor_terms), pgdg)
         dims = ntuple(i -> length(pgdg[i].weights), 3); n = prod(dims)
         counts = zeros(Int, n)
         for b in basis.blocks
@@ -495,6 +496,14 @@ end
             @test import_external_gto_orbitals(w, packet).alpha.imported_coefficients == X
             gram, H, selfs = oracle(Q, X, pgdg, z, Z)
             @test maximum(abs, X'*ops.one_body*X-H) <= 1e-10
+            if fixture == 5 && a == 1
+                potential_z, charges = [-1.3, 0., 1.7], [1.25, 2., .75]
+                changed = cartesian_collinear_operators(w, potential_z, charges; expansion)
+                _, expected, _ = oracle(Q, X, pgdg, potential_z, charges)
+                @test X'*changed.one_body*X ≈ expected atol=1e-10 rtol=0
+                @test changed.electron_electron_ida == ops.electron_electron_ida
+                @test changed.nuclear_repulsion ≈ sum(charges[i]*charges[j]/(potential_z[j]-potential_z[i]) for i in 1:3 for j in i+1:3) atol=1e-12
+            end
             @test maximum(abs, vec(sum(abs2.(X).*(ops.electron_electron_ida*abs2.(X));dims=1))-selfs) <= 1e-10
             if fixture <= 2
                 index = 2*(fixture-1)+a; target = frozen[index]
@@ -514,6 +523,7 @@ end
             end
         end
         @test_throws ArgumentError cartesian_collinear_operators(w, z, Z; expansion = coulomb_gaussian_expansion())
+        @test all(pgdg[i].gaussian_factor_terms == borrowed_factors[i] for i in 1:3)
     end
     # Three surviving groups: test exact direct gaps and realize the exterior slabs.
     grid_axes = (collect(-3.:3.), collect(-3.:3.), collect(-12.:12.))

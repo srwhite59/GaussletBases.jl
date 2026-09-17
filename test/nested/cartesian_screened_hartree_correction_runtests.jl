@@ -16,7 +16,10 @@ const CRD = GaussletBases.CartesianReferenceDensity
     probes=CartesianGaussianShellSupplementRepresentation3D(:sp,
         [orbital(p,x,.8) for x in z for p in ((0,0,0),(1,0,0),(0,1,0))],(;))
     system=cartesian_residual_gto_mwg_system(w,z,ones(3);supplement=probes,expansion=e)
+    axes=ntuple(i->GB._nested_axis_pgdg(w.parent_axis_bundles,(:x,:y,:z)[i]),3)
+    borrowed=map(a->deepcopy(a.gaussian_factor_terms),axes)
     field, correction=GB._collinear_atomic_fit_screening(system,z,atom,C,[1.])
+    @test all(axes[i].gaussian_factor_terms == borrowed[i] for i in 1:3)
     fit,pot=CRD._one_electron_h_reference_fits(atom,C,[1.])
     pe=CoulombGaussianExpansion(pot.coefficients,pot.exponents;del=e.del,s=e.s,c=e.c,maxu=e.maxu)
     B=gto_overlap_matrix(system,probes); blocks=[B[:,i:i] for i in (1,4,7)]
@@ -28,6 +31,14 @@ const CRD = GaussletBases.CartesianReferenceDensity
         @test dot(B[:,i],field.matrix*B[:,i]) ≈ oracle[i,i] atol=1e-10
     end
     proxy,donor=F._r3a_qw_proxy_layers(w.parent_axis_bundles),F._r3a_qw_supplement(probes)
+    for center in ((0.,0.,0.),(.2,-.3,.4))
+        split=R.placed_spherical_gaussian_potential_ga_aa_blocks(proxy,donor,pe,center)
+        whole=R.placed_spherical_gaussian_potential_raw_blocks(w.terminal_basis,w.parent_axis_bundles,proxy,donor,pe,center)
+        @test split.GA == whole.GA && split.AA == whole.AA
+        @test B'*GB.CartesianResidualGaussians.transform_augmented_operator(
+            whole.GG,F._r3a_project_parent_ga(w.terminal_basis,split.GA),split.AA,system.residual)*B ≈
+            CRD._nuclear_matrix(probes,-1.,center,pe) atol=1e-10
+    end
     percenter=zeros(size(field.matrix))
     for x in z
         raw=R.placed_spherical_gaussian_potential_raw_blocks(w.terminal_basis,w.parent_axis_bundles,proxy,donor,pe,(0.,0.,x))

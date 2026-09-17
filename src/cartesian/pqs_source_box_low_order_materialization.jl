@@ -62,16 +62,21 @@ end
 function _collinear_complete_operators(terminal, bundles, z, Z, expansion)
     pgdg = ntuple(a -> _nested_axis_pgdg(bundles, (:x, :y, :z)[a]), 3)
     _pqs_source_box_route_driver_validate_pgdg_expansion(pgdg, expansion)
-    one_body = _pqs_source_box_route_driver_terminal_products(terminal, pgdg).kinetic
+    one_body = @timeg "collinear.kinetic" _pqs_source_box_route_driver_terminal_products(terminal, pgdg).kinetic
     C = CartesianFinalBasisRealization
     buffers = C._terminal_operator_buffers(terminal)
-    for (position, charge) in zip(z, Z)
-        factors = ntuple(a -> _pqs_source_box_route_driver_centered_factor_terms(
-            pgdg[a], expansion, a == 3 ? position : 0.0), 3)
-        C._accumulate_terminal_gaussian_sum!(
-            one_body, terminal, charge .* expansion.coefficients, factors..., buffers...)
+    factors = @timeg "collinear.nuclear_factors_z_sum" begin
+        transverse = ntuple(a -> _pqs_source_box_route_driver_centered_factor_terms(pgdg[a], expansion, 0.0), 2)
+        longitudinal = zeros(Float64, length(expansion), size(pgdg[3].overlap)...)
+        for (position, charge) in zip(z, Z)
+            longitudinal .+= charge .* C._terminal_factor_terms(
+                _pqs_source_box_route_driver_centered_factor_terms(pgdg[3], expansion, position))
+        end
+        (transverse..., longitudinal)
     end
-    electron_electron_ida = _pqs_source_box_route_driver_terminal_vee(terminal, expansion, pgdg)
+    @timeg "collinear.nuclear_GG" C._accumulate_terminal_gaussian_sum!(
+        one_body, terminal, expansion.coefficients, factors..., buffers...)
+    electron_electron_ida = @timeg "collinear.base_IDA" _pqs_source_box_route_driver_terminal_vee(terminal, expansion, pgdg)
     nuclear_repulsion = sum((Z[i] * Z[j] / (z[j] - z[i])
         for i in eachindex(z) for j in i+1:length(z)); init = 0.0)
     all(isfinite, one_body) && all(isfinite, electron_electron_ida) && isfinite(nuclear_repulsion) ||

@@ -498,15 +498,20 @@ function placed_spherical_gaussian_potential_gg_block(basis, bundles, expansion,
         factors[1], factors[2], factors[3]; scale = 1.0)
     return _symmetrize_raw_block(GG)
 end
-function placed_spherical_gaussian_potential_raw_blocks(
-    basis, bundles, proxy, supplement, expansion, center)
+function placed_spherical_gaussian_potential_ga_aa_blocks(proxy, supplement, expansion, center)
     placement = _float_center(center)
     terms = _AtomicReferenceHartreePotentialTerm[_AtomicReferenceHartreePotentialTerm(
         Float64(coefficient), Float64(exponent), placement, (0, 0, 0))
         for (coefficient, exponent) in zip(expansion.coefficients, expansion.exponents)]
     inventory = _axis_family_inventory(supplement)
-    GG = placed_spherical_gaussian_potential_gg_block(basis, bundles, expansion, placement)
     GA = _mixed_hartree_ga_block(proxy, supplement, inventory, terms)
     AA = _mixed_hartree_aa_block(supplement, inventory, terms)
+    return (; GA, AA)
+end
+function placed_spherical_gaussian_potential_raw_blocks(
+    basis, bundles, proxy, supplement, expansion, center)
+    placement = _float_center(center)
+    GG = placed_spherical_gaussian_potential_gg_block(basis, bundles, expansion, placement)
+    GA, AA = placed_spherical_gaussian_potential_ga_aa_blocks(proxy, supplement, expansion, placement)
     return (; GG, GA, AA)
 end
