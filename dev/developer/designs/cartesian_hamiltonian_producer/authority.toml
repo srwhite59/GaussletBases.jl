@@ -92,7 +92,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_s
 sha256 = "e147f315224dd644b01e587d3cc2d2210ec563512d08e7fd7a7724dae87d4cfb"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_additive_reference_correction.md"
-sha256 = "f536eaefb414dd600c7f2355a65068c045230c558e9d0c57be563b1e3c68e368"
+sha256 = "7d1983d9f19d6d2fd8af9c41a878751d82ec4b0589493bf5d9f351f375253979"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/protected_localized_artifact.md"
 sha256 = "885a178058230ac17359a2241f2d8c4c50bff3f74e4ca7b2201dab5196f7f5c7"
@@ -751,10 +751,10 @@ title = "return shell overlap from existing shell plan — rejected/deferred"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/terminal_basis_and_base_assembly.md"
 [[records]]
 dependency_ids = ["HP-COLLINEAR-PQS-FN-01", "HP-COLLINEAR-PQS-RG-FN-01", "HP-PQS-ATOMREF-PACKET-FN-01", "HP-PQS-SCREEN-HARTREE-CORR-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-COLLINEAR-ATOMIC-FIT-FN-01"
-lifecycle = "approved"
-scope = "Implement Collinear Early Longitudinal Sum in the three named owners: replace collinear nuclear/identical-H GG loops, extract only placed-potential GA/AA reuse, add existing TimeG annotations. At most 65 added source lines. Preserve kernels, other callers, fits, thresholds and public interfaces. No cache, fallback framework, approximation, solver, basis rebuild or release."
+lifecycle = "implemented"
+scope = "Maintain Collinear Early Longitudinal Sum in the three named owners: weighted nuclear and identical-H fitted GG sums, shared placed-potential GA/AA and existing TimeG. Preserve kernels, other callers, fits, thresholds and interfaces. Implementation and one-shot acceptance are complete; no new optimization, approximation, cache, basis rebuild, solver, physical campaign or release is granted."
 surfaces = ["source"]
 title = "one-electron atomic-fit collinear connection"
 
@@ -784,6 +784,12 @@ title = "one-electron atomic-fit collinear connection"
     [[records.evidence_refs]]
     kind = "external_path"
     value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/hchain/runs/h10_early_z_sum_20260917/README.md"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "6663d392258e5372e018fd8081cd19c3f9a6ed57"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "645"
 
     [[records.paths]]
     kind = "source"
@@ -799,10 +805,10 @@ title = "one-electron atomic-fit collinear connection"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-COLLINEAR-ATOMIC-FIT-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-COLLINEAR-ATOMIC-FIT-TEST-01"
-lifecycle = "approved"
-scope = "Validate Collinear Early Longitudinal Sum in two existing owners, at most 45 added lines. Preserve current tolerances; check weighted nuclear and fitted post-transform closure plus GA/AA split. One adviser-coordinated frozen q7 complete build against saved baseline, within stated resource caps. No routine H10 CI, baseline replay, basis rebuild, HF, new framework or physical campaign."
+lifecycle = "completed"
+scope = "Maintain Collinear Early Longitudinal Sum coverage in the two existing test owners: weighted nuclear, fitted post-transform closure, borrowed factors and GA/AA split. Preserve numerical gates and accepted q7 evidence, including interrupted-attempt and timing qualifications. One-shot acceptance is consumed; no q7 replay, routine H10 CI, basis rebuild, HF, framework or physical campaign."
 surfaces = ["tests"]
 title = "atomic-fit connection and bounded field acceptance"
 
@@ -832,6 +838,12 @@ title = "atomic-fit connection and bounded field acceptance"
     [[records.evidence_refs]]
     kind = "external_path"
     value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/work/hchain/runs/h10_early_z_sum_20260917/README.md"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "6663d392258e5372e018fd8081cd19c3f9a6ed57"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "645"
 
     [[records.paths]]
     kind = "test"
