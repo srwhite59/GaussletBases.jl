@@ -17,7 +17,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driv
 sha256 = "e8a9ace6a4e2b48e4974436ce4aeeb63b27c39c303d5015c99511839da03fb5b"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driver_usability_workflow.md"
-sha256 = "f07a565dbf2c2918096ebb91cb920ac7d617306aa9097ebab70214d4405262c6"
+sha256 = "eec84f2816c1cf2472073be8a57a5e6c42e0077e1f5c424eb1fbecf1511e98fb"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md"
 sha256 = "a2ba99ef16c06e58dfca3d8b22741280509bc0ee12334f7b3f5e0d73d271d8bc"
@@ -56,7 +56,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_o
 sha256 = "417af5ce68d45a3719cb38a6ec9f47564f422f75ebc08d70c18f8bdf472fe7a0"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md"
-sha256 = "2631b7b44d2500a3a03a72907b745c42e8c92f592d96f517883b2c129b8eedd6"
+sha256 = "69806a27ca8ee6bd80a40f448514877e3c42d5036e4f9f7a487db1d3557fbc3c"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md"
 sha256 = "e21df153a635702b03303d1f4ced9fcf5e23728030099e2cc8a0105494ce759a"
@@ -86,7 +86,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_sur
 sha256 = "dd325e13a2afcfe50d0bf5f36447a779f00013132da0a5848f29859ae87a4738"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
-sha256 = "395da271c8504dc40a290c125812f7bca9dfec6dd39b5fb15ca02e30685540ce"
+sha256 = "c1c0993c4233b859fbfce04f067273830bebe86c7b9e467df402396b127175c2"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "e147f315224dd644b01e587d3cc2d2210ec563512d08e7fd7a7724dae87d4cfb"
@@ -143,13 +143,13 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/represented_mi
 sha256 = "dee7a89608ebe542ea5b3ca20e3ae04032a6bb1eb4d2b2922ed9953fc4312338"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_domain_module.md"
-sha256 = "7ae7b5666d5ed464619b2607b1ef590a035b368c7b4e5da23930b050490f3568"
+sha256 = "4f8ec18cc8496ee4cc6eb0b4f0ab52c5acc3855d93ad457216d5730548a07893"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_injection_hybrid.md"
 sha256 = "6d8dcc37dd7afc8df833f06e458068409a79fed67c08ee3cd9826994218fe0ec"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
-sha256 = "49d096a4b849b34b048b01c40d182c4f7718d0a97b9a866ca85e7582aeca4466"
+sha256 = "0d1efefa876fcf96706f8608ee3788c9b1e811283d48d2c2b9cf29b2336e544c"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/retained_gto_egoi.md"
 sha256 = "66567e19f01e34c4146b02999b8fba035811ad9e9ad8364db2ec7c77d9457945"
@@ -937,7 +937,7 @@ dependency_ids = ["HP-COLLINEAR-PQS-FN-01", "HP-REP-PQS-RG-WORKING-FN-01"]
 grant = "implementation"
 id = "HP-COLLINEAR-PQS-RG-FN-01"
 lifecycle = "approved"
-scope = "Implement Collinear Residual Cutoff Forwarding only in the existing collinear supplemented overload and PQS manual: validated optional cutoff, unchanged 1e-6 default, existing selector forwarding. Source/docstrings at most 16 added lines; manual 6. Preserve all validity thresholds and other interfaces. No new helper, type, metadata, selector, determinant transfer, H10 run or release."
+scope = "Amend Collinear Residual Cutoff Forwarding: set the four named shared defaults to 1e-8, preserving explicit overrides and every validity threshold. Existing facade docstring/manual only; incremental source/docstrings 16, manual 6 added lines beyond 7f9dbfd1e. Preserve algorithms, stored recipes and numerical-complete calls. No helper, type, metadata, new interface, H10 run, determinant transfer or release."
 surfaces = ["docs", "source"]
 title = "finite collinear residual-GTO supplementation"
 
@@ -964,10 +964,25 @@ title = "finite collinear residual-GTO supplementation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "641"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "642"
 
     [[records.paths]]
     kind = "source"
     path = "src/cartesian/cartesian_base_hamiltonian.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_residual_gaussians/residual_basis.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_protected_ladder_bundle.jl"
     state = "existing"
     [[records.paths]]
     kind = "docs"
@@ -978,7 +993,7 @@ dependency_ids = ["HP-COLLINEAR-PQS-RG-FN-01"]
 grant = "implementation"
 id = "HP-COLLINEAR-PQS-RG-TEST-01"
 lifecycle = "approved"
-scope = "Extend the existing public residual-GTO owner under Collinear Residual Cutoff Forwarding, at most 25 added lines: default parity, cutoff-sensitive forwarding, invalid inputs and overlap/raw import. Preserve existing assertions and tolerances; reuse small fixtures and completed H10 evidence. No new file, helper, H10 fixture, broad run, workflow or consumer grant."
+scope = "Amend the two existing residual-GTO owners under Collinear Residual Cutoff Forwarding: omitted/explicit 1e-8 parity, explicit 1e-10/1e-6 forwarding, invalid inputs, overlap/import and nested default provenance. At most 25 added lines beyond 7f9dbfd1e. Preserve numerical expectations and tolerances; reuse completed H10 evidence. No new file, helper, H10 fixture, broad run, workflow or consumer grant."
 surfaces = ["tests"]
 title = "finite collinear supplementation validation"
 
@@ -1005,10 +1020,17 @@ title = "finite collinear supplementation validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "641"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "642"
 
     [[records.paths]]
     kind = "test"
     path = "test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-COLLINEAR-PQS-FN-01"]
@@ -8601,7 +8623,7 @@ evidence_refs = []
 grant = "maintenance"
 id = "HP-RG-CUTOFF-FN-02"
 lifecycle = "implemented"
-scope = "source maintenance."
+scope = "Maintain residual cutoff robustness under Residual Gaussian Orthogonality And Cutoff Policy. The former 1e-6 default is superseded by Pass 642 under HP-COLLINEAR-PQS-RG-FN-01; preserve historical evidence and all metric/merge thresholds. This maintenance grant does not independently authorize further default changes."
 surfaces = ["source"]
 title = "production residual cutoff tightening"
 
