@@ -159,15 +159,18 @@ Cr2 workflow.
 
 ## Basic Gaussian Integral Arithmetic Repair
 
-Pass 648 grants only HP-GAUSSIAN-BASIC-ARITH-FN-01/TEST-01 for task
-GB-BASIC-INTEGRAL-20260918. The target is accurate one-dimensional overlap
-and polynomial moments consumed by existing mixed/supplement blocks, not a
-new residual algorithm or physical-basis qualification.
+Pass 649 accepts implementation `1dbc1856d7b699311dcf65ae6a68fb193f9c1009`
+for task GB-BASIC-INTEGRAL-20260918. HP-GAUSSIAN-BASIC-ARITH-FN-01/TEST-01
+are implemented/completed maintenance; Pass 648's implementation grants are
+consumed. The accepted repair changes only one-particle integral arithmetic,
+not residual algorithms or physical-basis qualification. Independent review
+passed the committed 81 checks plus 33 high-precision scratch checks; full
+source CI and Docs passed. No successor task is authorized.
 
-Change only `polynomial_gaussian_basic_integral` in
-`src/foundation/GaussianAnalyticIntegrals.jl`, with at most 30 added source
-lines (including comments). Replace its absolute-center damping subtraction
-and cancellation-prone polynomial shifts; remove the replaced expressions.
+The accepted change affects only `polynomial_gaussian_basic_integral` in
+`src/foundation/GaussianAnalyticIntegrals.jl`: +10/-10 within the 30-added-line
+budget. Relative-coordinate damping/shifts replace the absolute-center
+damping subtraction and cancellation-prone polynomial shifts.
 No other function, caller, signature, return type, kernel, helper or file changes.
 The existing kinetic caller and two-particle repairs remain unchanged.
 
@@ -194,8 +197,8 @@ its moments transform by the binomial rule under common translation.
 
 ### Focused Acceptance
 
-At most 40 added lines in existing `test/core/runtests.jl`; no new test owner
-or numerical assertion elsewhere. Prefer table-driven use of the existing
+Accepted +35 lines in existing `test/core/runtests.jl`, within the 40-line
+budget; no new test owner or assertions elsewhere. Maintain table-driven use of the existing
 high-precision axis oracle, with independent binomial expansion for absolute
 moments. These checks catch translated overlap and polynomial-moment errors
 that existing endpoint tests neither isolate nor independently reference.

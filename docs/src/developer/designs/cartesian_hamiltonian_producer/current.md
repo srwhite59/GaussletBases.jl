@@ -3,14 +3,14 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
-Pass 648 authorizes only the [basic Gaussian integral arithmetic repair](cartesian_gaussian_raw_blocks_non_nuclear.md#Basic-Gaussian-Integral-Arithmetic-Repair)
-under HP-GAUSSIAN-BASIC-ARITH-FN-01/TEST-01, task GB-BASIC-INTEGRAL-20260918.
-Replace cancellation-prone damping/shifts in the existing one-particle kernel;
-preserve argument semantics and callers. Bounds are 30 added source lines and
-40 existing-core-test lines. q9 has independent residual/input accuracy blockers
-as well as resource constraints; this grant clears neither. No q9 loading,
-physical requalification, consumer continuation or q8 energy claim is granted.
-Hchain-doer remains paused. The bounded manager cycle ends at kernel closeout.
+Pass 649 accepts the [basic Gaussian integral arithmetic repair](cartesian_gaussian_raw_blocks_non_nuclear.md#Basic-Gaussian-Integral-Arithmetic-Repair)
+at 1dbc1856d7b699311dcf65ae6a68fb193f9c1009. Both BASIC-ARITH IDs return to
+maintenance; the implementation grants for GB-BASIC-INTEGRAL-20260918 are
+consumed. The translated primitive error falls from 1.07e-11 to 2.85e-17 with
+accepted argument semantics and callers preserved. This does not establish
+physical residual accuracy or energy changes. q9 residual requalification
+and resource admission remain separate blockers; no loading, consumer restart
+or successor task is authorized. Hchain-doer remains paused.
 
 Pass 647 accepts the [screening-memory repair](screened_hartree_correction_assembly.md#Screening-Memory-Repair)
 at 8744b01c26faf29608677a7463554a21c837c376; both correction IDs return to

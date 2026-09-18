@@ -1735,3 +1735,35 @@ residual merge arithmetic require separate physical requalification, as does
 q9 resource admission. No q8 energy conclusion or consumer restart. MT8's
 allocation work remains completed, not q9 admission. Hchain-doer stays paused;
 this bounded cycle ends at kernel acceptance/closeout, no successor.
+
+### Pass 649: Basic Gaussian Integral Repair Accepted
+
+Accept 1dbc1856d7b699311dcf65ae6a68fb193f9c1009 after independent source/test
+diff, hashes and exact-head CI/Docs review. Task GB-BASIC-INTEGRAL-20260918
+ends here; both implementation grants are consumed and become maintenance.
+LT1/LT2 advance through accurate overlap inputs, not a physical residual or
+energy claim. Signed accepted exponents, absolute moments, prefactors, errors
+and kinetic callers are preserved. No correction round was needed.
+
+Evidence: tmp/reviews/pass648-basic-integral-implementation.md, SHA-256
+5e03934068dfeaea0001e6c6be334c1f61fef1ff6a6db5d2eaace8ced9100b84.
+Manager reran 81 committed checks plus 33 independent absolute-coordinate
+256-bit checks in /Users/srw/dmrgtmp/pass648_design_review.jl (0.95 seconds),
+reproducing primitive error 2.85e-17 versus old 1.07e-11. The previously lost
+preflight summary remains unclaimed. Reuse doer core/IDA/Cartesian/residual,
+atomic-packet/screening owners and full CI35370892362; Docs35370892353 passed.
+Small warmed scalar/moment/kinetic timings overlap baseline ranges; allocation
+counts are unchanged, not an end-to-end performance claim. Closeout local
+package/docs 8/8 + 162/162 + 10/10, authority/self-test, two-render parity,
+Documenter/log/diff passed. Remote docs-only CI/Docs must pass before the
+completion notice; no full numerical replay.
+
+Deleted: absolute quadratic and polynomial-center subtractions. Simplified:
+relative-coordinate arithmetic. Quarantined: none. Not deleted: shared moment
+machinery and callers. Added/deleted src10/10; tests35, 81 assertions in the
+existing owner; new files/metadata/status0. Exact remaining blockers: accurate
+input propagation, merge arithmetic and real base-metric effects need separate
+physical residual requalification; q9 resource admission is also separate.
+MT8 allocation work remains completed, not admission. No q8 energy conclusion,
+q9 load, consumer restart or successor. Hchain-doer stays paused; send only the
+authorized adviser completion notice after closeout checks pass.

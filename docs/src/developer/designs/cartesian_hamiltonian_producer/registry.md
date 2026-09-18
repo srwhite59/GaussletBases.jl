@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `cbc3ac012f62f311700f1aa2d915b5016e44c29d415774a7377a165fcc5d986e`.
+> [authority.toml](authority.toml), SHA-256 `5d5652d433f4bcf4d352ff5aea8ac7943587bfb19e2bda8bacef492a197a0d7d`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1407,8 +1407,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-GAUSSIAN-BASIC-ARITH-FN-01 - basic Gaussian relative-coordinate arithmetic repair
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1418,13 +1418,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `manager_pass`: `648`
   - `git_commit`: `68a05b6c1bd45160c19530caaf34df5f14f71da1`
+  - `git_commit`: `1dbc1856d7b699311dcf65ae6a68fb193f9c1009`
+  - `manager_pass`: `649`
 - **Dependencies:** none
-- **Scope:** Repair only polynomial\_gaussian\_basic\_integral in GaussianAnalyticIntegrals.jl under Basic Gaussian Integral Arithmetic Repair: relative damping/shifts, unchanged accepted arguments and callers, at most 30 added source lines. Exclude other kernels, helpers, residual algorithms, q9 loading/requalification, numerical-policy changes, workflows and releases. Stop without commit on scope, budget or validation failure.
+- **Scope:** Maintain accepted relative damping/shifts in polynomial\_gaussian\_basic\_integral under Basic Gaussian Integral Arithmetic Repair. Preserve accepted arguments, absolute moments, errors and callers. The implementation grant is consumed; no successor is authorized. Exclude other kernels, helpers, residual algorithms, q9 loading/requalification, numerical-policy changes, workflows and releases.
 
 ### HP-GAUSSIAN-BASIC-ARITH-TEST-01 - basic Gaussian independent arithmetic regressions
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -1433,8 +1435,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/core/runtests.jl`
 - **Evidence:**
   - `manager_pass`: `648`
+  - `git_commit`: `1dbc1856d7b699311dcf65ae6a68fb193f9c1009`
+  - `manager_pass`: `649`
 - **Dependencies:** `HP-GAUSSIAN-BASIC-ARITH-FN-01`
-- **Scope:** Add at most 40 lines in test/core/runtests.jl under Basic Gaussian Integral Arithmetic Repair: independent translated primitive/moment, extra-Gaussian, kinetic and accepted-input regressions. Preserve existing assertions and caller gates. Exclude new owners/frameworks, q9 audit replay, physical qualification, tolerance changes and workflow edits. Stop without commit on unexplained failures or budget expansion.
+- **Scope:** Maintain the accepted 35-line, 81-check core regression under Basic Gaussian Integral Arithmetic Repair: independent translated primitive/moment, extra-Gaussian, kinetic and accepted-input checks. The implementation grant is consumed. Preserve references, tolerances and caller gates; exclude new owners/frameworks, q9 audit replay, physical qualification and workflow edits.
 
 ### HP-GAUSSIAN-CENTERED-DET-FN-01 - centered Gaussian determinant cancellation repair
 
