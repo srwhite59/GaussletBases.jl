@@ -156,3 +156,88 @@ This owner does not authorize nuclear or mixed-Hartree changes, final-basis
 `G-G` optimization, residual selection/transforms, Qiu-White semantic changes,
 factor blocks, persistent providers/caches, artifacts, drivers, solvers, or
 Cr2 workflow.
+
+## Basic Gaussian Integral Arithmetic Repair
+
+Pass 648 grants only HP-GAUSSIAN-BASIC-ARITH-FN-01/TEST-01 for task
+GB-BASIC-INTEGRAL-20260918. The target is accurate one-dimensional overlap
+and polynomial moments consumed by existing mixed/supplement blocks, not a
+new residual algorithm or physical-basis qualification.
+
+Change only `polynomial_gaussian_basic_integral` in
+`src/foundation/GaussianAnalyticIntegrals.jl`, with at most 30 added source
+lines (including comments). Replace its absolute-center damping subtraction
+and cancellation-prone polynomial shifts; remove the replaced expressions.
+No other function, caller, signature, return type, kernel, helper or file changes.
+The existing kinetic caller and two-particle repairs remain unchanged.
+
+For left/right/extra exponents `a,b,h`, centers `c,d,e`, and `g=a+b+h`, use
+the algebraically equivalent relative-coordinate construction:
+
+```text
+D = (a/g)*b*(c-d)^2 + (a/g)*h*(c-e)^2 + (b/g)*h*(d-e)^2
+s_left  = (b/g)*(d-c) + (h/g)*(e-c)
+s_right = (a/g)*(c-d) + (h/g)*(e-d)
+mu = c + s_left
+```
+
+Use the two independently formed relative shifts for the primitive factors
+and `mu` for the absolute-coordinate `xpower` factor. Preserve the existing
+polynomial multiplication, central moments, summation, prefactors and errors.
+Preserve the complete accepted argument domain: positive total exponent is
+the existing guard, not positivity of each exponent. Signed/zero exponents
+with positive total remain accepted. Negative primitive powers retain their
+existing rejection; nonpositive `xpower` retains its current ignored-factor
+behavior. Do not add finite-input restrictions, damping clamps or fallback
+branches. Do not require translation invariance for positive `xpower`:
+its moments transform by the binomial rule under common translation.
+
+### Focused Acceptance
+
+At most 40 added lines in existing `test/core/runtests.jl`; no new test owner
+or numerical assertion elsewhere. Prefer table-driven use of the existing
+high-precision axis oracle, with independent binomial expansion for absolute
+moments. These checks catch translated overlap and polynomial-moment errors
+that existing endpoint tests neither isolate nor independently reference.
+
+- Freeze the actual primitive case
+  `(200.37578609661574,-8.074717920578998,0,1.0,1776.776,-8.1,0,5.7993350529830705)`:
+  reference `0.2060379396832722746153333949198068445882`, absolute error at most
+  `5e-16`; the old implementation must fail this regression.
+- Include centered and large-common-translation cases, diffuse/ordinary/tight
+  exponents, s/p and higher polynomial powers, optional extra Gaussian,
+  positive absolute moments and their binomial translation law. For bounded
+  nondegenerate fixtures use `rtol=5e-13, atol=1e-24`; kinetic/covariance
+  cancellation checks may use `atol=1e-20` with the same relative tolerance.
+- Preserve accepted signed/zero inputs, prefactor signs/zero, nonpositive
+  `xpower` and invalid-total/negative-primitive-power errors. Validate kinetic
+  against independent second-derivative integration, not itself.
+- Run existing core, Cartesian public/residual-GTO, IDA (including sliced
+  chain), atomic-packet and public screening owners; retain their assertions
+  and tolerances. Reuse overlapping full-CI results rather than duplicate
+  paper examples. Require all three normal numerical CI jobs and Docs.
+- Package load, docs tests, authority check/self-test, deterministic generated
+  views, Documenter, manager-log bound and diff checks must pass. Record small
+  warmed scalar/moment/kinetic time and allocation comparisons, not end-to-end
+  speed claims. Scratch stays machine-local; no q9 basis or old audit replay.
+
+### Evidence And Stop Boundary
+
+Baseline `68a05b6c1` and the completed 140-second audit are preserved in
+`tmp/reviews/h10-q9-residual-audit-2026-09-18.md` (SHA-256
+`56cc10241f63bf31b872b3d20e24e2740a2757bceb4c54e27a05a5ea18f356c7`).
+Independent design review reproduced the primitive error `-1.0703271e-11`;
+relative-coordinate scratch reduced it to `2.85e-17`. Its final moment-test
+summary was not recovered and is not passing evidence. New focused acceptance
+is mandatory. Existing rounded-input merge success does not certify physical
+residuals; real base-metric defects and input errors remain distinct.
+
+If accepted argument behavior, budget or gates cannot be preserved, make no
+implementation commit and report the obstruction. Do not loosen tests or
+adapt callers. Exclude residual merge/validation changes, cutoff/rank/tolerance
+changes, q9 loading/rebuild/requalification, H10 operators/fields/HF, source
+monkey-patching, new dependencies/caches/APIs, workflows and releases.
+No q8 energy claim follows. Hchain-doer stays paused. Accurate-input residual
+requalification, including actual base metrics and independent physical checks,
+requires a separate approved task; this grant ends at kernel acceptance and
+lifecycle closeout, with no automatic successor.

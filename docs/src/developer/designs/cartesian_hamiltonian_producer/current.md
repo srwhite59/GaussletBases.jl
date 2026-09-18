@@ -3,6 +3,15 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
+Pass 648 authorizes only the [basic Gaussian integral arithmetic repair](cartesian_gaussian_raw_blocks_non_nuclear.md#Basic-Gaussian-Integral-Arithmetic-Repair)
+under HP-GAUSSIAN-BASIC-ARITH-FN-01/TEST-01, task GB-BASIC-INTEGRAL-20260918.
+Replace cancellation-prone damping/shifts in the existing one-particle kernel;
+preserve argument semantics and callers. Bounds are 30 added source lines and
+40 existing-core-test lines. q9 has independent residual/input accuracy blockers
+as well as resource constraints; this grant clears neither. No q9 loading,
+physical requalification, consumer continuation or q8 energy claim is granted.
+Hchain-doer remains paused. The bounded manager cycle ends at kernel closeout.
+
 Pass 647 accepts the [screening-memory repair](screened_hartree_correction_assembly.md#Screening-Memory-Repair)
 at 8744b01c26faf29608677a7463554a21c837c376; both correction IDs return to
 maintenance. Combined P0/q0, thresholds, ownership and other builders remain

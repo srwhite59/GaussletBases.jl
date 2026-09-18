@@ -1707,3 +1707,31 @@ Both grants return to maintenance. Exact remaining blocker: q9 correction
 window~40.83GiB plus unreclaimed arrays is not a bound below46/48GiB; preserve
 6GiB reserve and require separate adviser/application-owner admission.
 Hchain-doer remains paused. No successor, heavy run or lifetime repair granted.
+
+### Pass 648: Basic Gaussian Integral Repair Authorized
+
+Task GB-BASIC-INTEGRAL-20260918 advances LT1/LT2: accurate shared overlap
+inputs before interpreting residual accuracy. Steven's bounded manager-cycle
+ARM authorizes this packet, not q9 admission. Add HP-GAUSSIAN-BASIC-ARITH-FN-01/
+TEST-01 under the existing non-nuclear contract; the centered/displaced grants
+and all residual policy stay unchanged. Baseline 68a05b6c1 and audit report
+SHA-256 56cc10241f63bf31b872b3d20e24e2740a2757bceb4c54e27a05a5ea18f356c7
+are frozen. Independent review reproduced the actual primitive's 1.07033e-11
+error and relative-coordinate reduction to 2.85e-17. The final scratch moment
+summary was unavailable: no claim it passed. Reuse completed audit evidence;
+do not load q9 or replay it. The proposed repair removes absolute-center
+cancellation while preserving signed accepted exponents, absolute moments and
+kinetic semantics. Focused independent checks are required before acceptance.
+
+Deleted/simplified: only the old damping/shift expressions in future source
+work. Quarantined: none. Not deleted: polynomial/moment machinery and callers.
+Budget: 30 added src lines, 40 added existing-core-test lines; new files,
+helpers, metadata/status fields zero. Local package/docs 8/8 + 162/162 + 10/10,
+authority/self-test, two equal external renders, Documenter/log/diff passed.
+Remote docs-only CI/Docs must pass before handoff; focused caller gates and
+full source CI are required for implementation.
+Exact remaining blockers: amplified input errors, real base-metric defects and
+residual merge arithmetic require separate physical requalification, as does
+q9 resource admission. No q8 energy conclusion or consumer restart. MT8's
+allocation work remains completed, not q9 admission. Hchain-doer stays paused;
+this bounded cycle ends at kernel acceptance/closeout, no successor.

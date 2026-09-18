@@ -20,7 +20,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driv
 sha256 = "eec84f2816c1cf2472073be8a57a5e6c42e0077e1f5c424eb1fbecf1511e98fb"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md"
-sha256 = "a2ba99ef16c06e58dfca3d8b22741280509bc0ee12334f7b3f5e0d73d271d8bc"
+sha256 = "ddd200a2a89ace8825c33fde7e2704d6a053063ed42c940dfccd023c84ea3f81"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_nuclear.md"
 sha256 = "b824bd11f9acad27a5848c8bf790b0b04d3c9b3790db633b38452507a9b45e69"
@@ -2444,6 +2444,53 @@ title = "validate shared reference Lanczos consolidation"
     [[records.paths]]
     kind = "test"
     path = "test/ida/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-GAUSSIAN-BASIC-ARITH-FN-01"
+lifecycle = "approved"
+scope = "Repair only polynomial_gaussian_basic_integral in GaussianAnalyticIntegrals.jl under Basic Gaussian Integral Arithmetic Repair: relative damping/shifts, unchanged accepted arguments and callers, at most 30 added source lines. Exclude other kernels, helpers, residual algorithms, q9 loading/requalification, numerical-policy changes, workflows and releases. Stop without commit on scope, budget or validation failure."
+surfaces = ["source"]
+title = "basic Gaussian relative-coordinate arithmetic repair"
+
+    [[records.document_refs]]
+    heading = "Basic Gaussian Integral Arithmetic Repair"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "648"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "68a05b6c1bd45160c19530caaf34df5f14f71da1"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/foundation/GaussianAnalyticIntegrals.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-GAUSSIAN-BASIC-ARITH-FN-01"]
+grant = "implementation"
+id = "HP-GAUSSIAN-BASIC-ARITH-TEST-01"
+lifecycle = "approved"
+scope = "Add at most 40 lines in test/core/runtests.jl under Basic Gaussian Integral Arithmetic Repair: independent translated primitive/moment, extra-Gaussian, kinetic and accepted-input regressions. Preserve existing assertions and caller gates. Exclude new owners/frameworks, q9 audit replay, physical qualification, tolerance changes and workflow edits. Stop without commit on unexplained failures or budget expansion."
+surfaces = ["tests"]
+title = "basic Gaussian independent arithmetic regressions"
+
+    [[records.document_refs]]
+    heading = "Basic Gaussian Integral Arithmetic Repair"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "648"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/core/runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-PQS-COULOMB-ACCURACY-FN-01"]
