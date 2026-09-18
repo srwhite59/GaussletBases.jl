@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `e3f76b0af6d5019ea25c52cd534f77c51d218e73cbc8a78e3df76d70b799f45e`.
+> [authority.toml](authority.toml), SHA-256 `5f47e8603dc2393bfd459e87f1268609066af3f038a1228a54f5ce7489e23353`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2914,34 +2914,35 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-SCREEN-HARTREE-CORR-FN-01 - internal screened-Hartree correction
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [screened\_hartree\_correction\_assembly.md](screened_hartree_correction_assembly.md); heading `Screened Hartree Correction Assembly`
+  - `canonical` [screened\_hartree\_correction\_assembly.md](screened_hartree_correction_assembly.md); heading `Screening Memory Repair`
 - **Owned paths:**
-  - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/cartesian/cartesian_reference_density/CartesianReferenceDensity.jl`
-  - `source` / `existing`: `src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl`
   - `source` / `existing`: `src/cartesian/cartesian_reference_density/screened_hartree_correction.jl`
-- **Evidence:** none
+- **Evidence:**
+  - `manager_pass`: `646`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/screening-memory-design-proposal-2026-09-17.md`
 - **Dependencies:** none
-- **Scope:** consume represented converged references and same-basis \`V\_IDA\`, \`J0\_G\`, and \`E0\_G\`; return in-memory \`Delta\_J0 = J0\_G - Diagonal(V\_IDA\*q0)\` and \`C = 0.5\*q0'V\_IDA\*q0 - 0.5\*E0\_G\`; preserve strict representation, finiteness, symmetry, convergence, and derivative/algebra failures while reporting ordinary fitted-potential energy inconsistency.
+- **Scope:** Implement Screening Memory Repair only in represented\_additive\_reference\_p0\_q0 and \_screened\_hartree\_trace\_product: scalar block diagnostics and Float64 Frobenius reduction. Hard 25 added source lines; user-approved net-positive exception. Preserve combined density, validation, ownership and scientific thresholds. No other builder, helper, cache, API, approximation, application lifetime, heavy run, solver or release change.
 
 ### HP-PQS-SCREEN-HARTREE-CORR-TEST-01 - correction validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [screened\_hartree\_correction\_assembly.md](screened_hartree_correction_assembly.md); heading `Screened Hartree Correction Assembly`
+  - `canonical` [screened\_hartree\_correction\_assembly.md](screened_hartree_correction_assembly.md); heading `Screening Memory Repair`
 - **Owned paths:**
   - `test` / `existing`: `test/nested/cartesian_screened_hartree_correction_runtests.jl`
-- **Evidence:** none
+- **Evidence:**
+  - `manager_pass`: `646`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/screening-memory-design-proposal-2026-09-17.md`
 - **Dependencies:** none
-- **Scope:** maintain packet/reference consistency, same-basis, anchor, derivative, symmetry/finiteness, fitted-potential reporting, and malformed input coverage without adding physics endpoint assertions.
+- **Scope:** Validate Screening Memory Repair in the existing nested correction owner, at most 35 added lines. Check exact combined P0/q0, scalar parity, validation/conversion behavior and bounded warmed allocations. Preserve current screening and ownership gates; reuse public screening coverage. No heavy acceptance, q9 admission, basis rebuild, HF, new owner/framework or workflow change.
 
 ### HP-PQS-SCREEN-HARTREE-NE-AUDIT-01 - Ne screened Hartree endpoint measurement
 

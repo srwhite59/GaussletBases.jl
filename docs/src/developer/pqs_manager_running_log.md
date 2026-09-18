@@ -1654,3 +1654,28 @@ general placed wrapper for live off-axis/RHF callers. Added/deleted src46/23;
 tests21 added in existing owners; new files/metadata/status fields0.
 Both grants return to maintenance; acceptance is consumed. Remaining blocker:
 separate consumer assignment. Hchain-doer stays paused; no successor opened.
+
+### Pass 646: Bounded Screening Memory Grant
+
+Independent review at97db4dea3 accepts the two-function proposal, with the user's
+explicit exception to net-negative refactor policy: expected source+17/-3,
+hard25 added source lines; expected29/hard35 test lines in the existing owner.
+No production edit here. Reproduced75 scratch and17 compact checks; combined
+P0/q0 bit-identical, trace/trace-loss changes near1e-15, input/conversion errors
+and ownership preserved. n768 additive allocation248.485->23.304MiB and dense
+trace14,156,016->0B confirm the targeted waste; warmed single calls are not a
+statistical timing or peak-RSS claim. Proposal and frozen patch hashes live in
+Screening Memory Repair; reuse existing small-owner evidence, no heavy run.
+
+MT8 advances economical screening assembly, not q9 scientific qualification.
+Deleted: required per-atom dense densities and scalar-product temporaries.
+Simplified: scalar per-block diagnostics and Float64 Frobenius reduction.
+Quarantined: none. Not deleted: combined P0, _sym, validation/result copies and
+copy-returning accessors with separate contracts. Exact remaining blocker:
+q9 correction window~40.83GiB plus unreclaimed prior arrays may exceed46GiB;
+keep6GiB reserve and separate adviser admission. No automatic follow-on cleanup.
+New tests:17 compact checks, no new owner; new metadata/status fields0.
+Existing correction/public screening owners and full source CI validate the
+future implementation. Package/docs, authority/self-test, deterministic renders,
+Documenter/log/diff and docs-only CI/Docs validate this grant. Hchain-doer remains
+paused; no q9 loading/build, HF, checkpoints, release or numerical-policy change.

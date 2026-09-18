@@ -1,6 +1,7 @@
 # Screened Hartree Correction Assembly
 
-Status: implemented internal facility under
+Status: implemented internal facility, with only the bounded
+[screening-memory repair](#Screening-Memory-Repair) approved in Pass 646, under
 `HP-PQS-SCREEN-HARTREE-CORR-FN-01` and
 `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`.
 
@@ -267,3 +268,81 @@ validated packet density/potential fields, and same-basis `V_IDA` with clean
 anchor checks, proceed under this authority. If it requires artifact schema,
 solver integration, source interaction transforms, exchange correction, or
 row-gauge substitutions, stop and request a new design amendment.
+
+## Screening Memory Repair
+
+Pass 646 authorizes only the reviewed two-function allocation repair under
+HP-PQS-SCREEN-HARTREE-CORR-FN-01/TEST-01. Independent review at
+97db4dea3078e5a4d0508984b22b72b155c2acdc reproduced 75 scratch checks and
+17 compact regressions without modifying production. Evidence:
+tmp/reviews/screening-memory-design-proposal-2026-09-17.md, SHA256
+c52c64ada1031dbda205e5ad74191d54c42deb75a6570e2ccd0af22084a5e34d;
+proposed patch SHA256 fd63fe145795e1f79e76fa14756163297190d8e565abea5d73d3b5a2db1b146d.
+
+Target: remove unnecessary atomic full-density matrices and scalar trace
+temporaries while preserving the represented additive screening contract.
+Physics endpoint: existing supplemented atomic-fit screening on small fixtures;
+this does not qualify or admit a q9 run.
+Allowed source: src/cartesian/cartesian_reference_density/screened_hartree_correction.jl,
+only represented_additive_reference_p0_q0 and _screened_hartree_trace_product.
+Allowed tests: test/nested/cartesian_screened_hartree_correction_runtests.jl.
+Source budget: expected +17/-3, hard 25 added lines including comments/docstrings.
+Tests: expected 29 lines/17 checks, hard 35 added lines. No new file.
+The user explicitly approved this packet's net-positive refactor exception;
+the standing net-decrease rule remains unchanged for all other work.
+
+In represented_additive_reference_p0_q0, replace per-block dense P0/q0
+construction with local scalar diagnostics. Preserve accepted Real matrix/vector
+inputs, Float64 conversion, length/dimension checks, finite/nonnegative checks
+and exception classes. Compute each Gram matrix as before, trace as
+dot(occ, diag(gram)), trace loss as sum(occ)-trace, and unchanged within-block
+Gram error. Keep the combined represented_reference_p0_q0(hcat(...),vcat(...))
+call, output shape, cross-overlap logic and per-block ordering unchanged.
+Separate atoms intentionally overlap; do not globally orthogonalize, normalize,
+merge or change occupations. The small existing local diagnostic record is
+permitted; no new returned field, persistent carrier, type or helper.
+
+In _screened_hartree_trace_product, retain size validation. Reuse operands only
+when already Matrix{Float64}; otherwise retain Matrix{Float64} conversion before
+multiplication. Return Float64(dot(A64,B64)), the real Frobenius product, not
+tr(A*B). Preserve views/sparse/wrapper conversion, Float32 promotion, complex
+conversion errors and implicit-zero/Inf behavior. No input mutation or alias
+escape; public copy-returning ownership is unchanged. Reassociation is allowed,
+not relaxed scientific tolerances or a bitwise scalar promise.
+
+Must delete/simplify: per-atom dense density production/retention and the trace's
+dense Float64 copies/product temporary. Preserve combined P0/q0 exactly.
+Forbidden: _sym, other builders, validation copies, accessors, public APIs/types,
+fits, thresholds, precision, caches, metadata, approximations, HFDMRG, workflow,
+application lifetimes/checkpoints, release changes and any wider cleanup.
+
+Acceptance uses the compact draft tmp/work/screening_memory_regression.jl
+(SHA256 0b8b4b3d007fb6961a90ed0c9549c80c87c4f3efce15e5dba7156881c64f4b18).
+These checks catch reintroduced per-atom density storage/product copies and
+Float32 multiplication before promotion, beyond ordinary endpoint parity.
+Require exact combined P0/q0, trace/trace-loss agreement within 1e-14 on the
+small regression, unchanged within-block Gram/cross overlap, invalid inputs,
+empty trace and conversion behavior. Preserve the scratch fractional/zero
+occupation, empty single-block and threshold-side evidence. Warmed n128 checks:
+ten-block additive allocation <10*8*128^2 bytes and dense trace allocation
+<sizeof(one 128-square Float64 matrix); do not impose timing-sensitive tests.
+The reviewed n768 evidence is 248.485->23.304 MiB additive and 14,156,016->0
+trace bytes; remeasure bounded calls after integration, not a large campaign.
+These are cumulative allocations, not peak RSS or end-to-end speedup.
+
+Run the existing nested correction owner (including collinear fitted-field
+coverage) and public supplied-field screening owner unchanged apart from the
+compact regression. Preserve scalar/derivative/fit consistency and public copy
+semantics. Require package load, docs, authority/self-test, deterministic views,
+Documenter, diff checks, and normal source-bearing three-job CI plus Docs.
+No q7 replay, q9 artifact load/build, full angular run, HF or physical ladder.
+
+The q9 forecast remains unadmitted: approximately40.83 GiB in the principal
+correction window is not an RSS bound. Prior unreachable temporaries can exceed
+the46 GiB guard/48 GiB cap; preserve the6 GiB reserve. Allocation savings alone
+do not establish admission. Adviser/application-owner memory/lifetime review is
+a separate decision; no such execution is granted here. Hchain-doer stays paused.
+Failure rule: if semantics, ownership, numerical checks, budgets or the exact
+two-function boundary cannot be preserved, make no implementation commit and
+report the obstacle; do not add a fallback, relax checks or expand the repair.
+Repo-manager waits for this recorded grant and its required checks before edits.

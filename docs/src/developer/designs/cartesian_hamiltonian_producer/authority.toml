@@ -164,7 +164,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/route_stage_me
 sha256 = "89d5fd0171bb48e99bd51b539882a2531da78a2c5cc27b62e758228167e1eb79"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartree_correction_assembly.md"
-sha256 = "4983b235f869a402675fdc607000354a6ef29ee5c59cd1041bf248edf2a3efba"
+sha256 = "d4de6ca246a363e8f43805f31536aebabe20b5f8801828d3934e5e182aa05da7"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartree_residual_density.md"
 sha256 = "a26a5760c108cd8aa97f5a92519741361f6591c4ce90b7251e825b1f64a0f9c5"
@@ -5178,49 +5178,49 @@ title = "protected-GTO screened Hartree residual-density audit"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartree_residual_density.md"
 [[records]]
 dependency_ids = []
-evidence_refs = []
-grant = "maintenance"
+grant = "implementation"
 id = "HP-PQS-SCREEN-HARTREE-CORR-FN-01"
-lifecycle = "implemented"
-scope = "consume represented converged references and same-basis `V_IDA`, `J0_G`, and `E0_G`; return in-memory `Delta_J0 = J0_G - Diagonal(V_IDA*q0)` and `C = 0.5*q0'V_IDA*q0 - 0.5*E0_G`; preserve strict representation, finiteness, symmetry, convergence, and derivative/algebra failures while reporting ordinary fitted-potential energy inconsistency."
+lifecycle = "approved"
+scope = "Implement Screening Memory Repair only in represented_additive_reference_p0_q0 and _screened_hartree_trace_product: scalar block diagnostics and Float64 Frobenius reduction. Hard 25 added source lines; user-approved net-positive exception. Preserve combined density, validation, ownership and scientific thresholds. No other builder, helper, cache, API, approximation, application lifetime, heavy run, solver or release change."
 surfaces = ["source"]
 title = "internal screened-Hartree correction"
 
     [[records.document_refs]]
-    heading = "Screened Hartree Correction Assembly"
+    heading = "Screening Memory Repair"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartree_correction_assembly.md"
 
-    [[records.paths]]
-    kind = "source"
-    path = "src/GaussletBases.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_reference_density/CartesianReferenceDensity.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_reference_density/atomic_hf_reference_packets.jl"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "646"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/screening-memory-design-proposal-2026-09-17.md"
+
     [[records.paths]]
     kind = "source"
     path = "src/cartesian/cartesian_reference_density/screened_hartree_correction.jl"
     state = "existing"
 [[records]]
 dependency_ids = []
-evidence_refs = []
-grant = "maintenance"
+grant = "implementation"
 id = "HP-PQS-SCREEN-HARTREE-CORR-TEST-01"
-lifecycle = "completed"
-scope = "maintain packet/reference consistency, same-basis, anchor, derivative, symmetry/finiteness, fitted-potential reporting, and malformed input coverage without adding physics endpoint assertions."
+lifecycle = "approved"
+scope = "Validate Screening Memory Repair in the existing nested correction owner, at most 35 added lines. Check exact combined P0/q0, scalar parity, validation/conversion behavior and bounded warmed allocations. Preserve current screening and ownership gates; reuse public screening coverage. No heavy acceptance, q9 admission, basis rebuild, HF, new owner/framework or workflow change."
 surfaces = ["tests"]
 title = "correction validation"
 
     [[records.document_refs]]
-    heading = "Screened Hartree Correction Assembly"
+    heading = "Screening Memory Repair"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartree_correction_assembly.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "646"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/screening-memory-design-proposal-2026-09-17.md"
 
     [[records.paths]]
     kind = "test"
