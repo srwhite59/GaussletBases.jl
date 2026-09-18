@@ -639,6 +639,41 @@ function _big_factor_axis_integral(alpha_l, center_l, power_l, prefactor_l,
     end
 end
 
+@testset "Basic Gaussian relative-coordinate arithmetic" begin
+    GI = GaussletBases.GaussianAnalyticIntegrals
+    basic = GI.polynomial_gaussian_basic_integral
+    failing = (200.37578609661574,-8.074717920578998,0,1.0,1776.776,-8.1,0,5.7993350529830705)
+    @test abs(basic(failing...) - 0.2060379396832722746153333949198068445882) <= 5e-16
+    for scale in (1e-4, 1.0, 1e4), offset in (0.0, 1e5), (l,r) in ((0,0),(1,1),(2,3))
+        a,b,h = scale, 2scale, 0.3scale
+        c,d,e = offset, offset + 0.25/sqrt(scale), offset - 0.125/sqrt(scale)
+        args = (a,c,l,-0.7,b,d,r,1.2)
+        for extra in (0.0,h)
+            @test basic(args...; extra_exponent=extra, extra_center=e) ≈ _big_factor_axis_integral(args...,extra,e) rtol=5e-13 atol=1e-24
+        end
+        ref(p) = _big_factor_axis_integral(a,c,l,-0.7,b,d,p,1.2,0.0,0.0)
+        kinetic = -0.5*((r >= 2 ? r*(r-1)*ref(r-2) : 0.0) - 2b*(2r+1)*ref(r) + 4b^2*ref(r+2))
+        @test GI.polynomial_gaussian_kinetic_integral(args...) ≈ kinetic rtol=5e-13 atol=1e-20
+    end
+    for n in (1,2,4), offset in (0.0,1024.0)
+        args = (0.7,offset,2,1.0,1.3,offset+0.25,0,1.0)
+        ref(k) = _big_factor_axis_integral(0.7,0.0,2+k,1.0,1.3,0.25,0,1.0,0.2,-0.5)
+        expected = sum(binomial(n,k)*offset^(n-k)*ref(k) for k in 0:n)
+        @test basic(args...; xpower=n, extra_exponent=0.2, extra_center=offset-0.5) ≈ expected rtol=5e-13 atol=1e-20
+    end
+    for (a,b,h) in ((0.0,1.0,0.0),(-0.5,1.0,0.0),(1.0,-0.5,0.0),(1.0,1.0,-0.5)), prefactor in (-1.0,0.0)
+        args = (a,0.25,1,prefactor,b,-0.125,2,1.0)
+        expected = _big_factor_axis_integral(args...,h,0.5)
+        for n in (-2,0)
+            @test basic(args...; xpower=n, extra_exponent=h, extra_center=0.5) ≈ expected rtol=5e-13 atol=1e-24
+        end
+    end
+    @test_throws ArgumentError basic(-1.0,0.0,0,1.0,1.0,0.0,0,1.0)
+    @test_throws ArgumentError basic(-2.0,0.0,0,1.0,1.0,0.0,0,1.0)
+    @test_throws ArgumentError basic(1.0,0.0,-1,1.0,1.0,0.0,0,1.0)
+    @test_throws ArgumentError basic(1.0,0.0,0,1.0,1.0,0.0,-1,1.0)
+end
+
 @testset "Displaced finite-expansion arithmetic" begin
     GI = GaussletBases.GaussianAnalyticIntegrals
     Pair = GaussletBases._GaussianCoulombAxisPairTerm

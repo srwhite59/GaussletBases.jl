@@ -279,19 +279,19 @@ function polynomial_gaussian_basic_integral(
     gamma = alpha_left + alpha_right + extra_exponent
     gamma > 0.0 ||
         throw(ArgumentError("polynomial Gaussian integral requires positive total exponent"))
-    weighted_center =
-        (
-            alpha_left * center_left +
-            alpha_right * center_right +
-            extra_exponent * extra_center
-        ) / gamma
+    left_shift = (alpha_right / gamma) * (center_right - center_left) +
+        (extra_exponent / gamma) * (extra_center - center_left)
+    right_shift = (alpha_left / gamma) * (center_left - center_right) +
+        (extra_exponent / gamma) * (extra_center - center_right)
+    weighted_center = center_left + left_shift
     constant =
-        alpha_left * center_left^2 + alpha_right * center_right^2 +
-        extra_exponent * extra_center^2 - gamma * weighted_center^2
+        (alpha_left / gamma) * alpha_right * (center_left - center_right)^2 +
+        (alpha_left / gamma) * extra_exponent * (center_left - extra_center)^2 +
+        (alpha_right / gamma) * extra_exponent * (center_right - extra_center)^2
 
     polynomial = Float64[1.0]
-    polynomial = polynomial_shift_multiply(polynomial, weighted_center - center_left, power_left)
-    polynomial = polynomial_shift_multiply(polynomial, weighted_center - center_right, power_right)
+    polynomial = polynomial_shift_multiply(polynomial, left_shift, power_left)
+    polynomial = polynomial_shift_multiply(polynomial, right_shift, power_right)
     xpower > 0 && (polynomial = polynomial_shift_multiply(polynomial, weighted_center, xpower))
 
     value = 0.0
