@@ -1,7 +1,7 @@
 # Screened Hartree Correction Assembly
 
-Status: implemented internal facility, with only the bounded
-[screening-memory repair](#Screening-Memory-Repair) approved in Pass 646, under
+Status: implemented internal facility; Pass 647 accepts the bounded
+[screening-memory repair](#Screening-Memory-Repair) and restores maintenance under
 `HP-PQS-SCREEN-HARTREE-CORR-FN-01` and
 `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`.
 
@@ -271,8 +271,11 @@ row-gauge substitutions, stop and request a new design amendment.
 
 ## Screening Memory Repair
 
-Pass 646 authorizes only the reviewed two-function allocation repair under
-HP-PQS-SCREEN-HARTREE-CORR-FN-01/TEST-01. Independent review at
+Pass 647 accepts 8744b01c26faf29608677a7463554a21c837c376 and returns
+HP-PQS-SCREEN-HARTREE-CORR-FN-01/TEST-01 to maintenance. The implementation
+grant and net-positive exception are consumed; the frozen Pass 646 boundary
+below is accepted evidence, not authority for another optimization or q9 run.
+Independent review at
 97db4dea3078e5a4d0508984b22b72b155c2acdc reproduced 75 scratch checks and
 17 compact regressions without modifying production. Evidence:
 tmp/reviews/screening-memory-design-proposal-2026-09-17.md, SHA256

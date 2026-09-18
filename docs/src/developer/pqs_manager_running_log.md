@@ -1679,3 +1679,31 @@ Existing correction/public screening owners and full source CI validate the
 future implementation. Package/docs, authority/self-test, deterministic renders,
 Documenter/log/diff and docs-only CI/Docs validate this grant. Hchain-doer remains
 paused; no q9 loading/build, HF, checkpoints, release or numerical-policy change.
+
+### Pass 647: Screening Memory Repair Accepted
+
+Accept 8744b01c26faf29608677a7463554a21c837c376 after independent diff, frozen
+patch/regression identity and exact-head remote review. Two source functions
+only, +17/-3; existing owner +29 with17 checks. The user-approved net-positive
+exception is consumed, not a standing policy change. MT8 reduces unnecessary
+screening storage without changing combined P0/q0, thresholds or ownership.
+
+Reviewed integrated n768 evidence: additive248.485->23.304MiB; dense trace
+14,156,016->0B. Scalar differences near1e-12 are reassociation, not bitwise
+equality; P0/q0 remain exact. Measurements are warmed single-call allocation
+traffic, not q9 peak RSS or end-to-end timing. Evidence:
+tmp/reviews/pass646-implementation-2026-09-17.md and linked allocation script/log.
+Reuse nested132/132, public22/22 and integrated6/6; prior independent75/75
+scratch checks apply to the exact patch. CI35311484055 ran all three numerical
+gates; Docs35311483858 passed. No numerical rerun for lifecycle closeout.
+Local package/docs, authority/self-test, generated parity, Documenter/log/diff
+and docs-only remote gates validate this pass.
+
+Deleted: per-atom full densities and trace copies/product. Simplified: scalar
+Gram diagnostics and Frobenius reduction. Quarantined: none. Not deleted:
+combined density, _sym, validation/result copies and public accessors.
+Added/deleted src17/3; tests29 in existing owner; new files/metadata/status0.
+Both grants return to maintenance. Exact remaining blocker: q9 correction
+window~40.83GiB plus unreclaimed arrays is not a bound below46/48GiB; preserve
+6GiB reserve and require separate adviser/application-owner admission.
+Hchain-doer remains paused. No successor, heavy run or lifetime repair granted.

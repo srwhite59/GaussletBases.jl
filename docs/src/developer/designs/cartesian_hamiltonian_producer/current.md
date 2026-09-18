@@ -3,13 +3,13 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
-Pass 646 authorizes only the [screening-memory repair](screened_hartree_correction_assembly.md#Screening-Memory-Repair)
-under HP-PQS-SCREEN-HARTREE-CORR-FN-01/TEST-01: two functions in one source
-owner (25 added lines maximum) and one existing test owner (35 maximum).
-The user approved the packet-specific net-positive refactor exception. Preserve
-combined P0/q0, scientific thresholds, ownership and all other builders.
-Allocation savings do not admit q9: unreclaimed temporaries remain a blocker.
-No heavy acceptance, HF, lifetime changes or consumer continuation is granted.
+Pass 647 accepts the [screening-memory repair](screened_hartree_correction_assembly.md#Screening-Memory-Repair)
+at 8744b01c26faf29608677a7463554a21c837c376; both correction IDs return to
+maintenance. Combined P0/q0, thresholds, ownership and other builders remain
+unchanged. The packet-specific net-positive exception is consumed. Bounded
+allocation savings are not peak-RSS admission: q9 remains blocked on prior
+garbage/lifetime accounting. Hchain-doer stays paused; no heavy acceptance,
+HF, lifetime change or successor implementation is granted.
 
 Pass 645 accepts [collinear early longitudinal sums](protected_additive_reference_correction.md#Collinear-Early-Longitudinal-Sum)
 at 6663d392258e5372e018fd8081cd19c3f9a6ed57. Both atomic-fit IDs return to

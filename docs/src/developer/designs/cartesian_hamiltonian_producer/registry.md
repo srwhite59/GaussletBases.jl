@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `5f47e8603dc2393bfd459e87f1268609066af3f038a1228a54f5ce7489e23353`.
+> [authority.toml](authority.toml), SHA-256 `ec90545a883d27c16265b0e1ff25f05dd89234c0da0983b091d60bd7cc9fa772`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -2914,8 +2914,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-PQS-SCREEN-HARTREE-CORR-FN-01 - internal screened-Hartree correction
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2925,13 +2925,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `manager_pass`: `646`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/screening-memory-design-proposal-2026-09-17.md`
+  - `git_commit`: `8744b01c26faf29608677a7463554a21c837c376`
+  - `manager_pass`: `647`
 - **Dependencies:** none
-- **Scope:** Implement Screening Memory Repair only in represented\_additive\_reference\_p0\_q0 and \_screened\_hartree\_trace\_product: scalar block diagnostics and Float64 Frobenius reduction. Hard 25 added source lines; user-approved net-positive exception. Preserve combined density, validation, ownership and scientific thresholds. No other builder, helper, cache, API, approximation, application lifetime, heavy run, solver or release change.
+- **Scope:** Maintain Screening Memory Repair in the two named functions: scalar block diagnostics and Float64 Frobenius reduction. Preserve combined P0/q0, validation, ownership, thresholds and other builders. The implementation grant and net-positive exception are consumed. No new optimization, helper, cache, API, approximation, application lifetime, heavy run, solver or release change.
 
 ### HP-PQS-SCREEN-HARTREE-CORR-TEST-01 - correction validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -2941,8 +2943,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `manager_pass`: `646`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/screening-memory-design-proposal-2026-09-17.md`
+  - `git_commit`: `8744b01c26faf29608677a7463554a21c837c376`
+  - `manager_pass`: `647`
 - **Dependencies:** none
-- **Scope:** Validate Screening Memory Repair in the existing nested correction owner, at most 35 added lines. Check exact combined P0/q0, scalar parity, validation/conversion behavior and bounded warmed allocations. Preserve current screening and ownership gates; reuse public screening coverage. No heavy acceptance, q9 admission, basis rebuild, HF, new owner/framework or workflow change.
+- **Scope:** Maintain accepted Screening Memory Repair coverage in the existing nested correction owner: exact combined P0/q0, scalar parity, validation/conversion behavior and bounded warmed allocations. Preserve numerical and ownership gates. No new assertions, heavy acceptance, q9 admission, basis rebuild, HF, new owner/framework or workflow change is granted.
 
 ### HP-PQS-SCREEN-HARTREE-NE-AUDIT-01 - Ne screened Hartree endpoint measurement
 
