@@ -20,7 +20,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_driv
 sha256 = "eec84f2816c1cf2472073be8a57a5e6c42e0077e1f5c424eb1fbecf1511e98fb"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_non_nuclear.md"
-sha256 = "ddd200a2a89ace8825c33fde7e2704d6a053063ed42c940dfccd023c84ea3f81"
+sha256 = "a305358a72e9ed0c0577a39d5a2bdea87fff0050cb0f12937fad37ccf352d361"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_gaussian_raw_blocks_nuclear.md"
 sha256 = "b824bd11f9acad27a5848c8bf790b0b04d3c9b3790db633b38452507a9b45e69"
@@ -2447,10 +2447,10 @@ title = "validate shared reference Lanczos consolidation"
     state = "existing"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "maintenance"
 id = "HP-GAUSSIAN-BASIC-ARITH-FN-01"
-lifecycle = "approved"
-scope = "Repair only polynomial_gaussian_basic_integral in GaussianAnalyticIntegrals.jl under Basic Gaussian Integral Arithmetic Repair: relative damping/shifts, unchanged accepted arguments and callers, at most 30 added source lines. Exclude other kernels, helpers, residual algorithms, q9 loading/requalification, numerical-policy changes, workflows and releases. Stop without commit on scope, budget or validation failure."
+lifecycle = "implemented"
+scope = "Maintain accepted relative damping/shifts in polynomial_gaussian_basic_integral under Basic Gaussian Integral Arithmetic Repair. Preserve accepted arguments, absolute moments, errors and callers. The implementation grant is consumed; no successor is authorized. Exclude other kernels, helpers, residual algorithms, q9 loading/requalification, numerical-policy changes, workflows and releases."
 surfaces = ["source"]
 title = "basic Gaussian relative-coordinate arithmetic repair"
 
@@ -2465,6 +2465,12 @@ title = "basic Gaussian relative-coordinate arithmetic repair"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "68a05b6c1bd45160c19530caaf34df5f14f71da1"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1dbc1856d7b699311dcf65ae6a68fb193f9c1009"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "649"
 
     [[records.paths]]
     kind = "source"
@@ -2472,10 +2478,10 @@ title = "basic Gaussian relative-coordinate arithmetic repair"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-GAUSSIAN-BASIC-ARITH-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-GAUSSIAN-BASIC-ARITH-TEST-01"
-lifecycle = "approved"
-scope = "Add at most 40 lines in test/core/runtests.jl under Basic Gaussian Integral Arithmetic Repair: independent translated primitive/moment, extra-Gaussian, kinetic and accepted-input regressions. Preserve existing assertions and caller gates. Exclude new owners/frameworks, q9 audit replay, physical qualification, tolerance changes and workflow edits. Stop without commit on unexplained failures or budget expansion."
+lifecycle = "completed"
+scope = "Maintain the accepted 35-line, 81-check core regression under Basic Gaussian Integral Arithmetic Repair: independent translated primitive/moment, extra-Gaussian, kinetic and accepted-input checks. The implementation grant is consumed. Preserve references, tolerances and caller gates; exclude new owners/frameworks, q9 audit replay, physical qualification and workflow edits."
 surfaces = ["tests"]
 title = "basic Gaussian independent arithmetic regressions"
 
@@ -2487,6 +2493,12 @@ title = "basic Gaussian independent arithmetic regressions"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "648"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1dbc1856d7b699311dcf65ae6a68fb193f9c1009"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "649"
 
     [[records.paths]]
     kind = "test"
