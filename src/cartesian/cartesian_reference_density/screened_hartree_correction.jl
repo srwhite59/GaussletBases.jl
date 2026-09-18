@@ -58,8 +58,20 @@ function represented_additive_reference_p0_q0(coefficient_blocks, occupation_blo
     length(coefficient_blocks) == length(occupation_blocks) &&
         !isempty(coefficient_blocks) || throw(ArgumentError(
             "additive represented reference needs matching nonempty blocks"))
-    references = [represented_reference_p0_q0(C, occ)
-        for (C, occ) in zip(coefficient_blocks, occupation_blocks)]
+    references = map(coefficient_blocks, occupation_blocks) do coefficients::AbstractMatrix{<:Real}, occupations::AbstractVector{<:Real}
+        C = Matrix{Float64}(coefficients)
+        occ = Vector{Float64}(occupations)
+        size(C, 2) == length(occ) || throw(DimensionMismatch(
+            "represented reference has $(size(C, 2)) orbitals but $(length(occ)) occupations"))
+        all(isfinite, C) || throw(ArgumentError("represented reference coefficients must be finite"))
+        all(isfinite, occ) || throw(ArgumentError("represented reference occupations must be finite"))
+        all(>=(0.0), occ) || throw(ArgumentError("represented reference occupations must be nonnegative"))
+        gram = transpose(C) * C
+        trace = dot(occ, diag(gram))
+        (; dimension = size(C, 1), trace, trace_loss = sum(occ) - trace,
+            occupied_orthogonality_error = size(gram, 1) == 0 ? 0.0 :
+                norm(gram - Matrix{Float64}(I, size(gram, 1), size(gram, 2)), Inf))
+    end
     all(reference -> reference.dimension == first(references).dimension, references) ||
         throw(DimensionMismatch("additive represented reference dimensions differ"))
     combined = represented_reference_p0_q0(
@@ -155,7 +167,9 @@ end
 
 function _screened_hartree_trace_product(A, B)
     size(A) == size(B) || throw(DimensionMismatch("trace-product size mismatch"))
-    return Float64(sum(Matrix{Float64}(A) .* Matrix{Float64}(B)))
+    A64 = A isa Matrix{Float64} ? A : Matrix{Float64}(A)
+    B64 = B isa Matrix{Float64} ? B : Matrix{Float64}(B)
+    return Float64(dot(A64, B64))
 end
 
 function _screened_hartree_validate_reference(

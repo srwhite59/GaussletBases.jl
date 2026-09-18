@@ -501,3 +501,32 @@ end
         occupations = terminal_occ,
     )
 end
+@testset "Additive screening storage and scalar reduction" begin
+    D = GaussletBases.CartesianReferenceDensity
+    blocks = [[1. 0.; 0. 1.; 0. 0.], [.6 0.; .8 0.; 0. 1.]]
+    occupations = [[.25, 1.5], [.5, 0.]]
+    ref = D.represented_additive_reference_p0_q0(blocks, occupations)
+    combined = D.represented_reference_p0_q0(hcat(blocks...), vcat(occupations...))
+    separate = [D.represented_reference_p0_q0(C,o) for (C,o) in zip(blocks,occupations)]
+    @test ref.P0 == combined.P0 && ref.q0 == combined.q0
+    @test ref.block_traces ≈ [x.trace for x in separate] atol=1e-14 rtol=0
+    @test ref.trace_loss ≈ sum(x.trace_loss for x in separate) atol=1e-14 rtol=0
+    @test ref.occupied_orthogonality_error == maximum(x.occupied_orthogonality_error for x in separate)
+    @test ref.cross_overlap_max ≈ .8
+    @test_throws DimensionMismatch D.represented_additive_reference_p0_q0(blocks, [[1.],[1.,2.,3.]])
+    @test_throws DimensionMismatch D.represented_additive_reference_p0_q0([ones(2,1),ones(3,1)], [[1.],[1.]])
+    for (C,o) in ((fill(NaN,3,1),[1.]),(ones(3,1),[Inf]),(ones(3,1),[-1.]))
+        @test_throws ArgumentError D.represented_additive_reference_p0_q0([C],[o])
+    end
+    A=Float32[1e20 2; 3 4]; B=Float32[1e20 5; 6 7]
+    @test D._screened_hartree_trace_product(A,B) ≈ sum(Float64.(A).*Float64.(B))
+    @test_throws DimensionMismatch D._screened_hartree_trace_product(ones(2,3),ones(3,2))
+    @test_throws MethodError D._screened_hartree_trace_product(ones(2),ones(2))
+    @test D._screened_hartree_trace_product(zeros(0,0),zeros(0,0)) === 0.0
+    @test_throws InexactError D._screened_hartree_trace_product(fill(1+im,2,2),ones(2,2))
+    C=fill(inv(sqrt(128.)),128,1); Cs=fill(C,10); os=[[1.] for _ in 1:10]
+    D.represented_additive_reference_p0_q0(Cs,os)
+    @test (@allocated D.represented_additive_reference_p0_q0(Cs,os)) < 10*8*128^2
+    X=ones(128,128); D._screened_hartree_trace_product(X,X)
+    @test (@allocated D._screened_hartree_trace_product(X,X)) < sizeof(X)
+end
