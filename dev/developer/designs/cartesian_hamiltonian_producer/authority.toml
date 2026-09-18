@@ -164,7 +164,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/route_stage_me
 sha256 = "89d5fd0171bb48e99bd51b539882a2531da78a2c5cc27b62e758228167e1eb79"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartree_correction_assembly.md"
-sha256 = "d4de6ca246a363e8f43805f31536aebabe20b5f8801828d3934e5e182aa05da7"
+sha256 = "d90db5bf1625528b3ada17e6e399682267c41ec374a8582f1628e0b3bce2f819"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartree_residual_density.md"
 sha256 = "a26a5760c108cd8aa97f5a92519741361f6591c4ce90b7251e825b1f64a0f9c5"
@@ -5178,10 +5178,10 @@ title = "protected-GTO screened Hartree residual-density audit"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/screened_hartree_residual_density.md"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-SCREEN-HARTREE-CORR-FN-01"
-lifecycle = "approved"
-scope = "Implement Screening Memory Repair only in represented_additive_reference_p0_q0 and _screened_hartree_trace_product: scalar block diagnostics and Float64 Frobenius reduction. Hard 25 added source lines; user-approved net-positive exception. Preserve combined density, validation, ownership and scientific thresholds. No other builder, helper, cache, API, approximation, application lifetime, heavy run, solver or release change."
+lifecycle = "implemented"
+scope = "Maintain Screening Memory Repair in the two named functions: scalar block diagnostics and Float64 Frobenius reduction. Preserve combined P0/q0, validation, ownership, thresholds and other builders. The implementation grant and net-positive exception are consumed. No new optimization, helper, cache, API, approximation, application lifetime, heavy run, solver or release change."
 surfaces = ["source"]
 title = "internal screened-Hartree correction"
 
@@ -5196,6 +5196,12 @@ title = "internal screened-Hartree correction"
     [[records.evidence_refs]]
     kind = "external_path"
     value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/screening-memory-design-proposal-2026-09-17.md"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "8744b01c26faf29608677a7463554a21c837c376"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "647"
 
     [[records.paths]]
     kind = "source"
@@ -5203,10 +5209,10 @@ title = "internal screened-Hartree correction"
     state = "existing"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "maintenance"
 id = "HP-PQS-SCREEN-HARTREE-CORR-TEST-01"
-lifecycle = "approved"
-scope = "Validate Screening Memory Repair in the existing nested correction owner, at most 35 added lines. Check exact combined P0/q0, scalar parity, validation/conversion behavior and bounded warmed allocations. Preserve current screening and ownership gates; reuse public screening coverage. No heavy acceptance, q9 admission, basis rebuild, HF, new owner/framework or workflow change."
+lifecycle = "completed"
+scope = "Maintain accepted Screening Memory Repair coverage in the existing nested correction owner: exact combined P0/q0, scalar parity, validation/conversion behavior and bounded warmed allocations. Preserve numerical and ownership gates. No new assertions, heavy acceptance, q9 admission, basis rebuild, HF, new owner/framework or workflow change is granted."
 surfaces = ["tests"]
 title = "correction validation"
 
@@ -5221,6 +5227,12 @@ title = "correction validation"
     [[records.evidence_refs]]
     kind = "external_path"
     value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/screening-memory-design-proposal-2026-09-17.md"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "8744b01c26faf29608677a7463554a21c837c376"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "647"
 
     [[records.paths]]
     kind = "test"
