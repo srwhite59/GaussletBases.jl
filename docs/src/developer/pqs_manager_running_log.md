@@ -1799,3 +1799,25 @@ Authorization checks passed: package/docs8/8 +162/162 +10/10, authority and
 adversarial self-test, two independent matching renders, Documenter/log/diff.
 Require exact-head remote docs-only CI/Docs success before the implementation
 handoff; no numerical owners were replayed for this authorization.
+
+### Pass 650 Amendment: Occupation Snapshot Portability
+
+Steven explicitly superseded the two occupation golden-value tolerance freezes
+through AMEND-GB-H10-Q8-RESIDUAL-20260918-2. The original R3A failure remains
+463/464: a 1.6896e-14 minimum-occupation difference exceeded atol1e-14, and
+the later64-check section was not reached. Static upstream dataflow does not
+prove its historical cause; no baseline campaign or causal claim is required.
+Allow exactly two atol1e-12 substitutions and up to two portability-comment
+lines in the existing R3A owner, preserving both values. Relative bounds near
+2e-9/8.2e-11 remain strict at the two observed scales. No physical, occupation
+cutoff, rank, metric, capture, action or energy gate changes.
+
+Preserve the uncommitted source+3/-1 and misc+32 draft and the successful
+rounded/selected-physical q5/q8 evidence in the implementation report (SHA-256
+c89d539f171edb123679ee8f2c5987deab03bed1b0fcca6e702c6a615f79130f).
+Deleted/simplified: only brittle snapshot precision; quarantined: none; no new
+helper, file or metadata. LT1/LT2 and all consumer restrictions remain unchanged.
+Require complete R3A including64 checks, full implementation CI/Docs and review;
+no q5/q8 replay. Remaining blocker is implementation acceptance, not a waived
+failure. Hchain-doer stays paused; no successor. This amendment changes only
+documentation authority; the source/test draft is excluded from its commit.

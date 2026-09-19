@@ -149,7 +149,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gauss
 sha256 = "6d8dcc37dd7afc8df833f06e458068409a79fed67c08ee3cd9826994218fe0ec"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
-sha256 = "fc36b8c2346fb7a0e81c7fe55a7d26e34f38d5a33b7b436a80cd16fbd8b8c655"
+sha256 = "54880b739112b6b86787273642be845c247d386d175930e3509189bf1bb4e450"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/retained_gto_egoi.md"
 sha256 = "66567e19f01e34c4146b02999b8fba035811ad9e9ad8364db2ec7c77d9457945"
@@ -9135,7 +9135,7 @@ evidence_refs = []
 grant = "implementation"
 id = "HP-RG-ORTHO-TEST-01"
 lifecycle = "approved"
-scope = "Pass 650: at most 35 added lines in existing misc owner under Residual Premerge Gram Arithmetic. Independent high-cancellation and nonzero-D checks, unchanged rejection gates; frozen q5/q8 acceptance within the shared resource envelope. No new fixture, other test edits, policy changes or consumer admission."
+scope = "Pass 650 and user-approved Occupation Snapshot Portability Amendment under Residual Premerge Gram Arithmetic: at most 35 added misc lines; exactly two R3A occupation-snapshot atol substitutions to 1e-12 and at most two comment lines. Preserve golden values and every physical/rank gate. Reuse q5/q8 evidence; rerun complete R3A and normal implementation CI. No other test edits or consumer admission."
 surfaces = ["tests"]
 title = "residual final-orthogonality validation"
 
@@ -9147,6 +9147,10 @@ title = "residual final-orthogonality validation"
     [[records.paths]]
     kind = "test"
     path = "test/misc/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = []

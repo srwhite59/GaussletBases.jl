@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `b8b27ec9bfd2954fcd23a857d32896b0ed46b99cffa5c2493fc5985c9698b7d8`.
+> [authority.toml](authority.toml), SHA-256 `c37e0887891b9d3e284c90def4a6236f50cd68c08d9c14bbd4f50cd121ed2445`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -5313,9 +5313,10 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [residual\_gaussian\_orthogonality\_robustness.md](residual_gaussian_orthogonality_robustness.md); heading `Residual Premerge Gram Arithmetic`
 - **Owned paths:**
   - `test` / `existing`: `test/misc/runtests.jl`
+  - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-RG-ORTHO-FN-01`
-- **Scope:** Pass 650: at most 35 added lines in existing misc owner under Residual Premerge Gram Arithmetic. Independent high-cancellation and nonzero-D checks, unchanged rejection gates; frozen q5/q8 acceptance within the shared resource envelope. No new fixture, other test edits, policy changes or consumer admission.
+- **Scope:** Pass 650 and user-approved Occupation Snapshot Portability Amendment under Residual Premerge Gram Arithmetic: at most 35 added misc lines; exactly two R3A occupation-snapshot atol substitutions to 1e-12 and at most two comment lines. Preserve golden values and every physical/rank gate. Reuse q5/q8 evidence; rerun complete R3A and normal implementation CI. No other test edits or consumer admission.
 
 ### HP-RG-PROTECT-ADDREF-FN-01 - protected additive atomic reference correction
 

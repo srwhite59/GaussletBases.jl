@@ -146,8 +146,9 @@ evaluation, unchanged final identity gate, and negative/near-singular rejection.
 Require accurate normalized Gram max error <=5e-8 in these fixtures. Explicitly
 check nonzero-D contribution so an ordinary-only simplification cannot pass.
 These local checks cover cancellation and the shared injected boundary that
-an ordinary endpoint alone would miss. No test edits elsewhere or tracked large
-fixture. Preserve existing misc, core, public Cartesian/residual-GTO and nested
+an ordinary endpoint alone would miss. The sole additional test edit is the
+snapshot-tolerance amendment below; no tracked large fixture. Preserve existing
+misc, core, public Cartesian/residual-GTO and nested
 R3A/supplemented owners, including its injected case. Run normal full three-job
 source CI/Docs and ordinary package/docs/authority/self-test/Documenter/log/diff
 checks. Do not repeat unrelated angular or paper calculations locally.
@@ -201,6 +202,31 @@ beyond resources, relax tolerances, change rank semantics or edit callers.
 Broader architecture/API/numerical policy needs a separate decision. The bounded
 cycle permits at most two in-scope correction rounds, not automatic expansion.
 Hchain-doer remains paused even on success; no successor task is authorized.
+
+### Occupation Snapshot Portability Amendment
+
+Steven explicitly approved AMEND-GB-H10-Q8-RESIDUAL-20260918-2 after the
+required R3A owner failed 463/464 at its minimum occupation snapshot. The
+observed difference 1.6895772975145107e-14 exceeded its 1e-14 bound; this
+original failure remains evidence, not a retroactive pass or established cause.
+
+Under HP-RG-ORTHO-TEST-01, additionally permit exactly two `atol` substitutions
+from 1e-14 to 1e-12 on the adjacent minimum/maximum residual_occupations
+golden-value assertions in
+`test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`, originally
+lines 501-502, plus at most two comment lines explaining numerical portability.
+Both golden values remain unchanged. At their scales, approximately 5.10e-4
+and 1.22e-2, the absolute bound corresponds to relative errors about 2e-9
+and 8.2e-11: still strict regression checks, not physical validity criteria.
+No other assertion, production threshold, cutoff, rank or policy may change.
+
+Preserve the source +3/-1 and misc-test +32 draft and completed q5/q8 evidence.
+Rerun the affected R3A owner including its previously unreached 64-check section;
+reuse unchanged successful checks, then require normal full implementation
+CI/Docs and independent review. Do not repeat q5/q8 acceptance or perform a
+baseline attribution campaign merely to explain these final digits. This narrow
+user-approved exception supersedes the original test-edit freeze only here;
+all other failure rules, budgets, exclusions and the two-round limit remain.
 
 ## Cutoff History
 
