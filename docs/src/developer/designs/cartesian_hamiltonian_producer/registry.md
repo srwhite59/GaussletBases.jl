@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `5d5652d433f4bcf4d352ff5aea8ac7943587bfb19e2bda8bacef492a197a0d7d`.
+> [authority.toml](authority.toml), SHA-256 `b8b27ec9bfd2954fcd23a857d32896b0ed46b99cffa5c2493fc5985c9698b7d8`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -5291,32 +5291,31 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-RG-ORTHO-FN-01 - residual final-orthogonality robustness
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [residual\_gaussian\_orthogonality\_robustness.md](residual_gaussian_orthogonality_robustness.md); heading `Residual Gaussian Orthogonality And Cutoff Policy`
+  - `canonical` [residual\_gaussian\_orthogonality\_robustness.md](residual_gaussian_orthogonality_robustness.md); heading `Residual Premerge Gram Arithmetic`
 - **Owned paths:**
-  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
   - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
 - **Evidence:** none
 - **Dependencies:** none
-- **Scope:** source maintenance.
+- **Scope:** Pass 650: premerge Gram reassociation only in finalize\_residual\_gaussian\_transform, under Residual Premerge Gram Arithmetic. At most eight added source lines. Preserve final four-term assertion, injected D contribution, thresholds, ranks, callers and interfaces; no helper, fallback, physical consumer admission or broader repair.
 
 ### HP-RG-ORTHO-TEST-01 - residual final-orthogonality validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [residual\_gaussian\_orthogonality\_robustness.md](residual_gaussian_orthogonality_robustness.md); heading `Residual Gaussian Orthogonality And Cutoff Policy`
+  - `canonical` [residual\_gaussian\_orthogonality\_robustness.md](residual_gaussian_orthogonality_robustness.md); heading `Residual Premerge Gram Arithmetic`
 - **Owned paths:**
-  - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
+  - `test` / `existing`: `test/misc/runtests.jl`
 - **Evidence:** none
 - **Dependencies:** `HP-RG-ORTHO-FN-01`
-- **Scope:** test maintenance, not source authority.
+- **Scope:** Pass 650: at most 35 added lines in existing misc owner under Residual Premerge Gram Arithmetic. Independent high-cancellation and nonzero-D checks, unchanged rejection gates; frozen q5/q8 acceptance within the shared resource envelope. No new fixture, other test edits, policy changes or consumer admission.
 
 ### HP-RG-PROTECT-ADDREF-FN-01 - protected additive atomic reference correction
 

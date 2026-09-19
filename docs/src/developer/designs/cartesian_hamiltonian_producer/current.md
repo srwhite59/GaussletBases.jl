@@ -3,6 +3,15 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
+Pass 650 authorizes the [premerge Gram arithmetic candidate](residual_gaussian_orthogonality_robustness.md#Residual-Premerge-Gram-Arithmetic)
+for GB-H10-Q8-RESIDUAL-20260918 under HP-RG-ORTHO-FN-01/TEST-01. Change only
+premerge evaluation, preserving the final four-term assertion and all numerical
+policies; eight added source lines and 35 existing-misc-test lines maximum.
+Fresh q5/q8 residual-only acceptance is required within the frozen resource
+envelope. Diagnosis is not a repaired basis or complete physical certificate.
+No q9, operators, fields, HF, consumer continuation or successor is authorized.
+Hchain-doer remains paused.
+
 Pass 649 accepts the [basic Gaussian integral arithmetic repair](cartesian_gaussian_raw_blocks_non_nuclear.md#Basic-Gaussian-Integral-Arithmetic-Repair)
 at 1dbc1856d7b699311dcf65ae6a68fb193f9c1009. Both BASIC-ARITH IDs return to
 maintenance; the implementation grants for GB-BASIC-INTEGRAL-20260918 are

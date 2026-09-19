@@ -1767,3 +1767,35 @@ physical residual requalification; q9 resource admission is also separate.
 MT8 allocation work remains completed, not admission. No q8 energy conclusion,
 q9 load, consumer restart or successor. Hchain-doer stays paused; send only the
 authorized adviser completion notice after closeout checks pass.
+
+### Pass 650: Residual Premerge Arithmetic Authorized
+
+Task GB-H10-Q8-RESIDUAL-20260918, explicitly armed by adviser under Steven's
+bounded cycle, is distinct from the closed integral repair. At aa2ac41c5,
+fresh q5 passes and fresh q8 fails with identical270 ordinary s/p/d candidates;
+both naturally retain270, not an assumed rank. Independently reviewed diagnosis
+tmp/reviews/h10-q8-residual-diagnosis-2026-09-18.md (SHA-256
+1e7e7495519d082222c89ecc676fa3cae915e703438644d50f46fcb2792e5233)
+attributes the1.13e-7 accurate rounded-input defect to premerge cancellation,
+not the inverse square root or a marginal owner cutoff. Physical spot checks
+still fail; neither rounded-input success nor the old mixed-provenance replay
+certifies the fresh basis. General D identity independently passed10 compact
+256-bit checks in0.84s; no q8 rerun or candidate whitening by design-manager.
+
+Authorize only general premerge reassociation under HP-RG-ORTHO-FN-01/TEST-01,
+with unchanged final assertion. Deleted/simplified: one premerge four-term
+evaluation, not the live overlap helper. Quarantined: none. Not deleted:
+final independent validation, ordinary/injected callers and all safeguards.
+Budget: eight added source lines,35 existing-misc-test lines; no new production
+helpers/files/metadata/status. LT1/LT2 advance through accurate construction,
+not acceptance by loosened checks. Diagnosis used87.029s/2.425GiB/140.668MiB;
+remaining task-specific computation shares the20min/16GiB/2GiB envelope.
+Require fresh q5/q8 unchanged gates and independent rounded/selected physical
+checks, active owners/full source CI, plus docs-only checks for this grant.
+Exact blocker on failure: this candidate is insufficient, not permission for
+another policy or rank choice. Hchain-doer stays paused, no successor. This
+does not reopen q9 resource admission or claim a q8 energy correction.
+Authorization checks passed: package/docs8/8 +162/162 +10/10, authority and
+adversarial self-test, two independent matching renders, Documenter/log/diff.
+Require exact-head remote docs-only CI/Docs success before the implementation
+handoff; no numerical owners were replayed for this authorization.

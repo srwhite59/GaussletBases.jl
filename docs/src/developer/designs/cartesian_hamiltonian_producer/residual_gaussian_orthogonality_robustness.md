@@ -13,8 +13,8 @@ The basis algorithm itself is canonical in
 
 | ID | Lifecycle | Durable result |
 | --- | --- | --- |
-| `HP-RG-ORTHO-FN-01` | Implemented current robustness | Symmetric final merge, hard near-singular failure, scale-aware identity check |
-| `HP-RG-ORTHO-TEST-01` | Completed evidence; active maintenance | H2 endpoint plus historical N2 robustness evidence |
+| `HP-RG-ORTHO-FN-01` | Approved bounded premerge repair | Preserve implemented merge/rank/identity rules; change premerge evaluation only |
+| `HP-RG-ORTHO-TEST-01` | Approved focused regression | Existing misc owner additions; unchanged H2/injected endpoint gates |
 | `HP-RG-IDTOL-FN-01` | Implemented historical; superseded | Former `identity_atol = 1e-8` default |
 | `HP-RG-IDTOL-TEST-01` | Completed historical evidence | Be high-zeta identity-tolerance audit |
 | `HP-RG-CUTOFF-FN-01` | Implemented historical; cutoff superseded | Former `5e-8` cutoff; current `identity_atol = 5e-8` originated here |
@@ -113,6 +113,94 @@ This check may absorb only final floating-point cleanup error after positive
 owner metrics, a healthy final merge, and strict `G-R` orthogonality. It must
 not retain a direction below the occupation cutoff, hide a negative metric,
 or replace the near-singular merge failure.
+
+## Residual Premerge Gram Arithmetic
+
+Pass 650 authorizes only the premerge repair for GB-H10-Q8-RESIDUAL-20260918,
+under HP-RG-ORTHO-FN-01/TEST-01. Baseline is
+`aa2ac41c513635bb5a7208848551eeef0edd754b`. This is a construction-arithmetic
+repair, not a cutoff, rank, conditioning policy or physical-basis admission.
+
+Change only the premerge `S_merge` evaluation in
+`src/cartesian/cartesian_residual_gaussians/residual_basis.jl` function
+`finalize_residual_gaussian_transform`, at most eight added source lines.
+For the existing input transforms use
+
+```text
+C = X * T_A0
+D = T_G0 + C
+S_merge = _rg_sym(D' * D + T_A0' * S_AA * T_A0 - C' * C)
+```
+
+This identity is general: never drop `D'D`, including on injected paths.
+Delete the replaced premerge four-term call. Preserve `_rg_sym`, inverse
+square root, signs, return values/shapes, owner selection/order/occupations,
+all thresholds and the final independent four-term `residual_gaussian_overlap`
+assertion byte-for-byte. Preserve ordinary/injected callers and the accepted
+basic integral repair. No helper, new type/API/metadata/cache, compensated
+complement framework, clamp, extra cleanup or fallback is authorized.
+
+At most 35 added lines in existing `test/misc/runtests.jl`: compact deterministic
+high-cancellation and nonzero-D cases with independent high-precision Gram
+evaluation, unchanged final identity gate, and negative/near-singular rejection.
+Require accurate normalized Gram max error <=5e-8 in these fixtures. Explicitly
+check nonzero-D contribution so an ordinary-only simplification cannot pass.
+These local checks cover cancellation and the shared injected boundary that
+an ordinary endpoint alone would miss. No test edits elsewhere or tracked large
+fixture. Preserve existing misc, core, public Cartesian/residual-GTO and nested
+R3A/supplemented owners, including its injected case. Run normal full three-job
+source CI/Docs and ordinary package/docs/authority/self-test/Documenter/log/diff
+checks. Do not repeat unrelated angular or paper calculations locally.
+
+### Bounded q5 And q8 Acceptance
+
+Reuse the four hash-frozen staged inputs listed in the task and diagnosis;
+never rebuild a terminal basis or use the old 210-direction transform. Fresh
+production construction must pass for q5 and q8 with the same ordered 270
+ordinary s/p/d candidates and nuclei. Require natural 270 rank/27 per owner,
+unchanged cutoff1e-8 and all existing merge/orthogonality/scale-aware identity
+checks; never force that rank or loosen a failure. Report max-entry, induced
+infinity row-sum and symmetry separately, actual thresholds, spectra and norms.
+
+Independently evaluate the complete small rounded-input residual Gram and
+selected physical subspaces using the actual base metric and d-capable analytic
+inputs. Include original implicated directions q8[141,114], q5[114,60] and
+new worst diagonal/off-diagonal directions. Require rounded-input and selected
+physical max error <=5e-8 and row-sum <=1e-5, with all signed contributions
+visible. Selected row sums are not full physical bounds: report coverage and
+limitations, not complete physical certification or permission for consumers.
+No alternate matrix may substitute for a failing production check.
+
+Keep total task-specific diagnostic/acceptance work within 20 numerical minutes,
+16GiB RSS and 2GiB additional scratch beyond staged inputs. Approximately88s
+is already consumed by diagnosis plus independent compact design checks;
+existing-owner tests and normal CI/setup wall time are separate. Use the
+existing guarded runner, selected/tiled contractions and machine-local scratch;
+no full dense final physical-metric rebuild. Record premerge and residual
+construction time/allocations separately from physical validation/I/O. A material
+cost regression requires review, not an unqualified speed claim. All frozen
+inputs and hchain evidence remain read-only. No Hamiltonians, fields, HF,
+q9/H20, correlation, release/version changes or consumer restart.
+
+### Evidence And Failure Rule
+
+Diagnosis `tmp/reviews/h10-q8-residual-diagnosis-2026-09-18.md`, SHA-256
+`1e7e7495519d082222c89ecc676fa3cae915e703438644d50f46fcb2792e5233`,
+reproduced q8 error1.26078e-7 against scaled threshold1.000000063e-7.
+Accurate rounded inputs still fail at1.13263e-7; propagated premerge error
+explains it. Formula-only two-quadratic error propagated through the ORIGINAL
+transform is5.212e-9; it is not a repaired basis. Independent selected physical
+error9.63739e-8 also fails. q5 passes. No cutoff/rank defect was established.
+Independent design review verified the general identity, including nonzero D,
+with ten compact 256-bit checks; no replacement q8 result has been claimed.
+
+If this exact candidate fails original or independent acceptance, budget,
+input identity or performance checks, make no implementation commit; preserve
+evidence and report. Do not select another remedy, expand physical coverage
+beyond resources, relax tolerances, change rank semantics or edit callers.
+Broader architecture/API/numerical policy needs a separate decision. The bounded
+cycle permits at most two in-scope correction rounds, not automatic expansion.
+Hchain-doer remains paused even on success; no successor task is authorized.
 
 ## Cutoff History
 

@@ -149,7 +149,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gauss
 sha256 = "6d8dcc37dd7afc8df833f06e458068409a79fed67c08ee3cd9826994218fe0ec"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
-sha256 = "48c9ba8bba9d5ae91d37e6b0d9dc5d93c345b4751ef463ec2bf04daaa5b5acb7"
+sha256 = "fc36b8c2346fb7a0e81c7fe55a7d26e34f38d5a33b7b436a80cd16fbd8b8c655"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/retained_gto_egoi.md"
 sha256 = "66567e19f01e34c4146b02999b8fba035811ad9e9ad8364db2ec7c77d9457945"
@@ -9113,22 +9113,18 @@ title = "occupied-first validation"
 [[records]]
 dependency_ids = []
 evidence_refs = []
-grant = "maintenance"
+grant = "implementation"
 id = "HP-RG-ORTHO-FN-01"
-lifecycle = "implemented"
-scope = "source maintenance."
+lifecycle = "approved"
+scope = "Pass 650: premerge Gram reassociation only in finalize_residual_gaussian_transform, under Residual Premerge Gram Arithmetic. At most eight added source lines. Preserve final four-term assertion, injected D contribution, thresholds, ranks, callers and interfaces; no helper, fallback, physical consumer admission or broader repair."
 surfaces = ["source"]
 title = "residual final-orthogonality robustness"
 
     [[records.document_refs]]
-    heading = "Residual Gaussian Orthogonality And Cutoff Policy"
+    heading = "Residual Premerge Gram Arithmetic"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
 
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl"
-    state = "existing"
     [[records.paths]]
     kind = "source"
     path = "src/cartesian/cartesian_residual_gaussians/residual_basis.jl"
@@ -9136,21 +9132,21 @@ title = "residual final-orthogonality robustness"
 [[records]]
 dependency_ids = ["HP-RG-ORTHO-FN-01"]
 evidence_refs = []
-grant = "maintenance"
+grant = "implementation"
 id = "HP-RG-ORTHO-TEST-01"
-lifecycle = "completed"
-scope = "test maintenance, not source authority."
+lifecycle = "approved"
+scope = "Pass 650: at most 35 added lines in existing misc owner under Residual Premerge Gram Arithmetic. Independent high-cancellation and nonzero-D checks, unchanged rejection gates; frozen q5/q8 acceptance within the shared resource envelope. No new fixture, other test edits, policy changes or consumer admission."
 surfaces = ["tests"]
 title = "residual final-orthogonality validation"
 
     [[records.document_refs]]
-    heading = "Residual Gaussian Orthogonality And Cutoff Policy"
+    heading = "Residual Premerge Gram Arithmetic"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
 
     [[records.paths]]
     kind = "test"
-    path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
+    path = "test/misc/runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = []
