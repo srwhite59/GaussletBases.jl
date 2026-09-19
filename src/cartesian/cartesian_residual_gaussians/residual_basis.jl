@@ -505,7 +505,9 @@ function residual_gaussian_block_metadata(blocks, owner_count)
     return source_owners, occupations, [count(==(owner), source_owners) for owner in 1:owner_count], labels
 end
 function finalize_residual_gaussian_transform(T_G0, T_A0, X, S_AA, tau_merge_abs, tau_merge_rel, identity_atol)
-    S_merge = _rg_sym(residual_gaussian_overlap(T_G0, T_A0, X, S_AA))
+    C = X * T_A0
+    D = T_G0 + C
+    S_merge = _rg_sym(transpose(D) * D + transpose(T_A0) * S_AA * T_A0 - transpose(C) * C)
     merge_values = eigvals(Symmetric(S_merge))
     tau_merge = check_residual_gaussian_metric(
         merge_values, tau_merge_abs, tau_merge_rel, "residual-Gaussian final merge metric")

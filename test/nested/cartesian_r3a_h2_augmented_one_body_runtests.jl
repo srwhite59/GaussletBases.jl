@@ -498,8 +498,9 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     @test residual.base_dimension == 487
     @test residual.residual_dimension == 18
     @test size(operators.kinetic) == (505, 505)
-    @test minimum(residual.residual_occupations) ≈ 5.102500905664382e-4 atol = 1.0e-14
-    @test maximum(residual.residual_occupations) ≈ 1.2243126230584132e-2 atol = 1.0e-14
+    # Occupation snapshots allow numerical portability; physical gates below are unchanged.
+    @test minimum(residual.residual_occupations) ≈ 5.102500905664382e-4 atol = 1.0e-12
+    @test maximum(residual.residual_occupations) ≈ 1.2243126230584132e-2 atol = 1.0e-12
     @test norm(residual.T_G + X * residual.T_A, Inf) <= 1.0e-10
     @test norm(RSR - I, Inf) <= 1.0e-10
     @test numerical_residual.occupation_cutoff == 1.0e-10

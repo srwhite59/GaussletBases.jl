@@ -69,6 +69,38 @@ end
         residual_compactness = nothing)
 end
 
+@testset "residual premerge cancellation and injected contribution" begin
+    CRG = GaussletBases.CartesianResidualGaussians
+    setprecision(BigFloat, 256) do
+        X = [sin(i + 2j) / 8 for i in 1:16, j in 1:3]
+        A0 = 3000 .* [1.0 0.2 0.0; 0.0 1.0 0.3; 0.1 0.0 1.0]
+        S = X' * X + Matrix{Float64}(I, 3, 3) / 3000^2
+        B = BigFloat.([Matrix{Float64}(I, 16, 16) X; X' S])
+        for amplitude in (0.0, 0.25)
+            D = [amplitude * cos(2i + j) for i in 1:16, j in 1:3]
+            G0 = -X * A0 + D
+            G, A = CRG.finalize_residual_gaussian_transform(
+                G0, A0, X, S, 1e-12, 1e-12, 5e-8)
+            R = BigFloat.([G; A])
+            @test maximum(abs, R' * B * R - I) <= 5e-8
+            @test maximum(abs, CRG.residual_gaussian_overlap(G, A, X, S) - I) <= 1e-7
+            if amplitude > 0
+                C = BigFloat.(X) * BigFloat.(A0)
+                exact = BigFloat.([G0; A0])' * B * BigFloat.([G0; A0])
+                without_D = BigFloat.(A0)' * BigFloat.(S) * BigFloat.(A0) - C' * C
+                @test maximum(abs, exact - without_D) > 0.1
+            end
+        end
+        @test_throws ArgumentError CRG.finalize_residual_gaussian_transform(
+            -X * A0, A0, X, S, 1e-12, 1e-12, 0.0)
+        for Sbad in ([-1.0 0.0; 0.0 1.0], [1e-14 0.0; 0.0 1.0])
+            @test_throws ArgumentError CRG.finalize_residual_gaussian_transform(
+                zeros(2, 2), Matrix{Float64}(I, 2, 2), zeros(2, 2), Sbad,
+                1e-12, 1e-12, 5e-8)
+        end
+    end
+end
+
 @testset "vendored legacy BasisSets provenance" begin
     path = joinpath(_PROJECT_ROOT, "data", "legacy", "BasisSets")
     text = read(path, String)
