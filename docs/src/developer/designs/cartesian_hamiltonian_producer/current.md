@@ -3,19 +3,16 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
-Pass 650 authorizes the [premerge Gram arithmetic candidate](residual_gaussian_orthogonality_robustness.md#Residual-Premerge-Gram-Arithmetic)
-for GB-H10-Q8-RESIDUAL-20260918 under HP-RG-ORTHO-FN-01/TEST-01. Change only
-premerge evaluation, preserving the final four-term assertion and all numerical
-policies; eight added source lines and 35 existing-misc-test lines maximum.
-Fresh q5/q8 residual-only acceptance is required within the frozen resource
-envelope. Diagnosis is not a repaired basis or complete physical certificate.
-No q9, operators, fields, HF, consumer continuation or successor is authorized.
-Hchain-doer remains paused.
-
-Steven's narrow Pass 650 amendment permits only the two R3A occupation-snapshot
-absolute tolerances to become 1e-12, with unchanged golden values and physical
-gates. Preserve the reported 463/464 failure; rerun the entire affected owner,
-reuse completed q5/q8 evidence, and require implementation CI and review.
+Pass 651 accepts the [premerge Gram arithmetic repair](residual_gaussian_orthogonality_robustness.md#Residual-Premerge-Gram-Arithmetic)
+at b974887980ef90bca6e753c049376d4548883dc0. The implementation grants for
+GB-H10-Q8-RESIDUAL-20260918 are consumed; HP-RG-ORTHO-FN-01/TEST-01 return to
+maintenance. Fresh q5/q8 naturally retain 270 directions and pass unchanged
+production gates plus bounded independent checks; selected physical checks are
+not full physical certification. Steven's two occupation-snapshot tolerances
+are now 1e-12, with unchanged golden values and physical gates. Original failure
+evidence remains; amended R3A passed 464/464 plus 64/64. No q9, operators,
+fields, HF, consumer continuation or successor is authorized. Hchain-doer stays
+paused; the bounded repair task ends here.
 
 Pass 649 accepts the [basic Gaussian integral arithmetic repair](cartesian_gaussian_raw_blocks_non_nuclear.md#Basic-Gaussian-Integral-Arithmetic-Repair)
 at 1dbc1856d7b699311dcf65ae6a68fb193f9c1009. Both BASIC-ARITH IDs return to

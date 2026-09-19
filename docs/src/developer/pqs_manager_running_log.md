@@ -1821,3 +1821,35 @@ Require complete R3A including64 checks, full implementation CI/Docs and review;
 no q5/q8 replay. Remaining blocker is implementation acceptance, not a waived
 failure. Hchain-doer stays paused; no successor. This amendment changes only
 documentation authority; the source/test draft is excluded from its commit.
+
+### Pass 651: Residual Premerge Repair Accepted
+
+Accept b974887980ef90bca6e753c049376d4548883dc0; close
+GB-H10-Q8-RESIDUAL-20260918 and return both ORTHO grants to maintenance.
+General premerge reassociation fixes demonstrated construction cancellation
+without dropping injected D, changing rank/cutoffs or weakening final checks.
+Fresh q5/q8 naturally retain270; accurate rounded maxima3.09e-9/4.45e-9 and
+selected physical maxima5.24e-9/1.86e-8 meet the assigned bounds. Selected
+physical checks are not full certification. Independent review inspected the
+oracle code, signed contributions, log/report hashes and exact committed diff;
+no q5/q8 replay. Report: tmp/reviews/pass650-q8-premerge-implementation.md,
+SHA-256 b43f6c540e75ac31a71521c48a42e43a5a398278eeb48c36f43f4d4ca196b60e.
+
+Original R3A463/464 failure remains evidence. Steven's narrow snapshot amendment
+changed two bounds to1e-12, not their values or physical checks; amended R3A
+464/464 and facade64/64 passed. Cause of the old final digits remains unclaimed.
+One amended continuation sufficed. Manager reran misc67 and docs8+162+10;
+reuse doer core/public owners, full exact-head CI35425393601 and
+Docs35425393550. Closeout local package/docs, authority/self-test, two-render
+parity, Documenter/log/diff passed; require docs-only remote checks before
+adviser notification.
+
+Deleted: one four-term premerge call. Simplified: premerge arithmetic.
+Quarantined: none. Not deleted: final independent overlap assertion and injected
+callers. Added/deleted src3/1; existing tests35/2, no new test files or
+metadata/status. q8 premerge adds62.88MiB temporary allocation and4.77ms;
+no material total construction regression observed or speedup claimed.
+Bounded task used under211s, peak2.77GiB, scratch295MB. LT1/LT2 advance through
+accurate construction; physical consumer admission remains separate. q9,
+H10 operators/fields/HF, release work and successors remain excluded.
+Hchain-doer stays paused; send the single final adviser notice after checks.

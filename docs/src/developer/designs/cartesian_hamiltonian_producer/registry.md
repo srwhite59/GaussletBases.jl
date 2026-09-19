@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `c37e0887891b9d3e284c90def4a6236f50cd68c08d9c14bbd4f50cd121ed2445`.
+> [authority.toml](authority.toml), SHA-256 `ecd6cfde01c4a4845ad9666aed7542c297fdbb89712e80ce13279d6d8faf7d2c`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -5291,22 +5291,24 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-RG-ORTHO-FN-01 - residual final-orthogonality robustness
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `source`
 - **Execution whitelist:** `true`
 - **Documents:**
   - `canonical` [residual\_gaussian\_orthogonality\_robustness.md](residual_gaussian_orthogonality_robustness.md); heading `Residual Premerge Gram Arithmetic`
 - **Owned paths:**
   - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
-- **Evidence:** none
+- **Evidence:**
+  - `git_commit`: `b974887980ef90bca6e753c049376d4548883dc0`
+  - `manager_pass`: `651`
 - **Dependencies:** none
-- **Scope:** Pass 650: premerge Gram reassociation only in finalize\_residual\_gaussian\_transform, under Residual Premerge Gram Arithmetic. At most eight added source lines. Preserve final four-term assertion, injected D contribution, thresholds, ranks, callers and interfaces; no helper, fallback, physical consumer admission or broader repair.
+- **Scope:** Maintain accepted premerge Gram identity at b97488798 under Residual Premerge Gram Arithmetic. Preserve nonzero D, final four-term assertion, inverse square root, thresholds, rank and callers. The bounded implementation grant is consumed; no new remedy, physical admission or consumer continuation.
 
 ### HP-RG-ORTHO-TEST-01 - residual final-orthogonality validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -5314,9 +5316,11 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/misc/runtests.jl`
   - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
-- **Evidence:** none
+- **Evidence:**
+  - `git_commit`: `b974887980ef90bca6e753c049376d4548883dc0`
+  - `manager_pass`: `651`
 - **Dependencies:** `HP-RG-ORTHO-FN-01`
-- **Scope:** Pass 650 and user-approved Occupation Snapshot Portability Amendment under Residual Premerge Gram Arithmetic: at most 35 added misc lines; exactly two R3A occupation-snapshot atol substitutions to 1e-12 and at most two comment lines. Preserve golden values and every physical/rank gate. Reuse q5/q8 evidence; rerun complete R3A and normal implementation CI. No other test edits or consumer admission.
+- **Scope:** Maintain accepted independent cancellation/nonzero-D misc checks and two R3A occupation snapshots at b97488798 under Residual Premerge Gram Arithmetic. Preserve golden values, amended 1e-12 snapshot bounds and all physical/rank gates. Implementation and amendment grants are consumed; no new physical run or consumer admission.
 
 ### HP-RG-PROTECT-ADDREF-FN-01 - protected additive atomic reference correction
 

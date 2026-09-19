@@ -13,8 +13,8 @@ The basis algorithm itself is canonical in
 
 | ID | Lifecycle | Durable result |
 | --- | --- | --- |
-| `HP-RG-ORTHO-FN-01` | Approved bounded premerge repair | Preserve implemented merge/rank/identity rules; change premerge evaluation only |
-| `HP-RG-ORTHO-TEST-01` | Approved focused regression | Existing misc owner additions; unchanged H2/injected endpoint gates |
+| `HP-RG-ORTHO-FN-01` | Implemented; maintenance | General premerge identity; unchanged merge/rank/final-identity rules |
+| `HP-RG-ORTHO-TEST-01` | Completed; maintenance | Independent misc regressions and two portable R3A occupation snapshots |
 | `HP-RG-IDTOL-FN-01` | Implemented historical; superseded | Former `identity_atol = 1e-8` default |
 | `HP-RG-IDTOL-TEST-01` | Completed historical evidence | Be high-zeta identity-tolerance audit |
 | `HP-RG-CUTOFF-FN-01` | Implemented historical; cutoff superseded | Former `5e-8` cutoff; current `identity_atol = 5e-8` originated here |
@@ -116,10 +116,20 @@ or replace the near-singular merge failure.
 
 ## Residual Premerge Gram Arithmetic
 
-Pass 650 authorizes only the premerge repair for GB-H10-Q8-RESIDUAL-20260918,
+Pass 650 authorized only the premerge repair for GB-H10-Q8-RESIDUAL-20260918,
 under HP-RG-ORTHO-FN-01/TEST-01. Baseline is
 `aa2ac41c513635bb5a7208848551eeef0edd754b`. This is a construction-arithmetic
 repair, not a cutoff, rank, conditioning policy or physical-basis admission.
+
+Pass 651 accepts b974887980ef90bca6e753c049376d4548883dc0 and consumes this
+implementation grant, including the narrow snapshot amendment below. The
+following bounds preserve the completed contract, not an active execution task.
+Fresh q5/q8 retained 270 directions naturally; complete rounded-input maximum
+errors were 3.09e-9/4.45e-9 and selected physical errors 5.24e-9/1.86e-8.
+Those physical checks are not a full metric certificate or consumer admission.
+The amended R3A owner passed 464/464 plus 64/64; the original 463/464 failure
+is retained without a claim about its historical cause. Full implementation
+CI35425393601 and Docs35425393550 passed. No physical thresholds changed.
 
 Change only the premerge `S_merge` evaluation in
 `src/cartesian/cartesian_residual_gaussians/residual_basis.jl` function
