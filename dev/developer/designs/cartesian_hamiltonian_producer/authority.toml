@@ -149,7 +149,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gauss
 sha256 = "6d8dcc37dd7afc8df833f06e458068409a79fed67c08ee3cd9826994218fe0ec"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
-sha256 = "54880b739112b6b86787273642be845c247d386d175930e3509189bf1bb4e450"
+sha256 = "e213a6000f0897033cea09c94c911c23053c33c179b2a0f8c6ea4e6717a40529"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/retained_gto_egoi.md"
 sha256 = "66567e19f01e34c4146b02999b8fba035811ad9e9ad8364db2ec7c77d9457945"
@@ -9112,11 +9112,10 @@ title = "occupied-first validation"
     state = "existing"
 [[records]]
 dependency_ids = []
-evidence_refs = []
-grant = "implementation"
+grant = "maintenance"
 id = "HP-RG-ORTHO-FN-01"
-lifecycle = "approved"
-scope = "Pass 650: premerge Gram reassociation only in finalize_residual_gaussian_transform, under Residual Premerge Gram Arithmetic. At most eight added source lines. Preserve final four-term assertion, injected D contribution, thresholds, ranks, callers and interfaces; no helper, fallback, physical consumer admission or broader repair."
+lifecycle = "implemented"
+scope = "Maintain accepted premerge Gram identity at b97488798 under Residual Premerge Gram Arithmetic. Preserve nonzero D, final four-term assertion, inverse square root, thresholds, rank and callers. The bounded implementation grant is consumed; no new remedy, physical admission or consumer continuation."
 surfaces = ["source"]
 title = "residual final-orthogonality robustness"
 
@@ -9125,17 +9124,23 @@ title = "residual final-orthogonality robustness"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
 
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "b974887980ef90bca6e753c049376d4548883dc0"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "651"
+
     [[records.paths]]
     kind = "source"
     path = "src/cartesian/cartesian_residual_gaussians/residual_basis.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-RG-ORTHO-FN-01"]
-evidence_refs = []
-grant = "implementation"
+grant = "maintenance"
 id = "HP-RG-ORTHO-TEST-01"
-lifecycle = "approved"
-scope = "Pass 650 and user-approved Occupation Snapshot Portability Amendment under Residual Premerge Gram Arithmetic: at most 35 added misc lines; exactly two R3A occupation-snapshot atol substitutions to 1e-12 and at most two comment lines. Preserve golden values and every physical/rank gate. Reuse q5/q8 evidence; rerun complete R3A and normal implementation CI. No other test edits or consumer admission."
+lifecycle = "completed"
+scope = "Maintain accepted independent cancellation/nonzero-D misc checks and two R3A occupation snapshots at b97488798 under Residual Premerge Gram Arithmetic. Preserve golden values, amended 1e-12 snapshot bounds and all physical/rank gates. Implementation and amendment grants are consumed; no new physical run or consumer admission."
 surfaces = ["tests"]
 title = "residual final-orthogonality validation"
 
@@ -9143,6 +9148,13 @@ title = "residual final-orthogonality validation"
     heading = "Residual Premerge Gram Arithmetic"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "b974887980ef90bca6e753c049376d4548883dc0"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "651"
 
     [[records.paths]]
     kind = "test"
