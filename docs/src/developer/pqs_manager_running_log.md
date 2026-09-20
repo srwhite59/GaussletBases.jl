@@ -1853,3 +1853,36 @@ Bounded task used under211s, peak2.77GiB, scratch295MB. LT1/LT2 advance through
 accurate construction; physical consumer admission remains separate. q9,
 H10 operators/fields/HF, release work and successors remain excluded.
 Hchain-doer stays paused; send the single final adviser notice after checks.
+
+### Pass 652: Stable Terminal Residual Construction Authorized
+
+Steven approves H10-SUPPLEMENT-IMPLEMENTATION-CYCLE-20260920 through Screening-
+advisor, including the explicit240-added-source-line exception. Reuse all270
+evidence rather than another design campaign: direct functions pass full
+refined Gram/cross and selected analytic checks, while rounded final validation
+still rejects them. This does not measure a full H10 energy error. Freeze a
+four-grid order/tail schedule, residual-level stabilization and checked memory
+admission before source work. Preserve symmetric Lowdin orientation with the
+small QR-factor SVD; scratch QR gauge is not an IDA-equivalent replacement.
+
+LT1/LT2 advance accurate usable supplementation, not another metric framework.
+MT boundary is non-injected function-aware terminal construction and validation
+together. Matrix-only/nonzero-D, injected/protected and operator definitions
+remain unchanged. Canonical contract owns exact source30/210, test35/100 and
+reader15/20 ceilings, selected operator gates and one cumulative60min/16GiB/8GiB
+saved-H10 qualification. No HF, consumer restart or successor; at most two
+in-scope correction rounds. Old evidence and both handoffs remain preserved.
+
+Deleted/simplified target: cancellation-prone terminal validation and duplicated
+entry routing, not selection. Quarantined: old formula only as diagnostic on
+the repaired branch. Not deleted: matrix-only finalizer and injected callers.
+Added source/tests/metadata in this authority pass: zero. Independent review
+used source closure, scratch receipts and exact assignment/design hashes; no
+numerical replay. Require local package/docs/authority/self-test/generated/build/
+log/diff and exact-head remote docs-only checks before dispatch. Failure of
+scope, budget, physical gates or admission stops the cycle for review.
+
+Authorization local checks passed: package load, docs8+162+10, authority/check
+self-test, two matching renders, Documenter with existing size warnings,
+log1883/2000 and diff. Source/tests remain untouched. Remote exact-head
+docs-only CI/Docs must pass before the single bounded implementation dispatch.

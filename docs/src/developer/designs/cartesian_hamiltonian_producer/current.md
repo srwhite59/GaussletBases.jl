@@ -3,7 +3,16 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
-Pass 651 accepts the [premerge Gram arithmetic repair](residual_gaussian_orthogonality_robustness.md#Residual-Premerge-Gram-Arithmetic)
+Pass 652 approves [stable terminal residual construction](residual_gaussian_orthogonality_robustness.md#Stable-Terminal-Residual-Construction)
+under HP-RG-ORTHO-FN-01/TEST-01, superseding their maintenance-only restriction
+for this one bounded cycle. The explicit source ceiling is240 added lines in
+two owners. Finite refinement/tail and memory admission precede direct formation,
+symmetric Lowdin normalization and physical validation. Matrix-only, injected
+and protected paths retain their existing contracts. Saved-q9 qualification is
+limited to construction and selected comparisons, not full operators/field/HF.
+No consumer restart, release or successor; hchain-doer remains paused.
+
+Historically, Pass 651 accepted the [premerge Gram arithmetic repair](residual_gaussian_orthogonality_robustness.md#Residual-Premerge-Gram-Arithmetic)
 at b974887980ef90bca6e753c049376d4548883dc0. The implementation grants for
 GB-H10-Q8-RESIDUAL-20260918 are consumed; HP-RG-ORTHO-FN-01/TEST-01 return to
 maintenance. Fresh q5/q8 naturally retain 270 directions and pass unchanged

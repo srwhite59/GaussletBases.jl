@@ -13,8 +13,8 @@ The basis algorithm itself is canonical in
 
 | ID | Lifecycle | Durable result |
 | --- | --- | --- |
-| `HP-RG-ORTHO-FN-01` | Implemented; maintenance | General premerge identity; unchanged merge/rank/final-identity rules |
-| `HP-RG-ORTHO-TEST-01` | Completed; maintenance | Independent misc regressions and two portable R3A occupation snapshots |
+| `HP-RG-ORTHO-FN-01` | Approved; bounded implementation | Stable Terminal Residual Construction; matrix-only premerge contract retained |
+| `HP-RG-ORTHO-TEST-01` | Approved; bounded validation | Physical construction/operator checks; existing R3A snapshots unchanged |
 | `HP-RG-IDTOL-FN-01` | Implemented historical; superseded | Former `identity_atol = 1e-8` default |
 | `HP-RG-IDTOL-TEST-01` | Completed historical evidence | Be high-zeta identity-tolerance audit |
 | `HP-RG-CUTOFF-FN-01` | Implemented historical; cutoff superseded | Former `5e-8` cutoff; current `identity_atol = 5e-8` originated here |
@@ -86,6 +86,10 @@ residual directions belong to the ordinary production basis. Neither is the
 final identity tolerance.
 
 ## Final Orthogonality And Identity
+
+The matrix-only formula below remains binding outside the function-aware
+terminal domain of [Stable Terminal Residual Construction](@ref). That section
+replaces its numerical evaluation, not its physical tolerances, on that domain.
 
 After owner-local selection, all owner blocks are concatenated and normalized
 by one symmetric inverse square root of the explicitly symmetrized final merge
@@ -237,6 +241,164 @@ CI/Docs and independent review. Do not repeat q5/q8 acceptance or perform a
 baseline attribution campaign merely to explain these final digits. This narrow
 user-approved exception supersedes the original test-edit freeze only here;
 all other failure rules, budgets, exclusions and the two-round limit remain.
+
+## Stable Terminal Residual Construction
+
+Pass 652 authorizes H10-SUPPLEMENT-IMPLEMENTATION-CYCLE-20260920, baseline
+67316863580b808d0ebe911f9fdf2e31906e46ed. Steven approved the reviewed design
+and the task-local 240-added-source-line exception. This section supersedes
+the historical four-term-assertion freeze only on the domain below. It grants
+no HF, consumer restart, release or automatic successor. At most two in-scope
+correction rounds; other scope, budget or scientific failures stop for review.
+
+### Domain And Construction
+
+Use one function-aware finalization for both non-injected terminal entrances:
+`pqs_terminal_residual_gto_augmentation` and the supplement-taking
+`pqs_terminal_residual_gto_augmented_hamiltonian`. Support their existing
+PGDG primitive/stencil parent axes and Cartesian contracted supplements,
+including s/p/d and higher nonnegative polynomial powers. Explicitly validate
+that the evaluated axis representation is the actual parent representation.
+Keep matrix-only, injected, protected and parent-backed composition paths
+unchanged; no silently narrowed public signature or automatic rescue fallback.
+If an ordinary supported terminal backend cannot use this representation,
+stop and report the exact backend before committing; do not silently route it
+to rounded arithmetic or add another evaluator.
+
+Retain existing owner selection, ordering, cutoffs, signs and merge thresholds.
+Separate selection from finalization without cloning it. A private call-local
+finalizer is permitted, with the old matrix-only implementation as its default;
+no public keyword, persistent callback or validation-bypass flag. Begin from
+selected unnormalized T_G0/T_A0, never the old normalized/failing result.
+Evaluate G*T_G0+A*T_A0 directly, preserving Gaussian tails and components
+outside the finite parent. Use local terminal lifts and sparse accumulation
+of contracted tensor coefficients without coefficient screening. Reproject
+twice against the intended orthonormal G, recording exactly the same correction
+P in T_G0. This is arithmetic cleanup, not a generalized metric solve.
+
+For thin QR V=Q*R and small SVD R=L*Sigma*W', use the symmetric transform
+U=W*diag(1/Sigma)*W'. Return (T_G0-P)*U and T_A0*U, then canonicalize signs.
+Do not use inv(R) as the final gauge. Check Sigma^2 against the existing
+absolute/relative merge gate; no floor, pruning, forced rank or changed
+selection metadata. Preserve nonzero-D matrix-only behavior. Injected residuals
+are orthogonal to their own fixed sector, so never reproject them against G
+under this grant. Keep existing returned type/fields/orientation vocabulary.
+
+### Finite Grid And Tail Freeze
+
+Use positive Gauss-Legendre panels in each axis. For maximum axis angular
+power l define T=max(12,sqrt(2*l+1)+10). Panel anchors for each parent primitive
+or Gaussian key are center+t*sigma, t in (-T,-6,-2,0,2,6,T), with sigma equal
+to its width or 1/sqrt(2*exponent). Include all centers, exponents and parent
+primitive anchors, sorted uniquely; finite inputs and checked panel counts
+are mandatory. No clipping to the parent box or screening small coefficients.
+Existing evaluation/normalization conventions remain authoritative.
+
+The finite schedule is exactly (order,tail)=(8,T),(12,T),(16,T),(16,T+4).
+Construct once at (8,T); reevaluate the SAME returned coefficient functions
+at all later grids, without renormalizing them or selecting the most favorable
+result. Validate full RR and G-R on each grid. All must meet unchanged
+scale-aware identity_atol and orthogonality_atol. Between consecutive grids
+require RR max change <=identity_atol/10 and G-R max change
+<=orthogonality_atol/10. Require RR-I and both cross orientations' induced
+infinity row sums <=1e-5, and consecutive row-sum changes <=1e-6.
+These are internal qualification checks, not replacements for the tighter
+existing elementwise gates. No retry beyond this schedule or relaxed failure.
+
+The final same-order tail enlargement isolates the tail check. Testing the
+actual contracted, normalized returned functions accounts for amplification
+and cancellation; raw-axis stabilization alone is insufficient. Angular-aware
+anchors cover polynomial extent but are not universal certification. Independent
+small analytic tests and saved-fixture selected analytic checks remain required.
+If the bounded schedule cannot qualify an accepted input, stop with that input;
+do not hard-code an angular cutoff, change its rank or start a grid framework.
+Release construction tensors before validation, processing one grid at a time.
+
+### Checked Memory Admission
+
+Batch width b=min(8,nR), at least one. Before allocation compute all dimensions
+and byte products with checked integer arithmetic, including panel/node counts
+at the largest scheduled grid. Let N be the common axis-dimension product,
+nP the parent-axis product, nK the Gaussian-key product, c_a axis column counts,
+v_a largest grid node counts, and m the largest per-column intermediate across
+all three tensor contractions/permutations (include N,nP,nK). Freeze the
+conservative incremental estimate, in bytes:
+
+```text
+E = 512 MiB + 8*(4*N*nR + 12*b*m + 4*sum(v_a*c_a) +
+                 6*nG*nR + 12*nR*nR + 2*nP*b + 2*nK*b)
+```
+
+Require E<=12 GiB and process high-water RSS at entry plus E<=16 GiB;
+overflow/nonfinite dimensions or a failed bound throw before the large work.
+This deliberately reserves prior temporaries and is not a guarantee about
+unrelated allocations. Record measured RSS in qualification and stop above
+16 GiB. No process scanning, public memory API or cache. Only one live
+N-by-nR array, in-place QR and bounded batch buffers; no parent-by-final map,
+dense parent metric, full tensor serialization or persistent representation.
+Do not silently fall back or lower rank to fit memory. If this conservative
+estimator excludes the saved fixture, report before allocating, not retune it.
+
+### Operator And Test Acceptance
+
+Operators use returned functions and full projection/normalization congruence.
+Recompute moments and MWG through existing callers. Span preservation does
+not justify rotating an old two-index IDA array. Preserve Galerkin nuclear
+attraction, finite expansion and all operator source code. Test raw symmetry,
+GR and RR overlap/kinetic/position/second moments and a small nuclear case
+against independent analytic finite-expansion references. Keep existing
+ordinary-fixture tolerances. For the selected cancellation fixture require
+direct kinetic agreement <=1e-10 Ha and selected compact-assembly Ritz/occupied
+perturbation <=1e-6 Ha including deltaH AND deltaS; neither is a full HF bound.
+Invalid MWG widths or a failed operator test requiring operator-source changes
+stop this task. No full-operator 1e-10 Ha or molecular-energy claim.
+
+Test contracted translated tight/diffuse s/p/d and at least one existing
+higher polynomial case, outside-parent span, rank failure, raw selected entry,
+symmetric orientation, unchanged matrix-only/nonzero-D/injected behavior and
+both terminal entrances. Physical validation replaces rounded cancellation
+only on the repaired branch; preserve the latter as regression evidence, not
+an obligatory rejecting gate or a suppressed exception. Report elementwise,
+row-sum and symmetry measures separately.
+
+### Exact Budget And Validation
+
+Source additions including docstrings: residual_basis.jl<=30 and
+pqs_terminal_residual_gto.jl<=210, total<=240; paths are the existing files
+under src/cartesian/cartesian_residual_gaussians/ and
+src/cartesian/cartesian_final_basis_realization/. No other source changes.
+Existing tests: test/misc/runtests.jl<=35 and
+test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl<=100, total135.
+Reader additions: docs/src/reference/export.md<=15 and
+docs/src/manual/projected_q_shells.md<=20. No new files, APIs, result fields,
+exports, caches, helpers outside those owners, dependency or workflow edits.
+Delete/simplify replaced terminal logic rather than cloning selection.
+
+One saved-H10 qualification across implementation/review/corrections:
+60 cumulative numerical minutes,16 GiB peak RSS,8 GiB new local scratch.
+Reuse the hash-frozen saved working basis and comparison artifacts in
+/Users/srw/dmrgtmp/h10_supplement_design_20260920/. No basis rebuild or prototype
+replay. Fresh raw selection must naturally retain270; check full span/refined
+RR/cross and the four selected independent analytic/kinetic comparisons.
+Charge failed work; separate construction, validation and I/O. No H10 full
+operators/field/HF. Small nuclear/moment checks use small fixtures only.
+
+Run existing misc, public Cartesian/collinear/residual, R3A/facade and relevant
+injected/occupied-first owners, package load, docs_fast/docs, authority/self-test,
+two deterministic renders, Documenter/log/diff and full three-job CI/Docs.
+Use existing easy atom/diatomic fixtures for before/after time/allocation.
+Stop for review if added construction time exceeds max(0.25*baseline,0.1s)
+or peak RSS exceeds the above cap; no unqualified performance claim. No full
+angular suite or repeated unrelated paper probes. Grant/closeout uses docs-only
+checks and remote route; implementation uses normal full source CI.
+
+Evidence: reviewed all270 report hash dd661c150e55f8e97079c9c70dc1715e441dc9eaa549b752c4dce1fd5bfdfcd1;
+production design hash 61387b4d6756d5e5663ed65663e263892b60890614b15f82eeecebbde00064ef.
+Construction11.409s, peak11.47GiB and selected operator limits are scratch
+evidence, not timings of this symmetric production variant. Commit only after
+the complete bounded acceptance succeeds. On a substantive failure preserve
+the draft/evidence, do not broaden scope or manufacture a passing result.
+Hchain-doer remains paused even after repository closeout.
 
 ## Cutoff History
 

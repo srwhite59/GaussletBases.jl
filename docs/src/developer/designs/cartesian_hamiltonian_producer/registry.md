@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `ecd6cfde01c4a4845ad9666aed7542c297fdbb89712e80ce13279d6d8faf7d2c`.
+> [authority.toml](authority.toml), SHA-256 `8aa5c1d2b4f006a5769d0836908ca526ee480a97333f61bf5e51fd22f19aad7f`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -4016,7 +4016,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Dependencies:** `HP-RG-FN-01`
-- **Scope:** maintain delegation to owner-local residual selection and one final inter-owner merge.
+- **Scope:** Maintain delegation to owner-local selection and one final merge. Pass 652 implementation is exclusively bounded by HP-RG-ORTHO-FN-01 and Stable Terminal Residual Construction; no independent expansion of terminal, injected or operator surfaces.
 
 ### HP-R3-FN-02 - exact augmented one-body and moment assembly
 
@@ -5291,36 +5291,39 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-RG-ORTHO-FN-01 - residual final-orthogonality robustness
 
-- **Lifecycle:** `implemented`
-- **Grant:** `maintenance`
-- **Surfaces:** `source`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [residual\_gaussian\_orthogonality\_robustness.md](residual_gaussian_orthogonality_robustness.md); heading `Residual Premerge Gram Arithmetic`
+  - `canonical` [residual\_gaussian\_orthogonality\_robustness.md](residual_gaussian_orthogonality_robustness.md); heading `Stable Terminal Residual Construction`
 - **Owned paths:**
   - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/residual_basis.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_final_basis_realization/pqs_terminal_residual_gto.jl`
+  - `docs` / `existing`: `docs/src/reference/export.md`
+  - `docs` / `existing`: `docs/src/manual/projected_q_shells.md`
 - **Evidence:**
   - `git_commit`: `b974887980ef90bca6e753c049376d4548883dc0`
   - `manager_pass`: `651`
 - **Dependencies:** none
-- **Scope:** Maintain accepted premerge Gram identity at b97488798 under Residual Premerge Gram Arithmetic. Preserve nonzero D, final four-term assertion, inverse square root, thresholds, rank and callers. The bounded implementation grant is consumed; no new remedy, physical admission or consumer continuation.
+- **Scope:** Implement Stable Terminal Residual Construction in the two named owners, preserving matrix-only/injected contracts. Source ceilings 30/210, total240 under Steven's task-local exception; reader ceilings15/20. Freeze refinement, tail, memory, symmetric orientation and physical validation. No operator-source, public API, rank/cutoff, consumer, release or successor changes.
 
 ### HP-RG-ORTHO-TEST-01 - residual final-orthogonality validation
 
-- **Lifecycle:** `completed`
-- **Grant:** `maintenance`
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [residual\_gaussian\_orthogonality\_robustness.md](residual_gaussian_orthogonality_robustness.md); heading `Residual Premerge Gram Arithmetic`
+  - `canonical` [residual\_gaussian\_orthogonality\_robustness.md](residual_gaussian_orthogonality_robustness.md); heading `Stable Terminal Residual Construction`
 - **Owned paths:**
   - `test` / `existing`: `test/misc/runtests.jl`
-  - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
+  - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
 - **Evidence:**
   - `git_commit`: `b974887980ef90bca6e753c049376d4548883dc0`
   - `manager_pass`: `651`
 - **Dependencies:** `HP-RG-ORTHO-FN-01`
-- **Scope:** Maintain accepted independent cancellation/nonzero-D misc checks and two R3A occupation snapshots at b97488798 under Residual Premerge Gram Arithmetic. Preserve golden values, amended 1e-12 snapshot bounds and all physical/rank gates. Implementation and amendment grants are consumed; no new physical run or consumer admission.
+- **Scope:** Validate Stable Terminal Residual Construction in existing misc/public residual owners, added ceilings35/100. Require independent physical/operator checks, unchanged matrix-only/injected behavior, one bounded saved-H10 qualification and normal CI. Preserve all scientific gates and R3A snapshots. No heavy committed fixture, HF, consumer restart or successor.
 
 ### HP-RG-PROTECT-ADDREF-FN-01 - protected additive atomic reference correction
 

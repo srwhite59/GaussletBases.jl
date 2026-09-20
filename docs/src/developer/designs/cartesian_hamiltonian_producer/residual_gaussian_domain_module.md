@@ -177,12 +177,19 @@ A zero, negative, or numerically near-singular final merge is a hard failure.
 There is no merge-eigenvalue flooring. Finally, signs are deterministic: the
 largest-magnitude entry in each `T_A` column is positive.
 
-The ordinary result must satisfy
+The matrix-only ordinary result must satisfy
 
 ```text
 norm(T_G + X*T_A, Inf) <= orthogonality_atol
 <R|R> approximately I under the current identity policy.
 ```
+
+Pass 652's [Stable Terminal Residual Construction](residual_gaussian_orthogonality_robustness.md#Stable-Terminal-Residual-Construction)
+replaces the cancellation-prone evaluation only for function-aware non-injected
+terminal construction. Both terminal entrances share direct residual formation,
+symmetric Lowdin normalization and refined physical RR/G-R validation. Selection,
+thresholds, returned fields and matrix-only/injected/protected contracts remain
+unchanged. This is not an operator-accuracy or consumer-admission grant.
 
 Current production defaults and the exact scale-aware identity check are in
 the [orthogonality and cutoff contract](residual_gaussian_orthogonality_robustness.md).
