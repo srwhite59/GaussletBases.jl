@@ -149,7 +149,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gauss
 sha256 = "6d8dcc37dd7afc8df833f06e458068409a79fed67c08ee3cd9826994218fe0ec"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
-sha256 = "c3563f93e66b2c6349ea7b65278f53d96548218d8b1ca3afc4b4581d481fd8f4"
+sha256 = "016c6fc0c7544448ac365e13a79fd6b2c1a384f804b52dc1142cfe268ff1698a"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/retained_gto_egoi.md"
 sha256 = "66567e19f01e34c4146b02999b8fba035811ad9e9ad8364db2ec7c77d9457945"
@@ -9115,7 +9115,7 @@ dependency_ids = []
 grant = "implementation"
 id = "HP-RG-ORTHO-FN-01"
 lifecycle = "approved"
-scope = "Implement Stable Terminal Residual Construction in the two named owners, preserving matrix-only/injected contracts. Source ceilings 30/210, total240 under Steven's task-local exception; reader ceilings15/20. Freeze refinement, tail, memory, symmetric orientation and physical validation. No operator-source, public API, rank/cutoff, consumer, release or successor changes."
+scope = "Implement Stable Terminal Residual Construction in the two named owners, including reviewed primitive specialization and task-local performance amendment. Preserve supported inputs and matrix-only/injected contracts. Source ceilings30/210, total240; reader15/20. Preserve refinement, memory, symmetric orientation and physical gates. No operator-source, public API, rank/cutoff, consumer, release or successor changes."
 surfaces = ["docs", "source"]
 title = "residual final-orthogonality robustness"
 
@@ -9152,7 +9152,7 @@ dependency_ids = ["HP-RG-ORTHO-FN-01"]
 grant = "implementation"
 id = "HP-RG-ORTHO-TEST-01"
 lifecycle = "approved"
-scope = "Validate Stable Terminal Residual Construction in existing misc/public residual owners, added ceilings35/100. Require independent physical/operator checks, unchanged matrix-only/injected behavior, one bounded saved-H10 qualification and normal CI. Preserve all scientific gates and R3A snapshots. No heavy committed fixture, HF, consumer restart or successor."
+scope = "Validate Stable Terminal Residual Construction in existing misc/public residual owners, ceilings35/100. Require remaining independent operator/compatibility checks, reviewed task-local timing bound and normal CI. Reuse accepted saved-H10 evidence only with final-code correspondence. Preserve scientific gates and R3A snapshots. No qualification replay, heavy committed fixture, HF, consumer restart or successor."
 surfaces = ["tests"]
 title = "residual final-orthogonality validation"
 
