@@ -387,8 +387,9 @@ Run existing misc, public Cartesian/collinear/residual, R3A/facade and relevant
 injected/occupied-first owners, package load, docs_fast/docs, authority/self-test,
 two deterministic renders, Documenter/log/diff and full three-job CI/Docs.
 Use existing easy atom/diatomic fixtures for before/after time/allocation.
-Stop for review if added construction time exceeds max(0.25*baseline,0.1s)
-or peak RSS exceeds the above cap; no unqualified performance claim. No full
+The original added-time limit max(0.25*baseline,0.1s) failed and is superseded
+for this repair only by the task-local amendment below. Peak RSS still must
+respect the above cap; no unqualified performance claim. No full
 angular suite or repeated unrelated paper probes. Grant/closeout uses docs-only
 checks and remote route; implementation uses normal full source CI.
 
@@ -399,6 +400,42 @@ evidence, not timings of this symmetric production variant. Commit only after
 the complete bounded acceptance succeeds. On a substantive failure preserve
 the draft/evidence, do not broaden scope or manufacture a passing result.
 Hchain-doer remains paused even after repository closeout.
+
+### Reviewed Performance Resumption
+
+Steven accepts the demonstrated roughly0.6s easy-H2 overhead under
+H10-SUPPLEMENT-IMPLEMENTATION-RESUME-20260920. The original5.001s draft and
+failed0.1s added-time gate remain historical failures, not passes. The reviewed
+local primitive specialization reduces warm total augmentation to median
+0.613841s (range0.612961--0.615194), versus original production0.001959708s.
+Freeze warm median <=0.80s total on the same saved easy-H2 fixture, Julia1.12.6,
+four Julia/four BLAS threads, one warmup plus three measured calls, including
+all four grids and five explicit GCs. Record individual times, allocations
+and RSS; warm cumulative allocation must remain <=550,000,000 bytes versus
+observed452,947,720. These task-local margins allow measurement variability,
+not another optimization or removal of validation. Report other easy-fixture
+costs; stop for a new material regression outside this accepted tradeoff.
+
+Permit only the reviewed local concrete primitive-parameter extraction or
+equivalent function barrier inside the existing terminal owner and source cap.
+Preserve actual values, precision, division/exponential/accumulation order and
+supported argument domain. Scratch Float64 assertions do not authorize input
+narrowing. No reciprocal substitution, fast math, screening, persistent cache,
+grid/tail/GC change, new architecture or operator-source change.
+
+Reuse the completed saved-q9 qualification when source review plus small-case
+coefficient/diagnostic parity establishes correspondence to the qualified
+candidate. All270/span/cross/charge and selected analytic checks passed; selected
+rounded kinetic/metric Ritz error0.907microHa has limited margin below1microHa,
+not a full-Hamiltonian/HF bound or universal1e-10Ha precision. Exact one-body
+congruence does not establish IDA invariance. Remaining independent small
+operator/compatibility tests and normal source-bearing CI are still mandatory.
+If correspondence fails, stop before any new H10 campaign. Cumulative saved-H10
+charge390s of3600s, peak11.010GiB, scratch118,048,990bytes; no resource reset.
+Original whitelist, source30/210, tests35/100, reader15/20 and physical gates
+remain unchanged. Zero of two correction rounds used at resumption. No HF,
+consumer restart or successor; accepted implementation then lifecycle closeout
+is the endpoint, not advance acceptance of the preserved draft.
 
 ## Cutoff History
 

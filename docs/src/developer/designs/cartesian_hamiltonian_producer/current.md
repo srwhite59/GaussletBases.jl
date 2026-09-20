@@ -12,6 +12,13 @@ and protected paths retain their existing contracts. Saved-q9 qualification is
 limited to construction and selected comparisons, not full operators/field/HF.
 No consumer restart, release or successor; hchain-doer remains paused.
 
+The September20 performance amendment resumes that same bounded cycle after
+Steven accepted the measured roughly0.6s easy-case overhead. Reviewed primitive
+specialization stays inside the original caps and supported domain. Saved-q9
+scratch qualification passed within its selected accuracy limits; remaining
+production regressions and review are required, not another H10 campaign.
+The canonical task-local timing check replaces the failed old cost gate only.
+
 Historically, Pass 651 accepted the [premerge Gram arithmetic repair](residual_gaussian_orthogonality_robustness.md#Residual-Premerge-Gram-Arithmetic)
 at b974887980ef90bca6e753c049376d4548883dc0. The implementation grants for
 GB-H10-Q8-RESIDUAL-20260918 are consumed; HP-RG-ORTHO-FN-01/TEST-01 return to

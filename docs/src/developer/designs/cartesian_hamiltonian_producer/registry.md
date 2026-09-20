@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `8aa5c1d2b4f006a5769d0836908ca526ee480a97333f61bf5e51fd22f19aad7f`.
+> [authority.toml](authority.toml), SHA-256 `fde2dbab6a681a9654e14f36fea7019b30e316697021ff48a4695f1bf9a815c4`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -5306,7 +5306,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `b974887980ef90bca6e753c049376d4548883dc0`
   - `manager_pass`: `651`
 - **Dependencies:** none
-- **Scope:** Implement Stable Terminal Residual Construction in the two named owners, preserving matrix-only/injected contracts. Source ceilings 30/210, total240 under Steven's task-local exception; reader ceilings15/20. Freeze refinement, tail, memory, symmetric orientation and physical validation. No operator-source, public API, rank/cutoff, consumer, release or successor changes.
+- **Scope:** Implement Stable Terminal Residual Construction in the two named owners, including reviewed primitive specialization and task-local performance amendment. Preserve supported inputs and matrix-only/injected contracts. Source ceilings30/210, total240; reader15/20. Preserve refinement, memory, symmetric orientation and physical gates. No operator-source, public API, rank/cutoff, consumer, release or successor changes.
 
 ### HP-RG-ORTHO-TEST-01 - residual final-orthogonality validation
 
@@ -5323,7 +5323,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `b974887980ef90bca6e753c049376d4548883dc0`
   - `manager_pass`: `651`
 - **Dependencies:** `HP-RG-ORTHO-FN-01`
-- **Scope:** Validate Stable Terminal Residual Construction in existing misc/public residual owners, added ceilings35/100. Require independent physical/operator checks, unchanged matrix-only/injected behavior, one bounded saved-H10 qualification and normal CI. Preserve all scientific gates and R3A snapshots. No heavy committed fixture, HF, consumer restart or successor.
+- **Scope:** Validate Stable Terminal Residual Construction in existing misc/public residual owners, ceilings35/100. Require remaining independent operator/compatibility checks, reviewed task-local timing bound and normal CI. Reuse accepted saved-H10 evidence only with final-code correspondence. Preserve scientific gates and R3A snapshots. No qualification replay, heavy committed fixture, HF, consumer restart or successor.
 
 ### HP-RG-PROTECT-ADDREF-FN-01 - protected additive atomic reference correction
 

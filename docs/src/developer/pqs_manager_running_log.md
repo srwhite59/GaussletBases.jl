@@ -1886,3 +1886,29 @@ Authorization local checks passed: package load, docs8+162+10, authority/check
 self-test, two matching renders, Documenter with existing size warnings,
 log1883/2000 and diff. Source/tests remain untouched. Remote exact-head
 docs-only CI/Docs must pass before the single bounded implementation dispatch.
+
+### Pass 652 Amendment: Reviewed Performance Resumption
+
+Steven accepts the roughly0.6s easy-H2 overhead; preserve the original failed
+0.1s gate and5.001s draft evidence. Local primitive specialization measured
+0.613841s median with exact returned-field parity. Freeze0.80s warm median and
+550MB cumulative-allocation bounds on that same fixture/settings; all physical,
+grid/tail/GC and memory gates remain. Specialization must preserve supported
+input types, not copy scratch Float64 assertions as a public restriction.
+
+The reviewed saved-q9 construction and checks pass: all270 retained, full span
+and occupied charge, independent selected kinetic2.46e-11Ha; rounded selected
+kinetic/metric Ritz0.907microHa passes with limited margin. Not full-HF or IDA
+accuracy. Charge390s/3600s, peak11.010GiB, scratch118,048,990bytes; reuse only
+with final-code correspondence, no new campaign. Reports remain frozen under
+tmp/reviews/h10-supplement-{primitive-specialization,saved-q9-qualification,
+saved-q9-checks}-2026-09-20.md; current phase record is the separate resume report.
+
+LT1/LT2 unchanged: finish usable, accurate supplementation; no consumer restart.
+Remaining small operator/compatibility tests and independent acceptance remain
+mandatory; zero of two correction rounds used. Deleted/simplified: only the
+superseded task-local cost rule; quarantined:none. No source/test/metadata
+additions in this amendment; preserve both source drafts outside its commit.
+Original source240/test135/reader35 caps and whitelist remain; exact blocker
+is remaining implementation validation. Require docs-only authority/build/CI
+checks before dispatch; stop at accepted closeout, with no successor.
