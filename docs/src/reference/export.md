@@ -227,6 +227,13 @@ Gaussian candidates and returns complete accumulated operators through
 `.hamiltonian`, with raw transfer in the actual supplemented basis. Its matrix-only
 result is distinct from the unchanged atom/diatomic `CartesianIDAHamiltonian`.
 Residual-containing interactions retain the existing MWG approximation.
+Ordinary non-injected terminal supplementation validates the actual residual
+functions on refined positive grids with Gaussian tails, after reprojection
+and symmetric Lowdin normalization. It retains owner-local selection and
+rejects failed rank, physical-metric, refinement or memory checks without a
+fallback. Matrix-only and injected constructions retain separate contracts.
+This construction validation is not a full-Hamiltonian or basis-convergence
+certificate; raw transfer still uses the actual returned supplemented basis.
 
 ```@docs
 cartesian_base_hamiltonian

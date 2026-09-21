@@ -161,6 +161,20 @@ does not clean up a determinant or repair capture loss. Small primitive tests
 do not establish diffuse-space convergence or H-chain accuracy; converge the
 supplement and parent/retained spaces for scientific calculations.
 
+For ordinary non-injected terminal bases, selected residual functions are
+formed directly from the parent stencils and contracted Gaussians, including
+Gaussian content outside the finite parent. Twice-reprojection and symmetric
+Lowdin normalization precede checks on a fixed sequence of positive quadrature
+grids and an enlarged tail region. Failed rank, physical-overlap, refinement,
+or memory-admission checks reject construction; there is no relaxed fallback.
+Owner selection and its cutoff are unchanged. Matrix-only and injected routes
+retain their separate contracts. Different finalizers need not return bitwise
+identical coefficients; exact one-body comparisons must represent the same
+functions, including any changed base-space projection. This does not authorize
+rotating an old IDA interaction array. These checks cost extra construction time
+and do not establish full-HF accuracy, diffuse convergence, or Coulomb-expansion
+accuracy; the existing finite expansion and MWG approximation remain in use.
+
 ## Matched H2+ comparison
 
 [`examples/41_pqs_h2plus_table1.jl`](https://github.com/srwhite59/GaussletBases.jl/blob/main/examples/41_pqs_h2plus_table1.jl)

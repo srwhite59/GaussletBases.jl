@@ -101,6 +101,27 @@ end
     end
 end
 
+@testset "residual selection before finalization" begin
+    R=GaussletBases.CartesianResidualGaussians
+    X=[sqrt(.999) 0.;0. inv(sqrt(2.));0. 0.]; S=Matrix{Float64}(I,2,2)
+    labels=["near","residual"]; centers=fill((0.,0.,0.),2); owners=[1,1]
+    seen=Ref(false)
+    function finalize(G,A,x,s,ta,tr,it,ot)
+        seen[]=true
+        @test G == -x*A
+        @test A == R.owner_residual_gaussian_block(x,s,owners,1,2,1e-8,1e-12,1e-12).T_A
+        R._matrix_residual_finalize(G,A,x,s,ta,tr,it,ot)
+    end
+    a=R.build_residual_gaussian_basis(3,X,S,labels,centers,owners)
+    b=R._build_residual_gaussian_basis(finalize,3,X,S,labels,centers,owners)
+    @test seen[] && all(getfield(a,k)==getfield(b,k) for k in fieldnames(typeof(a)))
+    seen[]=false
+    a=R.build_residual_gaussian_basis(3,X,S,labels,centers,owners;residual_injection_cutoff=.01)
+    b=R._build_residual_gaussian_basis(finalize,3,X,S,labels,centers,owners;residual_injection_cutoff=.01)
+    @test !seen[] && all(getfield(a,k)==getfield(b,k) for k in fieldnames(typeof(a)))
+    @test_throws ArgumentError R.build_residual_gaussian_basis(3,zeros(3,2),ones(2,2),labels,centers,[1,2])
+end
+
 @testset "vendored legacy BasisSets provenance" begin
     path = joinpath(_PROJECT_ROOT, "data", "legacy", "BasisSets")
     text = read(path, String)

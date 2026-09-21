@@ -156,7 +156,8 @@ function pqs_terminal_residual_gto_augmented_hamiltonian(
     owners = Int[CRG.residual_candidate_owner(center, nuclei_value) for center in centers]
     S_AA = Matrix{Float64}(
         getfield(_GB_PARENT, :_cartesian_supplement_cross_overlap)(supplement, supplement))
-    residual = CRG.build_residual_gaussian_basis(
+    residual = CRG._build_residual_gaussian_basis(
+        _terminal_residual_finalizer(basis, bundles, supplement),
         basis.final_dimension, supplement_blocks.mixed.overlap, S_AA, labels, centers, owners)
     augmented_operators = pqs_terminal_residual_gto_augmented_operators(
         basis, bundles, nothing, supplement, residual, atom_locations, nuclear_charges;
@@ -592,10 +593,164 @@ function pqs_terminal_residual_gto_augmentation(
     X = _terminal_residual_mixed_overlap(basis, bundles, supplement)
     S_AA = Matrix{Float64}(
         getfield(_GB_PARENT, :_cartesian_supplement_cross_overlap)(supplement, supplement))
-    return CRG.build_residual_gaussian_basis(basis.final_dimension, X, S_AA,
+    return CRG._build_residual_gaussian_basis(
+        _terminal_residual_finalizer(basis, bundles, supplement), basis.final_dimension, X, S_AA,
         labels, centers, owners; residual_occupation_cutoff, tau_neg_abs,
         tau_neg_rel, tau_merge_abs, tau_merge_rel, orthogonality_atol, identity_atol,
         residual_injection_cutoff)
+end
+
+_terminal_residual_product(xs) = foldl(Base.checked_mul, xs; init = 1)
+function _terminal_residual_transform(c, rs)
+    nx, ny, nz = map(r -> size(r, 2), rs); n = size(c, 2)
+    y = rs[3] * reshape(c, nz, :)
+    y = permutedims(reshape(y, size(rs[3], 1), ny, nx, n), (2, 1, 3, 4))
+    y = rs[2] * reshape(y, ny, :)
+    y = permutedims(reshape(y, size(rs[2], 1), size(rs[3], 1), nx, n), (3, 1, 2, 4))
+    y = rs[1] * reshape(y, nx, :)
+    return reshape(permutedims(reshape(y, size(rs[1], 1), size(rs[2], 1),
+        size(rs[3], 1), n), (3, 2, 1, 4)), :, n)
+end
+function _terminal_residual_anchors(gs, keys, tail)
+    pts = Float64[g.center_value + t*g.width for g in gs for t in (-tail,-6.,-2.,0.,2.,6.,tail)]
+    append!(pts, [c+t/sqrt(2a) for (a,c,l) in keys for t in (-tail,-6.,-2.,0.,2.,6.,tail)])
+    all(isfinite, pts) || throw(ArgumentError("residual quadrature anchors must be finite"))
+    return sort!(unique!(pts))
+end
+function _terminal_residual_axis(layer, gs, keys, pts, order)
+    count = Base.checked_mul(order, length(pts)-1)
+    rule = eigen(SymTridiagonal(zeros(order), [i/sqrt(4i^2-1) for i in 1:order-1]))
+    x, sw = Vector{Float64}(undef,count), Vector{Float64}(undef,count)
+    for j in 1:length(pts)-1
+        h = (pts[j+1]-pts[j])/2; mid = pts[j]+h
+        for i in 1:order
+            row = (j-1)*order+i; x[row] = mid+h*rule.values[i]
+            sw[row] = sqrt(2h)*abs(rule.vectors[1,i])
+        end
+    end
+    stencil = getfield(_GB_PARENT, :stencil_matrix)(layer); np = size(stencil,2)
+    centers = [g.center_value for g in gs]
+    widths = [g.width for g in gs]
+    ev = zeros(count,np+length(keys))
+    for first in 1:8:length(gs)
+        cols = first:min(first+7,length(gs))
+        prim = [sw[i]*exp(-((x[i]-centers[j])/widths[j])^2/2) for i in eachindex(x), j in cols]
+        mul!(view(ev,:,1:np),prim,view(stencil,cols,:),1.,1.)
+    end
+    pref = getfield(_GB_PARENT, :_qwrg_atomic_shell_prefactor)
+    for (j,(a,c,l)) in enumerate(keys)
+        scale = pref(a,l)
+        for i in eachindex(x)
+            d = x[i]-c; ev[i,np+j] = sw[i]*scale*d^l*exp(-a*d*d)
+        end
+    end
+    all(isfinite, ev) || throw(ArgumentError("nonfinite residual axis evaluation"))
+    return Matrix(qr!(ev).R)
+end
+function _terminal_residual_finalizer(basis, bundles, supplement)
+    return function (G0,A0,X,S,ta,tr,it,ot)
+        entry_rss = Sys.maxrss(); nR = size(A0,2); batch = min(8,nR)
+        ax = ntuple(k -> _nested_axis_pgdg(bundles,(:x,:y,:z)[k]),3)
+        proxy = _r3a_qw_proxy_layers(bundles)
+        layers = ntuple(k -> getproperty(proxy,(:x,:y,:z)[k]),3)
+        all(layers[k] === ax[k].auxiliary_layer for k in 1:3) ||
+            throw(ArgumentError("residual evaluator does not represent the parent axes"))
+        gs = map(layer -> getfield(_GB_PARENT,:primitives)(getfield(_GB_PARENT,:primitive_set)(layer)),layers)
+        orbs = supplement.orbitals
+        all(o.primitive_normalization === :axiswise_normalized_cartesian_gaussian for o in orbs) ||
+            throw(ArgumentError("residual evaluator requires normalized Cartesian primitives"))
+        keys = ntuple(k -> sort!(unique([(a,o.center[k],o.angular_powers[k]) for o in orbs for a in o.exponents])),3)
+        all(a>0 && isfinite(a) && isfinite(c) && l>=0 for ks in keys for (a,c,l) in ks) ||
+            throw(ArgumentError("invalid residual Gaussian axis input"))
+        p = map(a -> size(a.overlap,1),ax); kd = map(length,keys); cd = p.+kd
+        tails = map(ks -> max(12.,sqrt(2maximum(t[3] for t in ks)+1)+10),keys)
+        anchors = ntuple(k -> _terminal_residual_anchors(gs[k],keys[k],tails[k]),3)
+        outer = ntuple(k -> _terminal_residual_anchors(gs[k],keys[k],tails[k]+4),3)
+        nodes = ntuple(k -> Base.checked_mul(16,max(length(anchors[k]),length(outer[k]))-1),3)
+        N,nP,nK = map(_terminal_residual_product,(cd,p,kd)); nG = size(G0,1)
+        m = maximum(_terminal_residual_product(i>=stage ? dst[i] : src[i] for i in 1:3)
+            for (src,dst) in ((p,cd),(kd,cd),(cd,p)) for stage in 1:4)
+        E = big(512)*1024^2+8*(4big(N)*nR+12big(batch)*m+4sum(big.(nodes).*cd)+
+            6big(nG)*nR+12big(nR)^2+2big(nP)*batch+2big(nK)*batch)
+        E<=12big(1024)^3 && entry_rss+E<=16big(1024)^3 ||
+            throw(ArgumentError("stable residual memory admission failed: estimated bytes=$E, entry RSS=$entry_rss"))
+        rows = [[(s[1]-1)*p[2]*p[3]+(s[2]-1)*p[3]+s[3] for s in b.support_states] for b in basis.blocks]
+        covered = zeros(Int,nP)
+        for row in rows; covered[row] .+= 1; end
+        all(==(1),covered) || throw(ArgumentError("terminal residual support is not a partition"))
+        km = map(ks -> Dict(key=>i for (i,key) in enumerate(ks)),keys)
+        function lift(g)
+            v = zeros(nP,size(g,2))
+            for (b,row) in zip(basis.blocks,rows)
+                v[row,:] = isnothing(b.coefficients) ? g[b.column_range,:] : b.coefficients*view(g,b.column_range,:)
+            end
+            return v
+        end
+        function restrict(v)
+            g = zeros(nG,size(v,2))
+            for (b,row) in zip(basis.blocks,rows)
+                g[b.column_range,:] = isnothing(b.coefficients) ? v[row,:] : b.coefficients'*view(v,row,:)
+            end
+            return g
+        end
+        function vectors(g,a,rs)
+            v = _terminal_residual_transform(lift(g),ntuple(k -> view(rs[k],:,1:p[k]),3))
+            ct = zeros(nK,size(a,2))
+            for (j,o) in enumerate(orbs),(ex,co) in zip(o.exponents,o.coefficients)
+                inds = ntuple(k -> km[k][(ex,o.center[k],o.angular_powers[k])],3)
+                row = (inds[1]-1)*kd[2]*kd[3]+(inds[2]-1)*kd[3]+inds[3]
+                for col in axes(a,2); ct[row,col] += co*a[j,col]; end
+            end
+            v .+= _terminal_residual_transform(ct,ntuple(k -> view(rs[k],:,p[k]+1:cd[k]),3))
+            return v
+        end
+        localerr = maximum(isnothing(b.coefficients) ? 0. : norm(b.coefficients'*b.coefficients-I) for b in basis.blocks)
+        G,A = copy(G0),copy(A0); previous = nothing
+        for (order,tailcheck) in ((8,false),(12,false),(16,false),(16,true))
+            rs = ntuple(k -> _terminal_residual_axis(layers[k],gs[k],keys[k],tailcheck ? outer[k] : anchors[k],order),3)
+            rg = ntuple(k -> view(rs[k],:,1:p[k]),3)
+            axiserr = [opnorm(rg[k]'*rg[k]-I,2) for k in 1:3]
+            localerr+(prod(1 .+ axiserr)-1)*(1+localerr)<=it ||
+                throw(ArgumentError("terminal base is not orthonormal on the residual grid"))
+            cross = zeros(nG,nR)
+            if order==8
+                V = Matrix{Float64}(undef,N,nR)
+                for first in 1:batch:nR
+                    cols = first:min(first+batch-1,nR); v = vectors(view(G,:,cols),view(A,:,cols),rs)
+                    for pass in 1:2
+                        delta = restrict(_terminal_residual_transform(v,map(adjoint,rg)))
+                        G[:,cols] .-= delta
+                        v .-= _terminal_residual_transform(lift(delta),rg)
+                    end
+                    V[:,cols] = v
+                end
+                factor = svd(Matrix(qr!(V).R)); vals = factor.S.^2
+                threshold = CRG.check_residual_gaussian_metric(vals,ta,tr,"physical residual final merge metric")
+                minimum(vals)>threshold || throw(ArgumentError("physical residual final merge metric is near singular"))
+                U = factor.V*Diagonal(inv.(factor.S))*factor.V'
+                G,A = G*U,A*U; CRG.canonicalize_residual_signs!(A,G)
+                V = nothing; GC.gc()
+            end
+            V = Matrix{Float64}(undef,N,nR)
+            for first in 1:batch:nR
+                cols = first:min(first+batch-1,nR); v = vectors(view(G,:,cols),view(A,:,cols),rs)
+                V[:,cols] = v; cross[:,cols] = restrict(_terminal_residual_transform(v,map(adjoint,rg)))
+            end
+            gram = V'*V; V = nothing; GC.gc()
+            maximum(abs,gram-I)<=it*(1+max(1.,maximum(abs,gram))) && maximum(abs,cross)<=ot ||
+                throw(ArgumentError("physical residual identity/cross validation failed"))
+            max(opnorm(gram-I,Inf),opnorm(cross,Inf),opnorm(cross',Inf))<=1e-5 ||
+                throw(ArgumentError("physical residual row-sum validation failed"))
+            if !isnothing(previous)
+                dg,dc = gram-previous[1],cross-previous[2]
+                maximum(abs,dg)<=it/10 && maximum(abs,dc)<=ot/10 &&
+                    max(opnorm(dg,Inf),opnorm(dc,Inf),opnorm(dc',Inf))<=1e-6 ||
+                    throw(ArgumentError("physical residual quadrature/tail stabilization failed"))
+            end
+            previous = (gram,cross)
+        end
+        return G,A
+    end
 end
 
 function _r3a_centered_factor_terms(axis, expansion, center)

@@ -776,6 +776,17 @@ function build_injected_residual_gaussian_basis(base_dimension, X, S_AA, labels,
         :largest_T_A_entry_positive)
 end
 function build_residual_gaussian_basis(base_dimension::Integer, X, S_AA,
+    labels::Vector{String}, centers::Vector{NTuple{3,Float64}}, owners::Vector{Int}; kwargs...)
+    return _build_residual_gaussian_basis(_matrix_residual_finalize,
+        base_dimension, X, S_AA, labels, centers, owners; kwargs...)
+end
+function _matrix_residual_finalize(G, A, X, S, abs_tol, rel_tol, identity_tol, cross_tol)
+    G, A = finalize_residual_gaussian_transform(G, A, X, S, abs_tol, rel_tol, identity_tol)
+    norm(G + X * A, Inf) <= cross_tol ||
+        throw(ArgumentError("residual-Gaussian G' S R validation failed"))
+    return G, A
+end
+function _build_residual_gaussian_basis(finalizer, base_dimension::Integer, X, S_AA,
     candidate_labels::Vector{String}, candidate_centers::Vector{NTuple{3,Float64}},
     candidate_owner_indices::Vector{Int}; residual_occupation_cutoff::Real = 1.0e-8,
     residual_injection_cutoff::Real = 0.0, candidate_overlap_atol::Real = 1.0e-12,
@@ -829,10 +840,8 @@ function build_residual_gaussian_basis(base_dimension::Integer, X, S_AA,
         throw(ArgumentError("residual-Gaussian candidate metric has no retained directions"))
     T_A0 = hcat((block.T_A for block in owner_blocks)...)
     T_G0 = Matrix{Float64}(-X * T_A0)
-    T_G, T_A = finalize_residual_gaussian_transform(
-        T_G0, T_A0, X, S_AA, tau_merge_abs, tau_merge_rel, identity_atol)
-    norm(T_G + X * T_A, Inf) <= orthogonality_atol ||
-        throw(ArgumentError("residual-Gaussian G' S R validation failed"))
+    T_G, T_A = finalizer(T_G0, T_A0, X, S_AA,
+        tau_merge_abs, tau_merge_rel, identity_atol, orthogonality_atol)
     residual_source_owner_indices, residual_occupations, owner_counts, residual_labels =
         residual_gaussian_block_metadata(owner_blocks, maximum(candidate_owner_indices))
     compact_sources = selection_rule == :owner_local_ordered_compact_first_mgs ?

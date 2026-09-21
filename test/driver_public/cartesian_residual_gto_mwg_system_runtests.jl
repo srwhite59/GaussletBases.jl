@@ -31,12 +31,12 @@ using TOML
         a.coefficients[i]*b.coefficients[j]*aaprimitive(primitive(a,i),primitive(b,j),z,Z,e)[k] for i in eachindex(a.exponents),j in eachindex(b.exponents)),(1,2))
     gaoracle(w,a,z,Z,e)=map(k->sum(
         a.coefficients[i]*gaprimitive(w,primitive(a,i),z,Z,e)[k] for i in eachindex(a.exponents)),(1,2))
-     # Five-point GH integrates these polynomial Gaussian products exactly.
-    GH = eigen(SymTridiagonal(zeros(5), sqrt.((1:4)./2)))
+     # Seven-point GH also integrates the higher-power moment/kinetic cases below.
+    GH = eigen(SymTridiagonal(zeros(7), sqrt.((1:6)./2)))
     hermite_nodes = GH.values
     hermite_weights = sqrt(pi).*abs2.(GH.vectors[1,:])
-    norm1(a,l) = (2a/pi)^.25 * (l==0 ? 1. : sqrt(4a))
-    function axisint(a,A,l,na,b,D,m,nb; t=0.,E=0.,kind=:overlap)
+    norm1(a,l) = (2a/pi)^.25 * sqrt((4a)^l/prod(1:2:2l-1;init=1))
+    function axisint(a,A,l,na,b,D,m,nb; t=0.,E=0.,kind=:overlap,power=0)
         g=a+b+t; mu=(a*A+b*D+t*E)/g
         damp=exp(-(a*(A-mu)^2+b*(D-mu)^2+t*(E-mu)^2))
         val=0.
@@ -47,7 +47,7 @@ using TOML
             else
                 y^m
             end
-            val += w*(x-A)^l*poly
+            val += w*(x-A)^l*poly*x^power
         end
         return na*nb*damp*val/sqrt(g)
     end
@@ -243,6 +243,66 @@ using TOML
     end
     @test_throws DimensionMismatch GB._validate_cartesian_residual_gto_mwg_system(merge(r.hamiltonian,(;electron_electron_ida=zeros(1,1))),r.terminal_basis,r.supplement,r.residual)
     @test_throws ArgumentError GB._validate_cartesian_residual_gto_mwg_system(merge(r.hamiltonian,(;nuclear_repulsion=NaN)),r.terminal_basis,r.supplement,r.residual)
+
+    # Independent finite Gaussian integrals on the actual returned GR/RR functions.
+    e=CoulombGaussianExpansion([.7,.2],[.3,2.];del=1.,s=1.,c=1.,maxu=2.)
+    w=build([-1.2,0.,1.2],ones(3)); t=w.terminal_basis; bundles=w.parent_axis_bundles
+    loc=[(0.,0.,v) for v in (-.3,.4,0.,12.)]
+    A=CartesianGaussianShellSupplementRepresentation3D(:domain,
+        [CartesianGaussianShellOrbitalRepresentation3D(string(i),p,loc[i],ex,[.8,.2],
+            :axiswise_normalized_cartesian_gaussian) for (i,p,ex) in
+            ((1,(0,0,0),[.08,.5]),(2,(1,0,0),[.4,1.2]),(3,(0,2,0),[4.,8.]),(4,(0,0,3),[.02,.06]))],(;))
+    r=C.pqs_terminal_residual_gto_augmentation(t,bundles,A,loc); n=r.base_dimension
+    @test r.residual_dimension==4 && r.owner_retained_counts==ones(Int,4)
+    proxy=C._r3a_qw_proxy_layers(bundles)
+    keys=ntuple(k->sort!(unique([(ex,o.center[k],o.angular_powers[k]) for o in A.orbitals for ex in o.exponents])),3)
+    layers=Tuple(getproperty(proxy,k) for k in (:x,:y,:z))
+    p=map(l->size(stencil_matrix(l),2),layers); dims=p.+map(length,keys)
+    flat(s)=(s[1]-1)*dims[2]*dims[3]+(s[2]-1)*dims[3]+s[3]
+    B=zeros(prod(dims),n+4); CA=zeros(prod(dims),4)
+    for b in t.blocks
+        rows=flat.(b.support_states)
+        B[rows,b.column_range]=isnothing(b.coefficients) ? Matrix{Float64}(I,length(rows),length(rows)) : b.coefficients
+    end
+    B[:,n+1:end]=B[:,1:n]*r.T_G
+    for (j,o) in pairs(A.orbitals),(ex,co) in zip(o.exponents,o.coefficients)
+        row=flat(ntuple(k->p[k]+findfirst(==((ex,o.center[k],o.angular_powers[k])),keys[k]),3))
+        B[row,n+1:end] .+= co.*r.T_A[j,:]
+        CA[row,j]+=co
+    end
+    function axisoracle(k;kwargs...)
+        l=layers[k]; gs=primitives(primitive_set(l)); M=stencil_matrix(l); nk=length(keys[k])
+        pars=vcat([(inv(2g.width^2),g.center_value,0,1.) for g in gs],[(a,c,h,norm1(a,h)) for (a,c,h) in keys[k]])
+        L=[M zeros(length(gs),nk);zeros(nk,p[k]) Matrix{Float64}(I,nk,nk)]
+        return L'*[axisint(a...,b...;kwargs...) for a in pars,b in pars]*L
+    end
+    S=ntuple(k->axisoracle(k),3)
+    oracle(xs)=B'*(kron(xs...)*B[:,n+1:end])
+    @test norm(oracle(S)-Matrix{Float64}(I,n+4,n+4)[:,n+1:end],Inf)<5e-8
+    X=C._terminal_residual_mixed_overlap(t,bundles,A)
+    Saa=GB._cartesian_supplement_cross_overlap(A,A)
+    A0=hcat([R.owner_residual_gaussian_block(X,Saa,collect(1:4),j,4,1e-8,1e-12,1e-12).T_A for j in 1:4]...)
+    lowdin=A0\r.T_A
+    @test norm(lowdin-lowdin',Inf)<1e-10 && minimum(eigvals(Symmetric(lowdin)))>0
+    error=B[:,n+1:end]/r.T_A-B[:,1:n]*(r.T_G/r.T_A)-CA
+    @test maximum(abs,error'*(kron(S...)*error))<5e-8^2
+    @test sum(abs2,X[:,4]) < .5*GB._cartesian_supplement_cross_overlap(A,A)[4,4]
+    @test norm(r.T_A*(r.T_A\Matrix{Float64}(I,4,4))-I,Inf)<1e-12
+    @test all(r.T_A[argmax(abs.(r.T_A[:,j])),j]>0 for j in 1:4)
+    O=C.pqs_terminal_residual_gto_augmented_operators(t,bundles,nothing,A,r,loc,ones(4);expansion=e)
+    K=sum(oracle(ntuple(j->j==k ? axisoracle(k;kind=:kinetic) : S[j],3)) for k in 1:3)
+    @test norm(O.kinetic[:,n+1:end]-K,Inf)<1e-10
+    U=-sum(c*oracle(ntuple(k->axisoracle(k;t=a),3)) for (c,a) in zip(e.coefficients,e.exponents))
+    @test norm(O.nuclear_attraction_unit_by_center[3][:,n+1:end]-U,Inf)<1e-10
+    for k in 1:3,power in 1:2
+        actual=getproperty(power==1 ? O.position : O.x2,(:x,:y,:z)[k])
+        expected=oracle(ntuple(j->j==k ? axisoracle(k;power) : S[j],3))
+        @test norm(actual[:,n+1:end]-expected,Inf)<1e-10
+        @test norm(expected[n+1:end,:]-expected[n+1:end,:]',Inf)<1e-10
+    end
+    @test norm(K[n+1:end,:]-K[n+1:end,:]',Inf)<1e-10
+    @test norm(U[n+1:end,:]-U[n+1:end,:]',Inf)<1e-10
+    @test_throws ArgumentError C.pqs_terminal_residual_gto_augmentation(t,bundles,A,loc;tau_merge_abs=2.)
 end
 
 

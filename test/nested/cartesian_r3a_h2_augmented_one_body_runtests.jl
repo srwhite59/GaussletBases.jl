@@ -508,9 +508,15 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     @test isnothing(numerical_residual.injected_G)
     @test numerical_residual.residual_dimension == residual.residual_dimension
     @test numerical_residual.owner_retained_counts == residual.owner_retained_counts
-    @test numerical_residual.T_G == residual.T_G
-    @test numerical_residual.T_A == residual.T_A
-    @test norm(numerical_operators.kinetic - operators.kinetic, Inf) <= 1.0e-10
+    # Compare the same full functions, including their changed base projection.
+    Am, Af = numerical_residual.T_A, residual.T_A
+    @test size(Am) == (18, 18) && cond(Am) < 1.0e4
+    U = Am \ Af
+    D = residual.T_G - numerical_residual.T_G * U
+    Q = [Matrix{Float64}(I, 487, 487) D; zeros(18, 487) U]
+    @test norm(Am * U - Af, Inf) <= 1.0e-12 * norm(Af, Inf)
+    @test norm(numerical_residual.T_G * U + D - residual.T_G, Inf) <= 1.0e-12
+    @test norm(Q' * numerical_operators.kinetic * Q - operators.kinetic, Inf) <= 1.0e-10
     @test maximum(norm(a - b, Inf) for (a, b) in zip(
         numerical_operators.nuclear_attraction_unit_by_center,
         operators.nuclear_attraction_unit_by_center)) <= 1.0e-10
@@ -983,7 +989,7 @@ elapsed = @elapsed @testset "R3-A H2 augmented one-body and moments" begin
     @test symmetry_error(ham.electron_electron_ida) <= 1.0e-10
     @test norm(ham.electron_electron_ida[1:nG, 1:nG] -
                base_ham.electron_electron_ida, Inf) <= 1.0e-12
-    @test norm(one_body_hamiltonian(numerical_ham) - one_body_hamiltonian(ham), Inf) <= 1.0e-10
+    @test norm(Q' * one_body_hamiltonian(numerical_ham) * Q - one_body_hamiltonian(ham), Inf) <= 1.0e-10
     @test norm(numerical_ham.electron_electron_ida -
         ham.electron_electron_ida, Inf) <= 1.0e-10
 
