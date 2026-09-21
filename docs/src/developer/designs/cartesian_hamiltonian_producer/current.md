@@ -3,27 +3,17 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
-Pass 652 approves [stable terminal residual construction](residual_gaussian_orthogonality_robustness.md#Stable-Terminal-Residual-Construction)
-under HP-RG-ORTHO-FN-01/TEST-01, superseding their maintenance-only restriction
-for this one bounded cycle. The explicit source ceiling is240 added lines in
-two owners. Finite refinement/tail and memory admission precede direct formation,
-symmetric Lowdin normalization and physical validation. Matrix-only, injected
-and protected paths retain their existing contracts. Saved-q9 qualification is
-limited to construction and selected comparisons, not full operators/field/HF.
-No consumer restart, release or successor; hchain-doer remains paused.
-
-The September20 performance amendment resumes that same bounded cycle after
-Steven accepted the measured roughly0.6s easy-case overhead. Reviewed primitive
-specialization stays inside the original caps and supported domain. Saved-q9
-scratch qualification passed within its selected accuracy limits; remaining
-production regressions and review are required, not another H10 campaign.
-The canonical task-local timing check replaces the failed old cost gate only.
-
-The subsequent authorized R3A reconciliation adds only its existing test owner:
-same-function one-body comparisons replace obsolete cross-route equality,
-with unchanged physical bounds and total135 test lines redistributed25/80/30.
-The460/464 stop remains evidence; full R3A/facade and independent production
-regressions still precede acceptance. No operator-source expansion or H10 replay.
+Pass 652 accepts [stable terminal residual construction](residual_gaussian_orthogonality_robustness.md#Stable-Terminal-Residual-Construction)
+at8b7536f72f6d8f32fc4c67f66b36192613907a6f. HP-RG-ORTHO-FN-01/TEST-01
+return to maintenance; the bounded implementation and qualification grants are
+consumed. Actual residual functions include Gaussian tails, with reprojection,
+symmetric Lowdin normalization, four-grid physical checks and memory admission.
+Matrix-only, injected and protected contracts remain unchanged. R3A same-function
+comparisons pass at unchanged limits; historical failures remain evidence.
+The accepted roughly0.62s easy-case cost includes validation. Saved-q9 selected
+Ritz sensitivity0.907microHa is not a full-Hamiltonian/HF certificate; occupied
+weights do not certify virtual/coupling or relaxation accuracy. No H10 replay,
+consumer restart, release or successor; hchain-doer remains paused.
 
 Historically, Pass 651 accepted the [premerge Gram arithmetic repair](residual_gaussian_orthogonality_robustness.md#Residual-Premerge-Gram-Arithmetic)
 at b974887980ef90bca6e753c049376d4548883dc0. The implementation grants for

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `4b9179bbde8c141337ecf1e207d9c4213ea7307db23f14f5f624e940b4e87415`.
+> [authority.toml](authority.toml), SHA-256 `eb6362159598a2110b6829d5c58b66c05eef880d82f20071d1c1d81f79fb520d`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -4016,7 +4016,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `repo_path`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Dependencies:** `HP-RG-FN-01`
-- **Scope:** Maintain delegation to owner-local selection and one final merge. Pass 652 implementation is exclusively bounded by HP-RG-ORTHO-FN-01 and Stable Terminal Residual Construction; no independent expansion of terminal, injected or operator surfaces.
+- **Scope:** Maintain delegation to owner-local selection and accepted function-aware terminal finalization under HP-RG-ORTHO-FN-01 and Stable Terminal Residual Construction. Pass 652 implementation is closed; no independent expansion of terminal, injected or operator surfaces.
 
 ### HP-R3-FN-02 - exact augmented one-body and moment assembly
 
@@ -5291,8 +5291,8 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-RG-ORTHO-FN-01 - residual final-orthogonality robustness
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `implemented`
+- **Grant:** `maintenance`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -5303,15 +5303,17 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/reference/export.md`
   - `docs` / `existing`: `docs/src/manual/projected_q_shells.md`
 - **Evidence:**
+  - `git_commit`: `8b7536f72f6d8f32fc4c67f66b36192613907a6f`
+  - `manager_pass`: `652`
   - `git_commit`: `b974887980ef90bca6e753c049376d4548883dc0`
   - `manager_pass`: `651`
 - **Dependencies:** none
-- **Scope:** Implement Stable Terminal Residual Construction in the two named owners, including reviewed primitive specialization and task-local performance amendment. Preserve supported inputs and matrix-only/injected contracts. Source ceilings30/210, total240; reader15/20. Preserve refinement, memory, symmetric orientation and physical gates. No operator-source, public API, rank/cutoff, consumer, release or successor changes.
+- **Scope:** Maintain accepted Stable Terminal Residual Construction in the two named owners and reader guidance. Preserve supported inputs, matrix-only/injected contracts, refinement, memory admission, symmetric orientation, physical gates and reviewed cost bounds. Pass 652 implementation grant is consumed. No new qualification, operator-source, API, rank/cutoff, consumer, release or successor work.
 
 ### HP-RG-ORTHO-TEST-01 - residual final-orthogonality validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
+- **Lifecycle:** `completed`
+- **Grant:** `maintenance`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
@@ -5321,10 +5323,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
   - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Evidence:**
+  - `git_commit`: `8b7536f72f6d8f32fc4c67f66b36192613907a6f`
+  - `manager_pass`: `652`
   - `git_commit`: `b974887980ef90bca6e753c049376d4548883dc0`
   - `manager_pass`: `651`
 - **Dependencies:** `HP-RG-ORTHO-FN-01`
-- **Scope:** Validate Stable Terminal Residual Construction and R3A Same-Function Reconciliation. Added ceilings misc25/public80/R3A30, total135. Reconcile only cross-route comparisons; preserve snapshots and physical limits. Require independent operator/compatibility tests, reviewed cost bound and normal CI. Reuse qualified H10 evidence by correspondence. No source expansion, qualification replay, HF, consumer restart or successor.
+- **Scope:** Maintain accepted Stable Terminal Residual Construction and R3A Same-Function Reconciliation regressions in the three existing owners. Preserve independent operator/domain coverage, full augmented comparison, snapshots, physical limits and unchanged matrix-only/injected contracts. Pass 652 implementation grant is consumed. No new fixture campaign, source expansion, H10 replay, HF, consumer restart or successor.
 
 ### HP-RG-PROTECT-ADDREF-FN-01 - protected additive atomic reference correction
 

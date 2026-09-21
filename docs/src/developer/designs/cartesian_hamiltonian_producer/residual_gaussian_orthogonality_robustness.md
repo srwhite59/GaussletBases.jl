@@ -244,7 +244,11 @@ all other failure rules, budgets, exclusions and the two-round limit remain.
 
 ## Stable Terminal Residual Construction
 
-Pass 652 authorizes H10-SUPPLEMENT-IMPLEMENTATION-CYCLE-20260920, baseline
+Pass 652 completed H10-SUPPLEMENT-IMPLEMENTATION-CYCLE-20260920 at
+8b7536f72f6d8f32fc4c67f66b36192613907a6f. Independent review accepted the
+implementation and same-function R3A reconciliation; FN/TEST grants return to
+maintenance. The bounded implementation/qualification authority below is
+consumed, not permission to replay H10 or resume a consumer. Original baseline:
 67316863580b808d0ebe911f9fdf2e31906e46ed. Steven approved the reviewed design
 and the task-local 240-added-source-line exception. This section supersedes
 the historical four-term-assertion freeze only on the domain below. It grants
@@ -478,6 +482,22 @@ energy value, but virtual energies, occupied-virtual couplings, relaxation and
 false minima still matter. This priority waives no gate and grants no solver
 calculation. Same cycle, two total correction rounds, zero used at this stop;
 no reset of the390s saved-H10 charge, resource caps or paused consumer boundary.
+
+### Pass 652 Acceptance Evidence
+
+Source170 added/6 deleted, tests96/9 and reader21/0 fit all per-owner caps.
+Independent review verified source correspondence, full augmented test map,
+independent finite-expansion oracles and exact-head numerical CI35551226941
+and Docs35551226944. Reviewer reran the public residual owner:120+80 passes,
+72.68s including compilation. Complete R3A465+64 and all other required owners
+are accepted from inspected implementation logs; no H10 replay.
+Easy-H2 median0.61993s/452962584bytes satisfies the amended practical gate.
+Saved qualification remains390s, peak11.010GiB, scratch118048990bytes.
+Selected kinetic/metric Ritz0.907microHa has limited margin; tiny selected
+occupied-weight sensitivity excludes unselected directions, GR, nuclear/J/K,
+relaxation and false minima. No full-HF/FCI accuracy or consumer restart follows.
+Historical performance and R3A failures remain evidence, not retroactive passes.
+No independent correction round was needed after the final implementation.
 
 ## Cutoff History
 

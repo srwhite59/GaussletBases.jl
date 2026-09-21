@@ -1933,3 +1933,28 @@ or test edits in this amendment, no new metadata. Exact remaining blocker is
 test-contract implementation and independent regression acceptance. Zero of two
 correction rounds used; no H10 replay, consumer restart or successor. Preserve
 drafts and stop for new scope. Require checked docs-only grant before dispatch.
+
+### Pass 652 Accepted: Stable Terminal Residual Functions
+
+Accepted8b7536f72f6d8f32fc4c67f66b36192613907a6f after independent source,
+contract, oracle and exact-head CI review. Direct residual formation retains
+outside-parent Gaussian content; symmetric normalization and four-grid/tail
+checks replace cancellation-sensitive terminal finalization. R3A compares the
+same full functions without changing1e-10 limits, snapshots or IDA policy.
+Reviewer public residual tests120+80 passed in72.68s including compilation;
+inspected R3A465+64, compatibility/occupied/protected logs and full numerical
+CI35551226941/Docs35551226944. Easy median0.61993s/452962584bytes passes the
+user-amended gate. Prior performance/R3A failures and fixture mistakes remain.
+
+LT1/LT2 advance to accepted construction, not consumer or energy certification.
+Selected q9 Ritz0.907microHa has limited margin; tiny occupied-weight RR effects
+exclude GR, nuclear/J/K, unselected virtuals, relaxation and false minima.
+No H10 replay:390s/11.010GiB/118048990bytes remains frozen. Hchain-doer stays
+paused. Implementation grants consumed; maintenance only, no successor.
+Deleted:6 source lines. Simplified: shared selection/finalizer dispatch and
+obsolete coefficient equality. Quarantined:none. Not deleted: matrix-only and
+injected paths have live callers. Remaining blocker: separate consumer authority
+and physical qualification, not this completed cycle. Added src170; tests96
+added/9 deleted in existing owners; reader21; new files/metadata/status:none.
+Mechanical diff gate and all per-owner budgets pass. No independent correction
+round required after final handback; local docs-only closeout checks follow.
