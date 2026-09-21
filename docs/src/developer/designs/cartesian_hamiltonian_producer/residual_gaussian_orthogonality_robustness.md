@@ -367,8 +367,11 @@ Source additions including docstrings: residual_basis.jl<=30 and
 pqs_terminal_residual_gto.jl<=210, total<=240; paths are the existing files
 under src/cartesian/cartesian_residual_gaussians/ and
 src/cartesian/cartesian_final_basis_realization/. No other source changes.
-Existing tests: test/misc/runtests.jl<=35 and
-test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl<=100, total135.
+Existing tests after R3A reconciliation: test/misc/runtests.jl<=25,
+test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl<=80 and
+test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl<=30, total135.
+These whole-repair additions replace the previous35/100 distribution without
+dropping required coverage. R3A permission is limited to the subsection below.
 Reader additions: docs/src/reference/export.md<=15 and
 docs/src/manual/projected_q_shells.md<=20. No new files, APIs, result fields,
 exports, caches, helpers outside those owners, dependency or workflow edits.
@@ -432,10 +435,49 @@ congruence does not establish IDA invariance. Remaining independent small
 operator/compatibility tests and normal source-bearing CI are still mandatory.
 If correspondence fails, stop before any new H10 campaign. Cumulative saved-H10
 charge390s of3600s, peak11.010GiB, scratch118,048,990bytes; no resource reset.
-Original whitelist, source30/210, tests35/100, reader15/20 and physical gates
-remain unchanged. Zero of two correction rounds used at resumption. No HF,
+Source30/210, reader15/20 and physical gates remain unchanged; the later R3A
+amendment reallocates the same135 test lines. Zero of two correction rounds
+used at performance resumption. No HF,
 consumer restart or successor; accepted implementation then lifecycle closeout
 is the endpoint, not advance acceptance of the preserved draft.
+
+### R3A Same-Function Reconciliation
+
+Steven authorizes H10-SUPPLEMENT-R3A-RECONCILIATION-20260920 after the
+unchanged R3A owner passed460/464 and stopped before its64-check facade.
+Preserve those four failures as evidence. Permit only reconciliation of its
+cross-route coefficient equality and exact one-body comparisons (reported
+lines511-513/986), with directly related hypothesis/accuracy assertions.
+No snapshot, tolerance, IDA/base/energy check or unrelated test rewrite.
+
+The unchanged matrix-only and repaired function-aware routes remain distinct
+tested contracts. Shared selection/rank/sign/Lowdin conventions do not require
+bit-identical coefficient arrays from different finalizers. Compare operators
+on the same functions, retaining1e-10 and all tighter existing physical limits.
+For the all18-retained fixture, a test-only full augmented map is allowed:
+verify square, suitably nonsingular A_m; solve A_m*U=A_f, D=G_f-G_m*U,
+Q=[I D;0 U]. Check conditioning and coefficient/function residuals, not merely
+successful solve return. Then [G,R_f]=[G,R_m]*Q and O_f=Q'*O_m*Q for exact
+one-body operators. A residual-only rotation omits reprojection into G.
+Alternatively use an independent same-function oracle. The old rounded route
+is not itself an independent accuracy oracle; no self-comparison substitute.
+
+All required independent small-fixture GR/RR kinetic/nuclear/position/second-
+moment, raw symmetry, supported-domain and outside-parent checks remain.
+Keep finite nuclear-expansion error separate. Preserve currently passing
+IDA/MWG/base/energy checks; the one-body identity does not authorize congruence
+of two-index IDA interactions. Run the complete amended R3A owner including64
+facade checks and original focused owners plus normal full CI/Docs. A surviving
+same-function discrepancy needing operator-source repair or relaxed accuracy
+is a stop, not permission to expand. No H10 replay or new performance candidate.
+
+Interpret matrix errors with existing actual occupied weights: the reviewed
+selected0.907microHa Ritz effect and tiny occupied sensitivity are different
+facts, neither a full-HF/FCI bound. Important occupied accuracy has practical
+energy value, but virtual energies, occupied-virtual couplings, relaxation and
+false minima still matter. This priority waives no gate and grants no solver
+calculation. Same cycle, two total correction rounds, zero used at this stop;
+no reset of the390s saved-H10 charge, resource caps or paused consumer boundary.
 
 ## Cutoff History
 

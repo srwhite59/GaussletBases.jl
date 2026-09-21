@@ -1912,3 +1912,24 @@ additions in this amendment; preserve both source drafts outside its commit.
 Original source240/test135/reader35 caps and whitelist remain; exact blocker
 is remaining implementation validation. Require docs-only authority/build/CI
 checks before dispatch; stop at accepted closeout, with no successor.
+
+### Pass 652 Amendment: R3A Same-Function Contract
+
+Steven authorizes the single R3A test-path reconciliation after460/464 failures;
+two bitwise coefficient assertions and two cross-route operator comparisons
+assumed the old shared finalizer. Their1.4461e-10/1.2551e-10 differences remain
+failed evidence, not a proof of harmlessness or a kernel defect. Permit checked
+full augmented-coordinate or independent same-function comparisons, retaining
+1e-10 and tighter physical bounds. Preserve all snapshots/IDA/base/energy tests.
+
+Reallocate135 added test lines: misc25/public80/R3A30. Source240/reader35 and
+all numerical/memory/domain gates unchanged; required coverage cannot be dropped
+to fit. Independent small operator tests and full R3A including64 facade checks
+remain. Easy-cost0.61993s passes; q9 evidence reused only by correspondence.
+LT1/LT2 unchanged. Actual occupied weights inform energy relevance, but do not
+waive gates or certify virtual-space/correlation/relaxation accuracy. No HF/FCI.
+Deleted/simplified target: obsolete identical-finalizer test pressure; no source
+or test edits in this amendment, no new metadata. Exact remaining blocker is
+test-contract implementation and independent regression acceptance. Zero of two
+correction rounds used; no H10 replay, consumer restart or successor. Preserve
+drafts and stop for new scope. Require checked docs-only grant before dispatch.

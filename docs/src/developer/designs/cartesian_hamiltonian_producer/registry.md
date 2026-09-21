@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `fde2dbab6a681a9654e14f36fea7019b30e316697021ff48a4695f1bf9a815c4`.
+> [authority.toml](authority.toml), SHA-256 `4b9179bbde8c141337ecf1e207d9c4213ea7307db23f14f5f624e940b4e87415`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -5319,11 +5319,12 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/misc/runtests.jl`
   - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
+  - `test` / `existing`: `test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl`
 - **Evidence:**
   - `git_commit`: `b974887980ef90bca6e753c049376d4548883dc0`
   - `manager_pass`: `651`
 - **Dependencies:** `HP-RG-ORTHO-FN-01`
-- **Scope:** Validate Stable Terminal Residual Construction in existing misc/public residual owners, ceilings35/100. Require remaining independent operator/compatibility checks, reviewed task-local timing bound and normal CI. Reuse accepted saved-H10 evidence only with final-code correspondence. Preserve scientific gates and R3A snapshots. No qualification replay, heavy committed fixture, HF, consumer restart or successor.
+- **Scope:** Validate Stable Terminal Residual Construction and R3A Same-Function Reconciliation. Added ceilings misc25/public80/R3A30, total135. Reconcile only cross-route comparisons; preserve snapshots and physical limits. Require independent operator/compatibility tests, reviewed cost bound and normal CI. Reuse qualified H10 evidence by correspondence. No source expansion, qualification replay, HF, consumer restart or successor.
 
 ### HP-RG-PROTECT-ADDREF-FN-01 - protected additive atomic reference correction
 

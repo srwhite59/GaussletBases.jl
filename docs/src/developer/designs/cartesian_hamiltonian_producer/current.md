@@ -19,6 +19,12 @@ scratch qualification passed within its selected accuracy limits; remaining
 production regressions and review are required, not another H10 campaign.
 The canonical task-local timing check replaces the failed old cost gate only.
 
+The subsequent authorized R3A reconciliation adds only its existing test owner:
+same-function one-body comparisons replace obsolete cross-route equality,
+with unchanged physical bounds and total135 test lines redistributed25/80/30.
+The460/464 stop remains evidence; full R3A/facade and independent production
+regressions still precede acceptance. No operator-source expansion or H10 replay.
+
 Historically, Pass 651 accepted the [premerge Gram arithmetic repair](residual_gaussian_orthogonality_robustness.md#Residual-Premerge-Gram-Arithmetic)
 at b974887980ef90bca6e753c049376d4548883dc0. The implementation grants for
 GB-H10-Q8-RESIDUAL-20260918 are consumed; HP-RG-ORTHO-FN-01/TEST-01 return to
