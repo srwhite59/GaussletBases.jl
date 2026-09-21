@@ -149,7 +149,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gauss
 sha256 = "6d8dcc37dd7afc8df833f06e458068409a79fed67c08ee3cd9826994218fe0ec"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
-sha256 = "016c6fc0c7544448ac365e13a79fd6b2c1a384f804b52dc1142cfe268ff1698a"
+sha256 = "383c2da0e9bde67c50f150a89521a4ec5a3b2d3b6d693b6618c4734792ff250f"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/retained_gto_egoi.md"
 sha256 = "66567e19f01e34c4146b02999b8fba035811ad9e9ad8364db2ec7c77d9457945"
@@ -9152,7 +9152,7 @@ dependency_ids = ["HP-RG-ORTHO-FN-01"]
 grant = "implementation"
 id = "HP-RG-ORTHO-TEST-01"
 lifecycle = "approved"
-scope = "Validate Stable Terminal Residual Construction in existing misc/public residual owners, ceilings35/100. Require remaining independent operator/compatibility checks, reviewed task-local timing bound and normal CI. Reuse accepted saved-H10 evidence only with final-code correspondence. Preserve scientific gates and R3A snapshots. No qualification replay, heavy committed fixture, HF, consumer restart or successor."
+scope = "Validate Stable Terminal Residual Construction and R3A Same-Function Reconciliation. Added ceilings misc25/public80/R3A30, total135. Reconcile only cross-route comparisons; preserve snapshots and physical limits. Require independent operator/compatibility tests, reviewed cost bound and normal CI. Reuse qualified H10 evidence by correspondence. No source expansion, qualification replay, HF, consumer restart or successor."
 surfaces = ["tests"]
 title = "residual final-orthogonality validation"
 
@@ -9175,6 +9175,10 @@ title = "residual final-orthogonality validation"
     [[records.paths]]
     kind = "test"
     path = "test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/nested/cartesian_r3a_h2_augmented_one_body_runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = []
