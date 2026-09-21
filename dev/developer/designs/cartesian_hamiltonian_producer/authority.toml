@@ -149,7 +149,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gauss
 sha256 = "6d8dcc37dd7afc8df833f06e458068409a79fed67c08ee3cd9826994218fe0ec"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
-sha256 = "383c2da0e9bde67c50f150a89521a4ec5a3b2d3b6d693b6618c4734792ff250f"
+sha256 = "bbe8c7435aefff7f24a2925c582dcf33d9a4b0815988770edf2940f1d15eb390"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/retained_gto_egoi.md"
 sha256 = "66567e19f01e34c4146b02999b8fba035811ad9e9ad8364db2ec7c77d9457945"
@@ -7147,7 +7147,7 @@ dependency_ids = ["HP-RG-FN-01"]
 grant = "maintenance"
 id = "HP-R3-FN-01"
 lifecycle = "implemented"
-scope = "Maintain delegation to owner-local selection and one final merge. Pass 652 implementation is exclusively bounded by HP-RG-ORTHO-FN-01 and Stable Terminal Residual Construction; no independent expansion of terminal, injected or operator surfaces."
+scope = "Maintain delegation to owner-local selection and accepted function-aware terminal finalization under HP-RG-ORTHO-FN-01 and Stable Terminal Residual Construction. Pass 652 implementation is closed; no independent expansion of terminal, injected or operator surfaces."
 surfaces = ["source"]
 title = "residual-basis construction"
 
@@ -9112,10 +9112,10 @@ title = "occupied-first validation"
     state = "existing"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "maintenance"
 id = "HP-RG-ORTHO-FN-01"
-lifecycle = "approved"
-scope = "Implement Stable Terminal Residual Construction in the two named owners, including reviewed primitive specialization and task-local performance amendment. Preserve supported inputs and matrix-only/injected contracts. Source ceilings30/210, total240; reader15/20. Preserve refinement, memory, symmetric orientation and physical gates. No operator-source, public API, rank/cutoff, consumer, release or successor changes."
+lifecycle = "implemented"
+scope = "Maintain accepted Stable Terminal Residual Construction in the two named owners and reader guidance. Preserve supported inputs, matrix-only/injected contracts, refinement, memory admission, symmetric orientation, physical gates and reviewed cost bounds. Pass 652 implementation grant is consumed. No new qualification, operator-source, API, rank/cutoff, consumer, release or successor work."
 surfaces = ["docs", "source"]
 title = "residual final-orthogonality robustness"
 
@@ -9124,6 +9124,12 @@ title = "residual final-orthogonality robustness"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
 
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "8b7536f72f6d8f32fc4c67f66b36192613907a6f"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "652"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "b974887980ef90bca6e753c049376d4548883dc0"
@@ -9149,10 +9155,10 @@ title = "residual final-orthogonality robustness"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-RG-ORTHO-FN-01"]
-grant = "implementation"
+grant = "maintenance"
 id = "HP-RG-ORTHO-TEST-01"
-lifecycle = "approved"
-scope = "Validate Stable Terminal Residual Construction and R3A Same-Function Reconciliation. Added ceilings misc25/public80/R3A30, total135. Reconcile only cross-route comparisons; preserve snapshots and physical limits. Require independent operator/compatibility tests, reviewed cost bound and normal CI. Reuse qualified H10 evidence by correspondence. No source expansion, qualification replay, HF, consumer restart or successor."
+lifecycle = "completed"
+scope = "Maintain accepted Stable Terminal Residual Construction and R3A Same-Function Reconciliation regressions in the three existing owners. Preserve independent operator/domain coverage, full augmented comparison, snapshots, physical limits and unchanged matrix-only/injected contracts. Pass 652 implementation grant is consumed. No new fixture campaign, source expansion, H10 replay, HF, consumer restart or successor."
 surfaces = ["tests"]
 title = "residual final-orthogonality validation"
 
@@ -9161,6 +9167,12 @@ title = "residual final-orthogonality validation"
     kind = "canonical"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
 
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "8b7536f72f6d8f32fc4c67f66b36192613907a6f"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "652"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "b974887980ef90bca6e753c049376d4548883dc0"
