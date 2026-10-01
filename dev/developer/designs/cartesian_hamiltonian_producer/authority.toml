@@ -182,11 +182,71 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "4a89d4562a7e9b8a7c82d9ef37436f61d5154af4b435cb02f76674d1625567b1"
+sha256 = "666ffbb49c61d9e601f1ecc57c58746ca81ae2c4db3cad02b7e59c71261d5fec"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
 
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-ANGULAR-HARMONICS-FN-01"
+lifecycle = "approved"
+scope = "Implement High-L Real Harmonic Repair only in angular_shell_basis.jl and an Unreleased CHANGELOG note: normalized recurrence, unchanged conventions/domain; delete two unused Legendre helpers; add one coupling finiteness guard. Preserve A+B and other APIs/numerical policies. No quadrature, solver, consumer, metadata, release or successor work. Stop on live callers, failed gates or budget expansion."
+surfaces = ["docs", "source"]
+title = "normalized high-L real spherical harmonic arithmetic"
+
+    [[records.document_refs]]
+    heading = "High-L Real Harmonic Repair"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/chatarchive/handoff/external_analysis/gaussletbases_atomic_interaction_multipole_issues_2026-10-01/evidence/VERIFY.md"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1a1e2c1ee761c6cdd1bca8adf7bbaa0197fccf28"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "654"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "CHANGELOG.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_shell_basis.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-ANGULAR-HARMONICS-FN-01"]
+grant = "implementation"
+id = "HP-ANGULAR-HARMONICS-TEST-01"
+lifecycle = "approved"
+scope = "Validate High-L Real Harmonic Repair in the existing angular owner: independent all-m high-precision scalar/convention/addition checks and compact moment/coupling regression. Require one bounded order-460 production-table qualification, costs, unchanged low-order anchors and full source CI/Docs. Complete angular runs once on exact candidate. No new owner, golden repin, tolerance relaxation, quadrature, consumer or successor work."
+surfaces = ["tests"]
+title = "independent high-L harmonic and moment-table validation"
+
+    [[records.document_refs]]
+    heading = "High-L Real Harmonic Repair"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/chatarchive/handoff/external_analysis/gaussletbases_atomic_interaction_multipole_issues_2026-10-01/evidence/VERIFY.md"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1a1e2c1ee761c6cdd1bca8adf7bbaa0197fccf28"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "654"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/angular/runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = ["HP-ANGULAR-TEST-CONTROL-FN-01", "HP-PUBLIC-PAPER-CI-FN-01"]
 grant = "maintenance"
