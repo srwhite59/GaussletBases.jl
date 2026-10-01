@@ -484,7 +484,13 @@ end
     @test from_small_ed.nup == adapter.nup
     @test from_small_ed.ndn == adapter.ndn
     @test from_small_ed.hamiltonian ≈ adapter.hamiltonian atol = 1.0e-12 rtol = 1.0e-12
-    @test from_small_ed.interaction ≈ adapter.interaction atol = 1.0e-12 rtol = 1.0e-12
+    # The pinned small-ED fixture keeps the legacy cap (interaction_lmax = :stored).
+    @test from_small_ed.interaction_lmax_plan.interaction_lmax_mode == :stored
+    @test from_small_ed.interaction ≈ GaussletBases._assemble_atomic_injected_angular_interaction(
+        adapter.one_body.radial_operators,
+        adapter.one_body.angular_assembly;
+        interaction_lmax = :stored,
+    ) atol = 1.0e-12 rtol = 1.0e-12
     @test from_small_ed.psiup0 ≈ adapter.psiup0 atol = 1.0e-12 rtol = 1.0e-12
     @test from_small_ed.psidn0 ≈ adapter.psidn0 atol = 1.0e-12 rtol = 1.0e-12
     @test size(open_shell_seeds.psiup0) == (diagnostics.basis_dim, 2)
@@ -591,6 +597,92 @@ end
         @test closed_shell_noninteracting < -199.0
         @test closed_shell_noninteracting ≈ exact_noninteracting atol = 1.0e-5 rtol = 1.0e-7
         @test full_spectrum[1:low_count] ≈ exact_spectrum[1:low_count] atol = 1.0e-6 rtol = 1.0e-8
+    end
+end
+
+@testset "Angular interaction multipole cap follows the moment tables" begin
+    benchmark = _paper_style_angular_one_body_benchmark_fixture(15; Z = 2.0, lmax = 2)
+    radial_ops, assembly = benchmark.radial_operators, benchmark.angular_assembly
+    lcap, stored = maximum(assembly.shell_interaction_lcap), length(radial_ops.multipole_data) - 1
+    assemble(cap; ops = radial_ops) = GaussletBases._assemble_atomic_injected_angular_interaction(
+        ops, assembly; interaction_lmax = cap)
+    V_auto, plan = GaussletBases._assemble_atomic_injected_angular_interaction_with_plan(radial_ops, assembly)
+    V_stored = assemble(:stored)
+    @test stored == 4 && lcap > 2 * stored
+    @test (plan.interaction_lmax, plan.interaction_lmax_required, plan.multipole_lmax_stored) == (lcap, lcap, stored)
+    @test plan.interaction_lmax_mode == :auto && !plan.interaction_truncated
+    @test maximum(abs, V_auto - V_stored) > 1.0e-4 * maximum(abs, V_auto)
+    @test V_auto ≈ transpose(V_auto) atol = 1.0e-12 rtol = 1.0e-12
+    # Independent absolute-power quadrature in extended precision, then every angular block.
+    oracle = zeros(size(V_auto))
+    samples = radial_ops.multipole_samples
+    setprecision(BigFloat, 192) do
+        r = BigFloat.(samples.points); x = BigFloat.(samples.weights .* samples.values)
+        iw = vec(sum(x; dims = 1))
+        for L in 0:lcap
+            prefix = cumsum(x .* r.^L; dims = 1)
+            suffix = reverse(cumsum(reverse(x .* r.^(-L-1); dims = 1); dims = 1); dims = 1) .- x .* r.^(-L-1)
+            R = Float64.((x' * (prefix .* r.^(-L-1) .+ suffix .* r.^L)) ./ (iw * iw'))
+            for a in eachindex(benchmark.shell_ranges), b in eachindex(benchmark.shell_ranges)
+                ma, mb = assembly.shell_interaction_moment_blocks[a], assembly.shell_interaction_moment_blocks[b]
+                haskey(ma, L) && haskey(mb, L) || continue
+                left = ma[L] ./ reshape(sqrt(4pi) .* vec(ma[0]), 1, :)
+                right = mb[L] ./ reshape(sqrt(4pi) .* vec(mb[0]), 1, :)
+                oracle[benchmark.shell_ranges[a], benchmark.shell_ranges[b]] .+=
+                    (4pi / (2L+1)) * R[a,b] .* (left' * right)
+            end
+        end
+    end
+    @test maximum(abs, V_auto - oracle) <= 1.0e-12 * max(1.0, maximum(abs, oracle))
+    rb, grid, _ = _paper_style_angular_anchor_radial_fixture(; Z = 2.0, lmax = 2)
+    full = atomic_operators(rb, grid; Z = 2.0, lmax = 2, multipole_lmax = lcap)
+    @test assemble(:stored; ops = full) == V_auto
+    @test assemble(stored) == V_stored
+    @test assemble(lcap + 1) == V_auto
+    @test assemble(big(typemax(Int)) + lcap) == V_auto
+    deltas = [maximum(abs, assemble(L) - V_auto) / maximum(abs, V_auto) for L in (4,6,8,10)]
+    @test issorted(deltas; rev = true)
+    @test all(deltas[k+1] < 0.1 * deltas[k] for k in 1:3) && deltas[end] < 1.0e-8
+    args = ntuple(i -> getfield(radial_ops, i), 8)
+    for legacy in (RadialAtomicOperators(args...), typeof(radial_ops)(args...))
+        @test_throws ArgumentError assemble(:auto; ops = legacy)
+        @test assemble(:stored; ops = legacy) == V_stored
+    end
+    for cap in (:everything, -1, true, false)
+        @test_throws ArgumentError assemble(cap)
+    end
+    payload = build_atomic_injected_angular_hfdmrg_payload(benchmark)
+    diagnostics = atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(payload)
+    @test payload.interaction == V_auto
+    @test diagnostics.interaction_lmax == lcap && diagnostics.interaction_lmax_required == lcap
+    @test diagnostics.multipole_lmax_stored == stored && !diagnostics.interaction_truncated
+    legacy_payload = build_atomic_injected_angular_hfdmrg_payload(benchmark; interaction_lmax = :stored)
+    @test legacy_payload.interaction == V_stored
+    @test atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(legacy_payload).interaction_truncated
+    hf_style = build_atomic_injected_angular_hf_style_benchmark(radial_ops, benchmark; nelec = 2)
+    @test atomic_injected_angular_hf_style_diagnostics(hf_style).interaction_lmax == lcap
+    @test build_atomic_injected_angular_hfdmrg_payload(hf_style).interaction_lmax_plan == plan
+    for external in (V_stored, copy(hf_style.interaction))
+        adapter = build_atomic_injected_angular_hfdmrg_payload(benchmark; interaction = external, hf_style)
+        @test ismissing(adapter.interaction_lmax_plan.interaction_lmax)
+        @test ismissing(adapter.interaction_lmax_plan.interaction_truncated)
+        @test adapter.interaction_lmax_plan.interaction_lmax_mode == :external
+        @test_throws ArgumentError build_atomic_injected_angular_hfdmrg_payload(
+            benchmark; interaction = external, interaction_lmax = :auto)
+    end
+    # Same interaction but different one-body identity must not attest the external matrix.
+    other = _paper_style_angular_one_body_benchmark_fixture(10; Z = 2.0, lmax = 2)
+    @test ismissing(build_atomic_injected_angular_hfdmrg_payload(other;
+        interaction = zeros(size(other.hamiltonian)), hf_style).interaction_lmax_plan.interaction_lmax)
+    hf_args = ntuple(i -> getfield(hf_style, i), 7)
+    for legacy in (AtomicInjectedAngularHFStyleBenchmark(hf_args...), typeof(hf_style)(hf_args...))
+        @test ismissing(legacy.interaction_lmax_plan.interaction_truncated)
+        @test build_atomic_injected_angular_hfdmrg_payload(legacy).interaction_lmax_plan.interaction_lmax_mode == :unknown
+    end
+    adapter_args = ntuple(i -> getfield(payload, i), 13)
+    for legacy in (AtomicInjectedAngularHFDMRGHFAdapter(adapter_args...), typeof(payload)(adapter_args...))
+        @test ismissing(legacy.interaction_lmax_plan.interaction_lmax)
+        @test ismissing(atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(legacy).interaction_truncated)
     end
 end
 

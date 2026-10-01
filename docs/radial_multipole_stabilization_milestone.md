@@ -100,3 +100,28 @@ note.
 The prototype milestone settled the manuscript radial object itself. This
 stabilization milestone hardens a later operator-building layer that consumes
 radial bases and quadrature data.
+
+## Follow-up: high-L underflow (2026-10)
+
+The scaled path above removed the overflow (`Inf` / `NaN`) failure but not the
+matching underflow. It scaled `r^L` by its global maximum (`r_max^L`) and
+`r^-(L+1)` by its global maximum (`r_min^-(L+1)`, with `r_min` clamped to
+`eps()`), so every inner product carried a factor of order
+`(r_min / r_max)^L`. Once `L * log(r_max / r_min)` exceeded about 700 the
+scaled sums fell below `floatmin`. `_recover_scaled_kernel_value` then returned
+`0.0` silently. On the Hooke erf grids (`r` from about 1e-23 to 80) this happened
+at `L = 16-17`, and every element was zero from `L = 18` on. The synthetic "risky"
+regression above only checked finiteness and symmetry, so it did not catch this.
+
+The kernel now uses a running normalization. With `x_p = W_p chi(r_p)` and
+`rho_p = (r_{p-1}/r_p)^L` it accumulates
+
+- `A_p = rho_p A_{p-1} + x_p`, the prefix sum normalized by `r_p^L`;
+- `B_p = rho_{p+1} (B_{p+1} + x_{p+1}/r_{p+1})`, the suffix sum normalized by `r_p^-L`;
+
+and forms `inner_p = A_p / r_p + B_p`. This avoids artificial global-scale
+underflow; genuine Float64 range and cancellation limitations remain.
+The recurrence requires finite positive sorted points; it does not sort them.
+The global shifts and log-magnitude recovery helpers are gone.
+The tests in `test/radial/runtests.jl` compare the new kernel with a BigFloat
+evaluation of the same quadrature formula for `L` up to 132.

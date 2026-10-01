@@ -1,5 +1,37 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Radial `IntegralDiagonal` multipoles (`multipole_matrix`, `atomic_operators`) now avoid
+  artificial global-scaling underflow. The previous `r^L` / `r^-(L+1)` scaling returned partially
+  (L = 16-17) and then completely (L >= 18) zero matrices on the examined erf grids that start
+  at r ~ 1e-23. The kernel now uses a running
+  normalization `(r_q / r_p)^L` recursion. Independent extended-precision regressions cover
+  the same discrete quadrature through L = 132 at a 1e-12 relative limit. This does not certify
+  continuum quadrature accuracy or remove all Float64 range and cancellation limitations.
+
+### Changed (numerics of default angular builds)
+- The shell-local angular IDA interaction (`build_atomic_injected_angular_hfdmrg_payload`,
+  `..._hfdmrg_hf_adapter`, `..._hf_style_benchmark`, `..._small_ed_benchmark`,
+  `build_atomic_fixed_radial_angular_sequence`) now sums multipoles through the shell interaction
+  moment `lcap` (new keyword `interaction_lmax = :auto`), as documented in
+  `docs/angular_interaction_moment_span_note.md`. Previously the sum silently stopped at the
+  multipoles stored by `atomic_operators`, `L <= 2 * lmax`, e.g. L <= 12 for the common
+  `lmax = 6`, while the moment tables reach L = 34 / 46 / 52 / 66 for NΩ = 50 / 98 / 130 / 200.
+  Reviewed packet cases: the Be2+ pair energy at s = 0.25 and NΩ = 98 drops by 0.41 µHa, and
+  by 2.0 µHa at NΩ = 130; tested s-shell HF shifts are below 1e-12 Ha, not a general energy bound.
+  `interaction_lmax = :stored` reproduces the old cap, not the old arithmetic bitwise;
+  an integer sets an explicit cap bounded by the moment span.
+- `atomic_operators` takes `multipole_lmax` (default `2 * lmax`, unchanged). It also keeps its
+  quadrature samples, so the angular builders evaluate missing multipoles on demand.
+- Payload, HF-style, and sequence-export metadata record the cap used: `interaction_lmax`,
+  `interaction_lmax_required`, `multipole_lmax_stored`, `interaction_truncated`, and the
+  `manifest/interaction/*` keys.
+- Radial multipole checksum changes can change radial, sequence and level identities even
+  in stored mode. Cap requests also enter sequence/level identities. SHA-pinned receipts
+  and old/new level mixtures require deliberate downstream-owner review.
+
 ## v0.2.1
 
 ### Fixed

@@ -78,7 +78,13 @@ struct AtomicInjectedAngularHFStyleBenchmark{
     exact_interaction::Matrix{Float64}
     scf_result::NamedTuple
     exact_scf_result::NamedTuple
+    interaction_lmax_plan::NamedTuple
 end
+
+AtomicInjectedAngularHFStyleBenchmark(args::Vararg{Any,7}) =
+    AtomicInjectedAngularHFStyleBenchmark(args..., _external_interaction_lmax_plan(:unknown))
+AtomicInjectedAngularHFStyleBenchmark{B,I}(args::Vararg{Any,7}) where {B,I} =
+    AtomicInjectedAngularHFStyleBenchmark{B,I}(args..., _external_interaction_lmax_plan(:unknown))
 
 """
     AtomicInjectedAngularHFDMRGHFAdapter
@@ -110,7 +116,13 @@ struct AtomicInjectedAngularHFDMRGHFAdapter{
     nup::Int
     ndn::Int
     overlap_identity_error::Float64
+    interaction_lmax_plan::NamedTuple
 end
+
+AtomicInjectedAngularHFDMRGHFAdapter(args::Vararg{Any,13}) =
+    AtomicInjectedAngularHFDMRGHFAdapter(args..., _external_interaction_lmax_plan(:unknown))
+AtomicInjectedAngularHFDMRGHFAdapter{O}(args::Vararg{Any,13}) where {O} =
+    AtomicInjectedAngularHFDMRGHFAdapter{O}(args..., _external_interaction_lmax_plan(:unknown))
 
 """
     AtomicInjectedAngularSmallEDBenchmark
@@ -604,40 +616,119 @@ function _scaled_shell_moment_block(moment_blocks::Dict{Int,Matrix{Float64}}, L:
     return moment_blocks[L] ./ reshape(weights, 1, :)
 end
 
-function _assemble_atomic_injected_angular_interaction(
+_atomic_injected_angular_interaction_lmax_required(assembly::AtomicShellLocalInjectedAngularAssembly) =
+    maximum(maximum(keys(blocks)) for blocks in assembly.shell_interaction_moment_blocks)
+
+# Resolve the multipole cap of the shell-local angular IDA interaction
+#
+#     V = sum_{L <= cap} 4 pi / (2L + 1) R_L(a, b) mt_L(a)' mt_L(b).
+#
+# `interaction_lmax`:
+# - `:auto` (default): every L carried by the shell interaction moment tables, i.e.
+#   `maximum(shell_interaction_lcap)`. Radial multipoles beyond those stored in `radial_ops` are
+#   evaluated on demand from its retained quadrature samples.
+# - `:stored`: the pre-2026-10 behaviour, `L <= min(stored radial multipoles, moment tables)`.
+#   It reproduces the old cap (with `atomic_operators(...; lmax)` that is L <= 2 lmax). Values agree
+#   with pre-2026-10 payloads to ~1e-14 relative, not bitwise, because the radial kernel changed.
+# - an integer: an explicit cap, clipped to the moment tables.
+function _atomic_injected_angular_interaction_lmax_plan(
     radial_ops::RadialAtomicOperators,
     assembly::AtomicShellLocalInjectedAngularAssembly,
+    interaction_lmax::Union{Symbol,Integer},
 )
+    required = _atomic_injected_angular_interaction_lmax_required(assembly)
+    stored = _stored_multipole_lmax(radial_ops)
+    if interaction_lmax === :auto
+        used = required
+    elseif interaction_lmax === :stored
+        used = min(stored, required)
+    elseif interaction_lmax isa Integer
+        !(interaction_lmax isa Bool) && interaction_lmax >= 0 ||
+            throw(ArgumentError("interaction_lmax must be a nonnegative integer, not Boolean"))
+        used = Int(min(interaction_lmax, required))
+    else
+        throw(
+            ArgumentError(
+                "interaction_lmax must be :auto, :stored, or a nonnegative integer; got $(repr(interaction_lmax))",
+            ),
+        )
+    end
+    used <= stored || _radial_multipoles_extendable(radial_ops) || throw(
+        ArgumentError(
+            "the angular interaction needs radial multipoles through L = $(used) (the shell interaction " *
+            "moment tables reach L = $(required)), but radial_ops stores only L <= $(stored) and carries no " *
+            "quadrature samples to extend them. Rebuild the radial operators with " *
+            "atomic_operators(...; multipole_lmax = $(required)), or pass interaction_lmax = :stored to " *
+            "accept the truncated interaction",
+        ),
+    )
+    return (
+        interaction_lmax = used,
+        interaction_lmax_required = required,
+        multipole_lmax_stored = stored,
+        interaction_truncated = used < required,
+        interaction_lmax_mode = interaction_lmax isa Integer ? :explicit : interaction_lmax,
+    )
+end
+
+_external_interaction_lmax_plan(mode::Symbol = :external) = (
+    interaction_lmax = missing,
+    interaction_lmax_required = missing,
+    multipole_lmax_stored = missing,
+    interaction_truncated = missing,
+    interaction_lmax_mode = mode,
+)
+
+function _assemble_atomic_injected_angular_interaction_with_plan(
+    radial_ops::RadialAtomicOperators,
+    assembly::AtomicShellLocalInjectedAngularAssembly;
+    interaction_lmax::Union{Symbol,Integer} = :auto,
+)
+    plan = _atomic_injected_angular_interaction_lmax_plan(radial_ops, assembly, interaction_lmax)
     nshells = length(assembly.shells)
     shell_ranges = _matrix_ranges(assembly.shell_offsets, assembly.shell_dimensions)
     interaction = zeros(Float64, size(assembly.overlap))
-    Lmax = length(radial_ops.multipole_data) - 1
 
-    for L in 0:Lmax
+    for L in 0:plan.interaction_lmax
         prefactor = 4 * pi / (2 * L + 1)
-        radial_block = multipole(radial_ops, L)
+        radial_block = _radial_multipole_on_demand(radial_ops, L)
+        scaled_blocks = [
+            _scaled_shell_moment_block(assembly.shell_interaction_moment_blocks[a], L) for a in 1:nshells
+        ]
         for a in 1:nshells
             ia = shell_ranges[a]
-            left = _scaled_shell_moment_block(assembly.shell_interaction_moment_blocks[a], L)
+            left = scaled_blocks[a]
             left === nothing && continue
             for b in 1:nshells
                 ib = shell_ranges[b]
-                right = _scaled_shell_moment_block(assembly.shell_interaction_moment_blocks[b], L)
+                right = scaled_blocks[b]
                 right === nothing && continue
                 interaction[ia, ib] .+= prefactor .* radial_block[a, b] .* (transpose(left) * right)
             end
         end
     end
 
-    return 0.5 .* (interaction .+ transpose(interaction))
+    return 0.5 .* (interaction .+ transpose(interaction)), plan
 end
 
 function _assemble_atomic_injected_angular_interaction(
-    benchmark::AtomicInjectedAngularOneBodyBenchmark,
+    radial_ops::RadialAtomicOperators,
+    assembly::AtomicShellLocalInjectedAngularAssembly;
+    interaction_lmax::Union{Symbol,Integer} = :auto,
+)
+    return first(
+        _assemble_atomic_injected_angular_interaction_with_plan(radial_ops, assembly; interaction_lmax),
+    )
+end
+
+function _assemble_atomic_injected_angular_interaction(
+    benchmark::AtomicInjectedAngularOneBodyBenchmark;
+    interaction_lmax::Union{Symbol,Integer} = :auto,
 )
     return _assemble_atomic_injected_angular_interaction(
         benchmark.radial_operators,
-        benchmark.angular_assembly,
+        benchmark.angular_assembly;
+        interaction_lmax,
     )
 end
 
@@ -1148,6 +1239,7 @@ function build_atomic_injected_angular_hf_style_benchmark(
     r_hi::Real = 7.0,
     w_lo::Real = 0.2,
     w_hi::Real = 0.7,
+    interaction_lmax::Union{Symbol,Integer} = :auto,
 )
     one_body = build_atomic_injected_angular_one_body_benchmark(
         radial_ops;
@@ -1170,6 +1262,7 @@ function build_atomic_injected_angular_hf_style_benchmark(
         maxiter = maxiter,
         damping = damping,
         tol = tol,
+        interaction_lmax,
     )
 end
 
@@ -1180,9 +1273,13 @@ function build_atomic_injected_angular_hf_style_benchmark(
     maxiter::Int = 50,
     damping::Real = 0.25,
     tol::Real = 1.0e-8,
+    interaction_lmax::Union{Symbol,Integer} = :auto,
 )
-    interaction =
-        _assemble_atomic_injected_angular_interaction(radial_ops, one_body.angular_assembly)
+    interaction, interaction_lmax_plan = _assemble_atomic_injected_angular_interaction_with_plan(
+        radial_ops,
+        one_body.angular_assembly;
+        interaction_lmax,
+    )
     projected_exact_interaction =
         one_body.exact_transform * interaction * transpose(one_body.exact_transform)
     exact_ida_reference = atomic_ida_operators(radial_ops; lmax = one_body.exact_common_lmax)
@@ -1216,6 +1313,7 @@ function build_atomic_injected_angular_hf_style_benchmark(
         exact_interaction,
         scf_result,
         exact_scf_result,
+        interaction_lmax_plan,
     )
 end
 
@@ -1236,6 +1334,7 @@ function atomic_injected_angular_hf_style_diagnostics(
         total_dim = size(benchmark.one_body.overlap, 1),
         shell_orders = copy(benchmark.one_body.angular_assembly.shell_orders),
         exact_common_lmax = benchmark.one_body.exact_common_lmax,
+        benchmark.interaction_lmax_plan...,
         interaction_symmetry_error = opnorm(benchmark.interaction - transpose(benchmark.interaction), Inf),
         full_converged = full.converged,
         full_iterations = full.iterations,
@@ -1284,6 +1383,15 @@ end
 Build the first in-memory HFDMRG-facing HF payload/adapter on top of the
 angular benchmark line.
 
+`interaction_lmax` sets the multipole cap of the density-density interaction.
+The default `:auto` uses every `L` in the shell interaction moment tables
+(`maximum(angular_assembly.shell_interaction_lcap)`) and evaluates radial
+multipoles that `radial_ops` does not store from its retained quadrature
+samples. `:stored` reproduces the pre-2026-10 cap, which stops at the
+stored range (`L <= 2 * lmax` of `atomic_operators`). An integer sets an
+explicit cap bounded by the available moment span. The cap actually used is reported by
+`atomic_injected_angular_hfdmrg_hf_adapter_diagnostics`.
+
 The current adapter uses the dense density-density route expected by
 `HFDMRG.solve_hfdmrg(H, V, psiup0, psidn0; ...)`. It deliberately avoids the
 separate mixed-basis file-export question. This entrypoint assembles the
@@ -1311,6 +1419,7 @@ function build_atomic_injected_angular_hfdmrg_hf_adapter(
     ndn::Union{Nothing,Int} = nothing,
     psiup0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
     psidn0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
+    interaction_lmax::Union{Symbol,Integer} = :auto,
 )
     one_body = build_atomic_injected_angular_one_body_benchmark(
         radial_ops;
@@ -1336,6 +1445,7 @@ function build_atomic_injected_angular_hfdmrg_hf_adapter(
         ndn = resolved_ndn,
         psiup0 = psiup0,
         psidn0 = psidn0,
+        interaction_lmax,
     )
 end
 
@@ -1398,15 +1508,29 @@ function build_atomic_injected_angular_hfdmrg_hf_adapter(
     psiup0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
     psidn0::Union{Nothing,AbstractMatrix{<:Real}} = nothing,
     hf_style::Union{Nothing,AtomicInjectedAngularHFStyleBenchmark} = nothing,
+    interaction_lmax::Union{Nothing,Symbol,Integer} = nothing,
 )
     norb = size(benchmark.hamiltonian, 1)
     _validate_hfdmrg_spin_count(nup, norb, "nup")
     _validate_hfdmrg_spin_count(ndn, norb, "ndn")
 
-    resolved_interaction =
-        interaction === nothing ?
-        _assemble_atomic_injected_angular_interaction(benchmark) :
-        Matrix{Float64}(interaction)
+    resolved_interaction, interaction_lmax_plan =
+        if interaction === nothing
+            _assemble_atomic_injected_angular_interaction_with_plan(
+                benchmark.radial_operators,
+                benchmark.angular_assembly;
+                interaction_lmax = isnothing(interaction_lmax) ? :auto : interaction_lmax,
+            )
+        else
+            isnothing(interaction_lmax) ||
+                throw(ArgumentError("interaction_lmax cannot be enforced on an external interaction"))
+            forwarded = hf_style !== nothing && hf_style.one_body === benchmark &&
+                        hf_style.interaction === interaction
+            (
+                Matrix{Float64}(interaction),
+                forwarded ? hf_style.interaction_lmax_plan : _external_interaction_lmax_plan(),
+            )
+        end
     size(resolved_interaction) == (norb, norb) ||
         throw(DimensionMismatch("interaction must have size ($norb, $norb)"))
 
@@ -1450,6 +1574,7 @@ function build_atomic_injected_angular_hfdmrg_hf_adapter(
         nup,
         ndn,
         overlap_identity_error,
+        interaction_lmax_plan,
     )
 end
 
@@ -1535,6 +1660,7 @@ function atomic_injected_angular_hfdmrg_hf_adapter_diagnostics(
         psidn0_source = adapter.psidn0_source,
         shell_orders = copy(adapter.one_body.angular_assembly.shell_orders),
         exact_common_lmax = adapter.one_body.exact_common_lmax,
+        adapter.interaction_lmax_plan...,
         overlap_identity_error = adapter.overlap_identity_error,
         hamiltonian_symmetry_error =
             opnorm(adapter.hamiltonian - transpose(adapter.hamiltonian), Inf),
@@ -1683,6 +1809,7 @@ function build_atomic_injected_angular_small_ed_benchmark(
     r_hi::Real = 7.0,
     w_lo::Real = 0.2,
     w_hi::Real = 0.7,
+    interaction_lmax::Union{Symbol,Integer} = :auto,
 )
     hf_style = build_atomic_injected_angular_hf_style_benchmark(
         radial_ops;
@@ -1701,6 +1828,7 @@ function build_atomic_injected_angular_small_ed_benchmark(
         r_hi = r_hi,
         w_lo = w_lo,
         w_hi = w_hi,
+        interaction_lmax,
     )
     return build_atomic_injected_angular_small_ed_benchmark(radial_ops, hf_style)
 end

@@ -239,6 +239,7 @@ function _build_atomic_fixed_radial_angular_sequence_level(
     tau::Real,
     whiten::Symbol,
     nelec::Int,
+    interaction_lmax::Union{Symbol,Integer} = :auto,
 )
     shell_ids = collect(1:length(radial_ops.shell_centers_r))
     profile =
@@ -258,6 +259,7 @@ function _build_atomic_fixed_radial_angular_sequence_level(
             tau = tau,
             whiten = whiten,
             nelec = nelec,
+            interaction_lmax,
         )
     shell_centers_r = Float64[Float64(value) for value in radial_ops.shell_centers_r]
     shell_dimensions = copy(payload.one_body.angular_assembly.shell_dimensions)
@@ -342,6 +344,7 @@ end
         tau=1e-12,
         whiten=:svd,
         nelec=round(Int, radial_ops.source_manifest.nuclear_charge),
+        interaction_lmax=:auto,
     )
 
 Build the fixed-radial-basis angular profile ladder for a user-specified list
@@ -363,6 +366,7 @@ function build_atomic_fixed_radial_angular_sequence(
     tau::Real = 1.0e-12,
     whiten::Symbol = :svd,
     nelec::Int = round(Int, radial_ops.source_manifest.nuclear_charge),
+    interaction_lmax::Union{Symbol,Integer} = :auto,
 )
     isempty(N_sph_values) &&
         throw(ArgumentError("build_atomic_fixed_radial_angular_sequence requires at least one N_sph value"))
@@ -377,6 +381,9 @@ function build_atomic_fixed_radial_angular_sequence(
         tau = Float64(tau),
         whiten = whiten,
         gauge_version = _SHELL_LOCAL_ANGULAR_PROFILE_GAUGE_VERSION,
+        # The interaction cap changes V without changing the one-body basis, so it must be part of
+        # the sequence (and hence level) identity.
+        interaction_lmax_request = interaction_lmax isa Integer ? string(interaction_lmax) : interaction_lmax,
     )
     sequence_id = _fixed_radial_sequence_id(radial_basis_id, resolved_N_sph, profile_settings)
     levels = Vector{AtomicFixedRadialAngularSequenceLevel}(undef, length(resolved_N_sph))
@@ -393,6 +400,7 @@ function build_atomic_fixed_radial_angular_sequence(
                 tau = tau,
                 whiten = whiten,
                 nelec = nelec,
+                interaction_lmax,
             )
     end
 
@@ -461,6 +469,16 @@ function _fixed_radial_level_meta_values(
         ),
     )
     merge!(meta_values, _fixed_radial_sequence_source_values(level.payload.one_body.radial_operators))
+    plan = level.payload.interaction_lmax_plan
+    merge!(
+        meta_values,
+        Dict{String,Any}(
+            "manifest/interaction/multipole_Lmax_used" => coalesce(plan.interaction_lmax, "unknown"),
+            "manifest/interaction/multipole_Lmax_required" => coalesce(plan.interaction_lmax_required, "unknown"),
+            "manifest/interaction/multipole_Lmax_mode" => string(plan.interaction_lmax_mode),
+            "manifest/interaction/truncated" => coalesce(plan.interaction_truncated, "unknown"),
+        ),
+    )
     return meta_values
 end
 

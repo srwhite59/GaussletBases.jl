@@ -501,6 +501,28 @@ end
     @test multipole1 ≈ multipole1_explicit atol = 1.0e-10 rtol = 1.0e-10
 end
 
+# Extended-precision evaluation of the same IntegralDiagonal quadrature formula (BigFloat has no
+# exponent-range limit, so nothing underflows); used to check the Float64 kernel at high L.
+function _bigfloat_integral_diagonal_reference(values, points, weights, L::Int; bits::Int = 192)
+    return setprecision(BigFloat, bits) do
+        r = BigFloat.(points)
+        x = BigFloat.(weights) .* BigFloat.(values)
+        npoints, nbasis = size(x)
+        rpow = r .^ L
+        invrpow = inv.(r .^ (L + 1))
+        prefix = cumsum(x .* rpow; dims = 1)
+        suffix = zeros(BigFloat, npoints, nbasis)
+        for p in (npoints - 1):-1:1
+            suffix[p, :] .= suffix[p + 1, :] .+ x[p + 1, :] .* invrpow[p + 1]
+        end
+        inner = invrpow .* prefix .+ rpow .* suffix
+        numerator = [sum(x[:, a] .* inner[:, b]) for a in 1:nbasis, b in 1:nbasis]
+        integral_weights = vec(sum(x; dims = 1))
+        kernel = numerator ./ (integral_weights * transpose(integral_weights))
+        Float64.((kernel .+ transpose(kernel)) ./ 2)
+    end
+end
+
 @testset "Stabilized radial multipole builder" begin
     rb, grid = _quick_radial_operator_fixture()
     points = quadrature_points(grid)
@@ -526,6 +548,78 @@ end
     @test !all(isfinite, raw_risky)
     @test all(isfinite, stable_risky)
     @test stable_risky ≈ transpose(stable_risky) atol = 1.0e-12 rtol = 1.0e-12
+    # Finite is not enough: the previous global-shift kernel returned exact zeros here.
+    reference_risky = _bigfloat_integral_diagonal_reference(risky_values, risky_points, risky_weights, 120)
+    @test count(==(0.0), stable_risky) == 0
+    @test maximum(abs.(stable_risky .- reference_risky)) / maximum(abs, reference_risky) < 1.0e-12
+end
+
+@testset "Radial multipole kernel accuracy at high L" begin
+    rb, grid = _quick_radial_operator_fixture()
+    points = quadrature_points(grid)
+    weights = quadrature_weights(grid)
+    values = GaussletBases._basis_values_matrix(rb, points)
+
+    # The quick fixture grid spans r = 8e-8 .. 12; the previous kernel returned an all-zero
+    # matrix from L ~ 35 on (L >= 17 on the production erf grids that start at r ~ 1e-23).
+    for L in (0, 1, 3, 12, 16, 17, 18, 29, 40, 66, 132)
+        multipole = multipole_matrix(rb, grid; L = L)
+        reference = _bigfloat_integral_diagonal_reference(values, points, weights, L)
+        @test all(isfinite, multipole)
+        @test count(==(0.0), multipole) == 0
+        @test maximum(abs.(multipole .- reference)) / maximum(abs, reference) < 1.0e-12
+        @test multipole == transpose(multipole)
+    end
+
+    # The bare multipole sequence must keep decaying smoothly instead of collapsing to zero.
+    diagonal_11 = [multipole_matrix(rb, grid; L = L)[1, 1] for L in 0:40]
+    @test all(value -> value > 0.0, diagonal_11)
+end
+
+@testset "Radial atomic operators multipole range" begin
+    rb, grid = _quick_radial_operator_fixture()
+    ops = atomic_operators(rb, grid; Z = 2.0, lmax = 1)
+    @test length(ops.centrifugal_data) == 2
+    @test length(ops.multipole_data) == 3
+    @test_throws BoundsError multipole(ops, 3)
+
+    ops_wide = atomic_operators(rb, grid; Z = 2.0, lmax = 1, multipole_lmax = 24)
+    @test length(ops_wide.centrifugal_data) == 2
+    @test length(ops_wide.multipole_data) == 25
+    @test multipole(ops_wide, 2) == multipole(ops, 2)
+    @test multipole(ops_wide, 24) == multipole_matrix(rb, grid; L = 24)
+    @test GaussletBases._radial_multipole_on_demand(ops, 24) == multipole(ops_wide, 24)
+    @test GaussletBases._radial_multipole_on_demand(ops, 1) === multipole(ops, 1)
+    @test_throws ArgumentError atomic_operators(rb, grid; Z = 2.0, lmax = 1, multipole_lmax = -1)
+end
+
+@testset "Production-like radial multipoles and legacy constructors" begin
+    prototype = radial_boundary_prototype(:paper_parity_g10_k6_x2)
+    rb = build_basis(prototype; mapping = AsinhMapping(c = 0.25/8, s = 0.25),
+        rmax = 30.0, rmax_count_policy = :legacy_strict_trim)
+    r, w = GaussletBases._make_physical_erf_grid(mapping(rb), rb.spec.reference_spacing,
+        80.0; refine = 200, sigma = 3.0, s0 = 6.5)
+    r, w = r[1:20:end], w[1:20:end]
+    values = GaussletBases._basis_values_matrix(rb, r)
+    @test first(r) < 1.0e-22
+    for L in (17, 18, 24)
+        actual = GaussletBases._integral_diagonal_kernel_matrix(values, r, w, L)
+        reference = _bigfloat_integral_diagonal_reference(values, r, w, L; bits = 256)
+        @test maximum(abs, actual - reference) <= 1.0e-12 * maximum(abs, reference)
+        @test actual[1, 1] > 0.0
+        @test actual[1, 1] ≈ reference[1, 1] rtol = 1.0e-12 atol = 0.0
+    end
+    for bad in (reverse(r), [NaN; r[2:end]], [Inf; r[2:end]], [0.0; r[2:end]])
+        @test_throws ArgumentError GaussletBases._integral_diagonal_kernel_matrix(values, bad, w, 18)
+    end
+    rb, grid = _quick_radial_operator_fixture()
+    ops = atomic_operators(rb, grid; Z = 2.0, lmax = 1)
+    args = ntuple(i -> getfield(ops, i), 8)
+    for legacy in (RadialAtomicOperators(args...), typeof(ops)(args...))
+        @test legacy.multipole_samples === nothing
+        @test multipole(legacy, 2) == multipole(ops, 2)
+        @test_throws ArgumentError GaussletBases._radial_multipole_on_demand(legacy, 3)
+    end
 end
 
 @testset "Radial primitive operator contraction" begin

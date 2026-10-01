@@ -324,7 +324,9 @@ end
 function _atomic_injected_angular_small_ed_benchmark_fixture()
     return _cached_fixture(:atomic_injected_angular_small_ed_benchmark_fixture, () -> begin
         _, _, radial_ops, _, _, _ = _quick_radial_atomic_fixture()
-        build_atomic_injected_angular_small_ed_benchmark(radial_ops)
+        # Pinned legacy anchor: keep the pre-2026-10 interaction cap (L <= 2 lmax = 4) so the
+        # recorded small-ED energy stays a regression check of the ED machinery itself.
+        build_atomic_injected_angular_small_ed_benchmark(radial_ops; interaction_lmax = :stored)
     end)
 end
 

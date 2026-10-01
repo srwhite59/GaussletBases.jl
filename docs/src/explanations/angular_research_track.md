@@ -103,6 +103,14 @@ for that policy is:
 
 - `docs/angular_interaction_moment_span_note.md`
 
+Angular interaction builders now default to `interaction_lmax=:auto`, using
+the complete expanded moment span, with missing radial multipoles evaluated
+from the original quadrature samples. `:stored` preserves the former cap;
+integer caps are bounded by the moment span. This intentionally changes the
+experimental interaction, not the one-electron or radial/Ylm storage policy.
+External matrices have unknown cap provenance and cannot accept a cap request.
+Quadrature error and high-order harmonic limitations remain separate.
+
 The first narrow atom-side benchmark path is now available through:
 
 - `build_atomic_injected_angular_one_body_benchmark(radial_ops; ...)`

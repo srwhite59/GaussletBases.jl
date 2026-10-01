@@ -262,109 +262,72 @@ function _integral_diagonal_kernel_matrix_raw(
     return _symmetrize_matrix(Diagonal(inv_integral_weights) * numerator * Diagonal(inv_integral_weights))
 end
 
-function _scaled_log_power(logvals::AbstractVector{Float64}, exponent::Int)
-    exponent >= 0 || throw(ArgumentError("scaled log powers require a nonnegative exponent"))
-    exponent == 0 && return ones(Float64, length(logvals)), 0.0
-    logs = exponent .* logvals
-    shift = maximum(logs)
-    isfinite(shift) || throw(ArgumentError("scaled log powers require finite logarithmic coordinates"))
-    return exp.(logs .- shift), shift
+# Adjacent-point ratio powers rho[p] = (r[p-1] / r[p])^L in (0, 1] for the running-normalized
+# multipole recursion. log1p of the relative step keeps the per-step relative error at a few ulps
+# even for L in the hundreds; rho[1] is unused and set to 1.
+function _radial_multipole_adjacent_ratio_powers(points::AbstractVector{Float64}, L::Int)
+    L >= 0 || throw(ArgumentError("multipole_matrix requires L >= 0"))
+    rho = ones(Float64, length(points))
+    L == 0 && return rho
+    @inbounds for p in 2:length(points)
+        rho[p] = exp(L * log1p((points[p - 1] - points[p]) / points[p]))
+    end
+    return rho
 end
 
-function _recover_scaled_kernel_value(
-    sum_scaled::Float64,
-    shift_total::Float64,
-    log_extra::Float64,
-    sign_extra::Float64;
-    L::Int,
-    rmin::Float64,
-    rmax::Float64,
-)
-    isfinite(sum_scaled) || throw(
-        ArgumentError(
-            "multipole_matrix produced a non-finite scaled accumulation for L=$(L) over radial range [$(rmin), $(rmax)]; shift_total=$(shift_total), log_extra=$(log_extra), sum_scaled=$(sum_scaled)",
-        ),
-    )
-    sum_scaled == 0.0 && return 0.0
-
-    logv = shift_total + log_extra + log(abs(sum_scaled))
-    log_floatmax = log(floatmax(Float64))
-    log_floatmin = log(floatmin(Float64))
-    logv < log_floatmin && return 0.0
-    logv > log_floatmax && throw(
-        ArgumentError(
-            "multipole_matrix overflowed during scaled recovery for L=$(L) over radial range [$(rmin), $(rmax)]; shift_total=$(shift_total), log_extra=$(log_extra), logv=$(logv)",
-        ),
-    )
-
-    recovered = sign(sum_scaled) * sign_extra * exp(logv)
-    isfinite(recovered) || throw(
-        ArgumentError(
-            "multipole_matrix recovered a non-finite value for L=$(L) over radial range [$(rmin), $(rmax)]; shift_total=$(shift_total), log_extra=$(log_extra), recovered=$(recovered)",
-        ),
-    )
-    return recovered
-end
-
+# Integral-diagonal radial multipole kernel
+#
+#     R_L(a, b) = [sum_p sum_q chi_a(r_p) W_p W_q chi_b(r_q) r_<^L / r_>^(L + 1)] / (w_a w_b)
+#
+# evaluated with a running normalization instead of global r^L / r^-(L+1) scale factors. With
+# x_p = W_p chi(r_p) and rho_p = (r_{p-1} / r_p)^L the prefix and suffix sums are
+#
+#     A_p = rho_p A_{p-1} + x_p                    = sum_{q <= p} x_q (r_q / r_p)^L
+#     B_p = rho_{p+1} (B_{p+1} + x_{p+1} / r_{p+1}) = sum_{q > p} x_q (r_p / r_q)^L / r_q
+#
+# and inner_p = A_p / r_p + B_p. Local ratios avoid artificial global-scale loss, but do not
+# remove genuine Float64 range or cancellation limitations. (The previous form scaled
+# r^L by r_max^L and r^-(L+1) by
+# r_min^-(L+1); their product underflowed for L * log(r_max / r_min) beyond ~700, i.e. L >= 17 on
+# production atomic grids, and silently returned zeros.)
 function _integral_diagonal_kernel_matrix(
     values::AbstractMatrix{<:Real},
     points::AbstractVector{Float64},
     weights::AbstractVector{Float64},
     L::Int,
 )
-    any(point -> point <= 0.0, points) &&
-        throw(ArgumentError("multipole_matrix requires quadrature points strictly above zero"))
+    all(point -> isfinite(point) && point > 0.0, points) ||
+        throw(ArgumentError("multipole_matrix requires finite quadrature points strictly above zero"))
+    issorted(points) || throw(ArgumentError("multipole_matrix requires sorted quadrature points"))
+    npoints, nbasis = size(values)
+    length(points) == npoints == length(weights) ||
+        throw(DimensionMismatch("multipole_matrix requires one basis-value row per quadrature point"))
 
-    log_r = log.(max.(points, eps(Float64)))
-    rpow_scaled, shift_r = _scaled_log_power(log_r, L)
-    invrpow_scaled, shift_invr = _scaled_log_power(-log_r, L + 1)
-    shift_sum = shift_r + shift_invr
-
-    weighted_prefix_scaled = (weights .* rpow_scaled) .* values
-    prefix_scaled = cumsum(weighted_prefix_scaled; dims = 1)
-
-    weighted_suffix_scaled = (weights .* invrpow_scaled) .* values
-    suffix_inclusive_scaled =
-        reverse(cumsum(reverse(weighted_suffix_scaled; dims = 1); dims = 1); dims = 1)
-    suffix_exclusive_scaled = suffix_inclusive_scaled .- weighted_suffix_scaled
-
-    inner_scaled =
-        (invrpow_scaled .* prefix_scaled) .+ (rpow_scaled .* suffix_exclusive_scaled)
-    all(isfinite, inner_scaled) || throw(
+    rho = _radial_multipole_adjacent_ratio_powers(points, L)
+    weighted_values = Matrix{Float64}(weights .* values)
+    inner = Matrix{Float64}(undef, npoints, nbasis)
+    @inbounds for j in 1:nbasis
+        prefix = 0.0
+        for p in 1:npoints
+            prefix = rho[p] * prefix + weighted_values[p, j]
+            inner[p, j] = prefix / points[p]
+        end
+        suffix = 0.0
+        for p in (npoints - 1):-1:1
+            suffix = rho[p + 1] * (suffix + weighted_values[p + 1, j] / points[p + 1])
+            inner[p, j] += suffix
+        end
+    end
+    all(isfinite, inner) || throw(
         ArgumentError(
-            "multipole_matrix produced non-finite scaled inner data for L=$(L) over radial range [$(minimum(points)), $(maximum(points))]; shift_r=$(shift_r), shift_invr=$(shift_invr)",
+            "multipole_matrix produced non-finite inner data for L=$(L) over radial range [$(minimum(points)), $(maximum(points))]",
         ),
     )
 
-    numerator_scaled = _weighted_basis_gram(values, inner_scaled, weights)
-    all(isfinite, numerator_scaled) || throw(
-        ArgumentError(
-            "multipole_matrix produced non-finite scaled numerator data for L=$(L) over radial range [$(minimum(points)), $(maximum(points))]; shift_r=$(shift_r), shift_invr=$(shift_invr)",
-        ),
-    )
-
+    numerator = _weighted_basis_gram(values, inner, weights)
     integral_weights = _check_integral_weights(_radial_basis_integral_weights(values, weights))
     inv_integral_weights = 1.0 ./ integral_weights
-    log_abs_inv_integral_weights = log.(abs.(inv_integral_weights))
-    sign_inv_integral_weights = sign.(inv_integral_weights)
-
-    kernel = zeros(Float64, size(numerator_scaled))
-    rmin = minimum(points)
-    rmax = maximum(points)
-    @inbounds for i in axes(kernel, 1), j in i:size(kernel, 2)
-        value = _recover_scaled_kernel_value(
-            numerator_scaled[i, j],
-            shift_sum,
-            log_abs_inv_integral_weights[i] + log_abs_inv_integral_weights[j],
-            sign_inv_integral_weights[i] * sign_inv_integral_weights[j];
-            L = L,
-            rmin = rmin,
-            rmax = rmax,
-        )
-        kernel[i, j] = value
-        kernel[j, i] = value
-    end
-    return _symmetrize_matrix(kernel)
+    return _symmetrize_matrix(Diagonal(inv_integral_weights) * numerator * Diagonal(inv_integral_weights))
 end
 
 """
@@ -386,13 +349,36 @@ function multipole_matrix(
     approximation::AbstractDiagonalApproximation = IntegralDiagonal(),
 )
     L >= 0 || throw(ArgumentError("multipole_matrix requires L >= 0"))
+    return _radial_multipole_from_samples(_radial_multipole_samples(basis, grid), L, approximation)
+end
+
+# Quadrature samples behind the radial multipole kernel. `atomic_operators` keeps them so that
+# multipoles beyond the stored range can be evaluated later with exactly the same kernel.
+struct _RadialMultipoleSamples
+    points::Vector{Float64}
+    weights::Vector{Float64}
+    values::Matrix{Float64}
+end
+
+function _radial_multipole_samples(basis::RadialBasis, grid::RadialQuadratureGrid)
     points, weights = _validate_radial_operator_grid(basis, grid)
     values = _basis_values_matrix(basis, points)
+    return _RadialMultipoleSamples(
+        Vector{Float64}(points),
+        Vector{Float64}(weights),
+        Matrix{Float64}(values),
+    )
+end
 
+function _radial_multipole_from_samples(
+    samples::_RadialMultipoleSamples,
+    L::Int,
+    approximation::AbstractDiagonalApproximation,
+)
+    L >= 0 || throw(ArgumentError("multipole_matrix requires L >= 0"))
     if approximation isa IntegralDiagonal
-        return _integral_diagonal_kernel_matrix(values, points, weights, L)
+        return _integral_diagonal_kernel_matrix(samples.values, samples.points, samples.weights, L)
     end
-
     throw(ArgumentError("unsupported diagonal approximation $(typeof(approximation))"))
 end
 
@@ -420,7 +406,14 @@ struct RadialAtomicOperators{A <: AbstractDiagonalApproximation,S <: _AtomicRadi
     shell_centers_r::Vector{Float64}
     source_manifest::S
     approximation::A
+    multipole_samples::Union{Nothing,_RadialMultipoleSamples}
 end
+
+# Pre-2026-10 positional layout: no retained quadrature samples, so multipoles cannot be
+# extended beyond `multipole_data`.
+RadialAtomicOperators(args::Vararg{Any,8}) = RadialAtomicOperators(args..., nothing)
+RadialAtomicOperators{A,S}(args::Vararg{Any,8}) where {A,S} =
+    RadialAtomicOperators{A,S}(args..., nothing)
 
 function Base.show(io::IO, ops::RadialAtomicOperators)
     print(
@@ -443,6 +436,7 @@ end
     atomic_operators(basis::RadialBasis, grid::RadialQuadratureGrid;
                      Z,
                      lmax::Int = 0,
+                     multipole_lmax::Int = 2 * lmax,
                      approximation::AbstractDiagonalApproximation = IntegralDiagonal())
 
 Build the high-level radial operator bundle for `basis` on the supplied
@@ -453,22 +447,36 @@ The bundle stores:
 - `ops.kinetic`
 - `ops.nuclear`
 - `centrifugal(ops, l)` for `l = 0:lmax`
-- `multipole(ops, L)` for `L = 0:(2 * lmax)`
+- `multipole(ops, L)` for `L = 0:multipole_lmax`
+
+`lmax` is the one-electron (centrifugal) angular-momentum range. The default
+`multipole_lmax = 2 * lmax` is the product range needed by `Y_lm` channels with
+`l <= lmax` (`atomic_ida_operators`). Shell-local angular interactions usually
+need far more multipoles than that (up to the shell interaction moment `lcap`,
+for example 46 for `NΩ = 98`). The bundle therefore also keeps the quadrature
+samples, and the angular interaction builders evaluate any missing multipoles
+on demand with the same kernel. Pass a larger `multipole_lmax` to store them
+up front.
 """
 function atomic_operators(
     basis::RadialBasis,
     grid::RadialQuadratureGrid;
     Z::Real,
     lmax::Int = 0,
+    multipole_lmax::Int = 2 * lmax,
     approximation::AbstractDiagonalApproximation = IntegralDiagonal(),
 )
     lmax >= 0 || throw(ArgumentError("atomic_operators requires lmax >= 0"))
+    multipole_lmax >= 0 || throw(ArgumentError("atomic_operators requires multipole_lmax >= 0"))
 
     overlap = overlap_matrix(basis, grid)
     kinetic = kinetic_matrix(basis, grid)
     nuclear = nuclear_matrix(basis, grid; Z = Z)
     centrifugal_data = Matrix{Float64}[centrifugal_matrix(basis, grid; l = l) for l in 0:lmax]
-    multipole_data = Matrix{Float64}[multipole_matrix(basis, grid; L = L, approximation = approximation) for L in 0:(2 * lmax)]
+    samples = _radial_multipole_samples(basis, grid)
+    multipole_data = Matrix{Float64}[
+        _radial_multipole_from_samples(samples, L, approximation) for L in 0:multipole_lmax
+    ]
     shell_centers_r = Float64[Float64(value) for value in centers(basis)]
     source_manifest = _AtomicRadialSourceManifest(basis.spec, Float64(Z))
     return RadialAtomicOperators(
@@ -480,6 +488,7 @@ function atomic_operators(
         shell_centers_r,
         source_manifest,
         approximation,
+        samples,
     )
 end
 
@@ -504,4 +513,22 @@ function multipole(ops::RadialAtomicOperators, L::Int)
     L >= 0 || throw(ArgumentError("multipole requires L >= 0"))
     L < length(ops.multipole_data) || throw(BoundsError(ops.multipole_data, L + 1))
     return ops.multipole_data[L + 1]
+end
+
+_stored_multipole_lmax(ops::RadialAtomicOperators) = length(ops.multipole_data) - 1
+_radial_multipoles_extendable(ops::RadialAtomicOperators) = ops.multipole_samples !== nothing
+
+# Stored multipole when available; otherwise evaluated from the retained quadrature samples
+# with the same kernel (identical to what `atomic_operators(...; multipole_lmax = L)` stores).
+function _radial_multipole_on_demand(ops::RadialAtomicOperators, L::Int)
+    L >= 0 || throw(ArgumentError("multipole requires L >= 0"))
+    L <= _stored_multipole_lmax(ops) && return ops.multipole_data[L + 1]
+    _radial_multipoles_extendable(ops) || throw(
+        ArgumentError(
+            "radial multipole L=$(L) is not stored (stored L <= $(_stored_multipole_lmax(ops))) and these " *
+            "RadialAtomicOperators carry no quadrature samples; rebuild them with " *
+            "atomic_operators(...; multipole_lmax = $(L))",
+        ),
+    )
+    return _radial_multipole_from_samples(ops.multipole_samples, L, ops.approximation)
 end

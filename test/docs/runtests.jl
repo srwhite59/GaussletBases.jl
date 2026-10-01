@@ -81,7 +81,9 @@
         @test occursin("rev = \"v0.2.0\"", readme)
         @test !occursin("https://srwhite59.github.io/GaussletBases.jl/dev/", readme)
         @test occursin("version = \"0.2.1\"", root_project)
-        @test startswith(changelog, "# Changelog\n\n## v0.2.1\n")
+        changelog_start = match(
+            r"\A# Changelog\n\n(?:## Unreleased\n(?:(?!^## ).)*)?## ([^\n]+)\n"ms, changelog)
+        @test changelog_start !== nothing && only(changelog_start.captures) == "v0.2.1"
         @test occursin("rev = \"v0.2.1\"", readme)
         @test _documentation_api_label(_documentation_target("push", "refs/tags/v0.2.1")) == "Versioned API: v0.2.1"
         @test _documentation_api_label(_documentation_target("push", "refs/tags/v0.2.0-rc2")) == "Versioned API: v0.2.0-rc2"

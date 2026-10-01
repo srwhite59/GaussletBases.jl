@@ -78,3 +78,28 @@
         end
     end
 end
+
+@testset "Fixed-radial sequence identity records the interaction cap" begin
+    _, _, radial_ops = _paper_style_angular_anchor_radial_fixture(; Z = 2.0, lmax = 2)
+    auto_seq = build_atomic_fixed_radial_angular_sequence(radial_ops, [10])
+    stored_seq = build_atomic_fixed_radial_angular_sequence(radial_ops, [10]; interaction_lmax = :stored)
+    @test auto_seq.radial_basis_id == stored_seq.radial_basis_id
+    @test auto_seq.levels[1].payload.interaction != stored_seq.levels[1].payload.interaction
+    @test auto_seq.sequence_id != stored_seq.sequence_id
+    @test auto_seq.levels[1].level_id != stored_seq.levels[1].level_id
+    level = auto_seq.levels[1]
+    legacy = typeof(level.payload)(ntuple(i -> getfield(level.payload, i), 13)...)
+    unknown = AtomicFixedRadialAngularSequenceLevel(ntuple(i -> getfield(level, i), 10)..., legacy)
+    cap = level.payload.interaction_lmax_plan.interaction_lmax
+    mktempdir() do dir
+        for (entry, expected) in ((level, (cap, cap, "auto", false)),
+                                 (unknown, ("unknown", "unknown", "unknown", "unknown")))
+            path = joinpath(dir, string(expected[3], ".jld2"))
+            write_atomic_fixed_radial_angular_level_jld2(path, entry)
+            jldopen(path, "r") do file
+                @test tuple((file["meta/manifest/interaction/" * key] for key in
+                    ("multipole_Lmax_used", "multipole_Lmax_required", "multipole_Lmax_mode", "truncated"))...) == expected
+            end
+        end
+    end
+end
