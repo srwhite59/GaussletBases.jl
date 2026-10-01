@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "572d9b1cde6fb37197446d956794a283d0edc11c635894ab735259c1c7efe033"
+sha256 = "d3a153f502a0481dfc57bf6eafdc1d154bf2d8c73cf633653fb209fd4bd39ce1"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -395,7 +395,7 @@ dependency_ids = ["HP-ATOMIC-MULTIPOLE-FN-01"]
 grant = "implementation"
 id = "HP-ATOMIC-MULTIPOLE-TEST-01"
 lifecycle = "approved"
-scope = "Validate Pass 653 Radial Multipole and Angular Interaction Repair in four existing owners: independent quadrature/full-moment oracles, production-like L17/18/24, sorted input, legacy constructors/caps, truthful external provenance, small-ED fixture/adapter and cap-dependent identities. Preserve scientific gates and selections. Run complete angular once per exact candidate; exclude consumer rebuilding, golden repinning, workflows and broader test machinery."
+scope = "Validate Pass 653 Radial Multipole and Angular Interaction Repair in five existing owners: independent radial/full-moment oracles, legacy caps/constructors, external provenance, small-ED adapter and cap-dependent identities; docs owner only optional Unreleased plus first released v0.2.1 placement. Preserve scientific gates/selections; reuse unchanged complete-angular evidence. Exclude consumer rebuilds, golden repinning, workflows and broader test machinery."
 surfaces = ["tests"]
 title = "independent radial and angular multipole regression validation"
 
@@ -414,6 +414,10 @@ title = "independent radial and angular multipole regression validation"
     [[records.paths]]
     kind = "test"
     path = "test/angular/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/docs/runtests.jl"
     state = "existing"
     [[records.paths]]
     kind = "test"
