@@ -218,3 +218,118 @@ The continuing rules are:
 The mapped-COMX axis-transform helper remains live at its existing path. Its
 presence inside the reduced `CartesianPairBlockMaterialization` module is a
 narrow ownership detail, not a surviving pair-materialization contract.
+
+## Radial Multipole and Angular Interaction Repair
+
+Pass 653 / `GB-ANGULAR-MULTIPOLE-20261001` authorizes only
+`HP-ATOMIC-MULTIPOLE-FN-01` and `HP-ATOMIC-MULTIPOLE-TEST-01` below.
+The earlier policy describes the intended moment span, not proof that the
+pre-repair assembler used it: that assembler stopped at the stored radial cap.
+Reviewed candidates are packet patches 01, 02 and the improvements-on-02 diff;
+00 duplicates 01+02. Neither patch 03 nor its high-l harmonic changes is granted.
+
+**Target and implementation.** Repair artificial high-L radial underflow and
+assemble the experimental mixed angular interaction over its full moment span.
+Source edits are confined to `src/radial/operators.jl`,
+`src/angular/angular_atomic_benchmark.jl`, and
+`src/angular/angular_sequence_export.jl`; no new source file or export.
+Replace global power scaling/recovery with adjacent-ratio prefix/suffix sums,
+retaining the same quadrature formula, integral-weight normalization and
+symmetrization. Require finite positive, nondecreasing radial points before the
+recurrence; reject unsorted input rather than sorting it. Remove superseded
+scaling helpers. Keep the useful benign raw-power test oracle. This removes
+artificial global-scale underflow, not all possible floating-point limitations.
+
+Keep `atomic_operators`' centrifugal range and default stored multipoles
+`0:2*lmax`. Permit the reviewed nonnegative integer `multipole_lmax` keyword,
+one private three-field sample owner (points, weights, basis values), and one
+optional sample field on `RadialAtomicOperators`. Beyond-storage angular
+multipoles use those exact retained samples without a new persistent cache.
+Public `multipole(ops,L)` still bounds access to the stored range. Preserve
+both inferred and parameterized eight-argument constructors with absent samples;
+requesting unavailable on-demand data must fail clearly, not synthesize it.
+
+Angular builders and the fixed-radial sequence use `interaction_lmax=:auto`
+by default: include all L present in the assembly's interaction moment tables.
+`:stored` selects the legacy stored cap; a nonnegative integer requests an
+explicit cap, bounded by the available moment span. Reject other symbols,
+negative integers and Boolean caps. `:stored` reproduces the cap convention,
+not the old arithmetic bitwise. Exact radial/Ylm reference assembly stays on its
+existing stored-range contract. Preserve the one-body, SCF and Lanczos policies.
+
+Permit only the reviewed five-field compact interaction plan (used, required,
+stored caps, truncation, mode), carried on the HF-style benchmark and HF adapter,
+and surfaced in their existing diagnostics and fixed-radial level metadata.
+Preserve inferred/parameterized seven-argument HF-style and thirteen-argument
+adapter constructors with explicitly unknown provenance. Unknown cap or
+truncation is `missing` in memory and an explicit `"unknown"` in dense metadata,
+never zero, false or an inferred enforced cap. Known facts retain their current
+integer/Boolean representation. No broader carrier or schema redesign.
+
+For the one-body adapter overload accepting an external interaction, a `nothing`
+request sentinel may distinguish omission from an explicitly requested cap.
+Omission resolves to auto only when assembling an interaction. Reject an
+explicit cap alongside an external matrix: this path cannot enforce that cap.
+Reuse a carried plan only for the exact HF-style one-body/interaction objects
+forwarded by the HF-style adapter; an unrelated `hf_style` must not attest a
+caller's matrix. Otherwise record external/unknown provenance. Preserve existing
+matrix-size, occupations, seeds, route and solver-mode checks.
+
+Include the normalized cap request in fixed-radial sequence and level identities;
+preserve shell/profile/gauge identities and adjacent versus direct sidecars.
+Retain `manifest/source/multipole_Lmax` as stored range, adding only the reviewed
+interaction used/required/mode/truncation metadata. Arithmetic can change the
+radial multipole checksum and hence radial/sequence/level IDs; receipts require
+owner review, not golden repinning. Existing dense/JLD2 payload arrays remain
+the interchange boundary. No binary-carrier migration framework is granted;
+stop if a current consumer needs old whole-carrier deserialization support.
+
+**Tests and budgets.** Edit only `test/radial/runtests.jl`,
+`test/angular/runtests.jl`, `test/runtests.jl` (small-ED fixture keyword only),
+and `test/driver_public/angular_fixed_radial_sequence_runtests.jl`.
+Source additions including docstrings/compatibility: preferred 300, hard 330;
+per-file ceilings radial 160, benchmark 160, sequence 30, subject to total 330.
+Test additions: preferred 220, hard 250; radial 100, angular 120, runner 5,
+angular_public 25. Reader additions: preferred 75, hard 85, only CHANGELOG,
+the angular interaction note, radial stabilization milestone and
+`docs/src/explanations/angular_research_track.md`. Necessary authority digest
+and deterministic-view reconciliation is permitted, not lifecycle/scope changes.
+
+Independent direct-pairwise or extended-precision quadrature oracles must cover
+benign and high-L input. Add compact production-like erf-grid coverage at
+L=17,18,24 that fails baseline; check nonzero accurate values, not only symmetry
+or finiteness. Use normwise relative error at most 1e-12 with meaningful entry
+checks, and sorted-point rejection. Reassemble angular interactions independently
+from every moment block and independent radial kernels: auto agrees within
+1e-12 relative/scaled absolute error. Compare legacy cap within roundoff, not
+bitwise equality with old source. Cover explicit caps, unavailable samples,
+legacy constructors, external unknown status and external-plus-cap rejection.
+Correct both small-ED fixture and its adapter comparison to explicit `:stored`;
+preserve the energy anchor and solver settings, not an auto golden repin.
+Check cap-dependent level/sequence IDs and one metadata round trip.
+
+Run existing radial, angular, ida, core, angular_public, docs_fast and misc
+owners unchanged apart from these bounded tests. Complete angular runs once on
+the exact final candidate; reuse that evidence during closeout. Record timings
+and allocations for representative kernel/operator assembly without an end-to-end
+speedup claim. Require package/resource load, full docs, authority/self-test,
+two matching external generated views, Documenter, manager-log/diff gates, and
+exact-head full source-bearing CI (all three numerical jobs) plus separate Docs.
+Keep fast, CI classifications/rows, optional HFDMRG behavior and all gates intact.
+
+Changelog distinguishes arithmetic repair from the intentionally changed angular
+default and documents ID/receipt consequences. Do not claim general atomic or
+molecular accuracy: quadrature bias and high-l spherical-harmonic limitations
+remain. Ne is closed-shell with occupied p orbitals; its measured proxy shift
+does not quantify Cr2. After acceptance, make a bounded read-only consumer
+inventory using actual stored cap/multipole manifests where available; classify
+unknowns and owner-reviewed rebuild/receipt needs, preserving all old artifacts.
+Do not rebuild or alter consumers or other repositories.
+
+**Failure and endpoint.** Stop without an implementation commit for scope/budget
+expansion, unresolved compatibility/science, failed scientific gates or required
+golden/tolerance relaxation. At most two in-scope correction rounds. Exclude
+quadrature/spacing/kink changes, one-body inverse-r2/lmax redesign, adaptive-L
+optimization, new frameworks, releases, H10/Hchain and any successor. Endpoint
+is independently accepted A+B repair, green checks and lifecycle closeout
+consuming implementation grants; adviser notification only, consumers stay paused.

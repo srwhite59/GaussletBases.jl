@@ -3,6 +3,14 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
+Pass 653 activates `GB-ANGULAR-MULTIPOLE-20261001` under
+HP-ATOMIC-MULTIPOLE-FN-01/TEST-01: the bounded
+[radial arithmetic and angular-cap repair](../../numerical_contracts.md#Radial-Multipole-and-Angular-Interaction-Repair).
+Implementation waits for the committed checked grant. Full moment-span auto
+assembly is an intentional experimental default change, not general accuracy
+certification. High-l harmonics, quadrature policy, consumers and releases remain
+outside this task; hchain-doer stays paused.
+
 Pass 652 accepts [stable terminal residual construction](residual_gaussian_orthogonality_robustness.md#Stable-Terminal-Residual-Construction)
 at8b7536f72f6d8f32fc4c67f66b36192613907a6f. HP-RG-ORTHO-FN-01/TEST-01
 return to maintenance; the bounded implementation and qualification grants are

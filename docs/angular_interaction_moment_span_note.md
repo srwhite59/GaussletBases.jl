@@ -41,3 +41,8 @@ The current repo policy now matches the legacy principle more closely:
 
 This note is intentionally narrow. It records the current repo-side contract
 without claiming a broader frozen angular API.
+
+Pass 653's bounded arithmetic/full-moment repair contract is in
+[numerical contracts](src/developer/numerical_contracts.md#Radial-Multipole-and-Angular-Interaction-Repair).
+The policy above describes the intended span; the pre-repair assembler still
+stops at stored radial multipoles. Historical evidence does not certify it.

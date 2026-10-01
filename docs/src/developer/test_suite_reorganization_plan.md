@@ -400,6 +400,10 @@ accepted evidence and is not repeated during closeout. Remote CI run
 per-push CI. No source, API, numerical policy, fixture, dependency, job, or
 release behavior changed.
 
+Those extraction line/assertion counts are historical, not a freeze on later
+numerical regressions. Pass 653's bounded cap/identity additions are separately
+owned by `HP-ATOMIC-MULTIPOLE-TEST-01`; group/CI selection remains unchanged.
+
 ## Scheduled Cartesian Internal Maintenance Gate
 
 `HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01` and

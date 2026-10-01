@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `eb6362159598a2110b6829d5c58b66c05eef880d82f20071d1c1d81f79fb520d`.
+> [authority.toml](authority.toml), SHA-256 `3887d8aaf01b06ceb17be92feea12eef1bb487f6733720ca82d324f7452cdf89`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -36,6 +36,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Radial Multipole and Angular Interaction Repair`
   - `canonical` [test\_suite\_reorganization\_plan.md](../../test_suite_reorganization_plan.md); heading `Fixed-Radial Angular Public CI Extraction`
 - **Owned paths:**
   - `test` / `existing`: `test/angular/runtests.jl`
@@ -47,7 +48,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `560`
   - `manager_pass`: `561`
 - **Dependencies:** `HP-ANGULAR-PUBLIC-CI-FN-01`, `HP-PUBLIC-PAPER-CI-TEST-01`
-- **Scope:** Maintain only the accepted 80-line, 83-assertion public owner from commit db156966a4a3a7bf2f685fa0f89312afca7b4280. It preserves representative \`\[10,15,32\]\` construction/common-radial-basis identity, shell/center/dimension/profile identities, both adjacent and the direct overlap sidecars, dense level/overlap payload semantics, and one direct-sidecar serialization round trip with sequence/level/profile/gauge/label/pair-kind identity metadata. Keep the superseded 163-line research-suite block absent and preserve the exact +88/-165 total test delta, net -77. Maintain the focused Supported-floor positive assertion and bare-angular rejection. Julia 1.10 passed 83/83 in 11.17 seconds; the one authorized combined \`angular,angular\_public\` Julia 1.12 run passed in 930.34 seconds and must not be repeated for lifecycle closeout. Remote CI 33509253422 passed all three gates and visibly ran angular\_public 83/83. Add no source, API, helper, extra fixture or test file, numerical policy, workflow row/job, dependency, version, tag, release, export documentation, or ShellLocalAngularProfileKey change.
+- **Scope:** Maintain only the accepted 80-line, 83-assertion public owner from commit db156966a4a3a7bf2f685fa0f89312afca7b4280. It preserves representative \`\[10,15,32\]\` construction/common-radial-basis identity, shell/center/dimension/profile identities, both adjacent and the direct overlap sidecars, dense level/overlap payload semantics, and one direct-sidecar serialization round trip with sequence/level/profile/gauge/label/pair-kind identity metadata. Keep the superseded 163-line research-suite block absent and preserve the exact +88/-165 total test delta, net -77. Maintain the focused Supported-floor positive assertion and bare-angular rejection. Julia 1.10 passed 83/83 in 11.17 seconds; the one authorized combined \`angular,angular\_public\` Julia 1.12 run passed in 930.34 seconds and must not be repeated for lifecycle closeout. Remote CI 33509253422 passed all three gates and visibly ran angular\_public 83/83. Add no source, API, helper, extra fixture or test file, numerical policy, workflow row/job, dependency, version, tag, release, export documentation, or ShellLocalAngularProfileKey change. Pass 653 numerical cap/identity additions are separately owned by HP-ATOMIC-MULTIPOLE-TEST-01; extraction counts are historical, not a later regression freeze.
 
 ### HP-ANGULAR-TEST-CONTROL-FN-01 - angular optional-consumer control-flow repair
 
@@ -89,6 +90,47 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `598`
 - **Dependencies:** `HP-ANGULAR-TEST-CONTROL-FN-01`
 - **Scope:** none. Preserve separate-process coverage of unset, blank, invalid, existing-but-unloadable, and valid paths plus the isolated 66-check adapter owner. Full angular is not required for portability maintenance. No committed test or implementation grant remains.
+
+### HP-ATOMIC-MULTIPOLE-FN-01 - radial high-L arithmetic and angular interaction cap repair
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Radial Multipole and Angular Interaction Repair`
+- **Owned paths:**
+  - `docs` / `existing`: `CHANGELOG.md`
+  - `docs` / `existing`: `docs/angular_interaction_moment_span_note.md`
+  - `docs` / `existing`: `docs/radial_multipole_stabilization_milestone.md`
+  - `docs` / `existing`: `docs/src/explanations/angular_research_track.md`
+  - `source` / `existing`: `src/angular/angular_atomic_benchmark.jl`
+  - `source` / `existing`: `src/angular/angular_sequence_export.jl`
+  - `source` / `existing`: `src/radial/operators.jl`
+- **Evidence:**
+  - `git_commit`: `f33ff89324de67c28d9e0f67cbeae5e057381947`
+  - `manager_pass`: `653`
+- **Dependencies:** none
+- **Scope:** Implement Pass 653 Radial Multipole and Angular Interaction Repair in the three owned source files and bounded reader pages: running-normalized radial arithmetic, full-moment auto cap, legacy constructors and truthful provenance/identities. Preserve radial/Ylm storage defaults. Exclude harmonics, quadrature/spacing, solver policies, frameworks, consumers, releases and successors; stop on expansion or failed scientific gates.
+
+### HP-ATOMIC-MULTIPOLE-TEST-01 - independent radial and angular multipole regression validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Radial Multipole and Angular Interaction Repair`
+- **Owned paths:**
+  - `test` / `existing`: `test/angular/runtests.jl`
+  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
+  - `test` / `existing`: `test/radial/runtests.jl`
+  - `test` / `existing`: `test/runtests.jl`
+- **Evidence:**
+  - `git_commit`: `f33ff89324de67c28d9e0f67cbeae5e057381947`
+  - `manager_pass`: `653`
+- **Dependencies:** `HP-ATOMIC-MULTIPOLE-FN-01`
+- **Scope:** Validate Pass 653 Radial Multipole and Angular Interaction Repair in four existing owners: independent quadrature/full-moment oracles, production-like L17/18/24, sorted input, legacy constructors/caps, truthful external provenance, small-ED fixture/adapter and cap-dependent identities. Preserve scientific gates and selections. Run complete angular once per exact candidate; exclude consumer rebuilding, golden repinning, workflows and broader test machinery.
 
 ### HP-AUTHORITY-EXECUTION-WHITELIST-FN-01 - whole-file execution whitelist authority view
 

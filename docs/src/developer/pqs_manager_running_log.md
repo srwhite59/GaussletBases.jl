@@ -1958,3 +1958,20 @@ and physical qualification, not this completed cycle. Added src170; tests96
 added/9 deleted in existing owners; reader21; new files/metadata/status:none.
 Mechanical diff gate and all per-owner budgets pass. No independent correction
 round required after final handback; local docs-only closeout checks follow.
+
+### Pass 653 Authorized: Radial Multipoles and Angular Cap
+
+GB-ANGULAR-MULTIPOLE-20261001 reviews packet 01+02+improvements, not03/duplicate00.
+Independent baseline erf-grid subsample reproduces L17 norm error9.17e-7 and
+all-zero L18/L24; direct pair sums agree with selected256-bit checks below4e-16.
+Freeze full-moment auto, explicit legacy cap, sorted points, old constructor
+arities and truthful external unknowns. Caps:330 source/250 test/85 reader added
+lines in existing owners only. LT1/LT2 accuracy and provenance advance; no
+consumer rebuild, quadrature/high-l redesign, Cr2 shift claim or release.
+Deleted/simplified target: global scaling/recovery and repeated radial sampling;
+quarantined:none. Existing dense export remains; carrier compatibility stops
+on a live unsupported binary consumer. No source/test change in this grant.
+Required exact-candidate angular run once, remaining owners and full CI/Docs;
+post-acceptance read-only cap inventory. Zero of two correction rounds used.
+Grant checks: package load, docs8+162+10, authority/self-test, two matching
+renders, Documenter and diff pass; log1977/2000. Source/tests remain unchanged.
