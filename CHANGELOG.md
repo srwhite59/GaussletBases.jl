@@ -3,6 +3,12 @@
 ## Unreleased
 
 ### Fixed
+- Real spherical harmonics use a normalized recurrence instead of separately forming
+  factorial ratios and raw polynomials, avoiding lost high-|m| rows from l = 89 and
+  nonfinite values from l = 151. Independent references qualify all m through l = 256;
+  phase, normalization, channel order and low-order conventions are unchanged.
+  Nonfinite prototype couplings now fail before matrix multiplication. This does not
+  certify continuum quadrature accuracy or downstream molecular energies.
 - Radial `IntegralDiagonal` multipoles (`multipole_matrix`, `atomic_operators`) now avoid
   artificial global-scaling underflow. The previous `r^L` / `r^-(L+1)` scaling returned partially
   (L = 16-17) and then completely (L >= 18) zero matrices on the examined erf grids that start

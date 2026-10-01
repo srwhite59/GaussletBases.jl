@@ -152,6 +152,70 @@ end
     end
 end
 
+@testset "Normalized high-L real harmonics and shell moments" begin
+    # Independent raw polynomial recurrence and exact factorials, not the normalized kernel.
+    function reference_harmonic(l, m, direction)
+        z = clamp(BigFloat(direction[3]), -1, 1)
+        phi, mm = atan(BigFloat(direction[2]), BigFloat(direction[1])), abs(m)
+        p0 = (-1)^mm * prod((BigFloat(2k - 1) for k in 1:mm); init = BigFloat(1)) * sqrt(1 - z^2)^mm
+        p = p0
+        if l > mm
+            p1 = z * (2mm + 1) * p0
+            for ell in (mm + 2):l
+                p0, p1 = p1, ((2ell - 1) * z * p1 - (ell + mm - 1) * p0) / (ell - mm)
+            end
+            p = p1
+        end
+        p *= sqrt(BigFloat(2l + 1) / (4 * BigFloat(pi)) *
+                  BigFloat(factorial(big(l - mm))) / BigFloat(factorial(big(l + mm))))
+        return Float64(m == 0 ? p : sqrt(BigFloat(2)) * p * (m > 0 ? cos(mm * phi) : sin(mm * phi)))
+    end
+    setprecision(BigFloat, 256) do
+        directions = [normalize([0.4, -0.7, 0.59]), [cos(0.3), sin(0.3), 0.0],
+                      normalize([1e-7, 2e-7, 1.0]), normalize([1e-7, 2e-7, -1.0]),
+                      [0.0, 0.0, 1.0], [0.0, 0.0, -1.0]]
+        for l in (0, 1, 2, 87, 88, 89, 151, 256), direction in directions
+            reference = [reference_harmonic(l, m, direction) for m in -l:l]
+            actual = [GaussletBases._real_spherical_harmonic(YlmChannel(l, m), direction) for m in -l:l]
+            @test maximum(abs, actual - reference) <= 1e-12 * max(1.0, maximum(abs, reference))
+            @test abs(sum(abs2, actual) / ((2l + 1) / (4pi)) - 1) <= 1e-12
+        end
+        x, y, z = directions[1]
+        formulas = ([ -sqrt(3 / (4pi)) * y, sqrt(3 / (4pi)) * z, -sqrt(3 / (4pi)) * x ],
+                    [sqrt(15 / (4pi)) * x * y, -sqrt(15 / (4pi)) * y * z,
+                     sqrt(5 / (16pi)) * (3z^2 - 1), -sqrt(15 / (4pi)) * x * z,
+                     sqrt(15 / (16pi)) * (x^2 - y^2)])
+        for l in 1:2
+            actual = [GaussletBases._real_spherical_harmonic(YlmChannel(l, m), directions[1]) for m in -l:l]
+            @test actual ≈ formulas[l] atol = 1e-12 rtol = 0
+        end
+        shell = _shell_local_injected_angular_fixture(15)
+        for l in (2, 87, 88, 89)
+            channels = YlmChannelSet(l, [YlmChannel(l, m) for m in -l:l])
+            raw_reference = [4pi * GaussletBases._scaled_spherical_besseli(l, shell.kappa[j]) *
+                             reference_harmonic(l, m, view(shell.point_set.coordinates, j, :))
+                             for m in -l:l, j in 1:shell.prototype_count]
+            raw, coupling = GaussletBases._ylm_prototype_coupling(shell.point_set.coordinates,
+                shell.kappa, shell.prototype_orthonormalizer, channels)
+            reference = raw_reference * shell.prototype_coefficients
+            if l <= shell.l_inject
+                reference .+= shell.ylm_coefficients[GaussletBases._ylm_rows_for_l(shell.injected_channels, l), :]
+            end
+            moments = GaussletBases._shell_local_ylm_moment_block(shell, l)
+            coupling_reference = raw_reference * shell.prototype_orthonormalizer
+            moment_scale = abs.(raw_reference) * abs.(shell.prototype_coefficients)
+            coupling_scale = abs.(raw_reference) * abs.(shell.prototype_orthonormalizer)
+            for row in axes(raw, 1)
+                @test maximum(abs, raw[row, :] - raw_reference[row, :]) <= 1e-12 * maximum(abs, raw_reference[row, :])
+                @test maximum(abs, coupling[row, :] - coupling_reference[row, :]) <= 1e-12 * maximum(coupling_scale[row, :])
+                @test maximum(abs, moments[row, :] - reference[row, :]) <= 1e-12 * max(maximum(abs, reference[row, :]), maximum(moment_scale[row, :]))
+            end
+        end
+        @test_throws ArgumentError GaussletBases._ylm_prototype_coupling([0.0 0.0 NaN],
+            [1.0], ones(1, 1), ylm_channels(1))
+    end
+end
+
 @testset "Shell-local angular profiles" begin
     profile15 = _shell_local_angular_profile_fixture(15)
     profile15_again = shell_local_angular_profile(15)

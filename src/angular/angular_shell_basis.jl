@@ -177,38 +177,22 @@ end
 
 _angular_small_argument_cutoff() = 1.0e-8
 
-function _double_factorial_odd(n::Int)
-    n >= -1 || throw(ArgumentError("_double_factorial_odd requires n >= -1"))
-    value = 1.0
-    k = n
-    while k > 1
-        value *= k
-        k -= 2
-    end
-    return value
-end
-
-function _associated_legendre(l::Int, m::Int, x::Float64)
-    l >= 0 || throw(ArgumentError("_associated_legendre requires l >= 0"))
-    0 <= m <= l || throw(ArgumentError("_associated_legendre requires 0 <= m <= l"))
-    x_clamped = clamp(x, -1.0, 1.0)
-
-    pmm = 1.0
-    if m > 0
-        factor = sqrt(max(1.0 - x_clamped^2, 0.0))
-        pmm = ((-1)^m) * _double_factorial_odd(2 * m - 1) * factor^m
+# Normalize during recurrence; separate factorials and raw polynomials lose range at high m.
+function _normalized_associated_legendre(l::Int, m::Int, theta::Float64)
+    0 <= m <= l || throw(ArgumentError("_normalized_associated_legendre requires 0 <= m <= l"))
+    x = cos(theta)
+    sintheta = sin(theta)
+    pmm = 1 / sqrt(4 * pi)
+    for k in 1:m
+        pmm *= -sqrt((2k + 1) / (2k)) * sintheta
     end
     l == m && return pmm
-
-    pmmp1 = x_clamped * (2 * m + 1) * pmm
-    l == m + 1 && return pmmp1
-
     p_prev = pmm
-    p_curr = pmmp1
+    p_curr = x * sqrt(2m + 3.0) * pmm
     for ell in (m + 2):l
-        p_next = ((2 * ell - 1) * x_clamped * p_curr - (ell + m - 1) * p_prev) / (ell - m)
-        p_prev = p_curr
-        p_curr = p_next
+        a = sqrt((4.0 * ell^2 - 1) / (ell^2 - m^2))
+        b = sqrt((4.0 * (ell - 1)^2 - 1) / ((ell - 1)^2 - m^2))
+        p_prev, p_curr = p_curr, a * (x * p_curr - p_prev / b)
     end
     return p_curr
 end
@@ -222,17 +206,14 @@ function _real_spherical_harmonic(channel::YlmChannel, direction::AbstractVector
     l = channel.l
     m = channel.m
     mm = abs(m)
-    log_ratio =
-        SpecialFunctions.loggamma(l - mm + 1) - SpecialFunctions.loggamma(l + mm + 1)
-    prefactor = sqrt(((2 * l + 1) / (4 * pi)) * exp(log_ratio))
-    plm = _associated_legendre(l, mm, cos(theta))
+    plm = _normalized_associated_legendre(l, mm, theta)
 
     if m == 0
-        return prefactor * plm
+        return plm
     elseif m > 0
-        return sqrt(2.0) * prefactor * plm * cos(mm * phi)
+        return sqrt(2.0) * plm * cos(mm * phi)
     else
-        return sqrt(2.0) * prefactor * plm * sin(mm * phi)
+        return sqrt(2.0) * plm * sin(mm * phi)
     end
 end
 
@@ -370,6 +351,8 @@ function _ylm_prototype_coupling(
             _real_spherical_harmonic(channel, view(coordinates, j, :))
     end
 
+    all(isfinite, ylm_to_prototype) ||
+        throw(ArgumentError("nonfinite spherical-harmonic prototype coupling"))
     return ylm_to_prototype, ylm_to_prototype * orthonormalizer
 end
 
