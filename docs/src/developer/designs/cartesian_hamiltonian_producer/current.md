@@ -3,17 +3,17 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
-Pass 653 activates `GB-ANGULAR-MULTIPOLE-20261001` under
-HP-ATOMIC-MULTIPOLE-FN-01/TEST-01: the bounded
+Pass 653 accepts `GB-ANGULAR-MULTIPOLE-20261001` at
+35684b6ddeb0433f6f6e1d9ee324c9a6173d7cb9: the bounded
 [radial arithmetic and angular-cap repair](../../numerical_contracts.md#Radial-Multipole-and-Angular-Interaction-Repair).
-Implementation waits for the committed checked grant. Full moment-span auto
-assembly is an intentional experimental default change, not general accuracy
-certification. High-l harmonics, quadrature policy, consumers and releases remain
-outside this task; hchain-doer stays paused.
-Steven's narrow continuation adds only the changelog-placement check in the
-existing docs owner: optional Unreleased, first released section v0.2.1. The
-eleven-file draft and completed numerical evidence remain frozen; no acceptance
-or lifecycle closeout is implied by this amendment.
+HP-ATOMIC-MULTIPOLE-FN-01/TEST-01 are completed with no execution grant.
+Full moment-span auto assembly intentionally changes the experimental default;
+stored-cap compatibility and radial/Ylm storage defaults remain. Independent
+oracles and all required checks pass, reusing the exact angular run. The bounded
+consumer inventory confirms old stored-cap4 Be15 metadata and identifies other
+unknowns for owner review, not rebuilding or receipt edits. High-l harmonics,
+quadrature bias, general accuracy and releases remain separate. The task ends
+without a successor; hchain-doer stays paused.
 
 Pass 652 accepts [stable terminal residual construction](residual_gaussian_orthogonality_robustness.md#Stable-Terminal-Residual-Construction)
 at8b7536f72f6d8f32fc4c67f66b36192613907a6f. HP-RG-ORTHO-FN-01/TEST-01

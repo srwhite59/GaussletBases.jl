@@ -1981,3 +1981,19 @@ to allow Unreleased while requiring first released v0.2.1. Six added/three
 deleted docs-test lines fit the unchanged250 test cap (angular allocation114).
 No strategic change: LT1/LT2 scientific gates and exclusions remain frozen;
 eleven draft hashes and completed angular evidence preserved, no acceptance yet.
+
+### Pass 653 Accepted: Multipole Arithmetic and Full Moment Span
+
+Accepted35684b6ddeb0433f6f6e1d9ee324c9a6173d7cb9 after full diff/contract review; all per-owner budgets pass.
+Independent367-point direct/256-bit oracle: L17/18/24 nonzero, norm errors1.45-1.81e-15;2.976s. Production changelog checks13/13.
+Reused exact angular61834 (one optional HFDMRG skip), radial435/core2155/ida12058/public89/misc72; no angular replay.
+Exact-head CI36922280281 ran all three numerical jobs; Docs36922280251 passed. Reviewer docs8+162+10, authority/self-test/renders and build pass.
+LT1/LT2 advance arithmetic/provenance correctness, not continuum or molecular-energy certification; harmonics/quadrature remain separate.
+Read-only inventory: Be15 stored manifest cap4 confirmed, actual-cap fields absent; remote Be ladder/Cr/Hooke caps remain partly source-derived or unknown.
+Owners must review coherent rebuilds and changed identities/receipts; no mutation or consumer restart. Ne is closed-shell; its proxy is not a Cr2 shift.
+Warm radial assembly2.713->1.264s, allocation3.708->1.722GB. Auto angular includes more physics; no application speedup claim.
+Deleted:108 source lines, including two orphaned global-scale helpers. Simplified: local-ratio recurrence and reused radial sampling.
+Quarantined:none. Not deleted: stored-cap and exact radial/Ylm routes have live callers. Remaining blockers: separate consumer review and C/D limitations.
+Added src281/tests218 (3 deleted)/reader85; no new files/exports. One sample owner/field, five-field cap plan and four metadata keys were explicitly granted.
+Mechanical diff gate passed. One approved placement continuation used; original failure preserved. Both task execution grants consumed, no successor.
+Hchain-doer remains paused; immutable releases/stable, scientific tolerances and solver anchors unchanged. Closeout uses docs-only checks.

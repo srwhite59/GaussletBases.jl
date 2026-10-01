@@ -221,8 +221,10 @@ narrow ownership detail, not a surviving pair-materialization contract.
 
 ## Radial Multipole and Angular Interaction Repair
 
-Pass 653 / `GB-ANGULAR-MULTIPOLE-20261001` authorizes only
-`HP-ATOMIC-MULTIPOLE-FN-01` and `HP-ATOMIC-MULTIPOLE-TEST-01` below.
+Pass 653 / `GB-ANGULAR-MULTIPOLE-20261001` accepted implementation
+`35684b6ddeb0433f6f6e1d9ee324c9a6173d7cb9`. Both task-specific FN/TEST
+execution grants are consumed (`completed`/`none`); the following records the
+accepted contract and historical implementation boundary, not new authority.
 The earlier policy describes the intended moment span, not proof that the
 pre-repair assembler used it: that assembler stopped at the stored radial cap.
 Reviewed candidates are packet patches 01, 02 and the improvements-on-02 diff;
@@ -338,3 +340,11 @@ quadrature/spacing/kink changes, one-body inverse-r2/lmax redesign, adaptive-L
 optimization, new frameworks, releases, H10/Hchain and any successor. Endpoint
 is independently accepted A+B repair, green checks and lifecycle closeout
 consuming implementation grants; adviser notification only, consumers stay paused.
+
+Acceptance reused the exact once-only angular evidence and green source-bearing
+CI/Docs; independent direct/256-bit radial checks pass at L17/18/24. A bounded
+read-only consumer inventory confirms one old Be15 level with stored cap4 and
+absent actual-cap provenance. Other inspected manifests/configurations require
+owner review; do not infer complete caps or quantified energy changes. Preserve
+old artifacts and review rebuilding/identity receipts as coherent families.
+High-l harmonics and quadrature bias remain separate; no successor is granted.

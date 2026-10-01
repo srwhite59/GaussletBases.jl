@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "d3a153f502a0481dfc57bf6eafdc1d154bf2d8c73cf633653fb209fd4bd39ce1"
+sha256 = "4a89d4562a7e9b8a7c82d9ef37436f61d5154af4b435cb02f76674d1625567b1"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -343,11 +343,12 @@ title = "angular optional-consumer control-flow validation"
     value = "598"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-ATOMIC-MULTIPOLE-FN-01"
-lifecycle = "approved"
-scope = "Implement Pass 653 Radial Multipole and Angular Interaction Repair in the three owned source files and bounded reader pages: running-normalized radial arithmetic, full-moment auto cap, legacy constructors and truthful provenance/identities. Preserve radial/Ylm storage defaults. Exclude harmonics, quadrature/spacing, solver policies, frameworks, consumers, releases and successors; stop on expansion or failed scientific gates."
-surfaces = ["docs", "source"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Pass 653 Radial Multipole and Angular Interaction Repair at 35684b6ddeb0433f6f6e1d9ee324c9a6173d7cb9: running-normalized arithmetic, full-moment auto cap, legacy constructors and truthful provenance/identities. The bounded execution grant is consumed. Preserve radial/Ylm storage defaults; no harmonic, quadrature/spacing, solver, framework, consumer rebuild, release or successor authority."
+surfaces = []
 title = "radial high-L arithmetic and angular interaction cap repair"
 
     [[records.document_refs]]
@@ -359,44 +360,19 @@ title = "radial high-L arithmetic and angular interaction cap repair"
     kind = "git_commit"
     value = "f33ff89324de67c28d9e0f67cbeae5e057381947"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "35684b6ddeb0433f6f6e1d9ee324c9a6173d7cb9"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "653"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "CHANGELOG.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/angular_interaction_moment_span_note.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/radial_multipole_stabilization_milestone.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/explanations/angular_research_track.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_atomic_benchmark.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_sequence_export.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/radial/operators.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-ATOMIC-MULTIPOLE-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-ATOMIC-MULTIPOLE-TEST-01"
-lifecycle = "approved"
-scope = "Validate Pass 653 Radial Multipole and Angular Interaction Repair in five existing owners: independent radial/full-moment oracles, legacy caps/constructors, external provenance, small-ED adapter and cap-dependent identities; docs owner only optional Unreleased plus first released v0.2.1 placement. Preserve scientific gates/selections; reuse unchanged complete-angular evidence. Exclude consumer rebuilds, golden repinning, workflows and broader test machinery."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Pass 653 validation at 35684b6ddeb0433f6f6e1d9ee324c9a6173d7cb9 in five existing owners, including the narrowly amended changelog-placement check. Independent oracles, legacy compatibility, external unknowns, small-ED and cap identities pass unchanged scientific gates. Complete-angular evidence is reused by exact hashes; the validation grant is consumed. No consumer rebuild, golden repin, workflow or successor authority."
+surfaces = []
 title = "independent radial and angular multipole regression validation"
 
     [[records.document_refs]]
@@ -408,29 +384,11 @@ title = "independent radial and angular multipole regression validation"
     kind = "git_commit"
     value = "f33ff89324de67c28d9e0f67cbeae5e057381947"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "35684b6ddeb0433f6f6e1d9ee324c9a6173d7cb9"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "653"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/angular/runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/docs/runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/radial/runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/runtests.jl"
-    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "maintenance"

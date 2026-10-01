@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `f018c551a1b1e23a0ef62aebab7cfe0f6d24162dd499a23a2cf07c2020cd695c`.
+> [authority.toml](authority.toml), SHA-256 `572237d14ae2822324791235fce430f7fbb67ff51a01360c4a71b40f05f5ddd5`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -93,45 +93,35 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-ATOMIC-MULTIPOLE-FN-01 - radial high-L arithmetic and angular interaction cap repair
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `docs`, `source`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Radial Multipole and Angular Interaction Repair`
-- **Owned paths:**
-  - `docs` / `existing`: `CHANGELOG.md`
-  - `docs` / `existing`: `docs/angular_interaction_moment_span_note.md`
-  - `docs` / `existing`: `docs/radial_multipole_stabilization_milestone.md`
-  - `docs` / `existing`: `docs/src/explanations/angular_research_track.md`
-  - `source` / `existing`: `src/angular/angular_atomic_benchmark.jl`
-  - `source` / `existing`: `src/angular/angular_sequence_export.jl`
-  - `source` / `existing`: `src/radial/operators.jl`
+- **Owned paths:** none
 - **Evidence:**
   - `git_commit`: `f33ff89324de67c28d9e0f67cbeae5e057381947`
+  - `git_commit`: `35684b6ddeb0433f6f6e1d9ee324c9a6173d7cb9`
   - `manager_pass`: `653`
 - **Dependencies:** none
-- **Scope:** Implement Pass 653 Radial Multipole and Angular Interaction Repair in the three owned source files and bounded reader pages: running-normalized radial arithmetic, full-moment auto cap, legacy constructors and truthful provenance/identities. Preserve radial/Ylm storage defaults. Exclude harmonics, quadrature/spacing, solver policies, frameworks, consumers, releases and successors; stop on expansion or failed scientific gates.
+- **Scope:** Record accepted Pass 653 Radial Multipole and Angular Interaction Repair at 35684b6ddeb0433f6f6e1d9ee324c9a6173d7cb9: running-normalized arithmetic, full-moment auto cap, legacy constructors and truthful provenance/identities. The bounded execution grant is consumed. Preserve radial/Ylm storage defaults; no harmonic, quadrature/spacing, solver, framework, consumer rebuild, release or successor authority.
 
 ### HP-ATOMIC-MULTIPOLE-TEST-01 - independent radial and angular multipole regression validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Radial Multipole and Angular Interaction Repair`
-- **Owned paths:**
-  - `test` / `existing`: `test/angular/runtests.jl`
-  - `test` / `existing`: `test/docs/runtests.jl`
-  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
-  - `test` / `existing`: `test/radial/runtests.jl`
-  - `test` / `existing`: `test/runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
   - `git_commit`: `f33ff89324de67c28d9e0f67cbeae5e057381947`
+  - `git_commit`: `35684b6ddeb0433f6f6e1d9ee324c9a6173d7cb9`
   - `manager_pass`: `653`
 - **Dependencies:** `HP-ATOMIC-MULTIPOLE-FN-01`
-- **Scope:** Validate Pass 653 Radial Multipole and Angular Interaction Repair in five existing owners: independent radial/full-moment oracles, legacy caps/constructors, external provenance, small-ED adapter and cap-dependent identities; docs owner only optional Unreleased plus first released v0.2.1 placement. Preserve scientific gates/selections; reuse unchanged complete-angular evidence. Exclude consumer rebuilds, golden repinning, workflows and broader test machinery.
+- **Scope:** Record accepted Pass 653 validation at 35684b6ddeb0433f6f6e1d9ee324c9a6173d7cb9 in five existing owners, including the narrowly amended changelog-placement check. Independent oracles, legacy compatibility, external unknowns, small-ED and cap identities pass unchanged scientific gates. Complete-angular evidence is reused by exact hashes; the validation grant is consumed. No consumer rebuild, golden repin, workflow or successor authority.
 
 ### HP-AUTHORITY-EXECUTION-WHITELIST-FN-01 - whole-file execution whitelist authority view
 
