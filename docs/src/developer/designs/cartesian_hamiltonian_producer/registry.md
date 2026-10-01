@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `572237d14ae2822324791235fce430f7fbb67ff51a01360c4a71b40f05f5ddd5`.
+> [authority.toml](authority.toml), SHA-256 `4e70e4117c27dcd25199f7793dc78bd95140c90a7b5b3cc034f564c37f6ab02f`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -9,6 +9,41 @@ owned paths, scope, `current.md`, `invariants.md`, and canonical contract.
 Lifecycle never grants work by itself. Any missing or conflicting fact fails closed.
 
 ## Records
+
+### HP-ANGULAR-HARMONICS-FN-01 - normalized high-L real spherical harmonic arithmetic
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `High-L Real Harmonic Repair`
+- **Owned paths:**
+  - `docs` / `existing`: `CHANGELOG.md`
+  - `source` / `existing`: `src/angular/angular_shell_basis.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/chatarchive/handoff/external_analysis/gaussletbases_atomic_interaction_multipole_issues_2026-10-01/evidence/VERIFY.md`
+  - `git_commit`: `1a1e2c1ee761c6cdd1bca8adf7bbaa0197fccf28`
+  - `manager_pass`: `654`
+- **Dependencies:** none
+- **Scope:** Implement High-L Real Harmonic Repair only in angular\_shell\_basis.jl and an Unreleased CHANGELOG note: normalized recurrence, unchanged conventions/domain; delete two unused Legendre helpers; add one coupling finiteness guard. Preserve A+B and other APIs/numerical policies. No quadrature, solver, consumer, metadata, release or successor work. Stop on live callers, failed gates or budget expansion.
+
+### HP-ANGULAR-HARMONICS-TEST-01 - independent high-L harmonic and moment-table validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `High-L Real Harmonic Repair`
+- **Owned paths:**
+  - `test` / `existing`: `test/angular/runtests.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/chatarchive/handoff/external_analysis/gaussletbases_atomic_interaction_multipole_issues_2026-10-01/evidence/VERIFY.md`
+  - `git_commit`: `1a1e2c1ee761c6cdd1bca8adf7bbaa0197fccf28`
+  - `manager_pass`: `654`
+- **Dependencies:** `HP-ANGULAR-HARMONICS-FN-01`
+- **Scope:** Validate High-L Real Harmonic Repair in the existing angular owner: independent all-m high-precision scalar/convention/addition checks and compact moment/coupling regression. Require one bounded order-460 production-table qualification, costs, unchanged low-order anchors and full source CI/Docs. Complete angular runs once on exact candidate. No new owner, golden repin, tolerance relaxation, quadrature, consumer or successor work.
 
 ### HP-ANGULAR-PUBLIC-CI-FN-01 - fixed-radial angular public CI wiring
 

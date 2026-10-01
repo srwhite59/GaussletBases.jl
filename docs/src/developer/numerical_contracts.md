@@ -348,3 +348,93 @@ absent actual-cap provenance. Other inspected manifests/configurations require
 owner review; do not infer complete caps or quantified energy changes. Preserve
 old artifacts and review rebuilding/identity receipts as coherent families.
 High-l harmonics and quadrature bias remain separate; no successor is granted.
+
+## High-L Real Harmonic Repair
+
+Pass 654 / `GB-HIGH-L-HARMONICS-20261001` is Steven's separate C authorization
+after accepted A+B, not an inferred successor. HP-ANGULAR-HARMONICS-FN-01 and
+HP-ANGULAR-HARMONICS-TEST-01 own only this bounded implementation/validation.
+Packet patch03 is a reviewed candidate, not authority. Its scalar evidence is
+useful, but the old order-460 moment-table run does not qualify repaired tables.
+
+**Target and exact files.** In `src/angular/angular_shell_basis.jl`, replace
+factorial normalization times unnormalized Legendre evaluation with one private
+fully normalized associated-Legendre recurrence used by `_real_spherical_harmonic`.
+Delete `_associated_legendre` and `_double_factorial_odd`; current tracked
+callers are confined to that replaced chain. Stop for a live additional caller.
+One two-line nonfinite guard in `_ylm_prototype_coupling` is permitted, before
+its matrix multiplication, to reject unusable couplings rather than propagating
+them into adaptive table stopping. No second evaluator, fallback or cache.
+Source additions including comments/docstrings: preferred 35, hard 45, with a
+net source decrease required. No edit to `angular_shell_assembly.jl` or other
+source. Reader edits only a truthful Unreleased CHANGELOG note, hard10 added
+lines; do not attribute this repair to v0.2.1 or change released entries.
+
+Preserve increasing l then m=-l:l ordering, Condon-Shortley phase, unit-sphere
+normalization, positive-m cosine and negative-m sine convention, Float64
+coordinate conversion, theta=acos(clamp(z,-1,1)) and phi=atan(y,x). Do not
+normalize directions, invent an input policy, change signatures/exports, or
+impose a new upper-l rejection. Qualified numerical range is 0<=l<=256.
+The normalized seed is 1/sqrt(4pi); diagonal steps multiply
+-sqrt((2m+1)/(2m))*sin(theta). The next degree multiplies cos(theta)*sqrt(2m+3).
+Subsequent steps use the reviewed normalized three-term recurrence, never a
+Float64 factorial ratio or unnormalized high-m polynomial. Genuine zeros remain
+valid. The optional coupling guard is the sole new nonfinite failure boundary.
+
+**Compact regressions.** Only `test/angular/runtests.jl` may change: preferred 90,
+hard 110 added lines, no deleted/relaxed existing numerical assertions. Use one
+small independent BigFloat reference based on unnormalized associated Legendre
+polynomials and exact factorial normalization, not the new normalized recurrence.
+Cover all m at l=0,1,2,87,88,89,151,256, generic/equatorial and both near-pole
+and exact-pole directions. Require maximum absolute error scaled by
+max(1,maximum(abs,reference))<=1e-12, not relative error at genuine zeros.
+Explicit Cartesian low-order formulas protect phase/sine/cosine conventions;
+the addition identity sum_m Y_lm^2=(2l+1)/(4pi) uses scaled 1e-12 accuracy.
+Use an existing small shell fixture for a compact high-L moment/coupling oracle
+and guard regression; do not add a costly order-460 fixture to routine tests.
+For moment blocks, require error<=1e-12 times their independent reference scale
+including absolute raw-product accumulation where cancellation is present;
+no blanket unit-scale floor that hides tiny but meaningful missing rows.
+
+**One high-order integration qualification.** Reuse a valid hash-frozen order-460
+profile if available; otherwise build exactly one at beta=2, auto injection
+(l_inject=14), tau=1e-12 and SVD whitening, and save it for reuse. Bounded inspected
+local evidence has no reusable full profile, only old-source table receipts.
+The historical profile cost was 1994s, so explain this >60s run before launch.
+Hard qualification cap 45 numerical minutes, 8GiB RSS, 512MiB new scratch; normal
+test owners are separate. No order-580 build or broad high-order sweep.
+Use the actual production expanded interaction-moment builder with unchanged
+256 span, 1e-12 residual criterion and two-small-increment stopping rule.
+Require reaching l>=89 naturally. Independently reassemble reference moments,
+including affected high-|m| rows, from reference harmonics, existing Bessel
+factors and the same frozen coefficients. Check reference-consistent restored
+rows, significant-reference nonzeros, and the first eligible two-small-increment
+stop from reference increments, not just finiteness or an old lcap golden.
+The old lcap=96 is evidence, not permission to repin. Preserve old failures and
+record lcap/lexpand/tail, error scales, timing, allocations and source/profile
+hashes. Stop on failed accuracy/stopping or resource gates, not new settings.
+
+Run radial, angular, angular_public, core, ida, misc and docs_fast owners;
+existing low-order energy/operator anchors and solver settings remain unchanged.
+Complete angular runs at most once on the exact final candidate; reuse matching
+source/test hashes during independent review/closeout. Measure warm scalar cost
+at low and high l and a small shell/coupling evaluation, against baseline at the
+same inputs; report allocations and compilation separately. No new scalar heap
+allocation or unexplained material regression. High-l baseline failures are not
+usable numerical output or a fair application-speedup comparison.
+Require package/resource load, full docs, authority/self-test, two matching
+external renders, Documenter/log/diff checks, normal source-bearing full CI
+(three numerical jobs) and separate Docs. Reviewer uses a compact independent
+oracle, not a second long profile/table qualification or full-angular replay.
+
+**Limits and stop.** Rounding-level coefficient/operator/identity changes are
+possible; preserve conventions and meaningful gates rather than asserting
+bitwise old-source equality or editing downstream receipts. No new test file,
+dependency, public API, carrier/metadata, framework, quadrature/default change,
+A+B redesign, inverse-r2/solver/interaction-policy work, downstream rebuild,
+other-repository mutation, Hchain work, release/stable action or successor.
+Stop without implementation commit on live obsolete callers, failed supported
+domain/convention/accuracy gates, unexplained failure, writer conflict or larger
+scope/budget. At most two in-scope correction rounds. Endpoint is independently
+accepted C with obsolete code deleted, required checks green, ordinary closeout
+and consumed grants. D and affected-consumer qualification remain separate.

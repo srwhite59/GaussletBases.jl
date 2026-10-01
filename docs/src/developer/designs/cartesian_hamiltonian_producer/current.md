@@ -3,6 +3,14 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
+Pass 654 activates only `GB-HIGH-L-HARMONICS-20261001` under
+HP-ANGULAR-HARMONICS-FN-01/TEST-01 and the
+[High-L real harmonic contract](../../numerical_contracts.md#High-L-Real-Harmonic-Repair).
+Implementation waits for the committed checked grant. Preserve conventions and
+the 0<=l<=256 numerical domain; delete obsolete polynomial helpers and qualify
+one actual high-order moment table. A+B is closed; quadrature correction D,
+consumers, releases and Hchain remain outside this task. No automatic successor.
+
 Pass 653 accepts `GB-ANGULAR-MULTIPOLE-20261001` at
 35684b6ddeb0433f6f6e1d9ee324c9a6173d7cb9: the bounded
 [radial arithmetic and angular-cap repair](../../numerical_contracts.md#Radial-Multipole-and-Angular-Interaction-Repair).
