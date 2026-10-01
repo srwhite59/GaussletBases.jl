@@ -351,9 +351,9 @@ High-l harmonics and quadrature bias remain separate; no successor is granted.
 
 ## High-L Real Harmonic Repair
 
-Pass 654 / `GB-HIGH-L-HARMONICS-20261001` is Steven's separate C authorization
-after accepted A+B, not an inferred successor. HP-ANGULAR-HARMONICS-FN-01 and
-HP-ANGULAR-HARMONICS-TEST-01 own only this bounded implementation/validation.
+Pass 654 / `GB-HIGH-L-HARMONICS-20261001` records Steven's separately authorized
+C repair after accepted A+B, not an inferred successor. Both
+HP-ANGULAR-HARMONICS-FN-01/TEST-01 execution grants are consumed on acceptance.
 Packet patch03 is a reviewed candidate, not authority. Its scalar evidence is
 useful, but the old order-460 moment-table run does not qualify repaired tables.
 
@@ -438,3 +438,13 @@ domain/convention/accuracy gates, unexplained failure, writer conflict or larger
 scope/budget. At most two in-scope correction rounds. Endpoint is independently
 accepted C with obsolete code deleted, required checks green, ordinary closeout
 and consumed grants. D and affected-consumer qualification remain separate.
+
+Accepted implementation 6a698b91609833e0b22259a1b42755211c93d47d meets this
+boundary: source +18/-35, existing angular tests +64, Unreleased +6. Independent
+reviewer scalar/convention and selected saved-moment checks pass 119/119;
+once-only full angular and exact-head source CI/Docs pass. One order-460 profile
+and 9409 moment rows qualify lcap=96/lexpand=94 against independent increments,
+including 136 significant high-m rows; worst scaled row error 2.993e-14.
+Rounding-level changes remain possible (small coupling difference 3.33e-16);
+tail 1.991e-7 is not certified by incremental stopping. No continuum/energy
+claim, downstream receipt edit, quadrature correction or successor follows.

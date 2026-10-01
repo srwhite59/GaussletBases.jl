@@ -91,8 +91,8 @@ archaeology and are not normal startup reading.
   releases remain separate; normal main deployments update dev, not stable.
 - A+B multipole arithmetic/full-span interaction repair is accepted in Pass 653;
   changed fixed-radial identities require owner review, not silent receipt edits.
-  Pass 654 separately authorizes C harmonic arithmetic only; quadrature D and
-  consumer rebuilding remain outside the finite task.
+  Pass 654 accepts C normalized harmonics through l=256 and one actual high-order
+  table; quadrature D and consumer rebuilding remain separately unqualified.
 - The source-layout moves, Lanczos consolidation, mapped-representation
   relocation, scheduled occupied-first coverage, and HFDMRG test-path repair
   are accepted. Generated execution authority is outside AGENTS.md. Public
@@ -1214,3 +1214,37 @@ Require checked committed authority and docs-only grant CI/Docs before dispatch;
 implementation requires normal full CI/Docs. Zero of two correction rounds used.
 Local grant checks pass: docs 8/162/10, authority/self-test, two renders,
 package load, Documenter without deployment, log/archive identity and diff.
+
+### Pass 654 Accepted: High-L Harmonics And Actual Moments
+
+Accepted 6a698b91609833e0b22259a1b42755211c93d47d after exact diff, hashes,
+independent oracle and remote review. Reviewer 119/119 in 2.10s: all-m scalars,
+real conventions, addition identity and selected saved L89/96 moments. Reuse
+once-only angular 63541 (one optional HFDMRG skip), radial 435/core 2155/ida 12058/
+public 89/misc 72 and docs 8+162+10. CI 36941084574 ran all three numerical jobs;
+Docs 36941084454 passed. One order-460 qualification 1437.6s/1.081GiB/54.02MB
+checks 9409 rows and 136 significant high-m rows, scaled error 2.993e-14;
+independent first stop 96/lexpand 94. No profile or full-angular replay.
+LT1/LT2 advance reliable coupling/table arithmetic, not continuum/energy
+certification. Tail 1.991e-7 survives incremental stopping. Small coupling
+roundoff 3.33e-16 permits identity changes; no downstream receipt repinning.
+Warm scalar allocation 0; coupling 4160B unchanged, 66.875 versus 64.208us;
+high-l failing baseline timing is not an application speedup claim.
+Deleted: 35 source lines including two unused helpers. Simplified: normalization
+inside one recurrence. Quarantined: none. Not deleted: live harmonic/coupling
+and moment owners. Remaining blocker: quadrature D and owner-reviewed consumers,
+not C. Added src 18/tests 64/reader 6; net source -17, no new files/metadata/status.
+Mechanical gate passed; zero correction rounds. Both execution grants consumed.
+Local closeout package/docs 8+162+10, authority/self-test/renders/build/log/diff
+pass; remote docs-only checks required. Hchain paused; releases/stable preserved.
+
+### Medium-Term Checkpoint After Pass 654
+
+- MT1 active: demonstrated A+B+C arithmetic/default-cap repairs completed; remaining quadrature limits separate.
+- MT2 completed: no new Cr2 scientific interpretation or work.
+- MT3 deferred/blocked: standard60 awaits a named consumer; represented Hartree scaling remains blocked.
+- MT4 active: residual/protected evidence and consumer qualification stay distinct.
+- MT5 maintenance: fail-closed authority, immutable release identities and stable pin preserved.
+- MT6 active: obsolete harmonic helpers deleted; no replacement framework or new cleanup grant.
+- MT7 completed/maintenance: external transfer unchanged.
+- MT8 maintenance: accepted collinear machinery does not certify Hchain energies or restart consumers.

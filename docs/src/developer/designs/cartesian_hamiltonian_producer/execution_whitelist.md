@@ -1,13 +1,11 @@
 # Cartesian Hamiltonian Producer Execution Whitelist
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `4e70e4117c27dcd25199f7793dc78bd95140c90a7b5b3cc034f564c37f6ab02f`.
+> [authority.toml](authority.toml), SHA-256 `8ed8d36d5c285cd76cdf835db84a15f36ad8cfdbfa50c455ceaefb8043e74d1a`.
 
 Cartesian Hamiltonian producer source work is currently authorized only for
 these approved design IDs:
 
-- `HP-ANGULAR-HARMONICS-FN-01`
-- `HP-ANGULAR-HARMONICS-TEST-01`
 - `HP-ANGULAR-PUBLIC-CI-FN-01`
 - `HP-ANGULAR-PUBLIC-CI-TEST-01`
 - `HP-ANGULAR-TEST-CONTROL-FN-01`
