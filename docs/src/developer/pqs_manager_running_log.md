@@ -1975,3 +1975,9 @@ Required exact-candidate angular run once, remaining owners and full CI/Docs;
 post-acceptance read-only cap inventory. Zero of two correction rounds used.
 Grant checks: package load, docs8+162+10, authority/self-test, two matching
 renders, Documenter and diff pass; log1977/2000. Source/tests remain unchanged.
+
+Pass 653 continuation: Steven authorizes only the existing docs changelog check
+to allow Unreleased while requiring first released v0.2.1. Six added/three
+deleted docs-test lines fit the unchanged250 test cap (angular allocation114).
+No strategic change: LT1/LT2 scientific gates and exclusions remain frozen;
+eleven draft hashes and completed angular evidence preserved, no acceptance yet.

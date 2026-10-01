@@ -286,11 +286,16 @@ stop if a current consumer needs old whole-carrier deserialization support.
 
 **Tests and budgets.** Edit only `test/radial/runtests.jl`,
 `test/angular/runtests.jl`, `test/runtests.jl` (small-ED fixture keyword only),
-and `test/driver_public/angular_fixed_radial_sequence_runtests.jl`.
+`test/driver_public/angular_fixed_radial_sequence_runtests.jl`, and
+`test/docs/runtests.jl` (changelog placement only). The docs check must preserve
+the exact Changelog header, permit an optional leading Unreleased section, and
+require the first versioned release section to be v0.2.1; all other release and
+version checks remain unchanged. No loose presence check or new helper.
 Source additions including docstrings/compatibility: preferred 300, hard 330;
 per-file ceilings radial 160, benchmark 160, sequence 30, subject to total 330.
-Test additions: preferred 220, hard 250; radial 100, angular 120, runner 5,
-angular_public 25. Reader additions: preferred 75, hard 85, only CHANGELOG,
+Test additions: preferred 220, hard 250; radial 100, angular 114, runner 5,
+angular_public 25, docs 6 (at most 3 deleted docs-test lines). Reader additions:
+preferred 75, hard 85, only CHANGELOG,
 the angular interaction note, radial stabilization milestone and
 `docs/src/explanations/angular_research_track.md`. Necessary authority digest
 and deterministic-view reconciliation is permitted, not lifecycle/scope changes.

@@ -10,6 +10,10 @@ Implementation waits for the committed checked grant. Full moment-span auto
 assembly is an intentional experimental default change, not general accuracy
 certification. High-l harmonics, quadrature policy, consumers and releases remain
 outside this task; hchain-doer stays paused.
+Steven's narrow continuation adds only the changelog-placement check in the
+existing docs owner: optional Unreleased, first released section v0.2.1. The
+eleven-file draft and completed numerical evidence remain frozen; no acceptance
+or lifecycle closeout is implied by this amendment.
 
 Pass 652 accepts [stable terminal residual construction](residual_gaussian_orthogonality_robustness.md#Stable-Terminal-Residual-Construction)
 at8b7536f72f6d8f32fc4c67f66b36192613907a6f. HP-RG-ORTHO-FN-01/TEST-01

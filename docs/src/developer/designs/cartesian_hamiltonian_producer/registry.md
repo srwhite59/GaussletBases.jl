@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `3887d8aaf01b06ceb17be92feea12eef1bb487f6733720ca82d324f7452cdf89`.
+> [authority.toml](authority.toml), SHA-256 `f018c551a1b1e23a0ef62aebab7cfe0f6d24162dd499a23a2cf07c2020cd695c`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -123,6 +123,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Radial Multipole and Angular Interaction Repair`
 - **Owned paths:**
   - `test` / `existing`: `test/angular/runtests.jl`
+  - `test` / `existing`: `test/docs/runtests.jl`
   - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
   - `test` / `existing`: `test/radial/runtests.jl`
   - `test` / `existing`: `test/runtests.jl`
@@ -130,7 +131,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `f33ff89324de67c28d9e0f67cbeae5e057381947`
   - `manager_pass`: `653`
 - **Dependencies:** `HP-ATOMIC-MULTIPOLE-FN-01`
-- **Scope:** Validate Pass 653 Radial Multipole and Angular Interaction Repair in four existing owners: independent quadrature/full-moment oracles, production-like L17/18/24, sorted input, legacy constructors/caps, truthful external provenance, small-ED fixture/adapter and cap-dependent identities. Preserve scientific gates and selections. Run complete angular once per exact candidate; exclude consumer rebuilding, golden repinning, workflows and broader test machinery.
+- **Scope:** Validate Pass 653 Radial Multipole and Angular Interaction Repair in five existing owners: independent radial/full-moment oracles, legacy caps/constructors, external provenance, small-ED adapter and cap-dependent identities; docs owner only optional Unreleased plus first released v0.2.1 placement. Preserve scientific gates/selections; reuse unchanged complete-angular evidence. Exclude consumer rebuilds, golden repinning, workflows and broader test machinery.
 
 ### HP-AUTHORITY-EXECUTION-WHITELIST-FN-01 - whole-file execution whitelist authority view
 
