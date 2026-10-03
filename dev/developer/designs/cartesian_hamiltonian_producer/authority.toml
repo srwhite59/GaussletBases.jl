@@ -182,11 +182,81 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "9d62d2b59725f7672c4a58ea0c8acc9e393794bc4bc59ff017525337f5fa9258"
+sha256 = "994dff10f77bacf72aa6a809b4c4aae24d632777ac5cc2b0f345c1555665eb96"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
 
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-ANGULAR-ENERGY-BUDGET-FN-01"
+lifecycle = "approved"
+scope = "Implement Estimated Angular Correlation Allocation only in angular_shell_assembly.jl and angular_atomic_benchmark.jl: bounded opt-in radial-aware count vector, correlated s reference, spectral gaps and one union budget. Hard150 source additions and60 reader lines. Preserve radius/constant defaults, required low-l and all carried interaction moments. No D, solver framework, metadata, consumer, release or successor work."
+surfaces = ["docs", "source"]
+title = "opt-in estimated angular correlation allocation"
+
+    [[records.document_refs]]
+    heading = "Estimated Angular Correlation Allocation"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_energy_budget_20261002/REPORT.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_energy_budget_20261002/full_reconstruction/REPORT.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_energy_budget_20261002/reliability/REPORT.md"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "de3dec50ff1ac9d51cb3e25e7a0ddeaa28660464"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "655"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/explanations/angular_research_track.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_atomic_benchmark.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_shell_assembly.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-ANGULAR-ENERGY-BUDGET-FN-01"]
+grant = "implementation"
+id = "HP-ANGULAR-ENERGY-BUDGET-TEST-01"
+lifecycle = "approved"
+scope = "Extend only existing test/angular/runtests.jl under Estimated Angular Correlation Allocation, hard80 added lines. Check total union accounting, required-channel floor, conservative gaps, input failures, unchanged explicit/radius paths and protected low-l blocks. Reuse accepted complete reconstruction and compact saved-estimator evidence. No full-angular or two-electron replay, new owner/framework, threshold relaxation, consumer or successor."
+surfaces = ["tests"]
+title = "estimated angular allocation and protected low-l validation"
+
+    [[records.document_refs]]
+    heading = "Estimated Angular Correlation Allocation"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_energy_budget_20261002/full_reconstruction/REPORT.md"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "de3dec50ff1ac9d51cb3e25e7a0ddeaa28660464"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "655"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/angular/runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"
