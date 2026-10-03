@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `ea2b7dfb44110e984d4759134e31b269396b5bdf7089fd95255c1471ac82342e`.
+> [authority.toml](authority.toml), SHA-256 `b0b5395b27f9a7cb7b6fca57417ddc606df67992bb31eb5b9a8f718eee8f4e4a`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -12,41 +12,45 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-ANGULAR-ENERGY-BUDGET-FN-01 - opt-in estimated angular correlation allocation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `docs`, `source`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Estimated Angular Correlation Allocation`
-- **Owned paths:**
-  - `docs` / `existing`: `docs/src/explanations/angular_research_track.md`
-  - `source` / `existing`: `src/angular/angular_atomic_benchmark.jl`
-  - `source` / `existing`: `src/angular/angular_shell_assembly.jl`
+- **Owned paths:** none
 - **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/pass655-angular-energy-budget-implementation-2026-10-02.md`
   - `external_path`: `/Users/srw/dmrgtmp/angular_energy_budget_20261002/REPORT.md`
   - `external_path`: `/Users/srw/dmrgtmp/angular_energy_budget_20261002/full_reconstruction/REPORT.md`
   - `external_path`: `/Users/srw/dmrgtmp/angular_energy_budget_20261002/reliability/REPORT.md`
+  - `external_path`: `/Users/srw/dmrgtmp/pass655/reviewer.log`
+  - `git_commit`: `1fa9d3611d7dda90f3aa77118c41b23fd420baab`
+  - `git_commit`: `8ef3dd257734df289168e085d742c6b071ce4771`
   - `git_commit`: `de3dec50ff1ac9d51cb3e25e7a0ddeaa28660464`
   - `manager_pass`: `655`
 - **Dependencies:** none
-- **Scope:** Implement Estimated Angular Correlation Allocation only in angular\_shell\_assembly.jl and angular\_atomic\_benchmark.jl: bounded opt-in radial-aware count vector, correlated s reference, spectral gaps and one union budget. Hard150 source additions and60 reader lines. Preserve radius/constant defaults, required low-l and all carried interaction moments. No D, solver framework, metadata, consumer, release or successor work.
+- **Scope:** Record accepted Pass 655 Estimated Angular Correlation Allocation at 1fa9d3611d7dda90f3aa77118c41b23fd420baab: bounded opt-in count vector, correlated s reference, spectral gaps and total union budget. Defaults, required low-l and all interaction moments remain. The execution grant is consumed; the cutoff is an estimate, not energy certification. No D, consumer, release or successor authority.
 
 ### HP-ANGULAR-ENERGY-BUDGET-TEST-01 - estimated angular allocation and protected low-l validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Estimated Angular Correlation Allocation`
-- **Owned paths:**
-  - `test` / `existing`: `test/angular/runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/pass655-angular-energy-budget-implementation-2026-10-02.md`
   - `external_path`: `/Users/srw/dmrgtmp/angular_energy_budget_20261002/full_reconstruction/REPORT.md`
+  - `external_path`: `/Users/srw/dmrgtmp/pass655/reviewer.log`
+  - `git_commit`: `1fa9d3611d7dda90f3aa77118c41b23fd420baab`
+  - `git_commit`: `8ef3dd257734df289168e085d742c6b071ce4771`
   - `git_commit`: `de3dec50ff1ac9d51cb3e25e7a0ddeaa28660464`
   - `manager_pass`: `655`
 - **Dependencies:** `HP-ANGULAR-ENERGY-BUDGET-FN-01`
-- **Scope:** Extend only existing test/angular/runtests.jl under Estimated Angular Correlation Allocation, hard80 added lines. Check total union accounting, required-channel floor, conservative gaps, input failures, unchanged explicit/radius paths and protected low-l blocks. Reuse accepted complete reconstruction and compact saved-estimator evidence. No full-angular or two-electron replay, new owner/framework, threshold relaxation, consumer or successor.
+- **Scope:** Record accepted Pass 655 focused allocation validation at 1fa9d3611d7dda90f3aa77118c41b23fd420baab: union/floor/gap/input checks, protected s/p blocks, saved estimator calibration and exact-head source CI/Docs. Independent compact reviewer checks pass; full reconstruction is reused without replay. The validation grant is consumed. No full-angular campaign, threshold relaxation, consumer restart or successor authority.
 
 ### HP-ANGULAR-HARMONICS-FN-01 - normalized high-L real spherical harmonic arithmetic
 

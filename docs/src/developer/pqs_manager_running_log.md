@@ -1272,3 +1272,32 @@ accuracy/default assessment. D/origin limits and consumer work remain separate.
 Use focused tests, saved estimator and accepted full reconstruction; no full
 angular/correlation replay. Ordinary CI/Docs and authority checks are required.
 At most two in-scope corrections; grant consumed at accepted closeout, then stop.
+
+### Pass 655 Accepted: Estimated Angular Recipe
+
+Accepted1fa9d3611d7dda90f3aa77118c41b23fd420baab, four assigned files and
+unchanged existing bodies/anchors. The opt-in recipe chooses first32/rest100
+at1e-10 with score5.0894836881e-11Ha. Reuse the accepted full-space3500/3432
+calibration (+1.25846e-10Ha); no reconstructed-energy<=cutoff assertion.
+LT1/LT2 gain an economical explicit recipe, not a universal correlation/continuum
+bound. Required low-l, outer shells, constant/radius defaults and all moments
+remain. The40-function/100-point cost domain prevents unbounded dense allocation.
+Independent reviewer100/100: product-matrix and quadratic-form projection
+oracles, alternate union accounting, saved score and unchanged assembly/Be
+anchors. A scratch missing-mapping error is preserved, not counted as success.
+Reuse new47 checks and radial435/core2155/public89/misc72, docs8+162+10.
+Exact-head CI37085656519 executed all three numerical jobs; Docs37085656518
+authority/dev build passed. No full-angular or reconstruction replay.
+Warm stored public0.143s/122.69MB; core0.048s/107.88MB; on-demand measured
+phase sum0.623s/1.587GiB, peak0.967GiB. These are estimator/stage costs,
+not an application speedup. Cold compilation and validation/I/O stay separate.
+Deleted: no live path. Simplified: count selection through the existing entrance.
+Quarantined: failed product-state estimate stays historical scratch evidence.
+Not deleted: independent constant/radius recipes and existing angular builder.
+Remaining blocker: D/origin and consumer qualifications, not this opt-in route.
+Added src104/deleted0, existing test61/reader37; no new files/metadata/status.
+Mechanical diff gate passes. Historical implementation failures and overwritten
+anchor-log disclosure remain; no scientific thresholds/goldens changed.
+Zero design correction rounds; both execution grants consumed. Closeout uses
+docs-only checks and preserves handoffs, stable/releases and consumer pause.
+No successor. The cutoff estimates loss rather than certifying arbitrary energies.

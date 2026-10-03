@@ -3,13 +3,15 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
-Pass 655 authorizes the bounded opt-in
+Pass 655 accepts the bounded opt-in
 [estimated angular correlation allocation](../../numerical_contracts.md#Estimated-Angular-Correlation-Allocation)
-under HP-ANGULAR-ENERGY-BUDGET-FN-01/TEST-01. Steven accepts the complete
-3500/3432-function calibration (+1.25846e-10Ha);1e-10 is a total estimated
-selection target, not an energy guarantee. Radius-only/constant-order defaults,
-all actual interaction moments and required low-l channels stay protected.
-Radial D, consumer work, releases and automatic successors remain excluded.
+at1fa9d3611d7dda90f3aa77118c41b23fd420baab. Both ENERGY-BUDGET IDs are
+completed with no execution grant. First32/rest100 and score5.08948e-11 match
+the saved35-shell model; Steven accepts the complete3500/3432 calibration
+(+1.25846e-10Ha). The1e-10 input is a total estimated selection target, not
+an energy guarantee. Radius-only/constant defaults, all interaction moments
+and required low-l channels remain protected; radial D, consumers, releases
+and automatic successors remain excluded. The task stops here.
 
 Pass 654 accepts `GB-HIGH-L-HARMONICS-20261001` at
 6a698b91609833e0b22259a1b42755211c93d47d under the

@@ -6,9 +6,10 @@ manual.
 
 ## Estimated Angular Correlation Allocation
 
-Pass 655 / `GB-ANGULAR-ENERGY-BUDGET-20261002` authorizes one experimental,
-opt-in allocation under HP-ANGULAR-ENERGY-BUDGET-FN-01/TEST-01. Steven accepts
-the full reconstructed Be2+ calibration below. The total cutoff is an estimated
+Pass 655 accepts `1fa9d3611d7dda90f3aa77118c41b23fd420baab` for
+`GB-ANGULAR-ENERGY-BUDGET-20261002`. Both HP-ANGULAR-ENERGY-BUDGET-FN-01/TEST-01
+execution grants are consumed; the boundary below records the completed grant.
+Steven accepts the full reconstructed Be2+ calibration. The total cutoff is an estimated
 angular-correlation selection target, not a bound on reconstructed or continuum
 energies. Earlier blocked recommendations remain historical evidence; their
 failed product-state estimator is not this contract.
@@ -118,6 +119,15 @@ change, radial D, A+B+C redesign, downstream run/receipt, release/stable or
 successor. Over-budget/broader semantics, unexplained failure or writer conflict
 means no implementation commit and exact blocker report. At most two in-scope
 correction rounds; accepted endpoint consumes both execution grants and pauses.
+
+Accepted source104 added, existing angular tests61, reader37; four existing
+files only. Independent reviewer100/100 includes product-matrix and alternate
+all-L projection checks, union accounting, saved score and unchanged anchors.
+Exact-head full source CI37085656519 and Docs37085656518 pass. Warm stored
+public estimator0.143s/122.69MB; on-demand phase sum0.623s/1.587GiB,
+peak0.967GiB, within admission. Protected common s/p blocks pass unchanged
+limits. No full-angular or full-reconstruction replay, default change, D repair,
+consumer restart or successor; the cutoff remains an estimate, not certification.
 
 ## Radial Construction And Quadrature Convergence
 
