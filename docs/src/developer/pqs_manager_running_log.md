@@ -1248,3 +1248,27 @@ pass; remote docs-only checks required. Hchain paused; releases/stable preserved
 - MT6 active: obsolete harmonic helpers deleted; no replacement framework or new cleanup grant.
 - MT7 completed/maintenance: external transfer unchanged.
 - MT8 maintenance: accepted collinear machinery does not certify Hchain energies or restart consumers.
+
+### Pass 655 Authorized: Opt-In Estimated Angular Allocation
+
+Steven accepts the actual all-100 versus first32/rest100 Be2+ reconstruction:
+3500/3432 functions, signed1.25846e-10Ha change, practical uncertainty around
+1e-12. The old blocked recommendation is superseded, not erased. The failed
+product-state estimate is excluded; the correlated s-reference/spectral-gap
+score5.08948e-11 selects the tested recipe under one1e-10 estimated target.
+LT1/LT2 advance an economical explicitly experimental recipe, not a universal
+error certificate. Required low-l channels, outer shells and all carried
+interaction moments remain. Radius-only/default/constant-order paths do not change.
+Freeze a bounded40-radial-function/100-point domain: no unbounded dense solve
+on a construction path. The compact35-function s-reference measured0.154s;
+allocator acceptance includes transparent cost and input failure checks.
+Two existing source owners hard150 added lines, angular tests80, reader60;
+no new files/carriers/exports/frameworks. Deleted: no existing live surface.
+Simplified: one score/count-vector entrance instead of manual inner scheduling.
+Quarantined: obsolete product-state estimate remains scratch evidence only.
+Not deleted: independent radius schedule and deliberate constant-order ladders.
+Remaining blocker: implementation and independent acceptance, not another
+accuracy/default assessment. D/origin limits and consumer work remain separate.
+Use focused tests, saved estimator and accepted full reconstruction; no full
+angular/correlation replay. Ordinary CI/Docs and authority checks are required.
+At most two in-scope corrections; grant consumed at accepted closeout, then stop.

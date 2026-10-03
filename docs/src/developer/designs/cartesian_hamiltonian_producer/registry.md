@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `8ed8d36d5c285cd76cdf835db84a15f36ad8cfdbfa50c455ceaefb8043e74d1a`.
+> [authority.toml](authority.toml), SHA-256 `ea2b7dfb44110e984d4759134e31b269396b5bdf7089fd95255c1471ac82342e`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -9,6 +9,44 @@ owned paths, scope, `current.md`, `invariants.md`, and canonical contract.
 Lifecycle never grants work by itself. Any missing or conflicting fact fails closed.
 
 ## Records
+
+### HP-ANGULAR-ENERGY-BUDGET-FN-01 - opt-in estimated angular correlation allocation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Estimated Angular Correlation Allocation`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/explanations/angular_research_track.md`
+  - `source` / `existing`: `src/angular/angular_atomic_benchmark.jl`
+  - `source` / `existing`: `src/angular/angular_shell_assembly.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/dmrgtmp/angular_energy_budget_20261002/REPORT.md`
+  - `external_path`: `/Users/srw/dmrgtmp/angular_energy_budget_20261002/full_reconstruction/REPORT.md`
+  - `external_path`: `/Users/srw/dmrgtmp/angular_energy_budget_20261002/reliability/REPORT.md`
+  - `git_commit`: `de3dec50ff1ac9d51cb3e25e7a0ddeaa28660464`
+  - `manager_pass`: `655`
+- **Dependencies:** none
+- **Scope:** Implement Estimated Angular Correlation Allocation only in angular\_shell\_assembly.jl and angular\_atomic\_benchmark.jl: bounded opt-in radial-aware count vector, correlated s reference, spectral gaps and one union budget. Hard150 source additions and60 reader lines. Preserve radius/constant defaults, required low-l and all carried interaction moments. No D, solver framework, metadata, consumer, release or successor work.
+
+### HP-ANGULAR-ENERGY-BUDGET-TEST-01 - estimated angular allocation and protected low-l validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Estimated Angular Correlation Allocation`
+- **Owned paths:**
+  - `test` / `existing`: `test/angular/runtests.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/dmrgtmp/angular_energy_budget_20261002/full_reconstruction/REPORT.md`
+  - `git_commit`: `de3dec50ff1ac9d51cb3e25e7a0ddeaa28660464`
+  - `manager_pass`: `655`
+- **Dependencies:** `HP-ANGULAR-ENERGY-BUDGET-FN-01`
+- **Scope:** Extend only existing test/angular/runtests.jl under Estimated Angular Correlation Allocation, hard80 added lines. Check total union accounting, required-channel floor, conservative gaps, input failures, unchanged explicit/radius paths and protected low-l blocks. Reuse accepted complete reconstruction and compact saved-estimator evidence. No full-angular or two-electron replay, new owner/framework, threshold relaxation, consumer or successor.
 
 ### HP-ANGULAR-HARMONICS-FN-01 - normalized high-L real spherical harmonic arithmetic
 

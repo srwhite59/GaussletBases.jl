@@ -4,6 +4,121 @@ This page records small internal engineering policies that are easy for
 generated code to miss. It is developer-facing rather than part of the public
 manual.
 
+## Estimated Angular Correlation Allocation
+
+Pass 655 / `GB-ANGULAR-ENERGY-BUDGET-20261002` authorizes one experimental,
+opt-in allocation under HP-ANGULAR-ENERGY-BUDGET-FN-01/TEST-01. Steven accepts
+the full reconstructed Be2+ calibration below. The total cutoff is an estimated
+angular-correlation selection target, not a bound on reconstructed or continuum
+energies. Earlier blocked recommendations remain historical evidence; their
+failed product-state estimator is not this contract.
+
+**Entrance and bounded domain.** Add only
+`assign_atomic_angular_shell_orders(radial_ops::RadialAtomicOperators;
+ord_max, estimated_energy_cutoff, required_l=1)`, returning the existing
+`Vector{Int}`. The two selection controls are the literal maximum supported
+point count and finite positive total cutoff in Ha; `required_l` specifies a
+physical represented-orbital floor, not another fitted selection control.
+Require 1 <= required_l <= the maximum rule's existing auto-injected l.
+Retain s/p at minimum. Support verified vendored rules from 10 through 100 and
+1:40 radial functions for this first compact implementation; reject larger or
+unsupported inputs before allocation. Require finite ordered positive shell
+radii, finite consistent radial matrices, IntegralDiagonal operators and an
+available inverse-r2 matrix (`centrifugal(radial_ops,1)`). Multipoles must cover
+the maximum profile's actual moment span or be extendable from retained samples.
+Do not repair/reinterpret the radial overlap, substitute grids or infer missing
+data. Existing radius-only assignment, explicit injection, constant orders,
+builders and defaults remain unchanged; no facade keyword propagation.
+
+Only the first min(12,nradial) shells, in radial order, are eligible for reduction;
+all other shells retain the literal ord_max. This is the tested inner-only policy,
+not a charge-specific hardcoded schedule. Candidate counts are the smallest
+vendored rule meeting the existing auto-injection half-count criterion for each
+retained l, bounded by ord_max. With maximum100 these are 10/18/32/50/72/100,
+not a search over intermediate rules with different mixed complements. Visit
+eligible shells inside-out, trying permitted retained l from required_l upward;
+accept the smallest candidate fitting the single updated total budget.
+
+**Reference and score.** Reuse the default maximum-rule profile (beta2, auto
+injection, tau1e-12, SVD whitening) and existing expanded interaction moments.
+Let C embed its exact real Ylm orbitals and
+Q_l = sum_m C_lm*C_lm' / sqrt(2l+1), including Q_0. Form the projected coupling
+V_l0 by summing every carried L: its coefficient multiplying R_L(a,b) is
+`4*pi/(2L+1) * sum((mt_L'*mt_L).*Q_l.*Q_0)`, with the existing normalized
+moment blocks. This is the actual angular IDA projection, not a substituted
+continuum Gaunt interaction, a 2*l cap or the failed product-state recipe.
+Obtain E_s and normalized C_s from the correlated s-sector Hamiltonian
+`H_s*X + X*H_s' + V_00.*X`, H_s=kinetic+nuclear. Use a selected symmetric
+eigensolve in this explicitly bounded radial product space, not a full angular
+two-electron Hamiltonian, scratch Davidson solver, four-index tensor or new
+solver framework. At n=35 the reference dimension is1225, not12.25million.
+
+For each l=1:l_auto, H_l=H_s+l*(l+1)*inverse_r2/2 and
+gap_l=2*eigmin(H_l)-E_s. Use W_l(a,b)=abs2(V_l0(a,b)*C_s(a,b))/gap_l.
+Nonfinite or nonpositive gaps, or gaps no larger than sqrt(eps(Float64)) times
+max(1,abs(E_s),opnorm(H_l,Inf)), are unreliable: their channel cannot be removed.
+Do not clamp a denominator, add a safety factor or manufacture a zero score.
+The total is the ordered sum of W_l(a,b) where either shell discards l. Charge
+the union once, including inner-inner and inner-outer pairs; equivalently double
+unordered off-diagonal terms. Never award a separate cutoff to each sphere.
+Only local matrices/weight vectors are transient; return no persistent score,
+metadata, reference state or new carrier. Keep all actual interaction moments
+when constructing the chosen point basis normally, with interaction_lmax=:auto.
+
+**Cost and exact surfaces.** Source including docstrings: preferred120, hard150
+added lines across existing `src/angular/angular_shell_assembly.jl` (hard60)
+and `src/angular/angular_atomic_benchmark.jl` (hard90). Only this overload and
+compact private projection/reference/union-selection details may be added.
+The capped dense s-reference has O(nradial^4) storage and O(nradial^6) solve
+cost: a40-function ceiling bounds its matrix to20.48MB;35 functions measured
+0.154s/100.64MB cumulative allocation in the saved selected eigensolve.
+Maximum-profile projections are at most100-by100; on-demand multipoles retain
+the existing sample/grid cost. Measure cold compilation separately, then warm
+estimator time/allocation separately from construction/validation. For the
+saved35/100 case stop above10s warm,512MiB cumulative projection/reference/
+selection allocation, or2GiB process RSS. Report on-demand radial-table cost
+separately: the saved29296-point grid measured0.888s/1.67GB cumulative allocation
+for all48 multipoles; allow at most2.5GiB total including that unchanged work.
+Stop on an unexplained material regression. Do not hide an unbounded dense
+allocation, rebuild a basis or alter a grid to meet these admission limits.
+
+Only `test/angular/runtests.jl` may grow (preferred60, hard80 added lines).
+Compact regressions must catch double-charged pair unions/per-shell budgets,
+violated required-l floors, nonpositive/unreliable gaps, invalid cutoff/count/
+domain inputs, and changed radius-only/constant-order behavior. Use small shared
+oracles rather than a new test framework. Protect common exact s/p one-body
+blocks at existing meaningful tolerances. Reader additions only
+`docs/src/explanations/angular_research_track.md`, hard60/preferred35 lines,
+plus the source docstring within its source budget. Explain physical reference,
+bounded cost, inner-only eligibility, floor and normal builder use. No prose locks.
+
+**Accepted calibration and validation.** Reuse frozen qualification inputs in
+`/Users/srw/dmrgtmp/angular_energy_budget_20261002/`, not the failed old estimate.
+The saved correlated-s/spectral algorithm selects [32;fill(100,34)] at1e-10,
+score5.0894836882e-11Ha. Reproduce this count vector and score (rtol1e-3,
+atol1e-14) in one compact estimator acceptance, using saved physical matrices;
+these saved artifacts are not a committed CI fixture or new dependency.
+The independent actual complete reconstructed Hamiltonians have3500/3432
+functions, every complement participating, and E_candidate-E_baseline
+1.2584600029e-10Ha with practical numerical uncertainty around1e-12. Steven
+accepts this calibration; do not require actual loss<=cutoff, a rigorous bound,
+empirical inflation or further1e-12 qualification. Channel-model loss7.50e-11
+is distinct. Nonnested point rules and changed IDA mean this is not a pure
+variational loss; existing radial origin/overlap uncertainties also remain.
+
+Run new focused tests plus selected existing shell-assembly/one-body anchors,
+angular_public, relevant radial/core/misc owners and docs_fast/full docs.
+Normal source-bearing CI must execute all three numerical jobs, plus separate
+Docs, package/resource load, authority/self-test, two external renders,
+Documenter/log/diff checks. Full angular and the full reconstruction must not
+be replayed; stop/report before expanding if changed contracts invalidate the
+saved calibration. Preserve original assertions, states, failures and reports.
+No new files/exports/types/dependencies/cache/schema, default/threshold/grid
+change, radial D, A+B+C redesign, downstream run/receipt, release/stable or
+successor. Over-budget/broader semantics, unexplained failure or writer conflict
+means no implementation commit and exact blocker report. At most two in-scope
+correction rounds; accepted endpoint consumes both execution grants and pauses.
+
 ## Radial Construction And Quadrature Convergence
 
 Pass 622 accepts `a7ec77247b9bc45a349771e58cb76cb8019e08f8`, implementing
