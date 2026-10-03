@@ -116,6 +116,58 @@ function assign_atomic_angular_shell_orders(
     return assigned
 end
 
+"""
+    assign_atomic_angular_shell_orders(radial_ops::RadialAtomicOperators;
+                                      ord_max, estimated_energy_cutoff, required_l=1)
+
+Experimental inner-shell point counts from one estimated angular-correlation
+budget in Ha. A correlated radial s-sector reference and projected IDA couplings
+estimate discarded channels; this is not a guaranteed reconstructed/continuum
+energy bound. Only the first `min(12,n)` shells may shrink, retaining at least
+`required_l` (s/p by default). Outer shells retain `ord_max`.
+
+Supports 1:40 radial functions and vendored 10:100 point rules, with
+`IntegralDiagonal` radial operators, inverse-r2 and all required multipoles
+(stored or available from retained samples). The bounded dense s-reference
+uses O(n^4) storage. Pass the returned `Vector{Int}` as `shell_orders` to the
+normal builder; keep `interaction_lmax=:auto`. Radius/default paths are unchanged.
+"""
+function assign_atomic_angular_shell_orders(
+    radial_ops::RadialAtomicOperators; ord_max, estimated_energy_cutoff, required_l=1,
+)
+    ord_max isa Integer && !(ord_max isa Bool) && 10 <= ord_max <= 100 &&
+        ord_max in sphere_point_set_orders() || throw(ArgumentError("ord_max must be a vendored 10:100 point count"))
+    estimated_energy_cutoff isa Real && !(estimated_energy_cutoff isa Bool) &&
+        isfinite(estimated_energy_cutoff) && estimated_energy_cutoff > 0 ||
+        throw(ArgumentError("estimated_energy_cutoff must be finite and positive (Ha)"))
+    cutoff = Float64(estimated_energy_cutoff)
+    isfinite(cutoff) && cutoff > 0 || throw(ArgumentError("cutoff must be representable as positive finite Float64"))
+    lmax = _choose_l_inject(Int(ord_max))
+    required_l isa Integer && !(required_l isa Bool) && 1 <= required_l <= lmax ||
+        throw(ArgumentError("required_l must lie between 1 and the maximum rule's auto-injected l"))
+    radii = radial_ops.shell_centers_r
+    n = length(radii)
+    1 <= n <= 40 || throw(ArgumentError("estimated allocation supports 1:40 radial functions"))
+    all(r -> isfinite(r) && r > 0, radii) && all(i -> radii[i] < radii[i+1], 1:n-1) ||
+        throw(ArgumentError("shell radii must be finite, positive and strictly ordered"))
+    radial_ops.approximation isa IntegralDiagonal || throw(ArgumentError("estimated allocation requires IntegralDiagonal"))
+    length(radial_ops.centrifugal_data) >= 2 || throw(ArgumentError("inverse-r2 data are required"))
+    inverse_r2 = centrifugal(radial_ops, 1)
+    for matrix in (radial_ops.overlap, radial_ops.kinetic, radial_ops.nuclear, inverse_r2)
+        size(matrix) == (n, n) && all(isfinite, matrix) || throw(ArgumentError("radial matrices must be finite and match the shell count"))
+    end
+    shell = shell_local_angular_profile(Int(ord_max)).basis
+    moments = _build_shell_local_interaction_moment_blocks(shell)
+    moments.lcap <= _stored_multipole_lmax(radial_ops) || _radial_multipoles_extendable(radial_ops) ||
+        throw(ArgumentError("radial multipoles must cover the maximum profile's moment span"))
+    couplings = _angular_correlation_couplings(radial_ops, shell, moments.blocks)
+    weights = _angular_correlation_weights(radial_ops.kinetic + radial_ops.nuclear, inverse_r2, couplings)
+    keeps = _angular_correlation_keeps(weights, Int(required_l), cutoff)
+    available = filter(order -> 10 <= order <= ord_max, sphere_point_set_orders())
+    counts = [l == lmax ? Int(ord_max) : first(order for order in available if _choose_l_inject(order) >= l) for l in 1:lmax]
+    return [i <= min(12, n) ? counts[keeps[i]] : Int(ord_max) for i in 1:n]
+end
+
 function _ylm_rows_for_l(channels::YlmChannelSet, l::Int)
     return findall(channel -> channel.l == l, channels.channel_data)
 end

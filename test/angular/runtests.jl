@@ -329,6 +329,67 @@ end
     @test any(order ∉ curated_sphere_point_set_orders() for order in scheduled_orders_full)
 end
 
+@testset "Estimated angular correlation allocation" begin
+    GB = GaussletBases
+    weights = [zeros(2, 2), [2.0 3.0; 3.0 5.0]]
+    @test GB._angular_correlation_score(weights, [1, 2]) == 8.0
+    @test GB._angular_correlation_score(weights, [1, 1]) == 13.0
+    @test GB._angular_correlation_keeps(weights, 1, 14.0) == [1, 1]
+    @test GB._angular_correlation_keeps(weights, 1, 10.0) == [1, 2]
+    @test GB._angular_correlation_keeps(weights, 2, 100.0) == [2, 2]
+    @test GB._angular_correlation_keeps([zeros(13, 13), zeros(13, 13)], 1, 1.0) == [fill(1, 12); 2]
+    for inverse_r2 in (zeros(1, 1), fill(1e-10, 1, 1), fill(-1.0, 1, 1))
+        w = GB._angular_correlation_weights(zeros(1, 1), inverse_r2, [zeros(1, 1), ones(1, 1)])
+        @test only(only(w)) == Inf
+        @test GB._angular_correlation_keeps([zeros(1, 1), only(w)], 1, 1e100) == [2]
+    end
+    @test only(only(GB._angular_correlation_weights(fill(-2.0, 1, 1), ones(1, 1),
+                                                   [ones(1, 1), fill(2.0, 1, 1)]))) ≈ 4.0
+    _, _, ops, _, _, _ = _quick_radial_atomic_fixture()
+    assign(; kwargs...) = assign_atomic_angular_shell_orders(ops; kwargs...)
+    for cutoff in (0.0, -1.0, Inf, NaN, true)
+        @test_throws ArgumentError assign(ord_max=18, estimated_energy_cutoff=cutoff)
+    end
+    for order in (9, 18.0, 101, 460, true)
+        @test_throws ArgumentError assign(ord_max=order, estimated_energy_cutoff=1e-10)
+    end
+    for l in (0, 3, true, 1.5)
+        @test_throws ArgumentError assign(ord_max=18, estimated_energy_cutoff=1e-10, required_l=l)
+    end
+    replace_ops(; radii=ops.shell_centers_r, overlap=ops.overlap, centrifugal_data=ops.centrifugal_data,
+                multipoles=ops.multipole_data, samples=ops.multipole_samples) = RadialAtomicOperators(
+        overlap, ops.kinetic, ops.nuclear, centrifugal_data, multipoles, radii,
+        ops.source_manifest, ops.approximation, samples)
+    for radii in (Float64[], collect(1.0:41.0), reverse(ops.shell_centers_r),
+                  fill(NaN, length(ops.shell_centers_r)), fill(0.0, length(ops.shell_centers_r)))
+        @test_throws ArgumentError assign_atomic_angular_shell_orders(replace_ops(; radii);
+            ord_max=18, estimated_energy_cutoff=1e-10)
+    end
+    for bad in (replace_ops(overlap=zeros(1,1)), replace_ops(overlap=fill(NaN,size(ops.overlap))),
+                replace_ops(centrifugal_data=Matrix{Float64}[]), replace_ops(samples=nothing))
+        @test_throws ArgumentError assign_atomic_angular_shell_orders(bad; ord_max=18, estimated_energy_cutoff=1e-10)
+    end
+    orders = assign(ord_max=18, estimated_energy_cutoff=1e100)
+    floor_orders = assign(ord_max=18, estimated_energy_cutoff=1e100, required_l=2)
+    @test orders isa Vector{Int}
+    @test orders == [i <= 12 ? 10 : 18 for i in eachindex(orders)]
+    @test floor_orders == fill(18, length(orders))
+    @test assign(ord_max=18, estimated_energy_cutoff=1e-300) == floor_orders
+    @test assign(ord_max=100, estimated_energy_cutoff=1e-300) == fill(100, length(orders))
+    default = build_atomic_injected_angular_one_body_benchmark(ops; ord_min=10, ord_max=10)
+    constant = build_atomic_injected_angular_one_body_benchmark(ops; shell_orders=fill(10, length(orders)))
+    @test default.angular_assembly.shell_orders == constant.angular_assembly.shell_orders
+    @test default.hamiltonian == constant.hamiltonian
+    for counts in (orders, floor_orders)
+        b = build_atomic_injected_angular_one_body_benchmark(ops; shell_orders=counts)
+        projected = b.exact_transform * b.hamiltonian * transpose(b.exact_transform)
+        nchannels = length(b.exact_channels)
+        low = [nchannels*(a-1)+c for a in eachindex(orders) for c in 1:4]
+        @test projected[low,low] ≈ constant.exact_hamiltonian atol=1e-10 rtol=1e-10
+        @test b.exact_overlap[low,low] ≈ constant.exact_overlap atol=1e-12 rtol=1e-12
+    end
+end
+
 @testset "Atomic injected angular one-body benchmark" begin
     benchmark = _atomic_injected_angular_one_body_benchmark_fixture()
     diagnostics = atomic_injected_angular_one_body_diagnostics(benchmark)

@@ -213,6 +213,43 @@ orchestration belongs in the repo itself.
 
 ## Experimental profile and sequence producers
 
+### Estimated inner-shell allocation
+
+An opt-in experimental allocation uses the radial operators rather than only
+shell radii:
+
+```julia
+orders = assign_atomic_angular_shell_orders(
+    radial_ops; ord_max=100, estimated_energy_cutoff=1e-10, required_l=1,
+)
+one_body = build_atomic_injected_angular_one_body_benchmark(
+    radial_ops; shell_orders=orders,
+)
+# Keep interaction_lmax=:auto in subsequent interaction/payload construction.
+```
+
+The cutoff is one total estimated angular-correlation budget in Ha, not a
+guarantee on the reconstructed or continuum energy. A correlated radial
+s-sector reference and all carried maximum-profile IDA moments estimate
+channel removal using positive reliable spectral gaps. An ordered pair is
+charged once if either shell discards its channel. Unreliable gaps prevent
+removal; s/p (or a higher explicit `required_l`) remain represented.
+
+Only the first `min(12,n)` shells may shrink; outer shells retain `ord_max`.
+This entrance is bounded to 1:40 radial functions and vendored 10:100 point
+rules. It needs finite ordered positive radii, consistent `IntegralDiagonal`
+operators, inverse-r2, and sufficient stored multipoles or retained samples.
+The selected dense s-reference uses O(n^4) storage and O(n^6) solve cost;
+on-demand radial tables have their own grid-dependent cost.
+
+The accepted 35-shell Be2+ calibration selects first32/rest100 at an estimated
+1e-10 target (score 5.08948e-11 Ha). Full reconstructed dimensions were
+3500/3432, with signed energy change +1.25846e-10 Ha and practical uncertainty
+around 1e-12 Ha. Nonnested point rules and changed IDA make this more than a
+pure variational channel removal. This is limited calibration, not universal
+accuracy certification. Existing radius-only, constant-order and default paths
+are unchanged; all actual interaction moments remain enabled.
+
 The same producer-side discipline extends to these fixed-radial angular
 objects and constructors:
 

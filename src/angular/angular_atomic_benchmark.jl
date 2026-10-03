@@ -616,6 +616,58 @@ function _scaled_shell_moment_block(moment_blocks::Dict{Int,Matrix{Float64}}, L:
     return moment_blocks[L] ./ reshape(weights, 1, :)
 end
 
+function _angular_correlation_couplings(radial_ops, shell, moments)
+    C = transpose(shell.injected_overlap)
+    Q = [C[:,l^2+1:(l+1)^2] * transpose(C[:,l^2+1:(l+1)^2]) / sqrt(2l+1) for l in 0:shell.l_inject]
+    n = length(radial_ops.shell_centers_r)
+    couplings = [zeros(n, n) for _ in Q]
+    for L in 0:maximum(keys(moments))
+        mt = _scaled_shell_moment_block(moments, L)
+        G = transpose(mt) * mt
+        radial = _radial_multipole_on_demand(radial_ops, L)
+        size(radial) == (n, n) && all(isfinite, radial) || throw(ArgumentError("radial multipoles must be finite and match the shell count"))
+        for l in eachindex(Q)
+            couplings[l] .+= (4pi/(2L+1) * sum(G .* Q[l] .* Q[1])) .* radial
+        end
+    end
+    return couplings
+end
+
+function _angular_correlation_weights(H, inverse_r2, couplings)
+    n = size(H, 1)
+    identity = Matrix{Float64}(I, n, n)
+    reference = eigen(Symmetric(kron(H, identity) + kron(identity, H) + Diagonal(vec(couplings[1]))), 1:1)
+    E = only(reference.values)
+    C = reshape(reference.vectors[:,1], n, n)
+    weights = Matrix{Float64}[]
+    for l in 1:length(couplings)-1
+        H_l = H + (l*(l+1)/2) .* inverse_r2
+        gap = 2eigmin(Symmetric(H_l)) - E
+        reliable = isfinite(gap) && gap > sqrt(eps(Float64)) * max(1.0, abs(E), opnorm(H_l, Inf))
+        push!(weights, reliable ? abs2.(couplings[l+1] .* C) ./ gap : fill(Inf, n, n))
+    end
+    return weights
+end
+
+# Ordered pairs form one union: an inner-inner pair is not charged twice.
+function _angular_correlation_score(weights, keeps)
+    return sum((weights[l][a,b] for l in eachindex(weights), a in eachindex(keeps), b in eachindex(keeps)
+                if l > keeps[a] || l > keeps[b]); init=0.0)
+end
+
+function _angular_correlation_keeps(weights, required_l, cutoff)
+    keeps = fill(length(weights), size(first(weights), 1))
+    for a in 1:min(12, length(keeps))
+        for l in required_l:length(weights)
+            previous = keeps[a]
+            keeps[a] = l
+            _angular_correlation_score(weights, keeps) <= cutoff && break
+            keeps[a] = previous
+        end
+    end
+    return keeps
+end
+
 _atomic_injected_angular_interaction_lmax_required(assembly::AtomicShellLocalInjectedAngularAssembly) =
     maximum(maximum(keys(blocks)) for blocks in assembly.shell_interaction_moment_blocks)
 
