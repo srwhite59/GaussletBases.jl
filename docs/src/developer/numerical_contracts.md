@@ -4,6 +4,134 @@ This page records small internal engineering policies that are easy for
 generated code to miss. It is developer-facing rather than part of the public
 manual.
 
+## Default Radial Panel Integration
+
+Pass 656 / `GB-RADIAL-INTEGRATION-20261017` authorizes the default repair under
+HP-RADIAL-INTEGRATION-FN-01/TEST-01. Steven approves at most120 added source
+lines and the normal public default, not an opt-in-only result. The earlier
+60-line stop and opt-in recommendation remain historical evidence. Basis
+construction, coefficients, maps, radial IDA, angular conventions and existing
+validity thresholds do not change. This is a quadrature change, not another
+running-sum arithmetic repair or a universal continuum-accuracy certificate.
+
+**Entrance and grid rule.** Replace only the body of the existing
+`_radial_quadrature_grid(basis::RadialBasis, cutoff::Float64; refine::Int)` with
+the qualified16-point physical Gauss-Legendre panel generator. No new public
+selector or forwarding grid helper. Keep `radial_quadrature` signatures,
+accuracy profiles/schedules, thresholds, early exits, warnings, explicit cutoff
+aliases and their mutual exclusion. The default cutoff remains the conservative
+basis support bound, not80bohr (232.2569373131539bohr on the saved fixture).
+For reference spacing h, mapping m, origin u0=uofx(m,0), refinement k and
+v=min(h/3, existing XGaussian alpha widths), start with edges0 and
+min(cutoff,xofu(m,u0+v*sqrt(eps(Float64))*24/k)). Use h/3 when no XGaussians.
+Require finite positive cutoff/origin scale. From each positive edge a, propose
+b=min(a*exp(2/k),cutoff), bisect toward a while uofx(m,b)-uofx(m,a)>24h/k,
+and require finite advancement. Include the zero-touching first panel and end
+exactly at cutoff. Forward-map width checks avoid the existing large-tail
+inverse-map failure; do not alter mapping code. No arbitrary map/extent cutoff.
+Extreme unrepresentable geometry fails clearly, never clamps or falls back.
+
+`refine` remains an optional positive starting resolution hint, now limiting
+physical-radius growth and reference-coordinate panel width. Existing automatic
+schedules and explicit doubling are unchanged; it is not a fixed-grid request.
+The old `:medium` description of reproducing the old grid must be corrected:
+its overlap-only acceptance policy remains, but it also uses panels. Truthful
+exhaustion/short-tail warnings remain; an actually converged grid is quiet.
+This supersedes only the former grid recipe and fixed warning expectations in
+Radial Construction And Quadrature Convergence, not construction or thresholds.
+
+**Private attachment and compatibility.** Add only `_RadialPanelRule`,
+`_radial_gauss_legendre` and `_radial_panel_kernel_matrix`. The rule holds
+`edges::Vector{Float64}`, `interpolation::Matrix{Float64}` and
+`geometry_digest::Vector{UInt8}`. Derive q from matrix size. Use existing SHA to digest concatenated
+Float64 points, weights, edges and interpolation entries. Check that digest
+before marked multipole evaluation; modified tagged geometry raises ArgumentError
+instead of silently using an incompatible rule. Retain finite/sorted/range and
+dimension checks. Accessors still expose the same mutable vectors; one-body
+builders still use their actual points/weights. A caller wanting a modified
+custom rule can construct an untagged grid from those arrays. No accessor-copy
+change, metadata, cache, side table or general mutation framework.
+
+Keep RadialQuadratureGrid's existing single mapping type parameter and add
+`panel_rule::Union{Nothing,_RadialPanelRule}`; preserve old keyword/copy behavior, inferred
+three-positional and explicitly parameterized three-argument constructors and
+their validation/conversion semantics. Those constructors default to no rule.
+Only library default generation attaches the rule. Add the nullable attachment
+as `panel_rule` to `_RadialMultipoleSamples`; its old three-argument form defaults to no rule.
+Retained copies preserve exact geometry and its digest. Marked stored/on-demand
+tables use the same panel kernel; untagged explicit/historical grids use the
+existing stable discrete kernel unchanged. Never infer provenance from a map
+or node pattern. No artifact-schema change, binary Serialization guarantee,
+consumer migration or receipt rewriting is authorized; internal layouts change.
+
+**Kernel and cost.** Use panel-edge carries, bounded local ratios and partial
+polynomial integration, with call-local moment/interpolation buffers and mul!.
+Preserve signed integral-weight normalization, symmetrization and all carried L.
+No raw global r^L/r^(-L-1), total-minus-prefix cancellation, diagonal kink patch,
+negative clamp, omitted function/support, overlap repair or angular truncation.
+The rejected large first panel and inverse-tail attempts remain evidence.
+Qualified normal36-function high24/32 grids have6192/8336 nodes. After sampling,
+48 multipoles measured2.165s/122454400B retained and2.151s/124149824B sequential;
+all48 agree. Retained matrices0.48MiB, samples/rule2.51MiB, normal peak0.818GiB.
+These are radial phases, not a measured complete future public call.
+
+Before acceptance, measure actual no-keyword preparation, one-body, retained48
+and sequential on-demand48 phases separately from compilation/validation/I/O.
+For the saved35/100 Pass655 scale, retain10s/512MiB warm projection/reference/
+selection,2.5GiB cumulative complete table/estimator allocation and2GiB process
+RSS. Require radial48-L after-sample work <=5s and256MiB cumulative allocation
+per retained/sequential measurement; retain no node-by-node or per-L action
+tensor. Reuse saved profiles rather than rebuilding them. Existing untagged
+saved inputs stay untagged. Do not claim simultaneous RSS from a phase-sum;
+measure the actual integrated call. No resource waiver/default workaround.
+
+**Accuracy and tests.** Reuse accepted frozen fine53, production36 and coarse16
+bases and independent panels/Slater/triangle references. Check the new default
+on all three, not only a hardcoded80-bohr grid. For these fixtures, elementwise
+S error <=2e-10; T/N/C2 error <=2e-11*abs(reference)+5*reference_uncertainty,
+with uncertainties1e-8Ha/1e-10Ha/1e-7bohr^-2 respectively. Report signed first
+entries, full and cross-block max/scaled errors; these are not energy bounds.
+Low-L0/2/6 full matrices and selected L132 must agree within2e-9 scaled with
+the independent references; use absolute scaling at true zeros. Preserve
+existing high-L discrete underflow regressions unchanged. Compact independent
+Slater controls at ordinary/tight scales retain1e-9 scaled accuracy.
+
+Only existing test/radial/runtests.jl may change, hard90 added lines including
+warning reconciliation. Protect public default selection, full cutoff, old
+constructors/copy behavior, digest mutation failures, stored/on-demand agreement,
+unchanged custom-grid direct-sum oracle and independent one-body/Coulomb checks.
+Reconcile obsolete assumptions that every profile exhausts or reaches its final
+schedule; verify actual profile satisfaction on early success and keep forced
+short-cutoff failure/targets/penultimate diagnostics. Never force a good grid to
+warn or relax an energy, metric, capture or solver assertion.
+
+**Exact bounds and acceptance.** Hard120 total added source lines INCLUDING
+comments/docstrings across src/foundation/quadrature.jl and
+src/radial/operators.jl. Replace the existing factory directly, eliminating the
+blueprint's extra forwarding helper to fit mutation/bounds guards without
+compression. Hard35 added reader lines total in
+docs/src/howto/recommended_atomic_setup.md and
+docs/src/algorithms/radial_interval_sampled_build_and_extents.md. No new source/
+test file, export/public type, dependency, knob, framework or persistent result.
+Run radial/core/ida/angular_public/misc/docs_fast/full docs, selected unchanged
+angular assembly and one-body anchors, package load, authority/self-test, two
+renders, Documenter/log/diff, exact-head full three-job CI and separate Docs.
+No full angular suite or historical reconstruction replay. Stop on a failing
+out-of-scope assertion, not a mechanical golden/tolerance repin.
+
+No HF endpoint is granted: independent integral evidence and the existing
+one-electron endpoint suffice here; report no independently measured HF-energy
+improvement. Custom implementation admission uses at most600 additional
+numerical seconds/8GiB RSS/512MiB scratch within the original1200s/1GiB envelope;
+190s is already conservatively charged. Actual Pass655 RSS remains2GiB. Required
+ordinary regression/CI checks are separate from custom qualification. Preserve
+all old evidence, handoffs and A+B+C. No external imports/edits, supplement or
+screening/HF-matching policy, solver/hamv6/angular allocation change, consumer
+restart/receipt, Hchain/q9, release/stable or successor. If scope, budget,
+accuracy, compatibility or cost fails, make no implementation commit and report
+the exact obstacle. At most two in-scope corrections, then accepted closeout
+consumes both grants and pauses.
+
 ## Estimated Angular Correlation Allocation
 
 Pass 655 accepts `1fa9d3611d7dda90f3aa77118c41b23fd420baab` for

@@ -1301,3 +1301,31 @@ anchor-log disclosure remain; no scientific thresholds/goldens changed.
 Zero design correction rounds; both execution grants consumed. Closeout uses
 docs-only checks and preserves handoffs, stable/releases and consumer pause.
 No successor. The cutoff estimates loss rather than certifying arbitrary energies.
+
+### Pass 656 Authorized: Default Radial Integration
+
+Steven explicitly approves120 added source lines and repairing the normal
+public radial_quadrature default. The earlier60-line stop/opt-in proposal stays
+historical. Same-grid recurrence is correct; source-free panels repair measured
+origin one-body and continuous Coulomb errors on fixed coefficients. Independent
+review35+27 checks passes. The changed external report is reconciled: its first
+12528bytes exactly hash to the original; added spacing/HF claims are not adopted.
+LT1/LT2 and MT1 advance accurate integral construction, not basis/energy certification.
+Freeze16-point panels, scaled tiny included origin panel, reference-width/radius
+ratio bounds, full basis-support cutoff and unchanged profiles/thresholds.
+Rule identity and a full-byte geometry digest protect mutable tagged grids;
+untagged explicit grids keep the discrete rule. Existing factory replaces its
+old body directly: no forwarding helper, public selector or fallback framework.
+Buffered48-L scratch costs2.165s/122.45MB after sampling instead of12GiB traffic;
+actual integrated Pass655 and default admission remain implementation gates.
+Deleted: replace the old generated radial recipe. Simplified: direct factory
+and reusable local buffers. Quarantined: old guesses/failures stay scratch.
+Not deleted: shared erf and discrete kernels have live explicit/diagnostic users.
+Exact blocker: implementation and measured public dispatch, not new physics.
+Hard source120/test90/reader35, only two existing source owners and one radial
+test owner. Private rule/grid/sample fields are explicitly owned, no result
+metadata/status/framework. Custom work remains within the original1200s/1GiB;
+190s charged before dispatch. No HF is granted or independent HF improvement
+claimed; existing hydrogen endpoint remains. Normal full CI/Docs required;
+no complete angular or historical reconstruction replay. Two correction rounds
+maximum, grants consumed at accepted closeout, no consumer/release/successor.

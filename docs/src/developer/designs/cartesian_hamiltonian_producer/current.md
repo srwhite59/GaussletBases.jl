@@ -3,6 +3,13 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
+Pass 656 authorizes [Default Radial Panel Integration](../../numerical_contracts.md#Default-Radial-Panel-Integration)
+under HP-RADIAL-INTEGRATION-FN-01/TEST-01, hard120 added source lines.
+Steven selects the normal public default, with preserved untagged explicit-grid
+semantics, support cutoff, thresholds and basis. Qualified integral evidence
+does not replace actual implementation/cost acceptance. No HF, consumer,
+release/stable or successor work; Hchain-doer remains paused.
+
 Pass 655 accepts the bounded opt-in
 [estimated angular correlation allocation](../../numerical_contracts.md#Estimated-Angular-Correlation-Allocation)
 at1fa9d3611d7dda90f3aa77118c41b23fd420baab. Both ENERGY-BUDGET IDs are

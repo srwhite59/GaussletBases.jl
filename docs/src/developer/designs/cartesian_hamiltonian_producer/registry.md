@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `b0b5395b27f9a7cb7b6fca57417ddc606df67992bb31eb5b9a8f718eee8f4e4a`.
+> [authority.toml](authority.toml), SHA-256 `ac110375d74c5ae5da759823b6ecd2deb3ac0a5f363d2a219f98465e39dc1370`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -4458,7 +4458,47 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `a7ec77247b9bc45a349771e58cb76cb8019e08f8`
   - `manager_pass`: `622`
 - **Dependencies:** `HP-RADIAL-CONVERGENCE-FN-01`
-- **Scope:** Maintain accepted core/radial coverage under Radial Construction And Quadrature Convergence: construction exits, fifth-candidate equality, explicit controls, truthful quadrature diagnostics, and two single-warning expectations. Preserve numerical assertions and existing owners. No implementation grant, new file/framework, large sweep, workflow, or unrelated test change.
+- **Scope:** Maintain accepted construction and truthful quadrature-notification coverage under Radial Construction And Quadrature Convergence. Default Radial Panel Integration separately reconciles obsolete always-warning expectations after genuine convergence; preserve forced-failure diagnostics and numerical assertions. This maintenance ID grants no new implementation, owner/framework, sweep, workflow, or unrelated test change.
+
+### HP-RADIAL-INTEGRATION-FN-01 - default radial panel integration and preserved explicit grids
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Default Radial Panel Integration`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/algorithms/radial_interval_sampled_build_and_extents.md`
+  - `docs` / `existing`: `docs/src/howto/recommended_atomic_setup.md`
+  - `source` / `existing`: `src/foundation/quadrature.jl`
+  - `source` / `existing`: `src/radial/operators.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-qualification-2026-10-17.md`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-review-2026-10-17.md`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-qualification-2026-10-17.md`
+  - `git_commit`: `e545d5e2c7bca7442a54a89613955707c044d4d7`
+  - `manager_pass`: `656`
+- **Dependencies:** none
+- **Scope:** Implement Default Radial Panel Integration only in foundation/quadrature.jl and radial/operators.jl: normal default panels, private rule/digest transport, compatible constructors and buffered high-L contraction. Hard120 added source and35 reader lines. Preserve explicit untagged grids, basis, thresholds and support cutoff. Require actual public-path cost admission. No new knob/framework, HF, external/consumer, release or successor work.
+
+### HP-RADIAL-INTEGRATION-TEST-01 - default radial integration independent regressions and admission
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Default Radial Panel Integration`
+- **Owned paths:**
+  - `test` / `existing`: `test/radial/runtests.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-qualification-2026-10-17.md`
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-review-2026-10-17.md`
+  - `git_commit`: `e545d5e2c7bca7442a54a89613955707c044d4d7`
+  - `manager_pass`: `656`
+- **Dependencies:** `HP-RADIAL-INTEGRATION-FN-01`
+- **Scope:** Extend only test/radial/runtests.jl under Default Radial Panel Integration, hard90 added lines. Check default integrals, rule mutation rejection, compatible constructors, retained/on-demand and untagged discrete behavior. Reconcile genuine quiet convergence, preserving failure diagnostics and all physical gates. Reuse saved references; require public-path admission and normal CI. No full angular/HF/campaign, new owner, consumer or successor.
 
 ### HP-RAW-SRCMODE-FN-01 - raw product source-mode inventory
 
