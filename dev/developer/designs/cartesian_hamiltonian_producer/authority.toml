@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "0dba827fde8697f8f4031c245d390d9c4f2a2bf51e70673ba5106c91ca24d016"
+sha256 = "85098da3db1f95e0a3a53295a3dc78dd8090389813e0fb174ec6feb2046af45f"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -7831,7 +7831,7 @@ dependency_ids = ["HP-RADIAL-CONVERGENCE-FN-01"]
 grant = "maintenance"
 id = "HP-RADIAL-CONVERGENCE-TEST-01"
 lifecycle = "completed"
-scope = "Maintain accepted core/radial coverage under Radial Construction And Quadrature Convergence: construction exits, fifth-candidate equality, explicit controls, truthful quadrature diagnostics, and two single-warning expectations. Preserve numerical assertions and existing owners. No implementation grant, new file/framework, large sweep, workflow, or unrelated test change."
+scope = "Maintain accepted construction and truthful quadrature-notification coverage under Radial Construction And Quadrature Convergence. Default Radial Panel Integration separately reconciles obsolete always-warning expectations after genuine convergence; preserve forced-failure diagnostics and numerical assertions. This maintenance ID grants no new implementation, owner/framework, sweep, workflow, or unrelated test change."
 surfaces = ["tests"]
 title = "radial convergence and quadrature diagnostic regressions"
 
@@ -7854,6 +7854,83 @@ title = "radial convergence and quadrature diagnostic regressions"
     kind = "test"
     path = "test/core/runtests.jl"
     state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/radial/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-RADIAL-INTEGRATION-FN-01"
+lifecycle = "approved"
+scope = "Implement Default Radial Panel Integration only in foundation/quadrature.jl and radial/operators.jl: normal default panels, private rule/digest transport, compatible constructors and buffered high-L contraction. Hard120 added source and35 reader lines. Preserve explicit untagged grids, basis, thresholds and support cutoff. Require actual public-path cost admission. No new knob/framework, HF, external/consumer, release or successor work."
+surfaces = ["docs", "source"]
+title = "default radial panel integration and preserved explicit grids"
+
+    [[records.document_refs]]
+    heading = "Default Radial Panel Integration"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-qualification-2026-10-17.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-review-2026-10-17.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-qualification-2026-10-17.md"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "e545d5e2c7bca7442a54a89613955707c044d4d7"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "656"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/algorithms/radial_interval_sampled_build_and_extents.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/howto/recommended_atomic_setup.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/foundation/quadrature.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/radial/operators.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-RADIAL-INTEGRATION-FN-01"]
+grant = "implementation"
+id = "HP-RADIAL-INTEGRATION-TEST-01"
+lifecycle = "approved"
+scope = "Extend only test/radial/runtests.jl under Default Radial Panel Integration, hard90 added lines. Check default integrals, rule mutation rejection, compatible constructors, retained/on-demand and untagged discrete behavior. Reconcile genuine quiet convergence, preserving failure diagnostics and all physical gates. Reuse saved references; require public-path admission and normal CI. No full angular/HF/campaign, new owner, consumer or successor."
+surfaces = ["tests"]
+title = "default radial integration independent regressions and admission"
+
+    [[records.document_refs]]
+    heading = "Default Radial Panel Integration"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-qualification-2026-10-17.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-review-2026-10-17.md"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "e545d5e2c7bca7442a54a89613955707c044d4d7"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "656"
+
     [[records.paths]]
     kind = "test"
     path = "test/radial/runtests.jl"
