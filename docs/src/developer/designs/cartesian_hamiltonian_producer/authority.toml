@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "85098da3db1f95e0a3a53295a3dc78dd8090389813e0fb174ec6feb2046af45f"
+sha256 = "a9c911eb5c09b8f7bfa012fad806910da04bf111661030e190824139f798ee45"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -7909,7 +7909,7 @@ dependency_ids = ["HP-RADIAL-INTEGRATION-FN-01"]
 grant = "implementation"
 id = "HP-RADIAL-INTEGRATION-TEST-01"
 lifecycle = "approved"
-scope = "Extend only test/radial/runtests.jl under Default Radial Panel Integration, hard90 added lines. Check default integrals, rule mutation rejection, compatible constructors, retained/on-demand and untagged discrete behavior. Reconcile genuine quiet convergence, preserving failure diagnostics and all physical gates. Reuse saved references; require public-path admission and normal CI. No full angular/HF/campaign, new owner, consumer or successor."
+scope = "Extend only test/radial/runtests.jl under Default Radial Panel Integration, hard90 added lines. Check default integrals, rule mutation rejection, compatible constructors, retained/on-demand and untagged discrete behavior. Preserve failure diagnostics and physical gates; use independently converged matched-support references, preserving finite-box evidence. Require public-path admission and normal CI. No full angular/HF/campaign, new owner, consumer or successor."
 surfaces = ["tests"]
 title = "default radial integration independent regressions and admission"
 

@@ -87,7 +87,17 @@ measure the actual integrated call. No resource waiver/default workaround.
 
 **Accuracy and tests.** Reuse accepted frozen fine53, production36 and coarse16
 bases and independent panels/Slater/triangle references. Check the new default
-on all three, not only a hardcoded80-bohr grid. For these fixtures, elementwise
+on all three, not only a hardcoded80-bohr grid. Match each reference's domain
+to the actual full support cutoff, including all Coulomb cross-region terms
+and the full signed integral-weight normalization. The coarse16 cutoff is
+14603.140434586174bohr; the original80-bohr reference omits a measured
+9.023291245e-6 overlap tail and remains evidence only for that finite box.
+Independent full-domain600x40/1200x60 panels reproduce coarse S/T/N/C2 and
+L0/2/6 within the unchanged gates. Reuse those saved references; complete the
+selected L132 check with a converged same-domain triangle oracle (r'=u*r),
+not raw global powers or an enlarged dense node-pair sum. Preserve original
+references and the failed comparison. This is a domain correction, not a
+tolerance change or production remedy. For these fixtures, elementwise
 S error <=2e-10; T/N/C2 error <=2e-11*abs(reference)+5*reference_uncertainty,
 with uncertainties1e-8Ha/1e-10Ha/1e-7bohr^-2 respectively. Report signed first
 entries, full and cross-block max/scaled errors; these are not energy bounds.

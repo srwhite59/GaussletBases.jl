@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `ac110375d74c5ae5da759823b6ecd2deb3ac0a5f363d2a219f98465e39dc1370`.
+> [authority.toml](authority.toml), SHA-256 `d47419a7221a1f06619a6c0ad277a228468cf4855a67bdb0e2349b72c2f387d9`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -4498,7 +4498,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `e545d5e2c7bca7442a54a89613955707c044d4d7`
   - `manager_pass`: `656`
 - **Dependencies:** `HP-RADIAL-INTEGRATION-FN-01`
-- **Scope:** Extend only test/radial/runtests.jl under Default Radial Panel Integration, hard90 added lines. Check default integrals, rule mutation rejection, compatible constructors, retained/on-demand and untagged discrete behavior. Reconcile genuine quiet convergence, preserving failure diagnostics and all physical gates. Reuse saved references; require public-path admission and normal CI. No full angular/HF/campaign, new owner, consumer or successor.
+- **Scope:** Extend only test/radial/runtests.jl under Default Radial Panel Integration, hard90 added lines. Check default integrals, rule mutation rejection, compatible constructors, retained/on-demand and untagged discrete behavior. Preserve failure diagnostics and physical gates; use independently converged matched-support references, preserving finite-box evidence. Require public-path admission and normal CI. No full angular/HF/campaign, new owner, consumer or successor.
 
 ### HP-RAW-SRCMODE-FN-01 - raw product source-mode inventory
 

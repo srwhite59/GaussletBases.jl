@@ -1329,3 +1329,23 @@ metadata/status/framework. Custom work remains within the original1200s/1GiB;
 claimed; existing hydrogen endpoint remains. Normal full CI/Docs required;
 no complete angular or historical reconstruction replay. Two correction rounds
 maximum, grants consumed at accepted closeout, no consumer/release/successor.
+
+### Pass 656 Continuation: Match Reference Support
+
+The implementation stopped correctly without a commit: coarse16's required
+full support reaches14603.140434586174bohr, but its frozen oracle stopped at80.
+Independent tail attribution accounts for the9.023291245e-6 overlap discrepancy;
+the reference mismatch is not a demonstrated panel-kernel defect. Original
+failed gates/reports stay verbatim. Independent reviewer28/28 passes on
+matched full-domain600x40/1200x60 panels: S error1.22e-15, L0/2/6 scaled errors
+below8e-14. Full Coulomb cross-region terms and normalization are included.
+LT1/MT1 retain accurate fixed-basis integration as the target; no threshold,
+cutoff, basis or numerical policy changes. This first in-scope continuation
+requires a matched-domain selected L132 oracle and the remaining public-path,
+owner and normal CI/Docs gates. Reuse unchanged production/fine/48-L evidence;
+do not replay completed studies. Preserve the five-file source/test/reader draft
+byte-for-byte during this docs-only amendment. Added source118/deleted6 remain
+within120; tests63/reader30 remain within90/35. Deleted/simplified: no further
+production change authorized. Quarantined: invalid cross-domain comparison,
+not its historical evidence. Remaining blocker is acceptance, not new physics.
+Reviewer7.66s/2.44GiB peak; charge20s, total270/1200, no budget reset.

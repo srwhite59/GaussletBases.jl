@@ -7,7 +7,9 @@ Pass 656 authorizes [Default Radial Panel Integration](../../numerical_contracts
 under HP-RADIAL-INTEGRATION-FN-01/TEST-01, hard120 added source lines.
 Steven selects the normal public default, with preserved untagged explicit-grid
 semantics, support cutoff, thresholds and basis. Qualified integral evidence
-does not replace actual implementation/cost acceptance. No HF, consumer,
+does not replace actual implementation/cost acceptance. The first continuation
+corrects only the coarse oracle's80-bohr domain to full support; thresholds,
+draft and budgets stay fixed. No HF, consumer,
 release/stable or successor work; Hchain-doer remains paused.
 
 Pass 655 accepts the bounded opt-in
