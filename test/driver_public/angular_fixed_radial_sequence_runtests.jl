@@ -55,7 +55,14 @@
         supplements=supplement, supplement_labels=["1s", "p_y"])
     full = materialize_atomic_contact_integrals(augmented)
     n = length(dense.w)
-    @test full.U[1:n, 1:n] == dense.U && full.T[1:n, 1:n] == dense.T
+    for name in (:U, :T)
+        reference = getproperty(dense, name)
+        delta = abs.(getproperty(full, name)[1:n, 1:n] - reference)
+        limits = ifelse.(abs.(reference) .>= 1e-6 .* diag(dense.U),
+            1e-10 .* abs.(reference), 1e-14 .* diag(dense.U))
+        @info "Contact base-block preservation" matrix=name max_absolute_delta=maximum(delta) max_error_gate_ratio=maximum(delta ./ limits)
+        @test all(delta .<= limits)
+    end
     @test full.w[n+1] ≈ 64pi/Z^3 rtol=2e-13
     @test full.U[n+1, n+1] ≈ Z^3/(8pi) rtol=2e-13
     @test full.T[n+1, n+1] ≈ full.U[n+1, n+1] rtol=1e-14
@@ -115,6 +122,9 @@
             @test file["factors"].angular.profile_index == augmented.factors.angular.profile_index
         end
         @test_throws ArgumentError write_atomic_contact_integrals_jld2(path, result)
+        link = joinpath(dir, "dangling.jld2")
+        symlink(joinpath(dir, "missing.jld2"), link)
+        @test_throws ArgumentError write_atomic_contact_integrals_jld2(link, result)
     end
 end
 

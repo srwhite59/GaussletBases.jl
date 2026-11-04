@@ -6,7 +6,7 @@ diagnostics, caller provenance and derived dense U/T/w. Refuses existing paths;
 never use the Hamiltonian/basis file as the destination.
 """
 function write_atomic_contact_integrals_jld2(path::AbstractString, result)
-    ispath(path) && throw(ArgumentError("contact companion destination already exists"))
+    (ispath(path) || islink(path)) && throw(ArgumentError("contact companion destination already exists"))
     @timeg "write contact JLD2 companion" begin
         dense = materialize_atomic_contact_integrals(result)
         jldopen(path, "w") do file
