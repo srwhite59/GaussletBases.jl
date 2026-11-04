@@ -711,3 +711,138 @@ including 136 significant high-m rows; worst scaled row error 2.993e-14.
 Rounding-level changes remain possible (small coupling difference 3.33e-16);
 tail 1.991e-7 is not certified by incremental stopping. No continuum/energy
 claim, downstream receipt edit, quadrature correction or successor follows.
+
+## Atomic Contact Integrals
+
+Pass657, GB-CONTACT-INTEGRALS-20261103, implements exact real-function geometry,
+not IDA or a fitted interaction. HP-ATOMIC-CONTACT-FN-01/TEST-01 are task-local;
+execution requires both committed records and the checked whitelist. Steven's
+IMPLEMENT-6 accepts the original-samples/smooth-expansion validation split.
+Original matched-grid tables/samples stay unchanged. Same-expansion full-domain
+U/T pass;120 original-to-expansion T bridge entries do NOT pass (worst2.65105
+times gate, example1.2962e-15 absolute). Record inherited reconstruction error,
+not identical functions, relaxed gates or repinned evidence. Approved review:
+`tmp/reviews/gb-contact-integrals-fullsupport-review-2026-11-03.md`, SHA256
+f1ef8c254f98b0cf2cdbcfd752f70726418376e61649da7638a86553d069bbce.
+
+**Physics and inputs.** For actual final signed functions, compute
+w_i=(integral phi_i)^2, Uij=integral phi_i^2 phi_j^2 and Tij=integral phi_i^3 phi_j.
+For phi=chi(r)f(Omega)/r, contact radial factors use dr/r^2; volume first moments
+use r*dr. Units are volume for w and inverse volume for U/T. Zero w is legal.
+Keep signed directed T, U symmetry/nonnegativity and diagT=diagU. Do not divide
+by w, symmetrize T, infer functions from H, align phases or change an interaction.
+
+Exactly four new public functions, no public type, default-policy change or
+additional numerical path:
+- `evaluate_angular_basis(shell,directions)` evaluates the actual
+  ShellLocalInjectedAngularBasis coefficients; a profile overload uses its basis.
+  Directions are finite N-by-3 unit directions; reject invalid shapes/nonfinite
+  inputs. Reuse current normalized Ylm/prototype mathematics and conventions.
+- `atomic_contact_integrals(rb,assembly;radial_grid,angular_quadrature,
+  supplements=nothing,supplement_labels=nothing,provenance=nothing)` consumes
+  the exact RadialBasis and actual assembly shells/offsets/dimensions. A lower
+  overload replaces assembly with the actual shell vector and explicit ranges;
+  its `labels` keyword supplies exact final base labels. The assembly overload
+  obtains labels from its actual profiles, never by rebuilding point counts.
+  Use an explicit RadialQuadratureGrid and angular `(directions,weights)` record;
+  finite positive radial nodes/weights, finite positive sphere weights, matching
+  shapes, nonempty arrays and contiguous exhaustive ordered ranges are required.
+  No replacement/refinement of caller grids or automatic cutoff is allowed.
+  Supplement record is exactly `(grid,reduced_values,channels)` with one FINAL
+  PHASED reduced-radial column/YlmChannel per appended site; require exact node/
+  weight pairing and explicit labels. Apply packet site_R/phase once outside
+  this input, never again inside. No interpolation, residual build, normalization,
+  modern-builder substitution, rank change or unsupported nonseparable function.
+- `materialize_atomic_contact_integrals(result)` derives only `(U,T,w)` from
+  its factors, including ALL supplement cross/self rows. No second quadrature.
+- `write_atomic_contact_integrals_jld2(path,result)` writes one JLD2 companion
+  at a new caller-selected path, never mutating the basis/Hamiltonian file.
+  It stores the factors/site map/diagnostics/provenance and bounded dense U/T/w
+  derived by the materializer. No second format, four-index tensor or gradients.
+
+**Exact final result.** One fixed-key final serialization bundle, not a staged
+plan or new public carrier: `(factors,site_map,diagnostics,provenance)`.
+`factors.radial` has `(R,Tr,wrad)` matrices/vector over product groups;
+`factors.angular` has `(A,Ta,wang,profile_index,pair_index)`: A/Ta are vectors of
+ordered distinct-profile-pair matrices, wang is a vector of profile vectors,
+profile_index maps product groups to profiles, pair_index is the profile-pair
+matrix of factor indices. Base groups use actual shells; each residual site may
+be its own radial/Ylm group, reusing identical angular factors locally.
+`site_map` is a vector of fixed `(group,local_index,label)` records in EXACT
+Hamiltonian order. No variable-size tuple/key inventory. `diagnostics` has
+`(overlap,row_sums,quadrature)`; overlap is `(radial,angular,full)` maximum
+identity deviations on the base radial set, each angular profile and complete
+final site set respectively, diagnostic only (different-l residual radial
+columns need not be mutually orthogonal). row_sums is literally w_i*sum_j Uij;
+quadrature is `(radial_nodes,sphere_nodes,radial_extent)`, with radial_extent
+the node extrema, not a certified support/domain bound. No forced range for
+row_sums or automatic overlap repair/gate. `provenance` is caller-supplied
+`(producer_commit,basis_manifest_sha256)` strings or empty strings when omitted;
+never infer identity or use metadata for algorithms. Do not retain full inputs,
+samples or dense outputs recursively. No other persistent fields are granted.
+
+Repeated actual profiles share call-local factors, not global caches or profile
+reconstruction. Compute all ordered pairs; no sparsification threshold. Cost is
+O(Nqr*Ngroups^2) plus O(NqOmega*sum_pq np*nq) and O(Nsites^2) materialization;
+the common-profile shortcut is not a mixed-profile cost claim. Stream/reuse
+blocks for full-overlap and row diagnostics without a nodes-by-sphere-by-sites
+array. Keep one grouped numerical engine for base and supplement functions.
+
+**Hard scope and carrying cost.** Added source INCLUDING docstrings:25 in
+src/angular/angular_shell_basis.jl,170 in angular_shell_assembly.jl,26 in
+angular_sequence_export.jl (same directory),4 in src/GaussletBases.jl;225 total.
+Only those four exports; no new file/type/dependency/cache/framework/schema,
+compatibility layer or duplicate dense engine. No active contact source exists
+to delete; replace consumer private reconstruction through the supported entry,
+but consumer migration is NOT granted. Stop for over-budget clear code rather
+than compressing, omitting guards or splitting the complete feature.
+Tests:130 added lines in test/driver_public/angular_fixed_radial_sequence_runtests.jl
+plus10 mechanical lines in test/docs/runtests.jl. Reader:25 added lines in
+docs/src/explanations/angular_research_track.md plus10 in
+docs/src/reference/operators_and_diagnostics.md. No new test file/prose locks.
+
+**Acceptance.** Preserve original tables and all existing assertions. On each
+reference row i use1e-10*abs(Aij) when abs(Aij)>=1e-6*Uii, else1e-14*Uii for
+U and signed T. Same-domain significant volume weights use1e-10 relative;
+zero-channel weights use analytic/sphere absolute scales, not division by zero.
+Require all four matched-domain B/C/N/O32 factor comparisons at1e-8, one genuine
+413-site candidate check with unchanged base block and complete supplement
+cross/self coverage, actual custom24/mixed32-24, signed convention/zero-w cases,
+analytic normalized1s w=64pi/Z^3 and U=T=Z^3/(8pi), independent streamed3D
+factor/materialization and one JLD2 identity/order round trip. For all-site
+S/Nuc/R2 input identity use unchanged1e-10 absolute. The historical T bridge
+failures are retained as accepted input-reconstruction uncertainty, NOT passing
+quadrature tests. Full-support FIRST moments combine signed inside+tail before
+squaring. Reuse fixed qualification inputs/results; no SCF, Hamiltonian/basis
+regeneration or redundant external-table campaign. Stop for unavailable inputs.
+Compact owner regressions should catch measure, signs, omitted cross terms and
+factor indexing, not internal metadata vocabulary. Full angular is not a gate.
+
+Freeze warm single-thread per-call ceilings, including preparation/diagnostics:
+600x40 B24 <=5s/1GiB cumulative allocation/2GiB RSS;72060-node full-support
+<=15s/3GiB allocation/4GiB RSS. Measure factor preparation, contractions,
+materialization/export and independent validation separately using TimeG;
+restore caller BLAS settings. Compilation is separate, no application speedup.
+Qualification remains200/600s,8GiB RSS/512MiB scratch, no reset. Candidate
+fixture-specific admission uses the remaining400s with a hard120s charge
+including compilation,4GiB RSS/64MiB output and one execution; no new numerical
+allowance. Normal existing tests/hosted CI
+are separate. Explain any >60s owner before running it. No complete physical
+qualification replay; reuse exact matching evidence. Require relevant compact
+angular_public/misc/docs_fast and full docs, package/resource load, authority/
+self-test/two external renders, Documenter/log/diff and normal three-job
+source-bearing CI plus separate Docs. Stop on a scientific/performance failure.
+
+**Ownership and endpoint.** Sole task checkout is machine-local
+/Users/srw/dmrgtmp/contact_integrals_20261103/implementation, branch main from
+f42b980d11e6b2d619918740b53df6b61ef2828d, cloned without overlaid work. Only
+existing managers use it, one writer per phase. Preserve primary five Pass656
+files and two handoffs byte-for-byte, never stash/reset/commit/advance that
+primary tree. Old radial grants confer no contact work and must not be used
+during this cycle. At most two in-scope correction rounds; commit/push task
+authority, implementation and accepted closeout from this checkout. Record the
+primary's later divergence from remote accurately. Close both contact grants
+only after independent acceptance and checks. No Pass656 disposition, consumer
+edits/runs/repins, fits/strength/mu/Hamiltonian change, Cartesian/p-wave/four-index,
+release/stable/tag, new agent, timer, callback loop or successor. Notify adviser
+once on accepted closeout or a real blocker, then pause.

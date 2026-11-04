@@ -1349,3 +1349,29 @@ within120; tests63/reader30 remain within90/35. Deleted/simplified: no further
 production change authorized. Quarantined: invalid cross-domain comparison,
 not its historical evidence. Remaining blocker is acceptance, not new physics.
 Reviewer7.66s/2.44GiB peak; charge20s, total270/1200, no budget reset.
+
+### Pass 657 Authorized: Exact Atomic Contact Geometry
+
+Steven accepts the reviewed original-sample/smooth-expansion validation split
+and225 added source lines for complete atomic Phase1, not dense-only output.
+Actual custom24/mixed profiles and genuine413-site functions qualify fixed-grid
+geometry. Same-expansion full-domain U/T pass all scaled entry gates;120 T
+bridge entries fail (worst2.65105 times gate), retained as inherited function
+reconstruction uncertainty, not relaxed checks or changed historical tables.
+LT1/MT1 advance truthful actual-function integrals for external contact models;
+model strengths, fits and consumer physics remain outside this producer.
+Weights use signed radial first moments including tails before squaring, not
+Coulomb IDA weights. Zero weights and directed signed T remain legal.
+Deleted: no active in-repo contact code. Simplified: one grouped factor engine
+and derived materialization/writer, not duplicate dense/factorized algorithms.
+Quarantined: original finite80 tables and bridge mismatches stay historical.
+Not deleted because: external reconstruction has live consumers outside scope.
+Exact blocker: implementation/independent acceptance, not further default study.
+Hard source25/170/26/4, tests130+10, reader25+10; no new files/types/metadata
+framework or global cache. Two new task execution records; no source added yet.
+Source-free qualification200/600s, peak1.742GiB; per-call/admission limits are
+explicit and hosted CI is separate. Task-only clean clone on main at f42b980d
+preserves the primary five-file Pass656 draft and both handoffs. Its radial
+blocker remains unaccepted. Normal authority/docs CI precedes peer handoff;
+implementation uses source-bearing CI, no full-angular/physical replay.
+Two corrections maximum, one writer per phase, no consumer/release/successor.
