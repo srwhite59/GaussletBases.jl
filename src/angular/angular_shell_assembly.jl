@@ -44,6 +44,164 @@ function Base.show(io::IO, assembly::AtomicShellLocalInjectedAngularAssembly)
     )
 end
 
+"""
+    atomic_contact_integrals(rb, assembly; radial_grid, angular_quadrature,
+        supplements=nothing, supplement_labels=nothing, provenance=nothing)
+    atomic_contact_integrals(rb, shells, ranges; labels, kwargs...)
+
+Exact real-function contact geometry on explicit quadrature, not an IDA interaction.
+Returns `(factors, site_map, diagnostics, provenance)` in the supplied final order.
+The lower entrance uses actual angular bases and contiguous base-site ranges.
+Supplement input `(grid, reduced_values, channels)` supplies final phased reduced
+radial columns and one YlmChannel per appended site, with explicit labels.
+No function reconstruction, normalization or phase alignment occurs. Volume
+weights are squared signed integrals; zero weights are legal (and diagnostic
+only for supplements). Accuracy and support coverage remain caller obligations.
+"""
+function atomic_contact_integrals(rb::RadialBasis, assembly::AtomicShellLocalInjectedAngularAssembly; kwargs...)
+    ranges = [o:o+d-1 for (o, d) in zip(assembly.shell_offsets, assembly.shell_dimensions)]
+    return atomic_contact_integrals(rb, assembly.shells, ranges;
+        labels=reduce(vcat, [p.labels for p in assembly.profiles]; init=String[]), kwargs...)
+end
+
+function atomic_contact_integrals(rb::RadialBasis, shells::AbstractVector, ranges::AbstractVector;
+    radial_grid::RadialQuadratureGrid, angular_quadrature, labels,
+    supplements=nothing, supplement_labels=nothing, provenance=nothing)
+    r, w = _validate_radial_operator_grid(rb, radial_grid)
+    all(isfinite, r) && all(>(0), r) && all(isfinite, w) ||
+        throw(ArgumentError("contact radial points and weights must be finite and positive"))
+    xyz, wa = angular_quadrature.directions, angular_quadrature.weights
+    wa isa AbstractVector{<:Real} && size(xyz, 1) == length(wa) > 0 && all(x -> isfinite(x) && x > 0, wa) ||
+        throw(ArgumentError("sphere weights must be finite, positive and match directions"))
+    length(shells) == length(ranges) == length(rb) > 0 ||
+        throw(DimensionMismatch("one actual angular shell and range per radial function required"))
+    offset = 1
+    for (shell, range) in zip(shells, ranges)
+        shell isa ShellLocalInjectedAngularBasis || throw(ArgumentError("actual angular bases required"))
+        range == offset:offset+shell.final_count-1 || throw(ArgumentError("base ranges must be contiguous and ordered"))
+        offset += shell.final_count
+    end
+    length(labels) == offset-1 && all(x -> x isa AbstractString, labels) ||
+        throw(ArgumentError("explicit labels must match the base site order"))
+    source = provenance === nothing ? (producer_commit="", basis_manifest_sha256="") : provenance
+    source isa NamedTuple && propertynames(source) == (:producer_commit, :basis_manifest_sha256) &&
+        all(x -> x isa AbstractString, Base.values(source)) || throw(ArgumentError("invalid contact provenance"))
+    supplements === nothing || (supplements isa NamedTuple &&
+        propertynames(supplements) == (:grid, :reduced_values, :channels)) || throw(ArgumentError("invalid supplement record"))
+    ns = supplements === nothing ? 0 : length(supplements.channels)
+    if supplements !== nothing
+        quadrature_points(supplements.grid) == r && quadrature_weights(supplements.grid) == w ||
+            throw(ArgumentError("supplement samples must use exactly the contact radial grid"))
+        supplements.reduced_values isa AbstractMatrix{<:Real} &&
+            size(supplements.reduced_values) == (length(r), ns) && all(isfinite, supplements.reduced_values) ||
+            throw(ArgumentError("invalid final reduced-radial supplement samples"))
+        all(ch -> ch isa YlmChannel, supplements.channels) || throw(ArgumentError("Ylm channels required"))
+        supplement_labels !== nothing && length(supplement_labels) == ns &&
+            all(x -> x isa AbstractString, supplement_labels) || throw(ArgumentError("explicit supplement labels required"))
+    elseif supplement_labels !== nothing
+        throw(ArgumentError("supplement labels require supplement functions"))
+    end
+    angular_values, unique_shells = Matrix{Float64}[], ShellLocalInjectedAngularBasis[]
+    profile_index = Int[]
+    values = @timeg "contact function evaluation" begin
+        for shell in shells
+            p = findfirst(s -> s === shell, unique_shells)
+            if p === nothing
+                push!(unique_shells, shell)
+                push!(angular_values, evaluate_angular_basis(shell, xyz))
+                p = length(angular_values)
+            end
+            push!(profile_index, p)
+        end
+        channels = Dict{YlmChannel,Int}()
+        for ch in (supplements === nothing ? YlmChannel[] : supplements.channels)
+            p = get!(channels, ch) do
+                push!(angular_values, reshape([_real_spherical_harmonic(ch, view(xyz, i, :)) for i in axes(xyz, 1)], :, 1))
+                length(angular_values)
+            end
+            push!(profile_index, p)
+        end
+        base = _basis_values_matrix(rb, r)
+        ns == 0 ? base : hcat(base, supplements.reduced_values)
+    end
+    radial, radial_overlap = @timeg "contact radial contractions" begin
+        squared = values.^2
+        R = transpose(squared) * ((w ./ r.^2) .* squared)
+        Tr = transpose(values.^3) * ((w ./ r.^2) .* values)
+        ((R=R, Tr=Tr, wrad=(transpose(values) * (w .* r)).^2), transpose(values) * (w .* values))
+    end
+    A, Ta, angular_overlap = Matrix{Float64}[], Matrix{Float64}[], Matrix{Float64}[]
+    np = length(angular_values)
+    pair_index = zeros(Int, np, np)
+    wang = Vector{Float64}[]
+    @timeg "contact angular pair contractions" begin
+        for F in angular_values
+            push!(wang, (transpose(F) * wa).^2)
+        end
+        for q in 1:np, p in 1:np
+            F, G = angular_values[p], angular_values[q]
+            push!(A, transpose(F.^2) * (wa .* G.^2))
+            push!(Ta, transpose(F.^3) * (wa .* G))
+            push!(angular_overlap, transpose(F) * (wa .* G))
+            pair_index[p, q] = length(A)
+        end
+    end
+    all(isfinite, radial.R) && all(isfinite, radial.Tr) && all(isfinite, radial.wrad) &&
+        all(M -> all(isfinite, M), A) && all(M -> all(isfinite, M), Ta) &&
+        all(v -> all(isfinite, v), wang) || throw(ArgumentError("nonfinite contact integrals"))
+    site_labels = ns == 0 ? String.(labels) : vcat(String.(labels), String.(supplement_labels))
+    site_map = [(group=g, local_index=k, label="") for g in eachindex(profile_index)
+        for k in axes(angular_values[profile_index[g]], 2)]
+    site_map = [(group=s.group, local_index=s.local_index, label=site_labels[i]) for (i, s) in enumerate(site_map)]
+    row_sums = zeros(length(site_map))
+    full_error, cursor = 0.0, 1
+    @timeg "contact overlap and row diagnostics" for g in eachindex(profile_index)
+        p = profile_index[g]
+        rows = zeros(length(wang[p]))
+        for h in eachindex(profile_index)
+            q = profile_index[h]
+            pair = pair_index[p, q]
+            block = radial_overlap[g, h] .* angular_overlap[pair]
+            if g == h
+                block -= I
+            end
+            full_error = max(full_error, maximum(abs, block))
+            rows .+= radial.R[g, h] .* vec(sum(A[pair]; dims=2))
+        end
+        count = length(rows)
+        row_sums[cursor:cursor+count-1] .= radial.wrad[g] .* wang[p] .* rows
+        cursor += count
+    end
+    overlap = (radial=maximum(abs, radial_overlap[1:length(rb), 1:length(rb)]-I),
+        angular=maximum(maximum(abs, angular_overlap[pair_index[p, p]]-I) for p in 1:np), full=full_error)
+    factors = (radial=radial, angular=(A=A, Ta=Ta, wang=wang, profile_index=profile_index, pair_index=pair_index))
+    diagnostics = (overlap=overlap, row_sums=row_sums,
+        quadrature=(radial_nodes=length(r), sphere_nodes=length(wa), radial_extent=extrema(r)))
+    return (factors=factors, site_map=site_map, diagnostics=diagnostics, provenance=source)
+end
+
+"""
+    materialize_atomic_contact_integrals(result)
+
+Derive dense `(U,T,w)` from atomic contact factors, including every appended
+supplement. T remains signed and directed; no quadrature is repeated.
+"""
+function materialize_atomic_contact_integrals(result)
+    radial, angular, sites = result.factors.radial, result.factors.angular, result.site_map
+    n = length(sites)
+    U, T, w = zeros(n, n), zeros(n, n), zeros(n)
+    @timeg "contact dense materialization" for (i, a) in enumerate(sites)
+        p = angular.profile_index[a.group]
+        w[i] = radial.wrad[a.group] * angular.wang[p][a.local_index]
+        for (j, b) in enumerate(sites)
+            pair = angular.pair_index[p, angular.profile_index[b.group]]
+            U[i, j] = radial.R[a.group, b.group] * angular.A[pair][a.local_index, b.local_index]
+            T[i, j] = radial.Tr[a.group, b.group] * angular.Ta[pair][a.local_index, b.local_index]
+        end
+    end
+    return (U=U, T=T, w=w)
+end
+
 _smooth_step_logistic(x, width) = width <= 0 ? (x >= 0 ? 1.0 : 0.0) : inv(1 + exp(-x / width))
 
 function _smooth_shell_order_of_radius(

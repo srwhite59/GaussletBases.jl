@@ -1,5 +1,8 @@
 module GaussletBases
 
+export evaluate_angular_basis, atomic_contact_integrals,
+       materialize_atomic_contact_integrals, write_atomic_contact_integrals_jld2
+
 using JLD2
 using LinearAlgebra
 using SHA

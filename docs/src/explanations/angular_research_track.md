@@ -307,6 +307,30 @@ and carries:
 - nearest-neighbor spread ratio `nn_ratio`
 - source tag / source project / source artifact note
 
+## Atomic contact geometry
+
+`evaluate_angular_basis(profile, directions)` evaluates the actual signed final
+functions, not a reconstruction from an angular point count. For a radial basis
+and its actual angular assembly, use `atomic_contact_integrals(rb, assembly;
+radial_grid=grid, angular_quadrature=(directions=xyz, weights=weights))`.
+The lower entrance accepts actual shells, contiguous site ranges and labels.
+Both entrances retain accessible radial/angular factors for mixed profiles.
+
+Optional `supplements=(grid=grid, reduced_values=values, channels=channels)`
+supplies one final phased reduced-radial column and `YlmChannel` per appended
+site, with explicit `supplement_labels`. These are supplied functions, not a
+request to construct, normalize or align residuals. Their volume weights are
+diagnostics and may vanish. Directed `T` changes under individual site signs.
+
+`materialize_atomic_contact_integrals(result)` derives complete `U`, `T`, `w`;
+`write_atomic_contact_integrals_jld2(path, result)` writes a new companion file.
+These are exact-function quadrature integrals, not IDA or fitted interactions.
+Grid coverage and contact convergence must be checked separately: volume
+weights require signed inside and tail moments **before** squaring. A result
+for historical finite-box samples is distinct from a reconstructed smooth
+expansion; agreement of central operators does not prove identical contact
+integrals or determine every site sign. No four-index tensor is retained.
+
 ## What is deferred
 
 The following items remain explicitly deferred:

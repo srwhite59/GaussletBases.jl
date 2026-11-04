@@ -1,4 +1,25 @@
 """
+    write_atomic_contact_integrals_jld2(path, result)
+
+Write a new JLD2 companion containing contact factors, exact site order,
+diagnostics, caller provenance and derived dense U/T/w. Refuses existing paths;
+never use the Hamiltonian/basis file as the destination.
+"""
+function write_atomic_contact_integrals_jld2(path::AbstractString, result)
+    ispath(path) && throw(ArgumentError("contact companion destination already exists"))
+    @timeg "write contact JLD2 companion" begin
+        dense = materialize_atomic_contact_integrals(result)
+        jldopen(path, "w") do file
+            for key in (:factors, :site_map, :diagnostics, :provenance)
+                file[string(key)] = getproperty(result, key)
+            end
+            file["U"], file["T"], file["w"] = dense.U, dense.T, dense.w
+        end
+    end
+    return path
+end
+
+"""
     AtomicFixedRadialAngularSequenceLevel
 
 One angular-resolution level in an experimental fixed-radial sequence. Levels

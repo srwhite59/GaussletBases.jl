@@ -5,6 +5,15 @@ If you want the narrative workflow before the API details, start with:
 - [First radial workflow](../tutorials/first_radial_workflow.md)
 - [Recommended atomic setup](../howto/recommended_atomic_setup.md)
 
+## Experimental atomic contact integrals
+
+```@docs
+evaluate_angular_basis
+atomic_contact_integrals
+materialize_atomic_contact_integrals
+write_atomic_contact_integrals_jld2
+```
+
 ## Small doctest
 
 ```jldoctest operators_and_diagnostics

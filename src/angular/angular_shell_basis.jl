@@ -90,6 +90,26 @@ end
 
 const _SHELL_LOCAL_ANGULAR_PROFILE_GAUGE_VERSION =
     :v1_seed_order_dominant_positive
+
+"""
+    evaluate_angular_basis(shell, directions)
+
+Evaluate the actual signed final angular functions at finite unit directions
+(one row per direction). Accepts an injected angular basis or its profile;
+columns retain the supplied function order and gauge, without reconstruction.
+"""
+function evaluate_angular_basis(shell::ShellLocalInjectedAngularBasis, directions::AbstractMatrix{<:Real})
+    size(directions, 2) == 3 && all(isfinite, directions) ||
+        throw(ArgumentError("directions must be a finite N-by-3 matrix"))
+    all(i -> isapprox(sum(abs2, view(directions, i, :)), 1.0; atol=1e-10, rtol=1e-10), axes(directions, 1)) ||
+        throw(ArgumentError("directions must be unit vectors"))
+    ylm = [_real_spherical_harmonic(ch, view(directions, i, :))
+           for i in axes(directions, 1), ch in shell.injected_channels.channel_data]
+    prototypes = exp.((directions * transpose(shell.point_set.coordinates) .- 1) .* transpose(shell.kappa))
+    return ylm * shell.ylm_coefficients + prototypes * shell.prototype_coefficients
+end
+evaluate_angular_basis(profile::ShellLocalAngularProfile, directions::AbstractMatrix{<:Real}) =
+    evaluate_angular_basis(profile.basis, directions)
 const _SHELL_LOCAL_ANGULAR_PROFILE_CACHE =
     Ref{Union{Nothing,Dict{ShellLocalAngularProfileKey,ShellLocalAngularProfile}}}(nothing)
 const _SHELL_LOCAL_ANGULAR_PROFILE_OVERLAP_CACHE =

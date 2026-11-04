@@ -274,6 +274,8 @@
             (docs_site_reference_ops, split("""
                 AbstractDiagonalApproximation IntegralDiagonal position_matrix
                 coulomb_gaussian_expansion
+                evaluate_angular_basis atomic_contact_integrals
+                materialize_atomic_contact_integrals write_atomic_contact_integrals_jld2
                 contract_primitive_vector contract_primitive_diagonal
                 contract_primitive_matrix gaussian_factor_matrix
                 gaussian_factor_matrices @timeg
