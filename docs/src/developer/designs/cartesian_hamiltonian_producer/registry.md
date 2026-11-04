@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `197ed95f24ce92da92317f02be9d90830f33434932b86d08ebbda53088b56247`.
+> [authority.toml](authority.toml), SHA-256 `b83abf306b57d555ed56cea069fe1492ac9be2ef449692c656eb89082c7d8cde`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -169,42 +169,39 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-ATOMIC-CONTACT-FN-01 - exact factorized atomic contact geometry and final supplements
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `docs`, `source`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Atomic Contact Integrals`
-- **Owned paths:**
-  - `source` / `existing`: `src/angular/angular_shell_basis.jl`
-  - `source` / `existing`: `src/angular/angular_shell_assembly.jl`
-  - `source` / `existing`: `src/angular/angular_sequence_export.jl`
-  - `source` / `existing`: `src/GaussletBases.jl`
-  - `docs` / `existing`: `docs/src/explanations/angular_research_track.md`
-  - `docs` / `existing`: `docs/src/reference/operators_and_diagnostics.md`
+- **Owned paths:** none
 - **Evidence:**
   - `manager_pass`: `657`
   - `git_commit`: `f42b980d11e6b2d619918740b53df6b61ef2828d`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-contact-integrals-fullsupport-review-2026-11-03.md`
+  - `git_commit`: `8238be7f5f76cc7361197f3d54a06bc669e435f1`
+  - `git_commit`: `6f2581caf6c02d9b48573be3ce7ad5559ad7653f`
+  - `external_path`: `/Users/srw/dmrgtmp/contact_integrals_20261103/implementation/tmp/reviews/pass657-contact-correction-round1-2026-11-03.md`
 - **Dependencies:** none
-- **Scope:** Implement Atomic Contact Integrals: actual angular evaluator, one factorized base/supplement geometry engine, derived dense materialization and JLD2 companion. Four named functions/result contract only; source25/170/26/4 and reader25/10. Use the isolated task checkout and accepted input-validation split. No Pass656, fits, consumers, Cartesian/p-wave, release or successor work.
+- **Scope:** Record accepted Pass657 atomic contact geometry at 8238be7f and correction6f2581ca: four functions, accessible mixed-profile/supplement factors, derived materialization and guarded JLD2 companion. Execution grant consumed. Preserve signed T, exact order, zero weights, explicit quadrature and original/expansion uncertainty. No Pass656, consumer, Cartesian/p-wave, release or successor authority.
 
 ### HP-ATOMIC-CONTACT-TEST-01 - atomic contact analytic mixed-profile and supplemented validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Atomic Contact Integrals`
-- **Owned paths:**
-  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
-  - `test` / `existing`: `test/docs/runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
   - `manager_pass`: `657`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-contact-integrals-fullsupport-review-2026-11-03.md`
+  - `git_commit`: `6f2581caf6c02d9b48573be3ce7ad5559ad7653f`
+  - `external_path`: `/Users/srw/dmrgtmp/contact_integrals_20261103/implementation/tmp/reviews/pass657-contact-correction-round1-2026-11-03.md`
 - **Dependencies:** `HP-ATOMIC-CONTACT-FN-01`
-- **Scope:** Validate Atomic Contact Integrals in the existing public angular owner (130 added lines) and docs owner (10 mechanical lines). Preserve scaled signed-contact and identity gates, original/expansion evidence, genuine413-site and four matched prototypes. Require frozen cost admission, normal source CI/Docs and independent review. No new fixture file, full angular, physical campaign, tolerance change or successor.
+- **Scope:** Record accepted Pass657 contact42, unchanged public83+6, genuine413-site50 and four matched prototypes; normal exact-head CI/Docs pass after correction1. Independent compact arithmetic and path-guard checks pass. Frozen entrywise gates unchanged; original CI failure and120 reconstruction mismatches preserved. Validation grant consumed; no campaign, consumer, release or successor authority.
 
 ### HP-ATOMIC-MULTIPOLE-FN-01 - radial high-L arithmetic and angular interaction cap repair
 

@@ -3,12 +3,12 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
-Pass657 authorizes [Atomic Contact Integrals](../../numerical_contracts.md#Atomic-Contact-Integrals)
-under HP-ATOMIC-CONTACT-FN-01/TEST-01,225 added source lines including docstrings.
-Factorized exact-function geometry, genuine final supplements and one JLD2
-companion are bounded to the isolated task checkout; the primary Pass656 draft
-remains untouched and unaccepted. Original-sample/expansion T bridge failures
-remain recorded, not passing or relaxed gates. No consumer/release work follows.
+Pass657 accepts [Atomic Contact Integrals](../../numerical_contracts.md#Atomic-Contact-Integrals)
+at8238be7f plus correction6f2581ca. Mixed-profile/final-supplement factors,
+derived dense geometry and one JLD2 companion are implemented; both execution
+grants are consumed. Explicit quadrature and recorded original/expansion
+uncertainty remain. The primary Pass656 draft stays untouched and unaccepted;
+consumer migration, Cartesian/p-wave, releases and successor work are separate.
 
 Pass 656 authorizes [Default Radial Panel Integration](../../numerical_contracts.md#Default-Radial-Panel-Integration)
 under HP-RADIAL-INTEGRATION-FN-01/TEST-01, hard120 added source lines.

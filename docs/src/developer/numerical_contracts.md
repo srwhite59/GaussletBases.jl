@@ -715,8 +715,8 @@ claim, downstream receipt edit, quadrature correction or successor follows.
 ## Atomic Contact Integrals
 
 Pass657, GB-CONTACT-INTEGRALS-20261103, implements exact real-function geometry,
-not IDA or a fitted interaction. HP-ATOMIC-CONTACT-FN-01/TEST-01 are task-local;
-execution requires both committed records and the checked whitelist. Steven's
+not IDA or a fitted interaction. Accepted8238be7f plus correction6f2581ca;
+HP-ATOMIC-CONTACT-FN-01/TEST-01 are completed with their grants consumed. Steven's
 IMPLEMENT-6 accepts the original-samples/smooth-expansion validation split.
 Original matched-grid tables/samples stay unchanged. Same-expansion full-domain
 U/T pass;120 original-to-expansion T bridge entries do NOT pass (worst2.65105

@@ -1375,3 +1375,30 @@ preserves the primary five-file Pass656 draft and both handoffs. Its radial
 blocker remains unaccepted. Normal authority/docs CI precedes peer handoff;
 implementation uses source-bearing CI, no full-angular/physical replay.
 Two corrections maximum, one writer per phase, no consumer/release/successor.
+
+### Pass 657 Accepted: Atomic Contact Factors
+
+Accept8238be7f5f76cc7361197f3d54a06bc669e435f1 plus correction
+6f2581caf6c02d9b48573be3ce7ad5559ad7653f. Actual signed functions now supply
+radial/angular contact factors, mixed-profile/final-supplement cross/self terms,
+derived dense U/T/w and a guarded JLD2 companion. LT1/MT1 advance truthful
+producer geometry; model fitting and external consumer migration remain separate.
+Original finite-box samples/tables and120 expansion-bridge T mismatches remain
+unchanged uncertainty. Same-expansion full-support gates pass; tails enter signed
+first moments before squaring. No continuum or energy guarantee is implied.
+Deleted: overstrong new bitwise test and incomplete writer path guard.
+Simplified: one factor engine/materializer; no duplicate dense quadrature path.
+Quarantined: original failed CI and scratch errors remain evidence, not passes.
+Not deleted: external private reconstruction remains live outside this task.
+Exact remaining blocker: Pass656 and consumer decisions, not contact acceptance.
+Source202 added/0 deleted, existing tests132, reader33; no new file/type/cache,
+status cloud or metadata framework. All individual ceilings hold.
+Reuse genuine413-site50/50, four prototypes and unchanged numerical evidence;
+contact42, public83+6, misc72 and docs8+162+10 pass. Independent compact11 and
+writer4 checks pass. Exact-head full CI41791575824/Docs41791575804 succeed;
+Linux U delta0, T2.22e-16, worst gate ratio4.18e-6, with no relaxed tolerance.
+Warm original/full0.402/1.000s,635MB/1.651GB cumulative, peak1.786GiB.
+No full-angular or physical replay. One correction used; grants consumed, no
+successor. Closeout is docs-only. The primary f42 checkout retains all five
+Pass656 drafts/two handoffs; only the isolated task clone advances remote main.
+Hchain-doer remains paused; no consumer, release or stable mutation.
