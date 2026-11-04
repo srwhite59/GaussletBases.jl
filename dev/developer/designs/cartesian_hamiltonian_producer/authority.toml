@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "ef5e7b3ef4bb76448b2f23ea01176eb6e904a48a51ab6bd13498b6cc47b60a7d"
+sha256 = "0d7bbb87126409f319d8f63c8696ed910fca470e34572de50cb97307a618183b"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -475,11 +475,12 @@ title = "angular optional-consumer control-flow validation"
     value = "598"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-ATOMIC-CONTACT-FN-01"
-lifecycle = "approved"
-scope = "Implement Atomic Contact Integrals: actual angular evaluator, one factorized base/supplement geometry engine, derived dense materialization and JLD2 companion. Four named functions/result contract only; source25/170/26/4 and reader25/10. Use the isolated task checkout and accepted input-validation split. No Pass656, fits, consumers, Cartesian/p-wave, release or successor work."
-surfaces = ["docs", "source"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Pass657 atomic contact geometry at 8238be7f and correction6f2581ca: four functions, accessible mixed-profile/supplement factors, derived materialization and guarded JLD2 companion. Execution grant consumed. Preserve signed T, exact order, zero weights, explicit quadrature and original/expansion uncertainty. No Pass656, consumer, Cartesian/p-wave, release or successor authority."
+surfaces = []
 title = "exact factorized atomic contact geometry and final supplements"
 
     [[records.document_refs]]
@@ -496,38 +497,23 @@ title = "exact factorized atomic contact geometry and final supplements"
     [[records.evidence_refs]]
     kind = "external_path"
     value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-contact-integrals-fullsupport-review-2026-11-03.md"
-
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_shell_basis.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_shell_assembly.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_sequence_export.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/GaussletBases.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/explanations/angular_research_track.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/reference/operators_and_diagnostics.md"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "8238be7f5f76cc7361197f3d54a06bc669e435f1"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "6f2581caf6c02d9b48573be3ce7ad5559ad7653f"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/contact_integrals_20261103/implementation/tmp/reviews/pass657-contact-correction-round1-2026-11-03.md"
 [[records]]
 dependency_ids = ["HP-ATOMIC-CONTACT-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-ATOMIC-CONTACT-TEST-01"
-lifecycle = "approved"
-scope = "Validate Atomic Contact Integrals in the existing public angular owner (130 added lines) and docs owner (10 mechanical lines). Preserve scaled signed-contact and identity gates, original/expansion evidence, genuine413-site and four matched prototypes. Require frozen cost admission, normal source CI/Docs and independent review. No new fixture file, full angular, physical campaign, tolerance change or successor."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Pass657 contact42, unchanged public83+6, genuine413-site50 and four matched prototypes; normal exact-head CI/Docs pass after correction1. Independent compact arithmetic and path-guard checks pass. Frozen entrywise gates unchanged; original CI failure and120 reconstruction mismatches preserved. Validation grant consumed; no campaign, consumer, release or successor authority."
+surfaces = []
 title = "atomic contact analytic mixed-profile and supplemented validation"
 
     [[records.document_refs]]
@@ -541,15 +527,12 @@ title = "atomic contact analytic mixed-profile and supplemented validation"
     [[records.evidence_refs]]
     kind = "external_path"
     value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-contact-integrals-fullsupport-review-2026-11-03.md"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/docs/runtests.jl"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "6f2581caf6c02d9b48573be3ce7ad5559ad7653f"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/contact_integrals_20261103/implementation/tmp/reviews/pass657-contact-correction-round1-2026-11-03.md"
 [[records]]
 dependency_ids = []
 grant = "none"
