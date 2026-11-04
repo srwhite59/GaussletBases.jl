@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "a9c911eb5c09b8f7bfa012fad806910da04bf111661030e190824139f798ee45"
+sha256 = "ef5e7b3ef4bb76448b2f23ea01176eb6e904a48a51ab6bd13498b6cc47b60a7d"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -473,6 +473,83 @@ title = "angular optional-consumer control-flow validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "598"
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-ATOMIC-CONTACT-FN-01"
+lifecycle = "approved"
+scope = "Implement Atomic Contact Integrals: actual angular evaluator, one factorized base/supplement geometry engine, derived dense materialization and JLD2 companion. Four named functions/result contract only; source25/170/26/4 and reader25/10. Use the isolated task checkout and accepted input-validation split. No Pass656, fits, consumers, Cartesian/p-wave, release or successor work."
+surfaces = ["docs", "source"]
+title = "exact factorized atomic contact geometry and final supplements"
+
+    [[records.document_refs]]
+    heading = "Atomic Contact Integrals"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "657"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "f42b980d11e6b2d619918740b53df6b61ef2828d"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-contact-integrals-fullsupport-review-2026-11-03.md"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_shell_basis.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_shell_assembly.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_sequence_export.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/explanations/angular_research_track.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/reference/operators_and_diagnostics.md"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-ATOMIC-CONTACT-FN-01"]
+grant = "implementation"
+id = "HP-ATOMIC-CONTACT-TEST-01"
+lifecycle = "approved"
+scope = "Validate Atomic Contact Integrals in the existing public angular owner (130 added lines) and docs owner (10 mechanical lines). Preserve scaled signed-contact and identity gates, original/expansion evidence, genuine413-site and four matched prototypes. Require frozen cost admission, normal source CI/Docs and independent review. No new fixture file, full angular, physical campaign, tolerance change or successor."
+surfaces = ["tests"]
+title = "atomic contact analytic mixed-profile and supplemented validation"
+
+    [[records.document_refs]]
+    heading = "Atomic Contact Integrals"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "657"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-contact-integrals-fullsupport-review-2026-11-03.md"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/docs/runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"
