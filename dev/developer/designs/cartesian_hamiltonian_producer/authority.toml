@@ -224,16 +224,16 @@ title = "positive cubature angular catalog"
     state = "existing"
     [[records.paths]]
     kind = "source"
+    path = "data/angular/cubature_sphere_points.toml"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
     path = "src/GaussletBases.jl"
     state = "existing"
     [[records.paths]]
     kind = "source"
-    path = "data/angular/cubature_sphere_points.toml"
-    state = "planned"
-    [[records.paths]]
-    kind = "source"
     path = "src/angular/angular_cubature_point_sets.jl"
-    state = "planned"
+    state = "existing"
 [[records]]
 dependency_ids = ["HP-ANGULAR-CUBATURE-FN-01"]
 grant = "implementation"
