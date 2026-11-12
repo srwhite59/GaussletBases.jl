@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "a5762cbc49f93c0fe0aa62768b33ef2fd1d55b06dd66e9121581473cdc15d95a"
+sha256 = "2bd57daa79cb5fabc055b3952e38b6a69a4f4e6c5f7390d9e04bafe1321f4f51"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -441,11 +441,12 @@ title = "independent high-L harmonic and moment-table validation"
     value = "654"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-ANGULAR-PROFILE-ASSEMBLY-FN-01"
-lifecycle = "approved"
-scope = "Implement Explicit Angular Profile Assembly only in angular_shell_assembly.jl and its reader page. Hard100 source/25 reader additions. Extract one shared body, add the reviewed four-field private cache value and ordered profile-pair caches; preserve legacy behavior, profiles, all moment spans and output layout. No coiflet/catalog, default, solver, global cache, consumer, Pass656, skill or release changes."
-surfaces = ["docs", "source"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Explicit Angular Profile Assembly at1292e64f454ca14b87624fd20c2c6176b6aff1b9: one shared body, local complete-key moment/pair reuse and preserved legacy output. Source65/29, tests87, reader20. Execution grant consumed; all three integrations accepted. No default, consumer, Pass656, release or successor authority follows."
+surfaces = []
 title = "explicit angular profile assembly with local reuse"
 
     [[records.document_refs]]
@@ -468,22 +469,17 @@ title = "explicit angular profile assembly with local reuse"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "e9cc62f644d8f59c63abe860135edc11f5dede52"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/explanations/angular_research_track.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_shell_assembly.jl"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1292e64f454ca14b87624fd20c2c6176b6aff1b9"
 [[records]]
 dependency_ids = ["HP-ANGULAR-PROFILE-ASSEMBLY-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-ANGULAR-PROFILE-ASSEMBLY-TEST-01"
-lifecycle = "approved"
-scope = "Add at most150 lines only in the existing public angular sequence test owner under Explicit Angular Profile Assembly. Check actual mixed-profile matrices, key-correct reuse, legacy fingerprints, invalid vectors and qualified complete-span four-index Gaunt oracles. New block under20s warm; require native Pkg.test/direct docs and exact-head full CI/Docs. No new solver, sweep, threshold or golden repin."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted GB-3 validation at1292e64f454ca14b87624fd20c2c6176b6aff1b9: focused72, independent distance-kernel8, exact legacy/table fingerprints, complete-span Gaunt oracles, native79843 passes/one unchanged optional skip, direct docs and exact-head full CI/Docs. Validation grant consumed. Qualification remains fixed-radial/angular, not general energy certification or a further test/campaign grant."
+surfaces = []
 title = "mixed angular assembly parity reuse and Coulomb oracles"
 
     [[records.document_refs]]
@@ -506,11 +502,9 @@ title = "mixed angular assembly parity reuse and Coulomb oracles"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "e9cc62f644d8f59c63abe860135edc11f5dede52"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1292e64f454ca14b87624fd20c2c6176b6aff1b9"
 [[records]]
 dependency_ids = ["HP-ANGULAR-TEST-CONTROL-FN-01", "HP-PUBLIC-PAPER-CI-FN-01"]
 grant = "maintenance"
