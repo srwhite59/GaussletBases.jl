@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "38e5744d70d265763d47ca475b8ec3efa76c4d398c86b8ad04ce3bf76231891e"
+sha256 = "a5762cbc49f93c0fe0aa62768b33ef2fd1d55b06dd66e9121581473cdc15d95a"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -439,6 +439,78 @@ title = "independent high-L harmonic and moment-table validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "654"
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-ANGULAR-PROFILE-ASSEMBLY-FN-01"
+lifecycle = "approved"
+scope = "Implement Explicit Angular Profile Assembly only in angular_shell_assembly.jl and its reader page. Hard100 source/25 reader additions. Extract one shared body, add the reviewed four-field private cache value and ordered profile-pair caches; preserve legacy behavior, profiles, all moment spans and output layout. No coiflet/catalog, default, solver, global cache, consumer, Pass656, skill or release changes."
+surfaces = ["docs", "source"]
+title = "explicit angular profile assembly with local reuse"
+
+    [[records.document_refs]]
+    heading = "Explicit Angular Profile Assembly"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/integration/tmp/reviews/gb-angular-gb3-authority-handoff-2026-11-12.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/input/kit/pass_gb3_shell_assembly/shell_assembly_patch.jl"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/verify_runner.log"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "88ee10a62608f219b62e109d2b6b0a9323d98460"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "e9cc62f644d8f59c63abe860135edc11f5dede52"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/explanations/angular_research_track.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_shell_assembly.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-ANGULAR-PROFILE-ASSEMBLY-FN-01"]
+grant = "implementation"
+id = "HP-ANGULAR-PROFILE-ASSEMBLY-TEST-01"
+lifecycle = "approved"
+scope = "Add at most150 lines only in the existing public angular sequence test owner under Explicit Angular Profile Assembly. Check actual mixed-profile matrices, key-correct reuse, legacy fingerprints, invalid vectors and qualified complete-span four-index Gaunt oracles. New block under20s warm; require native Pkg.test/direct docs and exact-head full CI/Docs. No new solver, sweep, threshold or golden repin."
+surfaces = ["tests"]
+title = "mixed angular assembly parity reuse and Coulomb oracles"
+
+    [[records.document_refs]]
+    heading = "Explicit Angular Profile Assembly"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/integration/tmp/reviews/gb-angular-gb3-authority-handoff-2026-11-12.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/input/kit/pass_gb3_shell_assembly/shell_assembly_patch.jl"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/verify_runner.log"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "88ee10a62608f219b62e109d2b6b0a9323d98460"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "e9cc62f644d8f59c63abe860135edc11f5dede52"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = ["HP-ANGULAR-TEST-CONTROL-FN-01", "HP-PUBLIC-PAPER-CI-FN-01"]
 grant = "maintenance"
