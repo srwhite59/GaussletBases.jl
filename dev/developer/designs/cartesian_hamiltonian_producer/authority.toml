@@ -182,11 +182,83 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "0d7bbb87126409f319d8f63c8696ed910fca470e34572de50cb97307a618183b"
+sha256 = "7092e29eb9750c421bed06ce9deea2f7043992b0f83b8531764ebac973b69795"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
 
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-ANGULAR-CUBATURE-FN-01"
+lifecycle = "approved"
+scope = "Implement only GB-1 of Cubature Angular Integration: the frozen positive-cubature asset/loader, concrete catalog entry, three public bindings, root wiring and concise reader/API documentation. Source80/reader20 ceilings; preserve legacy data/defaults. Return new files uncommitted for design-owned path-state promotion. No Polar/assembly edits, workflow/dependency change, consumer, release or successor."
+surfaces = ["artifacts", "docs", "source"]
+title = "positive cubature angular catalog"
+
+    [[records.document_refs]]
+    heading = "Cubature Angular Integration"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/integration/tmp/reviews/gb-angular-handoff-v4-integration-2026-11-11.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/input/kit/README_INTEGRATION_PLAN.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/verify_runner.log"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "6863b048de110af36d77c76abcabd7afd87b7e8a"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/explanations/angular_research_track.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/reference/bases_and_mappings.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "data/angular/cubature_sphere_points.toml"
+    state = "planned"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_cubature_point_sets.jl"
+    state = "planned"
+[[records]]
+dependency_ids = ["HP-ANGULAR-CUBATURE-FN-01"]
+grant = "implementation"
+id = "HP-ANGULAR-CUBATURE-TEST-01"
+lifecycle = "approved"
+scope = "Validate GB-1 Cubature Angular Integration in the existing public angular owner:15-rule unit/positive/normalization/harmonic/default and cache checks, invalid lookup, native package/docs and required source CI. Hard60 added test lines, bounded2s warm new block. Preserve all old tests and gates; no new owner/helper framework, broad profile/HF campaign or Polar/assembly tests yet."
+surfaces = ["tests"]
+title = "positive cubature catalog validation"
+
+    [[records.document_refs]]
+    heading = "Cubature Angular Integration"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/integration/tmp/reviews/gb-angular-handoff-v4-integration-2026-11-11.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/verify_runner.log"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"
