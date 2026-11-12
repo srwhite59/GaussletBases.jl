@@ -25,14 +25,14 @@ grants are consumed. Explicit quadrature and recorded original/expansion
 uncertainty remain. The primary Pass656 draft stays untouched and unaccepted;
 consumer migration, Cartesian/p-wave, releases and successor work are separate.
 
-Pass 656 authorizes [Default Radial Panel Integration](../../numerical_contracts.md#Default-Radial-Panel-Integration)
-under HP-RADIAL-INTEGRATION-FN-01/TEST-01, hard120 added source lines.
-Steven selects the normal public default, with preserved untagged explicit-grid
-semantics, support cutoff, thresholds and basis. Qualified integral evidence
-does not replace actual implementation/cost acceptance. The first continuation
-corrects only the coarse oracle's80-bohr domain to full support; thresholds,
-draft and budgets stay fixed. No HF, consumer,
-release/stable or successor work; Hchain-doer remains paused.
+Pass 656 resumes [Default Radial Panel Integration](../../numerical_contracts.md#Default-Radial-Panel-Integration)
+under its exact two grants and RESUME-3: normal public panels, direct-basis
+centrifugal contract, labeled finite-grid primitive validation and Example14.
+The clean current-main task checkout alone may change after checked authority;
+the dirty primary, five drafts, handoffs and consumer snapshots/environments
+stay untouched. No primitive framework, threshold waiver or consumer-energy
+certification. Prior evidence/accounting and the two-continuation limit remain;
+no HF/Ne/K91 duplicate, angular, release/stable, skill or successor work.
 
 Pass 655 accepts the bounded opt-in
 [estimated angular correlation allocation](../../numerical_contracts.md#Estimated-Angular-Correlation-Allocation)

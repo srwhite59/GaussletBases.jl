@@ -1572,3 +1572,30 @@ drafts/two handoffs remain byte-identical and unaccepted. Corrected optional
 skill promotion text is ready, but archive policy requires four-host deployment;
 no local-only shared-skill update is claimed. Consumers, release/stable and
 unrequested successors stay excluded. The repository task stops after checks.
+
+### Pass 656 RESUME-3 Direct-Basis Contract and Isolated Ownership
+
+Steven explicitly resolves the centrifugal demonstration stop: accurate
+physical inverse-square integration forms the final RadialBasis functions
+first. A dense Float64 inverse-square matrix for origin-nonzero primitives
+is only a finite-grid diagnostic; the measured1.55e-5 roundtrip failure and
+192-bit stage attribution remain evidence, not a passing continuum claim.
+LT1/MT1 resumes the normal-public-default panel repair, not a new quadrature
+survey or a changed basis. Existing matched-support/origin/high-L evidence
+is reused by source correspondence. One independent clean-main512-midpoint
+finite-grid probe retains the old1e-9 contraction gate and gives1.134e-15;
+it establishes only a well-conditioned diagnostic. Default actual-basis
+checks and one current-main35/100 admission remain implementation gates.
+Hard bounds stay120 added source,90 existing radial-test,35 reader lines;
+Example14 additionally has15 lines for the transparent direct-basis lesson.
+The exact existing-example checker exception does not admit other examples.
+Only the dedicated machine-local checkout based on a1f95447 may change.
+Primary five drafts/two handoffs, overlays, snapshot and consumers must remain
+untouched, with no energy-cancellation or retrospective certification claim.
+Custom accounting370/1200 total and160/600 admission is not reset; this is
+the second approved continuation. Deleted/simplified: retire the misleading
+default primitive demonstration, not generic contraction. No new framework,
+tolerance waiver, numerical-body alternative, HF or successor is granted.
+Exact remaining boundary is checked implementation, independent acceptance
+and ordinary closeout; numerical source differences from frozen draft must
+be reported so consumer owners can decide their own pins.

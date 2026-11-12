@@ -106,14 +106,39 @@ the independent references; use absolute scaling at true zeros. Preserve
 existing high-L discrete underflow regressions unchanged. Compact independent
 Slater controls at ordinary/tight scales retain1e-9 scaled accuracy.
 
-Only existing test/radial/runtests.jl may change, hard90 added lines including
-warning reconciliation. Protect public default selection, full cutoff, old
+Only existing test/radial/runtests.jl may change tests, hard90 added lines including
+warning and centrifugal-contract reconciliation. Protect public default selection, full cutoff, old
 constructors/copy behavior, digest mutation failures, stored/on-demand agreement,
 unchanged custom-grid direct-sum oracle and independent one-body/Coulomb checks.
 Reconcile obsolete assumptions that every profile exhausts or reaches its final
 schedule; verify actual profile satisfaction on early success and keep forced
 short-cutoff failure/targets/penultimate diagnostics. Never force a good grid to
 warn or relax an energy, metric, capture or solver assertion.
+
+**RESUME-3 direct-basis centrifugal contract.** Steven explicitly accepts
+forming the physical RadialBasis functions BEFORE inverse-square integration.
+When individual primitives do not vanish at zero, their dense Float64
+inverse-square matrices are finite-grid diagnostics, not a promised accurate
+continuum primitive-then-contract route. Preserve the measured1.55e-5 failure
+and192-bit stage attribution; do not label the default roundtrip repaired.
+No generic contract_primitive_matrix change, higher-precision framework,
+singular subtraction, origin cutoff, basis repair or weakened tolerance.
+At most two source-docstring lines clarify this contract within120 total.
+
+Keep S/T/nuclear primitive comparisons on their original supplied grid. Scope
+only the centrifugal primitive regression to the explicit512-point midpoint
+rule on0..12bohr, with h=12/512, points=(i-0.5)h, weights=h and an untagged
+RadialQuadratureGrid. Same finite-grid direct/primitive comparison retains1e-9
+relative and1e-12 symmetry gates; it does not certify continuum quadrature.
+The clean-main six-function/188-primitive probe gives1.134e-15 relative error;
+primitive/final maxima3543.50/7745.49, not the default's huge intermediate.
+Retain strict NORMAL-default actual-basis checks: add independent64-panel
+uniform full-support Gauss-Legendre references at orders64/96 for C(l=1),
+forming basis values first. Require reference agreement<=1e-7 and default
+elementwise error<=2e-11*abs(reference)+5e-7, the existing C2 uncertainty rule.
+Keep analytic Slater and saved actual-basis S/T/N/C2 gates unchanged.
+Example14 must use direct-basis centrifugal assembly on the normal public grid;
+any primitive comparison is labeled ONLY as the explicit finite-grid diagnostic.
 
 **Exact bounds and acceptance.** Hard120 total added source lines INCLUDING
 comments/docstrings across src/foundation/quadrature.jl and
@@ -123,6 +148,9 @@ compression. Hard35 added reader lines total in
 docs/src/howto/recommended_atomic_setup.md and
 docs/src/algorithms/radial_interval_sampled_build_and_extents.md. No new source/
 test file, export/public type, dependency, knob, framework or persistent result.
+Additionally, examples/14_radial_primitive_operators.jl has a hard15-added-line
+allowance for this direct-basis lesson and labeled finite-grid comparison.
+No helper/type is added beyond the already authorized five-file draft.
 Run radial/core/ida/angular_public/misc/docs_fast/full docs, selected unchanged
 angular assembly and one-body anchors, package load, authority/self-test, two
 renders, Documenter/log/diff, exact-head full three-job CI and separate Docs.
@@ -133,14 +161,40 @@ No HF endpoint is granted: independent integral evidence and the existing
 one-electron endpoint suffice here; report no independently measured HF-energy
 improvement. Custom implementation admission uses at most600 additional
 numerical seconds/8GiB RSS/512MiB scratch within the original1200s/1GiB envelope;
-190s is already conservatively charged. Actual Pass655 RSS remains2GiB. Required
+RESUME-3 starts after350/1200 numerical seconds and160/600 admission seconds.
+The one clean-main finite-grid preflight is charged20s (measured0.327s), now
+370/1200 total; admission remains160/600, not reset. Permit at most160 further
+candidate-admission seconds FROM the remaining440, not a new allowance. Reuse
+hash-identical numerical source evidence; rerun only the amended small default/
+finite-grid checks and ONE current-main integrated35/100 admission, using saved
+basis/profiles, not a rebuild or HF. The latter is necessary because angular
+assembly changed since the old receipt. Retained48-L evidence is reusable only
+if its numerical bodies/inputs are unchanged; do not claim old integrated cost
+measured on current main. Actual Pass655 RSS remains2GiB. Required
 ordinary regression/CI checks are separate from custom qualification. Preserve
 all old evidence, handoffs and A+B+C. No external imports/edits, supplement or
 screening/HF-matching policy, solver/hamv6/angular allocation change, consumer
 restart/receipt, Hchain/q9, release/stable or successor. If scope, budget,
 accuracy, compatibility or cost fails, make no implementation commit and report
-the exact obstacle. At most two in-scope corrections, then accepted closeout
-consumes both grants and pauses.
+the exact obstacle. One prior in-scope continuation was used; RESUME-3 is the
+second approved continuation, not a reset of the two-round limit. New scope or
+unexplained failure after this continuation requires renewed review. Accepted
+closeout consumes both grants and pauses.
+
+**Isolated resume ownership.** Only the clean task checkout
+/Users/srw/dmrgtmp/radial_integration_20261017/resume_implementation_20261112,
+branch radial-integration-resume-20261112, starts from verified current main
+a1f95447b81dbeb64ee1b8076a5064a1208b7083. Its canonical /Volumes/DMRG path
+names the same inode; use normal scoped permissions, never a bypass. After the
+amendment commit/checks, copy ONLY the five hash-verified original draft files
+into this checkout, preserving original bytes and old-base evidence separately.
+Record all subsequent differences from that frozen draft, especially whether
+any NUMERICAL source body changed. Never touch/fetch/advance/reset/stash the
+dirty Dropbox primary, five original drafts, handoffs, consumer overlay,
+reported frozen snapshot or consumer environment, even after acceptance.
+Consumer adoption/pins are unconfirmed and owner-controlled. Do not duplicate
+the separately assigned Ne comparison/K91 work or infer energy cancellation
+from equal radial treatment. No shared skill rollout or automatic successor.
 
 ## Estimated Angular Correlation Allocation
 

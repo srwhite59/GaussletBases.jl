@@ -119,6 +119,18 @@ Use the existing authority/self-test and compact positive/negative path probes,
 normal docs/package/Documenter checks and docs-only CI/Docs; no numerical rerun.
 Preserve the primary Pass656 draft, legacy sphere data, defaults and releases.
 
+#### Radial Primitive Example Path Amendment
+
+RESUME-GB-RADIAL-INTEGRATION-20261017-3 explicitly adds the existing Example14
+to the bounded radial repair. Recognize only kind=source, state=existing and
+path=examples/14_radial_primitive_operators.jl, using the same exact-path pattern
+as GB-0. Do not admit an examples directory prefix, planned example, new path
+kind, unsafe path or another file. Preserve tracking/symlink/state checks.
+This is necessary machine recognition of the approved example, not broader
+source authority. Keep the checker outside its own producer whitelist, as in
+the earlier bootstrap. Validate compact positive/negative probes, self-test,
+whole renders, docs/Documenter and normal docs-only CI before implementation.
+
 For execution records, `dependency_ids` are immediate normative prerequisites,
 not navigation. An execution record must not depend on a retired, rejected,
 superseded, or no-grant record. No-grant historical records may retain

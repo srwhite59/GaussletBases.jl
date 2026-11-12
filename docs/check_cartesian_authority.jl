@@ -317,6 +317,7 @@ function _path_errors(item, id, index, tracked)
     )
     root_project = kind == "source" && path == "Project.toml"
     angular_cubature_asset = kind == "source" && path == "data/angular/cubature_sphere_points.toml"
+    radial_primitive_example = kind == "source" && state == "existing" && path == "examples/14_radial_primitive_operators.jl"
     root_changelog = kind == "docs" && path == "CHANGELOG.md"
     root_readme = kind == "docs" && path == "README.md"
     root_status_doc = kind == "docs" && state == "existing" &&
@@ -327,7 +328,7 @@ function _path_errors(item, id, index, tracked)
         ".github/workflows/docs.yml",
         "docs/make.jl",
     )
-    (root_project || angular_cubature_asset || root_changelog || root_readme || root_status_doc || repository_workflow_tool ||
+    (root_project || angular_cubature_asset || radial_primitive_example || root_changelog || root_readme || root_status_doc || repository_workflow_tool ||
      any(prefix -> startswith(path, prefix), prefixes[kind])) ||
         push!(errors, "$id.paths[$index] has wrong prefix: $path")
     state == "existing" && (!isfile(absolute) || !(path in tracked)) &&

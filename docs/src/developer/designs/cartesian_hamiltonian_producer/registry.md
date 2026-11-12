@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `fd134aca55dc0a3ff18856363e5ddd459bd660410da915a240475c91f4f7f195`.
+> [authority.toml](authority.toml), SHA-256 `40bee95d144f6de0dc753af952c6886b8a2be4d6966a3414740847bde7431614`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -365,7 +365,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `601`
   - `manager_pass`: `602`
 - **Dependencies:** none
-- **Scope:** Maintain Generated Authority Views, accepted root-document recognition and the user-approved Angular Cubature Asset Path Amendment (GB-0). Recognize only the exact cubature TOML source asset, preserving other data-path rejection, states, tracking and safety checks. No prefix/schema expansion, asset creation, numerical/default/API change, release or consumer work.
+- **Scope:** Maintain Generated Authority Views and its exact path amendments: accepted roots, GB-0 cubature asset, and RESUME-3 existing-source Example14 recognition. Preserve all other prefix/state/tracking/safety checks; no general examples prefix or planned example. Checker reconciliation only; no independent numerical, API, release or consumer authority.
 
 ### HP-AUTHORITY-EXECUTION-WHITELIST-TEST-01 - whole-file execution whitelist validation
 
@@ -4617,16 +4617,20 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `docs` / `existing`: `docs/src/algorithms/radial_interval_sampled_build_and_extents.md`
   - `docs` / `existing`: `docs/src/howto/recommended_atomic_setup.md`
+  - `source` / `existing`: `examples/14_radial_primitive_operators.jl`
   - `source` / `existing`: `src/foundation/quadrature.jl`
   - `source` / `existing`: `src/radial/operators.jl`
 - **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-centrifugal-review-2026-10-17.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-qualification-2026-10-17.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-review-2026-10-17.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-qualification-2026-10-17.md`
+  - `external_path`: `/Users/srw/dmrgtmp/radial_integration_20261017/resume_authority_20261112/resume3_assignment.md`
+  - `git_commit`: `a1f95447b81dbeb64ee1b8076a5064a1208b7083`
   - `git_commit`: `e545d5e2c7bca7442a54a89613955707c044d4d7`
   - `manager_pass`: `656`
 - **Dependencies:** none
-- **Scope:** Implement Default Radial Panel Integration only in foundation/quadrature.jl and radial/operators.jl: normal default panels, private rule/digest transport, compatible constructors and buffered high-L contraction. Hard120 added source and35 reader lines. Preserve explicit untagged grids, basis, thresholds and support cutoff. Require actual public-path cost admission. No new knob/framework, HF, external/consumer, release or successor work.
+- **Scope:** Complete Default Radial Panel Integration under RESUME-3 in the isolated checkout: two source owners hard120 additions, two readers35, existing Example14 fifteen. Teach physical-functions-first centrifugal integration, not accurate singular primitive contraction. Preserve explicit grids, support, thresholds and frozen draft evidence. Require current-main admission. No primary/consumer mutation, new framework, HF, release or successor.
 
 ### HP-RADIAL-INTEGRATION-TEST-01 - default radial integration independent regressions and admission
 
@@ -4639,12 +4643,15 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `test` / `existing`: `test/radial/runtests.jl`
 - **Evidence:**
+  - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-centrifugal-review-2026-10-17.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-qualification-2026-10-17.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-review-2026-10-17.md`
+  - `external_path`: `/Users/srw/dmrgtmp/radial_integration_20261017/resume_authority_20261112/resume3_assignment.md`
+  - `git_commit`: `a1f95447b81dbeb64ee1b8076a5064a1208b7083`
   - `git_commit`: `e545d5e2c7bca7442a54a89613955707c044d4d7`
   - `manager_pass`: `656`
 - **Dependencies:** `HP-RADIAL-INTEGRATION-FN-01`
-- **Scope:** Extend only test/radial/runtests.jl under Default Radial Panel Integration, hard90 added lines. Check default integrals, rule mutation rejection, compatible constructors, retained/on-demand and untagged discrete behavior. Preserve failure diagnostics and physical gates; use independently converged matched-support references, preserving finite-box evidence. Require public-path admission and normal CI. No full angular/HF/campaign, new owner, consumer or successor.
+- **Scope:** Complete Default Radial Panel Integration tests under RESUME-3, only existing radial owner hard90 additions. Preserve strict default direct-basis and independent matched-support gates; label primitive centrifugal comparison as an explicit well-conditioned finite-grid diagnostic. Retain old failures, compatibility and stored/on-demand checks. Require current-main cost admission and CI. No weakened thresholds, new owner, HF/campaign or consumer work.
 
 ### HP-RAW-SRCMODE-FN-01 - raw product source-mode inventory
 
