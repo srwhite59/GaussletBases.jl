@@ -145,3 +145,12 @@ reset_timing_report!
 current_timing_report
 timing_report
 ```
+
+## Expert cubature-aligned angular profiles
+
+This opt-in same-size rotation preserves the parent span, not general IDA.
+Approximate target whitening must be requested explicitly for arbitrary rules.
+
+```@docs
+coiflet_angular_profile
+```

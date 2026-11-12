@@ -31,6 +31,97 @@
     end
 end
 
+@testset "Polar coiflet moments and locality" begin
+    flat_moments(b, l) = reduce(vcat, [GaussletBases._shell_local_ylm_moment_block(b, k) for k in 0:l])
+    target(x, w, l) = [sqrt(w[a]) * GaussletBases._real_spherical_harmonic(ch, view(x, a, :))
+        for ch in ylm_channels(l).channel_data, a in eachindex(w)]
+    gl = eigen(SymTridiagonal(zeros(48), [k/sqrt(4k*k-1) for k in 1:47]))
+    directions = [sqrt(1-z*z)*f(2pi*(j-0.5)/96) for z in gl.values, j in 1:96, f in (cos, sin)]
+    xyz = hcat(vec(directions[:, :, 1]), vec(directions[:, :, 2]), repeat(gl.values, 96))
+    qw = repeat(2 .* gl.vectors[1, :].^2 .* (2pi/96), 96)
+    function locality(b, points)
+        rho = evaluate_angular_basis(b, xyz).^2
+        d2 = 2 .* (1 .- clamp.(xyz * points', -1.0, 1.0))
+        return sqrt(sum(qw .* rho .* d2)/size(points, 1)), sum(qw .* rho .* d2.^3)/size(points, 1)
+    end
+    for name in ("Ih_12", "McLaren_24", "Ih_32", "Oh_50_Unif")
+        cs = cubature_sphere_point_set(name)
+        parent = shell_local_angular_profile(cs.point_set; beta=cs.default_beta, l_inject=cs.default_l_inject)
+        p = coiflet_angular_profile(cs)
+        actual = flat_moments(p.basis, cs.default_l_flat)
+        reference = target(cs.point_set.coordinates, cs.cubature_weights, cs.default_l_flat)
+        @test maximum(abs, actual-reference) < 1e-13
+        @test opnorm(p.basis.final_overlap-I, Inf) < 1e-11
+        @test minimum(actual[1, :]) > 0
+        @test p.gauge_metadata.min_site_alignment >= 0.98
+        @test p.basis.shell_weights == parent.basis.shell_weights
+        @test p.gauge_metadata.mixed_signs == parent.gauge_metadata.mixed_signs
+        @test p === coiflet_angular_profile(Symbol(name))
+        @test maximum(abs, eigvals(Symmetric(p.basis.final_kinetic)) -
+            eigvals(Symmetric(parent.basis.final_kinetic))) < 1e-11
+        lp, lc = locality(parent.basis, cs.point_set.coordinates), locality(p.basis, cs.point_set.coordinates)
+        @test lc[1] <= 1.02lp[1]
+        name == "Ih_32" && @test lc[2] <= 1.02lp[2]
+        @info "Polar coiflet qualification" rule=name moment_error=maximum(abs, actual-reference) alignment=p.gauge_metadata.min_site_alignment sigma_parent=lp[1] sigma_coiflet=lc[1] tau6_parent=lp[2] tau6_coiflet=lc[2]
+    end
+    cs = cubature_sphere_point_set("Oh_14")
+    x, w = cs.point_set.coordinates, cs.cubature_weights
+    axes = [a for a in eachindex(w) if count(v -> abs(v) > 0.99, view(x, a, :)) == 1]
+    corners = setdiff(collect(eachindex(w)), axes)
+    alt = copy(w)
+    alt[axes] .= 1.1 .* w[axes]
+    alt[corners] .= (4pi-sum(alt[axes]))/length(corners)
+    opts = (l_flat=1, beta=cs.default_beta, l_inject=cs.default_l_inject)
+    original = coiflet_angular_profile(cs; l_flat=1)
+    alternative = coiflet_angular_profile(cs.point_set, alt; opts...)
+    whitened = coiflet_angular_profile(cs.point_set, w; opts..., whiten_target=true)
+    @test original.key != alternative.key && original.key != whitened.key
+    @test original.profile_id != alternative.profile_id
+    @test original === coiflet_angular_profile(cs.point_set, BigFloat.(w); opts...)
+    @test alternative === coiflet_angular_profile(cs.point_set, alt; opts...)
+    @test whitened === coiflet_angular_profile(cs.point_set, w; opts..., whiten_target=true)
+    @test maximum(abs, flat_moments(original.basis, 1)-target(x, w, 1)) < 1e-13
+    @test maximum(abs, flat_moments(alternative.basis, 1)-target(x, alt, 1)) < 1e-13
+    @test maximum(abs, flat_moments(whitened.basis, 1)-target(x, w, 1)) < 1e-13
+    ps = sphere_point_set(50)
+    A = target(ps.coordinates, ones(50), 6)
+    w0 = fill(4pi/50, 50)
+    wr = w0 + pinv(A; rtol=1e-12) * (vcat(sqrt(4pi), zeros(size(A, 1)-1))-A*w0)
+    @test minimum(wr) > 0
+    @test_throws ArgumentError coiflet_angular_profile(ps, wr; l_flat=3)
+    rounded = coiflet_angular_profile(ps, wr; l_flat=3, whiten_target=true)
+    raw = target(ps.coordinates, wr, 3)
+    effective = inv(sqrt(Symmetric(raw*raw'))) * raw
+    @test maximum(abs, flat_moments(rounded.basis, 3)-effective) < 1e-11
+    @test maximum(abs, effective-raw) > 1e-11
+    @test opnorm(rounded.basis.final_overlap-I, Inf) < 1e-11
+    @test minimum(flat_moments(rounded.basis, 0)) > 0
+    @test rounded.gauge_metadata.min_site_alignment >= 0.95
+    @test rounded === coiflet_angular_profile(ps, wr; l_flat=3, whiten_target=true)
+    @test_throws ArgumentError coiflet_angular_profile("Ih_32"; l_inject=-1)
+    @test_throws ArgumentError coiflet_angular_profile("Ih_32"; l_inject=2)
+    @test_throws ArgumentError coiflet_angular_profile("Ih_12"; l_flat=3)
+    @test_throws ArgumentError coiflet_angular_profile("Ih_12"; l_flat=-1)
+    @test_throws ArgumentError coiflet_angular_profile(cs; whiten=:invalid)
+    for bad in (w[1:end-1], -w, fill(0.0, 14), fill(Inf, 14), fill(NaN, 14), 2w)
+        @test_throws ArgumentError coiflet_angular_profile(cs.point_set, bad; opts...)
+    end
+    tiny = BigFloat.(w)
+    tiny[2] += tiny[1] - big"1e-1000"
+    tiny[1] = big"1e-1000"
+    @test_throws ArgumentError GaussletBases._coiflet_weights_digest(tiny, 14, false)
+    @test_throws ArgumentError coiflet_angular_profile(cs.point_set, w .* (1+1e-7); opts...)
+    admitted = coiflet_angular_profile(cs.point_set, w .* (1+1e-7); opts..., whiten_target=true)
+    @test opnorm(admitted.basis.final_overlap-I, Inf) < 1e-11
+    @test_throws ArgumentError coiflet_angular_profile(cs.point_set, w .* (1+1e-4); opts..., whiten_target=true)
+    bad_gram = copy(w)
+    bad_gram[1] += 1e-3
+    bad_gram[2] -= 1e-3
+    @test_throws ArgumentError coiflet_angular_profile(cs.point_set, bad_gram; opts..., whiten_target=true)
+    @test_throws ArgumentError GaussletBases._polar_coiflet_isometry(0.99Matrix{Float64}(I, 2, 2), Matrix{Float64}(I, 2, 2))
+    @test_throws DimensionMismatch GaussletBases._polar_coiflet_isometry(ones(2, 3), ones(2, 2))
+end
+
 @testset "Atomic contact geometry" begin
     rb, _ = _quick_radial_operator_fixture()
     # Actual frozen McLaren24 coordinates/order, not the vendored 24-point rule.

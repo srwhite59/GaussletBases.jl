@@ -229,6 +229,7 @@ export AbstractFunction1D,
        SpherePointSet,
        CuratedSpherePointSet,
        CubatureSpherePointSet, cubature_sphere_point_set_names, cubature_sphere_point_set,
+       coiflet_angular_profile,
        ShellLocalInjectedAngularBasis,
        ShellLocalAngularProfileKey,
        ShellLocalAngularProfile,
@@ -987,6 +988,7 @@ include("atomic/gaunt_tables.jl")
 include("angular/angular_point_sets.jl")
 include("angular/angular_cubature_point_sets.jl")
 include("angular/angular_shell_basis.jl")
+include("angular/angular_coiflet.jl")
 include("angular/angular_shell_assembly.jl")
 include("angular/angular_atomic_benchmark.jl")
 include("atomic/atomic_angular_sectors.jl")

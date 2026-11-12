@@ -83,6 +83,21 @@ Its weights integrate over solid angle (sum `4pi`); its declared cubature degree
 is distinct from its point count and angular-profile resolution controls.
 This catalog does not change `sphere_point_set` or any construction default.
 
+### Opt-in polar coiflet profiles
+
+`coiflet_angular_profile("Ih_32")` rotates an exact-injected parent to align its
+low-harmonic moments with the catalog weights and directions, with positive
+monopoles and bounded site alignment. The one-body span is preserved; general
+basis-dependent IDA is not invariant under this rotation.
+Catalog calls use stored beta/injection/flat defaults and strict targets.
+Ih_60 is a degree-9 rule, not an 11-design.
+For arbitrary `(point_set, weights)` input, `l_flat` is required. Strict mode
+matches the raw weighted harmonics; explicit `whiten_target=true` instead
+matches their row-orthonormal polar target, not the original rounded moments.
+Its 1e-5 raw-Gram/weight-sum admission is not an exact-cubature guarantee;
+the output moment check remains 1e-11. `whiten` separately controls the parent
+complement. No angular default or shell schedule is changed.
+
 The first shell-local basis layer is now available
 through:
 

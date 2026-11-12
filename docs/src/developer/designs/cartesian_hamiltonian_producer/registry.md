@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `17aefe807abef9d1f48b6411594584e7da332be7547eeffed7f834d93c472bec`.
+> [authority.toml](authority.toml), SHA-256 `f5393aa3c18a5e164cabe2a2a937231aa2ae4e6857e879b59cd2a711f266098d`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -22,7 +22,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `docs` / `existing`: `docs/src/explanations/angular_research_track.md`
   - `docs` / `existing`: `docs/src/reference/operators_and_diagnostics.md`
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `planned`: `src/angular/angular_coiflet.jl`
+  - `source` / `existing`: `src/angular/angular_coiflet.jl`
   - `source` / `existing`: `src/angular/angular_shell_basis.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/integration/tmp/reviews/gb-angular-gb2-authority-handoff-2026-11-12.md`

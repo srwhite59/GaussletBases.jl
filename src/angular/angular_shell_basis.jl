@@ -682,22 +682,31 @@ function _build_shell_local_angular_profile_uncached(
         injected_kinetic,
     )
 
-    exact_labels = _exact_profile_labels(injected_channels)
-    mixed_labels = _mixed_profile_labels(prototype_count - injected_count)
+    return _wrap_shell_local_angular_profile(key, basis, gauge_metadata)
+end
+
+function _wrap_shell_local_angular_profile(
+    key::ShellLocalAngularProfileKey,
+    basis::ShellLocalInjectedAngularBasis,
+    gauge_metadata::NamedTuple,
+)
+    exact_labels = _exact_profile_labels(basis.injected_channels)
+    mixed_count = basis.final_count - basis.injected_count
+    mixed_labels = _mixed_profile_labels(mixed_count)
     labels = vcat(exact_labels, mixed_labels)
     block_kinds = vcat(
-        fill(:exact, injected_count),
-        fill(:mixed, prototype_count - injected_count),
+        fill(:exact, basis.injected_count),
+        fill(:mixed, mixed_count),
     )
 
     diagnostics = (
         shell = shell_local_injected_angular_diagnostics(basis),
-        final_overlap_checksum = _angular_digest_float_matrix(final_overlap),
-        final_kinetic_checksum = _angular_digest_float_matrix(final_kinetic),
-        grand_coefficients_checksum = _angular_digest_float_matrix(grand_coefficients),
+        final_overlap_checksum = _angular_digest_float_matrix(basis.final_overlap),
+        final_kinetic_checksum = _angular_digest_float_matrix(basis.final_kinetic),
+        grand_coefficients_checksum = _angular_digest_float_matrix(basis.grand_coefficients),
         label_checksum = _angular_digest_strings(labels),
-        exact_count = injected_count,
-        mixed_count = prototype_count - injected_count,
+        exact_count = basis.injected_count,
+        mixed_count = mixed_count,
     )
     profile_id = bytes2hex(
         SHA.sha1(
