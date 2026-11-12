@@ -725,8 +725,17 @@ The frozen packet and complete evidence are under machine-local
 **GB-1 only is executable now**, under HP-ANGULAR-CUBATURE-FN-01/TEST-01,
 after GB-0 commit6863b048de110af36d77c76abcabd7afd87b7e8a passes CI/Docs.
 Add exactly `data/angular/cubature_sphere_points.toml`, hash
-cf01c791c4a5b5538f6499fded0844274b3cf065bac2fbc21a897b57ceba9b55,
+938dd029cb230c556fba9c5fb8a593a1b0a1f5e92e5791ea97387855e435223c,
 and `src/angular/angular_cubature_point_sets.jl`, with root include/exports.
+The original frozen input hash remains
+cf01c791c4a5b5538f6499fded0844274b3cf065bac2fbc21a897b57ceba9b55.
+For vendoring only, remove exactly its final redundant newline byte, retaining
+one terminating newline (81679 to81678 bytes). Preserve the original kit and
+stop report unchanged. The same parsed TOML and all other bytes must be equal;
+no other normalization, data edit or whitespace-gate waiver is authorized.
+This is the first in-scope mechanical continuation, not a numerical correction;
+reuse the373 qualification and213 draft checks by exact parsed-input/source
+correspondence, then complete the still-pending native package/build gates.
 The public `CubatureSpherePointSet` has only name, family, point_set,
 cubature_degree, default_l_inject, default_l_flat, default_beta and
 cubature_weights, with the concrete types in the frozen loader. Its contained

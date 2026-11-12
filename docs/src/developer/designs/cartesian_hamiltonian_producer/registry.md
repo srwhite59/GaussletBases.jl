@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `dc8e98667b4bc76bde53fe1be9280cf73a5aa28c2e4830f7aaa40c45de6638e1`.
+> [authority.toml](authority.toml), SHA-256 `15c2daae106228c8769245f037ee8686e2193cf4e6d4990b6e77fab57a958b8d`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -30,7 +30,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/verify_runner.log`
   - `git_commit`: `6863b048de110af36d77c76abcabd7afd87b7e8a`
 - **Dependencies:** none
-- **Scope:** Implement only GB-1 of Cubature Angular Integration: the frozen positive-cubature asset/loader, concrete catalog entry, three public bindings, root wiring and concise reader/API documentation. Source80/reader20 ceilings; preserve legacy data/defaults. Return new files uncommitted for design-owned path-state promotion. No Polar/assembly edits, workflow/dependency change, consumer, release or successor.
+- **Scope:** Implement only GB-1 of Cubature Angular Integration: the one-byte-EOF-normalized cubature asset, frozen loader/catalog entry, three public bindings, root wiring and concise documentation. Use both recorded input/vendored hashes; no other data edits or gate waiver. Source80/reader20 caps and uncommitted path-promotion checkpoint remain. No Polar/assembly, default, workflow, consumer, release or successor changes.
 
 ### HP-ANGULAR-CUBATURE-TEST-01 - positive cubature catalog validation
 

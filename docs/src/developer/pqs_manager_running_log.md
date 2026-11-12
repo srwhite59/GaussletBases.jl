@@ -1438,3 +1438,19 @@ Pass656 stays separately unaccepted. No source added in this authority commit,
 two execution IDs only, no status cloud/framework. Return the uncommitted new
 files for design-owned path-state promotion before committing implementation.
 No consumer restart, release or automatic unrequested successor.
+
+### Pass 658 GB-1 EOF Reconciliation
+
+First in-scope continuation: the frozen input's redundant EOF newline conflicts
+with the unchanged native whitespace gate. Preserve original cf01c791 bytes
+and the stop report; the vendored copy alone loses that last newline, becoming
+938dd029 (81679 to81678 bytes). Exact-prefix and parsed-TOML equality pass7/7;
+the scratch normalized candidate has no whitespace diagnostics. No strategic
+change: LT1/MT1 still target truthful opt-in geometry, with no scientific data,
+threshold/default change or gate waiver. All six draft hashes are preserved
+while committing this path-scoped authority amendment. Source73/test33/reader19
+remain within80/60/20; no ID, helper, test or numeric-source addition here.
+The213 compact checks and373 qualification remain evidence, not a claim that
+pending Pkg.test/direct docs/build and later source CI passed. Return only
+the one-byte fix and original validation continuation after checked grant;
+GB-2/3, primary Pass656, consumers/releases and skill promotion remain paused.
