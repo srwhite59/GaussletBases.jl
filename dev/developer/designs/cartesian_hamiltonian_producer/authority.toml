@@ -56,7 +56,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_o
 sha256 = "417af5ce68d45a3719cb38a6ec9f47564f422f75ebc08d70c18f8bdf472fe7a0"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md"
-sha256 = "c061c7726f6c71ae0432af484a0c3769deb97131405c8ec18ca8d8fdffae332c"
+sha256 = "b530f51f44069907d59ebc862975bbb1d51f82103eb2a5d548cbc27364a998ca"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md"
 sha256 = "e21df153a635702b03303d1f4ced9fcf5e23728030099e2cc8a0105494ce759a"
@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "2bd57daa79cb5fabc055b3952e38b6a69a4f4e6c5f7390d9e04bafe1321f4f51"
+sha256 = "d9bf54673eedfd9c5edcc5ff7fdbd3c964f4b35f518a4e3adc11ecdb088eb268"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -772,7 +772,7 @@ dependency_ids = []
 grant = "maintenance"
 id = "HP-AUTHORITY-EXECUTION-WHITELIST-FN-01"
 lifecycle = "implemented"
-scope = "Maintain Generated Authority Views, accepted root-document recognition and the user-approved Angular Cubature Asset Path Amendment (GB-0). Recognize only the exact cubature TOML source asset, preserving other data-path rejection, states, tracking and safety checks. No prefix/schema expansion, asset creation, numerical/default/API change, release or consumer work."
+scope = "Maintain Generated Authority Views and its exact path amendments: accepted roots, GB-0 cubature asset, and RESUME-3 existing-source Example14 recognition. Preserve all other prefix/state/tracking/safety checks; no general examples prefix or planned example. Checker reconciliation only; no independent numerical, API, release or consumer authority."
 surfaces = ["docs"]
 title = "whole-file execution whitelist authority view"
 
@@ -8109,7 +8109,7 @@ dependency_ids = []
 grant = "implementation"
 id = "HP-RADIAL-INTEGRATION-FN-01"
 lifecycle = "approved"
-scope = "Implement Default Radial Panel Integration only in foundation/quadrature.jl and radial/operators.jl: normal default panels, private rule/digest transport, compatible constructors and buffered high-L contraction. Hard120 added source and35 reader lines. Preserve explicit untagged grids, basis, thresholds and support cutoff. Require actual public-path cost admission. No new knob/framework, HF, external/consumer, release or successor work."
+scope = "Complete Default Radial Panel Integration under RESUME-3 in the isolated checkout: two source owners hard120 additions, two readers35, existing Example14 fifteen. Teach physical-functions-first centrifugal integration, not accurate singular primitive contraction. Preserve explicit grids, support, thresholds and frozen draft evidence. Require current-main admission. No primary/consumer mutation, new framework, HF, release or successor."
 surfaces = ["docs", "source"]
 title = "default radial panel integration and preserved explicit grids"
 
@@ -8120,6 +8120,9 @@ title = "default radial panel integration and preserved explicit grids"
 
     [[records.evidence_refs]]
     kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-centrifugal-review-2026-10-17.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
     value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-qualification-2026-10-17.md"
     [[records.evidence_refs]]
     kind = "external_path"
@@ -8127,6 +8130,12 @@ title = "default radial panel integration and preserved explicit grids"
     [[records.evidence_refs]]
     kind = "external_path"
     value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-qualification-2026-10-17.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/radial_integration_20261017/resume_authority_20261112/resume3_assignment.md"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "a1f95447b81dbeb64ee1b8076a5064a1208b7083"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "e545d5e2c7bca7442a54a89613955707c044d4d7"
@@ -8144,6 +8153,10 @@ title = "default radial panel integration and preserved explicit grids"
     state = "existing"
     [[records.paths]]
     kind = "source"
+    path = "examples/14_radial_primitive_operators.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
     path = "src/foundation/quadrature.jl"
     state = "existing"
     [[records.paths]]
@@ -8155,7 +8168,7 @@ dependency_ids = ["HP-RADIAL-INTEGRATION-FN-01"]
 grant = "implementation"
 id = "HP-RADIAL-INTEGRATION-TEST-01"
 lifecycle = "approved"
-scope = "Extend only test/radial/runtests.jl under Default Radial Panel Integration, hard90 added lines. Check default integrals, rule mutation rejection, compatible constructors, retained/on-demand and untagged discrete behavior. Preserve failure diagnostics and physical gates; use independently converged matched-support references, preserving finite-box evidence. Require public-path admission and normal CI. No full angular/HF/campaign, new owner, consumer or successor."
+scope = "Complete Default Radial Panel Integration tests under RESUME-3, only existing radial owner hard90 additions. Preserve strict default direct-basis and independent matched-support gates; label primitive centrifugal comparison as an explicit well-conditioned finite-grid diagnostic. Retain old failures, compatibility and stored/on-demand checks. Require current-main cost admission and CI. No weakened thresholds, new owner, HF/campaign or consumer work."
 surfaces = ["tests"]
 title = "default radial integration independent regressions and admission"
 
@@ -8166,10 +8179,19 @@ title = "default radial integration independent regressions and admission"
 
     [[records.evidence_refs]]
     kind = "external_path"
+    value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-centrifugal-review-2026-10-17.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
     value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-qualification-2026-10-17.md"
     [[records.evidence_refs]]
     kind = "external_path"
     value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-review-2026-10-17.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/radial_integration_20261017/resume_authority_20261112/resume3_assignment.md"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "a1f95447b81dbeb64ee1b8076a5064a1208b7083"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "e545d5e2c7bca7442a54a89613955707c044d4d7"
