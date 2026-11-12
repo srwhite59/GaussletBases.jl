@@ -22,17 +22,21 @@ Pass657 accepts [Atomic Contact Integrals](../../numerical_contracts.md#Atomic-C
 at8238be7f plus correction6f2581ca. Mixed-profile/final-supplement factors,
 derived dense geometry and one JLD2 companion are implemented; both execution
 grants are consumed. Explicit quadrature and recorded original/expansion
-uncertainty remain. The primary Pass656 draft stays untouched and unaccepted;
+uncertainty remain. The primary Pass656 draft stays untouched and unadvanced;
 consumer migration, Cartesian/p-wave, releases and successor work are separate.
 
-Pass 656 resumes [Default Radial Panel Integration](../../numerical_contracts.md#Default-Radial-Panel-Integration)
-under its exact two grants and RESUME-3: normal public panels, direct-basis
-centrifugal contract, labeled finite-grid primitive validation and Example14.
-The clean current-main task checkout alone may change after checked authority;
-the dirty primary, five drafts, handoffs and consumer snapshots/environments
-stay untouched. No primitive framework, threshold waiver or consumer-energy
-certification. Prior evidence/accounting and the two-continuation limit remain;
-no HF/Ne/K91 duplicate, angular, release/stable, skill or successor work.
+Pass 656 accepts [Default Radial Panel Integration](../../numerical_contracts.md#Default-Radial-Panel-Integration)
+at1d408bc1aa2e1f3495d591fea5c16d83d56b3661. Normal public grids and stored/on-demand
+multipoles use the panel rule; physical functions precede centrifugal integration.
+Both execution grants are consumed. Source120/6, tests85/7, readers34 and Example14
+9/5 meet the limits. Numerical source bodies equal the frozen draft exactly;
+only two source-docstring lines differ. Full source CI/Docs and independent
+hydrogenic/high-L review pass; current-main35/100 admission meets all cost gates.
+Explicit untagged grids keep their discrete rule. Default primitive inverse-square
+contraction is not repaired or promised; Example14 labels its finite-grid diagnostic.
+Primary remainsf42 with five drafts/two handoffs unchanged, not synchronized to main;
+consumer pins, overlays/snapshot and energy interpretation remain owner-controlled.
+No HF improvement, universal accuracy, release/stable, shared-skill or successor claim.
 
 Pass 655 accepts the bounded opt-in
 [estimated angular correlation allocation](../../numerical_contracts.md#Estimated-Angular-Correlation-Allocation)

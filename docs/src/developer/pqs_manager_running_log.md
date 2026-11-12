@@ -1599,3 +1599,31 @@ tolerance waiver, numerical-body alternative, HF or successor is granted.
 Exact remaining boundary is checked implementation, independent acceptance
 and ordinary closeout; numerical source differences from frozen draft must
 be reported so consumer owners can decide their own pins.
+
+### Pass 656 Accepted Default Radial Integration and Closeout
+
+Accept1d408bc1aa2e1f3495d591fea5c16d83d56b3661 after RESUME-3. LT1/MT1's
+radial integration defect is crossed: normal public support-aware panels feed
+physical one-body and continuous stored/on-demand Coulomb integration, without
+changing basis coefficients, maps, thresholds or explicit-grid discrete rules.
+Primitive inverse-square contraction remains a labeled finite-grid diagnostic;
+the old1.55e-5 failure is not repaired or repinned. Exact comparison proves
+both numerical source bodies equal the frozen draft; only two docstring lines
+differ. Primaryf42/five drafts/two handoffs and consumers stay untouched.
+Use radial447, selected-owner15050, Example14 and exact-source CI43263075541/
+Docs43263075396 with executed numerical steps. Independent14/14 hydrogenic
+one-body/L0/L132 checks pass; worst Coulomb relative2.82e-15. The initial
+unnormalized scratch tight density hit the existing integral-weight guard;
+normalized physical density passes without changing that guard or science.
+Reuse matched-support/Slater/triangle and48-L evidence by exact correspondence,
+not an expensive replay. Current-main35/100 complete call3.974s/1.905GB,
+warm core1.814s/260.7MB, actual peak1.136GiB meets prior admission limits;
+first18/rest100 score9.88182e-11 is not an energy guarantee. Custom ledger
+430/1200 and180/600 admission is final, not reset. No HF gain is measured.
+Deleted/simplified: replace inadequate grid factory and misleading default
+primitive lesson with one rule-driven integration. Quarantined: finite-grid
+primitive/old80bohr reference; retain live generic contraction and discrete
+callers. Source120/6, tests85/7, readers34, example9/5; only frozen private
+rule/helpers/attachments, no public type/export/framework. Both grants consumed;
+no remaining repository task or automatic successor. Consumer comparison/pins,
+snapshot adoption, shared skills and releases remain separate owner decisions.

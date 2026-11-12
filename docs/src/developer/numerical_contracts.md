@@ -6,9 +6,10 @@ manual.
 
 ## Default Radial Panel Integration
 
-Pass 656 / `GB-RADIAL-INTEGRATION-20261017` authorizes the default repair under
-HP-RADIAL-INTEGRATION-FN-01/TEST-01. Steven approves at most120 added source
-lines and the normal public default, not an opt-in-only result. The earlier
+Pass 656 / `GB-RADIAL-INTEGRATION-20261017` accepts the default repair at
+1d408bc1aa2e1f3495d591fea5c16d83d56b3661. Both HP-RADIAL-INTEGRATION-FN-01/TEST-01
+execution grants are consumed. The historical boundary below records Steven's
+120-added-source-line normal-public-default approval, not future authority. The earlier
 60-line stop and opt-in recommendation remain historical evidence. Basis
 construction, coefficients, maps, radial IDA, angular conventions and existing
 validity thresholds do not change. This is a quadrature change, not another

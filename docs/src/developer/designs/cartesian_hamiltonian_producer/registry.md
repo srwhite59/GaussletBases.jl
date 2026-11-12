@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `40bee95d144f6de0dc753af952c6886b8a2be4d6966a3414740847bde7431614`.
+> [authority.toml](authority.toml), SHA-256 `9f35c329e9a9795ff822cd8076b35b126caac5ad3cbd7e10a223618d86d8fafa`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -4608,50 +4608,52 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-RADIAL-INTEGRATION-FN-01 - default radial panel integration and preserved explicit grids
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `docs`, `source`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Default Radial Panel Integration`
-- **Owned paths:**
-  - `docs` / `existing`: `docs/src/algorithms/radial_interval_sampled_build_and_extents.md`
-  - `docs` / `existing`: `docs/src/howto/recommended_atomic_setup.md`
-  - `source` / `existing`: `examples/14_radial_primitive_operators.jl`
-  - `source` / `existing`: `src/foundation/quadrature.jl`
-  - `source` / `existing`: `src/radial/operators.jl`
+- **Owned paths:** none
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-centrifugal-review-2026-10-17.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-qualification-2026-10-17.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-review-2026-10-17.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-qualification-2026-10-17.md`
+  - `external_path`: `/Users/srw/dmrgtmp/radial_integration_20261017/resume_authority_20261112/independent_acceptance_normalized.log`
   - `external_path`: `/Users/srw/dmrgtmp/radial_integration_20261017/resume_authority_20261112/resume3_assignment.md`
+  - `external_path`: `/Users/srw/dmrgtmp/radial_integration_20261017/resume_implementation_20261112/tmp/reviews/pass656-radial-integration-resume3-2026-11-12.md`
+  - `git_commit`: `1d408bc1aa2e1f3495d591fea5c16d83d56b3661`
+  - `git_commit`: `2f421ad8f8476b7272095bead36a7bf96c195942`
   - `git_commit`: `a1f95447b81dbeb64ee1b8076a5064a1208b7083`
   - `git_commit`: `e545d5e2c7bca7442a54a89613955707c044d4d7`
   - `manager_pass`: `656`
 - **Dependencies:** none
-- **Scope:** Complete Default Radial Panel Integration under RESUME-3 in the isolated checkout: two source owners hard120 additions, two readers35, existing Example14 fifteen. Teach physical-functions-first centrifugal integration, not accurate singular primitive contraction. Preserve explicit grids, support, thresholds and frozen draft evidence. Require current-main admission. No primary/consumer mutation, new framework, HF, release or successor.
+- **Scope:** Record accepted Pass656 at1d408bc1: normal public panels, rule transport and direct-basis centrifugal contract. Source120/6, readers34, Example14 9/5; numerical bodies equal frozen draft. Execution grant consumed. Preserve explicit discrete grids and original failures; no primary/consumer migration, energy certification, release or successor authority.
 
 ### HP-RADIAL-INTEGRATION-TEST-01 - default radial integration independent regressions and admission
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Default Radial Panel Integration`
-- **Owned paths:**
-  - `test` / `existing`: `test/radial/runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-centrifugal-review-2026-10-17.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-qualification-2026-10-17.md`
   - `external_path`: `/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-review-2026-10-17.md`
+  - `external_path`: `/Users/srw/dmrgtmp/radial_integration_20261017/resume_authority_20261112/independent_acceptance_normalized.log`
   - `external_path`: `/Users/srw/dmrgtmp/radial_integration_20261017/resume_authority_20261112/resume3_assignment.md`
+  - `external_path`: `/Users/srw/dmrgtmp/radial_integration_20261017/resume_implementation_20261112/tmp/reviews/pass656-radial-integration-resume3-2026-11-12.md`
+  - `git_commit`: `1d408bc1aa2e1f3495d591fea5c16d83d56b3661`
+  - `git_commit`: `2f421ad8f8476b7272095bead36a7bf96c195942`
   - `git_commit`: `a1f95447b81dbeb64ee1b8076a5064a1208b7083`
   - `git_commit`: `e545d5e2c7bca7442a54a89613955707c044d4d7`
   - `manager_pass`: `656`
 - **Dependencies:** `HP-RADIAL-INTEGRATION-FN-01`
-- **Scope:** Complete Default Radial Panel Integration tests under RESUME-3, only existing radial owner hard90 additions. Preserve strict default direct-basis and independent matched-support gates; label primitive centrifugal comparison as an explicit well-conditioned finite-grid diagnostic. Retain old failures, compatibility and stored/on-demand checks. Require current-main cost admission and CI. No weakened thresholds, new owner, HF/campaign or consumer work.
+- **Scope:** Record accepted Pass656 radial447, selected15050, finite-grid primitive and independent default checks; current-main admission and exact-source CI/Docs pass. Independent hydrogenic/high-L review14/14 passes without gate changes. Validation grant consumed. Preserve old failures and uncertainty; no further campaign, consumer, release or successor authority.
 
 ### HP-RAW-SRCMODE-FN-01 - raw product source-mode inventory
 
