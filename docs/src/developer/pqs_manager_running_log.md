@@ -1478,3 +1478,24 @@ GB-2 needs its separate public-API/numerical grant; no automatic source advance.
 Source73/test33/reader19 plus asset961 and metadata8/8; no test file, dependency,
 workflow or status cloud. Both grants are consumed. Primary Pass656 and two
 handoffs remain untouched; skills, consumers and release/stable actions stay held.
+
+### Pass 659 GB-2 Polar Coiflet Authority
+
+After separately closed GB-1 f0a7a5eb and its green docs-only CI43189538950 /
+Docs43189538939, authorize only the same-size opt-in polar profile constructor.
+LT1/MT1 advances from truthful rule data to localized functions with controlled
+low-harmonic moments; no default or scientific recipe is replaced. The frozen
+373 qualification remains evidence, not a substitute for integrated tests.
+Strict cubature and explicitly whitened rounded targets are distinct; the latter
+matches its polar target, not original raw moments. Ih_60 stays degree9.
+Hard150 source/140 existing-test/35 reader additions, including all relocated
+wrapper/docstring/root lines. Simplify the existing single wrapper; omit unused
+new rectangular/seed scaffolding and guard Float64 weight representability.
+Preserve parent controls, shell weights/gauge provenance and old IDs exactly.
+Cache must include rule weights and whitening choice. No new carrier, framework,
+dependency, broad catalog sweep or numerical-policy relaxation. Require compact
+moment/locality/cache/invalid checks, pre/post legacy fingerprints, one native
+Pkg.test and direct docs, then exact source CI/Docs. Return the uncommitted new
+file for design-owned path promotion; no early source commit or peer authority
+edit. One finite-cycle correction remains. GB-3/skill promotion, primary Pass656,
+consumers and releases remain separate; no source was added by this grant.

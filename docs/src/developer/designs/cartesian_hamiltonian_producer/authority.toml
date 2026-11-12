@@ -182,11 +182,95 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "ca6a45cbc50438a152cefc6a95d9baa3e7e0153b6687181059809c2207ad74c8"
+sha256 = "9515749e52ea292f09e4b124f98d7c53bbc453f8cc09c0cf253c2ac5421055e5"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
 
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-ANGULAR-COIFLET-FN-01"
+lifecycle = "approved"
+scope = "Implement Polar Coiflet Profiles only in the new angular_coiflet owner, existing shell-basis wrapper and root wiring, plus two reader pages. Hard150 source/35 reader additions. Preserve exact-injected same-size parents, positive gauge, weight-aware cache, explicit approximate-target semantics and legacy identities. Remove unused rectangular seed branches. No assembly, catalog/default, carrier, consumer, release or skill changes."
+surfaces = ["docs", "source"]
+title = "same-size polar coiflet angular profiles"
+
+    [[records.document_refs]]
+    heading = "Polar Coiflet Profiles"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/integration/tmp/reviews/gb-angular-gb2-authority-handoff-2026-11-12.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/input/kit/pass_gb2_polar_coiflets/TARGET_CARD_AND_BLURB.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/verify_runner.log"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "aa8e3911009e56412afc841750a7d4daebf0f566"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "f0a7a5ebb45d43bb49fd0d420dce0c4f0b4d1ad0"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/explanations/angular_research_track.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/reference/operators_and_diagnostics.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/GaussletBases.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_coiflet.jl"
+    state = "planned"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_shell_basis.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-ANGULAR-COIFLET-FN-01"]
+grant = "implementation"
+id = "HP-ANGULAR-COIFLET-TEST-01"
+lifecycle = "approved"
+scope = "Add at most140 lines only in the existing public angular sequence test owner under Polar Coiflet Profiles. Protect actual moments, locality/gauge, weight/whitening cache identity, invalid inputs and unchanged legacy fingerprints. New block under8s warm; require native default-all Pkg.test, direct docs and exact-head full CI/Docs. No new test file, broad sweep, threshold or golden repin."
+surfaces = ["tests"]
+title = "polar coiflet moments locality and identity regressions"
+
+    [[records.document_refs]]
+    heading = "Polar Coiflet Profiles"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/integration/tmp/reviews/gb-angular-gb2-authority-handoff-2026-11-12.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/input/kit/pass_gb2_polar_coiflets/TARGET_CARD_AND_BLURB.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/verify_runner.log"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "aa8e3911009e56412afc841750a7d4daebf0f566"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "f0a7a5ebb45d43bb49fd0d420dce0c4f0b4d1ad0"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"

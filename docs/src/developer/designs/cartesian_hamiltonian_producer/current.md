@@ -6,9 +6,12 @@ steps. It does not grant authority or restate subsystem contracts.
 GB-1's [positive cubature catalog](../../numerical_contracts.md#Cubature-Angular-Integration)
 is accepted at aa8e3911; both CUBATURE IDs are completed with no execution grant.
 The frozen Ih_60 is degree9, not the external card's11 claim. GB-0 path support
-and both input/vendor hashes remain recorded. GB-2/3 and skill promotion await
-separate checked boundaries/acceptance; primary Pass656 drafts, existing angular
-defaults and releases stay unchanged.
+and both input/vendor hashes remain recorded. GB-2's
+[polar coiflet profiles](../../numerical_contracts.md#Polar-Coiflet-Profiles)
+have a separate bounded implementation/validation grant: same-size exact-injected
+parents, positive monopoles, weight-aware cache and explicit approximate-target
+distinction. GB-3 and skill promotion await separate acceptance boundaries;
+primary Pass656 drafts, existing angular defaults and releases stay unchanged.
 
 Pass657 accepts [Atomic Contact Integrals](../../numerical_contracts.md#Atomic-Contact-Integrals)
 at8238be7f plus correction6f2581ca. Mixed-profile/final-supplement factors,

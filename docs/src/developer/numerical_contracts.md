@@ -787,6 +787,92 @@ Pass656 disposition, consumer/release/stable action or successor is authorized.
 On failure, budget/scope expansion or conflicting state, stop without a source
 commit and report; at most two in-scope correction rounds in the finite cycle.
 
+## Polar Coiflet Profiles
+
+GB-2 of GB-ANGULAR-HANDOFF-20261111 implements one opt-in public function,
+`coiflet_angular_profile`, under HP-ANGULAR-COIFLET-FN-01/TEST-01. Accepted
+GB-1 aa8e3911 supplies its unchanged catalog; Ih_60 remains degree9, not11.
+Use the frozen v4 source/card and373-check evidence described above, with
+the bounded refinements below. This is not a default or interaction-cap change.
+
+Entrances are `(point_set::SpherePointSet, cubature_weights::AbstractVector{<:Real};
+l_flat::Int, beta::Real=2, l_inject::Union{Int,Symbol}=:auto, tau::Real=1e-12,
+whiten::Symbol=:svd, whiten_target::Bool=false)`, `(cs::CubatureSpherePointSet;
+beta=cs.default_beta, l_inject=:auto, l_flat=cs.default_l_flat, tau=1e-12,
+whiten=:svd)`, and `(name::Union{Symbol,AbstractString}; kwargs...)`.
+The catalog resolves :auto to its stored injection order, requires
+2*l_flat<=cubature_degree and uses strict target moments. Only the arbitrary
+point-set entrance exposes whiten_target. All require exact-injected,
+same-size parents, resolved_l>=l_flat>=0; no pure-Gaussian or rectangular mode.
+Existing beta/tau/whiten validation and parent construction remain unchanged.
+
+Weights must match cardinality, be finite/positive before AND after Float64
+conversion, and sum to4*pi within1e-11 (1e-5 for explicit target whitening).
+Do not clamp, rescale or screen weights. Strict target rows are
+T[(l,m),a]=sqrt(weight[a])*Y_lm(n_a), with infinity-norm row-Gram error<=1e-11.
+Explicit whiten_target=true admits raw row-Gram error<=1e-5 and uses the polar
+row-orthonormal target T_eff=U*V' from the thin SVD of T. Its matched moments
+are T_eff, NOT the original rounded T. This is an approximate-input option,
+not an exact-cubature or arbitrary-energy guarantee; whiten remains the
+separate unchanged parent-complement control.
+
+The parent moment matrix must have minimum singular value>=1-1e-11. Keep the
+prepared same-size polar rotation: align parent column signs from its monopole,
+use Diagonal(s_parent) for the nullspace complement, and require actual moment
+error<=1e-11, site alignment>=0.90 and positive final monopoles. Transform
+coefficients, overlap and kinetic consistently, preserving parent shell_weights
+and gauge provenance. Remove unused private seed_overlap/rectangular branches
+from the proposed new file; do not retain a second implementation or fallback.
+
+Return the existing ShellLocalAngularProfile/ShellLocalInjectedAngularBasis,
+with unchanged field layouts, labels, checksums and ordering machinery. The
+new profile's inherited gauge_metadata may add only coiflet_gauge, l_flat,
+cubature_weights (copied provenance), min_site_alignment and
+target_moment_orth_err as in the prepared source. Do not read this metadata
+for algorithmic data or confuse parent gauge provenance with final monopoles.
+Use the existing profile cache/key, adding weight-Float64-byte SHA1 and
+whiten_target/l_flat identity in mode_tag; keep legacy keys untouched. Repeats
+return the same profile/basis objects; distinct weights/whitening cannot alias.
+
+Only src/angular/angular_coiflet.jl (planned), the wrapper extraction in
+src/angular/angular_shell_basis.jl and root export/include may change source.
+Extract _wrap_shell_local_angular_profile and switch the old caller; delete
+the old inline body, preserving exact legacy numerical operations/IDs.
+Hard150 added source lines includes docstrings/comments/blanks/relocation/root.
+Hard140 added tests in test/driver_public/angular_fixed_radial_sequence_runtests.jl;
+no new test file. Reader hard35 total across explanations/angular_research_track.md
+and reference/operators_and_diagnostics.md under docs/src. No catalog, angular
+assembly, moment algorithm, dependency, carrier, workflow or default edit.
+
+Compact tests use Ih_12/McLaren_24/Ih_32/Oh_50_Unif: direct moments<1e-13,
+overlap<1e-11, positive monopoles, alignment>=0.98, chordal spread<=1.02 parent
+and Ih_32 sixth-tail moment<=1.02 parent on the qualified48x96 sphere rule.
+Oh_14 original/1.1x axis weights test distinct keys and actual moments; repeated
+calls and whitening flags test cache identity. Rounded legacy H50 tests strict
+rejection and explicit whitening against an independent symmetric inverse-root
+target at1e-11. Reject invalid injection/flat/degree, weights and inexact parents.
+Save legacy15/24/32 IDs and coefficient/overlap/kinetic fingerprints BEFORE
+edits; compare exactly in a fresh same-runtime process after extraction, not
+via portable hardcoded machine goldens or a warmed shared-cache substitute.
+These catch wrong sign/moments/cache/extraction bugs not localized by overlap.
+
+Dense parent/polar work is O(N^3) CPU/O(N^2) live storage; reuse cached profiles.
+New ordinary block<8s warm on the qualification Julia1.12.6 runtime; report
+JIT separately and restore caller BLAS settings. No all-catalog/high-N sweep.
+Require native default-all Pkg.test once after this source pass, direct
+nondeploying docs/make.jl, diff/regex, package, authority/self-test/two renders,
+logs and exact-head source-bearing full CI plus Docs. Reuse the373 physics
+qualification by explicit numerical-branch/input correspondence, not a replay.
+The rotation preserves one-body span, not general full-IDA congruence.
+
+Return the validated UNCOMMITTED draft before tracking the new file; only
+design-manager promotes its planned path and seals the index/generated views.
+Preserve primary Pass656/five drafts/two handoffs. GB-3 and skills remain
+separate; no ternary/Delaunay, named schedules, consumer/receipt, solver,
+release/stable or unrequested successor. Stop without source commit for scope,
+budget, legacy-identity, numerical or state failure; no tolerance/golden repin.
+The existing finite-cycle correction limit remains, with one round available.
+
 ## Atomic Contact Integrals
 
 Pass657, GB-CONTACT-INTEGRALS-20261103, implements exact real-function geometry,
