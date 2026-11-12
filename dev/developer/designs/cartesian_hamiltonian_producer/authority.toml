@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "7092e29eb9750c421bed06ce9deea2f7043992b0f83b8531764ebac973b69795"
+sha256 = "a292b9e07be1aadec8629da032c8c64be3616d621593fed8994865469e0ea5ac"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -192,7 +192,7 @@ dependency_ids = []
 grant = "implementation"
 id = "HP-ANGULAR-CUBATURE-FN-01"
 lifecycle = "approved"
-scope = "Implement only GB-1 of Cubature Angular Integration: the frozen positive-cubature asset/loader, concrete catalog entry, three public bindings, root wiring and concise reader/API documentation. Source80/reader20 ceilings; preserve legacy data/defaults. Return new files uncommitted for design-owned path-state promotion. No Polar/assembly edits, workflow/dependency change, consumer, release or successor."
+scope = "Implement only GB-1 of Cubature Angular Integration: the one-byte-EOF-normalized cubature asset, frozen loader/catalog entry, three public bindings, root wiring and concise documentation. Use both recorded input/vendored hashes; no other data edits or gate waiver. Source80/reader20 caps and uncommitted path-promotion checkpoint remain. No Polar/assembly, default, workflow, consumer, release or successor changes."
 surfaces = ["artifacts", "docs", "source"]
 title = "positive cubature angular catalog"
 
