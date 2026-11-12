@@ -56,7 +56,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/external_gto_o
 sha256 = "417af5ce68d45a3719cb38a6ec9f47564f422f75ebc08d70c18f8bdf472fe7a0"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/invariants.md"
-sha256 = "69806a27ca8ee6bd80a40f448514877e3c42d5036e4f9f7a487db1d3557fbc3c"
+sha256 = "c061c7726f6c71ae0432af484a0c3769deb97131405c8ec18ca8d8fdffae332c"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/mapped_comx_source_span.md"
 sha256 = "e21df153a635702b03303d1f4ced9fcf5e23728030099e2cc8a0105494ce759a"
@@ -586,7 +586,7 @@ dependency_ids = []
 grant = "maintenance"
 id = "HP-AUTHORITY-EXECUTION-WHITELIST-FN-01"
 lifecycle = "implemented"
-scope = "Maintain Generated Authority Views and accepted existing-root-document recognition from 98294fd4c5b4159d95dc87440d80fb773b70a2cc. Preserve exact DESIGN.md, ROADMAP.md, and STATUS.md acceptance, planned-state restrictions, all other path checks, deterministic registry/whitelist generation, and deny-by-default authority. No broader checker, reader-page, source/API, schema, workflow, release, or numerical change."
+scope = "Maintain Generated Authority Views, accepted root-document recognition and the user-approved Angular Cubature Asset Path Amendment (GB-0). Recognize only the exact cubature TOML source asset, preserving other data-path rejection, states, tracking and safety checks. No prefix/schema expansion, asset creation, numerical/default/API change, release or consumer work."
 surfaces = ["docs"]
 title = "whole-file execution whitelist authority view"
 
