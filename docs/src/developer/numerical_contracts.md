@@ -875,6 +875,90 @@ release/stable or unrequested successor. Stop without source commit for scope,
 budget, legacy-identity, numerical or state failure; no tolerance/golden repin.
 The existing finite-cycle correction limit remains, with one round available.
 
+## Explicit Angular Profile Assembly
+
+GB-3 of GB-ANGULAR-HANDOFF-20261111 is independently authorized under
+HP-ANGULAR-PROFILE-ASSEMBLY-FN-01/TEST-01, after separately accepted/closed
+GB-1 and GB-2. Use the frozen v4 shell_assembly_patch.jl (SHA256
+e156aa0d4409411d2ed523fe09e4eef5cd0c1fd963afd81eca059b9cb8137982).
+The existing exported build_atomic_shell_local_angular_assembly gains only
+the overload (shell_radii::AbstractVector{<:Real},
+profiles::AbstractVector{ShellLocalAngularProfile}). Require nonempty radii
+and one profile per radius; copy containers, preserve actual profile/basis
+entries, ordering and gauge. New-method assigned_orders are final function
+counts. Return the unchanged AtomicShellLocalInjectedAngularAssembly layout.
+Old keyword/radius-only/constant-order behavior and controls remain unchanged.
+No automatic schedule/family selection or new public keyword/type/export.
+
+Extract one _assemble_shell_local_angular_profiles and switch BOTH entrances
+to it; remove the old inline assembly body. The only new private cache-value
+type is _CachedShellMomentData with blocks::Dict{Int,Matrix{Float64}}, lcap::Int,
+lexpand::Int and tail::Float64. It replaces the two existing duplicate typed
+NamedTuple declarations and is local temporary work, not persistent metadata.
+Keep separate expanded kinetic/interaction caches keyed by profile.key and
+the original numerical operations/stopping/thresholds/caps. Cache ordered
+overlap/kinetic pair blocks by the fixed pair of profile keys; do not replace
+the reverse pair by a transpose or change multiplication order. Caches live
+within one assembly only. Exact-low-l dictionaries retain their per-shell
+construction. No new global cache or duplicate numerical implementation.
+
+Repeated profile keys share expanded moment dictionaries/bases and ordered
+pair matrices. Supported constructors establish truthful keys; treat profiles
+and shared arrays as read-only. Do not rebuild/rephase caller profiles or
+guess identity from point count. A bounded source scan found block reads in
+diagnostics/atomic benchmarking, no mutation caller; this is not universal
+downstream clearance. Full matrix ordering, symmetry and all carried moments
+remain, including interaction_lmax=:auto downstream. No coiflet/catalog,
+interaction, radial, default, serialization or physical-policy change.
+
+Only src/angular/angular_shell_assembly.jl may change source, hard100 added
+lines including relocated code/docstrings/comments/blanks; prepared73/51.
+Hard150 test additions only in the existing
+test/driver_public/angular_fixed_radial_sequence_runtests.jl; hard25 reader
+lines only in docs/src/explanations/angular_research_track.md. The existing
+export reference already documents this function. No new source/test file,
+dependency, framework, root wiring or result field. Scope failure means stop
+without a source commit, not compression, omitted guards or a silent exception.
+
+Before edits save eight-shell legacy uniform32 and variable15/24/32 matrix,
+profile and carried-table fingerprints; compare exactly in a fresh same-runtime
+process after extraction. No portable hardcoded machine goldens or second old
+implementation. Both public methods must agree bitwise for legacy profiles.
+Compact uniform/mixed tests include repeated keys and distinct keys with the
+SAME point count (e.g. parent/coiflet Oh14), not just different orders. Compare
+cache objectid counts per kind/pair with unique keys and direct numerical
+blocks; identity alone cannot certify correct reuse. Test order/counts,
+container copy, entry preservation and empty/mismatch rejection.
+
+Use actual returned assembly moment tables for complete-span four-index
+projected IDA versus independent Gauss-Legendre/Fourier Gaunt quadrature at
+radii0.25/1.25, max error<1e-13Ha. Qualified (profile,lA,profile,lB) tuples are
+(Oh_6,0,Oh_38,2), (Ih_12,1,Ih_32,1), (McLaren_24,1,Oh_38,2), as actually
+executed by the373 verifier; some target-card tuples differ and are not that
+evidence. No artificial interaction-L cap or weakened gate. New block<20s
+warm on qualification Julia1.12.6/BLAS1; restore caller settings, report JIT.
+No all-catalog/high-N moment sweep or new permanent SCF solver.
+
+Reuse373 fixed-radial Neon/rotation evidence by exact branch/input
+correspondence, not a new campaign. Preserve the existing native Neon HF
+endpoint and ordinary assertions. Require one native default-all Pkg.test
+after this source pass, direct nondeploying docs/make.jl, package paths,
+authority/self-test/two whole renders, log/diff/regex and exact-source-SHA
+full numerical CI plus separate Docs. Stop if correspondence fails before
+expanding numerical work; no radial/CBS/correlation accuracy claim follows.
+
+For K unique profiles, expanded-table and pair work is per K and ordered K^2,
+respectively; dense final matrices still cost O(D^2) in total dimension D.
+Measure preparation, table/pair work and final assembly separately using
+TimeG, including dimensions, warm allocations and peak memory. No speedup
+without matched workloads or allocation-as-RSS claim. All paths already
+exist: repo-manager may commit/push after local gates, then obtain source
+CI/Docs and return exact identity/evidence for independent review/closeout.
+No authority/generated/log edit by the implementation owner. One in-scope
+correction remains. Preserve primary Pass656/five drafts/two handoffs; skills
+stay deferred through all three acceptances. No consumer, Delaunay/ternary,
+named schedule, solver, release/stable or unrequested successor work.
+
 ## Atomic Contact Integrals
 
 Pass657, GB-CONTACT-INTEGRALS-20261103, implements exact real-function geometry,

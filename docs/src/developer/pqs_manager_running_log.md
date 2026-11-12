@@ -1524,3 +1524,25 @@ Both grants are consumed. Exact next boundary is separately checked GB-3
 explicit-profile assembly/cache reuse; skills stay deferred through acceptance.
 Primary five Pass656 drafts/two handoffs, consumers and release/stable remain
 untouched. No numerical rerun is needed for this lifecycle-only closeout.
+
+### Pass 660 GB-3 Explicit-Profile Assembly Authority
+
+After separate GB-2 closeout e9cc62f6 and green CI43203770676/Docs43203770688,
+authorize only the final already requested integration phase: explicit caller
+profiles, one shared assembly body, local per-profile/per-pair reuse. LT1/MT1
+advances to usable mixed shell constructions without a named schedule policy.
+Hard100 added source/150 existing-test/25 reader lines; no public type/export,
+new file or framework. One private four-field cache-value type replaces the
+duplicate fixed-NamedTuple declarations; it does not enter persistent results.
+Preserve old keyword matrices/identities, all expanded moments and auto cap.
+New tests use actual returned tables for the executed verifier's low-channel
+Gaunt tuples, including same-count/different-key reuse to catch identity bugs.
+The target card names different tuples; do not call those already qualified.
+Reuse373 Neon/SO3 evidence by source correspondence and keep existing Neon HF
+coverage; do not promote the scratch solver or replay the campaign. Require
+one native suite/direct docs and exact implementation CI/Docs. Dense final
+matrices remain quadratic; local caches are not a scalable sparse framework.
+No strategic default change. Exact remaining boundary: implementation and
+independent acceptance, then domain-qualified skill guidance. Primary Pass656,
+consumers and releases remain separate. One correction remains; no source is
+added by this grant and no automatic unrequested successor is opened.

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `dbf3f3743060b5ce03c9111a21596e906c7c258c150fdc5c17a2250b0264ea60`.
+> [authority.toml](authority.toml), SHA-256 `4747c183be8140668db20c1066a6ecae7395bba84d123522c1c931d5facd6449`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -157,6 +157,45 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `654`
 - **Dependencies:** `HP-ANGULAR-HARMONICS-FN-01`
 - **Scope:** Record accepted Pass 654 independent scalar/convention/addition, compact moment and one order-460 integration qualification at 6a698b91609833e0b22259a1b42755211c93d47d. Low-order anchors, costs and full source CI/Docs pass; complete-angular evidence is reused by exact hashes. The validation grant is consumed. No new owner, golden repin, tolerance relaxation, downstream rebuilding/receipt or successor authority.
+
+### HP-ANGULAR-PROFILE-ASSEMBLY-FN-01 - explicit angular profile assembly with local reuse
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Explicit Angular Profile Assembly`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/explanations/angular_research_track.md`
+  - `source` / `existing`: `src/angular/angular_shell_assembly.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/integration/tmp/reviews/gb-angular-gb3-authority-handoff-2026-11-12.md`
+  - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/input/kit/pass_gb3_shell_assembly/shell_assembly_patch.jl`
+  - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/verify_runner.log`
+  - `git_commit`: `88ee10a62608f219b62e109d2b6b0a9323d98460`
+  - `git_commit`: `e9cc62f644d8f59c63abe860135edc11f5dede52`
+- **Dependencies:** none
+- **Scope:** Implement Explicit Angular Profile Assembly only in angular\_shell\_assembly.jl and its reader page. Hard100 source/25 reader additions. Extract one shared body, add the reviewed four-field private cache value and ordered profile-pair caches; preserve legacy behavior, profiles, all moment spans and output layout. No coiflet/catalog, default, solver, global cache, consumer, Pass656, skill or release changes.
+
+### HP-ANGULAR-PROFILE-ASSEMBLY-TEST-01 - mixed angular assembly parity reuse and Coulomb oracles
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Explicit Angular Profile Assembly`
+- **Owned paths:**
+  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/integration/tmp/reviews/gb-angular-gb3-authority-handoff-2026-11-12.md`
+  - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/input/kit/pass_gb3_shell_assembly/shell_assembly_patch.jl`
+  - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/verify_runner.log`
+  - `git_commit`: `88ee10a62608f219b62e109d2b6b0a9323d98460`
+  - `git_commit`: `e9cc62f644d8f59c63abe860135edc11f5dede52`
+- **Dependencies:** `HP-ANGULAR-PROFILE-ASSEMBLY-FN-01`
+- **Scope:** Add at most150 lines only in the existing public angular sequence test owner under Explicit Angular Profile Assembly. Check actual mixed-profile matrices, key-correct reuse, legacy fingerprints, invalid vectors and qualified complete-span four-index Gaunt oracles. New block under20s warm; require native Pkg.test/direct docs and exact-head full CI/Docs. No new solver, sweep, threshold or golden repin.
 
 ### HP-ANGULAR-PUBLIC-CI-FN-01 - fixed-radial angular public CI wiring
 
