@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "d9bf54673eedfd9c5edcc5ff7fdbd3c964f4b35f518a4e3adc11ecdb088eb268"
+sha256 = "e6da7728a35fa835585a12ef841daf92c5199c9fc9ae483a1e59d40db25486e2"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -8106,11 +8106,12 @@ title = "radial convergence and quadrature diagnostic regressions"
     state = "existing"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-RADIAL-INTEGRATION-FN-01"
-lifecycle = "approved"
-scope = "Complete Default Radial Panel Integration under RESUME-3 in the isolated checkout: two source owners hard120 additions, two readers35, existing Example14 fifteen. Teach physical-functions-first centrifugal integration, not accurate singular primitive contraction. Preserve explicit grids, support, thresholds and frozen draft evidence. Require current-main admission. No primary/consumer mutation, new framework, HF, release or successor."
-surfaces = ["docs", "source"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Pass656 at1d408bc1: normal public panels, rule transport and direct-basis centrifugal contract. Source120/6, readers34, Example14 9/5; numerical bodies equal frozen draft. Execution grant consumed. Preserve explicit discrete grids and original failures; no primary/consumer migration, energy certification, release or successor authority."
+surfaces = []
 title = "default radial panel integration and preserved explicit grids"
 
     [[records.document_refs]]
@@ -8132,7 +8133,19 @@ title = "default radial panel integration and preserved explicit grids"
     value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-qualification-2026-10-17.md"
     [[records.evidence_refs]]
     kind = "external_path"
+    value = "/Users/srw/dmrgtmp/radial_integration_20261017/resume_authority_20261112/independent_acceptance_normalized.log"
+    [[records.evidence_refs]]
+    kind = "external_path"
     value = "/Users/srw/dmrgtmp/radial_integration_20261017/resume_authority_20261112/resume3_assignment.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/radial_integration_20261017/resume_implementation_20261112/tmp/reviews/pass656-radial-integration-resume3-2026-11-12.md"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1d408bc1aa2e1f3495d591fea5c16d83d56b3661"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "2f421ad8f8476b7272095bead36a7bf96c195942"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "a1f95447b81dbeb64ee1b8076a5064a1208b7083"
@@ -8142,34 +8155,14 @@ title = "default radial panel integration and preserved explicit grids"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "656"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/algorithms/radial_interval_sampled_build_and_extents.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/howto/recommended_atomic_setup.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "examples/14_radial_primitive_operators.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/foundation/quadrature.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/radial/operators.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-RADIAL-INTEGRATION-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-RADIAL-INTEGRATION-TEST-01"
-lifecycle = "approved"
-scope = "Complete Default Radial Panel Integration tests under RESUME-3, only existing radial owner hard90 additions. Preserve strict default direct-basis and independent matched-support gates; label primitive centrifugal comparison as an explicit well-conditioned finite-grid diagnostic. Retain old failures, compatibility and stored/on-demand checks. Require current-main cost admission and CI. No weakened thresholds, new owner, HF/campaign or consumer work."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Pass656 radial447, selected15050, finite-grid primitive and independent default checks; current-main admission and exact-source CI/Docs pass. Independent hydrogenic/high-L review14/14 passes without gate changes. Validation grant consumed. Preserve old failures and uncertainty; no further campaign, consumer, release or successor authority."
+surfaces = []
 title = "default radial integration independent regressions and admission"
 
     [[records.document_refs]]
@@ -8188,7 +8181,19 @@ title = "default radial integration independent regressions and admission"
     value = "/Users/srw/Library/CloudStorage/Dropbox/codexhome/repositories/GaussletBases/tmp/reviews/gb-radial-integration-default-review-2026-10-17.md"
     [[records.evidence_refs]]
     kind = "external_path"
+    value = "/Users/srw/dmrgtmp/radial_integration_20261017/resume_authority_20261112/independent_acceptance_normalized.log"
+    [[records.evidence_refs]]
+    kind = "external_path"
     value = "/Users/srw/dmrgtmp/radial_integration_20261017/resume_authority_20261112/resume3_assignment.md"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/radial_integration_20261017/resume_implementation_20261112/tmp/reviews/pass656-radial-integration-resume3-2026-11-12.md"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1d408bc1aa2e1f3495d591fea5c16d83d56b3661"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "2f421ad8f8476b7272095bead36a7bf96c195942"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "a1f95447b81dbeb64ee1b8076a5064a1208b7083"
@@ -8198,11 +8203,6 @@ title = "default radial integration independent regressions and admission"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "656"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/radial/runtests.jl"
-    state = "existing"
 [[records]]
 dependency_ids = []
 evidence_refs = []
