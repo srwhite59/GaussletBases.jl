@@ -232,7 +232,7 @@ title = "same-size polar coiflet angular profiles"
     [[records.paths]]
     kind = "source"
     path = "src/angular/angular_coiflet.jl"
-    state = "planned"
+    state = "existing"
     [[records.paths]]
     kind = "source"
     path = "src/angular/angular_shell_basis.jl"
