@@ -712,6 +712,68 @@ Rounding-level changes remain possible (small coupling difference 3.33e-16);
 tail 1.991e-7 is not certified by incremental stopping. No continuum/energy
 claim, downstream receipt edit, quadrature correction or successor follows.
 
+## Cubature Angular Integration
+
+Steven authorizes the narrowed v4 packet at README SHA256
+50a68050e8971c3fdd55d525444789140ebd0e9a175c192796c0a3c8234b298b.
+Independent clean-c674 qualification passes373/373 in276.753s, peak2.107GB;
+four-index errors are at most2.554e-14Ha and fixed-radial continuum-angular
+Neon differences at most3.638e-12Ha. This is not radial/CBS/correlation accuracy.
+The frozen packet and complete evidence are under machine-local
+`/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/`.
+
+**GB-1 only is executable now**, under HP-ANGULAR-CUBATURE-FN-01/TEST-01,
+after GB-0 commit6863b048de110af36d77c76abcabd7afd87b7e8a passes CI/Docs.
+Add exactly `data/angular/cubature_sphere_points.toml`, hash
+cf01c791c4a5b5538f6499fded0844274b3cf065bac2fbc21a897b57ceba9b55,
+and `src/angular/angular_cubature_point_sets.jl`, with root include/exports.
+The public `CubatureSpherePointSet` has only name, family, point_set,
+cubature_degree, default_l_inject, default_l_flat, default_beta and
+cubature_weights, with the concrete types in the frozen loader. Its contained
+arrays are shared cached read-only inputs, not a mutable construction API.
+`cubature_sphere_point_set_names()` returns a copied name list;
+`cubature_sphere_point_set(name)` returns the cached entry or ArgumentError.
+Use existing `_package_data_path`, SpherePointSet/provenance, TOML and SHA;
+no new dependency, second point registry/default switch or global override.
+All three exports need actual docstrings; a concise missing loader docstring
+may be added to the prepared source rather than reserving an undocumented name.
+
+GB-1 hard ceilings:80 total added source lines,60 added existing-public-test
+lines,20 reader lines across the two owned pages. Count comments/docstrings,
+blanks, root wiring and relocated lines; no compression or test-file addition.
+Keep the new ordinary test block under2s warm on the qualification runtime:
+all15 rules' unit directions, positive weights,4*pi sum, declared harmonic
+moments (including odd maximum degrees), low-harmonic Gram, defaults/cache
+identity and unknown-name rejection. These catch wrong data/normalization and
+lookup identity, which orthonormality of an independently rebuilt profile
+would not localize. Use1e-13 scaled/absolute quadrature tolerances as qualified.
+
+After each actual source pass require native diff/regex gates, the user's
+`Pkg.test()` and direct nondeploying `docs/make.jl`, normal source-bearing CI
+and Docs, package/authority/self-test/two-render/log checks. Do not substitute
+the standalone373 checks for integrated production tests. Explain the existing
+package suite's >60s cost before launch; time the new block separately.
+No broad all-catalog profile/HF sweep is added to routine package tests.
+
+The implementation owner returns a validated UNCOMMITTED draft before tracking
+the two new files. Design-manager independently reviews and owns the necessary
+planned-to-existing path-state promotion and whole-file generated views before
+the implementation commit; no peer authority edit or grant expansion is allowed.
+Single writer per phase; preserve the primary five Pass656 drafts/two handoffs.
+
+GB-2 Polar profiles (exact-injected same-size parents, positive-monopole gauge,
+weight/whitening-aware keys, explicit bounded arbitrary-rule target whitening)
+and GB-3 explicit-profile assembly/cache extraction remain separately gated
+implementation phases of this same requested feature. Their prepared native
+source deltas140/9 and73/51 fit the150-line per-pass cap, but this GB-1 grant
+does not authorize their source/test edits. Freeze each exact boundary before
+dispatch; preserve legacy profile/assembly identities and all carried moments.
+Keep the skill snippet deferred through all three accepted integrations.
+No Delaunay/ternary or named-cutoff API, numerical default/threshold change,
+Pass656 disposition, consumer/release/stable action or successor is authorized.
+On failure, budget/scope expansion or conflicting state, stop without a source
+commit and report; at most two in-scope correction rounds in the finite cycle.
+
 ## Atomic Contact Integrals
 
 Pass657, GB-CONTACT-INTEGRALS-20261103, implements exact real-function geometry,

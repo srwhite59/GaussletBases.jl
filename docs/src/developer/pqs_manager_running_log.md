@@ -1414,3 +1414,27 @@ changes; source0, checker2 added/1 deleted, no new ID/type/helper or test file.
 Use compact path probes, authority/self-test/render parity, docs/package/build
 and normal docs-only CI/Docs. GB-1 implementation still needs a checked grant;
 the primary five drafts and both handoffs remain untouched.
+
+### Pass 658 GB-1 Boundary: Positive Cubature Catalog
+
+GB-0 is accepted at6863b048d, CI43161692951/Docs43161692938 green; exact path
+probes12/12, docs8+162+10, authority/self-test/two renders and direct Documenter
+pass. Steven's v4 narrows the feature to catalog, Polar profiles and explicit
+profile assembly. Independent373/373 qualifies the new input packet in277s,
+peak2.107GB, with weight-key isolation, sign/locality, legacy parity and bounded
+angular physics oracles. Earlier reviews and failures remain historical.
+LT1/MT1 advance opt-in angular representation without a new scientific default.
+Only GB-1's two source/data files, root wiring and existing public-test owner
+are executable now. Source80/test60/reader20 caps include concise actual API
+docs. The planned69-line loader needs its second function documented, not a
+new reserved export. New block targets2s warm; native Pkg.test/direct docs and
+normal source CI/Docs remain mandatory before acceptance.
+Deleted: unused proposed hull and named-schedule APIs never enter production.
+Simplified: three explicit layers, existing data/path and profile machinery.
+Quarantined: old kit failures and long interrupted attempt, not passing evidence.
+Not deleted: released SpherePoints/profiles retain real callers.
+Exact remaining blocker: source implementation and sequential acceptance;
+Pass656 stays separately unaccepted. No source added in this authority commit,
+two execution IDs only, no status cloud/framework. Return the uncommitted new
+files for design-owned path-state promotion before committing implementation.
+No consumer restart, release or automatic unrequested successor.
