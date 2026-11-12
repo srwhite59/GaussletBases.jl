@@ -182,18 +182,19 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "a292b9e07be1aadec8629da032c8c64be3616d621593fed8994865469e0ea5ac"
+sha256 = "ca6a45cbc50438a152cefc6a95d9baa3e7e0153b6687181059809c2207ad74c8"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
 
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-ANGULAR-CUBATURE-FN-01"
-lifecycle = "approved"
-scope = "Implement only GB-1 of Cubature Angular Integration: the one-byte-EOF-normalized cubature asset, frozen loader/catalog entry, three public bindings, root wiring and concise documentation. Use both recorded input/vendored hashes; no other data edits or gate waiver. Source80/reader20 caps and uncommitted path-promotion checkpoint remain. No Polar/assembly, default, workflow, consumer, release or successor changes."
-surfaces = ["artifacts", "docs", "source"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted GB-1 Cubature Angular Integration at aa8e3911009e56412afc841750a7d4daebf0f566:15-rule opt-in catalog, three documented bindings, source73/test33/reader19 and preserved defaults. Both input/vendor identities remain. Ih_60 is degree9, not11. The execution grant is consumed; no Polar/assembly, consumer, release or successor work follows from this record."
+surfaces = []
 title = "positive cubature angular catalog"
 
     [[records.document_refs]]
@@ -213,34 +214,17 @@ title = "positive cubature angular catalog"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "6863b048de110af36d77c76abcabd7afd87b7e8a"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/explanations/angular_research_track.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/reference/bases_and_mappings.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "data/angular/cubature_sphere_points.toml"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/GaussletBases.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_cubature_point_sets.jl"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "aa8e3911009e56412afc841750a7d4daebf0f566"
 [[records]]
 dependency_ids = ["HP-ANGULAR-CUBATURE-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-ANGULAR-CUBATURE-TEST-01"
-lifecycle = "approved"
-scope = "Validate GB-1 Cubature Angular Integration in the existing public angular owner:15-rule unit/positive/normalization/harmonic/default and cache checks, invalid lookup, native package/docs and required source CI. Hard60 added test lines, bounded2s warm new block. Preserve all old tests and gates; no new owner/helper framework, broad profile/HF campaign or Polar/assembly tests yet."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted GB-1 validation at aa8e3911009e56412afc841750a7d4daebf0f566:213 catalog checks, independent polynomial/input review, one native default-all suite, direct docs and exact-head full CI/Docs. Preserve the failed11-design expectation as evidence of an external prose error, not a passing test. The validation grant is consumed; no further tests or campaign are authorized."
+surfaces = []
 title = "positive cubature catalog validation"
 
     [[records.document_refs]]
@@ -254,11 +238,9 @@ title = "positive cubature catalog validation"
     [[records.evidence_refs]]
     kind = "external_path"
     value = "/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/verify_runner.log"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
-    state = "existing"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "aa8e3911009e56412afc841750a7d4daebf0f566"
 [[records]]
 dependency_ids = []
 grant = "none"

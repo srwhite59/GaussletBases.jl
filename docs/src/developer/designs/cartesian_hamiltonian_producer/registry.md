@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `492d05971160dc5be279eaaf5761bdb25e9321d6978f6a24d4bf7f0d8b56ae63`.
+> [authority.toml](authority.toml), SHA-256 `6915cfbd013ded1af50fd42894001aea49d3326acf2b6a7e050e0ee39d3847e7`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -12,41 +12,37 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-ANGULAR-CUBATURE-FN-01 - positive cubature angular catalog
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `artifacts`, `docs`, `source`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Cubature Angular Integration`
-- **Owned paths:**
-  - `docs` / `existing`: `docs/src/explanations/angular_research_track.md`
-  - `docs` / `existing`: `docs/src/reference/bases_and_mappings.md`
-  - `source` / `existing`: `data/angular/cubature_sphere_points.toml`
-  - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/angular/angular_cubature_point_sets.jl`
+- **Owned paths:** none
 - **Evidence:**
   - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/integration/tmp/reviews/gb-angular-handoff-v4-integration-2026-11-11.md`
   - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/input/kit/README_INTEGRATION_PLAN.md`
   - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/verify_runner.log`
   - `git_commit`: `6863b048de110af36d77c76abcabd7afd87b7e8a`
+  - `git_commit`: `aa8e3911009e56412afc841750a7d4daebf0f566`
 - **Dependencies:** none
-- **Scope:** Implement only GB-1 of Cubature Angular Integration: the one-byte-EOF-normalized cubature asset, frozen loader/catalog entry, three public bindings, root wiring and concise documentation. Use both recorded input/vendored hashes; no other data edits or gate waiver. Source80/reader20 caps and uncommitted path-promotion checkpoint remain. No Polar/assembly, default, workflow, consumer, release or successor changes.
+- **Scope:** Record accepted GB-1 Cubature Angular Integration at aa8e3911009e56412afc841750a7d4daebf0f566:15-rule opt-in catalog, three documented bindings, source73/test33/reader19 and preserved defaults. Both input/vendor identities remain. Ih\_60 is degree9, not11. The execution grant is consumed; no Polar/assembly, consumer, release or successor work follows from this record.
 
 ### HP-ANGULAR-CUBATURE-TEST-01 - positive cubature catalog validation
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Cubature Angular Integration`
-- **Owned paths:**
-  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
   - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/integration/tmp/reviews/gb-angular-handoff-v4-integration-2026-11-11.md`
   - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/verify_runner.log`
+  - `git_commit`: `aa8e3911009e56412afc841750a7d4daebf0f566`
 - **Dependencies:** `HP-ANGULAR-CUBATURE-FN-01`
-- **Scope:** Validate GB-1 Cubature Angular Integration in the existing public angular owner:15-rule unit/positive/normalization/harmonic/default and cache checks, invalid lookup, native package/docs and required source CI. Hard60 added test lines, bounded2s warm new block. Preserve all old tests and gates; no new owner/helper framework, broad profile/HF campaign or Polar/assembly tests yet.
+- **Scope:** Record accepted GB-1 validation at aa8e3911009e56412afc841750a7d4daebf0f566:213 catalog checks, independent polynomial/input review, one native default-all suite, direct docs and exact-head full CI/Docs. Preserve the failed11-design expectation as evidence of an external prose error, not a passing test. The validation grant is consumed; no further tests or campaign are authorized.
 
 ### HP-ANGULAR-ENERGY-BUDGET-FN-01 - opt-in estimated angular correlation allocation
 

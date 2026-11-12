@@ -1454,3 +1454,27 @@ The213 compact checks and373 qualification remain evidence, not a claim that
 pending Pkg.test/direct docs/build and later source CI passed. Return only
 the one-byte fix and original validation continuation after checked grant;
 GB-2/3, primary Pass656, consumers/releases and skill promotion remain paused.
+
+### Pass 658 Accepted GB-1: Positive Cubature Catalog
+
+Accept aa8e3911009e56412afc841750a7d4daebf0f566, exact sealed tree634bca54.
+The15-rule opt-in catalog and three documented bindings advance LT1/MT1's
+truthful angular inputs; defaults, legacy SpherePoints and profile code stay
+unchanged. The one-byte vendoring normalization is explicit, with the original
+input preserved. Actual Ih_60 is a verified9-design, not the external card's11
+claim: degree10 x^10 error8.20e-4. The failed reviewer11 expectation remains
+evidence; no data or gate was repinned. This is not an interaction cap or
+radial/correlation accuracy certificate.
+Use the one native default-all suite:79696 passes/one unchanged optional skip,
+catalog213 and direct docs; independent polynomial review and hash/tree checks.
+Exact-head CI43184782041/Docs43184782023 pass, with all three numerical jobs
+executed; Linux1.10 catalog213 in0.5s. No full-suite or373 replay at closeout.
+The new block is roughly0.045s/7.1MB warm; the existing31-minute suite and
+observed6.9GiB child RSS are not new-catalog cost or a certified peak.
+Deleted: no live legacy data/code. Simplified: one package-path/TOML catalog.
+Quarantined: original EOF failure and incorrect11 claim remain historical.
+Not deleted: released point/profile callers remain active. Exact next boundary:
+GB-2 needs its separate public-API/numerical grant; no automatic source advance.
+Source73/test33/reader19 plus asset961 and metadata8/8; no test file, dependency,
+workflow or status cloud. Both grants are consumed. Primary Pass656 and two
+handoffs remain untouched; skills, consumers and release/stable actions stay held.

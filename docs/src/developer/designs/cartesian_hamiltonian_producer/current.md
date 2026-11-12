@@ -3,14 +3,12 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
-GB-0's [single cubature asset path amendment](invariants.md#Angular-Cubature-Asset-Path-Amendment)
-is accepted at6863b048d with CI/Docs green. GB-1 alone is authorized under
-HP-ANGULAR-CUBATURE-FN-01/TEST-01 and the [v4 integration contract](../../numerical_contracts.md#Cubature-Angular-Integration).
-GB-2/3 and skill promotion await sequential checked boundaries/acceptance;
-primary Pass656 drafts, existing angular defaults and releases stay unchanged.
-GB-1's frozen-input EOF conflict is reconciled by exactly one terminal-newline
-deletion in the vendored copy, with both hashes retained in the contract.
-No numerical bytes, gates or draft source/test/reader content change.
+GB-1's [positive cubature catalog](../../numerical_contracts.md#Cubature-Angular-Integration)
+is accepted at aa8e3911; both CUBATURE IDs are completed with no execution grant.
+The frozen Ih_60 is degree9, not the external card's11 claim. GB-0 path support
+and both input/vendor hashes remain recorded. GB-2/3 and skill promotion await
+separate checked boundaries/acceptance; primary Pass656 drafts, existing angular
+defaults and releases stay unchanged.
 
 Pass657 accepts [Atomic Contact Integrals](../../numerical_contracts.md#Atomic-Contact-Integrals)
 at8238be7f plus correction6f2581ca. Mixed-profile/final-supplement factors,

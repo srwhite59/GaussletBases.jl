@@ -722,8 +722,12 @@ Neon differences at most3.638e-12Ha. This is not radial/CBS/correlation accuracy
 The frozen packet and complete evidence are under machine-local
 `/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/`.
 
-**GB-1 only is executable now**, under HP-ANGULAR-CUBATURE-FN-01/TEST-01,
-after GB-0 commit6863b048de110af36d77c76abcabd7afd87b7e8a passes CI/Docs.
+GB-1 is accepted at aa8e3911009e56412afc841750a7d4daebf0f566 after the checked
+GB-0 prerequisite. HP-ANGULAR-CUBATURE-FN-01/TEST-01 are completed, with no
+execution grant. Exact-head full CI43184782041/Docs43184782023 and native
+Pkg.test pass; numerical source73/test33/reader19 remain within80/60/20.
+The supplied Ih_60 is declared and independently verified as degree9, not11;
+the external target-card11 claim is incorrect. No data or gate is changed.
 Add exactly `data/angular/cubature_sphere_points.toml`, hash
 938dd029cb230c556fba9c5fb8a593a1b0a1f5e92e5791ea97387855e435223c,
 and `src/angular/angular_cubature_point_sets.jl`, with root include/exports.
