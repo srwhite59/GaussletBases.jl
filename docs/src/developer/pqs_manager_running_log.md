@@ -1546,3 +1546,29 @@ No strategic default change. Exact remaining boundary: implementation and
 independent acceptance, then domain-qualified skill guidance. Primary Pass656,
 consumers and releases remain separate. One correction remains; no source is
 added by this grant and no automatic unrequested successor is opened.
+
+### Pass 660 Accepted GB-3 and Angular Integration Closeout
+
+Accept1292e64f454ca14b87624fd20c2c6176b6aff1b9, exact tree99726161.
+Explicit caller profiles now assemble without private reconstruction; expanded
+moments/pair blocks are reused by complete keys, with actual functions/gauge
+and ordering preserved. LT1/MT1's bounded three-pass opt-in integration is
+complete; no default or new medium-term task is selected. Legacy eight-shell
+uniform/mixed fingerprints remain exact, including all carried tables.
+Use one native Pkg.test79843 passes/one unchanged optional skip, new72/72,
+existing Neon HF4/4 and direct docs. Independent direct-distance Coulomb
+review8/8 gives6.66e-15Ha; actual returned-table Gaunt errors<=1.122e-14Ha.
+Exact-head CI43211378205/Docs43211378265 pass with numerical jobs executed;
+Linux1.10 new72/72. The373 physics evidence is reused by source correspondence,
+not replayed; no radial/CBS/correlation accuracy follows. Warm assembly is
+18.318ms/5.895MB at D256/K1 and21.561ms/6.369MB at D148/K3. Final matrices
+remain dense quadratic; local caches are not a sparse/scalable framework.
+Deleted/simplified: one shared assembly body replaces inline ownership and
+duplicate typed cache declarations. One private four-field temporary value,
+no public type/result field/dependency or test file. Source65/29, tests87,
+reader20. Live moment kernels/defaults remain; old packet alternatives remain
+external history. All three phase grants are consumed. Primary five Pass656
+drafts/two handoffs remain byte-identical and unaccepted. Corrected optional
+skill promotion text is ready, but archive policy requires four-host deployment;
+no local-only shared-skill update is claimed. Consumers, release/stable and
+unrequested successors stay excluded. The repository task stops after checks.

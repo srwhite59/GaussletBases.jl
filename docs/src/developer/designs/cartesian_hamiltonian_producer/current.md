@@ -10,11 +10,13 @@ and both input/vendor hashes remain recorded. GB-2's
 [polar coiflet profiles](../../numerical_contracts.md#Polar-Coiflet-Profiles)
 are accepted at88ee10a6, with both COIFLET grants consumed. Same-size exact-injected
 parents, positive monopoles, weight-aware cache and explicit approximate-target
-distinction remain the contract. GB-3 has its separate bounded
+distinction remain the contract. GB-3's
 [explicit-profile assembly](../../numerical_contracts.md#Explicit-Angular-Profile-Assembly)
-implementation/validation grant, with local moment/pair cache reuse and unchanged
-legacy behavior. Skill promotion waits for all three acceptances; primary
-Pass656 drafts, existing angular defaults and releases stay unchanged.
+is accepted at1292e64f, with both grants consumed. Local moment/pair reuse and
+legacy behavior are preserved; all three requested integrations are accepted.
+Reviewed skill guidance is ready for archive-owned four-host deployment, not
+claimed installed here. Primary Pass656 drafts, existing angular defaults,
+consumers and releases stay unchanged; no successor is opened.
 
 Pass657 accepts [Atomic Contact Integrals](../../numerical_contracts.md#Atomic-Contact-Integrals)
 at8238be7f plus correction6f2581ca. Mixed-profile/final-supplement factors,

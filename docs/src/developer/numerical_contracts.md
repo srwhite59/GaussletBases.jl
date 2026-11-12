@@ -774,14 +774,13 @@ planned-to-existing path-state promotion and whole-file generated views before
 the implementation commit; no peer authority edit or grant expansion is allowed.
 Single writer per phase; preserve the primary five Pass656 drafts/two handoffs.
 
-GB-2 Polar profiles (exact-injected same-size parents, positive-monopole gauge,
-weight/whitening-aware keys, explicit bounded arbitrary-rule target whitening)
-and GB-3 explicit-profile assembly/cache extraction remain separately gated
-implementation phases of this same requested feature. Their prepared native
-source deltas140/9 and73/51 fit the150-line per-pass cap, but this GB-1 grant
-does not authorize their source/test edits. Freeze each exact boundary before
-dispatch; preserve legacy profile/assembly identities and all carried moments.
-Keep the skill snippet deferred through all three accepted integrations.
+GB-2 Polar profiles are accepted at88ee10a6 and GB-3 explicit-profile assembly
+at1292e64f, under the separate contracts below. All three integration grants
+are consumed; historical preparation/validation wording grants no further work.
+Legacy profile/assembly identities and all carried moments are preserved.
+Skill promotion prerequisites are met. Reviewed domain-qualified guidance is
+ready for archive-owned four-host deployment, not claimed installed by this
+repository-only closeout. The original packet snippet remains unchanged.
 No Delaunay/ternary or named-cutoff API, numerical default/threshold change,
 Pass656 disposition, consumer/release/stable action or successor is authorized.
 On failure, budget/scope expansion or conflicting state, stop without a source
@@ -877,9 +876,11 @@ The existing finite-cycle correction limit remains, with one round available.
 
 ## Explicit Angular Profile Assembly
 
-GB-3 of GB-ANGULAR-HANDOFF-20261111 is independently authorized under
-HP-ANGULAR-PROFILE-ASSEMBLY-FN-01/TEST-01, after separately accepted/closed
-GB-1 and GB-2. Use the frozen v4 shell_assembly_patch.jl (SHA256
+GB-3 of GB-ANGULAR-HANDOFF-20261111 is accepted at
+1292e64f454ca14b87624fd20c2c6176b6aff1b9: source65/29, tests87, reader20.
+Both PROFILE-ASSEMBLY grants are consumed after exact-head full
+CI43211378205/Docs43211378265, native package tests and direct docs.
+GB-1/2 were separately accepted/closed. Frozen v4 shell_assembly_patch.jl (SHA256
 e156aa0d4409411d2ed523fe09e4eef5cd0c1fd963afd81eca059b9cb8137982).
 The existing exported build_atomic_shell_local_angular_assembly gains only
 the overload (shell_radii::AbstractVector{<:Real},
@@ -952,11 +953,10 @@ respectively; dense final matrices still cost O(D^2) in total dimension D.
 Measure preparation, table/pair work and final assembly separately using
 TimeG, including dimensions, warm allocations and peak memory. No speedup
 without matched workloads or allocation-as-RSS claim. All paths already
-exist: repo-manager may commit/push after local gates, then obtain source
-CI/Docs and return exact identity/evidence for independent review/closeout.
-No authority/generated/log edit by the implementation owner. One in-scope
-correction remains. Preserve primary Pass656/five drafts/two handoffs; skills
-stay deferred through all three acceptances. No consumer, Delaunay/ternary,
+existed at implementation, with source CI/Docs and independent review completed.
+No execution or correction-round authority remains after this closeout.
+Preserve primary Pass656/five drafts/two handoffs. Skill guidance is eligible
+for its separate archive-owned deployment, not a default change. No consumer, Delaunay/ternary,
 named schedule, solver, release/stable or unrequested successor work.
 
 ## Atomic Contact Integrals
