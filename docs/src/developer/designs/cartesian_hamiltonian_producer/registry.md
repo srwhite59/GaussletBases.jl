@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `15c2daae106228c8769245f037ee8686e2193cf4e6d4990b6e77fab57a958b8d`.
+> [authority.toml](authority.toml), SHA-256 `492d05971160dc5be279eaaf5761bdb25e9321d6978f6a24d4bf7f0d8b56ae63`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -21,9 +21,9 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Owned paths:**
   - `docs` / `existing`: `docs/src/explanations/angular_research_track.md`
   - `docs` / `existing`: `docs/src/reference/bases_and_mappings.md`
+  - `source` / `existing`: `data/angular/cubature_sphere_points.toml`
   - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `planned`: `data/angular/cubature_sphere_points.toml`
-  - `source` / `planned`: `src/angular/angular_cubature_point_sets.jl`
+  - `source` / `existing`: `src/angular/angular_cubature_point_sets.jl`
 - **Evidence:**
   - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/integration/tmp/reviews/gb-angular-handoff-v4-integration-2026-11-11.md`
   - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/input/kit/README_INTEGRATION_PLAN.md`

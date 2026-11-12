@@ -230,3 +230,14 @@ MappedPGDGLocalized1D
 mapped_pgdg_prototype
 mapped_pgdg_localized
 ```
+
+## Experimental positive-cubature sphere catalog
+
+These opt-in weighted rules do not replace the default sphere-point collection.
+Cached coordinates and weights must be treated as read-only.
+
+```@docs
+CubatureSpherePointSet
+cubature_sphere_point_set_names
+cubature_sphere_point_set
+```

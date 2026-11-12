@@ -75,6 +75,14 @@ These are explicit optional paths. They do **not** change the normal/default
 vendored `sphere_point_set(order)` behavior, and optimization does not happen
 implicitly inside the default loader.
 
+### Opt-in positive cubature
+
+`cubature_sphere_point_set_names()` lists 15 positive-weight spherical rules;
+`cubature_sphere_point_set("Ih_32")` returns a cached, read-only entry.
+Its weights integrate over solid angle (sum `4pi`); its declared cubature degree
+is distinct from its point count and angular-profile resolution controls.
+This catalog does not change `sphere_point_set` or any construction default.
+
 The first shell-local basis layer is now available
 through:
 

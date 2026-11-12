@@ -1,3 +1,36 @@
+@testset "Positive spherical cubature catalog" begin
+    names = cubature_sphere_point_set_names()
+    @test length(names) == 15
+    copied_names = cubature_sphere_point_set_names()
+    pop!(copied_names)
+    @test cubature_sphere_point_set_names() == names
+    @test_throws ArgumentError cubature_sphere_point_set(:unknown_cubature)
+    for name in names
+        rule = cubature_sphere_point_set(name)
+        @test rule isa CubatureSpherePointSet
+        @test rule === cubature_sphere_point_set(Symbol(name))
+        @test rule.name == name && rule.family in (:ih, :oh)
+        points, weights = rule.point_set.coordinates, rule.cubature_weights
+        @test size(points) == (rule.point_set.order, 3)
+        @test rule.point_set.cardinality == length(weights) == size(points, 1)
+        @test maximum(abs, vec(sum(abs2, points; dims=2)) .- 1) < 1e-13
+        @test all(isfinite, weights) && minimum(weights) > 0
+        @test abs(sum(weights) - 4pi) < 1e-13
+        @test 2 * rule.default_l_flat <= rule.cubature_degree
+        @test rule.default_l_inject >= rule.default_l_flat >= 0
+        @test isfinite(rule.default_beta) && rule.default_beta > 0
+        channels = ylm_channels(rule.cubature_degree)
+        Y = [GaussletBases._real_spherical_harmonic(ch, view(points, a, :))
+            for ch in channels.channel_data, a in eachindex(weights)]
+        moments = Y * weights
+        @test abs(moments[1] - sqrt(4pi)) < 1e-13
+        @test maximum(abs, moments[2:end]) < 1e-13
+        nlow = (rule.cubature_degree ÷ 2 + 1)^2
+        low = Y[1:nlow, :]
+        @test opnorm(low * Diagonal(weights) * low' - I, Inf) < 1e-13
+    end
+end
+
 @testset "Atomic contact geometry" begin
     rb, _ = _quick_radial_operator_fixture()
     # Actual frozen McLaren24 coordinates/order, not the vendored 24-point rule.

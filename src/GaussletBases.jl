@@ -228,6 +228,7 @@ export AbstractFunction1D,
        SpherePointSetProvenance,
        SpherePointSet,
        CuratedSpherePointSet,
+       CubatureSpherePointSet, cubature_sphere_point_set_names, cubature_sphere_point_set,
        ShellLocalInjectedAngularBasis,
        ShellLocalAngularProfileKey,
        ShellLocalAngularProfile,
@@ -984,6 +985,7 @@ include("atomic/atomic_ylm.jl")
 include("radial/radial_ylm_gto_bridge.jl")
 include("atomic/gaunt_tables.jl")
 include("angular/angular_point_sets.jl")
+include("angular/angular_cubature_point_sets.jl")
 include("angular/angular_shell_basis.jl")
 include("angular/angular_shell_assembly.jl")
 include("angular/angular_atomic_benchmark.jl")
