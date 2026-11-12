@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `b83abf306b57d555ed56cea069fe1492ac9be2ef449692c656eb89082c7d8cde`.
+> [authority.toml](authority.toml), SHA-256 `3cbd3deff5c1112521f8bb72ac2bd6e65ff34dde082f8d459ab75280f19af8c6`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -255,7 +255,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `601`
   - `manager_pass`: `602`
 - **Dependencies:** none
-- **Scope:** Maintain Generated Authority Views and accepted existing-root-document recognition from 98294fd4c5b4159d95dc87440d80fb773b70a2cc. Preserve exact DESIGN.md, ROADMAP.md, and STATUS.md acceptance, planned-state restrictions, all other path checks, deterministic registry/whitelist generation, and deny-by-default authority. No broader checker, reader-page, source/API, schema, workflow, release, or numerical change.
+- **Scope:** Maintain Generated Authority Views, accepted root-document recognition and the user-approved Angular Cubature Asset Path Amendment (GB-0). Recognize only the exact cubature TOML source asset, preserving other data-path rejection, states, tracking and safety checks. No prefix/schema expansion, asset creation, numerical/default/API change, release or consumer work.
 
 ### HP-AUTHORITY-EXECUTION-WHITELIST-TEST-01 - whole-file execution whitelist validation
 

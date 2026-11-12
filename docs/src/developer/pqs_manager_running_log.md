@@ -1402,3 +1402,15 @@ No full-angular or physical replay. One correction used; grants consumed, no
 successor. Closeout is docs-only. The primary f42 checkout retains all five
 Pass656 drafts/two handoffs; only the isolated task clone advances remote main.
 Hchain-doer remains paused; no consumer, release or stable mutation.
+
+### Pass 658 GB-0: Exact Cubature Asset Path
+
+Steven authorizes the v4 angular packet's single-asset prerequisite before
+GB-1 has a planned record. Only the exact cubature TOML source path gains
+recognition; other data paths, tracking, states and safety checks stay denied.
+No strategic change: LT1/MT1's truthful producer boundary and Pass656's separate,
+unaccepted radial draft remain. No numerical source/API/default or consumer
+changes; source0, checker2 added/1 deleted, no new ID/type/helper or test file.
+Use compact path probes, authority/self-test/render parity, docs/package/build
+and normal docs-only CI/Docs. GB-1 implementation still needs a checked grant;
+the primary five drafts and both handoffs remain untouched.

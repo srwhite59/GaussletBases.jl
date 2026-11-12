@@ -105,6 +105,20 @@ owned by `HP-PUBLIC-STATUS-ONBOARDING-DOC-01`; its navigation path uses the
 existing `docs/make.jl` tool classification.
 No source, API, workflow, release, deployment, or numerical change is granted.
 
+#### Angular Cubature Asset Path Amendment
+
+Steven authorizes GB-0 for the v4 angular handoff: recognize exactly
+`kind = "source"`, `path = "data/angular/cubature_sphere_points.toml"`,
+for both planned and existing records. All other data paths remain denied;
+directory prefixes, tracking, normalization, symlink and state checks stay
+unchanged. This is asset-path recognition, not authority to vendor the asset.
+GB-1 needs its own checked source/test grant after this prerequisite lands.
+As with the root-document amendment, the checker itself remains outside the
+producer source-path whitelist. No schema, path kind or framework is added.
+Use the existing authority/self-test and compact positive/negative path probes,
+normal docs/package/Documenter checks and docs-only CI/Docs; no numerical rerun.
+Preserve the primary Pass656 draft, legacy sphere data, defaults and releases.
+
 For execution records, `dependency_ids` are immediate normative prerequisites,
 not navigation. An execution record must not depend on a retired, rejected,
 superseded, or no-grant record. No-grant historical records may retain

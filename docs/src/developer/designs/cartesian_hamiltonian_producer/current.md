@@ -3,6 +3,11 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
+GB-0 applies the user-approved [single cubature asset path amendment](invariants.md#Angular-Cubature-Asset-Path-Amendment)
+before any GB-1 planned record. The v4 catalog/coiflet/explicit-profile feature
+remains pending its separate checked implementation grants. Primary Pass656
+drafts, existing angular defaults and released artifacts remain unchanged.
+
 Pass657 accepts [Atomic Contact Integrals](../../numerical_contracts.md#Atomic-Contact-Integrals)
 at8238be7f plus correction6f2581ca. Mixed-profile/final-supplement factors,
 derived dense geometry and one JLD2 companion are implemented; both execution
