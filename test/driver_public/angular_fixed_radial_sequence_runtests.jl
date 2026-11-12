@@ -122,6 +122,93 @@ end
     @test_throws DimensionMismatch GaussletBases._polar_coiflet_isometry(ones(2, 3), ones(2, 2))
 end
 
+@testset "Explicit angular profile assembly" begin
+    radii = collect(range(0.08, 4.5; length=8))
+    for orders in (fill(32, 8), [15, 24, 32, 15, 24, 32, 15, 32])
+        profiles = shell_local_angular_profile.(orders)
+        legacy = build_atomic_shell_local_angular_assembly(radii; shell_orders=orders)
+        actual = build_atomic_shell_local_angular_assembly(radii, profiles)
+        @test actual.overlap == legacy.overlap
+        @test actual.kinetic == legacy.kinetic
+        @test actual.shell_orders == actual.shell_dimensions == orders
+        @test actual.shell_offsets == legacy.shell_offsets
+        @test actual.shell_interaction_lcap == legacy.shell_interaction_lcap
+        @test actual.shell_interaction_lexpand == legacy.shell_interaction_lexpand
+        @test actual.shell_radii == radii && actual.shell_radii !== radii
+        @test actual.profiles !== profiles && all(actual.profiles[i] === profiles[i] for i in 1:8)
+    end
+    cs = cubature_sphere_point_set("Oh_14")
+    parent = shell_local_angular_profile(cs.point_set; beta=cs.default_beta, l_inject=cs.default_l_inject)
+    polar, p32 = coiflet_angular_profile(cs), coiflet_angular_profile("Ih_32")
+    @test parent.key != polar.key && parent.basis.final_count == polar.basis.final_count
+    for profiles in (fill(polar, 8), [parent, polar, p32, parent, p32, polar, parent, polar])
+        actual = build_atomic_shell_local_angular_assembly(radii, profiles)
+        keys = [p.key for p in profiles]
+        nk = length(unique(keys))
+        @test length(unique(objectid.(actual.shell_kinetic_moment_blocks))) == nk
+        @test length(unique(objectid.(actual.shell_interaction_moment_blocks))) == nk
+        @test length(unique(objectid.(actual.shell_moment_blocks))) == 8
+        @test length(unique(objectid.(actual.shells))) == nk
+        @test length(unique(objectid.(vec(actual.overlap_blocks)))) == nk^2
+        @test length(unique(objectid.(vec(actual.kinetic_blocks)))) == nk^2
+        @test all(actual.shells[i] === profiles[i].basis for i in 1:8)
+        @test actual.shell_orders == [p.basis.final_count for p in profiles]
+        @test maximum(abs, actual.overlap-actual.overlap') < 1e-13
+        @test maximum(abs, actual.kinetic-actual.kinetic') < 1e-13
+        representatives = [findfirst(==(key), keys) for key in unique(keys)]
+        for i in representatives
+            kinetic = GaussletBases._build_shell_local_kinetic_moment_blocks(actual.shells[i])
+            interaction = GaussletBases._build_shell_local_interaction_moment_blocks(actual.shells[i])
+            @test all(actual.shell_kinetic_moment_blocks[i][l] == block for (l, block) in kinetic.blocks)
+            @test all(actual.shell_interaction_moment_blocks[i][l] == block for (l, block) in interaction.blocks)
+            for j in representatives
+                @test actual.overlap_blocks[i, j] == GaussletBases._shell_local_overlap(actual.shells[i], actual.shells[j])
+                @test actual.kinetic_blocks[i, j] == GaussletBases._shell_local_pair_kinetic(
+                    actual.shells[i], actual.shells[j], actual.shell_kinetic_moment_blocks[i],
+                    actual.shell_kinetic_moment_blocks[j], actual.shell_kinetic_lcap[i], actual.shell_kinetic_lcap[j])
+            end
+        end
+        if nk > 1
+            @test norm(actual.overlap_blocks[1, 1]-actual.overlap_blocks[1, 2]) > 1e-6
+        end
+    end
+    @test_throws ArgumentError build_atomic_shell_local_angular_assembly(Float64[], ShellLocalAngularProfile[])
+    @test_throws ArgumentError build_atomic_shell_local_angular_assembly(radii, [polar])
+    @test_throws ArgumentError build_atomic_shell_local_angular_assembly([1.0], ShellLocalAngularProfile[])
+    # Independent Gaunt quadrature versus projected IDA using ALL returned moments.
+    e = eigen(SymTridiagonal(zeros(32), [k/sqrt(4k*k-1) for k in 1:31]))
+    xyz = reduce(vcat, [[sqrt(1-z*z)*cos(2pi*(j-0.5)/64) sqrt(1-z*z)*sin(2pi*(j-0.5)/64) z]
+        for z in e.values for j in 1:64])
+    weights = [w*2pi/64 for w in 2 .* e.vectors[1, :].^2 for j in 1:64]
+    channels = ylm_channels(4).channel_data
+    Y = [GaussletBases._real_spherical_harmonic(ch, view(xyz, q, :)) for ch in channels, q in eachindex(weights)]
+    products(M) = reduce(hcat, [M[i, :] .* M[j, :] for i in axes(M, 1) for j in axes(M, 1)])
+    for (name_a, la, name_b, lb) in (("Oh_6", 0, "Oh_38", 2), ("Ih_12", 1, "Ih_32", 1), ("McLaren_24", 1, "Oh_38", 2))
+        assembly = build_atomic_shell_local_angular_assembly([0.25, 1.25], coiflet_angular_profile.([name_a, name_b]))
+        da, db = assembly.shell_interaction_moment_blocks
+        na, nb = assembly.shell_dimensions
+        interaction = zeros(na, nb)
+        for l in 0:maximum(assembly.shell_interaction_lcap)
+            ma, mb = get(da, l, zeros(2l+1, na)), get(db, l, zeros(2l+1, nb))
+            interaction .+= (4pi/(2l+1)*0.25^l/1.25^(l+1)) .* (ma' * mb)
+        end
+        wa = sqrt(4pi) .* vec(assembly.shell_moment_blocks[1][0])
+        wb = sqrt(4pi) .* vec(assembly.shell_moment_blocks[2][0])
+        interaction ./= wa * wb'
+        ma = reduce(vcat, [assembly.shell_moment_blocks[1][l] for l in 0:la])
+        mb = reduce(vcat, [assembly.shell_moment_blocks[2][l] for l in 0:lb])
+        projected = products(ma)' * interaction * products(mb)
+        lm = (2min(la, lb)+1)^2
+        scale = [sqrt(4pi/(2ch.l+1)*0.25^ch.l/1.25^(ch.l+1)) for ch in channels[1:lm]]
+        weighted = Y[1:lm, :] .* weights'
+        ga = scale .* (weighted * products(Y[1:(la+1)^2, :]))
+        gb = scale .* (weighted * products(Y[1:(lb+1)^2, :]))
+        error = maximum(abs, projected-ga'*gb)
+        @info "Explicit-profile four-index Coulomb oracle" name_a name_b carried_lmax=maximum(assembly.shell_interaction_lcap) max_error_Ha=error
+        @test error < 1e-13
+    end
+end
+
 @testset "Atomic contact geometry" begin
     rb, _ = _quick_radial_operator_fixture()
     # Actual frozen McLaren24 coordinates/order, not the vendored 24-point rule.

@@ -582,18 +582,52 @@ function build_atomic_shell_local_angular_assembly(
     length(assigned_orders) == nshells ||
         throw(ArgumentError("shell_orders length must match the number of shell radii"))
 
-    profiles = Vector{ShellLocalAngularProfile}(undef, nshells)
+    profiles = @timeg "angular profile preparation" [shell_local_angular_profile(
+        order; beta=beta, l_inject=l_inject, tau=tau, whiten=whiten,
+    ) for order in assigned_orders]
+    return _assemble_shell_local_angular_profiles(radii, profiles; assigned_orders=assigned_orders)
+end
+
+"""
+    build_atomic_shell_local_angular_assembly(shell_radii, profiles)
+
+Assemble one explicit `ShellLocalAngularProfile` per radial shell, preserving
+its actual basis, order and gauge. Input containers are copied; profile entries
+and repeated-key moment/pair arrays are shared read-only. Reported shell orders
+are final function counts. No family or radial schedule is inferred.
+
+Reuses expanded tables per profile and overlap/kinetic blocks per ordered key
+pair within this assembly. Final dense matrices still require O(D^2) storage.
+"""
+function build_atomic_shell_local_angular_assembly(
+    shell_radii::AbstractVector{<:Real},
+    profiles::AbstractVector{ShellLocalAngularProfile},
+)
+    prof_vec = ShellLocalAngularProfile[profiles[i] for i in eachindex(profiles)]
+    return _assemble_shell_local_angular_profiles(shell_radii, prof_vec)
+end
+
+struct _CachedShellMomentData
+    blocks::Dict{Int,Matrix{Float64}}
+    lcap::Int
+    lexpand::Int
+    tail::Float64
+end
+
+function _assemble_shell_local_angular_profiles(
+    shell_radii::AbstractVector{<:Real}, profiles::Vector{ShellLocalAngularProfile};
+    assigned_orders::Vector{Int}=Int[p.basis.final_count for p in profiles],
+)
+    radii = Float64[shell_radii[i] for i in eachindex(shell_radii)]
+    nshells = length(radii)
+    nshells >= 1 || throw(ArgumentError("angular assembly requires at least one shell radius"))
+    length(profiles) == length(assigned_orders) == nshells ||
+        throw(ArgumentError("profiles and assigned_orders lengths must match shell_radii"))
     shells = Vector{ShellLocalInjectedAngularBasis}(undef, nshells)
     shell_moment_blocks = Vector{Dict{Int,Matrix{Float64}}}(undef, nshells)
-    cached_kinetic_moment_blocks = Dict{
-        ShellLocalAngularProfileKey,
-        NamedTuple{(:blocks, :lcap, :lexpand, :tail),Tuple{Dict{Int,Matrix{Float64}},Int,Int,Float64}},
-    }()
+    cached_kinetic_moment_blocks = Dict{ShellLocalAngularProfileKey,_CachedShellMomentData}()
     shell_kinetic_moment_blocks = Vector{Dict{Int,Matrix{Float64}}}(undef, nshells)
-    cached_interaction_moment_blocks = Dict{
-        ShellLocalAngularProfileKey,
-        NamedTuple{(:blocks, :lcap, :lexpand, :tail),Tuple{Dict{Int,Matrix{Float64}},Int,Int,Float64}},
-    }()
+    cached_interaction_moment_blocks = Dict{ShellLocalAngularProfileKey,_CachedShellMomentData}()
     shell_interaction_moment_blocks = Vector{Dict{Int,Matrix{Float64}}}(undef, nshells)
     shell_exact_lmax = Vector{Int}(undef, nshells)
     shell_kinetic_lcap = Vector{Int}(undef, nshells)
@@ -603,17 +637,9 @@ function build_atomic_shell_local_angular_assembly(
     shell_interaction_lexpand = Vector{Int}(undef, nshells)
     shell_interaction_tail = Vector{Float64}(undef, nshells)
 
-    for i in 1:nshells
-        profile =
-            shell_local_angular_profile(
-                assigned_orders[i];
-                beta = beta,
-                l_inject = l_inject,
-                tau = tau,
-                whiten = whiten,
-            )
+    @timeg "angular moment tables" for i in 1:nshells
+        profile = profiles[i]
         shell = profile.basis
-        profiles[i] = profile
         shells[i] = shell
         key = profile.key
         moment_blocks = Dict{Int,Matrix{Float64}}()
@@ -625,14 +651,16 @@ function build_atomic_shell_local_angular_assembly(
         # one-body angular kinetic needs a larger Y-moment span for the mixed
         # remainder, or spurious extra s-like states collapse onto the 1s branch.
         kinetic_moment_data = get!(cached_kinetic_moment_blocks, key) do
-            _build_shell_local_kinetic_moment_blocks(shell)
+            raw = _build_shell_local_kinetic_moment_blocks(shell)
+            _CachedShellMomentData(raw.blocks, raw.lcap, raw.lexpand, raw.tail)
         end
         # The interaction needs at least the product span of the exact injected
         # sector, but for the mixed shell-local basis this is only a lower
         # bound. Follow the legacy sphgatomps principle and grow the shell
         # Y-moment tables adaptively beyond 2*l_inject.
         interaction_moment_data = get!(cached_interaction_moment_blocks, key) do
-            _build_shell_local_interaction_moment_blocks(shell)
+            raw = _build_shell_local_interaction_moment_blocks(shell)
+            _CachedShellMomentData(raw.blocks, raw.lcap, raw.lexpand, raw.tail)
         end
         shell_kinetic_moment_blocks[i] = kinetic_moment_data.blocks
         shell_interaction_moment_blocks[i] = interaction_moment_data.blocks
@@ -649,11 +677,16 @@ function build_atomic_shell_local_angular_assembly(
     shell_offsets = cumsum(vcat(1, shell_dimensions[1:end-1]))
     overlap_blocks = Matrix{Matrix{Float64}}(undef, nshells, nshells)
     kinetic_blocks = Matrix{Matrix{Float64}}(undef, nshells, nshells)
+    pair_ov_cache = Dict{Tuple{ShellLocalAngularProfileKey,ShellLocalAngularProfileKey},Matrix{Float64}}()
+    pair_kin_cache = Dict{Tuple{ShellLocalAngularProfileKey,ShellLocalAngularProfileKey},Matrix{Float64}}()
 
-    for a in 1:nshells
-        for b in 1:nshells
-            overlap_blocks[a, b] = _shell_local_overlap(shells[a], shells[b])
-            kinetic_blocks[a, b] = _shell_local_pair_kinetic(
+    @timeg "angular ordered pair blocks" for a in 1:nshells, b in 1:nshells
+        key = (profiles[a].key, profiles[b].key)
+        overlap_blocks[a, b] = get!(pair_ov_cache, key) do
+            _shell_local_overlap(shells[a], shells[b])
+        end
+        kinetic_blocks[a, b] = get!(pair_kin_cache, key) do
+            _shell_local_pair_kinetic(
                 shells[a],
                 shells[b],
                 shell_kinetic_moment_blocks[a],
@@ -664,10 +697,13 @@ function build_atomic_shell_local_angular_assembly(
         end
     end
 
-    overlap = _assemble_shell_block_matrix(overlap_blocks, shell_offsets, shell_dimensions)
-    overlap = 0.5 .* (overlap .+ transpose(overlap))
-    kinetic = _assemble_shell_block_matrix(kinetic_blocks, shell_offsets, shell_dimensions)
-    kinetic = 0.5 .* (kinetic .+ transpose(kinetic))
+    overlap, kinetic = @timeg "angular final dense assembly" begin
+        overlap = _assemble_shell_block_matrix(overlap_blocks, shell_offsets, shell_dimensions)
+        overlap = 0.5 .* (overlap .+ transpose(overlap))
+        kinetic = _assemble_shell_block_matrix(kinetic_blocks, shell_offsets, shell_dimensions)
+        kinetic = 0.5 .* (kinetic .+ transpose(kinetic))
+        (overlap, kinetic)
+    end
 
     return AtomicShellLocalInjectedAngularAssembly(
         radii,

@@ -98,6 +98,26 @@ Its 1e-5 raw-Gram/weight-sum admission is not an exact-cubature guarantee;
 the output moment check remains 1e-11. `whiten` separately controls the parent
 complement. No angular default or shell schedule is changed.
 
+### Explicit profiles across radial shells
+
+Pass one actual profile per radius, including a caller-chosen mixture:
+
+```julia
+radii = [0.25, 1.25]
+profiles = coiflet_angular_profile.(["Ih_12", "Ih_32"])
+assembly = build_atomic_shell_local_angular_assembly(radii, profiles)
+```
+
+The containers are copied; profile entries, bases and repeated-key angular
+tables/ordered-pair blocks are shared read-only within the assembly. It preserves
+the supplied order and gauge; reported shell orders are final function counts.
+The legacy keyword entrance retains its order/radius-assignment controls.
+Expanded moments are computed per unique profile, pair blocks per ordered key
+pair; final overlap/kinetic matrices still require quadratic dense storage.
+All carried interaction moments remain available for the usual `:auto` span.
+This enables explicit mixed-profile construction, not an automatic physical
+schedule or a new continuum-radial/energy accuracy guarantee.
+
 The first shell-local basis layer is now available
 through:
 
