@@ -789,9 +789,11 @@ commit and report; at most two in-scope correction rounds in the finite cycle.
 
 ## Polar Coiflet Profiles
 
-GB-2 of GB-ANGULAR-HANDOFF-20261111 implements one opt-in public function,
-`coiflet_angular_profile`, under HP-ANGULAR-COIFLET-FN-01/TEST-01. Accepted
-GB-1 aa8e3911 supplies its unchanged catalog; Ih_60 remains degree9, not11.
+GB-2 of GB-ANGULAR-HANDOFF-20261111 is accepted at
+88ee10a62608f219b62e109d2b6b0a9323d98460: opt-in coiflet_angular_profile,
+source147/9, tests91 and reader24; both COIFLET grants are consumed. Exact-head
+full CI43200713489/Docs43200713289, native package tests and direct docs pass.
+Accepted GB-1 aa8e3911 supplies its unchanged catalog; Ih_60 remains degree9, not11.
 Use the frozen v4 source/card and373-check evidence described above, with
 the bounded refinements below. This is not a default or interaction-cap change.
 
@@ -834,8 +836,8 @@ Use the existing profile cache/key, adding weight-Float64-byte SHA1 and
 whiten_target/l_flat identity in mode_tag; keep legacy keys untouched. Repeats
 return the same profile/basis objects; distinct weights/whitening cannot alias.
 
-Only src/angular/angular_coiflet.jl (planned), the wrapper extraction in
-src/angular/angular_shell_basis.jl and root export/include may change source.
+Implementation used only src/angular/angular_coiflet.jl, the wrapper extraction
+in src/angular/angular_shell_basis.jl and root export/include.
 Extract _wrap_shell_local_angular_profile and switch the old caller; delete
 the old inline body, preserving exact legacy numerical operations/IDs.
 Hard150 added source lines includes docstrings/comments/blanks/relocation/root.

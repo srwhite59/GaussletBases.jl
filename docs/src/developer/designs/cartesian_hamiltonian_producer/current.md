@@ -8,9 +8,9 @@ is accepted at aa8e3911; both CUBATURE IDs are completed with no execution grant
 The frozen Ih_60 is degree9, not the external card's11 claim. GB-0 path support
 and both input/vendor hashes remain recorded. GB-2's
 [polar coiflet profiles](../../numerical_contracts.md#Polar-Coiflet-Profiles)
-have a separate bounded implementation/validation grant: same-size exact-injected
+are accepted at88ee10a6, with both COIFLET grants consumed. Same-size exact-injected
 parents, positive monopoles, weight-aware cache and explicit approximate-target
-distinction. GB-3 and skill promotion await separate acceptance boundaries;
+distinction remain the contract. GB-3 and skill promotion await separate boundaries;
 primary Pass656 drafts, existing angular defaults and releases stay unchanged.
 
 Pass657 accepts [Atomic Contact Integrals](../../numerical_contracts.md#Atomic-Contact-Integrals)

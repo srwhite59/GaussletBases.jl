@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `f5393aa3c18a5e164cabe2a2a937231aa2ae4e6857e879b59cd2a711f266098d`.
+> [authority.toml](authority.toml), SHA-256 `dbf3f3743060b5ce03c9111a21596e906c7c258c150fdc5c17a2250b0264ea60`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -12,45 +12,41 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-ANGULAR-COIFLET-FN-01 - same-size polar coiflet angular profiles
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `docs`, `source`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Polar Coiflet Profiles`
-- **Owned paths:**
-  - `docs` / `existing`: `docs/src/explanations/angular_research_track.md`
-  - `docs` / `existing`: `docs/src/reference/operators_and_diagnostics.md`
-  - `source` / `existing`: `src/GaussletBases.jl`
-  - `source` / `existing`: `src/angular/angular_coiflet.jl`
-  - `source` / `existing`: `src/angular/angular_shell_basis.jl`
+- **Owned paths:** none
 - **Evidence:**
   - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/integration/tmp/reviews/gb-angular-gb2-authority-handoff-2026-11-12.md`
   - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/input/kit/pass_gb2_polar_coiflets/TARGET_CARD_AND_BLURB.md`
   - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/verify_runner.log`
   - `git_commit`: `aa8e3911009e56412afc841750a7d4daebf0f566`
   - `git_commit`: `f0a7a5ebb45d43bb49fd0d420dce0c4f0b4d1ad0`
+  - `git_commit`: `88ee10a62608f219b62e109d2b6b0a9323d98460`
 - **Dependencies:** none
-- **Scope:** Implement Polar Coiflet Profiles only in the new angular\_coiflet owner, existing shell-basis wrapper and root wiring, plus two reader pages. Hard150 source/35 reader additions. Preserve exact-injected same-size parents, positive gauge, weight-aware cache, explicit approximate-target semantics and legacy identities. Remove unused rectangular seed branches. No assembly, catalog/default, carrier, consumer, release or skill changes.
+- **Scope:** Record accepted Polar Coiflet Profiles at88ee10a62608f219b62e109d2b6b0a9323d98460: same-size exact-injected rotation, positive gauge, rule-aware cache and explicit approximate-target semantics. Source147/9, tests91, reader24; legacy identities/defaults preserved. Execution grant consumed. No GB-3, skills, catalog, consumer, Pass656 or release authority follows.
 
 ### HP-ANGULAR-COIFLET-TEST-01 - polar coiflet moments locality and identity regressions
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Polar Coiflet Profiles`
-- **Owned paths:**
-  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
   - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/integration/tmp/reviews/gb-angular-gb2-authority-handoff-2026-11-12.md`
   - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/input/kit/pass_gb2_polar_coiflets/TARGET_CARD_AND_BLURB.md`
   - `external_path`: `/Users/srw/dmrgtmp/angular_handoff_review_20261111/v4/verify_runner.log`
   - `git_commit`: `aa8e3911009e56412afc841750a7d4daebf0f566`
   - `git_commit`: `f0a7a5ebb45d43bb49fd0d420dce0c4f0b4d1ad0`
+  - `git_commit`: `88ee10a62608f219b62e109d2b6b0a9323d98460`
 - **Dependencies:** `HP-ANGULAR-COIFLET-FN-01`
-- **Scope:** Add at most140 lines only in the existing public angular sequence test owner under Polar Coiflet Profiles. Protect actual moments, locality/gauge, weight/whitening cache identity, invalid inputs and unchanged legacy fingerprints. New block under8s warm; require native default-all Pkg.test, direct docs and exact-head full CI/Docs. No new test file, broad sweep, threshold or golden repin.
+- **Scope:** Record accepted GB-2 validation at88ee10a62608f219b62e109d2b6b0a9323d98460: focused71, independent evaluated-function9, legacy fingerprint parity, native79771 passes/one unchanged optional skip, direct docs and exact-head full CI/Docs. Preserve strict/effective-target and cold/warm distinctions. Validation grant consumed; no further campaign, test or numerical-policy grant.
 
 ### HP-ANGULAR-CUBATURE-FN-01 - positive cubature angular catalog
 

@@ -1499,3 +1499,28 @@ Pkg.test and direct docs, then exact source CI/Docs. Return the uncommitted new
 file for design-owned path promotion; no early source commit or peer authority
 edit. One finite-cycle correction remains. GB-3/skill promotion, primary Pass656,
 consumers and releases remain separate; no source was added by this grant.
+
+### Pass 659 Accepted GB-2: Polar Coiflet Profiles
+
+Accept88ee10a62608f219b62e109d2b6b0a9323d98460, exact sealed tree3c9b1f9d.
+LT1/MT1 now has opt-in localized functions aligned to a positive cubature rule,
+not only point data. The parent one-body span is retained, with positive
+monopoles and measured locality; general IDA remains basis-dependent. Strict
+raw moments and explicit approximate polar targets remain distinct. Actual
+Ih_60 stays degree9, and old constructors/keys/defaults are unchanged.
+Validation uses one native Pkg.test:79771 passes/one unchanged optional skip,
+71 focused checks, fresh legacy15/24/32 fingerprint equality and direct docs.
+Independent evaluated-function/polynomial review9/9 reaches roughly1e-14;
+the staged373 campaign is reused by live-branch/input correspondence, not
+replayed. Exact-head CI43200713489/Docs43200713289 pass; all three numerical
+jobs execute, Linux1.10.13 coiflet71/71. Its13.5s cold/JIT is not the local
+0.414s warm block gate. Separate parent/profile/polar/cache costs are recorded;
+N50 complete profile0.226s is not wholly polar work (roughly0.000279s).
+Deleted/simplified: old inline wrapper becomes one shared owner; unused proposed
+rectangular seed branches never enter production. Quarantined: external old
+alternatives remain evidence. Not deleted: live released parent/default code.
+Source147/9, tests91, reader24; no type/dependency/test file or framework.
+Both grants are consumed. Exact next boundary is separately checked GB-3
+explicit-profile assembly/cache reuse; skills stay deferred through acceptance.
+Primary five Pass656 drafts/two handoffs, consumers and release/stable remain
+untouched. No numerical rerun is needed for this lifecycle-only closeout.
