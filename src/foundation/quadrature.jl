@@ -141,6 +141,17 @@ function _make_physical_erf_grid(
     return physical_points, physical_weights
 end
 
+struct _RadialPanelRule
+    edges::Vector{Float64}
+    interpolation::Matrix{Float64}
+    geometry_digest::Vector{UInt8}
+end
+
+function _radial_gauss_legendre(n)
+    e = eigen(SymTridiagonal(zeros(n), [k / sqrt(4k*k-1) for k in 1:n-1]))
+    return e.values, 2 .* e.vectors[1,:].^2
+end
+
 """
     RadialQuadratureGrid(points, weights; mapping=nothing)
 
@@ -151,7 +162,13 @@ struct RadialQuadratureGrid{M}
     point_data::Vector{Float64}
     weight_data::Vector{Float64}
     mapping_value::M
+    panel_rule::Union{Nothing,_RadialPanelRule}
 end
+
+RadialQuadratureGrid(points::Vector{Float64}, weights::Vector{Float64}, mapping) =
+    RadialQuadratureGrid{typeof(mapping)}(points, weights, mapping, nothing)
+RadialQuadratureGrid{M}(points, weights, mapping) where {M} =
+    RadialQuadratureGrid{M}(points, weights, mapping, nothing)
 
 function RadialQuadratureGrid(
     points::AbstractVector{<:Real},
@@ -201,8 +218,8 @@ retained radial basis support itself and uses the `:high` accuracy profile.
 Construction/setup extents used while building the basis are separate internal
 objects and are not set by this API.
 
-`accuracy` may be `:medium`, `:high`, or `:veryhigh`. `:medium` reproduces the
-older cheaper overlap-focused behavior. `:high` is the default and also checks
+`accuracy` may be `:medium`, `:high`, or `:veryhigh`. All use polynomial panels;
+`:medium` keeps cheaper overlap-only acceptance. `:high` is the default and also checks
 that simple basis diagnostics have stabilized across refinement. `:veryhigh`
 pushes the same checks farther. `refine` is an optional expert starting
 resolution hint. `quadrature_rmax` is an optional explicit physical-space
@@ -210,8 +227,8 @@ cutoff override kept for expert compatibility. If an explicit cutoff is too
 short to cover the retained basis support, the routine warns rather than
 silently reporting good overlap on a truncated grid. Exhausted `:high` and
 `:veryhigh` schedules return the last best-effort grid with one warning listing
-unmet criteria, achieved values, and targets. `refine` changes the starting
-resolution, not that notification policy; it is not a no-refinement switch.
+unmet criteria, achieved values, and targets. `refine` bounds physical-radius
+growth and reference-coordinate panel width; it is not a no-refinement switch.
 The historical no-explicit-cutoff overlap-only fallback remains for `:medium`.
 To request more work, use e.g. `radial_quadrature(basis; refine=128)`; this starts
 the existing doubling schedule, not a fixed-grid request or convergence promise.
@@ -379,6 +396,40 @@ function _radial_quadrature_grid(
     cutoff::Float64;
     refine::Int,
 )
-    points, weights = _make_physical_erf_grid(mapping(basis), basis.spec.reference_spacing, cutoff; refine = refine)
-    return RadialQuadratureGrid(points, weights; mapping = mapping(basis))
+    refine > 0 || throw(ArgumentError("refine must be positive"))
+    isfinite(cutoff) && cutoff > 0 || throw(ArgumentError("cutoff must be finite and positive"))
+    mp = mapping(basis)
+    h = basis.spec.reference_spacing
+    narrow = minimum(x.alpha for x in basis.spec.xgaussians; init = h/3)
+    first_edge = xofu(mp, uofx(mp, 0.0) + narrow * sqrt(eps(Float64)) * 24 / refine)
+    isfinite(first_edge) && first_edge > 0 ||
+        throw(ArgumentError("quadrature origin scale must be finite and positive"))
+    edges = [0.0, min(first_edge, cutoff)]
+    while last(edges) < cutoff
+        a = last(edges)
+        b = min(a * exp(2 / refine), cutoff)
+        while uofx(mp,b)-uofx(mp,a) > 24h/refine
+            b = (a+b)/2
+            b > a || error("panel edge cannot advance")
+        end
+        isfinite(b) && b > a || error("panel edge cannot advance")
+        push!(edges, b)
+    end
+    q = 16
+    x, wx = _radial_gauss_legendre(q)
+    P = ones(q,q)
+    P[:,2] .= x
+    for k in 2:q-1
+        P[:,k+1] .= ((2k-1).*x.*P[:,k] .- (k-1).*P[:,k-1])./k
+    end
+    transform = Diagonal((2 .* (0:q-1) .+ 1)./2) * transpose(P) * Diagonal(wx)
+    points, weights = Float64[], Float64[]
+    for p in 1:length(edges)-1
+        a, b = edges[p], edges[p+1]
+        append!(points, (a+b)/2 .+ (b-a)/2 .* x)
+        append!(weights, (b-a)/2 .* wx)
+    end
+    digest = sha256(reinterpret(UInt8, [points; weights; edges; vec(transform)]))
+    rule = _RadialPanelRule(edges, transform, digest)
+    return RadialQuadratureGrid{typeof(mp)}(points, weights, mp, rule)
 end

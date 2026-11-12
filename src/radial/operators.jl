@@ -222,6 +222,8 @@ Build the primitive-space reduced-radial centrifugal matrix
     <phi_mu | l(l + 1) / (2 r^2) | phi_nu>
 
 on the supplied quadrature `grid`.
+This is a finite-grid diagnostic when primitives do not vanish at the origin;
+form physical basis functions first for accurate continuum integration.
 """
 function centrifugal_matrix(set::PrimitiveSet1D, grid::RadialQuadratureGrid; l::Int)
     l >= 0 || throw(ArgumentError("centrifugal_matrix requires l >= 0"))
@@ -330,6 +332,61 @@ function _integral_diagonal_kernel_matrix(
     return _symmetrize_matrix(Diagonal(inv_integral_weights) * numerator * Diagonal(inv_integral_weights))
 end
 
+# Panel-edge carries and bounded local ratios avoid global high-L radial powers.
+# Moment and interpolation buffers are call-local and reused across panels.
+function _radial_panel_kernel_matrix(values, points, weights, rule, L)
+    sha256(reinterpret(UInt8, [points; weights; rule.edges; vec(rule.interpolation)])) == rule.geometry_digest ||
+        throw(ArgumentError("generated panel geometry has been modified"))
+    n, q = size(values,2), size(rule.interpolation,1)
+    size(values,1) == length(points) == length(weights) == q*(length(rule.edges)-1) ||
+        throw(DimensionMismatch("panel sample dimensions do not match"))
+    all(r -> isfinite(r) && r > 0, points) && issorted(points) ||
+        throw(ArgumentError("panel points must be finite, positive and sorted"))
+    z, wz = _radial_gauss_legendre(max(64,cld(L+q+2,2)))
+    inner = zeros(size(values))
+    acc = zeros(n)
+    moments, local_matrix = zeros(q,q), zeros(q,q)
+    for direction in (1,-1)
+        fill!(acc,0)
+        indices = direction == 1 ? (1:length(rule.edges)-1) : (length(rule.edges)-1:-1:1)
+        for p in indices
+            a, b = rule.edges[p], rule.edges[p+1]
+            rows = (p-1)*q+1:p*q
+            r, F, w = view(points,rows), view(values,rows,:), view(weights,rows)
+            fill!(moments,0)
+            for i in 1:q, k in eachindex(z)
+                ri, t = r[i], (z[k]+1)/2
+                if direction == 1
+                    y = a+(ri-a)*t
+                    weight = (ri-a)/ri * wz[k]/2 * (y/ri)^L
+                else
+                    h = log(b/ri)/2
+                    s = h*(z[k]+1)
+                    y = ri*exp(s)
+                    weight = h*wz[k]*exp(-L*s)
+                end
+                x = 2*(y-a)/(b-a)-1
+                previous, current = 0.0, 1.0
+                for j in 0:q-1
+                    moments[i,j+1] += weight*current
+                    previous, current = current, ((2j+1)*x*current-j*previous)/(j+1)
+                end
+            end
+            mul!(local_matrix,moments,rule.interpolation)
+            mul!(view(inner,rows,:),local_matrix,F,1.0,direction == 1 ? 0.0 : 1.0)
+            carry = direction == 1 ? (a ./ r).^(L+1) : (r ./ b).^L
+            view(inner,rows,:) .+= carry .* transpose(acc)
+            factor = direction == 1 ? (r ./ b).^L ./ b : (a ./ r).^L ./ r
+            acc .= (a/b)^(direction == 1 ? L+1 : L).*acc .+ transpose(F)*(w.*factor)
+        end
+    end
+    all(isfinite,inner) || throw(ArgumentError("nonfinite panel action"))
+    iw = _check_integral_weights(vec(transpose(values)*weights))
+    inner .*= weights
+    raw = transpose(values)*inner
+    return (raw+transpose(raw))./(2 .* (iw*transpose(iw)))
+end
+
 """
     multipole_matrix(basis::RadialBasis, grid::RadialQuadratureGrid;
                      L::Int,
@@ -358,7 +415,10 @@ struct _RadialMultipoleSamples
     points::Vector{Float64}
     weights::Vector{Float64}
     values::Matrix{Float64}
+    panel_rule::Union{Nothing,_RadialPanelRule}
 end
+
+_RadialMultipoleSamples(points, weights, values) = _RadialMultipoleSamples(points, weights, values, nothing)
 
 function _radial_multipole_samples(basis::RadialBasis, grid::RadialQuadratureGrid)
     points, weights = _validate_radial_operator_grid(basis, grid)
@@ -367,6 +427,7 @@ function _radial_multipole_samples(basis::RadialBasis, grid::RadialQuadratureGri
         Vector{Float64}(points),
         Vector{Float64}(weights),
         Matrix{Float64}(values),
+        grid.panel_rule,
     )
 end
 
@@ -377,6 +438,8 @@ function _radial_multipole_from_samples(
 )
     L >= 0 || throw(ArgumentError("multipole_matrix requires L >= 0"))
     if approximation isa IntegralDiagonal
+        samples.panel_rule === nothing || return _radial_panel_kernel_matrix(
+            samples.values, samples.points, samples.weights, samples.panel_rule, L)
         return _integral_diagonal_kernel_matrix(samples.values, samples.points, samples.weights, L)
     end
     throw(ArgumentError("unsupported diagonal approximation $(typeof(approximation))"))

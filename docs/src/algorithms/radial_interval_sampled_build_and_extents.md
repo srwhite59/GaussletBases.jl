@@ -83,6 +83,25 @@
     `quadrature_rmax` remains only as an expert override.
     Code: `src/foundation/quadrature.jl`, `src/foundation/diagnostics.jl`
 
+## Operator Integration
+
+The generated physical grid uses 16-point Gauss-Legendre panels, including a
+scale-derived first panel touching zero. With reference spacing `h` and hint
+`k = refine`, subsequent panel radius ratios are at most `exp(2/k)` and their
+mapped-coordinate widths at most `24h/k`. The support cutoff and existing
+accuracy/refinement schedules remain unchanged; this does not alter the
+construction/localization grids in steps 4–7.
+
+Radial Coulomb integration uses partial-panel polynomial integrals and
+panel-edge carries with bounded local ratios, not global positive/negative
+radial powers or a universal diagonal-kink correction. Local work buffers are
+reused. A private rule and geometry digest accompany generated grids and
+retained samples, so stored and on-demand tables use the same mathematics.
+Mutated tagged geometry is rejected; caller-created untagged grids keep their
+original discrete rule. No quadrature fix certifies a basis or many-body energy.
+Form physical functions before centrifugal integration; separately accumulated
+primitive inverse-square matrices are finite-grid diagnostics, not a continuum roundtrip.
+
 ## References
 
 - Supporting notes:

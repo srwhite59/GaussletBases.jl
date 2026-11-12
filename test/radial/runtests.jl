@@ -327,6 +327,19 @@ end
     for options in ((;), (;refine=1), (;quadrature_rmax=1.), (;accuracy=:medium), (;accuracy=:veryhigh))
         logger = Test.TestLogger(min_level=Logging.Warn)
         grid = with_logger(logger) do; radial_quadrature(basis;options...); end
+        if isempty(logger.logs)
+            profile = GaussletBases._quadrature_accuracy_profile(get(options,:accuracy,:high))
+            schedule = GaussletBases._quadrature_refine_schedule(profile;refine=get(options,:refine,nothing))
+            cutoff = GaussletBases._radial_quadrature_tail_bound(basis)
+            index = findfirst(k -> quadrature_points(grid) == quadrature_points(
+                GaussletBases._radial_quadrature_grid(basis,cutoff;refine=k)),schedule)
+            previous_grid = index == 1 ? nothing : GaussletBases._radial_quadrature_grid(basis,cutoff;refine=schedule[index-1])
+            previous = previous_grid === nothing ? nothing : GaussletBases._quadrature_quality_metrics(
+                basis,quadrature_points(previous_grid),quadrature_weights(previous_grid))
+            latest = GaussletBases._quadrature_quality_metrics(basis,quadrature_points(grid),quadrature_weights(grid))
+            @test !haskey(options,:quadrature_rmax) && GaussletBases._quadrature_profile_satisfied(latest,previous,profile)
+            continue
+        end
         @test length(logger.logs) == 1
         @test occursin("truncating basis tails", string(only(logger.logs).message)) == haskey(options,:quadrature_rmax)
         data = Dict(only(logger.logs).kwargs)
@@ -344,7 +357,7 @@ end
         @test quadrature_points(grid) == quadrature_points(GaussletBases._radial_quadrature_grid(basis,cutoff;refine=last(schedule)))
     end
     grid = @test_logs min_level=Logging.Warn radial_quadrature(basis;refine=64)
-    @test quadrature_points(grid) == quadrature_points(GaussletBases._radial_quadrature_grid(basis,GaussletBases._radial_quadrature_tail_bound(basis);refine=512))
+    @test GaussletBases._quadrature_quality_metrics(basis,quadrature_points(grid),quadrature_weights(grid)).overlap_error <= 1e-6
     control = build_basis(RadialBasisSpec(:G10;rmax=30.,mapping=AsinhMapping(c=.01,s=.2),xgaussians=XGaussian[]))
     @test_logs min_level=Logging.Warn radial_quadrature(control)
 end
@@ -356,8 +369,8 @@ end
         rmax = 30.0,
         mapping = AsinhMapping(c = s / (2Z), s = s),
     ))
-    diag = @test_logs (:warn, r"radial_quadrature did not reach") basis_diagnostics(rb)
-    grid = @test_logs (:warn, r"radial_quadrature did not reach") radial_quadrature(rb)
+    diag = @test_logs min_level=Logging.Warn basis_diagnostics(rb)
+    grid = @test_logs min_level=Logging.Warn radial_quadrature(rb)
     hamiltonian = kinetic_matrix(rb, grid) +
                   nuclear_matrix(rb, grid; Z = Z) +
                   centrifugal_matrix(rb, grid; l = 0)
@@ -498,7 +511,9 @@ end
     @test multipole0 ≈ transpose(multipole0) atol = 1.0e-12 rtol = 1.0e-12
     @test all(isfinite, multipole1)
     @test multipole1 ≈ transpose(multipole1) atol = 1.0e-12 rtol = 1.0e-12
-    @test multipole1 ≈ multipole1_explicit atol = 1.0e-10 rtol = 1.0e-10
+    # The node-pair oracle defines the untagged discrete rule, not panel integration.
+    discrete_grid = RadialQuadratureGrid(points, weights; mapping = mapping(rb))
+    @test multipole_matrix(rb, discrete_grid; L = 1) ≈ multipole1_explicit atol = 1.0e-10 rtol = 1.0e-10
 end
 
 # Extended-precision evaluation of the same IntegralDiagonal quadrature formula (BigFloat has no
@@ -556,6 +571,7 @@ end
 
 @testset "Radial multipole kernel accuracy at high L" begin
     rb, grid = _quick_radial_operator_fixture()
+    grid = RadialQuadratureGrid(quadrature_points(grid),quadrature_weights(grid);mapping=mapping(rb))
     points = quadrature_points(grid)
     weights = quadrature_weights(grid)
     values = GaussletBases._basis_values_matrix(rb, points)
@@ -622,6 +638,65 @@ end
     end
 end
 
+@testset "Default radial panel integration" begin
+    rb, _ = _quick_radial_operator_fixture()
+    grid = radial_quadrature(rb)
+    r, w = quadrature_points(grid), quadrature_weights(grid)
+    rule = grid.panel_rule
+    @test last(rule.edges) == GaussletBases._radial_quadrature_tail_bound(rb)
+    for legacy in (RadialQuadratureGrid(r,w;mapping=mapping(rb)),
+                   RadialQuadratureGrid(r,w,mapping(rb)),typeof(grid)(r,w,mapping(rb)))
+        @test legacy.panel_rule === nothing
+        @test quadrature_points(legacy) == r && quadrature_weights(legacy) == w
+    end
+    copied = RadialQuadratureGrid(r,w;mapping=mapping(rb))
+    @test quadrature_points(copied) !== r && quadrature_weights(copied) !== w
+    values = GaussletBases._basis_values_matrix(rb,r)
+    sample = GaussletBases._RadialMultipoleSamples(copy(r),copy(w),values)
+    @test GaussletBases._radial_multipole_from_samples(sample,2,IntegralDiagonal()) ==
+        GaussletBases._integral_diagonal_kernel_matrix(values,r,w,2)
+    ops = atomic_operators(rb,grid;Z=2.,lmax=1)
+    @test GaussletBases._radial_multipole_on_demand(ops,6) == multipole_matrix(rb,grid;L=6)
+    for array in (r,w,rule.edges,rule.interpolation)
+        index = cld(length(array),2)
+        original = array[index]
+        array[index] = nextfloat(original)
+        @test_throws ArgumentError multipole_matrix(rb,grid;L=0)
+        array[index] = original
+    end
+    @test multipole_matrix(rb,grid;L=0) == multipole(ops,0)
+    # Independent analytic one-body moments and triangle Coulomb integral.
+    nodes, weights = GaussletBases._radial_gauss_legendre(192)
+    u, wu = (nodes.+1)./2, weights./2
+    for a in (5.,1450.)
+        f = r.*exp.(-a.*r)
+        d = (1 .- a.*r).*exp.(-a.*r)
+        actual = [dot(w,f.^2),dot(w,d.^2)/2,-5dot(w,f.^2 ./ r),dot(w,f.^2 ./ r.^2)]
+        exact = [1/(4a^3),1/(8a),-5/(4a^2),1/(2a)]
+        @test actual ≈ exact rtol=1e-10 atol=0.0
+        for L in (0,6,132)
+            oracle = 4a*dot(wu,u.^(L+1)./(1 .+ u).^3)
+            kernel = GaussletBases._radial_panel_kernel_matrix(reshape(f,:,1),r,w,rule,L)
+            @test only(kernel) ≈ oracle rtol=1e-9 atol=0.0
+        end
+    end
+    @test_throws ArgumentError radial_quadrature(rb;quadrature_rmax=1.,rmax=1.)
+    @test_throws ArgumentError radial_quadrature(rb;refine=0)
+    # Independent uniform full-support panels, forming physical functions first.
+    references = Matrix{Float64}[]
+    edges = range(0.,GaussletBases._radial_quadrature_tail_bound(rb);length=65)
+    for q in (64,96)
+        eigenrule = eigen(SymTridiagonal(zeros(q),[k/sqrt(4k*k-1) for k in 1:q-1]))
+        nodes, weights = eigenrule.values, 2 .* eigenrule.vectors[1,:].^2
+        points = reduce(vcat,[(a+b)/2 .+ (b-a)/2 .* nodes for (a,b) in zip(edges[1:end-1],edges[2:end])])
+        measure = reduce(vcat,[(b-a)/2 .* weights for (a,b) in zip(edges[1:end-1],edges[2:end])])
+        values = GaussletBases._basis_values_matrix(rb,points)
+        push!(references,values' * ((measure ./ points.^2) .* values))
+    end
+    @test maximum(abs,references[1]-references[2]) <= 1e-7
+    @test all(abs.(centrifugal_matrix(rb,grid;l=1)-references[2]) .<= 2e-11 .* abs.(references[2]) .+ 5e-7)
+end
+
 @testset "Radial primitive operator contraction" begin
     rb, grid = _quick_radial_operator_fixture()
     P = primitive_set(rb)
@@ -629,7 +704,10 @@ end
     overlap_mu = overlap_matrix(P, grid)
     kinetic_mu = kinetic_matrix(P, grid)
     nuclear_mu = nuclear_matrix(P, grid; Z = 2.0)
-    centr2_mu = centrifugal_matrix(P, grid; l = 2)
+    # Primitive inverse-square contraction is only a finite-grid diagnostic.
+    h = 12/512
+    finite_grid = RadialQuadratureGrid(h .* ((1:512) .- 0.5),fill(h,512);mapping=mapping(rb))
+    centr2_mu = centrifugal_matrix(P, finite_grid; l = 2)
 
     overlap_b = contract_primitive_matrix(rb, overlap_mu)
     kinetic_b = contract_primitive_matrix(rb, kinetic_mu)
@@ -649,8 +727,8 @@ end
     @test norm(overlap_b - overlap_matrix(rb, grid), Inf) ≤ 1.0e-10
     @test norm(kinetic_b - kinetic_matrix(rb, grid), Inf) ≤ 1.0e-10
     @test norm(nuclear_b - nuclear_matrix(rb, grid; Z = 2.0), Inf) ≤ 1.0e-10
-    @test norm(centr2_b - centrifugal_matrix(rb, grid; l = 2), Inf) /
-          norm(centrifugal_matrix(rb, grid; l = 2), Inf) ≤ 1.0e-9
+    @test norm(centr2_b - centrifugal_matrix(rb, finite_grid; l = 2), Inf) /
+          norm(centrifugal_matrix(rb, finite_grid; l = 2), Inf) ≤ 1.0e-9
 end
 
 @testset "Radial Ylm solid-harmonic GTO bridge" begin

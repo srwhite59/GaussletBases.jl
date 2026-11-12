@@ -150,6 +150,21 @@ the existing doubling schedule; it is not a fixed grid or convergence promise.
 The expert keyword `quadrature_rmax` still exists for compatibility, but it is
 not part of the recommended front-door story.
 
+The default grid uses 16-point polynomial panels over the full retained-support
+cutoff, resolving the near-origin functions without changing their coefficients
+or mapping. `refine` limits both physical-radius growth and mapped-coordinate
+panel width; all accuracy profiles use panels, with their existing acceptance
+checks. A genuinely converged calculation is quiet.
+
+Generated grids also carry the panel integration rule used by radial Coulomb
+multipoles, including tables evaluated later on demand. Their geometry is
+checked before that evaluation. To use modified points or weights, construct
+`RadialQuadratureGrid(points, weights; mapping=map)` explicitly; such custom
+grids retain the discrete-sum convention. Integration convergence is distinct
+from basis, angular, and IDA errors, and is not an energy-accuracy guarantee.
+For centrifugal terms use `centrifugal_matrix(rb, grid; l=...)`: physical functions
+must be formed before inverse-square integration, not contracted from singular primitives.
+
 ## What this page is for
 
 This page is the practical tuning page. If you want the workflow taught more
