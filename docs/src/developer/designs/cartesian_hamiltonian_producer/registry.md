@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `1159fa31b983cc7c647c4576d3518615d52815e98884ba12897ff7b9e1af498e`.
+> [authority.toml](authority.toml), SHA-256 `d9ea2e6d7aacbece524e812c9f43c1d34a8bc1a95c2807ea02168d214d49bf3a`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1794,6 +1794,38 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `661`
 - **Dependencies:** `HP-H4-RECTANGLE-BARE-FN-01`
 - **Scope:** Record accepted Pass 661 local and hosted tests and four-case admission at 696cb0ac. Existing test +91. Measured cost totals retained; requested TimeG phase receipt missing and not replayed. Grant consumed; no operator, energy, production run or successor authority.
+
+### HP-H4-RECTANGLE-RG-FN-01 - matched hydrogen rectangle supplemented Hamiltonian
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `Matched Hydrogen Rectangle Supplemented Operators`
+- **Owned paths:**
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+  - `source` / `existing`: `src/cartesian/pqs_source_box_low_order_materialization.jl`
+- **Evidence:**
+  - `git_commit`: `c2824723dc727204e1a80dd0be7c026d7ec6afcc`
+  - `manager_pass`: `662`
+- **Dependencies:** none
+- **Scope:** Implement only Matched Hydrogen Rectangle Supplemented Operators: terminal separable attraction and shared unscreened IDA/MWG assembly for accepted paired H4 bases. Hard 150 added source lines. Preserve existing routes and gates. No public API, geometry change, screening, solver, artifact or consumer work.
+
+### HP-H4-RECTANGLE-RG-TEST-01 - matched hydrogen rectangle supplemented operator checks
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [pqs\_residual\_gto\_working\_basis.md](pqs_residual_gto_working_basis.md); heading `Matched Hydrogen Rectangle Supplemented Operators`
+- **Owned paths:**
+  - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `662`
+- **Dependencies:** `HP-H4-RECTANGLE-RG-FN-01`
+- **Scope:** Protect the matched H4 supplemented Hamiltonian contract in the existing residual owner. Hard 110 added test lines. Use the existing Gaussian-product oracle and small operator, metric, bare IDA and fixed-state energy checks. No new test file, solver or routine paper-size fixture.
 
 ### HP-HAM-MANIFEST-FN-01 - compact Hamiltonian artifact manifest
 

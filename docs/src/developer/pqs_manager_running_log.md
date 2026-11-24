@@ -1660,3 +1660,19 @@ receipt, and do not replay. Owner 800/800, full source CI 45338175904 and Docs
 Deleted/quarantined: none. Simplified: one support partition, common direct
 and exterior blocks, existing family realizations. Kept: live atom/diatomic
 and collinear callers. Both grants are consumed; no Pass 2, consumer or release.
+
+### Pass 662 Matched Hydrogen Rectangle Supplemented Authority
+
+PQS-H4-20261124-03 advances LT1/MT1 from matched bare bases to matrix
+Hamiltonians that the paper team can consume. Use the four actual nuclei
+for attraction and for placement of the same 84 contracted H/cc-pV6Z s,p
+candidates. The paper's REQ-028 cc-pV6Z builder resolves the selection cutoff:
+explicit `1e-6` owner-local occupation, not the current default. Sum the
+two-axis GG factors before contraction; stream mixed and candidate attraction
+by center and reuse the collinear residual and MWG assembly. No new public
+API or artifact. Hard +150 source/+110 existing test lines. The compact
+matched smoke must pass an explicit-center operator check, signed-site
+reflection/exchange checks and an independently reconstructed determinant
+energy before paper-side builds. Equivalent spans alone do not certify an
+IDA interaction in different gauges. Actual ranks, timings, memory and
+parity are pending; no paper-scale convergence, solver, consumer or release.

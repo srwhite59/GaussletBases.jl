@@ -550,3 +550,101 @@ The implementation and review gates are complete; no further implementation is g
 Hchain-doer remains paused pending a separate bounded
 continuation at 1e-8, reusing the saved standard-q5 basis and preserving the
 208-direction evidence. No physical continuation is authorized by this packet.
+
+## Matched Hydrogen Rectangle Supplemented Operators
+
+Pass 662, PQS-H4-20261124-03 at `c2824723d`: build an unscreened supplemented
+Hamiltonian for either family of the accepted matched H4 bases. Use a private
+`_h4_residual_gto_mwg_system(pair, family; supplement, expansion)` with the
+intact result of `_matched_h4_terminal_bases`, for `:pqs` or `:wl`. Take the
+physical centers from the mapped axes' nucleus coordinates, not snapped
+grid sites or a second set of side lengths. Require the centered rectangle
+and shared expansion. Consume explicit final contracted Cartesian candidates
+at those centers, the same inventory for both families. For the paper recipe
+use 21 H/cc-pV6Z orbitals per center (6 s and 5 Cartesian p triples), no
+primitive uncontracting or width filter, and fixed owner-local residual
+occupation cutoff `1e-6`, as in the paper's REQ-028 cc-pV6Z builder. This is
+not a singular-value cutoff of `1e-6` or a change to the package default.
+
+Reuse the existing collinear supplemented assembly after factoring out its
+candidate checks and common residual/operator work. Preserve collinear
+inputs, output, cutoff and numerical behavior, and its admission before
+building the bare dense operators. Bare kinetic is the existing Galerkin
+axis product. For each expansion term, sum the two shifted x factors and
+the two shifted y factors separately, multiply with the z=0 factor, and
+accumulate the negative nuclear attraction in terminal blocks. For mixed
+and candidate blocks, stream the existing explicit signed unit-attraction
+blocks one physical center at a time. Use the existing direct physical
+residual finalizer and single final transformation. Keep the bare IDA block
+exactly and use the existing integral-normalized MWG completion for the
+new blocks. Reuse the existing opaque result and its three-field matrix
+Hamiltonian: `one_body`, `electron_electron_ida`, `nuclear_repulsion` map
+directly to SiteIDAHamiltonian `h`, `V`, `ecore`. Compute `E_nn` from the
+physical geometry; no screening, solver, external dependency or export.
+
+Source: only `src/cartesian/cartesian_base_hamiltonian.jl` (private rectangle
+entry and shared collinear validation/augmentation), and
+`src/cartesian/pqs_source_box_low_order_materialization.jl` (terminal bare
+rectangle operators). Hard 150 added source lines including moved code and
+comments; replace the duplicated inline assembly instead of keeping two
+versions. No public API, new carrier, metadata, new artifact, general XYZ
+route, primitive change, or modification to Pass 661 basis construction.
+
+Tests: only the existing
+`test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`, hard 110
+added lines. Extend the current independent Gaussian-product oracle to real
+3D centers rather than create a second oracle. Use a small rectangle with
+explicit s,p candidates to protect the two-axis factorization, projected
+mixed and candidate kinetic/nuclear terms, exact bare IDA retention, final
+metric and matrix-only fixed-state energy. Compare GG attraction against
+four separate terminal contractions at physical coordinates. Compare the
+GA/AA nuclear terms to an explicit-center primitive oracle, and compare the
+final H to the original three blocks transformed by the same residual
+coefficients. Preserve existing collinear tests and tolerances.
+
+One guarded compact admission: both physical rectangles `(1.6,3.2)` and
+`(1.6,1.7)` bohr and their x/y swaps, both families, `ns=3`, padding 4 bohr,
+`coulomb_gaussian_expansion(doacc=false)` as the compact smoke profile only.
+Build the same 84 candidates from `legacy_atomic_gaussian_supplement`
+(`H`, `cc-pV6Z`, `lmax=1`, contracted, no width filter) and translate its
+Cartesian representation without changing coefficients or normalization.
+Use the bundled `data/legacy/BasisSets` SHA-256
+`6796d34f2c813e5b627b03d003ddd29e0701cfd18e1b4c2ee7d263ce671dbede`.
+Check 21 at each physical nucleus, no undocumented filtering; report owner
+ranks and final dimensions, not an imposed cross-family rank equality.
+Report parent extents/counts, displacement, shell/contact/exterior dimensions,
+gauge, fallbacks/warnings, and existing finalizer checks. Independently sum
+six nuclear pairs: `2.4340169943749475`, `3.283176461991533` Ha respectively.
+For a fixed, nontrivial orthonormal determinant with two spin-up and two
+spin-down electrons, compare the density-matrix expectation to an occupied
+direct/exchange pair sum with nuclear repulsion added once. No SCF or solve.
+
+Admission gates: full actual-function metric including GG/GR/RR, inherited
+physical finalizer gates and `norm(S-I,Inf) < 5e-8`; independent small raw
+GA/AA and transformed H checks at existing `1e-10` Ha absolute. For the
+complete compact fixture, check explicit-center GG/GA/AA and transformed
+operators at max-element error `1e-10 * max(1, maxabs(reference))` Ha,
+with independent primitive checks on representative contracted s and all p
+orientations. Fixed-state energy agreement `1e-10` Ha absolute. Check x/y/z
+reflections and x/y swap independently within each family by transporting
+actual basis functions (including residual coefficients and p parity).
+Establish a signed site permutation from overlap, with max-element error
+`5e-8`; apply it to h and the unsigned permutation to V, with the same
+scaled operator gate. Span agreement alone does not certify density-density
+operators under a non-monomial gauge. Stop and disclose any such failure;
+do not change localization, select ranks, or weaken a gate to obtain parity.
+
+Preflight projected finalizer plus live basis, candidate, terminal-pair and
+output workspaces before each build. Keep existing admission limits as well
+as task caps: 600 numerical seconds, 8 GiB RSS, 512 MiB added scratch (local,
+known PID/log). No `N_parent x N_parent` dense object or four-index tensor.
+Use sequential builds, retaining only necessary symmetry-reference data;
+one total admission, no automatic repeat. Verify dimensions/coverage before
+operators. Persist TimeG phase trees and actual time/allocation/peak RSS;
+separate compile, construction, validation and I/O. Report any measured warm
+phases distinctly; no extra build solely for timing. Run existing residual,
+Cartesian/collinear and pertinent core owners, docs/authority/self-test/
+generated parity, package load, Documenter/diff and exact source CI/Docs.
+If the gates, resource envelope, scope or budget cannot be met, stop without
+an implementation commit. No paper-scale ladder, H4 correlated run, new
+solver, screening, consumer edits, releases or successor task.
