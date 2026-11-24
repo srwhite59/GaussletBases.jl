@@ -766,8 +766,10 @@ rejector is not an implementation of the new entrance.
 
 ## Matched Hydrogen Rectangle Bare Realization
 
-PQS-H4-REV Pass 1, review PQS-H4-20261123-02. Return a real matched bare
-pair, not a planner. Scope is four unit nuclei at `(±a/2, ±b/2, 0)`,
+PQS-H4-REV Pass 1 (661) accepts `696cb0ac83df7e7f3027d558fdba7a73b53063b5`.
+Both execution grants are consumed; the contract below records what was
+qualified, not future authority. The result is a matched bare pair, not a
+planner. Scope is four unit nuclei at `(±a/2, ±b/2, 0)`,
 finite positive sides only. Use a private `_matched_h4_terminal_bases(a, b;
 ns, expansion, padding=10.0)` entry in the existing route helper. Return
 one shared parent axis tuple and bundle, and the two existing
@@ -846,6 +848,18 @@ energy/FCIFewP work, paper runs, expansion policy, arbitrary polyatomic geometry
 new public API, release and successor authority. A later pass may use the
 paper-team-confirmed unscreened IDA/MWG and `SiteIDAHamiltonian(h,V,ecore)`;
 neither is implemented or run here.
+
+The exact `ns=5`, 10-bohr-padding admission passed 1346 checks on
+`(1.6, 3.2)` and `(1.6, 1.7)` bohr and both x/y exchanges. The bare sizes
+are 1561 and 1495 for **each** family. Both 1.6-bohr axes merge at initialization;
+later direct contact sizes are 77 and 45, with 120 exterior columns in each
+case. Max local Gram error was `1.57e-13` and cross-block bound `2.67e-11`.
+Lower-band-limited choices occurred; those are not interpolation or energy
+evidence. The 37.60 s / 1.568 GiB guarded admission and per-case totals and
+allocations were accepted. The requested per-phase TimeG receipt was not
+emitted and was not replayed; no phase cost is claimed. Source additions 150,
+existing test additions 91; exact-source CI 45338175904 and Docs 45338175760
+passed. No Pass 2 opened.
 
 ## Private Recursive Chain Retirement
 

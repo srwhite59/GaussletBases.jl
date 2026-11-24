@@ -3,6 +3,13 @@
 This page owns live implementation status, active work, blockers, and next
 steps. It does not grant authority or restate subsystem contracts.
 
+Pass 661 accepts [matched bare H4 rectangles](common_terminal_shell_decomposition.md#Matched-Hydrogen-Rectangle-Bare-Realization)
+at `696cb0ac`: one mapped parent, equal PQS/WL dimensions, exact terminal support
+ownership and checked reflection/axis exchange for both paper geometries.
+Both grants are consumed. Bare construction is qualified; angular-band
+fallback is disclosed and no Hamiltonian, supplement or energy is qualified.
+No Pass 2 or other successor is open.
+
 GB-1's [positive cubature catalog](../../numerical_contracts.md#Cubature-Angular-Integration)
 is accepted at aa8e3911; both CUBATURE IDs are completed with no execution grant.
 The frozen Ih_60 is degree9, not the external card's11 claim. GB-0 path support

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `876965e35887918919ca166da17f5fae9feb242cbe399bfaaa7cd02beddd5c4a`.
+> [authority.toml](authority.toml), SHA-256 `1159fa31b983cc7c647c4576d3518615d52815e98884ba12897ff7b9e1af498e`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -1766,35 +1766,34 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-H4-RECTANGLE-BARE-FN-01 - matched bare hydrogen rectangle terminal bases
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `source`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Matched Hydrogen Rectangle Bare Realization`
-- **Owned paths:**
-  - `source` / `existing`: `src/cartesian/cartesian_shellification/terminal_geometry.jl`
-  - `source` / `existing`: `src/cartesian/pqs_source_box_route_driver_helpers.jl`
+- **Owned paths:** none
 - **Evidence:**
+  - `git_commit`: `696cb0ac83df7e7f3027d558fdba7a73b53063b5`
   - `git_commit`: `a7e55c562a494064da2e9da2347a7924b5275bdb`
   - `manager_pass`: `661`
 - **Dependencies:** none
-- **Scope:** Implement only Matched Hydrogen Rectangle Bare Realization, Pass 661: shared mapped parent, equivariant core/contact/shell/exterior ownership, common source dimensions and matched PQS/WL terminal blocks. Hard150 added source lines total. Preserve existing routes. No operators, supplements, public API, consumer, release or successor.
+- **Scope:** Record accepted Matched Hydrogen Rectangle Bare Realization at 696cb0ac: shared mapped parent, exact ownership and matched PQS/WL bare dimensions for the two H4 rectangles. Source +150. Grant consumed; no operators, supplements, public API, consumer, release or Pass 2 authority.
 
 ### HP-H4-RECTANGLE-BARE-TEST-01 - matched hydrogen rectangle geometry and bare realization checks
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [common\_terminal\_shell\_decomposition.md](common_terminal_shell_decomposition.md); heading `Matched Hydrogen Rectangle Bare Realization`
-- **Owned paths:**
-  - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
+  - `git_commit`: `696cb0ac83df7e7f3027d558fdba7a73b53063b5`
   - `manager_pass`: `661`
 - **Dependencies:** `HP-H4-RECTANGLE-BARE-FN-01`
-- **Scope:** Qualify Matched Hydrogen Rectangle Bare Realization in the existing Cartesian owner, hard100 added test lines. Protect overlap-at-initialization, simultaneous contact, mirror ties, axis exchange, ownership, ranks and local orthogonality; one bounded geometry/bare acceptance only. No operator or energy tests, new owner, production run or loosened gate.
+- **Scope:** Record accepted Pass 661 local and hosted tests and four-case admission at 696cb0ac. Existing test +91. Measured cost totals retained; requested TimeG phase receipt missing and not replayed. Grant consumed; no operator, energy, production run or successor authority.
 
 ### HP-HAM-MANIFEST-FN-01 - compact Hamiltonian artifact manifest
 

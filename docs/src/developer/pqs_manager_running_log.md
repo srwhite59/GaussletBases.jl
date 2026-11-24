@@ -1642,3 +1642,21 @@ axis exchange, overlap/contact/ties, rank, weights and symmetry under bounded
 bare-only admission. No result is yet claimed. Operator/supplement/energy work
 is separate; the paper team confirms identical unscreened IDA/MWG for its later
 comparison and a direct matrix consumer, not an implementation grant.
+
+### Pass 661 Accepted Matched Bare Hydrogen Rectangles
+
+Accept `696cb0ac83df7e7f3027d558fdba7a73b53063b5` for PQS-H4-REV Pass 1.
+LT1/MT1 advances to matched bare PQS/WL bases on one parent for each rectangle.
+At ns=5 the 1.6 x 3.2 and 1.6 x 1.7 bohr fixtures give 1561 and 1495
+functions per family, unchanged by axis exchange. Initial overlap on the
+short side is owned once; later contacts have 77/45 direct columns, the
+shared exterior 120 each. Full local ranks, reflection/exchange spans,
+positive weights and existing metric bounds pass. The short-side snap moves
+0.481 local spacings; selector lower-band fallback is disclosed, not accuracy
+evidence. The frozen admission passed 1346/1346 in 37.60 s / 1.568 GiB; accept
+measured construction and validation totals, not the missing TimeG phase
+receipt, and do not replay. Owner 800/800, full source CI 45338175904 and Docs
+45338175760 match the reviewed hashes. Source +150, existing tests +91.
+Deleted/quarantined: none. Simplified: one support partition, common direct
+and exterior blocks, existing family realizations. Kept: live atom/diatomic
+and collinear callers. Both grants are consumed; no Pass 2, consumer or release.
