@@ -1676,3 +1676,25 @@ reflection/exchange checks and an independently reconstructed determinant
 energy before paper-side builds. Equivalent spans alone do not certify an
 IDA interaction in different gauges. Actual ranks, timings, memory and
 parity are pending; no paper-scale convergence, solver, consumer or release.
+
+### Pass 662 Accepted Matched Supplemented Hydrogen Rectangles
+
+Accept `203e730f09c856465298f913b1cd66c8bc55aaa4` for PQS-H4-REV Pass 2.
+LT1/MT1 now has a matched, unscreened matrix producer with physical
+four-center attraction, exact bare IDA retention and existing MWG residual
+blocks. At ns=3/pad=4 both families retained 84 residuals, 21 on each nucleus;
+dimensions 369/339 and `E_nn` 2.4340169943749475/3.283176461991533 Ha are for
+the two rectangles respectively. Explicit-center, independent primitive and
+fixed 2-up/2-down energy checks passed 640/640. Full metric max error
+2.786e-12; 28 signed site checks passed, with transported h/V errors at most
+6.381e-12/1.733e-12 Ha. Warm Hamiltonian construction 1.96-2.21 s; residual
+selection dominated. One scratch binding correction, cumulative 165.2844 s
+of 600, peak 2.475 GiB, scratch 100519 B. The initial pre-operator rejection
+is preserved. Independent diff/hash/oracle review reused the rendered TimeG
+and admission results; no replay. Local 3536/3536; source CI 45361430384
+and Docs 45361430339 green. Added source 79, deleted 13; existing tests
++90/-4, no new test files or metadata/status fields. Deleted/simplified:
+replaced inline collinear-only assembly by one shared path; quarantined:
+none. Kept: live released collinear, atom and diatomic entries. Both grants
+consumed. Paper-side builds can proceed with their own preflight; production
+dimensions and correlated accuracy remain unmeasured. No solver or successor.

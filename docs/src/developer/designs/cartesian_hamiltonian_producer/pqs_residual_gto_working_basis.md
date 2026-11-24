@@ -648,3 +648,9 @@ generated parity, package load, Documenter/diff and exact source CI/Docs.
 If the gates, resource envelope, scope or budget cannot be met, stop without
 an implementation commit. No paper-scale ladder, H4 correlated run, new
 solver, screening, consumer edits, releases or successor task.
+
+Accepted at `203e730f09c856465298f913b1cd66c8bc55aaa4`; both grants are
+consumed. In the compact admission both routes retained 21 residuals per
+nucleus. Final dimensions were 369 and 339 respectively and were unchanged
+under axis exchange. This qualifies the matrix producer for the paper-side
+builds, not those larger bases, their retained ranks or correlated energies.
