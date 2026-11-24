@@ -35,7 +35,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/cartesian_pqs_
 sha256 = "1eb1fcf74b441212bea6bf914f6a8413b963b3c1c83dce112b8bd321aa1e7093"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
-sha256 = "acd6922ca46177d543ac2d402584d827a08077573ac5bbd3592e5d11cfe2bf5a"
+sha256 = "a0528677f90a27f9072ce89c5411ea8b969513262b9a9517ae4eff14ad55b59e"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/complete_core_shell_rhf_retirement.md"
 sha256 = "99520abb40f2d828f9cd80fb56517259fb20c37310a58924380d3d6c2e00f4be"
@@ -3052,11 +3052,12 @@ title = "displaced Gaussian independent arithmetic regressions"
     state = "existing"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-H4-RECTANGLE-BARE-FN-01"
-lifecycle = "approved"
-scope = "Implement only Matched Hydrogen Rectangle Bare Realization, Pass 661: shared mapped parent, equivariant core/contact/shell/exterior ownership, common source dimensions and matched PQS/WL terminal blocks. Hard150 added source lines total. Preserve existing routes. No operators, supplements, public API, consumer, release or successor."
-surfaces = ["source"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Matched Hydrogen Rectangle Bare Realization at 696cb0ac: shared mapped parent, exact ownership and matched PQS/WL bare dimensions for the two H4 rectangles. Source +150. Grant consumed; no operators, supplements, public API, consumer, release or Pass 2 authority."
+surfaces = []
 title = "matched bare hydrogen rectangle terminal bases"
 
     [[records.document_refs]]
@@ -3066,26 +3067,21 @@ title = "matched bare hydrogen rectangle terminal bases"
 
     [[records.evidence_refs]]
     kind = "git_commit"
+    value = "696cb0ac83df7e7f3027d558fdba7a73b53063b5"
+    [[records.evidence_refs]]
+    kind = "git_commit"
     value = "a7e55c562a494064da2e9da2347a7924b5275bdb"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "661"
-
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_shellification/terminal_geometry.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/pqs_source_box_route_driver_helpers.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-H4-RECTANGLE-BARE-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-H4-RECTANGLE-BARE-TEST-01"
-lifecycle = "approved"
-scope = "Qualify Matched Hydrogen Rectangle Bare Realization in the existing Cartesian owner, hard100 added test lines. Protect overlap-at-initialization, simultaneous contact, mirror ties, axis exchange, ownership, ranks and local orthogonality; one bounded geometry/bare acceptance only. No operator or energy tests, new owner, production run or loosened gate."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Pass 661 local and hosted tests and four-case admission at 696cb0ac. Existing test +91. Measured cost totals retained; requested TimeG phase receipt missing and not replayed. Grant consumed; no operator, energy, production run or successor authority."
+surfaces = []
 title = "matched hydrogen rectangle geometry and bare realization checks"
 
     [[records.document_refs]]
@@ -3094,13 +3090,11 @@ title = "matched hydrogen rectangle geometry and bare realization checks"
     path = "docs/src/developer/designs/cartesian_hamiltonian_producer/common_terminal_shell_decomposition.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "696cb0ac83df7e7f3027d558fdba7a73b53063b5"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "661"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"
-    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "maintenance"
