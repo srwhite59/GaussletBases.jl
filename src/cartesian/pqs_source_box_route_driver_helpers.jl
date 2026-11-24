@@ -2143,3 +2143,103 @@ function _collinear_terminal_basis(axes, bundles, z, core_side, nref, outer_coun
         direct!, shell!, slab!, axes, z, core_side, outer_count)
     return C.CartesianTerminalBasisRealization(blocks, last(last(blocks).column_range), 0.0)
 end
+
+function _matched_h4_terminal_bases(a, b; ns, expansion::CoulombGaussianExpansion, padding=10.0)
+    ns isa Integer && !(ns isa Bool) && 3 <= ns < typemax(Int) ||
+        throw(ArgumentError("rectangle ns must be an integer >= 3, not Bool"))
+    ns = Int(ns)
+    positive(value, name) = _pqs_source_box_route_driver_positive_float(value, name)
+    ax, by = positive(a, :a)/2, positive(b, :b)/2
+    padding = positive(padding, :padding)
+    min(ax, by) > 0 || throw(ArgumentError("rectangle half sides must be positive"))
+    basis = (nuclei=[(x, y, 0.0) for x in (-ax, ax) for y in (-by, by)],)
+    atoms = [(location = p, nuclear_charge = 1.0) for p in basis.nuclei]
+    axes, bundles = @timeg "rectangle parent" begin
+        parent_axes = ntuple(j -> first(_cartesian_center_list_parent_axis(atoms,
+            (core_spacing=1.2/(ns-1), s_factor=1.0, reference_spacing=1.0, tail_spacing=2.8,
+                radius=(ax, by, 0.0)[j]+padding), (;), j)), 3)
+        parts = map(axis -> _mapped_ordinary_gausslet_1d_bundle(axis;
+            exponents=expansion.exponents, backend=:pgdg_localized_experimental), parent_axes)
+        parent_axes, _CartesianNestedAxisBundles3D(parts...)
+    end
+    C = CartesianFinalBasisRealization
+    labels = (:x, :y, :z)
+    pgdg = map(axis -> _nested_axis_pgdg(bundles, axis), labels)
+    overlaps = map(axis -> axis.overlap, pgdg)
+    pqs, wl = C.CartesianTerminalBasisBlock[], C.CartesianTerminalBasisBlock[]
+    dims = length.(axes)
+    nextcol(blocks) = isempty(blocks) ? 1 : last(last(blocks).column_range) + 1
+    function support(box, excluded=())
+        states = [(x, y, z) for x in box[1] for y in box[2] for z in box[3]
+            if !any(b -> all((x, y, z)[j] in b[j] for j in 1:3), excluded)]
+        return [_cartesian_flat_index(s..., dims) for s in states], states
+    end
+    function direct!(kind, box, excluded)
+        indices, states = support(box, excluded)
+        isempty(indices) && return
+        record = (unit_key=Symbol(kind, "_", length(pqs)+1), support_indices=indices, support_states=states)
+        C._append_direct!(pqs, (support_record=record,), bundles, overlaps, nextcol(pqs), 1e-10)
+        push!(wl, last(pqs))
+    end
+    function shell!(outer, inner, merged)
+        shape = @timeg "rectangle selector" begin
+            band = any(merged) ? _nested_diatomic_shared_shell_reference_band(
+                basis, bundles, outer; nside=ns, angular_resolution_scale=1.4) : nothing
+            ntuple(3) do j
+                merged[j] || return ns
+                choice = _nested_diatomic_choose_shell_axis_retain_count(
+                    basis, bundles, labels[j], inner[j], outer, band; minimum_retained=ns-2)
+                @debug "Rectangle angular selector" outer axis=labels[j] choice.retain choice.parent_limited choice.lower_band_limited
+                choice.retain + 2
+            end
+        end
+        all(shape .<= length.(outer)) || throw(ArgumentError("rectangle shell counts exceed source"))
+        indices, states = support(outer, (inner,))
+        key = Symbol("shell_", length(pqs)+1)
+        modes = _nested_projected_q_shell_boundary_comx_product_modes(shape)
+        n = prod(shape) - prod(shape .- 2)
+        record = (unit_key=key, support_indices=indices, support_states=states,
+            outer_box=outer, source_mode_shape=shape)
+        rule = (retained_rule_kind=:boundary_comx_product_mode_selection,
+            transform_kind=:source_mode_column_selector, source_mode_dims=shape,
+            source_mode_ordering=:x_major_y_major_z_fast, retained_column_indices=modes.column_indices,
+            retained_mode_indices=modes.mode_indices, retained_count=n)
+        @timeg "rectangle PQS realization" C._push_block!(pqs, key, C._realize_shell(
+            (support_record=record,), (metadata=(raw_product_source_retained_rule=rule,),),
+            bundles, overlaps, 1e-10, 1e-14)..., nextcol(pqs))
+        @timeg "rectangle WL realization" begin
+            strata = CartesianCPB.complete_shell_boundary_strata(CartesianCPB.cpb(outer), CartesianCPB.cpb(inner))
+            coefficients = zeros(length(indices), n)
+            col = 0
+            for cpb in strata.all_strata
+                rows, _, c = C._wl_boundary_stratum_block((source_cpbs=(cpb,),
+                    terminal_region_role=:shared_molecular_shell,
+                    metadata=(white_lindsey_retained_count_1d=ns-2, source_mode_shape=shape)), bundles)
+                coefficients[searchsortedfirst.(Ref(indices), rows), col .+ Base.axes(c, 2)] .= c
+                col += size(c, 2)
+            end
+            col == n || throw(ArgumentError("rectangle WL shell rank mismatch"))
+            C._canonicalize!(coefficients, states, bundles, 1e-14)
+            C._wl_validate_coefficients(states, coefficients, overlaps, 1e-10)
+            C._push_block!(wl, key, indices, states, coefficients, nextcol(wl))
+        end
+        @debug "Rectangle shell" outer shape n
+    end
+    function exterior!(box, middle)
+        @timeg "rectangle exterior realization" begin
+            all(!middle[j] || length(box[j]) >= ns for j in 1:3) ||
+                throw(ArgumentError("rectangle exterior counts exceed source"))
+            factors = ntuple(j -> middle[j] ? _nested_doside_1d(pgdg[j], box[j], ns;
+                enforce_symmetric_odd=false).local_coefficients : Matrix{Float64}(I, length(box[j]), length(box[j])), 3)
+            indices, states = support(box)
+            c = C._canonicalize!(kron(factors...), states, bundles, 1e-14)
+            C._wl_validate_coefficients(states, c, overlaps, 1e-10)
+            C._push_block!(pqs, Symbol("outer_", length(pqs)+1), indices, states, c, nextcol(pqs))
+            push!(wl, last(pqs))
+        end
+    end
+    @timeg "rectangle partition and realization" CartesianShellification._h4_rectangle_geometry(
+        direct!, shell!, exterior!, centers.(axes), (ax, by), isodd(ns) ? ns : ns+1)
+    return (; axes, bundles, pqs=C.CartesianTerminalBasisRealization(pqs, nextcol(pqs)-1, 0.0),
+        wl=C.CartesianTerminalBasisRealization(wl, nextcol(wl)-1, 0.0))
+end

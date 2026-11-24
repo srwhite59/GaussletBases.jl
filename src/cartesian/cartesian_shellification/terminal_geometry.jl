@@ -71,6 +71,56 @@ function _collinear_terminal_geometry(direct!, shell!, slab!, axes, z, core_side
     return nothing
 end
 
+function _h4_rectangle_snap(axis, position)
+    n = length(axis)
+    isodd(n) && n >= 3 && all(>(0), diff(axis)) &&
+        maximum(abs, axis + reverse(axis)) <= 8eps(maximum(abs, axis)) ||
+        throw(ArgumentError("rectangle parent axis must be ordered, odd and centered"))
+    mid = (n + 1) ÷ 2
+    iszero(position) && return mid
+    hi = searchsortedfirst(axis, position)
+    mid < hi <= n || throw(ArgumentError("rectangle nucleus lies outside positive parent half"))
+    midpoint = (axis[hi-1] + axis[hi]) / 2
+    index = position >= midpoint - 8eps(max(abs(position), abs(midpoint))) ? hi : hi-1
+    index > mid || throw(ArgumentError("rectangle centers collapse onto the same index"))
+    return index
+end
+
+function _h4_rectangle_geometry(direct!, shell!, exterior!, axes, half_sides, core_side)
+    dims = length.(axes)
+    snap = ntuple(a -> _h4_rectangle_snap(axes[a], a == 3 ? 0.0 : half_sides[a]), 3)
+    radius = core_side ÷ 2
+    hull(rs) = first(first(rs)):last(last(rs))
+    merge_axis(rs) = length(rs) == 2 && first(last(rs)) <= last(first(rs)) ? [hull(rs)] : rs
+    expand(r) = first(r)-1:last(r)+1
+    ranges = ntuple(3) do a
+        hi = snap[a]
+        lo = dims[a] + 1 - hi
+        all(i -> radius < i <= dims[a]-radius, (lo, hi)) ||
+            throw(ArgumentError("rectangle core lies outside parent"))
+        merge_axis([i-radius:i+radius for i in (a == 3 ? (hi,) : (lo, hi))])
+    end
+    foreach(box -> direct!(:core, box, ()), Iterators.product(ranges...))
+    while true
+        grown = ntuple(a -> merge_axis(expand.(ranges[a])), 3)
+        all(a -> 1 <= first(hull(grown[a])) && last(hull(grown[a])) <= dims[a], 1:3) || break
+        for outer in Iterators.product(grown...)
+            previous = ntuple(a -> filter(r -> first(r) in outer[a], ranges[a]), 3)
+            inner = map(hull, previous)
+            direct!(:contact, inner, Iterators.product(previous...))
+            shell!(outer, inner, (length(grown[1]) == 1, length(grown[2]) == 1, false))
+        end
+        ranges = grown
+    end
+    inner = map(hull, ranges)
+    direct!(:gap, inner, Iterators.product(ranges...))
+    pieces = ntuple(a -> (1:first(inner[a])-1, inner[a], last(inner[a])+1:dims[a]), 3)
+    for box in Iterators.product(pieces...)
+        (box == inner || any(isempty, box)) || exterior!(box, box .== inner)
+    end
+    return nothing
+end
+
 """
     raw_terminal_geometry(parent_axes, nuclear_positions; kwargs...)
 

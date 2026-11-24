@@ -562,3 +562,94 @@ end
     @test_throws ArgumentError build([-.2,0.,.2],ones(3))
     @test_throws ArgumentError build([-2.4,0.,2.4],ones(3);outer_face_count=99, padding_transverse=6.)
 end
+
+@testset "Matched bare hydrogen rectangle" begin
+    GB = GaussletBases
+    G = GB.CartesianShellification
+    C = GB.CartesianFinalBasisRealization
+    grid = collect(-6.0:6.0)
+    @test G._h4_rectangle_snap(grid, 1.5) == 9
+    @test G._h4_rectangle_snap(grid, prevfloat(1.5)) == 9
+    @test G._h4_rectangle_snap(grid, 1.5 - 16eps(1.5)) == 8
+    @test_throws ArgumentError G._h4_rectangle_snap(grid, 0.25)
+    @test_throws ArgumentError G._h4_rectangle_snap(grid, 7.0)
+    @test_throws ArgumentError G._h4_rectangle_snap(grid[2:end], 1.5)
+    function audit_geometry(axes, halves)
+        seen = zeros(Int, length.(axes))
+        counts = Dict{Symbol,Vector{Int}}()
+        shell_merges = NTuple{3,Bool}[]
+        function mark(kind, box, excluded)
+            n = 0
+            for s in Iterators.product(box...)
+                any(b -> all(s[j] in b[j] for j in 1:3), excluded) && continue
+                seen[s...] += 1
+                n += 1
+            end
+            n > 0 && push!(get!(() -> Int[], counts, kind), n)
+        end
+        shell(outer, inner, merged) = (mark(:shell, outer, (inner,)); push!(shell_merges, merged))
+        G._h4_rectangle_geometry(mark, shell, (box, _) -> mark(:outer, box, ()), axes, halves, 3)
+        @test all(==(1), seen)
+        return counts, shell_merges
+    end
+    counts, merges = audit_geometry((grid, grid, grid), (2.0, 2.0))
+    @test counts[:core] == fill(27, 4)
+    @test counts[:contact] == [39]
+    @test first(merges) == (true, true, false)
+    counts, _ = audit_geometry((grid, grid, grid), (1.0, 1.0))
+    @test counts[:core] == [75]
+    @test !haskey(counts, :contact)
+    counts, _ = audit_geometry((grid, grid, collect(-2.0:2.0)), (3.0, 3.0))
+    @test counts[:gap] == [105]
+    @test sum(counts[:outer]) == (13^2 - 11^2)*5
+
+    expansion = coulomb_gaussian_expansion(doacc=false)
+    build(a, b; ns=3) = GB._matched_h4_terminal_bases(a, b; ns, expansion, padding=4.0)
+    @test_throws ArgumentError build(1.0, 2.0; ns=true)
+    @test_throws ArgumentError build(1.0, 2.0; ns=2)
+    @test_throws ArgumentError build(1.0, NaN)
+    forward, swapped = build(3.1, 1.2), build(1.2, 3.1)
+    dims = length.(forward.axes)
+    @test (dims[2], dims[1], dims[3]) == length.(swapped.axes)
+    @test all(centers(forward.axes[j]) == centers(swapped.axes[k]) for (j, k) in ((1,2),(2,1),(3,3)))
+    @test forward.pqs.final_dimension == forward.wl.final_dimension
+    @test length(forward.pqs.blocks) == length(forward.wl.blocks)
+    for (p, w) in zip(forward.pqs.blocks, forward.wl.blocks)
+        @test p.support_states == w.support_states
+        @test p.column_range == w.column_range
+        startswith(string(p.unit_key), "shell_") || @test p === w
+    end
+    S = map(axis -> GB._nested_axis_pgdg(forward.bundles, axis).overlap, (:x,:y,:z))
+    function check_span(block, lookup, transport)
+        states = transport.(block.support_states)
+        other = lookup[sort(states)]
+        @test length(block.column_range) == length(other.column_range)
+        isnothing(block.coefficients) && return @test isnothing(other.coefficients)
+        order = Dict(s => i for (i, s) in enumerate(other.support_states))
+        aligned = other.coefficients[[order[s] for s in states], :]
+        @test norm(block.coefficients - aligned*(aligned'*block.coefficients), Inf) <= 1e-10
+    end
+    for family in (:pqs, :wl)
+        lhs, rhs = getproperty(forward, family), getproperty(swapped, family)
+        @test lhs.final_dimension == rhs.final_dimension
+        @test sort(reduce(vcat, (b.support_indices for b in lhs.blocks))) == 1:prod(dims)
+        local_blocks = Dict(sort(b.support_states) => b for b in lhs.blocks)
+        swapped_blocks = Dict(sort(b.support_states) => b for b in rhs.blocks)
+        for b in lhs.blocks
+            c = b.coefficients
+            weights = C._support_weights(b.support_states, forward.bundles)
+            @test minimum(isnothing(c) ? weights : c' * weights) > 1e-14
+            error = isnothing(c) ? C._support_identity_error(b.support_states, S) :
+                C._matrix_identity_error(c' * C._support_action(b.support_states, b.support_states, c, S))
+            @test error <= 1e-10
+            check_span(b, swapped_blocks, s -> (s[2], s[1], s[3]))
+            for j in 1:3
+                check_span(b, local_blocks, s -> ntuple(k -> k == j ? dims[k]+1-s[k] : s[k], 3))
+            end
+        end
+        # Disjoint support ensures at least one off-diagonal parent factor.
+        l1 = maximum(isnothing(b.coefficients) ? 1.0 : opnorm(b.coefficients, 1) for b in lhs.blocks)
+        axis_error = maximum(C._matrix_identity_error, S)
+        @test axis_error*(1+axis_error)^2*l1^2 <= 1e-10
+    end
+end
