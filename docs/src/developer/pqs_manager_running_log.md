@@ -1627,3 +1627,18 @@ callers. Source120/6, tests85/7, readers34, example9/5; only frozen private
 rule/helpers/attachments, no public type/export/framework. Both grants consumed;
 no remaining repository task or automatic successor. Consumer comparison/pins,
 snapshot adoption, shared skills and releases remain separate owner decisions.
+
+### Pass 661 Matched Hydrogen Rectangle Bare Authority
+
+Paper-team handoff PQS-H4-20261123-02 at a7e55c562 bounds LT1/MT1 advancement
+to one shared parent and actual bare matched PQS/WL rectangle bases. Contact
+including overlapping initial cores follows the Cartesian product of independently
+merged interval lists, with mirrored snapping and a common tensor exterior.
+One shell shape per support gives identical dimensions but not identical spans.
+Reuse existing angular-band, local PQS and WL stratum kernels; ordered exterior
+peeling is not used for rectangles. Hard150 added source and100 existing-test
+lines; no new API, framework or legacy deletion. Check both physical inputs,
+axis exchange, overlap/contact/ties, rank, weights and symmetry under bounded
+bare-only admission. No result is yet claimed. Operator/supplement/energy work
+is separate; the paper team confirms identical unscreened IDA/MWG for its later
+comparison and a direct matrix consumer, not an implementation grant.

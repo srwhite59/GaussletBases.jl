@@ -764,6 +764,89 @@ numerical gates, expert/released parity or these budgets require broader changes
 make no implementation commit and report the exact obstacle. A mismatch-only
 rejector is not an implementation of the new entrance.
 
+## Matched Hydrogen Rectangle Bare Realization
+
+PQS-H4-REV Pass 1, review PQS-H4-20261123-02. Return a real matched bare
+pair, not a planner. Scope is four unit nuclei at `(±a/2, ±b/2, 0)`,
+finite positive sides only. Use a private `_matched_h4_terminal_bases(a, b;
+ns, expansion, padding=10.0)` entry in the existing route helper. Return
+one shared parent axis tuple and bundle, and the two existing
+`CartesianTerminalBasisRealization` objects. No new carrier type or export.
+The Coulomb expansion here is only for the existing PGDG axis bundle setup;
+no molecular operator is assembled. Preserve all released entry points.
+
+Use deduplicated center-list axis records and the positive-amplitude fitter
+with `d=1.2/(ns-1)`, `s_factor=1`, tail spacing 2.8, equal padding beyond
+the outermost center on each axis, and the existing mapped odd-count G10
+construction. Require integer `ns>=3` (not Bool); direct core side is the
+smallest odd integer >= ns. Require an odd, ordered parent centered at
+zero to roundoff. Snap each positive coordinate once in physical space
+using adjacent grid points (midpoint ties, including roundoff within eight
+ulps at that coordinate scale, go outward), then mirror by index. Snap z
+to the middle index. Reject collapsed, out-of-parent or unbounded cores.
+Report original and snapped coordinates, signed displacements and absolute
+displacement divided by local spacing (mean adjacent step, one-sided at an
+endpoint). Physical nuclear coordinates also feed angular distances.
+
+Use independent x/y lists of intervals and one common z interval; a layer
+is their Cartesian product. Merge intervals with a shared index, not merely
+adjacent intervals. At initialization, merged Cartesian hulls are single
+direct identity blocks, including any overlapping nominal cores exactly once.
+Advance all intervals by one row per side together; group overlapping grown
+intervals on both axes before emitting any block. For each resulting box,
+emit the hull of its previous boxes minus their union as a direct contact
+block (skip empty), then a complete shell between that inner hull and its
+one-row expansion. Stop before any growth would leave the parent. If groups
+are still separate, emit the remaining inner-hull gaps once as direct blocks.
+For the exterior use the Cartesian product of low/middle/high intervals of
+each axis, excluding the all-middle box and empty pieces. In each piece use
+identity on outside intervals and existing local COMX with `ns` columns on
+middle intervals, without parity adjustment. Reject incompatible counts.
+Both routes share the same direct and exterior blocks. Never use the ordered
+axis slab peel, global orthogonalization, or a global coefficient map.
+
+On each complete shell use outer source size `ns` on unmerged axes, including
+z. For each merged axis use the existing shared-shell angular band (`nside=ns`,
+scale 1.4) and axis selector on the inner interval with minimum `ns-2`; take
+the selected inner count plus 2 as the outer size. Evaluate the band against
+all four nuclei. Keep the existing selector's band-limited diagnostics visible;
+do not claim that fallback certifies angular accuracy. Require counts to fit,
+mirrored/transposed counts to correspond, and full local rank. Use the same
+`D` in both routes: `_realize_shell` for PQS boundary modes and local Lowdin;
+`complete_shell_boundary_strata` and `_wl_boundary_stratum_block` for WL
+with free-axis counts `D.-2`. Both must retain `prod(D)-prod(D.-2)` columns.
+Reuse support-local blocks; existing temporary sparse WL stratum assembly is
+allowed, not a global dense map or a second realization framework.
+
+Hard cap 150 added source lines, including relocated code/docstrings in
+`src/cartesian/cartesian_shellification/terminal_geometry.jl` and
+`src/cartesian/pqs_source_box_route_driver_helpers.jl` only. Add at most 100
+lines to existing `test/driver_public/cartesian_base_hamiltonian_runtests.jl`.
+No new file, export, compatibility layer or persistent report. Keep ordinary
+regressions compact (small synthetic geometry and representative complete
+realization). One bounded acceptance on both paper rectangles and x/y-swapped
+copies at ns=5, 10-bohr padding, using the same existing compact expansion for
+the axis setup, at most 120 elapsed seconds numerical/8 GiB peak RSS; report
+TimeG parent, partition/selector and realization phases and measured allocation.
+Use synthetic equal-gap simultaneous contact and half-index tie fixtures, and
+explicit initially overlapping cores. Audit exactly-once support, expected
+and realized rank, both final dimensions, shared parent identity, and reflected
+and swapped support/shape correspondence. For within-family coefficient symmetry
+compare transported local spans, not arbitrary coefficient signs or column order.
+Check direct and transformed Gram/cross-block identity to existing terminal
+tolerances (1e-10 for this construction) and finite positive-gaugeable IDA
+weights (existing 1e-14 floor). Record parent bounds/counts and each direct
+core/contact/exterior and complete shell support and retained dimension.
+Stop before commit for a substantive symmetry, rank, resource or budget issue;
+no silent retuning, cap reduction or extra fallback. Require the relevant
+existing Cartesian owners and ordinary source-bearing CI and Docs.
+
+Excluded: molecular H1, IDA/MWG assembly, supplements, screening, correlated
+energy/FCIFewP work, paper runs, expansion policy, arbitrary polyatomic geometry,
+new public API, release and successor authority. A later pass may use the
+paper-team-confirmed unscreened IDA/MWG and `SiteIDAHamiltonian(h,V,ecore)`;
+neither is implemented or run here.
+
 ## Private Recursive Chain Retirement
 
 Pass 638 accepts 4b6e1c9dab7696a4a6b9f8198b225450de8924a9: exactly 708 lines
