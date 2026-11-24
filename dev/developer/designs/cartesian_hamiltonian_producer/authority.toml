@@ -86,7 +86,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_sur
 sha256 = "dd325e13a2afcfe50d0bf5f36447a779f00013132da0a5848f29859ae87a4738"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
-sha256 = "334565392cdfc88f360875c7922b94ebf4d22b3c989abd08886c324de89e42da"
+sha256 = "197520a9a8793c8b8c68859a371ad499f8916e279edb084686d6291d9e3d278b"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_semantic_shell_q_overrides.md"
 sha256 = "e147f315224dd644b01e587d3cc2d2210ec563512d08e7fd7a7724dae87d4cfb"
@@ -3095,6 +3095,57 @@ title = "matched hydrogen rectangle geometry and bare realization checks"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "661"
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-H4-RECTANGLE-RG-FN-01"
+lifecycle = "approved"
+scope = "Implement only Matched Hydrogen Rectangle Supplemented Operators: terminal separable attraction and shared unscreened IDA/MWG assembly for accepted paired H4 bases. Hard 150 added source lines. Preserve existing routes and gates. No public API, geometry change, screening, solver, artifact or consumer work."
+surfaces = ["source"]
+title = "matched hydrogen rectangle supplemented Hamiltonian"
+
+    [[records.document_refs]]
+    heading = "Matched Hydrogen Rectangle Supplemented Operators"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "c2824723dc727204e1a80dd0be7c026d7ec6afcc"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "662"
+
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_base_hamiltonian.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/pqs_source_box_low_order_materialization.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-H4-RECTANGLE-RG-FN-01"]
+grant = "implementation"
+id = "HP-H4-RECTANGLE-RG-TEST-01"
+lifecycle = "approved"
+scope = "Protect the matched H4 supplemented Hamiltonian contract in the existing residual owner. Hard 110 added test lines. Use the existing Gaussian-product oracle and small operator, metric, bare IDA and fixed-state energy checks. No new test file, solver or routine paper-size fixture."
+surfaces = ["tests"]
+title = "matched hydrogen rectangle supplemented operator checks"
+
+    [[records.document_refs]]
+    heading = "Matched Hydrogen Rectangle Supplemented Operators"
+    kind = "canonical"
+    path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "662"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "maintenance"
