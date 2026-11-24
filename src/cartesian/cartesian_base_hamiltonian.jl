@@ -1681,6 +1681,16 @@ function cartesian_residual_gto_mwg_system(working::_CartesianCollinearWorkingBa
     isfinite(cutoff) && cutoff >= 0 || throw(ArgumentError(
         "residual_occupation_cutoff must be finite and nonnegative as Float64"))
     z, Z = _collinear_nuclei(z, Z)
+    _validate_terminal_supplement_candidates(supplement)
+    locations = [(0.0, 0.0, value) for value in z]
+    return _terminal_unscreened_residual_gto_mwg_system(
+        working.terminal_basis, working.parent_axis_bundles, locations, Z, supplement, expansion, cutoff,
+    ) do
+        cartesian_collinear_operators(working, z, Z; expansion)
+    end
+end
+
+function _validate_terminal_supplement_candidates(supplement)
     isempty(supplement.orbitals) && throw(ArgumentError("supplement must not be empty"))
     for orbital in supplement.orbitals
         !isempty(orbital.exponents) && length(orbital.exponents) == length(orbital.coefficients) &&
@@ -1690,30 +1700,64 @@ function cartesian_residual_gto_mwg_system(working::_CartesianCollinearWorkingBa
             orbital.primitive_normalization === :axiswise_normalized_cartesian_gaussian ||
             throw(ArgumentError("invalid Cartesian Gaussian supplement candidate"))
     end
-    C, R = CartesianFinalBasisRealization, CartesianResidualGaussians
-    terminal, bundles = working.terminal_basis, working.parent_axis_bundles
-    locations = [(0.0, 0.0, value) for value in z]
-    C._r3_validate_pgdg_expansion(bundles, expansion)
-    residual = C.pqs_terminal_residual_gto_augmentation(terminal, bundles, supplement, locations;
-        residual_occupation_cutoff = cutoff)
-    base = cartesian_collinear_operators(working, z, Z; expansion)
-    raw = @timeg "collinear.Gaussian_raw_blocks" C._r3a_qw_blocks(terminal, bundles, supplement, NTuple{3,Float64}[], expansion)
-    products = @timeg "collinear.Gaussian_products" C.pqs_terminal_residual_gto_augmented_products(terminal, bundles, nothing,
-        supplement, residual, locations, Z; expansion, supplement_blocks = raw)
+    return nothing
+end
+
+function _terminal_supplement_one_body_blocks(terminal, bundles, supplement, locations, Z, expansion, raw)
+    C = CartesianFinalBasisRealization
     H_GA, H_AA = copy(raw.mixed.kinetic), copy(raw.self.kinetic)
     proxy, donor = C._r3a_qw_proxy_layers(bundles), C._r3a_qw_supplement(supplement)
     for (center, charge) in zip(locations, Z)
-        unit = @timeg "collinear.nuclear_GA_AA" CartesianGaussianRawBlocks.gaussian_nuclear_raw_blocks_by_center(
+        unit = @timeg "terminal.nuclear_GA_AA" CartesianGaussianRawBlocks.gaussian_nuclear_raw_blocks_by_center(
             proxy, donor, expansion, [center])
         H_GA .+= charge .* C._r3a_project_parent_ga(terminal, only(unit.ga))
         H_AA .+= charge .* only(unit.aa)
     end
-    one_body = @timeg "collinear.residual_one_body" R.transform_augmented_operator(base.one_body, H_GA, H_AA, residual)
-    electron_electron_ida = @timeg "collinear.residual_MWG" R.assemble_residual_ida_interaction(base.electron_electron_ida,
+    return H_GA, H_AA
+end
+
+function _terminal_unscreened_residual_gto_mwg_system(
+    build_bare, terminal, bundles, locations, Z, supplement, expansion, cutoff,
+)
+    C, R = CartesianFinalBasisRealization, CartesianResidualGaussians
+    C._r3_validate_pgdg_expansion(bundles, expansion)
+    residual = @timeg "terminal.residual_selection" C.pqs_terminal_residual_gto_augmentation(
+        terminal, bundles, supplement, locations; residual_occupation_cutoff = cutoff)
+    base = build_bare()
+    raw = @timeg "terminal.Gaussian_raw_blocks" C._r3a_qw_blocks(
+        terminal, bundles, supplement, NTuple{3,Float64}[], expansion)
+    products = @timeg "terminal.Gaussian_products" C.pqs_terminal_residual_gto_augmented_products(
+        terminal, bundles, nothing, supplement, residual, locations, Z; expansion, supplement_blocks = raw)
+    H_GA, H_AA = _terminal_supplement_one_body_blocks(terminal, bundles, supplement, locations, Z, expansion, raw)
+    one_body = @timeg "terminal.residual_one_body" R.transform_augmented_operator(base.one_body, H_GA, H_AA, residual)
+    electron_electron_ida = @timeg "terminal.residual_MWG" R.assemble_residual_ida_interaction(base.electron_electron_ida,
         terminal, bundles, residual, products; expansion)
     hamiltonian = (; one_body, electron_electron_ida, nuclear_repulsion = base.nuclear_repulsion)
     return _cartesian_residual_gto_mwg_system_result(
         hamiltonian, terminal, bundles, supplement, residual, locations)
+end
+
+function _h4_residual_gto_mwg_system(pair, family; supplement, expansion::CoulombGaussianExpansion)
+    supplement::CartesianGaussianShellSupplementRepresentation3D
+    family in (:pqs, :wl) || throw(ArgumentError("rectangle family must be :pqs or :wl"))
+    terminal, bundles = getproperty(pair, family), pair.bundles
+    all(getproperty(bundles, (:bundle_x, :bundle_y, :bundle_z)[a]).basis === pair.axes[a] for a in 1:3) ||
+        throw(ArgumentError("rectangle axis bundles must belong to the shared parent"))
+    maps = mapping.(pair.axes)
+    all(m -> m isa CombinedInvsqrtMapping, maps) || throw(ArgumentError("rectangle requires mapped axes"))
+    xs, ys, zs = map(m -> m.centers, maps)
+    length(xs) == length(ys) == 2 && length(zs) == 1 && iszero(only(zs)) &&
+        all(c -> isfinite(last(c)) && first(c) == -last(c) < 0, (xs, ys)) ||
+        throw(ArgumentError("rectangle nuclei must be centered with two distinct positions per in-plane axis"))
+    locations = [(x, y, 0.0) for x in xs for y in ys]
+    _validate_terminal_supplement_candidates(supplement)
+    all(o -> o.center in locations, supplement.orbitals) ||
+        throw(ArgumentError("rectangle Gaussian candidates must be at physical nuclei"))
+    return _terminal_unscreened_residual_gto_mwg_system(
+        terminal, bundles, locations, ones(4), supplement, expansion, 1.0e-6,
+    ) do
+        _h4_terminal_operators(terminal, bundles, (xs, ys, zs), locations, expansion)
+    end
 end
 
 function _collinear_atomic_fit_screening(system::_CartesianResidualGTOMWGSystem,

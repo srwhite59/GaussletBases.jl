@@ -60,7 +60,7 @@ using TOML
         U=0.
         for (v,q) in zip(z,Z), (c,t) in zip(e.coefficients,e.exponents)
             U-=q*c*prod(axisint(a.exponents[1],a.center[k],a.angular_powers[k],norm1(a.exponents[1],a.angular_powers[k]),
-                b.exponents[1],b.center[k],b.angular_powers[k],norm1(b.exponents[1],b.angular_powers[k]);t,E=k==3 ? v : 0.) for k in 1:3)
+                b.exponents[1],b.center[k],b.angular_powers[k],norm1(b.exponents[1],b.angular_powers[k]);t,E=v[k]) for k in 1:3)
         end
         return prod(s),K+U
     end
@@ -88,10 +88,95 @@ using TOML
             addproduct!(ho,ntuple(j->j==k ? ki[j] : ov[j],3),1.)
         end
         for (v,q) in zip(z,Z),(c,t) in zip(e.coefficients,e.exponents)
-            addproduct!(ho,ntuple(k->axisvalues(k;t,E=k==3 ? v : 0.),3),-q*c)
+            addproduct!(ho,ntuple(k->axisvalues(k;t,E=v[k]),3),-q*c)
         end
         return so,ho
     end
+
+    function h4_block_audit(s, locations, e, selected; scaled=false)
+        t, b, A, r = s.terminal_basis, s.parent_axis_bundles, s.supplement, s.residual
+        n, m = r.base_dimension, r.candidate_count
+        pg = C._r3_validate_pgdg_expansion(b, e)
+        Sgg = zeros(n,n)
+        C._assemble_terminal_product_operator!(Sgg, t, map(a->a.overlap,pg)...,
+            C._terminal_operator_buffers(t)...)
+        raw = C._r3a_qw_blocks(t, b, A, locations, e)
+        X, Sa = raw.mixed.overlap, raw.self.overlap
+        T = [Matrix{Float64}(I,n,n) r.T_G; zeros(m,n) r.T_A]
+        metric = norm(T' * [Sgg X; X' Sa] * T-I, Inf)
+        GG = GB._pqs_source_box_route_driver_terminal_products(t, pg).kinetic
+        for U in GB._pqs_source_box_route_driver_terminal_unit_nuclear(t,e,pg,locations)
+            GG .+= U
+        end
+        GA = raw.mixed.kinetic + sum(raw.mixed.nuclear)
+        AA = raw.self.kinetic + sum(raw.self.nuclear)
+        Href = T'*[GG GA; GA' AA]*T
+        ga, aa = GB._terminal_supplement_one_body_blocks(t,b,A,locations,ones(4),e,raw)
+        h,V = s.hamiltonian.one_body, s.hamiltonian.electron_electron_ida
+        errors = (norm(h[1:n,1:n]-GG,Inf), norm(ga-GA,Inf), norm(aa-AA,Inf),
+            norm(h-Href,Inf))
+        references = (GG,GA,AA,Href)
+        @test metric < 5e-8
+        @test all(err <= 1e-10*(scaled ? max(1.,maximum(abs,ref)) : 1.) for (err,ref) in zip(errors,references))
+        @test @view(V[1:n,1:n]) == GB._pqs_source_box_route_driver_terminal_vee(t,e,pg)
+        @test max(norm(h-h',Inf),norm(V-V',Inf)) <= 1e-10
+        primitive_GA = primitive_AA = 0.
+        for j in selected
+            so, ho = gaoracle(s,A.orbitals[j],locations,ones(4),e)
+            @test norm(so-X[:,j],Inf) <= 1e-12
+            primitive_GA = max(primitive_GA,norm(ho-GA[:,j],Inf))
+            for i in selected
+                so, ho = aaoracle(A.orbitals[i],A.orbitals[j],locations,ones(4),e)
+                @test abs(so-Sa[i,j]) <= 1e-12
+                primitive_AA = max(primitive_AA,abs(ho-AA[i,j]))
+            end
+        end
+        @test primitive_GA <= 1e-10*(scaled ? max(1.,maximum(abs,GA)) : 1.)
+        @test primitive_AA <= 1e-10*(scaled ? max(1.,maximum(abs,AA)) : 1.)
+        return (; metric, errors, primitive_GA, primitive_AA)
+    end
+
+    function h4_determinant_audit(ham, repulsion)
+        h,V = ham.one_body, ham.electron_electron_ida
+        j = collect(1:size(h,1))
+        occupied = map(((.11,.17),(.23,.29))) do (a,b)
+            qr([sin.(a.*j) cos.(b.*j)]).Q[:,1:2]
+        end
+        @test all(norm(C'*C-I,Inf) <= 1e-12 for C in occupied)
+        up, down = map(C->C*C',occupied)
+        P = up+down; q = diag(P)
+        density = sum(h.*P)+.5*(dot(q,V*q)-sum(V.*(up.^2+down.^2)))+ham.nuclear_repulsion
+        pairs = sum(dot(c,h*c) for C in occupied for c in eachcol(C)) + repulsion
+        for i in 1:2, j in 1:2, a in eachcol(occupied[i]), b in eachcol(occupied[j])
+            pairs += .5*dot(abs2.(a),V*abs2.(b))
+            i == j && (pairs -= .5*dot(a.*b,V*(a.*b)))
+        end
+        @test abs(density-pairs) <= 1e-10
+        return (; density, pairs, error=abs(density-pairs))
+    end
+
+    @testset "Matched rectangle supplemented operators" begin
+        e = CoulombGaussianExpansion([.7,.2],[.3,2.];del=1.,s=1.,c=1.,maxu=2.)
+        pair = GB._matched_h4_terminal_bases(1.6,3.2;ns=3,padding=3.,expansion=e)
+        loc = [(x,y,0.) for x in (-.8,.8) for y in (-1.6,1.6)]
+        powers = ((0,0,0),(1,0,0),(0,1,0),(0,0,1))
+        A = CartesianGaussianShellSupplementRepresentation3D(:test_h4,
+            [CartesianGaussianShellOrbitalRepresentation3D("$(i)_$(p)",p,c,[.8,1.6],[.7,.2],
+                :axiswise_normalized_cartesian_gaussian) for (i,c) in pairs(loc) for p in powers],(;))
+        @test_throws ArgumentError GB._h4_residual_gto_mwg_system(pair,:other;supplement=A,expansion=e)
+        for family in (:pqs,:wl)
+            s = GB._h4_residual_gto_mwg_system(pair,family;supplement=A,expansion=e)
+            @test s.terminal_basis === getproperty(pair,family)
+            @test s.parent_axis_bundles === pair.bundles
+            @test s.residual.occupation_cutoff == 1e-6
+            @test s.residual.candidate_owner_indices == repeat(1:4;inner=4)
+            repulsion = sum(inv(sqrt(sum(abs2,loc[i].-loc[j]))) for i in 1:4 for j in i+1:4)
+            @test abs(s.hamiltonian.nuclear_repulsion-repulsion) <= 1e-12
+            h4_block_audit(s,loc,e,[1,2,3,4,13,14,15,16])
+            h4_determinant_audit(s.hamiltonian,repulsion)
+        end
+    end
+
     function mixed_mwg_oracle(w,centers,widths,e,rindex)
         proxy=C._r3a_qw_proxy_layers(w.parent_axis_bundles)
         terms=ntuple(3) do k
@@ -118,6 +203,7 @@ using TOML
     end
     function validate(w,data,z,Z,e; primitive_case=true)
         s=data.result; r=s.residual; n=r.base_dimension; nr=r.residual_dimension
+        loc=[(0.,0.,v) for v in z]
         @test 0 < nr <= length(s.supplement.orbitals)
         @test size(s.hamiltonian.one_body,1)<600
         @test Base.summarysize(s)<512*1024^2
@@ -139,14 +225,14 @@ using TOML
         @test norm(s.hamiltonian.electron_electron_ida-s.hamiltonian.electron_electron_ida',Inf)<1e-10
         errS=0.; errH=0.
         for i in eachindex(s.supplement.orbitals), j in eachindex(s.supplement.orbitals)
-            so,ho=aaoracle(s.supplement.orbitals[i],s.supplement.orbitals[j],z,Z,e)
+            so,ho=aaoracle(s.supplement.orbitals[i],s.supplement.orbitals[j],loc,Z,e)
             errS=max(errS,abs(S_AA[i,j]-so)); errH=max(errH,abs(data.Haa[i,j]-ho))
         end
         @test errS<1e-12
         @test errH<1e-10
         gaS=0.; gaH=0.
         for j in unique([1,min(6,size(S_AA,1)),min(7,size(S_AA,1)),size(S_AA,1)])
-            so,ho=gaoracle(w,s.supplement.orbitals[j],z,Z,e)
+            so,ho=gaoracle(w,s.supplement.orbitals[j],loc,Z,e)
             gaS=max(gaS,norm(so-X[:,j],Inf)); gaH=max(gaH,norm(ho-data.Hga[:,j],Inf))
         end
         @test gaS<1e-12

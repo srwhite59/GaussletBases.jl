@@ -83,3 +83,25 @@ function _collinear_complete_operators(terminal, bundles, z, Z, expansion)
         throw(ArgumentError("collinear operators are not finite"))
     return (; one_body, electron_electron_ida, nuclear_repulsion)
 end
+
+function _h4_terminal_operators(terminal, bundles, nuclear_axes, locations, expansion)
+    pgdg = ntuple(a -> _nested_axis_pgdg(bundles, (:x, :y, :z)[a]), 3)
+    _pqs_source_box_route_driver_validate_pgdg_expansion(pgdg, expansion)
+    one_body = @timeg "rectangle.kinetic" _pqs_source_box_route_driver_terminal_products(terminal, pgdg).kinetic
+    C = CartesianFinalBasisRealization
+    # Each x center occurs with each y center, so the two sums factor term by term.
+    factors = @timeg "rectangle.nuclear_factors_xy_sums" ntuple(3) do a
+        centers = nuclear_axes[a]
+        terms(position) = C._terminal_factor_terms(
+            _pqs_source_box_route_driver_centered_factor_terms(pgdg[a], expansion, position))
+        a == 3 ? terms(only(centers)) : terms(first(centers)) + terms(last(centers))
+    end
+    @timeg "rectangle.nuclear_GG" C._accumulate_terminal_gaussian_sum!(
+        one_body, terminal, expansion.coefficients, factors...)
+    electron_electron_ida = @timeg "rectangle.base_IDA" _pqs_source_box_route_driver_terminal_vee(terminal, expansion, pgdg)
+    nuclear_repulsion = sum(inv(norm(locations[i] .- locations[j]))
+        for i in 1:4 for j in i+1:4)
+    all(isfinite, one_body) && all(isfinite, electron_electron_ida) && isfinite(nuclear_repulsion) ||
+        throw(ArgumentError("rectangle operators are not finite"))
+    return (; one_body, electron_electron_ida, nuclear_repulsion)
+end
