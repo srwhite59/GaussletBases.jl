@@ -1864,3 +1864,19 @@ source; distinguish a mismatch from legacy missing evidence. Legacy
 ordinary operations remain live (independent compact one-body parity
 was exact); no new carrier or compatibility layer. Hard +50 source,
 +35 existing tests, +4 Unreleased. No artifact or consumer changes.
+
+### Pass 668 Accepted Verified Radial Source for Angular Cartesian Moments
+
+Accept `be4c5f0a4a1797647e477c3a1bca08760104c9f6`. LT1/MT1 advances:
+Cartesian moments use the Hamiltonian's retained radial samples. The
+independent probe confirmed exact matched R2, rejection of the doubled
+scale at Gram error 1.03e-15, unchanged legacy H, and a distinct missing
+evidence error. Deleted the implicit rebuild and Gram-only certification;
+the ordinary legacy operator constructors and private Hooke polynomial
+entrance remain live. No quarantine, carrier, schema or tolerance change.
+Source +36/-20, existing tests +35/-1, Unreleased +3. Warm retained and
+explicit calls measured 0.436/0.470 s; cumulative allocation was
+1.003/1.072 GB, primarily unchanged angular assembly. Local radial447,
+angular_public514 and targeted moment45 plus source CI45683619066 and
+Docs45683619065 passed. Both grants consumed. Review past Cartesian moments
+with uncertain radial provenance, not stored Hamiltonians or all energies.

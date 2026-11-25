@@ -1467,3 +1467,8 @@ dual-render parity, Documenter/diff, exact full source CI and separate Docs.
 Stop on failed gates, scope or budget expansion, new source-status consumer
 conflict, or loss of valid matched behavior. No full angular run, repin,
 consumer action, release or other repair item.
+
+Accepted at `be4c5f0a4a1797647e477c3a1bca08760104c9f6`; both grants consumed.
+Independent matched R2, scaled-input rejection despite Gram agreement,
+and unchanged legacy one-body H passed. Missing evidence is not a
+mismatch. Exact source CI and Docs passed without a full Angular replay.
