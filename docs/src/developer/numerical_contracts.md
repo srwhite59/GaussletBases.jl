@@ -1404,3 +1404,8 @@ then normal full source CI and separate Docs. No full angular replay.
 Stop on a failed gate, executable change, or scope/budget expansion.
 Radial source verification (item 5B), other items, consumers, repins,
 releases and frozen export changes are outside this grant.
+
+Accepted at `c215dcd1ecaa20ce7b78c073a0f922d382d99449`; both grants consumed.
+The signed Ih_12 reconstruction passed in both gauges within 5e-16.
+All source bytes outside the six approved docstrings match the parent.
+No localized site, angular operator, export field, or frozen file changed.

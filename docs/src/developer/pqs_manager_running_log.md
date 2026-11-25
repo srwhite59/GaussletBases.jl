@@ -1837,3 +1837,18 @@ Reconcile the older producer-doc maintenance contract's false ordering
 description. Hard +24 source docstrings/+25 reader/+18 existing test lines.
 No physics campaign, schema change or re-export. Item 5B will require its
 own radial source-verification contract and grant.
+
+### Pass 667 Accepted Angular Site Labels and Injected Channels
+
+Accept `c215dcd1ecaa20ce7b78c073a0f922d382d99449`. MT5 advances:
+readers can project onto exact harmonics using the signed overlap transform
+without mistaking stored site labels for orbital assignments. Simplified false
+leading-block wording; no runtime code removed because the existing
+localized profiles, contact site order, and sequence writers are correct
+and live. Independent comparison confirmed only six source docstrings
+changed. Both Ih_12 routes reconstruct Y00 within 5e-16; local
+angular_public 501/501, source CI 45678541170 and Docs 45678541238 passed.
+Source docstrings +19/-10, reader +24/-9, existing test +15; no new
+metadata or owner. Both grants consumed. Prior label-based orbital selections
+may need interpretation review only; no re-export or rerun. Item 5B remains
+separate.

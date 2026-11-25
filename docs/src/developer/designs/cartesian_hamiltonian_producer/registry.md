@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `8a856ae015451f55b907d726df48b41cd99c1a7b837a04a8693f89130e1528df`.
+> [authority.toml](authority.toml), SHA-256 `dc2a8b48359b891e997edd162d8161aca83917175d2e2bb5e0388324a4fab7f9`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -12,38 +12,34 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-ANGULAR-SITE-LABEL-FN-01 - distinguish localized angular sites from exact harmonic channels
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `docs`, `source`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Angular Site Labels and Injected Channels`
-- **Owned paths:**
-  - `docs` / `existing`: `docs/src/explanations/angular_research_track.md`
-  - `docs` / `existing`: `docs/src/reference/export.md`
-  - `source` / `existing`: `src/angular/angular_sequence_export.jl`
-  - `source` / `existing`: `src/angular/angular_shell_assembly.jl`
-  - `source` / `existing`: `src/angular/angular_shell_basis.jl`
+- **Owned paths:** none
 - **Evidence:**
-  - `git_commit`: `95b1aefba85c43621307d8065c7b925afa025e33`
+  - `git_commit`: `4e2fcc6ace519af46d0c43b4b4a5d4c210cdd7ea`
+  - `git_commit`: `c215dcd1ecaa20ce7b78c073a0f922d382d99449`
   - `manager_pass`: `667`
 - **Dependencies:** none
-- **Scope:** Implement Angular Site Labels and Injected Channels, Pass 667 item 5A. Clarify localized sites, the existing injected-channel transform, legacy overlap diagnostics, contact site maps and fixed-radial labels. Hard +24 source docstrings/+25 readers only. No executable, label, artifact, schema, radial provenance or consumer change.
+- **Scope:** Record Pass 667 item 5A accepted at c215dcd1: localized site labels, existing signed channel transform, and legacy overlap, contact and export interpretation. Source docstrings +19/-10 and readers +24/-9; runtime, schema and frozen artifacts unchanged. Grant consumed.
 
 ### HP-ANGULAR-SITE-LABEL-TEST-01 - verify distributed Y00 and the signed channel transform
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Angular Site Labels and Injected Channels`
-- **Owned paths:**
-  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
+  - `git_commit`: `c215dcd1ecaa20ce7b78c073a0f922d382d99449`
   - `manager_pass`: `667`
 - **Dependencies:** `HP-ANGULAR-SITE-LABEL-FN-01`
-- **Scope:** Validate Angular Site Labels and Injected Channels with ordinary and coiflet Ih\_12: distributed Y00 weights and signed reconstruction from actual evaluated sites. Hard +18 in the existing angular fixed-radial sequence test owner only. No new fixture file, permanent assertion weakening, angular campaign, consumer work or radial provenance.
+- **Scope:** Record accepted Pass 667 regression at c215dcd1: eight Ih\_12 distribution and signed reconstruction checks, unchanged contact and fixed-radial metadata checks, exact source CI and Docs. Existing test +15. Grant consumed.
 
 ### HP-ANGULAR-COIFLET-FN-01 - same-size polar coiflet angular profiles
 
