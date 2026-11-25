@@ -432,7 +432,7 @@ end
     @test bundle.shell_ranges == benchmark.shell_ranges
     @test bundle.S ≈ benchmark.overlap atol = 1.0e-12 rtol = 1.0e-12
     @test bundle.radial_moment_source == :explicit_basis_and_grid
-    @test bundle_reconstructed.radial_moment_source == :reconstructed_from_source_manifest
+    @test bundle_reconstructed.radial_moment_source == :retained_quadrature_samples
     @test bundle_reconstructed.S ≈ bundle.S atol = 0.0 rtol = 0.0
     @test bundle_reconstructed.X ≈ bundle.X atol = 1.0e-10 rtol = 1.0e-10
     @test bundle_reconstructed.Y ≈ bundle.Y atol = 1.0e-10 rtol = 1.0e-10

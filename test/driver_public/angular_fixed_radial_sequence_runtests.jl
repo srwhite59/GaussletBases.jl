@@ -469,6 +469,40 @@ end
         shell_orders=fill(10, length(ops.shell_centers_r)), l_inject=1)
     moments = build_atomic_injected_angular_cartesian_moments(benchmark;
         radial_basis=rb, radial_grid=grid)
+    build_moments = build_atomic_injected_angular_cartesian_moments
+    retained = build_moments(benchmark)
+    @test moments.radial_moment_source === :explicit_basis_and_grid
+    @test retained.radial_moment_source === :retained_quadrature_samples
+    @test all(k -> getproperty(moments, k) == getproperty(retained, k),
+        (:S, :X, :Y, :Z, :X2, :Y2, :Z2, :R2))
+    mismatch = r"ArgumentError: radial moment source mismatch"
+    scaled = build_basis(RadialBasisSpec(:G10; count=8, xgaussian_count=0,
+        mapping=AsinhMapping(c=0.25, s=0.5, tail_spacing=20.0)))
+    scaled_grid = radial_quadrature(scaled)
+    @test opnorm(overlap_matrix(scaled, scaled_grid) - ops.overlap, Inf) <= 1e-8
+    @test_throws mismatch build_moments(benchmark; radial_basis=scaled, radial_grid=scaled_grid)
+    flipped = deepcopy(rb)
+    flipped.coefficient_matrix[:, 1] .*= -1
+    @test_throws mismatch build_moments(benchmark; radial_basis=flipped, radial_grid=grid)
+
+    medium = radial_quadrature(rb; accuracy=:medium)
+    medium_ops = atomic_operators(rb, medium; Z=2, lmax=1)
+    medium_benchmark = build_atomic_injected_angular_one_body_benchmark(medium_ops, benchmark.angular_assembly)
+    @test build_moments(medium_benchmark).R2 == build_moments(medium_benchmark; radial_basis=rb, radial_grid=medium).R2
+    points, weights = copy(quadrature_points(medium)), copy(quadrature_weights(medium))
+    weights[1] *= 1.01
+    @test_throws mismatch build_moments(medium_benchmark; radial_basis=rb,
+        radial_grid=RadialQuadratureGrid(points, weights))
+    points[1] = nextfloat(points[1])
+    @test_throws mismatch build_moments(medium_benchmark; radial_basis=rb,
+        radial_grid=RadialQuadratureGrid(points, quadrature_weights(medium)))
+    legacy = RadialAtomicOperators(ntuple(i -> getfield(ops, i), 8)...)
+    legacy_benchmark = build_atomic_injected_angular_one_body_benchmark(legacy, benchmark.angular_assembly)
+    @test legacy_benchmark.hamiltonian == benchmark.hamiltonian
+    @test centrifugal(legacy, 1) === centrifugal(ops, 1) && multipole(legacy, 2) === multipole(ops, 2)
+    unavailable = r"ArgumentError: cannot verify radial moment source: no retained quadrature samples"
+    @test_throws unavailable build_moments(legacy_benchmark)
+    @test_throws unavailable build_moments(legacy_benchmark; radial_basis=rb, radial_grid=grid)
     trace = moments.X2 + moments.Y2 + moments.Z2
     @test trace ≈ moments.R2 atol=1e-8 rtol=1e-8
     @info "Directional radial trace" max_error=maximum(abs, trace - moments.R2)

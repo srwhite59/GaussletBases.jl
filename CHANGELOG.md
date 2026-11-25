@@ -3,6 +3,9 @@
 ## Unreleased
 
 ### Fixed
+- Angular Cartesian moments use the Hamiltonian's retained radial samples.
+  Explicit basis/grid pairs must match those samples; bundles without retained
+  samples no longer produce unverifiable moments.
 - Lanczos now verifies the returned Ritz residual before reporting convergence.
   Atomic IDA UHF checks the undamped density defect rather than the damped step size.
 - Compact sliced hydrogen chains now use the physical lattice phase in both

@@ -433,8 +433,14 @@ function _radial_polynomial_matrix(
     points = quadrature_points(grid)
     weights = quadrature_weights(grid)
     values = _basis_values_matrix(basis, points)
-    radial_factor = power == 0 ? ones(Float64, length(points)) : points .^ power
-    return _symmetrize_matrix(_weighted_basis_gram(values, values, weights .* radial_factor))
+    return _radial_polynomial_matrix(points, weights, values; power)
+end
+
+function _radial_polynomial_matrix(
+    points::Vector{Float64}, weights::Vector{Float64}, values::Matrix{Float64}; power::Int,
+)
+    weighted = power == 0 ? weights : weights .* points .^ power
+    return _symmetrize_matrix(_weighted_basis_gram(values, values, weighted))
 end
 
 function _resolve_atomic_angular_cartesian_radial_source(
@@ -453,22 +459,28 @@ function _resolve_atomic_angular_cartesian_radial_source(
         )
     end
 
-    resolved_basis =
-        radial_basis === nothing ? build_basis(radial_ops.source_manifest.basis_spec) : radial_basis
-    resolved_grid =
-        radial_grid === nothing ? radial_quadrature(resolved_basis) : radial_grid
-    source =
-        radial_basis === nothing ? :reconstructed_from_source_manifest : :explicit_basis_and_grid
-
-    overlap_error =
-        opnorm(overlap_matrix(resolved_basis, resolved_grid) - radial_ops.overlap, Inf)
+    samples = radial_ops.multipole_samples
+    samples === nothing && throw(ArgumentError(
+        "cannot verify radial moment source: no retained quadrature samples",
+    ))
+    if radial_basis !== nothing
+        points, weights = _validate_radial_operator_grid(radial_basis, radial_grid)
+        if points != samples.points || weights != samples.weights ||
+           _basis_values_matrix(radial_basis, points) != samples.values
+            throw(ArgumentError(
+                "radial moment source mismatch: nodes, weights, or signed samples differ; omit the explicit pair to use the retained source",
+            ))
+        end
+    end
+    gram = _radial_polynomial_matrix(samples.points, samples.weights, samples.values; power = 0)
+    overlap_error = opnorm(gram - radial_ops.overlap, Inf)
     overlap_error <= overlap_tol || throw(
         ArgumentError(
-            "resolved radial moment source does not reproduce the supplied radial overlap (error = $(overlap_error)); pass the exact radial_basis and radial_grid used to build the RadialAtomicOperators",
+            "retained radial samples do not reproduce the supplied radial overlap (error = $(overlap_error))",
         ),
     )
 
-    return (basis = resolved_basis, grid = resolved_grid, source = source)
+    return samples, radial_basis === nothing ? :retained_quadrature_samples : :explicit_basis_and_grid
 end
 
 _cartesian_real_ylm_row(L::Int, M::Int) = M + L + 1
@@ -1048,9 +1060,13 @@ The bundle returns:
 - `X2`, `Y2`, `Z2`
 - `R2`
 
-When `radial_basis` and `radial_grid` are not supplied, the builder rebuilds
-the radial source from `benchmark.radial_operators.source_manifest` and checks
-that the reconstructed overlap reproduces the supplied radial overlap.
+Moments use the radial operators' retained quadrature samples without
+rebuilding the basis or grid. Supply both `radial_basis` and `radial_grid`
+only when their ordered nodes, weights, and signed basis samples match the
+retained data exactly. Both routes check the retained overlap with
+`overlap_tol`. Operators without retained samples cannot verify this source.
+The source field records `:retained_quadrature_samples` or
+`:explicit_basis_and_grid` for a verified pair.
 """
 function build_atomic_injected_angular_cartesian_moments(
     benchmark::AtomicInjectedAngularOneBodyBenchmark;
@@ -1058,14 +1074,14 @@ function build_atomic_injected_angular_cartesian_moments(
     radial_grid::Union{Nothing,RadialQuadratureGrid} = nothing,
     overlap_tol::Real = 1.0e-8,
 )
-    radial_source = _resolve_atomic_angular_cartesian_radial_source(
+    samples, radial_source = _resolve_atomic_angular_cartesian_radial_source(
         benchmark.radial_operators;
         radial_basis = radial_basis,
         radial_grid = radial_grid,
         overlap_tol = overlap_tol,
     )
-    radial_r = _radial_polynomial_matrix(radial_source.basis, radial_source.grid; power = 1)
-    radial_r2 = _radial_polynomial_matrix(radial_source.basis, radial_source.grid; power = 2)
+    radial_r = _radial_polynomial_matrix(samples.points, samples.weights, samples.values; power = 1)
+    radial_r2 = _radial_polynomial_matrix(samples.points, samples.weights, samples.values; power = 2)
     assembly = benchmark.angular_assembly
 
     X = _assemble_atomic_injected_angular_cartesian_matrix(
@@ -1105,7 +1121,7 @@ function build_atomic_injected_angular_cartesian_moments(
         assembly,
         benchmark.shell_ranges,
         benchmark.exact_common_lmax,
-        radial_source.source,
+        radial_source,
         Matrix{Float64}(benchmark.overlap),
         X,
         Y,
