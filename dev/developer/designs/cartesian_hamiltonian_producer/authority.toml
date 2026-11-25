@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "e6da7728a35fa835585a12ef841daf92c5199c9fc9ae483a1e59d40db25486e2"
+sha256 = "0d9133ffd435ce8bb1d1e07a0fff7add7cc88f448cfe34313494667281608b66"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -307,6 +307,60 @@ title = "positive cubature catalog validation"
     [[records.evidence_refs]]
     kind = "git_commit"
     value = "aa8e3911009e56412afc841750a7d4daebf0f566"
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-ANGULAR-DIRECTIONAL-MOMENTS-FN-01"
+lifecycle = "approved"
+scope = "Implement Angular Directional Second Moments, Pass 663: correct both normalized real Y22 coefficients in _cartesian_quadratic_components (+2/-2). Add at most three Unreleased changelog lines. Preserve other observables, field-free operators, provenance, API and all releases; no consumer or other review item work."
+surfaces = ["docs", "source"]
+title = "correct angular directional squared observables"
+
+    [[records.document_refs]]
+    heading = "Angular Directional Second Moments"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/gb_review_repairs_20261124.n7LQhR/gaussletbases_review_2026-11-24.md"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "ebfc029e282e1b8c5f1c3fd24e17674dcbce9a41"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "663"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "CHANGELOG.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_atomic_benchmark.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-ANGULAR-DIRECTIONAL-MOMENTS-FN-01"]
+grant = "implementation"
+id = "HP-ANGULAR-DIRECTIONAL-MOMENTS-TEST-01"
+lifecycle = "approved"
+scope = "Validate Angular Directional Second Moments on the existing angular_public owner, hard +32 test lines. Exact p-axis fractions, radial trace and the compact l<=3 positivity discriminant. No new test file, workflow, tolerance relaxation or expensive physical fixture."
+surfaces = ["tests"]
+title = "exact angular directional observable regression"
+
+    [[records.document_refs]]
+    heading = "Angular Directional Second Moments"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "663"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"
