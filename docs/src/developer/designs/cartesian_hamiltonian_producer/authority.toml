@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "53bc52dc9b13403201dc4f5e90bf223fbc9a1a3c334a01cf10aa8f4cb843f96d"
+sha256 = "e683be11632463452f43c5fcee1924a4f5ea1b8ee76b43bbd60d8c3e7ab6436d"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -10938,11 +10938,12 @@ title = "sliced hydrogen-chain producer validation"
     state = "existing"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-SLICED-NUCLEAR-PHASE-FN-01"
-lifecycle = "approved"
-scope = "Implement Compact Sliced Nuclear Phase, Pass 665: physical separations in near H1 and far prefix sums; keep near terms out of far sums. Hard +28 source, +3 Unreleased. No gate, lattice, Vee, storage, multisliced/PQS, API, consumer or release work."
-surfaces = ["docs", "source"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Compact Sliced Nuclear Phase at ee3193f5: signed physical offset in both H1 branches and far-only prefix sums. Source +14/-11 and Unreleased +2. Grant consumed; no Vee, multisliced/PQS, consumer or release work."
+surfaces = []
 title = "compact sliced physical nuclear phase"
 
     [[records.document_refs]]
@@ -10954,24 +10955,19 @@ title = "compact sliced physical nuclear phase"
     kind = "git_commit"
     value = "1cfe342ad4488045c8a8d1dd3c83728fb7448cd6"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "ee3193f56fa2fc79dc8f661988bab56004ca8138"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "665"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "CHANGELOG.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/ordinary/sliced_hydrogen_chain.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-SLICED-NUCLEAR-PHASE-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-SLICED-NUCLEAR-PHASE-TEST-01"
-lifecycle = "approved"
-scope = "Validate Compact Sliced Nuclear Phase in the existing IDA sliced owner (+24 max). Coordinate-aware H2 near/adjacent/far oracle, fractional and nearly aligned phases, unchanged zero-phase controls and tolerances. No new owner, H10 campaign or other review item."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted near/adjacent/far physical oracle and zero-phase tests at ee3193f5, existing IDA owner +18. Both Julia versions pass. Grant consumed; no new fixture owner, H10 campaign or other review item."
+surfaces = []
 title = "compact sliced shifted near and far H1 checks"
 
     [[records.document_refs]]
@@ -10980,8 +10976,61 @@ title = "compact sliced shifted near and far H1 checks"
     path = "docs/src/developer/numerical_contracts.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "ee3193f56fa2fc79dc8f661988bab56004ca8138"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "665"
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-SOLVER-CONVERGENCE-FN-01"
+lifecycle = "approved"
+scope = "Implement Honest Lanczos and Atomic IDA UHF Convergence, Pass 666. Certify the returned Ritz residual and undamped UHF defect without API or caller changes. Hard +45 source, +4 Unreleased. No tolerance, solver framework, consumer, release or other item work."
+surfaces = ["docs", "source"]
+title = "honest Ritz and UHF convergence certification"
+
+    [[records.document_refs]]
+    heading = "Honest Lanczos and Atomic IDA UHF Convergence"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "ee3193f56fa2fc79dc8f661988bab56004ca8138"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "666"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "CHANGELOG.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/atomic/atomic_ida_uhf.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/foundation/lanczos.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-SOLVER-CONVERGENCE-FN-01"]
+grant = "implementation"
+id = "HP-SOLVER-CONVERGENCE-TEST-01"
+lifecycle = "approved"
+scope = "Validate Honest Lanczos and Atomic IDA UHF Convergence, existing IDA owner +32 max: weak direction, exact breakdown, tight budget residual, ordinary/strong damping and fresh projector checks. Existing gates unchanged. No new owner, broad solver campaign or consumer work."
+surfaces = ["tests"]
+title = "small discriminating solver convergence regressions"
+
+    [[records.document_refs]]
+    heading = "Honest Lanczos and Atomic IDA UHF Convergence"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "666"
 
     [[records.paths]]
     kind = "test"

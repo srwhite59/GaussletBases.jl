@@ -1280,3 +1280,57 @@ consumer work, solver, release or other repair item. Stop without a source
 commit for a failed gate, scope/budget expansion or unsupported phase
 limitation. A guard-only alternative requires review rather than silently
 substituting it for the correction.
+
+Accepted at `ee3193f56fa2fc79dc8f661988bab56004ca8138`; both grants consumed.
+Both fractional phases pass near, adjacent and far samples at the existing
+gate (worst absolute error 8.52e-11 Ha). Zero-phase and compact storage
+checks passed. No multisliced, PQS or total-energy claim follows.
+
+## Honest Lanczos and Atomic IDA UHF Convergence
+
+Pass 666, item 4 of GB-REVIEW-REPAIRS-20261124. Only the shared
+`src/foundation/lanczos.jl::_lanczos_ground_state_apply` and
+`src/atomic/atomic_ida_uhf.jl::uhf_scf` with its docstring. Hard +45 source
+lines total. Existing Unreleased/Fixed hard +4; no new helper/solver, API,
+state carrier, convergence input or caller edit. Preserve iteration budgets,
+result shapes, scientific tolerances and supported input behavior.
+
+Lanczos: keep recurrence, reorthogonalization and Ritz estimate as a trigger,
+not a certificate. Continue resolvable small nonzero directions; replace the
+absolute sqrt(eps) stop with exact or action-scale roundoff breakdown
+(`b <= eps(Float64)*norm(A*v)` using the current applied vector before reuse).
+On an estimated success, breakdown or last step, form the normalized Ritz
+vector and measure `norm(A*x - lambda*x)` with the same action and existing
+scratch. Return this actual residual and mark converged only when it is
+finite and <= `tol`. If an estimate is optimistic and another safe step
+exists, continue. A measured eigenpair need not be the global ground state
+if the start never accesses its sector. Report extra action count/timing;
+preserve the independent H2+ caller gate and do not edit callers.
+
+Atomic IDA UHF: retain the damping, mixed-step history in `residuals`,
+energy calculation and output projections. A success requires existing
+energy convergence plus undamped fixed-point defect of both spin densities
+at the input of the step, using the current max-entry norm and `tol`.
+Verify the defect once more at the returned densities using the already
+computed final occupied eigensystems, without extra diagonalizations. That
+check may revoke a tentative success; do not mislabel a mixed step or
+change energy/iteration meanings. No damping schedule or solver campaign.
+
+Only existing `test/ida/runtests.jl` Lanczos/UHF blocks, hard +32 lines.
+Keep existing thresholds and anchors. For H=[-1,5e-9;5e-9,-2], start e1,
+tol=1e-12, require one-step budget nonconvergence and actual 5e-9 residual;
+with two steps require the correct low Ritz value and measured residual
+within tol. Exact disconnected diagonal/e1 returns its -1 eigenpair with
+zero residual, not a claim about the unseen -2 sector. Retain the existing
+identity breakdown test. Reuse existing He for normal damping 0.25 and
+tol=1e-10 including fresh projector agreement; add `1-1e-9`, maxiter=8,
+tol=1e-8 and check false even though the mixed step is small and the actual
+returned projector defect is large. Baseline at that damping reported true
+after two steps with defect 0.06583; normal case has defect 3.96e-11.
+
+Require local IDA, one existing pinned angular small-ED testset only (no
+full angular; justify if >60 s), package/docs/authority/self-test/render
+parity/Documenter/diff, and exact source CI/Docs including existing PQS
+H2+ coverage. Preserve numerical anchors; no threshold relaxation or broad
+physics work. Stop without a source commit for a substantive accuracy,
+cost, scope or budget failure. No consumer, release or later item work.

@@ -1767,3 +1767,32 @@ the prefix sums; subtracting very large near multipoles could erase the
 finite answer for small phases. Keep bounds and zero-phase gates. Hard
 +28 source/+24 existing IDA/+3 Unreleased. No Vee, compact storage,
 transverse, multisliced/PQS, consumer or solver change.
+
+### Pass 665 Accepted Compact Sliced Nuclear Phase
+
+Accept `ee3193f56fa2fc79dc8f661988bab56004ca8138`. LT1/MT1 gains a
+compact sliced H1 that evaluates nuclei at the actual longitudinal phase.
+Phase 0.08 previously missed the near diagonal by -0.1172824 Ha and the
+both-far diagonal by +1.1120522e-4 Ha. Both fractional cases now agree
+with the direct Laplace oracle within 8.52e-11 Ha. Zero-phase, band and
+allocation checks unchanged; warm H1 about a second, 2862512 B, not a
+speedup claim. Independent diff, physical branch checks and exact source
+CI 45558149584/Docs 45558149275 pass; local IDA 12074, sliced 88/88
+locally and on the floor. Deleted/simplified: remove near tail subtraction
+and sum only far terms in the existing prefix; quarantine none. Kept:
+compact bands and existing near integral. Source +14/-11, existing tests
++18, Unreleased +2, no new metadata/status. Both grants consumed. Review
+past off-site explicit-phase sliced H1 uses only; no total-energy result,
+multisliced/PQS, consumer or release change.
+
+### Pass 666 Honest Lanczos and Atomic IDA UHF Authority
+
+Open only item 4. Lanczos flagged a 5e-9 Ritz residual as a success at
+1e-12 tol. A tiny identity or disconnected eigenpair still legitimately
+converges in its starting sector. Certify the actual residual and keep
+safe nonzero steps. Strong legal UHF damping hid a 0.06583 returned
+projector defect; normal He had 3.96e-11. Check the undamped defect and
+existing energy tolerance, then the fresh returned projector; mixed-step
+history is not the certificate. Hard +45 source/+32 existing IDA/+4
+Unreleased. No caller edit, scientific tolerance move, new solver or
+physics campaign. Preserve the pinned small-ED and H2+ gates.

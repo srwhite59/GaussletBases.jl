@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `325e0eb130e7af9ffb134c78398dbdaf7c20627ff79eb134680c6c9c12b3a58d`.
+> [authority.toml](authority.toml), SHA-256 `ba23ecf4a5c08871f05a61a12b1b772a2e2090178bebef78a58c2a3b95380db4`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -6505,35 +6505,67 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-SLICED-NUCLEAR-PHASE-FN-01 - compact sliced physical nuclear phase
 
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Compact Sliced Nuclear Phase`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `1cfe342ad4488045c8a8d1dd3c83728fb7448cd6`
+  - `git_commit`: `ee3193f56fa2fc79dc8f661988bab56004ca8138`
+  - `manager_pass`: `665`
+- **Dependencies:** none
+- **Scope:** Record accepted Compact Sliced Nuclear Phase at ee3193f5: signed physical offset in both H1 branches and far-only prefix sums. Source +14/-11 and Unreleased +2. Grant consumed; no Vee, multisliced/PQS, consumer or release work.
+
+### HP-SLICED-NUCLEAR-PHASE-TEST-01 - compact sliced shifted near and far H1 checks
+
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Compact Sliced Nuclear Phase`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `ee3193f56fa2fc79dc8f661988bab56004ca8138`
+  - `manager_pass`: `665`
+- **Dependencies:** `HP-SLICED-NUCLEAR-PHASE-FN-01`
+- **Scope:** Record accepted near/adjacent/far physical oracle and zero-phase tests at ee3193f5, existing IDA owner +18. Both Julia versions pass. Grant consumed; no new fixture owner, H10 campaign or other review item.
+
+### HP-SOLVER-CONVERGENCE-FN-01 - honest Ritz and UHF convergence certification
+
 - **Lifecycle:** `approved`
 - **Grant:** `implementation`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Compact Sliced Nuclear Phase`
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Honest Lanczos and Atomic IDA UHF Convergence`
 - **Owned paths:**
   - `docs` / `existing`: `CHANGELOG.md`
-  - `source` / `existing`: `src/ordinary/sliced_hydrogen_chain.jl`
+  - `source` / `existing`: `src/atomic/atomic_ida_uhf.jl`
+  - `source` / `existing`: `src/foundation/lanczos.jl`
 - **Evidence:**
-  - `git_commit`: `1cfe342ad4488045c8a8d1dd3c83728fb7448cd6`
-  - `manager_pass`: `665`
+  - `git_commit`: `ee3193f56fa2fc79dc8f661988bab56004ca8138`
+  - `manager_pass`: `666`
 - **Dependencies:** none
-- **Scope:** Implement Compact Sliced Nuclear Phase, Pass 665: physical separations in near H1 and far prefix sums; keep near terms out of far sums. Hard +28 source, +3 Unreleased. No gate, lattice, Vee, storage, multisliced/PQS, API, consumer or release work.
+- **Scope:** Implement Honest Lanczos and Atomic IDA UHF Convergence, Pass 666. Certify the returned Ritz residual and undamped UHF defect without API or caller changes. Hard +45 source, +4 Unreleased. No tolerance, solver framework, consumer, release or other item work.
 
-### HP-SLICED-NUCLEAR-PHASE-TEST-01 - compact sliced shifted near and far H1 checks
+### HP-SOLVER-CONVERGENCE-TEST-01 - small discriminating solver convergence regressions
 
 - **Lifecycle:** `approved`
 - **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Compact Sliced Nuclear Phase`
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Honest Lanczos and Atomic IDA UHF Convergence`
 - **Owned paths:**
   - `test` / `existing`: `test/ida/runtests.jl`
 - **Evidence:**
-  - `manager_pass`: `665`
-- **Dependencies:** `HP-SLICED-NUCLEAR-PHASE-FN-01`
-- **Scope:** Validate Compact Sliced Nuclear Phase in the existing IDA sliced owner (+24 max). Coordinate-aware H2 near/adjacent/far oracle, fractional and nearly aligned phases, unchanged zero-phase controls and tolerances. No new owner, H10 campaign or other review item.
+  - `manager_pass`: `666`
+- **Dependencies:** `HP-SOLVER-CONVERGENCE-FN-01`
+- **Scope:** Validate Honest Lanczos and Atomic IDA UHF Convergence, existing IDA owner +32 max: weak direction, exact breakdown, tight budget residual, ordinary/strong damping and fresh projector checks. Existing gates unchanged. No new owner, broad solver campaign or consumer work.
 
 ### HP-SOURCE-LAYOUT-ANGULAR-FN-01 - relocate angular source files
 
