@@ -182,18 +182,19 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "b3e226a288ede1339bef1af717ea196eb1a9510924290f9e82c5f086bed0b3ab"
+sha256 = "2161bc3672fff5a4ff8e0ae9285ff9239d91bbf207079dd72a4664cbb25ad788"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
 
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-TERMINAL-SUPPLEMENT-OWNERSHIP-FN-01"
-lifecycle = "approved"
-scope = "Implement Terminal Supplement Gaussian Ownership, Pass 669 item 6. Snapshot only the caller's orbital data once in the common terminal builder; use it for assembly and future overlaps. Hard +12 source/+3 Unreleased. No large matrix copies, new carrier, cutoff or numerical policy change."
-surfaces = ["docs", "source"]
+lifecycle = "completed"
+paths = []
+scope = "Record Pass 669 item 6 accepted at f2b9c5c5: snapshot only the small Gaussian orbital definition used by the shared terminal builder. Source +5, Unreleased +2; no large copy, new state or numerical change. Grant consumed."
+surfaces = []
 title = "retain the Gaussian functions used for terminal supplemented Hamiltonians"
 
     [[records.document_refs]]
@@ -203,29 +204,21 @@ title = "retain the Gaussian functions used for terminal supplemented Hamiltonia
 
     [[records.evidence_refs]]
     kind = "git_commit"
-    value = "a0289623bd4df6d5b3a36f4d7faefd7742389472"
+    value = "e96159182c8c9392b5dcd5c554ac76af6d6725b8"
     [[records.evidence_refs]]
-    kind = "external_path"
-    value = "/Users/srw/dmrgtmp/gb_review_repairs_20261124.n7LQhR/gaussletbases_review_2026-11-24.jl"
+    kind = "git_commit"
+    value = "f2b9c5c5360e8926d5ae1bc25d77548f400fab66"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "669"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "CHANGELOG.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_base_hamiltonian.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-TERMINAL-SUPPLEMENT-OWNERSHIP-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-TERMINAL-SUPPLEMENT-OWNERSHIP-TEST-01"
-lifecycle = "approved"
-scope = "Validate Terminal Supplement Gaussian Ownership in the existing residual owner. Hard +18 lines: matched control and unchanged exact overlaps after caller coefficient, exponent and list edits. Reuse the contracted compact fixture. No new build, owner, threshold, admission or consumer run."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Pass 669 matched and post-mutation overlap controls at f2b9c5c5: coefficient, exponent and orbital-list edits, same-H alias discrimination and compact H4 parity. Existing tests +15, source CI and Docs green. Grant consumed."
+surfaces = []
 title = "preserve terminal overlap after edits to caller-owned Gaussian orbitals"
 
     [[records.document_refs]]
@@ -234,13 +227,11 @@ title = "preserve terminal overlap after edits to caller-owned Gaussian orbitals
     path = "docs/src/developer/numerical_contracts.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "f2b9c5c5360e8926d5ae1bc25d77548f400fab66"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "669"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl"
-    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"
