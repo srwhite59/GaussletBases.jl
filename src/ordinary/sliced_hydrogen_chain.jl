@@ -584,7 +584,7 @@ function _sliced_build_coulomb(longitudinal, transverse, expansion, mode, sites_
 end
 
 function _sliced_inverse_sums(longitudinal, first_atom_lattice::Int, natoms::Int,
-    sites_per_atom::Int)
+    sites_per_atom::Int, anchor_offset::Float64, tail_distance::Float64)
     mmin = 2first(longitudinal.lattice_indices) - 2first_atom_lattice
     mmax = 2last(longitudinal.lattice_indices) - 2first_atom_lattice
     sums = zeros(Float64, 4, mmax - mmin + 1)
@@ -601,8 +601,10 @@ function _sliced_inverse_sums(longitudinal, first_atom_lattice::Int, natoms::Int
             index = n - nmin + 1
             @inbounds prefix[:, index + 1] .= prefix[:, index]
             coordinate = period * n + residue
-            if coordinate != 0
-                inverse = 2 / (longitudinal.spacing * abs(coordinate))
+            separation = anchor_offset + longitudinal.spacing * (coordinate / 2)
+            # Near terms are evaluated directly, not added and subtracted as tails.
+            if abs(separation) > tail_distance
+                inverse = inv(abs(separation))
                 @inbounds for order_index in 1:4
                     prefix[order_index, index + 1] += inverse^(2order_index - 1)
                 end
@@ -627,8 +629,11 @@ function _sliced_h1_bands(longitudinal, transverse, coulomb, nuclei,
     band = coulomb.h1_band
     first_atom_lattice = first(longitudinal.lattice_indices) +
         round(Int, (first(nuclei) - first(longitudinal.centers)) / longitudinal.spacing)
+    anchor_site = first_atom_lattice - first(longitudinal.lattice_indices) + 1
+    anchor_offset = longitudinal.centers[anchor_site] - first(nuclei)
+    period = 2sites_per_atom
     inverse_sums, midpoint_min = _sliced_inverse_sums(longitudinal,
-        first_atom_lattice, length(nuclei), sites_per_atom)
+        first_atom_lattice, length(nuclei), sites_per_atom, anchor_offset, coulomb.h1_tail_distance)
     max_relative_atom = ceil(Int, (coulomb.h1_tail_distance +
         (sites_per_atom + band) * longitudinal.spacing) /
         (sites_per_atom * longitudinal.spacing)) + 1
@@ -637,8 +642,8 @@ function _sliced_h1_bands(longitudinal, transverse, coulomb, nuclei,
         sites_per_atom, 2max_relative_atom + 1)
     for distance in 0:band, residue in 1:sites_per_atom,
         relative_atom in -max_relative_atom:max_relative_atom
-        separation = longitudinal.spacing *
-            (residue - 1 + distance / 2 - sites_per_atom * relative_atom)
+        coordinate = 2(residue - 1) + distance - period * relative_atom
+        separation = anchor_offset + longitudinal.spacing * (coordinate / 2)
         abs(separation) <= coulomb.h1_tail_distance || continue
         @inbounds for k in eachindex(coulomb.expansion.coefficients)
             longitudinal_value = _sliced_longitudinal_nuclear(longitudinal,
@@ -678,8 +683,8 @@ function _sliced_h1_bands(longitudinal, transverse, coulomb, nuclei,
             for relative_atom in -max_relative_atom:max_relative_atom
                 atom = cell + relative_atom
                 0 <= atom < length(nuclei) || continue
-                separation = longitudinal.spacing *
-                    (residue - 1 + distance / 2 - sites_per_atom * relative_atom)
+                coordinate = 2(residue - 1) + distance - period * relative_atom
+                separation = anchor_offset + longitudinal.spacing * (coordinate / 2)
                 abs(separation) <= coulomb.h1_tail_distance || continue
                 exact_value = 0.0
                 @inbounds for p in 1:nprimitive, q in 1:nprimitive
@@ -688,9 +693,7 @@ function _sliced_h1_bands(longitudinal, transverse, coulomb, nuclei,
                             distance + 1, residue,
                             relative_atom + max_relative_atom + 1]
                 end
-                tail_value = iszero(separation) ? 0.0 :
-                    _sliced_tail_value(multipoles, abs(separation))
-                potential += exact_value - tail_value
+                potential += exact_value
             end
             bands[distance + 1, site] = local_value - potential
         end

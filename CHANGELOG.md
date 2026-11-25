@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Fixed
+- Compact sliced hydrogen chains now use the physical lattice phase in both
+  near and far nuclear one-body terms, without subtracting singular near tails.
 - Cartesian occupied-block transfer rejects rank loss before QR instead of
   completing lost directions. Raw vector and single-column transfers are unchanged.
 - Corrected the angular `X2` and `Y2` directional second moments. The radial

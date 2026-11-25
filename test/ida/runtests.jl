@@ -971,6 +971,24 @@ end
     @test finite_vee[finite_mid, finite_mid] ≈ direct_vee(finite, finite_mid, finite_mid) atol = 1e-8
     @test finite_vee[finite_mid, finite_mid + 1] ≈ direct_vee(finite, finite_mid, finite_mid + 1) atol = 1e-8
 
+    for phase in (0.08, -1e-6)
+        shifted = sliced_hydrogen_chain(2; R = 3.6, spacing = 0.2, phase,
+            left_padding = 36.0, right_padding = 2.0, alignment = :explicit_phase,
+            transverse_mode = :finite)
+        centers = shifted.longitudinal.centers
+        near = argmin(abs.(centers .- first(shifted.nuclei)))
+        radius = shifted.coulomb.h1_tail_distance
+        @test sliced_h1_bandwidth(shifted) >= 1
+        @test isapprox(centers[near] - first(shifted.nuclei), phase; atol = 1e-14, rtol = 0)
+        @test all(abs.(centers[near] .- shifted.nuclei) .<= radius)
+        midpoint = (centers[near] + centers[near + 1]) / 2
+        @test all(abs.(midpoint .- shifted.nuclei) .<= radius)
+        @test all(abs.(first(centers) .- shifted.nuclei) .> radius)
+        for (i, j) in ((near, near), (near, near + 1), (1, 1))
+            @test sliced_h1(shifted)[i, j] ≈ direct_h1(shifted, i, j) atol = 1e-8 rtol = 0
+        end
+    end
+
     h10 = sliced_hydrogen_chain(10; common..., spacing = 0.2,
         transverse_mode = :periodic_template)
     h1 = sliced_h1(h10)
