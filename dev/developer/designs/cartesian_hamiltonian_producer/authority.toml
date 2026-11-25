@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "d70e236cac57ce5f87c8e9621dcc064431a5bb8223311f83c9032ec425676d69"
+sha256 = "755eb97071cc33e039c41e68e2013a0d790eb82469a7aa607188687996052a57"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -10983,11 +10983,12 @@ title = "compact sliced shifted near and far H1 checks"
     value = "665"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-SOLVER-CONVERGENCE-FN-01"
-lifecycle = "approved"
-scope = "Implement Honest Lanczos and Atomic IDA UHF Convergence, Pass 666. Certify the returned Ritz residual and undamped UHF defect without API or caller changes. Hard +45 source, +4 Unreleased. No tolerance, solver framework, consumer, release or other item work."
-surfaces = ["docs", "source"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Honest Lanczos and Atomic IDA UHF Convergence at 01980cdc: actual returned Ritz residual and undamped UHF defect. Source +24/-14, Unreleased +2. Grant consumed; no tolerance, caller, consumer or release changes."
+surfaces = []
 title = "honest Ritz and UHF convergence certification"
 
     [[records.document_refs]]
@@ -10997,30 +10998,21 @@ title = "honest Ritz and UHF convergence certification"
 
     [[records.evidence_refs]]
     kind = "git_commit"
+    value = "01980cdc8b19383d25e748669d972e58ac2031e0"
+    [[records.evidence_refs]]
+    kind = "git_commit"
     value = "ee3193f56fa2fc79dc8f661988bab56004ca8138"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "666"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "CHANGELOG.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/atomic/atomic_ida_uhf.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/foundation/lanczos.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-SOLVER-CONVERGENCE-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-SOLVER-CONVERGENCE-TEST-01"
-lifecycle = "approved"
-scope = "Validate Honest Lanczos and Atomic IDA UHF Convergence: existing IDA owner +32 max, exact-hash focused evidence reusable. ADVISER-666-COMPACT-1 replaces the failed task-local angular gate with one bounded same-input scratch check. Existing permanent tests and tolerances unchanged; no new owner, repin, broad replay or consumer work."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted focused IDA and ADVISER-666-COMPACT-1 solver qualification at 01980cdc. Tests +28; same-input angular residual and energy pass. Grant consumed; historical 20/22 and both goldens unchanged. No replay, repin or other item work."
+surfaces = []
 title = "small discriminating solver convergence regressions"
 
     [[records.document_refs]]
@@ -11029,13 +11021,14 @@ title = "small discriminating solver convergence regressions"
     path = "docs/src/developer/numerical_contracts.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "01980cdc8b19383d25e748669d972e58ac2031e0"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "77b946b7a30cd97482f821d7725917f5a1912be9"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "666"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/ida/runtests.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-PACKAGE-ROOT-PATH-FN-01"]
 grant = "maintenance"
