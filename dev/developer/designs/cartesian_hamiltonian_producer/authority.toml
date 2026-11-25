@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "e683be11632463452f43c5fcee1924a4f5ea1b8ee76b43bbd60d8c3e7ab6436d"
+sha256 = "d70e236cac57ce5f87c8e9621dcc064431a5bb8223311f83c9032ec425676d69"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -11019,7 +11019,7 @@ dependency_ids = ["HP-SOLVER-CONVERGENCE-FN-01"]
 grant = "implementation"
 id = "HP-SOLVER-CONVERGENCE-TEST-01"
 lifecycle = "approved"
-scope = "Validate Honest Lanczos and Atomic IDA UHF Convergence, existing IDA owner +32 max: weak direction, exact breakdown, tight budget residual, ordinary/strong damping and fresh projector checks. Existing gates unchanged. No new owner, broad solver campaign or consumer work."
+scope = "Validate Honest Lanczos and Atomic IDA UHF Convergence: existing IDA owner +32 max, exact-hash focused evidence reusable. ADVISER-666-COMPACT-1 replaces the failed task-local angular gate with one bounded same-input scratch check. Existing permanent tests and tolerances unchanged; no new owner, repin, broad replay or consumer work."
 surfaces = ["tests"]
 title = "small discriminating solver convergence regressions"
 
