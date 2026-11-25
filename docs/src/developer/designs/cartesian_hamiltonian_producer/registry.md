@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `814cec39281fced616ba950554fd33a6384146fb92ed473c093a2aded6085a6a`.
+> [authority.toml](authority.toml), SHA-256 `530001de58d29c511eea3be49fa2cf5e81d49e13135ae175e39822e925da8eab`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -12,36 +12,34 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-TERMINAL-SUPPLEMENT-OWNERSHIP-FN-01 - retain the Gaussian functions used for terminal supplemented Hamiltonians
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `docs`, `source`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Terminal Supplement Gaussian Ownership`
-- **Owned paths:**
-  - `docs` / `existing`: `CHANGELOG.md`
-  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+- **Owned paths:** none
 - **Evidence:**
-  - `git_commit`: `a0289623bd4df6d5b3a36f4d7faefd7742389472`
-  - `external_path`: `/Users/srw/dmrgtmp/gb_review_repairs_20261124.n7LQhR/gaussletbases_review_2026-11-24.jl`
+  - `git_commit`: `e96159182c8c9392b5dcd5c554ac76af6d6725b8`
+  - `git_commit`: `f2b9c5c5360e8926d5ae1bc25d77548f400fab66`
   - `manager_pass`: `669`
 - **Dependencies:** none
-- **Scope:** Implement Terminal Supplement Gaussian Ownership, Pass 669 item 6. Snapshot only the caller's orbital data once in the common terminal builder; use it for assembly and future overlaps. Hard +12 source/+3 Unreleased. No large matrix copies, new carrier, cutoff or numerical policy change.
+- **Scope:** Record Pass 669 item 6 accepted at f2b9c5c5: snapshot only the small Gaussian orbital definition used by the shared terminal builder. Source +5, Unreleased +2; no large copy, new state or numerical change. Grant consumed.
 
 ### HP-TERMINAL-SUPPLEMENT-OWNERSHIP-TEST-01 - preserve terminal overlap after edits to caller-owned Gaussian orbitals
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Terminal Supplement Gaussian Ownership`
-- **Owned paths:**
-  - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
+  - `git_commit`: `f2b9c5c5360e8926d5ae1bc25d77548f400fab66`
   - `manager_pass`: `669`
 - **Dependencies:** `HP-TERMINAL-SUPPLEMENT-OWNERSHIP-FN-01`
-- **Scope:** Validate Terminal Supplement Gaussian Ownership in the existing residual owner. Hard +18 lines: matched control and unchanged exact overlaps after caller coefficient, exponent and list edits. Reuse the contracted compact fixture. No new build, owner, threshold, admission or consumer run.
+- **Scope:** Record accepted Pass 669 matched and post-mutation overlap controls at f2b9c5c5: coefficient, exponent and orbital-list edits, same-H alias discrimination and compact H4 parity. Existing tests +15, source CI and Docs green. Grant consumed.
 
 ### HP-ANGULAR-RADIAL-SOURCE-FN-01 - use and verify retained radial data for angular Cartesian moments
 

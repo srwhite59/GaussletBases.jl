@@ -1518,3 +1518,8 @@ facts and warmed copy time/allocation on the small orbitals separately; no
 performance claim based on cold compilation and no replay just for timing.
 Stop for a mismatch, budget/scope conflict, or a live caller that requires
 aliasing. No consumer, screening-physics, release, or other item work.
+
+Accepted at `f2b9c5c5360e8926d5ae1bc25d77548f400fab66`; both grants consumed.
+Matched overlaps and all three caller-mutation controls are bitwise stable.
+The same-H aliased controls change overlap, with no need for a second build.
+Exact implementation CI and Docs passed without a new H4 admission.

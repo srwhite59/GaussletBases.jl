@@ -1892,3 +1892,18 @@ change the separate NamedTuple recipe facade. Exact matched and
 three nested/list mutations in the existing residual owner; preserve its
 private H4 checks, no H4 admission or campaign. Hard +12 source/+18 tests/+3
 Unreleased. Subsequent enumerated items each require independent grants.
+
+### Pass 669 Accepted Terminal Supplement Gaussian Ownership
+
+Accept `f2b9c5c5360e8926d5ae1bc25d77548f400fab66`. LT1/MT1 advances:
+later overlaps use the Gaussian functions that built the Hamiltonian.
+Removed caller aliasing in the shared collinear and private H4 terminal
+builder; no numeric path removed, and the separate recipe builder already
+owns its construction. No quarantine, state or large copy. Independent
+diff and exact receipt review, matched and three mutated controls stable;
+same-H aliased deltas 14.91/0.255/11.20 distinguish the old behavior.
+Source +5, existing tests +15, Unreleased +2. Cold build not repeated;
+warm snapshot 1.503 us/3232 bytes. Existing residual 375 including compact
+H4, docs/authority, source CI45690305531 and Docs45690305230 passed.
+Both grants consumed. Review prior overlaps only if the caller edited its
+inputs after build; no blanket Hamiltonian or energy rerun.
