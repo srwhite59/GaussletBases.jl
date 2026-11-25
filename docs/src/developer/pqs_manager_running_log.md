@@ -1698,3 +1698,16 @@ replaced inline collinear-only assembly by one shared path; quarantined:
 none. Kept: live released collinear, atom and diatomic entries. Both grants
 consumed. Paper-side builds can proceed with their own preflight; production
 dimensions and correlated accuracy remain unmeasured. No solver or successor.
+
+### Pass 663 Angular Directional Second Moments Authority
+
+Open only item 1 of GB-REVIEW-REPAIRS-20261124 at `ebfc029e`. The
+compact exact p probe reproduces 0.6828427/0.1171573/0.2 for p_x, with
+the reversed error for p_y and an unchanged trace. The exact l<=3
+projected squared coordinate has a negative eigenvalue near -0.064473.
+The independent normalized expansion gives opposite coefficients of
+magnitude sqrt(4*pi/15), not sqrt(8*pi/15). Correct just those two lines;
+test p axes, trace and positivity in angular_public. Hard +2 source,
++32 existing test, +3 Unreleased. No field-free operator, radial
+provenance, label, frozen-artifact or consumer change. The Cartesian
+lost-rank transfer review is next, with separate authority required.

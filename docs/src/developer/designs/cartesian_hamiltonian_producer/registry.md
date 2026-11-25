@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `87d7100e0e5079341176dc88730eb99b288e925c71696d07d66f844fec8c6714`.
+> [authority.toml](authority.toml), SHA-256 `78edc9b8befb67bce468349df824b7b14211086d2cf2a35b408284ebd8feed05`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -81,6 +81,39 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `git_commit`: `aa8e3911009e56412afc841750a7d4daebf0f566`
 - **Dependencies:** `HP-ANGULAR-CUBATURE-FN-01`
 - **Scope:** Record accepted GB-1 validation at aa8e3911009e56412afc841750a7d4daebf0f566:213 catalog checks, independent polynomial/input review, one native default-all suite, direct docs and exact-head full CI/Docs. Preserve the failed11-design expectation as evidence of an external prose error, not a passing test. The validation grant is consumed; no further tests or campaign are authorized.
+
+### HP-ANGULAR-DIRECTIONAL-MOMENTS-FN-01 - correct angular directional squared observables
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Angular Directional Second Moments`
+- **Owned paths:**
+  - `docs` / `existing`: `CHANGELOG.md`
+  - `source` / `existing`: `src/angular/angular_atomic_benchmark.jl`
+- **Evidence:**
+  - `external_path`: `/Users/srw/dmrgtmp/gb_review_repairs_20261124.n7LQhR/gaussletbases_review_2026-11-24.md`
+  - `git_commit`: `ebfc029e282e1b8c5f1c3fd24e17674dcbce9a41`
+  - `manager_pass`: `663`
+- **Dependencies:** none
+- **Scope:** Implement Angular Directional Second Moments, Pass 663: correct both normalized real Y22 coefficients in \_cartesian\_quadratic\_components (+2/-2). Add at most three Unreleased changelog lines. Preserve other observables, field-free operators, provenance, API and all releases; no consumer or other review item work.
+
+### HP-ANGULAR-DIRECTIONAL-MOMENTS-TEST-01 - exact angular directional observable regression
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Angular Directional Second Moments`
+- **Owned paths:**
+  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `663`
+- **Dependencies:** `HP-ANGULAR-DIRECTIONAL-MOMENTS-FN-01`
+- **Scope:** Validate Angular Directional Second Moments on the existing angular\_public owner, hard +32 test lines. Exact p-axis fractions, radial trace and the compact l\<=3 positivity discriminant. No new test file, workflow, tolerance relaxation or expensive physical fixture.
 
 ### HP-ANGULAR-ENERGY-BUDGET-FN-01 - opt-in estimated angular correlation allocation
 

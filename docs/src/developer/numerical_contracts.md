@@ -1148,3 +1148,36 @@ only after independent acceptance and checks. No Pass656 disposition, consumer
 edits/runs/repins, fits/strength/mu/Hamiltonian change, Cartesian/p-wave/four-index,
 release/stable/tag, new agent, timer, callback loop or successor. Notify adviser
 once on accepted closeout or a real blocker, then pause.
+
+## Angular Directional Second Moments
+
+Pass 663, item 1 of GB-REVIEW-REPAIRS-20261124, at `ebfc029e`. Only
+`src/angular/angular_atomic_benchmark.jl::_cartesian_quadratic_components`:
+replace the two real `Y22` coefficients with `+sqrt(4*pi/15)` for `X2`
+and `-sqrt(4*pi/15)` for `Y2`. With the established real convention,
+`Y22 = sqrt(15/(16*pi)) * (x^2-y^2)/r^2`, and the anisotropic term in
+`x^2/r^2` is half the difference. Source hard +2/-2 lines. Preserve the
+other coefficients, dipoles, `Z2`, `R2`, trace, convention, API and all
+field-free Hamiltonian/interaction construction. No radial-source provenance,
+site label, or arbitrary geometry change. One existing Unreleased/Fixed
+note in `CHANGELOG.md`, hard +3 lines, no tag/release/stable change.
+
+Only `test/driver_public/angular_fixed_radial_sequence_runtests.jl`, hard
++32 lines, on the existing Supported-floor `angular_public` gate. Use
+the compact He benchmark (`RadialBasisSpec(:G10; count=8,
+xgaussian_count=0, mapping=AsinhMapping(c=.125,s=.5,tail_spacing=10.))`,
+ordinary public quadrature, `Z=2`, radial `lmax=1`, order 10, `l_inject=1`).
+Project actual exact p channels with the benchmark transform, not a
+localized-site label. Fractions of matched `R2` must be `(3/5,1/5,1/5)`
+for p_x and the axis permutations for p_y and p_z (absolute `1e-10`);
+test matrix trace at the established `1e-8` absolute/relative tolerance.
+Check nonnegative angular `x^2/r^2` and `y^2/r^2` on the exact `l<=3`
+subspace, with normalized absolute roundoff slack `1e-12`. The old
+coefficients give p_x `(0.6828427,0.1171573,0.2)` and a negative eigenvalue
+near `-0.064473` despite a correct trace. No new test file or suite/golden
+change. Record exact targeted results and test seconds; no full angular
+suite or physical replay. Require local angular_public, package load,
+docs/authority/self-test/render parity/Documenter/diff and exact normal
+source CI plus Docs. Stop without source commit if any gate fails or the
+impl/test cap cannot be met. Only item 1 is granted here; later items need
+their own reviewed authority. No consumer edit, export rewrite or rerun.
