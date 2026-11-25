@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `bd4b56d2549cfbbe7ec38b9378e2a8957e891a0e66218b397c3e19c44abc7daf`.
+> [authority.toml](authority.toml), SHA-256 `5f64be1e0593ac4626a85f719615a728767e0aa7c5ae4f2010adf85ea9c6943c`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -10,40 +10,76 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ## Records
 
-### HP-MATRIX-EGOI-XGTO-VALIDATION-FN-01 - repair zero EGOI and external orbital input validation
+### HP-COMPOSABLE-ANGULAR-GAUSSIAN-FN-01 - compose angular and Gaussian calls and reject unsupported MWG
 
 - **Lifecycle:** `approved`
 - **Grant:** `implementation`
 - **Surfaces:** `docs`, `source`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Matrix EGOI and External Orbital Validation`
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Composable Angular and Gaussian Calls`
 - **Owned paths:**
   - `docs` / `existing`: `CHANGELOG.md`
-  - `source` / `existing`: `src/cartesian/cartesian_external_gto_import.jl`
-  - `source` / `existing`: `src/cartesian/cartesian_external_gto_interchange.jl`
-  - `source` / `existing`: `src/cartesian/hamiltonian_corrections.jl`
+  - `source` / `existing`: `src/angular/angular_coiflet.jl`
+  - `source` / `existing`: `src/angular/angular_cubature_point_sets.jl`
+  - `source` / `existing`: `src/angular/angular_point_sets.jl`
+  - `source` / `existing`: `src/angular/angular_shell_basis.jl`
+  - `source` / `existing`: `src/cartesian/gaussian_coulomb_reference.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl`
 - **Evidence:**
-  - `git_commit`: `3e8b4ef6c151c1204569aea5accb2230cfcaa673`
-  - `manager_pass`: `670`
+  - `git_commit`: `56701e70c8c907e95be90fc1449ce1c432d197e1`
+  - `manager_pass`: `671`
 - **Dependencies:** none
-- **Scope:** Implement Matrix EGOI and External Orbital Validation, Pass 670 item 7: rank-aware zero EGOI, induced infinity norm in the Julia reader, and shared spin-block validation. Hard +45 source/+6 Unreleased. Preserve positive EGOI, valid constructors and packets. No route, schema, exporter, consumer or release changes.
+- **Scope:** Implement Composable Angular and Gaussian Calls, Pass 671 item 8: dynamic pair scheduling, synchronized angular and catalog caches, reject/delete the direct-G MWG congruence. Hard +60 source/+6 Unreleased. Preserve default, parent-backed and protected paths. No framework, consumer or release work.
 
-### HP-MATRIX-EGOI-XGTO-VALIDATION-TEST-01 - discriminate rank, row-norm and constructor defects
+### HP-COMPOSABLE-ANGULAR-GAUSSIAN-TEST-01 - exercise nested calls, cold caches, and explicit rejection
 
 - **Lifecycle:** `approved`
 - **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Matrix EGOI and External Orbital Validation`
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Composable Angular and Gaussian Calls`
 - **Owned paths:**
-  - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
-  - `test` / `existing`: `test/ida/cartesian_ida_hamiltonian_runtests.jl`
+  - `test` / `existing`: `test/core/runtests.jl`
+  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
+  - `test` / `existing`: `test/misc/runtests.jl`
 - **Evidence:**
+  - `git_commit`: `56701e70c8c907e95be90fc1449ce1c432d197e1`
+  - `manager_pass`: `671`
+- **Dependencies:** `HP-COMPOSABLE-ANGULAR-GAUSSIAN-FN-01`
+- **Scope:** Validate Composable Angular and Gaussian Calls: nested two-thread pair parity, cold and warm angular reuse, and explicit unsupported interaction rejection. Hard +50 across three existing owners. No new owner, workflow, full Angular, consumer or release work.
+
+### HP-MATRIX-EGOI-XGTO-VALIDATION-FN-01 - repair zero EGOI and external orbital input validation
+
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Matrix EGOI and External Orbital Validation`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `3e8b4ef6c151c1204569aea5accb2230cfcaa673`
+  - `git_commit`: `56701e70c8c907e95be90fc1449ce1c432d197e1`
+  - `manager_pass`: `670`
+- **Dependencies:** none
+- **Scope:** Record accepted zero EGOI, row-norm and spin validation at 03e60a80 plus 56701e70. Source +31/-19, reader +4, no route or schema change. Grant consumed.
+
+### HP-MATRIX-EGOI-XGTO-VALIDATION-TEST-01 - discriminate rank, row-norm and constructor defects
+
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Matrix EGOI and External Orbital Validation`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `56701e70c8c907e95be90fc1449ce1c432d197e1`
   - `manager_pass`: `670`
 - **Dependencies:** `HP-MATRIX-EGOI-XGTO-VALIDATION-FN-01`
-- **Scope:** Validate Matrix EGOI and External Orbital Validation: independent retained/null and old positive-filter controls, row-sum discriminator and frozen packet, valid and invalid spin constructors. Hard +50 in two existing owners. No fixture write, gate relaxation, full Angular, consumer or release work.
+- **Scope:** Record accepted retained/null, range, row-norm and spin-block controls at 56701e70, tests +50 and exact CI/Docs. Grant consumed.
 
 ### HP-TERMINAL-SUPPLEMENT-OWNERSHIP-FN-01 - retain the Gaussian functions used for terminal supplemented Hamiltonians
 

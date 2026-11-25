@@ -1920,3 +1920,28 @@ conversion behavior. Hard +45 source/+50 existing tests/+6 Unreleased.
 Full angular diagnosis is separate and complete: the two radial rules
 reproduce both full endpoints; the IDA change explains 99.86% of the shift.
 No anchor or source edit from that diagnosis.
+
+### Pass 670 Accepted Matrix EGOI and External Orbital Validation
+
+Accept `03e60a80` plus correction `56701e70c8c907e95be90fc1449ce1c432d197e1`.
+LT1/MT1/MT7: the zero filter now respects numerical product rank and
+does not form an underflowing singular pair; independent zero and
+finite subnormal-target controls pass. Positive filter bit-identical.
+Reader uses the exporter row norm, and spin constructors share one
+validator without changing valid conversions. Replaced the unrestricted
+zero filter and bypassed validation, no new owner or schema. Whole
+source +31/-19, tests +50, Unreleased +4. IDA12093, residual389 and
+exact correction CI45702125111, Docs45702124921 passed. Both grants
+consumed. Audit unregularized rank-deficient corrections or invalid
+packets, not validated positive-default or frozen results.
+
+### Pass 671 Composable Angular and Gaussian Calls Authority
+
+Open only item 8. Reproduced the nested static scheduler failure on two
+threads, with the serial integral 1.12837916245 Ha. Keep arithmetic;
+synchronize existing angular caches and directly required lazy catalogs
+without changing keys, data, or warm reuse. Remove only the unsupported
+direct-G density-density congruence and reject that request before work.
+Scoped caller scan finds no maintained enabled interaction consumer;
+one-body injection, parent-backed and protected-localized paths remain.
+Hard +60 source/+50 existing tests/+6 Unreleased; no cache framework.

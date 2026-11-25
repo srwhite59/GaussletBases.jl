@@ -146,7 +146,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gauss
 sha256 = "ac3dac466c3fcefc9f85ae9a7feb71126ebfbc38563c02d61aebe4a929dc65b8"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_injection_hybrid.md"
-sha256 = "6d8dcc37dd7afc8df833f06e458068409a79fed67c08ee3cd9826994218fe0ec"
+sha256 = "a3d817be4eb185dee8f42cedc5913fc93bed5e042678a5902ae97fa6d89ef38a"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/residual_gaussian_orthogonality_robustness.md"
 sha256 = "bbe8c7435aefff7f24a2925c582dcf33d9a4b0815988770edf2940f1d15eb390"
@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "5995b1cde965cab744584363c1a8f439ed60e9e223baa990515a45f10567b461"
+sha256 = "5f98d3ecf6ea688cd68af7dbf96cf948ad7ae25b9e6cf131dfe6eea51633afb4"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -190,10 +190,93 @@ sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
 [[records]]
 dependency_ids = []
 grant = "implementation"
-id = "HP-MATRIX-EGOI-XGTO-VALIDATION-FN-01"
+id = "HP-COMPOSABLE-ANGULAR-GAUSSIAN-FN-01"
 lifecycle = "approved"
-scope = "Implement Matrix EGOI and External Orbital Validation, Pass 670 item 7: rank-aware zero EGOI, induced infinity norm in the Julia reader, and shared spin-block validation. Hard +45 source/+6 Unreleased. Preserve positive EGOI, valid constructors and packets. No route, schema, exporter, consumer or release changes."
+scope = "Implement Composable Angular and Gaussian Calls, Pass 671 item 8: dynamic pair scheduling, synchronized angular and catalog caches, reject/delete the direct-G MWG congruence. Hard +60 source/+6 Unreleased. Preserve default, parent-backed and protected paths. No framework, consumer or release work."
 surfaces = ["docs", "source"]
+title = "compose angular and Gaussian calls and reject unsupported MWG"
+
+    [[records.document_refs]]
+    heading = "Composable Angular and Gaussian Calls"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "56701e70c8c907e95be90fc1449ce1c432d197e1"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "671"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "CHANGELOG.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_coiflet.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_cubature_point_sets.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_point_sets.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_shell_basis.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/gaussian_coulomb_reference.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-COMPOSABLE-ANGULAR-GAUSSIAN-FN-01"]
+grant = "implementation"
+id = "HP-COMPOSABLE-ANGULAR-GAUSSIAN-TEST-01"
+lifecycle = "approved"
+scope = "Validate Composable Angular and Gaussian Calls: nested two-thread pair parity, cold and warm angular reuse, and explicit unsupported interaction rejection. Hard +50 across three existing owners. No new owner, workflow, full Angular, consumer or release work."
+surfaces = ["tests"]
+title = "exercise nested calls, cold caches, and explicit rejection"
+
+    [[records.document_refs]]
+    heading = "Composable Angular and Gaussian Calls"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "56701e70c8c907e95be90fc1449ce1c432d197e1"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "671"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/core/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/misc/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = []
+grant = "none"
+id = "HP-MATRIX-EGOI-XGTO-VALIDATION-FN-01"
+lifecycle = "completed"
+paths = []
+scope = "Record accepted zero EGOI, row-norm and spin validation at 03e60a80 plus 56701e70. Source +31/-19, reader +4, no route or schema change. Grant consumed."
+surfaces = []
 title = "repair zero EGOI and external orbital input validation"
 
     [[records.document_refs]]
@@ -205,32 +288,19 @@ title = "repair zero EGOI and external orbital input validation"
     kind = "git_commit"
     value = "3e8b4ef6c151c1204569aea5accb2230cfcaa673"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "56701e70c8c907e95be90fc1449ce1c432d197e1"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "670"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "CHANGELOG.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_external_gto_import.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_external_gto_interchange.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/hamiltonian_corrections.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-MATRIX-EGOI-XGTO-VALIDATION-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-MATRIX-EGOI-XGTO-VALIDATION-TEST-01"
-lifecycle = "approved"
-scope = "Validate Matrix EGOI and External Orbital Validation: independent retained/null and old positive-filter controls, row-sum discriminator and frozen packet, valid and invalid spin constructors. Hard +50 in two existing owners. No fixture write, gate relaxation, full Angular, consumer or release work."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted retained/null, range, row-norm and spin-block controls at 56701e70, tests +50 and exact CI/Docs. Grant consumed."
+surfaces = []
 title = "discriminate rank, row-norm and constructor defects"
 
     [[records.document_refs]]
@@ -239,17 +309,11 @@ title = "discriminate rank, row-norm and constructor defects"
     path = "docs/src/developer/numerical_contracts.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "56701e70c8c907e95be90fc1449ce1c432d197e1"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "670"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/ida/cartesian_ida_hamiltonian_runtests.jl"
-    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"

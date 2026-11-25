@@ -154,6 +154,11 @@ directions do not receive residual-GTO/MWG descriptors. Exact one-body
 transformation does not authorize a two-index interaction congruence or a new
 density convention.
 
+Pass 671 authorizes removing the nonphysical direct-G interaction
+congruence and explicitly rejecting this interaction request. It does not
+retire enabled selection or exact one-body transformations, and does not
+affect the separate parent-backed or protected-localized interaction.
+
 The current supplemented artifact writer rejects
 `residual_injection_cutoff > 0`. Enabled injection is in-memory only; this
 contract does not authorize artifact provenance or persistence.

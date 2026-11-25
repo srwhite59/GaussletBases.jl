@@ -1581,3 +1581,63 @@ source CI and separate Docs. Report scope, discriminating baseline,
 focused cost and preservation of positive EGOI and valid packet behavior.
 Stop for failed gate, consumer incompatibility or scope expansion.
 No full Angular, consumer, release, item 8 or item 9 work in this grant.
+
+Accepted at `56701e70c8c907e95be90fc1449ce1c432d197e1`, atop the initial
+`03e60a80337eab10836159f004e15dc228464579`; both grants consumed. Round 1
+avoids singular-pair underflow by doing two separate divisions only in the
+zero filter. Independent exact-zero and finite subnormal-target checks pass.
+Exact source CI and Docs passed; positive filter and valid packets preserved.
+
+## Composable Angular and Gaussian Calls
+
+Pass 671, item 8 of GB-REVIEW-REPAIRS-20261124. Hard +60 source lines
+total, +50 existing tests and +6 Unreleased/Fixed. No workflow, buffer,
+cache framework, public API, threshold or artifact change.
+
+- In `src/cartesian/gaussian_coulomb_reference.jl` replace the four static
+  Julia schedules with the supported dynamic scheduler. Each writes
+  disjoint entries; retain every loop body, summation order and threading
+  eligibility. Independent baseline on two threads: serial 1.12837916245
+  Ha; the same public call from an outer loop fails on nested static scheduling.
+- Serialize profile-cache initialization and dictionary lookup/build/
+  insertion for the ordinary and coiflet entrances and ordered overlap
+  cache. Only `src/angular/angular_shell_basis.jl` and `angular_coiflet.jl`;
+  a small file-local scoped cache operation is allowed. Use a reentrant
+  profile lock because a coiflet builds or reads its ordinary parent.
+  Cache hits remain cached, keys, identities, values and input validation
+  unchanged. Synchronize lazy full/curated/cubature point-set loading in
+  `src/angular/angular_point_sets.jl` and `angular_cubature_point_sets.jl`
+  under a separate point-load lock, preserving lazy behavior and existing
+  read-only data. Do not hold the point-load lock during profile work.
+  No lock-free reads of writable dictionaries, retry cache, double-build
+  of a cold key, or guarantee for external mutations of cached arrays.
+  Local assembly caches and task-local TimeG are unchanged.
+- Only `src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl`:
+  in `assemble_residual_ida_interaction`, fail early with a clear
+  ArgumentError for non-`nothing` `injected_G`. Delete the unsupported
+  two-index congruence, keep the ordinary channel arithmetic. A 45-degree
+  rotation of a constant two-site interaction would give diagonal (2,0)
+  instead of (1,1). Only collinear/rectangle and the staged wrapper call
+  this assembler, with ordinary production residuals. Scoped read-only
+  search found no maintained external enabled interaction caller; Hooke's
+  checked diagnostic uses cutoff zero. Existing direct-G tests exercise
+  selection and one-body algebra, not this interaction. Preserve those
+  paths and the separate parent-backed and protected-localized interactions.
+
+Tests in existing `test/core/runtests.jl`, public angular fixed-radial
+sequence owner, and `test/misc/runtests.jl` only. Compare same-center and
+translated pair matrices with serial calls from an outer Julia loop.
+Use two-thread fresh-process focused validation to exercise actual
+nesting, cold point/profile/coiflet/overlap first use, then warm identity
+and numerical parity. Use small same/distinct keys and do not clear
+global caches in routine tests. The cache concern is a source race,
+not an established wrong science result. Reuse the misc injected
+fixture for the explicit interaction rejection before assembly. Preserve
+all default and parent-backed/matrix checks and include focused residual
+and R3A owners; explain any >60-second run. Report warmed scheduler/cache
+cost and allocations on one small representative workload, no broad
+performance or physics campaign. Require package, docs/authority/
+self-test/two renders/direct Documenter/diff/added-line regex and full
+exact source CI plus separate Docs. Stop on a live conflict, failed
+gate or scope/budget expansion. No full Angular, consumer, release,
+item 9, or other route change.
