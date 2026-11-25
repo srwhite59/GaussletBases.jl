@@ -1880,3 +1880,15 @@ explicit calls measured 0.436/0.470 s; cumulative allocation was
 angular_public514 and targeted moment45 plus source CI45683619066 and
 Docs45683619065 passed. Both grants consumed. Review past Cartesian moments
 with uncertain radial provenance, not stored Hamiltonians or all energies.
+
+### Pass 669 Terminal Supplement Gaussian Ownership Authority
+
+Open item 6 only under ADVISER-ITEMS6-9-20261125-1. A frozen compact H3
+probe at `a0289623` changed capture 1.0 to 426.47 while its 234-by-234
+Hamiltonian stayed unchanged. Replace retention of caller-owned Gaussian
+vectors in the shared terminal builder with one small owned orbital copy
+used by both assembly and later overlap. Do not copy large matrices or
+change the separate NamedTuple recipe facade. Exact matched and
+three nested/list mutations in the existing residual owner; preserve its
+private H4 checks, no H4 admission or campaign. Hard +12 source/+18 tests/+3
+Unreleased. Subsequent enumerated items each require independent grants.

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `0e0073994172dbe407e68c98ab46668d59db9393a441ba2bfd6336d02ec4ac53`.
+> [authority.toml](authority.toml), SHA-256 `814cec39281fced616ba950554fd33a6384146fb92ed473c093a2aded6085a6a`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -9,6 +9,39 @@ owned paths, scope, `current.md`, `invariants.md`, and canonical contract.
 Lifecycle never grants work by itself. Any missing or conflicting fact fails closed.
 
 ## Records
+
+### HP-TERMINAL-SUPPLEMENT-OWNERSHIP-FN-01 - retain the Gaussian functions used for terminal supplemented Hamiltonians
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Terminal Supplement Gaussian Ownership`
+- **Owned paths:**
+  - `docs` / `existing`: `CHANGELOG.md`
+  - `source` / `existing`: `src/cartesian/cartesian_base_hamiltonian.jl`
+- **Evidence:**
+  - `git_commit`: `a0289623bd4df6d5b3a36f4d7faefd7742389472`
+  - `external_path`: `/Users/srw/dmrgtmp/gb_review_repairs_20261124.n7LQhR/gaussletbases_review_2026-11-24.jl`
+  - `manager_pass`: `669`
+- **Dependencies:** none
+- **Scope:** Implement Terminal Supplement Gaussian Ownership, Pass 669 item 6. Snapshot only the caller's orbital data once in the common terminal builder; use it for assembly and future overlaps. Hard +12 source/+3 Unreleased. No large matrix copies, new carrier, cutoff or numerical policy change.
+
+### HP-TERMINAL-SUPPLEMENT-OWNERSHIP-TEST-01 - preserve terminal overlap after edits to caller-owned Gaussian orbitals
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Terminal Supplement Gaussian Ownership`
+- **Owned paths:**
+  - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `669`
+- **Dependencies:** `HP-TERMINAL-SUPPLEMENT-OWNERSHIP-FN-01`
+- **Scope:** Validate Terminal Supplement Gaussian Ownership in the existing residual owner. Hard +18 lines: matched control and unchanged exact overlaps after caller coefficient, exponent and list edits. Reuse the contracted compact fixture. No new build, owner, threshold, admission or consumer run.
 
 ### HP-ANGULAR-RADIAL-SOURCE-FN-01 - use and verify retained radial data for angular Cartesian moments
 

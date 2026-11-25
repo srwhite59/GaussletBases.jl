@@ -182,11 +182,65 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "d783be60635b4ee9187cecfabd1aad95d02635e0ba1935d534e0c78170b65b05"
+sha256 = "b3e226a288ede1339bef1af717ea196eb1a9510924290f9e82c5f086bed0b3ab"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
 
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-TERMINAL-SUPPLEMENT-OWNERSHIP-FN-01"
+lifecycle = "approved"
+scope = "Implement Terminal Supplement Gaussian Ownership, Pass 669 item 6. Snapshot only the caller's orbital data once in the common terminal builder; use it for assembly and future overlaps. Hard +12 source/+3 Unreleased. No large matrix copies, new carrier, cutoff or numerical policy change."
+surfaces = ["docs", "source"]
+title = "retain the Gaussian functions used for terminal supplemented Hamiltonians"
+
+    [[records.document_refs]]
+    heading = "Terminal Supplement Gaussian Ownership"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "a0289623bd4df6d5b3a36f4d7faefd7742389472"
+    [[records.evidence_refs]]
+    kind = "external_path"
+    value = "/Users/srw/dmrgtmp/gb_review_repairs_20261124.n7LQhR/gaussletbases_review_2026-11-24.jl"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "669"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "CHANGELOG.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_base_hamiltonian.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-TERMINAL-SUPPLEMENT-OWNERSHIP-FN-01"]
+grant = "implementation"
+id = "HP-TERMINAL-SUPPLEMENT-OWNERSHIP-TEST-01"
+lifecycle = "approved"
+scope = "Validate Terminal Supplement Gaussian Ownership in the existing residual owner. Hard +18 lines: matched control and unchanged exact overlaps after caller coefficient, exponent and list edits. Reuse the contracted compact fixture. No new build, owner, threshold, admission or consumer run."
+surfaces = ["tests"]
+title = "preserve terminal overlap after edits to caller-owned Gaussian orbitals"
+
+    [[records.document_refs]]
+    heading = "Terminal Supplement Gaussian Ownership"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "669"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"

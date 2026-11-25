@@ -1472,3 +1472,49 @@ Accepted at `be4c5f0a4a1797647e477c3a1bca08760104c9f6`; both grants consumed.
 Independent matched R2, scaled-input rejection despite Gram agreement,
 and unchanged legacy one-body H passed. Missing evidence is not a
 mismatch. Exact source CI and Docs passed without a full Angular replay.
+
+## Terminal Supplement Gaussian Ownership
+
+Pass 669, item 6 of GB-REVIEW-REPAIRS-20261124. The collinear builder
+must retain the same Gaussian functions that it used for the Hamiltonian,
+even when the caller subsequently edits the input. At baseline
+`a0289623`, the frozen compact H3 probe changed capture from
+0.9999999999999852 to 426.4663950390566 after doubling one caller coefficient;
+its 234-by-234 one-body matrix did not change.
+
+Only `src/cartesian/cartesian_base_hamiltonian.jl`:
+`_terminal_unscreened_residual_gto_mwg_system` and, if useful, the existing
+collinear facade docstring. Hard +12 source lines. In that common builder
+take one owned copy of the supplied orbital vector, including every
+orbital's exponent and coefficient vectors, before residual selection and
+raw assembly. Use that same representation for assembly and the returned
+system. Preserve labels, centers, powers, normalization, ordering and
+provenance metadata (not numerical input); copy no Hamiltonian, parent
+data, residual transform or probe. The separate NamedTuple recipe facade
+already builds its own Gaussian representation and stays untouched.
+The common terminal helper also serves the private H4 route: preserve that
+route's numerical behavior and existing tests without rerunning admission.
+The guarantee is against edits to caller-owned Gaussian data after return,
+not concurrent input edits during construction or mutation of opaque
+returned internals. No new helper, field, export, cache, dependency, copy
+policy at other entrances, or numerical-policy changes.
+
+Only the existing finite-collinear connection testset in
+`test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`, hard +18.
+Reuse its existing contracted H3 and matched omitted/explicit-cutoff build,
+including existing numerical matrix and exact-overlap checks. Use probe
+orbitals independent of the caller data. Check matched unmodified overlap,
+then mutate a caller coefficient, exponent, and orbital vector entry
+separately, checking the already-built system's full overlap after each.
+No new Hamiltonian build for these checks. Existing Unreleased/Fixed hard +3
+reader lines; no other prose, owner, or gate changes.
+
+Run the existing residual owner including compact rectangle checks, package
+load, docs/authority/self-test/two renders/Documenter/diff/added-line regex,
+and exact full source CI plus separate Docs. The existing residual owner is
+needed to exercise both callers of the shared terminal builder; do not run a
+paper-scale or historical campaign. Report capture, dimensions, construction
+facts and warmed copy time/allocation on the small orbitals separately; no
+performance claim based on cold compilation and no replay just for timing.
+Stop for a mismatch, budget/scope conflict, or a live caller that requires
+aliasing. No consumer, screening-physics, release, or other item work.
