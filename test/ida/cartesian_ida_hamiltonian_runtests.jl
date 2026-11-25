@@ -1,7 +1,28 @@
 using JLD2
+using LinearAlgebra
 using Test
 
 using GaussletBases
+
+@testset "Matrix EGOI numerical product rank" begin
+    Q = Matrix(qr([1. 3.; 2. -2.; 3. 1.; 4. -4.; 5. .5; 6. 2.; 7. -1.; 8. 6.]).Q)
+    P = egoi_target_product_matrix(Q)
+    A = [1 / (1 + abs(i - j)) for i in 1:8, j in 1:8]
+    T = P' * A * P
+    retained = Matrix(qr(P[:, [1, 2, 4]]).Q)
+    R = retained * retained'
+    zero_reg = egoi_density_density_correction(zeros(8, 8), Q, T; regularization = 0.0)
+    D = zero_reg.interaction_delta
+    @test zero_reg.diagnostics.product_rank == 3
+    @test opnorm(D - R * A * R, Inf) <= 1e-10
+    @test opnorm(P' * zero_reg.interaction_matrix * P - T, Inf) <= 1e-10
+    @test opnorm((I - R) * D, Inf) <= 1e-10
+    @test opnorm(D * (I - R), Inf) <= 1e-10
+    F = svd(P)
+    products = F.S * F.S'
+    smooth = F.U * ((F.V' * T * F.V) .* products ./ (1e-18 .+ products.^2)) * F.U'
+    @test opnorm(egoi_density_density_correction(zeros(8, 8), Q, T).interaction_delta - smooth, Inf) <= 1e-10
+end
 
 @testset "Public Cartesian IDA Hamiltonian contract" begin
     kinetic = [1.0 0.1; 0.1 1.4]

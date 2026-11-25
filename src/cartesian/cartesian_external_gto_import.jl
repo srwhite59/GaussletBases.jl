@@ -9,26 +9,31 @@ struct ExternalGTOOrbitalSpinBlock
     spin::Symbol
     coefficients::Matrix{Float64}
     occupations::Vector{Float64}
+
+    function ExternalGTOOrbitalSpinBlock(spin::Symbol, C::Matrix{Float64}, occ::Vector{Float64})
+        size(C, 2) == length(occ) || throw(
+            DimensionMismatch(
+                "external GTO spin block $(spin) has $(size(C, 2)) orbitals but $(length(occ)) occupations",
+            ),
+        )
+        spin in (:restricted, :alpha, :beta) || throw(
+            ArgumentError("external GTO spin block must be :restricted, :alpha, or :beta; got $(spin)"),
+        )
+        all(isfinite, C) || throw(ArgumentError("external GTO MO coefficients for $(spin) are not finite"))
+        all(isfinite, occ) || throw(ArgumentError("external GTO occupations for $(spin) are not finite"))
+        return new(spin, C, occ)
+    end
 end
+
+ExternalGTOOrbitalSpinBlock(spin, coefficients, occupations) = ExternalGTOOrbitalSpinBlock(
+    convert(Symbol, spin), convert(Matrix{Float64}, coefficients), convert(Vector{Float64}, occupations))
 
 function ExternalGTOOrbitalSpinBlock(
     spin::Symbol,
     coefficients::AbstractMatrix{<:Real},
     occupations::AbstractVector{<:Real},
 )
-    C = Matrix{Float64}(coefficients)
-    occ = Vector{Float64}(occupations)
-    size(C, 2) == length(occ) || throw(
-        DimensionMismatch(
-            "external GTO spin block $(spin) has $(size(C, 2)) orbitals but $(length(occ)) occupations",
-        ),
-    )
-    spin in (:restricted, :alpha, :beta) || throw(
-        ArgumentError("external GTO spin block must be :restricted, :alpha, or :beta; got $(spin)"),
-    )
-    all(isfinite, C) || throw(ArgumentError("external GTO MO coefficients for $(spin) are not finite"))
-    all(isfinite, occ) || throw(ArgumentError("external GTO occupations for $(spin) are not finite"))
-    return ExternalGTOOrbitalSpinBlock(spin, C, occ)
+    return ExternalGTOOrbitalSpinBlock(spin, Matrix{Float64}(coefficients), Vector{Float64}(occupations))
 end
 
 ExternalGTOOrbitalSpinBlock(

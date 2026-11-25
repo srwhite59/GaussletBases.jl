@@ -175,7 +175,7 @@ function _xgto_orbital_blocks(records, arrays, S_GG, state_kind)
         size(coefficients, 2) == length(indices) == length(occupations) ||
             _xgto_fail("$(expected_spin) orbital dimensions disagree")
         all(>(0), occupations) || _xgto_fail("exported occupations must be positive")
-        metric_error = norm(transpose(coefficients) * S_GG * coefficients - I, Inf)
+        metric_error = opnorm(transpose(coefficients) * S_GG * coefficients - I, Inf)
         metric_error <= 1.0e-8 || _xgto_fail("$(expected_spin) source metric error $(metric_error)")
         abs(metric_error - _xgto_float(row["metric_error_inf"], "orbital block metric error")) <= 1.0e-8 ||
             _xgto_fail("$(expected_spin) metric diagnostic mismatch")

@@ -155,19 +155,24 @@ function _egoi_svd_delta_matrix(
         throw(ArgumentError("regularization must be nonnegative"))
     decomposition = svd(Matrix{Float64}(product))
     singular_values = Float64[Float64(value) for value in decomposition.S]
+    diagnostic_cutoff =
+        isempty(singular_values) ? 0.0 : max(size(product)...) * eps(Float64) * maximum(singular_values)
     right_vectors = decomposition.V
     left_vectors = decomposition.U
     transformed_target = transpose(right_vectors) * Matrix{Float64}(delta_target) * right_vectors
     transformed_delta = zeros(Float64, length(singular_values), length(singular_values))
     for nu in eachindex(singular_values), mu in eachindex(singular_values)
         sigma_product = singular_values[mu] * singular_values[nu]
+        if iszero(regularization_value)
+            min(singular_values[mu], singular_values[nu]) > diagnostic_cutoff || continue
+            transformed_delta[mu, nu] = transformed_target[mu, nu] / sigma_product
+            continue
+        end
         denominator = regularization_value + sigma_product^2
         transformed_delta[mu, nu] =
             denominator == 0.0 ? 0.0 :
             transformed_target[mu, nu] * sigma_product / denominator
     end
-    diagnostic_cutoff =
-        isempty(singular_values) ? 0.0 : max(size(product)...) * eps(Float64) * maximum(singular_values)
     rank = count(value -> value > diagnostic_cutoff, singular_values)
     return (
         delta = _hc_symmetrize(left_vectors * transformed_delta * transpose(left_vectors)),
@@ -225,9 +230,9 @@ space reproduces `exact_target` as closely as possible:
 `P' * (V + ΔV) * P ≈ exact_target`, where `P =
 egoi_target_product_matrix(Qtarget)`.
 
-The correction follows the CR2 smooth SVD regularization in the product basis,
-so rank-deficient product spaces are handled explicitly and reported in
-diagnostics.
+Positive regularization uses the CR2 smooth SVD filter in the product basis.
+At zero, the correction uses a pseudoinverse on the numerical product rank,
+leaving discarded product directions uncorrected. Diagnostics report the rank.
 """
 function egoi_density_density_correction(
     V::AbstractMatrix{<:Real},

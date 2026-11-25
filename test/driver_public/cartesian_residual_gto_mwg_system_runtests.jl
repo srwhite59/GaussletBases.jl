@@ -462,6 +462,35 @@ end
 
     S_GG = Matrix{Float64}(I, 2, 2)
     coefficients = Matrix{Float64}(I, 2, 2)
+    occ = ones(2)
+    block = ExternalGTOOrbitalSpinBlock(:restricted, coefficients, occ)
+    @test block.coefficients === coefficients && block.occupations === occ
+    C32, o32 = Float32.(coefficients), Float32.(occ)
+    converted = ExternalGTOOrbitalSpinBlock(:alpha, C32, o32)
+    @test converted.spin === :alpha && converted.coefficients == coefficients && converted.occupations == occ
+    @test eltype(converted.coefficients) === Float64 && eltype(converted.occupations) === Float64
+    keyword = ExternalGTOOrbitalSpinBlock(coefficients, occ; spin = :beta)
+    @test keyword.spin === :beta && keyword.coefficients === coefficients && keyword.occupations === occ
+    generic = ExternalGTOOrbitalSpinBlock(:alpha, ComplexF64.(coefficients), occ)
+    @test generic.coefficients == coefficients && generic.occupations === occ
+    @test_throws ArgumentError ExternalGTOOrbitalSpinBlock(:invalid, coefficients, occ)
+    @test_throws DimensionMismatch ExternalGTOOrbitalSpinBlock(:restricted, coefficients, [1.0])
+    for bad in (NaN, Inf)
+        @test_throws ArgumentError ExternalGTOOrbitalSpinBlock(:restricted, fill(bad, 2, 2), occ)
+        @test_throws ArgumentError ExternalGTOOrbitalSpinBlock(:restricted, coefficients, [1.0, bad])
+    end
+
+    reader = GaussletBases._xgto_orbital_blocks
+    badS, goodS = S_GG .+ 6e-9, S_GG .+ 4e-11
+    @test norm(badS - I, Inf) < 1e-8 < opnorm(badS - I, Inf)
+    records = [Dict("spin" => "restricted", "mo_indices_1based" => [1, 2], "metric_error_inf" => opnorm(badS - I, Inf))]
+    arrays = Dict("source_overlap" => badS, "alpha_coefficients" => coefficients, "alpha_occupations" => occ)
+    @test_throws r"restricted source metric error" reader(records, arrays, badS, "rhf")
+    records[1]["metric_error_inf"] = opnorm(goodS - I, Inf)
+    arrays["source_overlap"] = goodS
+    blocks, inds = reader(records, arrays, goodS, "rhf")
+    @test only(blocks).coefficients === coefficients && only(inds) == [1, 2]
+
     source_block = ExternalGTOOrbitalSpinBlock(:restricted, coefficients, [1.0, 1.0])
     packet = ExternalGTOOrbitalPacket(probes, S_GG, source_block)
     imported = import_external_gto_orbitals(result, packet)

@@ -3,6 +3,10 @@
 ## Unreleased
 
 ### Fixed
+- Zero-regularization matrix EGOI no longer amplifies directions below its
+  existing numerical-rank cutoff; the positive filter is unchanged.
+- The external Cartesian-GTO reader checks the occupied metric by maximum
+  absolute row sum, and all spin-block constructors validate their inputs.
 - Terminal supplemented Cartesian Hamiltonians now own their Gaussian orbital
   data, so later edits to caller inputs cannot change orbital overlaps.
 - Angular Cartesian moments use the Hamiltonian's retained radial samples.
