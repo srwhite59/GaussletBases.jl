@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Execution Whitelist
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `530001de58d29c511eea3be49fa2cf5e81d49e13135ae175e39822e925da8eab`.
+> [authority.toml](authority.toml), SHA-256 `bd4b56d2549cfbbe7ec38b9378e2a8957e891a0e66218b397c3e19c44abc7daf`.
 
 Cartesian Hamiltonian producer source work is currently authorized only for
 these approved design IDs:
@@ -81,6 +81,8 @@ these approved design IDs:
 - `HP-HAM-MANIFEST-TEST-01`
 - `HP-MAPPED-ORDINARY-REP-FN-01`
 - `HP-MAPPED-ORDINARY-REP-TEST-01`
+- `HP-MATRIX-EGOI-XGTO-VALIDATION-FN-01`
+- `HP-MATRIX-EGOI-XGTO-VALIDATION-TEST-01`
 - `HP-MCOMX-DRV-FN-01`
 - `HP-MCOMX-FILE-01`
 - `HP-MCOMX-FN-01`

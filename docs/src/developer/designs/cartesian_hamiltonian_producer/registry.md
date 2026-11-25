@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `530001de58d29c511eea3be49fa2cf5e81d49e13135ae175e39822e925da8eab`.
+> [authority.toml](authority.toml), SHA-256 `bd4b56d2549cfbbe7ec38b9378e2a8957e891a0e66218b397c3e19c44abc7daf`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -9,6 +9,41 @@ owned paths, scope, `current.md`, `invariants.md`, and canonical contract.
 Lifecycle never grants work by itself. Any missing or conflicting fact fails closed.
 
 ## Records
+
+### HP-MATRIX-EGOI-XGTO-VALIDATION-FN-01 - repair zero EGOI and external orbital input validation
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Matrix EGOI and External Orbital Validation`
+- **Owned paths:**
+  - `docs` / `existing`: `CHANGELOG.md`
+  - `source` / `existing`: `src/cartesian/cartesian_external_gto_import.jl`
+  - `source` / `existing`: `src/cartesian/cartesian_external_gto_interchange.jl`
+  - `source` / `existing`: `src/cartesian/hamiltonian_corrections.jl`
+- **Evidence:**
+  - `git_commit`: `3e8b4ef6c151c1204569aea5accb2230cfcaa673`
+  - `manager_pass`: `670`
+- **Dependencies:** none
+- **Scope:** Implement Matrix EGOI and External Orbital Validation, Pass 670 item 7: rank-aware zero EGOI, induced infinity norm in the Julia reader, and shared spin-block validation. Hard +45 source/+6 Unreleased. Preserve positive EGOI, valid constructors and packets. No route, schema, exporter, consumer or release changes.
+
+### HP-MATRIX-EGOI-XGTO-VALIDATION-TEST-01 - discriminate rank, row-norm and constructor defects
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Matrix EGOI and External Orbital Validation`
+- **Owned paths:**
+  - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
+  - `test` / `existing`: `test/ida/cartesian_ida_hamiltonian_runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `670`
+- **Dependencies:** `HP-MATRIX-EGOI-XGTO-VALIDATION-FN-01`
+- **Scope:** Validate Matrix EGOI and External Orbital Validation: independent retained/null and old positive-filter controls, row-sum discriminator and frozen packet, valid and invalid spin constructors. Hard +50 in two existing owners. No fixture write, gate relaxation, full Angular, consumer or release work.
 
 ### HP-TERMINAL-SUPPLEMENT-OWNERSHIP-FN-01 - retain the Gaussian functions used for terminal supplemented Hamiltonians
 

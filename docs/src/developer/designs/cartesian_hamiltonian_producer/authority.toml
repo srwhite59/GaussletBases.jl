@@ -182,11 +182,74 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "2161bc3672fff5a4ff8e0ae9285ff9239d91bbf207079dd72a4664cbb25ad788"
+sha256 = "5995b1cde965cab744584363c1a8f439ed60e9e223baa990515a45f10567b461"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
 
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-MATRIX-EGOI-XGTO-VALIDATION-FN-01"
+lifecycle = "approved"
+scope = "Implement Matrix EGOI and External Orbital Validation, Pass 670 item 7: rank-aware zero EGOI, induced infinity norm in the Julia reader, and shared spin-block validation. Hard +45 source/+6 Unreleased. Preserve positive EGOI, valid constructors and packets. No route, schema, exporter, consumer or release changes."
+surfaces = ["docs", "source"]
+title = "repair zero EGOI and external orbital input validation"
+
+    [[records.document_refs]]
+    heading = "Matrix EGOI and External Orbital Validation"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "3e8b4ef6c151c1204569aea5accb2230cfcaa673"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "670"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "CHANGELOG.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_external_gto_import.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_external_gto_interchange.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/hamiltonian_corrections.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-MATRIX-EGOI-XGTO-VALIDATION-FN-01"]
+grant = "implementation"
+id = "HP-MATRIX-EGOI-XGTO-VALIDATION-TEST-01"
+lifecycle = "approved"
+scope = "Validate Matrix EGOI and External Orbital Validation: independent retained/null and old positive-filter controls, row-sum discriminator and frozen packet, valid and invalid spin constructors. Hard +50 in two existing owners. No fixture write, gate relaxation, full Angular, consumer or release work."
+surfaces = ["tests"]
+title = "discriminate rank, row-norm and constructor defects"
+
+    [[records.document_refs]]
+    heading = "Matrix EGOI and External Orbital Validation"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "670"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/ida/cartesian_ida_hamiltonian_runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"

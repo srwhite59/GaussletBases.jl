@@ -1523,3 +1523,61 @@ Accepted at `f2b9c5c5360e8926d5ae1bc25d77548f400fab66`; both grants consumed.
 Matched overlaps and all three caller-mutation controls are bitwise stable.
 The same-H aliased controls change overlap, with no need for a second build.
 Exact implementation CI and Docs passed without a new H4 admission.
+
+## Matrix EGOI and External Orbital Validation
+
+Pass 670, item 7 of GB-REVIEW-REPAIRS-20261124 under
+ADVISER-ITEMS6-9-20261125-1. Only the three repairs below. Hard +45
+source, +50 existing tests, and +6 Unreleased/Fixed. No new files,
+helpers, dependencies, formats, thresholds, or packet rewrites.
+
+**Zero-regularization EGOI:** `src/cartesian/hamiltonian_corrections.jl`
+only `_egoi_svd_delta_matrix` and the existing public correction docstring.
+Compute the existing numerical-rank cutoff before applying the SVD
+filter. At zero, use the pseudoinverse only when both singular values
+exceed that cutoff; no correction in discarded product directions.
+Keep the positive regularization branch and default unmodified, along
+with diagnostics and result shape. No retained-GTO EGOI route reactivation.
+Test in existing `test/ida/cartesian_ida_hamiltonian_runtests.jl`:
+use a reproducible size 8 by 2 orthonormal Q (not an exactly diagonal
+rank-deficient product), with P the four products, and target P' * A * P
+for a bounded symmetric A. Since the 2,3 columns duplicate each other,
+independently build the retained projector R by QR of columns 1,2,4.
+Check comparison to R*A*R, a small target residual and negligible left
+and right null components at 1e-10 for this O(1) fixture. Keep a
+positive-default control against the original smooth filter. Before
+repair a reproducible fixture had correction max 507.5, null error
+512.5, and target residual 8.9e-16; residual alone cannot catch it.
+
+**Interchange row norm:** `src/cartesian/cartesian_external_gto_interchange.jl`
+only `_xgto_orbital_blocks`. Use induced matrix infinity norm (maximum
+absolute row sum) for the occupied metric check and existing
+`metric_error_inf` comparison. Both current Julia tolerances remain
+unchanged. The PySCF exporter already computes the row sum and remains
+untouched, including its stricter export gate. Test a synthetic two-MO
+case with entries near 6e-9 but row sum near 1.2e-8, which the old
+reader admitted, plus a passing row-sum control and the existing frozen
+packet. No exporter or SCF run is needed.
+
+**Spin-block validation:** `src/cartesian/cartesian_external_gto_import.jl`,
+only `ExternalGTOOrbitalSpinBlock` type constructor and existing
+forwarding methods. Move existing spin, dimension and finiteness checks
+to the exact concrete inner constructor. Preserve the existing Real
+array conversion/copy and concrete Float64 alias behavior. Preserve
+the formerly implicit generic field conversion where legal (one exact
+replacement forwarding method if needed; e.g. a numerically real
+ComplexF64 matrix was convertible), routing every success through the
+same validator. No new complex-orbital policy, occupancy bounds, or
+packet validation changes. Verify Float64, Float32 and keyword routes;
+test bad spin, dimensions, NaN/Inf in coefficients and occupations
+separately, including exact Float64 inputs.
+
+Both interchange/constructor checks belong to the existing public packet
+testset in `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`.
+No new file or old assertion changes. Run focused IDA and residual
+owners (including the existing frozen packet), package, docs/authority/
+self-test/two renders/direct Documenter/diff/added-line regex, exact full
+source CI and separate Docs. Report scope, discriminating baseline,
+focused cost and preservation of positive EGOI and valid packet behavior.
+Stop for failed gate, consumer incompatibility or scope expansion.
+No full Angular, consumer, release, item 8 or item 9 work in this grant.

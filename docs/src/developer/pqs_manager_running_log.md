@@ -1907,3 +1907,16 @@ warm snapshot 1.503 us/3232 bytes. Existing residual 375 including compact
 H4, docs/authority, source CI45690305531 and Docs45690305230 passed.
 Both grants consumed. Review prior overlaps only if the caller edited its
 inputs after build; no blanket Hamiltonian or energy rerun.
+
+### Pass 670 Matrix EGOI and External Orbital Validation Authority
+
+Open item 7 only. Zero EGOI can report an O(1e-15) target residual with
+O(500) unsupported correction. Reuse the numerical rank for the zero
+pseudoinverse and preserve the positive filter. PySCF writes the
+induced infinity norm; correct only the Julia reader and keep its
+tolerances and frozen packet. Exact Float64 spin blocks bypassed the
+validator; route all legal constructors through it without changing
+conversion behavior. Hard +45 source/+50 existing tests/+6 Unreleased.
+Full angular diagnosis is separate and complete: the two radial rules
+reproduce both full endpoints; the IDA change explains 99.86% of the shift.
+No anchor or source edit from that diagnosis.
