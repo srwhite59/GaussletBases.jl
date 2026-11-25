@@ -22,8 +22,8 @@ using GaussletBases
     products = F.S * F.S'
     smooth = F.U * ((F.V' * T * F.V) .* products ./ (1e-18 .+ products.^2)) * F.U'
     @test opnorm(egoi_density_density_correction(zeros(8, 8), Q, T).interaction_delta - smooth, Inf) <= 1e-10
+    @test iszero(egoi_density_density_correction(zeros(2, 2), fill(1e-90, 2, 1), zeros(1, 1); regularization = 0.0).interaction_delta)
 end
-
 @testset "Public Cartesian IDA Hamiltonian contract" begin
     kinetic = [1.0 0.1; 0.1 1.4]
     unit_nuclear = Matrix{Float64}[

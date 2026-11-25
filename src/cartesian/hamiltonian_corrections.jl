@@ -162,12 +162,14 @@ function _egoi_svd_delta_matrix(
     transformed_target = transpose(right_vectors) * Matrix{Float64}(delta_target) * right_vectors
     transformed_delta = zeros(Float64, length(singular_values), length(singular_values))
     for nu in eachindex(singular_values), mu in eachindex(singular_values)
-        sigma_product = singular_values[mu] * singular_values[nu]
         if iszero(regularization_value)
-            min(singular_values[mu], singular_values[nu]) > diagnostic_cutoff || continue
-            transformed_delta[mu, nu] = transformed_target[mu, nu] / sigma_product
+            sigma_min = min(singular_values[mu], singular_values[nu])
+            sigma_min > diagnostic_cutoff || continue
+            transformed_delta[mu, nu] =
+                (transformed_target[mu, nu] / max(singular_values[mu], singular_values[nu])) / sigma_min
             continue
         end
+        sigma_product = singular_values[mu] * singular_values[nu]
         denominator = regularization_value + sigma_product^2
         transformed_delta[mu, nu] =
             denominator == 0.0 ? 0.0 :
