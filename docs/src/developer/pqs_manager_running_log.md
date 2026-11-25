@@ -1945,3 +1945,26 @@ direct-G density-density congruence and reject that request before work.
 Scoped caller scan finds no maintained enabled interaction consumer;
 one-body injection, parent-backed and protected-localized paths remain.
 Hard +60 source/+50 existing tests/+6 Unreleased; no cache framework.
+
+### Pass 671 Accepted Composable Angular and Gaussian Calls
+
+Accept `b2c3d35b849fb0f70ec7dff3554651107636da2d` (LT1/MT7): nested Gaussian
+calls retain the same summations and no longer require a top-level static
+scheduler. Cold angular caches publish under scoped locks; warm lookups
+reuse identities. Deleted the unsupported direct-G interaction congruence;
+no enabled maintained caller found. Kept the separate parent-backed,
+protected and one-body paths. No quarantine, metadata, or new test owner.
+Source +29/-33, existing tests +39, Unreleased +4. Exact diff and report
+review, two-thread Gaussian 2/2 and angular 9/9, owner checks, source CI
+45706688483 and Docs 45706688357 passed. Both grants consumed. Review prior
+private direct-G interactions if used; no blanket energy rerun.
+
+### Pass 672 Development Workflows and Supported Geometry Authority
+
+Open only final item 9. Clarify main versus v0.2.1, make the docs bootstrap
+and collinear recipe runnable, and map supported geometries to actual
+operator/transfer surfaces. Signed probe transport and fixed-basis fractional
+centers supplement accepted H4 span/operator evidence; one finite probe
+separates parent and retained-space losses without implying independent ns
+controls. No production, schema, cutoff or release change. Existing owners
+only, hard +65 reader/+3 docs tool/+65 tests.

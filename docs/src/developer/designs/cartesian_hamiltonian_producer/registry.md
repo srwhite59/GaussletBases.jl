@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `5f64be1e0593ac4626a85f719615a728767e0aa7c5ae4f2010adf85ea9c6943c`.
+> [authority.toml](authority.toml), SHA-256 `506e5724f68f6debd91200c385d44c05fe6e9abceb33770f6bc8c5f6f0422978`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -12,43 +12,68 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-COMPOSABLE-ANGULAR-GAUSSIAN-FN-01 - compose angular and Gaussian calls and reject unsupported MWG
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `docs`, `source`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Composable Angular and Gaussian Calls`
-- **Owned paths:**
-  - `docs` / `existing`: `CHANGELOG.md`
-  - `source` / `existing`: `src/angular/angular_coiflet.jl`
-  - `source` / `existing`: `src/angular/angular_cubature_point_sets.jl`
-  - `source` / `existing`: `src/angular/angular_point_sets.jl`
-  - `source` / `existing`: `src/angular/angular_shell_basis.jl`
-  - `source` / `existing`: `src/cartesian/gaussian_coulomb_reference.jl`
-  - `source` / `existing`: `src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl`
+- **Owned paths:** none
 - **Evidence:**
-  - `git_commit`: `56701e70c8c907e95be90fc1449ce1c432d197e1`
+  - `git_commit`: `b2c3d35b849fb0f70ec7dff3554651107636da2d`
   - `manager_pass`: `671`
 - **Dependencies:** none
-- **Scope:** Implement Composable Angular and Gaussian Calls, Pass 671 item 8: dynamic pair scheduling, synchronized angular and catalog caches, reject/delete the direct-G MWG congruence. Hard +60 source/+6 Unreleased. Preserve default, parent-backed and protected paths. No framework, consumer or release work.
+- **Scope:** Record accepted composable Gaussian scheduling, synchronized angular caches and direct-G interaction retirement at b2c3d35b; source +29/-33, Unreleased +4. Grant consumed.
 
 ### HP-COMPOSABLE-ANGULAR-GAUSSIAN-TEST-01 - exercise nested calls, cold caches, and explicit rejection
+
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Composable Angular and Gaussian Calls`
+- **Owned paths:** none
+- **Evidence:**
+  - `git_commit`: `b2c3d35b849fb0f70ec7dff3554651107636da2d`
+  - `manager_pass`: `671`
+- **Dependencies:** `HP-COMPOSABLE-ANGULAR-GAUSSIAN-FN-01`
+- **Scope:** Record accepted nested calls, first-use cache and explicit rejection checks at b2c3d35b; +39 existing tests. Exact source CI and Docs passed. Grant consumed.
+
+### HP-DEVELOPMENT-GEOMETRY-FN-01 - clarify development workflows and supported geometry
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `tools`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Development Workflows and Supported Geometry`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/index.md`
+  - `docs` / `existing`: `docs/src/manual/projected_q_shells.md`
+  - `tool` / `existing`: `docs/make.jl`
+- **Evidence:**
+  - `git_commit`: `b2c3d35b849fb0f70ec7dff3554651107636da2d`
+  - `manager_pass`: `672`
+- **Dependencies:** none
+- **Scope:** Implement Development Workflows and Supported Geometry: geometry map, main versus v0.2.1, consistent collinear inputs, fresh-checkout bootstrap and non-tag label. Hard +65 reader/+3 docs tool. No production, workflow or release change.
+
+### HP-DEVELOPMENT-GEOMETRY-TEST-01 - verify runnable docs and compact supported geometry contracts
 
 - **Lifecycle:** `approved`
 - **Grant:** `implementation`
 - **Surfaces:** `tests`
 - **Execution whitelist:** `true`
 - **Documents:**
-  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Composable Angular and Gaussian Calls`
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Development Workflows and Supported Geometry`
 - **Owned paths:**
-  - `test` / `existing`: `test/core/runtests.jl`
-  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
-  - `test` / `existing`: `test/misc/runtests.jl`
+  - `test` / `existing`: `test/docs/runtests.jl`
+  - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
 - **Evidence:**
-  - `git_commit`: `56701e70c8c907e95be90fc1449ce1c432d197e1`
-  - `manager_pass`: `671`
-- **Dependencies:** `HP-COMPOSABLE-ANGULAR-GAUSSIAN-FN-01`
-- **Scope:** Validate Composable Angular and Gaussian Calls: nested two-thread pair parity, cold and warm angular reuse, and explicit unsupported interaction rejection. Hard +50 across three existing owners. No new owner, workflow, full Angular, consumer or release work.
+  - `git_commit`: `b2c3d35b849fb0f70ec7dff3554651107636da2d`
+  - `manager_pass`: `672`
+- **Dependencies:** `HP-DEVELOPMENT-GEOMETRY-FN-01`
+- **Scope:** Validate Development Workflows and Supported Geometry: exact footer, fractional shifts, signed rectangle probe transport, bounded parent and retention comparison, and clean examples/build. Hard +65 existing tests. Preserve cutoffs, tolerances and data. No solver, production or consumer work.
 
 ### HP-MATRIX-EGOI-XGTO-VALIDATION-FN-01 - repair zero EGOI and external orbital input validation
 

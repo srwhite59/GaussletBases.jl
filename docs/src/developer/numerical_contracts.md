@@ -1641,3 +1641,57 @@ self-test/two renders/direct Documenter/diff/added-line regex and full
 exact source CI plus separate Docs. Stop on a live conflict, failed
 gate or scope/budget expansion. No full Angular, consumer, release,
 item 9, or other route change.
+
+Accepted at `b2c3d35b849fb0f70ec7dff3554651107636da2d` after independent
+diff and receipt review. Both Pass 671 grants are consumed.
+
+## Development Workflows and Supported Geometry
+
+Pass 672, item 9 of GB-REVIEW-REPAIRS-20261124. No `src/` edits. Only
+`docs/src/index.md` and `docs/src/manual/projected_q_shells.md` (hard +65
+reader lines), the non-tag label in `docs/make.jl` (hard +3), and existing
+`test/docs/runtests.jl` and `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
+(hard +65 test lines total). No new committed files. No workflow, dependency,
+version, API, cutoff, frozen input, stable or tagged deployment change.
+
+- Label main as development; identify post-v0.2.1 APIs where readers
+  choose a workflow. Keep tagged and promotion labels and routing unchanged.
+  Add a compact geometry/basis/operators/transfer map, including limits of
+  the collinear, sliced, and private matched-H4 routes. Distinguish parent
+  resolution and extent, retained space, operator approximation, and solver
+  convergence. Do not imply arbitrary molecular geometry or rotation invariance.
+- Correct local bootstrap to develop the checkout into the docs environment
+  before instantiating from the root. Verify the exact commands, loaded package
+  path and direct nondeploying Documenter from a clean machine-local copy.
+  Give the q-based collinear example its own z/Z/expansion and use those same
+  inputs, with a packet explicitly centered on those nuclei, for supplementation.
+  Run the explicit and q-based build snippets and an actual matching supplement
+  smoke with declared test inputs; do not use an unrelated packet as a control.
+- In the existing compact collinear owner, exercise a rigid fractional z shift
+  of supplied nuclei and Gaussian probes on a fixed working basis. Check the
+  explicit physical-center oracle, unchanged nuclear repulsion and a nontrivial
+  operator change; this is not translational invariance of the fixed grid.
+- Reuse Passes 661/662 support and operator gates. In the compact rectangle
+  owner, add a signed Cartesian probe projection check under x/y interchange
+  and an axis reflection using properly permuted powers and p signs. Compare
+  gauge-independent projected probe Gram entries, including a resolved signed
+  off-diagonal; the existing support-span checks alone cannot catch a lost sign.
+  Keep the rectangle fixture's explicit `1e-6` cutoff and unchanged collinear
+  default. Do not build extra supplemented Hamiltonians for probe transport.
+- One bounded scratch refinement comparison at fixed (1.6,3.2) bohr with
+  ns=3 and 5, matched PQS/WL and same padding and fixed physical Gaussian probe.
+  Report parent capture from factorized parent overlaps and both terminal
+  captures, with actual dimensions and parent and retention losses separated.
+  Require finite, physically ordered captures within the existing overlap
+  scale; no new monotonicity claim or independent retention knob. The ns ladder
+  changes both spaces, so it is not independent variation of the two controls.
+
+Use existing exact-oracle tolerances. No dense parent-square work, solver,
+energy rerun, arbitrary-position frontend, historical small-ED replay or
+repin, broad Angular suite, consumer or successor. Warm incremental permanent
+geometry test target <=15 s, single scratch admission <=180 s, 4 GiB RSS,
+128 MiB new numeric output; render TimeG while live for nontrivial runs. Run
+the affected public Cartesian owner, docs/mechanical/authority/self-test/two
+renders and exact normal CI and Docs. Explain longer clean docs/build steps
+before launch. If an existing example or acceptance gate needs another
+source, decision or budget, stop with evidence rather than editing around it.
