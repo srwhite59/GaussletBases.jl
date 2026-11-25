@@ -1824,3 +1824,16 @@ history, no quarantine. Source +24/-14, existing tests +28, Unreleased +2,
 no new metadata or owner. Both grants consumed. The original angular
 20/22 and full shift remain separate; no repin or replay. Review prior
 results that relied only on these two old flags, not blanket energies.
+
+### Pass 667 Angular Site Labels and Injected Channels Authority
+
+Open only item 5A. A localized site labeled `exact_l0_m0` is not a Y00
+orbital: in independent ordinary and polar Ih_12 probes, all twelve sites
+carry squared Y00 overlap 1/12 to roundoff, and their signed combination
+reconstructs the normalized constant within 1e-15. Clarify the existing
+transform, contact site map, fixed-radial export labels and legacy leading
+overlap diagnostic without changing a stored byte or numerical path.
+Reconcile the older producer-doc maintenance contract's false ordering
+description. Hard +24 source docstrings/+25 reader/+18 existing test lines.
+No physics campaign, schema change or re-export. Item 5B will require its
+own radial source-verification contract and grant.

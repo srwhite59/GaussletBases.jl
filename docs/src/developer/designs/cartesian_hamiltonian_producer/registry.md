@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `677085cfd29f285b81e7b16a28b9349a31d8734d641570600dfedf49fef4297b`.
+> [authority.toml](authority.toml), SHA-256 `8a856ae015451f55b907d726df48b41cd99c1a7b837a04a8693f89130e1528df`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -9,6 +9,41 @@ owned paths, scope, `current.md`, `invariants.md`, and canonical contract.
 Lifecycle never grants work by itself. Any missing or conflicting fact fails closed.
 
 ## Records
+
+### HP-ANGULAR-SITE-LABEL-FN-01 - distinguish localized angular sites from exact harmonic channels
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Angular Site Labels and Injected Channels`
+- **Owned paths:**
+  - `docs` / `existing`: `docs/src/explanations/angular_research_track.md`
+  - `docs` / `existing`: `docs/src/reference/export.md`
+  - `source` / `existing`: `src/angular/angular_sequence_export.jl`
+  - `source` / `existing`: `src/angular/angular_shell_assembly.jl`
+  - `source` / `existing`: `src/angular/angular_shell_basis.jl`
+- **Evidence:**
+  - `git_commit`: `95b1aefba85c43621307d8065c7b925afa025e33`
+  - `manager_pass`: `667`
+- **Dependencies:** none
+- **Scope:** Implement Angular Site Labels and Injected Channels, Pass 667 item 5A. Clarify localized sites, the existing injected-channel transform, legacy overlap diagnostics, contact site maps and fixed-radial labels. Hard +24 source docstrings/+25 readers only. No executable, label, artifact, schema, radial provenance or consumer change.
+
+### HP-ANGULAR-SITE-LABEL-TEST-01 - verify distributed Y00 and the signed channel transform
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Angular Site Labels and Injected Channels`
+- **Owned paths:**
+  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `667`
+- **Dependencies:** `HP-ANGULAR-SITE-LABEL-FN-01`
+- **Scope:** Validate Angular Site Labels and Injected Channels with ordinary and coiflet Ih\_12: distributed Y00 weights and signed reconstruction from actual evaluated sites. Hard +18 in the existing angular fixed-radial sequence test owner only. No new fixture file, permanent assertion weakening, angular campaign, consumer work or radial provenance.
 
 ### HP-ANGULAR-COIFLET-FN-01 - same-size polar coiflet angular profiles
 
@@ -3478,7 +3513,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `562`
   - `manager_pass`: `563`
 - **Dependencies:** `HP-ANGULAR-PUBLIC-CI-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-FN-01`
-- **Scope:** Maintain only the accepted experimental angular producer documentation from commit 9b410ea14356cee6085ad2de51e73849695a0d97: docstrings for the seven exported bindings ShellLocalAngularProfile, ShellLocalAngularProfileOverlap, shell\_local\_angular\_profile, adjacent\_shell\_local\_angular\_profile\_overlap, AtomicFixedRadialAngularSequenceLevel, AtomicFixedRadialAngularSequenceOverlapSidecar, and AtomicFixedRadialAngularSequence in src/angular/angular\_shell\_basis.jl and src/angular/angular\_sequence\_export.jl; the compact reader explanation in docs/src/explanations/angular\_research\_track.md; and the curated seven-binding section in docs/src/reference/export.md. Preserve the experimental producer-side classification, exact injected-Ylm versus mixed-complement ordering, deterministic labels and gauge metadata, provenance/integrity-only profile/level/sequence IDs, shell-independent source-to-target overlaps, adjacent versus complete non-adjacent direct upper-triangle sidecars, and one common radial basis/shell inventory/shell-center set across levels with changing N\_sph/profile. Final working bases remain intended orthonormal, so sidecars are continuation/transfer data rather than generalized-overlap authority. The accepted implementation added 58 source-docstring lines and changed reader/reference documentation by +42/-10, with no new file or executable change. ShellLocalAngularProfileKey remains exported but undocumented and absent from the curated reference; its possible next-minor de-export is outside this grant. Preserve every definition, field, signature, method, dispatch, export, cache behavior, numerical result, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude restart orchestration, common-target lifts, Givens transformations, downstream campaigns, key documentation or de-export, source behavior, API changes, examples, fixtures, and global documentation policy.
+- **Scope:** Maintain only the accepted experimental angular producer documentation from commit 9b410ea14356cee6085ad2de51e73849695a0d97: docstrings for the seven exported bindings ShellLocalAngularProfile, ShellLocalAngularProfileOverlap, shell\_local\_angular\_profile, adjacent\_shell\_local\_angular\_profile\_overlap, AtomicFixedRadialAngularSequenceLevel, AtomicFixedRadialAngularSequenceOverlapSidecar, and AtomicFixedRadialAngularSequence in src/angular/angular\_shell\_basis.jl and src/angular/angular\_sequence\_export.jl; the compact reader explanation in docs/src/explanations/angular\_research\_track.md; and the curated seven-binding section in docs/src/reference/export.md. Preserve the experimental producer-side classification, localized site order, the distinct exactly represented harmonic span and transform, deterministic legacy exact/mixed labels and gauge metadata, provenance/integrity-only profile/level/sequence IDs, shell-independent source-to-target overlaps, adjacent versus complete non-adjacent direct upper-triangle sidecars, and one common radial basis/shell inventory/shell-center set across levels with changing N\_sph/profile. Final working bases remain intended orthonormal, so sidecars are continuation/transfer data rather than generalized-overlap authority. The accepted implementation added 58 source-docstring lines and changed reader/reference documentation by +42/-10, with no new file or executable change. ShellLocalAngularProfileKey remains exported but undocumented and absent from the curated reference; its possible next-minor de-export is outside this grant. Preserve every definition, field, signature, method, dispatch, export, cache behavior, numerical result, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude restart orchestration, common-target lifts, Givens transformations, downstream campaigns, key documentation or de-export, source behavior, API changes, examples, fixtures, and global documentation policy.
 
 ### HP-PUBLIC-ANGULAR-PRODUCER-DOC-TEST-01 - validate experimental angular producer documentation
 
@@ -3496,7 +3531,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `562`
   - `manager_pass`: `563`
 - **Dependencies:** `HP-ANGULAR-PUBLIC-CI-TEST-01`, `HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01`, `HP-PUBLIC-EXPORT-INTEGRITY-TEST-01`
-- **Scope:** Maintain only the accepted focused documentation checks in test/docs/runtests.jl from commit 9b410ea14356cee6085ad2de51e73849695a0d97. They require the exact seven experimental angular producer bindings to remain exported, documented, and present in the curated export reference with the producer-only, exact/mixed partition, deterministic label/gauge, provenance-identity, shell-independent overlap, adjacent/direct, shared-radial-substrate, orthonormal-final-basis, transfer-only, and excluded-campaign boundaries from the canonical contract. ShellLocalAngularProfileKey must remain exported temporarily while having no Julia docstring and no curated reference entry; its possible next-minor de-export is outside this grant. The undocumented exported-binding count, excluding the module self-binding, is exactly 16 after the accepted 23-to-16 reduction. The accepted docs-test delta is +18/-1. Documenter remains the executable @docs resolution gate; the existing angular\_public owner passed 83/83, while the roughly 930-second full angular research suite was correctly not repeated and is not required for routine maintenance here. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, key documentation, export change, dependency, example, version, tag, or release work.
+- **Scope:** Maintain only the accepted focused documentation checks in test/docs/runtests.jl from commit 9b410ea14356cee6085ad2de51e73849695a0d97. They require the exact seven experimental angular producer bindings to remain exported, documented, and present in the curated export reference with the producer-only, legacy site-label partition (distinct from the exact harmonic span), deterministic label/gauge, provenance-identity, shell-independent overlap, adjacent/direct, shared-radial-substrate, orthonormal-final-basis, transfer-only, and excluded-campaign boundaries from the canonical contract. ShellLocalAngularProfileKey must remain exported temporarily while having no Julia docstring and no curated reference entry; its possible next-minor de-export is outside this grant. The undocumented exported-binding count, excluding the module self-binding, is exactly 16 after the accepted 23-to-16 reduction. The accepted docs-test delta is +18/-1. Documenter remains the executable @docs resolution gate; the existing angular\_public owner passed 83/83, while the roughly 930-second full angular research suite was correctly not repeated and is not required for routine maintenance here. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, key documentation, export change, dependency, example, version, tag, or release work.
 
 ### HP-PUBLIC-ATOMIC-IDA-DOC-FN-01 - document atomic IDA inspection and tiny two-electron reference bindings
 

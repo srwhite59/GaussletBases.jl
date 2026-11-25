@@ -83,7 +83,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_mapping_s_
 sha256 = "02893c3a15acd9fccda4d0419819983b9dc824946c2df3ca6e3db94d07924e42"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_public_surface.md"
-sha256 = "dd325e13a2afcfe50d0bf5f36447a779f00013132da0a5848f29859ae87a4738"
+sha256 = "3b0306d5b9e9d1546472f4c2262d42d678fc879474f605c2dca92bfe99061672"
 [[documents]]
 path = "docs/src/developer/designs/cartesian_hamiltonian_producer/pqs_residual_gto_working_basis.md"
 sha256 = "cccfd395b6040548ee1ced42a92688d39b81857572da5be17c02b90533f6a3be"
@@ -182,11 +182,74 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "755eb97071cc33e039c41e68e2013a0d790eb82469a7aa607188687996052a57"
+sha256 = "6aa53e2741c008e859f0c4cf6c055a6b4278cea66661441a4a3f27b0bf3e2aa2"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
 
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-ANGULAR-SITE-LABEL-FN-01"
+lifecycle = "approved"
+scope = "Implement Angular Site Labels and Injected Channels, Pass 667 item 5A. Clarify localized sites, the existing injected-channel transform, legacy overlap diagnostics, contact site maps and fixed-radial labels. Hard +24 source docstrings/+25 readers only. No executable, label, artifact, schema, radial provenance or consumer change."
+surfaces = ["docs", "source"]
+title = "distinguish localized angular sites from exact harmonic channels"
+
+    [[records.document_refs]]
+    heading = "Angular Site Labels and Injected Channels"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "95b1aefba85c43621307d8065c7b925afa025e33"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "667"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/explanations/angular_research_track.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/reference/export.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_sequence_export.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_shell_assembly.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_shell_basis.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-ANGULAR-SITE-LABEL-FN-01"]
+grant = "implementation"
+id = "HP-ANGULAR-SITE-LABEL-TEST-01"
+lifecycle = "approved"
+scope = "Validate Angular Site Labels and Injected Channels with ordinary and coiflet Ih_12: distributed Y00 weights and signed reconstruction from actual evaluated sites. Hard +18 in the existing angular fixed-radial sequence test owner only. No new fixture file, permanent assertion weakening, angular campaign, consumer work or radial provenance."
+surfaces = ["tests"]
+title = "verify distributed Y00 and the signed channel transform"
+
+    [[records.document_refs]]
+    heading = "Angular Site Labels and Injected Channels"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "667"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"
@@ -6070,7 +6133,7 @@ dependency_ids = ["HP-ANGULAR-PUBLIC-CI-FN-01", "HP-PUBLIC-EXPORT-INTEGRITY-FN-0
 grant = "maintenance"
 id = "HP-PUBLIC-ANGULAR-PRODUCER-DOC-FN-01"
 lifecycle = "implemented"
-scope = "Maintain only the accepted experimental angular producer documentation from commit 9b410ea14356cee6085ad2de51e73849695a0d97: docstrings for the seven exported bindings ShellLocalAngularProfile, ShellLocalAngularProfileOverlap, shell_local_angular_profile, adjacent_shell_local_angular_profile_overlap, AtomicFixedRadialAngularSequenceLevel, AtomicFixedRadialAngularSequenceOverlapSidecar, and AtomicFixedRadialAngularSequence in src/angular/angular_shell_basis.jl and src/angular/angular_sequence_export.jl; the compact reader explanation in docs/src/explanations/angular_research_track.md; and the curated seven-binding section in docs/src/reference/export.md. Preserve the experimental producer-side classification, exact injected-Ylm versus mixed-complement ordering, deterministic labels and gauge metadata, provenance/integrity-only profile/level/sequence IDs, shell-independent source-to-target overlaps, adjacent versus complete non-adjacent direct upper-triangle sidecars, and one common radial basis/shell inventory/shell-center set across levels with changing N_sph/profile. Final working bases remain intended orthonormal, so sidecars are continuation/transfer data rather than generalized-overlap authority. The accepted implementation added 58 source-docstring lines and changed reader/reference documentation by +42/-10, with no new file or executable change. ShellLocalAngularProfileKey remains exported but undocumented and absent from the curated reference; its possible next-minor de-export is outside this grant. Preserve every definition, field, signature, method, dispatch, export, cache behavior, numerical result, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude restart orchestration, common-target lifts, Givens transformations, downstream campaigns, key documentation or de-export, source behavior, API changes, examples, fixtures, and global documentation policy."
+scope = "Maintain only the accepted experimental angular producer documentation from commit 9b410ea14356cee6085ad2de51e73849695a0d97: docstrings for the seven exported bindings ShellLocalAngularProfile, ShellLocalAngularProfileOverlap, shell_local_angular_profile, adjacent_shell_local_angular_profile_overlap, AtomicFixedRadialAngularSequenceLevel, AtomicFixedRadialAngularSequenceOverlapSidecar, and AtomicFixedRadialAngularSequence in src/angular/angular_shell_basis.jl and src/angular/angular_sequence_export.jl; the compact reader explanation in docs/src/explanations/angular_research_track.md; and the curated seven-binding section in docs/src/reference/export.md. Preserve the experimental producer-side classification, localized site order, the distinct exactly represented harmonic span and transform, deterministic legacy exact/mixed labels and gauge metadata, provenance/integrity-only profile/level/sequence IDs, shell-independent source-to-target overlaps, adjacent versus complete non-adjacent direct upper-triangle sidecars, and one common radial basis/shell inventory/shell-center set across levels with changing N_sph/profile. Final working bases remain intended orthonormal, so sidecars are continuation/transfer data rather than generalized-overlap authority. The accepted implementation added 58 source-docstring lines and changed reader/reference documentation by +42/-10, with no new file or executable change. ShellLocalAngularProfileKey remains exported but undocumented and absent from the curated reference; its possible next-minor de-export is outside this grant. Preserve every definition, field, signature, method, dispatch, export, cache behavior, numerical result, workflow, dependency, compatibility floor, version, tag, and release artifact. Exclude restart orchestration, common-target lifts, Givens transformations, downstream campaigns, key documentation or de-export, source behavior, API changes, examples, fixtures, and global documentation policy."
 surfaces = ["docs", "source"]
 title = "document experimental angular profile and sequence producers"
 
@@ -6113,7 +6176,7 @@ dependency_ids = ["HP-ANGULAR-PUBLIC-CI-TEST-01", "HP-PUBLIC-ANGULAR-PRODUCER-DO
 grant = "maintenance"
 id = "HP-PUBLIC-ANGULAR-PRODUCER-DOC-TEST-01"
 lifecycle = "completed"
-scope = "Maintain only the accepted focused documentation checks in test/docs/runtests.jl from commit 9b410ea14356cee6085ad2de51e73849695a0d97. They require the exact seven experimental angular producer bindings to remain exported, documented, and present in the curated export reference with the producer-only, exact/mixed partition, deterministic label/gauge, provenance-identity, shell-independent overlap, adjacent/direct, shared-radial-substrate, orthonormal-final-basis, transfer-only, and excluded-campaign boundaries from the canonical contract. ShellLocalAngularProfileKey must remain exported temporarily while having no Julia docstring and no curated reference entry; its possible next-minor de-export is outside this grant. The undocumented exported-binding count, excluding the module self-binding, is exactly 16 after the accepted 23-to-16 reduction. The accepted docs-test delta is +18/-1. Documenter remains the executable @docs resolution gate; the existing angular_public owner passed 83/83, while the roughly 930-second full angular research suite was correctly not repeated and is not required for routine maintenance here. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, key documentation, export change, dependency, example, version, tag, or release work."
+scope = "Maintain only the accepted focused documentation checks in test/docs/runtests.jl from commit 9b410ea14356cee6085ad2de51e73849695a0d97. They require the exact seven experimental angular producer bindings to remain exported, documented, and present in the curated export reference with the producer-only, legacy site-label partition (distinct from the exact harmonic span), deterministic label/gauge, provenance-identity, shell-independent overlap, adjacent/direct, shared-radial-substrate, orthonormal-final-basis, transfer-only, and excluded-campaign boundaries from the canonical contract. ShellLocalAngularProfileKey must remain exported temporarily while having no Julia docstring and no curated reference entry; its possible next-minor de-export is outside this grant. The undocumented exported-binding count, excluding the module self-binding, is exactly 16 after the accepted 23-to-16 reduction. The accepted docs-test delta is +18/-1. Documenter remains the executable @docs resolution gate; the existing angular_public owner passed 83/83, while the roughly 930-second full angular research suite was correctly not repeated and is not required for routine maintenance here. Add no test file, numerical assertion, fixture, parser framework, allowlist, checkdocs change, workflow, source behavior, key documentation, export change, dependency, example, version, tag, or release work."
 surfaces = ["tests"]
 title = "validate experimental angular producer documentation"
 

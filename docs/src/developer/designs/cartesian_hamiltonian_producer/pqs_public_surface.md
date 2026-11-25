@@ -1414,9 +1414,11 @@ commit `9b410ea14356cee6085ad2de51e73849695a0d97`:
 - `AtomicFixedRadialAngularSequence`.
 
 This remains an experimental producer-side surface, not a completed angular
-application workflow. A shell-local profile records an ordered exact injected-
-Ylm block followed by the mixed complement, together with deterministic labels
-and gauge metadata. `profile_id`, level IDs, and sequence IDs are provenance
+application workflow. A shell-local profile records deterministic legacy
+exact/mixed prefix labels in localized site order and the site gauge. The
+exactly represented Ylm span and its transform are distinct from those labels;
+see [Angular Site Labels and Injected Channels](../../numerical_contracts.md#Angular-Site-Labels-and-Injected-Channels).
+`profile_id`, level IDs, and sequence IDs are provenance
 and integrity identities; they are not tolerance-, convention-, or numerical-
 equivalence claims. The cache's `ShellLocalAngularProfileKey` is not a consumer
 identity and must not be promoted by this packet.

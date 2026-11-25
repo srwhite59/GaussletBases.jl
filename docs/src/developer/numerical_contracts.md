@@ -1361,3 +1361,46 @@ Accepted at `01980cdc8b19383d25e748669d972e58ac2031e0`; both grants consumed.
 The compact witnessed Ritz residual was 8.8804693551e-9 for both solvers,
 with identical energy. The historical full angular 20/22 remains a failure
 outside this amended acceptance; neither golden is repinned.
+
+## Angular Site Labels and Injected Channels
+
+Pass 667, item 5A of GB-REVIEW-REPAIRS-20261124, decision
+ADVISER-ITEM5-SPLIT-20261125-1. Ordinary and polar coiflet profiles carry
+localized working sites in their final order and gauge. The exact
+representation is a harmonic subspace, not a leading block of individual
+harmonic sites. The legacy exact/mixed labels and counts describe a site
+prefix and its complement. The legacy `exact_block_inf_norm` measures the
+leading site slice of the overlap, not an injected-channel overlap.
+
+Use `profile.basis.injected_channels` for channel order and
+`O = profile.basis.injected_overlap` for `O[a,j] = <Y_a|site_j>` in
+the actual profile gauge. `O * c_site` projects site coefficients onto
+the injected channels; `O' * c_channel` gives site coefficients for an
+exactly represented harmonic combination in the orthonormal working basis.
+Use the matching profile, not labels in an exported file, to recover the
+transform. Fixed-radial export labels and the angular base contact site map
+identify localized functions. Explicit contact supplement channels still
+describe the supplied radial times harmonic functions.
+
+Hard +24 source docstring lines total: `ShellLocalAngularProfile`,
+`ShellLocalAngularProfileOverlap`, `shell_local_angular_profile` and
+`adjacent_shell_local_angular_profile_overlap` in angular_shell_basis.jl;
+`atomic_contact_integrals` in angular_shell_assembly.jl; the existing dense
+level JLD2 writer docstring in angular_sequence_export.jl. Hard +25 reader
+lines total in angular_research_track.md and reference/export.md. Preserve
+all executable code, order, labels, keys, stored values, IDs, numerical
+results, signatures and frozen artifacts. No added binding, field, file,
+format, changelog or numerical policy change.
+
+Hard +18 lines in the existing angular fixed-radial sequence test owner.
+Use ordinary and polar coiflet Ih_12 profiles with the catalog controls;
+verify channel Y00, its squared overlaps of 1/12 on all twelve sites, and
+reconstruct its signed value 1/sqrt(4*pi) at several unit directions from
+the actual evaluated sites and the stored overlap row. Absolute 1e-11
+is sufficient for this compact check. Do not tie the test to portable
+hashes or add an operator solve. Require the existing angular_public
+owner and package/docs/authority/self-test/render parity/Documenter/diff,
+then normal full source CI and separate Docs. No full angular replay.
+Stop on a failed gate, executable change, or scope/budget expansion.
+Radial source verification (item 5B), other items, consumers, repins,
+releases and frozen export changes are outside this grant.
