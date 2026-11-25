@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Fixed
+- Corrected the angular `X2` and `Y2` directional second moments. The radial
+  trace and field-free Hamiltonian are unchanged.
 - Real spherical harmonics use a normalized recurrence instead of separately forming
   factorial ratios and raw polynomials, avoiding lost high-|m| rows from l = 89 and
   nonfinite values from l = 151. Independent references qualify all m through l = 256;

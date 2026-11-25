@@ -444,3 +444,35 @@ end
         end
     end
 end
+
+@testset "Angular directional second moments" begin
+    rb = build_basis(RadialBasisSpec(:G10; count=8, xgaussian_count=0,
+        mapping=AsinhMapping(c=0.125, s=0.5, tail_spacing=10.0)))
+    grid = radial_quadrature(rb)
+    ops = atomic_operators(rb, grid; Z=2, lmax=1)
+    benchmark = build_atomic_injected_angular_one_body_benchmark(ops;
+        shell_orders=fill(10, length(ops.shell_centers_r)), l_inject=1)
+    moments = build_atomic_injected_angular_cartesian_moments(benchmark;
+        radial_basis=rb, radial_grid=grid)
+    trace = moments.X2 + moments.Y2 + moments.Z2
+    @test trace ≈ moments.R2 atol=1e-8 rtol=1e-8
+    @info "Directional radial trace" max_error=maximum(abs, trace - moments.R2)
+    for (axis, m) in enumerate((1, -1, 0))
+        row = findfirst(==(YlmChannel(1, m)), benchmark.exact_channels.channel_data)
+        p = view(benchmark.exact_transform, row, :)
+        fractions = map(M -> dot(p, M*p)/dot(p, moments.R2*p),
+            (moments.X2, moments.Y2, moments.Z2))
+        @test maximum(abs, fractions .- ntuple(i -> i == axis ? 3/5 : 1/5, 3)) <= 1e-10
+        @info "Exact p directional fractions" axis=(:x,:y,:z)[axis] fractions
+    end
+    for axis in (:x, :y)
+        terms = GaussletBases._cartesian_quadratic_components(axis)
+        A = zeros(16, 16)
+        for ((l1, l2), block) in GaussletBases._precompute_cartesian_angular_couplings(3, terms)
+            A[l1^2+1:(l1+1)^2, l2^2+1:(l2+1)^2] .= block
+        end
+        lambda_min = eigmin(Symmetric(A))
+        @test lambda_min >= -1e-12
+        @info "Exact angular squared-coordinate minimum" axis lambda_min
+    end
+end

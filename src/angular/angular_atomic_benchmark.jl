@@ -489,12 +489,12 @@ function _cartesian_quadratic_components(axis::Symbol)
     if axis === :x
         return [
             (0, Dict(0 => sqrt(4 * pi) / 3)),
-            (2, Dict(0 => -sqrt(4 * pi / 45), 2 => sqrt(8 * pi / 15))),
+            (2, Dict(0 => -sqrt(4 * pi / 45), 2 => sqrt(4 * pi / 15))),
         ]
     elseif axis === :y
         return [
             (0, Dict(0 => sqrt(4 * pi) / 3)),
-            (2, Dict(0 => -sqrt(4 * pi / 45), 2 => -sqrt(8 * pi / 15))),
+            (2, Dict(0 => -sqrt(4 * pi / 45), 2 => -sqrt(4 * pi / 15))),
         ]
     else
         return [
