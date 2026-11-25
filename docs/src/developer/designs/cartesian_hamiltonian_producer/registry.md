@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `a6fa0936804af5688a536c8c35662da40306f3450e39cdf208fd92b238d0edb2`.
+> [authority.toml](authority.toml), SHA-256 `325e0eb130e7af9ffb134c78398dbdaf7c20627ff79eb134680c6c9c12b3a58d`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -463,35 +463,34 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-CARTESIAN-OCC-XFER-FN-01 - fail closed on lost projected occupied rank
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `docs`, `source`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Cartesian Occupied Transfer Rank Guard`
-- **Owned paths:**
-  - `docs` / `existing`: `CHANGELOG.md`
-  - `source` / `existing`: `src/cartesian/cartesian_representation_transfer.jl`
+- **Owned paths:** none
 - **Evidence:**
+  - `git_commit`: `1cfe342ad4488045c8a8d1dd3c83728fb7448cd6`
   - `git_commit`: `70b067239fa3a7c48620b9ca704aedaf8fe25832`
   - `manager_pass`: `664`
 - **Dependencies:** none
-- **Scope:** Implement Cartesian Occupied Transfer Rank Guard, Pass 664. Reject lost numerical rank before existing QR with raw Gram diagnostics; preserve successful cleanup, traces and raw vector transfer. Hard +42 source, +3 Unreleased only. No overlap, importer, API, consumer or release changes.
+- **Scope:** Record accepted Cartesian Occupied Transfer Rank Guard at 1cfe342a: reject lost raw rank before QR, unchanged valid cleanup and diagnostics. Source +24/-11, Unreleased +2. Grant consumed; no overlap, importer, consumer or release changes.
 
 ### HP-CARTESIAN-OCC-XFER-TEST-01 - compact occupied projection rank regressions
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Cartesian Occupied Transfer Rank Guard`
-- **Owned paths:**
-  - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
+  - `git_commit`: `1cfe342ad4488045c8a8d1dd3c83728fb7448cd6`
   - `manager_pass`: `664`
 - **Dependencies:** `HP-CARTESIAN-OCC-XFER-FN-01`
-- **Scope:** Validate Cartesian Occupied Transfer Rank Guard in the existing Cartesian base owner: exact projector and tiny mixed-raw rank-loss and valid controls, direct and materialized. Hard +55 lines. No new owner, tolerance relaxation or solver/consumer campaign.
+- **Scope:** Record accepted exact-projector and mixed-raw direct/materialized checks at 1cfe342a. Existing owner +47 and 21 new checks pass locally and on the floor. Grant consumed; no overlap certification or solver/consumer campaign.
 
 ### HP-CGAI-FN-01 - historical Cartesian Gaussian axis-helper proposal
 
@@ -6503,6 +6502,38 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `457`
 - **Dependencies:** `HP-SLICE-HCHAIN-FN-01`
 - **Scope:** Maintain the committed IDA-owner checks, including finite, periodic-template, and singleton structural H1-bandwidth bounds, exact represented-operator zeros outside the reported band, and zero-allocation constant-time query access. Preserve deterministic H/STO-6G transverse construction, bounded G10 donor parity, analytic H1 and direct-quadrature Vee oracles, scalar/row/action parity, finite tail diagnostics, malformed-input rejection, the H10 dense fixture, and H1000 compact construction. H10000 remains transient evidence. Add no HF, DMRG, MPO, publication-energy, fixture file, or test owner under this grant.
+
+### HP-SLICED-NUCLEAR-PHASE-FN-01 - compact sliced physical nuclear phase
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Compact Sliced Nuclear Phase`
+- **Owned paths:**
+  - `docs` / `existing`: `CHANGELOG.md`
+  - `source` / `existing`: `src/ordinary/sliced_hydrogen_chain.jl`
+- **Evidence:**
+  - `git_commit`: `1cfe342ad4488045c8a8d1dd3c83728fb7448cd6`
+  - `manager_pass`: `665`
+- **Dependencies:** none
+- **Scope:** Implement Compact Sliced Nuclear Phase, Pass 665: physical separations in near H1 and far prefix sums; keep near terms out of far sums. Hard +28 source, +3 Unreleased. No gate, lattice, Vee, storage, multisliced/PQS, API, consumer or release work.
+
+### HP-SLICED-NUCLEAR-PHASE-TEST-01 - compact sliced shifted near and far H1 checks
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Compact Sliced Nuclear Phase`
+- **Owned paths:**
+  - `test` / `existing`: `test/ida/runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `665`
+- **Dependencies:** `HP-SLICED-NUCLEAR-PHASE-FN-01`
+- **Scope:** Validate Compact Sliced Nuclear Phase in the existing IDA sliced owner (+24 max). Coordinate-aware H2 near/adjacent/far oracle, fractional and nearly aligned phases, unchanged zero-phase controls and tolerances. No new owner, H10 campaign or other review item.
 
 ### HP-SOURCE-LAYOUT-ANGULAR-FN-01 - relocate angular source files
 

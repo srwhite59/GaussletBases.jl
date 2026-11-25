@@ -1233,3 +1233,50 @@ source CI/Docs. Report raw rank/trace, valid matched controls and cost.
 No new test file, cross-overlap or importer edits, consumer/energy reruns,
 release or other review items. Stop without a source commit if valid
 transfer behavior, focused gate, budgets or exact boundaries cannot be met.
+
+Accepted at `1cfe342ad4488045c8a8d1dd3c83728fb7448cd6`; both grants consumed.
+The exact and mixed-raw null blocks fail closed; valid cleanup, successful
+diagnostics, and the raw single-orbital paths pass unchanged.
+
+## Compact Sliced Nuclear Phase
+
+Pass 665, item 3 of GB-REVIEW-REPAIRS-20261124. Repair physical longitudinal
+separations in the compact sliced chain, not multisliced or collinear PQS.
+Keep the integer nearest-site anchor for residues and midpoint indexing,
+but add the signed displacement of that anchor's actual center from the
+first physical nucleus to each midpoint-to-nucleus separation. Preserve
+the existing commensurate lattice and accepted geometry/tolerance policy.
+Apply the same physical separation in the near-table fill and application,
+and in the far inverse-power prefix sums with the existing tail cutoff.
+
+The prefix sums contain only separations strictly outside the tail cutoff;
+inside, including coincidence and the cutoff itself, add the existing
+exact finite-expansion terms directly. This is the same near/far split in
+real arithmetic; do not add a singular near multipole and then subtract it,
+which cancels badly for small nonzero phases. Preserve prefix/band storage,
+kernels, bounds, tolerances, Vee, nuclear repulsion, transverse functions,
+and zero-phase numerical gates; do not require old bitwise reassociation.
+No dense operator, new model, alternate implementation, or public API.
+
+Only `src/ordinary/sliced_hydrogen_chain.jl::_sliced_inverse_sums` and
+`_sliced_h1_bands`, hard +28 source lines including comments. Existing
+`CHANGELOG.md` Unreleased/Fixed hard +3. Tests only `test/ida/runtests.jl`
+existing sliced owner, hard +24 lines, reuse physical `direct_h1` Laplace
+oracle. Keep all zero-phase controls. Two finite-mode H2 fixtures: R=3.6,
+h=0.2, left/right padding 36/2 bohr, explicit phases 0.08 and -1e-6,
+existing default tolerances. Check the site closest to the first nucleus,
+its adjacent in-band entry and the first-site diagonal against the direct
+oracle at absolute 1e-8 Ha. Assert that near entries use near distances
+and both nuclei at the first site are strictly beyond the unchanged
+tail radius. The small negative phase guards against near cancellation.
+Baseline phase 0.08 errors are -0.1172824 diagonal, -0.0328615 adjacent,
+and +1.112052e-4 Ha far; zero phase already passes these samples.
+
+Record exact discrimination, runtime/allocations and unchanged compact
+storage and zero-phase checks. Run the existing IDA owner, package,
+docs/authority/self-test/render parity/Documenter/diff, and exact full
+source CI/Docs. No broad calculation or new H10 campaign, artifact or
+consumer work, solver, release or other repair item. Stop without a source
+commit for a failed gate, scope/budget expansion or unsupported phase
+limitation. A guard-only alternative requires review rather than silently
+substituting it for the correction.

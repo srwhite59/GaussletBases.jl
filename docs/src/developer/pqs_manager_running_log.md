@@ -1739,3 +1739,31 @@ and raw vector behavior. Hard +42 source/+55 existing tests/+3 Unreleased.
 Use the tiny fixture's actual null space, not a residual label. This is a
 rank-handling test, not a certification of the overlap construction.
 No cross-overlap, raw GTO importer, schema, consumer or item 3 work.
+
+### Pass 664 Accepted Cartesian Occupied Transfer Rank Guard
+
+Accept `1cfe342ad4488045c8a8d1dd3c83728fb7448cd6`. LT1/MT1 transfer
+cannot promote a missing occupied direction to a captured unit vector.
+The exact null block reports raw rank 1/2, trace 1 and minimum 0; the tiny
+mixed-raw null is rejected with and without the materialized projector.
+Valid signed QR and raw action/returned diagnostics are unchanged. Small
+warm cleanup 2.724 to 2.916 us, not a projection speed claim. Independent
+diff, baseline and hosted receipts reviewed. Local base 821/821, residual
+371/371, new control 21/21 on both Julia versions; CI 45555469883 and Docs
+45555469995 passed. Deleted/simplified: coefficient-taking identity check
+replaced by one reused Gram; quarantined: none. Kept: shared live QR for
+valid blocks; importer/overlap untouched. Source +24/-11, existing tests
++47 and Unreleased +2, no new file or metadata. Both grants consumed.
+Prior low-capture occupied-block transfers warrant targeted review, not
+raw GTO imports or blanket energy reruns.
+
+### Pass 665 Compact Sliced Nuclear Phase Authority
+
+Open only item 3. Physical-coordinate H2 probes at phase 0.08 show
+-0.1172824 Ha near and +1.112052e-4 Ha with both nuclei beyond the 31.2-bohr
+tail. Zero phase passes. Preserve the integer indexing but carry the
+actual anchor displacement in both branches. Keep near values out of
+the prefix sums; subtracting very large near multipoles could erase the
+finite answer for small phases. Keep bounds and zero-phase gates. Hard
++28 source/+24 existing IDA/+3 Unreleased. No Vee, compact storage,
+transverse, multisliced/PQS, consumer or solver change.
