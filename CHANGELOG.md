@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Fixed
+- Cartesian occupied-block transfer rejects rank loss before QR instead of
+  completing lost directions. Raw vector and single-column transfers are unchanged.
 - Corrected the angular `X2` and `Y2` directional second moments. The radial
   trace and field-free Hamiltonian are unchanged.
 - Real spherical harmonics use a normalized recurrence instead of separately forming

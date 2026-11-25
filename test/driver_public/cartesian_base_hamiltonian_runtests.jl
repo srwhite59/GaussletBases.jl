@@ -653,3 +653,50 @@ end
         @test axis_error*(1+axis_error)^2*l1^2 <= 1e-10
     end
 end
+
+@testset "Cartesian occupied transfer rejects lost rank before QR" begin
+    diagnostics = CartesianBasisTransferDiagnostics(2, 2, :test, 0.0, NaN, NaN, nothing, nothing, nothing)
+    occupied = Matrix{Float64}(I, 2, 2)
+    projector = CartesianBasisProjector3D([1.0 0.0; 0.0 0.0], diagnostics)
+    @test transfer_orbitals(occupied[:, 2], projector).coefficients == zeros(2)
+    @test transfer_orbitals(occupied[:, 2:2], projector).coefficients == zeros(2, 1)
+    @test_throws ArgumentError transfer_orbitals(occupied, projector)
+    @test transfer_orbitals(2occupied, projector).coefficients == 2projector.matrix
+    nonfinite = CartesianBasisProjector3D([1.0 0.0; 0.0 Inf], diagnostics)
+    @test_throws ArgumentError transfer_orbitals(occupied, nonfinite)
+
+    contraction = CartesianBasisProjector3D([1.0 0.0; 0.0 0.8], diagnostics)
+    cleaned = transfer_orbitals(occupied, contraction)
+    @test cleaned.coefficients == occupied
+    @test cleaned.diagnostics.source_metric_trace == cleaned.diagnostics.target_metric_trace == 2.0
+    @test isnan(cleaned.diagnostics.transferred_residual_inf)
+
+    axis = build_basis(MappedUniformBasisSpec(:G10; count=3,
+        mapping=AsinhMapping(c=0.2, s=0.5, tail_spacing=2.8)))
+    expansion = CoulombGaussianExpansion([0.7, 0.2], [0.3, 2.0]; del=1.0, s=1.0, c=1.0, maxu=2.0)
+    supplement = legacy_atomic_gaussian_supplement("H", "cc-pVTZ"; lmax=0)
+    source = basis_representation(ordinary_cartesian_qiu_white_operators(axis, supplement; Z=1.0, expansion))
+    target = source.parent_data.cartesian_parent_representation
+    overlap = basis_projector(source, target).matrix
+    @test size(overlap) == (27, 30)
+    decomposition = svd(overlap; full=true)
+    @test minimum(decomposition.S[3:4]) > 0.5
+    u, v, z = (decomposition.V[:, j] for j in (3, 4, size(overlap, 2)))
+    lost, valid = hcat(u, z), hcat(u, 0.8v + 0.6z)
+    raw_lost, raw_valid = overlap * lost, overlap * valid
+    gram = raw_lost' * raw_lost
+    spectrum = eigvals(Symmetric(gram))
+    floor = max(size(raw_lost)...) * eps(Float64) * max(1.0, last(spectrum))
+    @test first(spectrum) <= floor < last(spectrum)
+    @info "Mixed-raw occupied rank regression" spectrum floor raw_trace=tr(gram) null_capture=sum(abs2, raw_lost[:, 2])
+    expected = raw_valid ./ sqrt.(sum(abs2, raw_valid; dims=1))
+    for materialize_projector in (true, false)
+        raw = transfer_orbitals(z, source, target; materialize_projector)
+        @test raw.coefficients ≈ raw_lost[:, 2] atol=1e-10 rtol=0
+        @test_throws ArgumentError transfer_orbitals(lost, source, target; materialize_projector)
+        result = transfer_orbitals(valid, source, target; materialize_projector)
+        @test result.coefficients ≈ expected atol=1e-10 rtol=0
+        @test result.coefficients' * result.coefficients ≈ occupied atol=1e-10 rtol=0
+        @test result.diagnostics.target_metric_trace ≈ 2.0 atol=1e-10 rtol=0
+    end
+end

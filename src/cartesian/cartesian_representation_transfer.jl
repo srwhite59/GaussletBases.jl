@@ -106,12 +106,10 @@ function _cartesian_transfer_path(
            :pure_cartesian_cross_overlap_transfer
 end
 
-function _cartesian_columns_are_nearly_orthonormal(
-    coefficients::AbstractMatrix{<:Real};
+function _cartesian_gram_is_nearly_identity(
+    gram::AbstractMatrix{Float64};
     atol::Float64 = 1.0e-8,
 )
-    size(coefficients, 2) > 1 || return false
-    gram = Matrix{Float64}(transpose(coefficients) * coefficients)
     identity = Matrix{Float64}(LinearAlgebra.I, size(gram, 1), size(gram, 2))
     return norm(gram - identity, Inf) <= atol
 end
@@ -147,12 +145,25 @@ function _cartesian_finalize_transferred_coefficients(
 )
     source_coefficients_matrix = _cartesian_coefficients_matrix(source_coefficients)
     transferred_matrix = Matrix{Float64}(transferred_coefficients_matrix)
-    if _cartesian_columns_are_nearly_orthonormal(source_coefficients_matrix) &&
-       !_cartesian_columns_are_nearly_orthonormal(transferred_matrix)
-        return (
-            _cartesian_euclidean_orthonormalize_columns(transferred_matrix),
-            true,
-        )
+    if size(source_coefficients_matrix, 2) > 1 && _cartesian_gram_is_nearly_identity(
+        transpose(source_coefficients_matrix) * source_coefficients_matrix,
+    )
+        gram = transpose(transferred_matrix) * transferred_matrix
+        all(isfinite, gram) ||
+            throw(ArgumentError("occupied transfer raw projected Gram is nonfinite"))
+        if !_cartesian_gram_is_nearly_identity(gram)
+            eigenvalues = eigvals(Symmetric(gram))
+            smallest = first(eigenvalues)
+            floor = max(size(transferred_matrix)...) * eps(Float64) * max(1.0, last(eigenvalues))
+            if smallest <= floor
+                rank = count(>(floor), eigenvalues)
+                throw(ArgumentError(
+                    "occupied transfer lost numerical rank: raw rank $rank/$(size(transferred_matrix, 2)), " *
+                    "minimum Gram eigenvalue $smallest, floor $floor, raw trace $(tr(gram))",
+                ))
+            end
+            return (_cartesian_euclidean_orthonormalize_columns(transferred_matrix), true)
+        end
     end
     return (transferred_matrix, false)
 end
@@ -374,7 +385,9 @@ pairs throw rather than silently falling back to projector materialization.
 Final-basis self-overlaps are diagnostic only and are not part of this normal
 transfer path. When the source columns already represent an orthonormal occupied
 block, the transferred target block may be Euclidean-orthonormalized as one
-final cleanup step.
+final cleanup step. Cleanup rejects a raw projected block that loses numerical
+rank. On success, `target_metric_trace` describes the returned columns, not
+the raw projected capture before cleanup.
 """
 function transfer_orbitals(
     source_coefficients::AbstractVecOrMat{<:Real},
