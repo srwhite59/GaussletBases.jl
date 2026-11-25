@@ -1356,3 +1356,8 @@ remain byte-identical during the docs-only amendment. No new allowed source,
 test or reader path, no change to the budgets above. Stop without a source
 commit for a substantive accuracy, cost, scope or budget failure. No
 consumer, release or later item work.
+
+Accepted at `01980cdc8b19383d25e748669d972e58ac2031e0`; both grants consumed.
+The compact witnessed Ritz residual was 8.8804693551e-9 for both solvers,
+with identical energy. The historical full angular 20/22 remains a failure
+outside this amended acceptance; neither golden is repinned.

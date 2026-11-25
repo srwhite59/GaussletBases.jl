@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `2bcf0d4c19f49678bb00b79a1ab6c6fd012aaa408a7e6603e38c9a6521bcb32f`.
+> [authority.toml](authority.toml), SHA-256 `677085cfd29f285b81e7b16a28b9349a31d8734d641570600dfedf49fef4297b`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -6536,36 +6536,35 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-SOLVER-CONVERGENCE-FN-01 - honest Ritz and UHF convergence certification
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `docs`, `source`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Honest Lanczos and Atomic IDA UHF Convergence`
-- **Owned paths:**
-  - `docs` / `existing`: `CHANGELOG.md`
-  - `source` / `existing`: `src/atomic/atomic_ida_uhf.jl`
-  - `source` / `existing`: `src/foundation/lanczos.jl`
+- **Owned paths:** none
 - **Evidence:**
+  - `git_commit`: `01980cdc8b19383d25e748669d972e58ac2031e0`
   - `git_commit`: `ee3193f56fa2fc79dc8f661988bab56004ca8138`
   - `manager_pass`: `666`
 - **Dependencies:** none
-- **Scope:** Implement Honest Lanczos and Atomic IDA UHF Convergence, Pass 666. Certify the returned Ritz residual and undamped UHF defect without API or caller changes. Hard +45 source, +4 Unreleased. No tolerance, solver framework, consumer, release or other item work.
+- **Scope:** Record accepted Honest Lanczos and Atomic IDA UHF Convergence at 01980cdc: actual returned Ritz residual and undamped UHF defect. Source +24/-14, Unreleased +2. Grant consumed; no tolerance, caller, consumer or release changes.
 
 ### HP-SOLVER-CONVERGENCE-TEST-01 - small discriminating solver convergence regressions
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Honest Lanczos and Atomic IDA UHF Convergence`
-- **Owned paths:**
-  - `test` / `existing`: `test/ida/runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
+  - `git_commit`: `01980cdc8b19383d25e748669d972e58ac2031e0`
+  - `git_commit`: `77b946b7a30cd97482f821d7725917f5a1912be9`
   - `manager_pass`: `666`
 - **Dependencies:** `HP-SOLVER-CONVERGENCE-FN-01`
-- **Scope:** Validate Honest Lanczos and Atomic IDA UHF Convergence: existing IDA owner +32 max, exact-hash focused evidence reusable. ADVISER-666-COMPACT-1 replaces the failed task-local angular gate with one bounded same-input scratch check. Existing permanent tests and tolerances unchanged; no new owner, repin, broad replay or consumer work.
+- **Scope:** Record accepted focused IDA and ADVISER-666-COMPACT-1 solver qualification at 01980cdc. Tests +28; same-input angular residual and energy pass. Grant consumed; historical 20/22 and both goldens unchanged. No replay, repin or other item work.
 
 ### HP-SOURCE-LAYOUT-ANGULAR-FN-01 - relocate angular source files
 

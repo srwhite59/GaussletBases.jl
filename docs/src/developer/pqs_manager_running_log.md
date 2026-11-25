@@ -1808,3 +1808,19 @@ angular comparison, uniform order 10 and stored cap. Measure actual Ritz
 residuals for old and new at unchanged 1e-8 and energy parity if both pass.
 Hard 60 s/2 GiB/64 MiB scratch, exact draft and focused evidence preserved;
 no source/test expansion, full angular replay, repin, or consumer work.
+
+### Pass 666 Accepted Honest Solver Convergence
+
+Accept `01980cdc8b19383d25e748669d972e58ac2031e0`. LT1/MT1 advances
+truthful residual and fixed-point certification. The one guarded angular
+check reused one h/V/start: identical 12.978563712106212 Ha and independently
+measured residual 8.8804693551e-9, actions 183/184; 12.776 s, 1.009 GiB
+peak, 8280 B scratch. Strong legal UHF damping no longer hides its
+0.06583 defect; ordinary He still converges. Independent diff/hash and
+oracle review; IDA 12086, exact source CI 45570400238 including H2+ 18/18,
+Docs 45570400513 passed. Deleted/simplified: removed heuristic-success
+and mixed-step certificates; kept live solver recurrence, damping and
+history, no quarantine. Source +24/-14, existing tests +28, Unreleased +2,
+no new metadata or owner. Both grants consumed. The original angular
+20/22 and full shift remain separate; no repin or replay. Review prior
+results that relied only on these two old flags, not blanket energies.
