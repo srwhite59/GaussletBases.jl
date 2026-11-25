@@ -1409,3 +1409,61 @@ Accepted at `c215dcd1ecaa20ce7b78c073a0f922d382d99449`; both grants consumed.
 The signed Ih_12 reconstruction passed in both gauges within 5e-16.
 All source bytes outside the six approved docstrings match the parent.
 No localized site, angular operator, export field, or frozen file changed.
+
+## Verified Radial Source for Angular Cartesian Moments
+
+Pass 668, item 5B of GB-REVIEW-REPAIRS-20261124, decision
+ADVISER-ITEM5-SPLIT-20261125-1. The Cartesian moment builder must use
+the same discrete radial functions and quadrature as its Hamiltonian.
+Self-overlap is a numerical consistency check, not a source match:
+doubling radial scale preserved the Gram to 1.03e-15 yet changed the
+reported R2 diagonal from 0.16962068 to 0.67848273 bohr^2.
+
+Only `src/angular/angular_atomic_benchmark.jl`: the radial source resolver,
+the existing polynomial moment helper and its shared sample-based
+calculation, and `build_atomic_injected_angular_cartesian_moments` with
+its docstring. Hard +50 source lines including docstring. No operator
+carrier, public binding, storage, panel, or quadrature changes. Preserve
+the existing private `_radial_polynomial_matrix(basis, grid; power)`
+entrance used by Hooke; share its contraction rather than duplicate it.
+
+Use the existing `RadialAtomicOperators.multipole_samples` for the moment
+contractions, without rebuilding the basis or grid. Omitted inputs report
+`:retained_quadrature_samples` in the existing in-memory source field,
+replacing the old reconstruction status. Preserve the paired keyword
+requirement and `:explicit_basis_and_grid` for verified explicit inputs.
+Check explicit grid validity as before, then require equality of ordered
+nodes, weights, and signed sampled basis columns against the retained
+data. No new numerical tolerance or comparison by Gram, absolute values,
+or labels. This verifies the discrete data used for these moments, not a
+continuum identity or a multipole-panel interpolation rule. An explicit
+input that does not match gets a clear radial-source mismatch error; the
+caller can omit the pair to consume the retained source. Use the retained
+data for both verified routes and preserve the existing positive
+`overlap_tol` validation and Gram consistency gate.
+
+With no retained samples, fail with a distinct ArgumentError that the
+radial source match cannot be verified, even with explicit input.
+Keep both eight-argument constructors and stored one-body, centrifugal
+and multipole use unchanged. No added restrictions to unrelated callers,
+artifact or consumer changes, deprecation, or unverified fallback. Put
+the behavior change in existing Unreleased/Fixed, hard +4 reader lines.
+
+Hard +35 test lines total in the existing driver_public angular fixed-radial
+sequence owner and test/angular/runtests.jl. Reuse the compact directional
+fixture and keep all its existing gates. Check matched explicit/retained
+moment and source-value parity, and reject the doubled radial scale despite
+matching Gram, an input quadrature mismatch, and a same-grid sign-gauge
+mismatch. Distinguish mismatch from missing evidence by inspecting the
+actual error. Show the real retained-data path on a nondefault input and
+legacy ordinary stored-operator/one-body use without needing the verifier.
+The existing Cartesian moment testset's no-keyword source assertion is
+the only historical assertion to replace; exercise the exact testset
+selectively with its fixture, no full angular replay. Report warmed moment
+time and allocations on the compact matched default/explicit paths and
+check no default reconstruction or duplicated sampling. Require existing
+angular_public, radial and docs owners, package/authority/self-test,
+dual-render parity, Documenter/diff, exact full source CI and separate Docs.
+Stop on failed gates, scope or budget expansion, new source-status consumer
+conflict, or loss of valid matched behavior. No full angular run, repin,
+consumer action, release or other repair item.

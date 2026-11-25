@@ -1852,3 +1852,15 @@ Source docstrings +19/-10, reader +24/-9, existing test +15; no new
 metadata or owner. Both grants consumed. Prior label-based orbital selections
 may need interpretation review only; no re-export or rerun. Item 5B remains
 separate.
+
+### Pass 668 Verified Radial Source for Angular Cartesian Moments Authority
+
+Open only item 5B. With GaussletBases at the accepted Pass 667 source, the
+eight-function doubled-scale pair agrees in radial Gram within 1.03e-15
+but moves one R2 diagonal from 0.16962 to 0.67848 bohr^2 without changing
+H. Replace Gram-only identity and the default radial rebuild with the
+already retained signed samples. Explicit inputs must match that discrete
+source; distinguish a mismatch from legacy missing evidence. Legacy
+ordinary operations remain live (independent compact one-body parity
+was exact); no new carrier or compatibility layer. Hard +50 source,
++35 existing tests, +4 Unreleased. No artifact or consumer changes.

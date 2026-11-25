@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `dc2a8b48359b891e997edd162d8161aca83917175d2e2bb5e0388324a4fab7f9`.
+> [authority.toml](authority.toml), SHA-256 `5089ba8a4d2c33b2da066ef737458a636c5882541b896efeaadeda08b6c951d7`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -9,6 +9,39 @@ owned paths, scope, `current.md`, `invariants.md`, and canonical contract.
 Lifecycle never grants work by itself. Any missing or conflicting fact fails closed.
 
 ## Records
+
+### HP-ANGULAR-RADIAL-SOURCE-FN-01 - use and verify retained radial data for angular Cartesian moments
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Verified Radial Source for Angular Cartesian Moments`
+- **Owned paths:**
+  - `docs` / `existing`: `CHANGELOG.md`
+  - `source` / `existing`: `src/angular/angular_atomic_benchmark.jl`
+- **Evidence:**
+  - `git_commit`: `e2a5634a0269b981ed454d6c7c4de7bb46f169dc`
+  - `manager_pass`: `668`
+- **Dependencies:** none
+- **Scope:** Implement Verified Radial Source for Angular Cartesian Moments, Pass 668 item 5B. Use retained samples; reject explicit mismatches and distinguish unavailable legacy evidence. Hard +50 source/+4 Unreleased. Preserve ordinary legacy operations and existing private polynomial entrance. No carrier, schema, threshold, consumer or release change.
+
+### HP-ANGULAR-RADIAL-SOURCE-TEST-01 - radial source identity and legacy operator regressions
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Verified Radial Source for Angular Cartesian Moments`
+- **Owned paths:**
+  - `test` / `existing`: `test/angular/runtests.jl`
+  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `668`
+- **Dependencies:** `HP-ANGULAR-RADIAL-SOURCE-FN-01`
+- **Scope:** Validate Verified Radial Source for Angular Cartesian Moments: matched and scaled, changed-rule and sign-gauge controls, distinct missing evidence, legacy unchanged. Hard +35 total in the two existing angular owners, one updated provenance assertion. No physical gate change, new owner, or full angular replay.
 
 ### HP-ANGULAR-SITE-LABEL-FN-01 - distinguish localized angular sites from exact harmonic channels
 
