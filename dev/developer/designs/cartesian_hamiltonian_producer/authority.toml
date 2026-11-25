@@ -182,18 +182,19 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "5f98d3ecf6ea688cd68af7dbf96cf948ad7ae25b9e6cf131dfe6eea51633afb4"
+sha256 = "58b9c244b6277e883b681033033f18298504eb6423756ce66163fe5fbbb0900a"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
 
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-COMPOSABLE-ANGULAR-GAUSSIAN-FN-01"
-lifecycle = "approved"
-scope = "Implement Composable Angular and Gaussian Calls, Pass 671 item 8: dynamic pair scheduling, synchronized angular and catalog caches, reject/delete the direct-G MWG congruence. Hard +60 source/+6 Unreleased. Preserve default, parent-backed and protected paths. No framework, consumer or release work."
-surfaces = ["docs", "source"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted composable Gaussian scheduling, synchronized angular caches and direct-G interaction retirement at b2c3d35b; source +29/-33, Unreleased +4. Grant consumed."
+surfaces = []
 title = "compose angular and Gaussian calls and reject unsupported MWG"
 
     [[records.document_refs]]
@@ -203,46 +204,18 @@ title = "compose angular and Gaussian calls and reject unsupported MWG"
 
     [[records.evidence_refs]]
     kind = "git_commit"
-    value = "56701e70c8c907e95be90fc1449ce1c432d197e1"
+    value = "b2c3d35b849fb0f70ec7dff3554651107636da2d"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "671"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "CHANGELOG.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_coiflet.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_cubature_point_sets.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_point_sets.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_shell_basis.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/gaussian_coulomb_reference.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_residual_gaussians/mwg_interaction.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-COMPOSABLE-ANGULAR-GAUSSIAN-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-COMPOSABLE-ANGULAR-GAUSSIAN-TEST-01"
-lifecycle = "approved"
-scope = "Validate Composable Angular and Gaussian Calls: nested two-thread pair parity, cold and warm angular reuse, and explicit unsupported interaction rejection. Hard +50 across three existing owners. No new owner, workflow, full Angular, consumer or release work."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted nested calls, first-use cache and explicit rejection checks at b2c3d35b; +39 existing tests. Exact source CI and Docs passed. Grant consumed."
+surfaces = []
 title = "exercise nested calls, cold caches, and explicit rejection"
 
     [[records.document_refs]]
@@ -252,22 +225,71 @@ title = "exercise nested calls, cold caches, and explicit rejection"
 
     [[records.evidence_refs]]
     kind = "git_commit"
-    value = "56701e70c8c907e95be90fc1449ce1c432d197e1"
+    value = "b2c3d35b849fb0f70ec7dff3554651107636da2d"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "671"
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-DEVELOPMENT-GEOMETRY-FN-01"
+lifecycle = "approved"
+scope = "Implement Development Workflows and Supported Geometry: geometry map, main versus v0.2.1, consistent collinear inputs, fresh-checkout bootstrap and non-tag label. Hard +65 reader/+3 docs tool. No production, workflow or release change."
+surfaces = ["docs", "tools"]
+title = "clarify development workflows and supported geometry"
+
+    [[records.document_refs]]
+    heading = "Development Workflows and Supported Geometry"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "b2c3d35b849fb0f70ec7dff3554651107636da2d"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "672"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/index.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "docs"
+    path = "docs/src/manual/projected_q_shells.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "tool"
+    path = "docs/make.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-DEVELOPMENT-GEOMETRY-FN-01"]
+grant = "implementation"
+id = "HP-DEVELOPMENT-GEOMETRY-TEST-01"
+lifecycle = "approved"
+scope = "Validate Development Workflows and Supported Geometry: exact footer, fractional shifts, signed rectangle probe transport, bounded parent and retention comparison, and clean examples/build. Hard +65 existing tests. Preserve cutoffs, tolerances and data. No solver, production or consumer work."
+surfaces = ["tests"]
+title = "verify runnable docs and compact supported geometry contracts"
+
+    [[records.document_refs]]
+    heading = "Development Workflows and Supported Geometry"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "b2c3d35b849fb0f70ec7dff3554651107636da2d"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "672"
 
     [[records.paths]]
     kind = "test"
-    path = "test/core/runtests.jl"
+    path = "test/docs/runtests.jl"
     state = "existing"
     [[records.paths]]
     kind = "test"
-    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/misc/runtests.jl"
+    path = "test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = []
