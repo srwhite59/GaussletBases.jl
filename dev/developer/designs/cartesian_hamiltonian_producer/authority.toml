@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "58b9c244b6277e883b681033033f18298504eb6423756ce66163fe5fbbb0900a"
+sha256 = "f0b7bfcb61c75859951c91ffced2ed3f4c1968f46d79b43df3abe376d34b2aef"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -231,11 +231,12 @@ title = "exercise nested calls, cold caches, and explicit rejection"
     value = "671"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-DEVELOPMENT-GEOMETRY-FN-01"
-lifecycle = "approved"
-scope = "Implement Development Workflows and Supported Geometry: geometry map, main versus v0.2.1, consistent collinear inputs, fresh-checkout bootstrap and non-tag label. Hard +65 reader/+3 docs tool. No production, workflow or release change."
-surfaces = ["docs", "tools"]
+lifecycle = "completed"
+paths = []
+scope = "Record the accepted development label, documentation bootstrap and collinear recipe at f48013e7; reader +43/-12, docs tool +1/-1, no production or release change. Grant consumed."
+surfaces = []
 title = "clarify development workflows and supported geometry"
 
     [[records.document_refs]]
@@ -245,30 +246,18 @@ title = "clarify development workflows and supported geometry"
 
     [[records.evidence_refs]]
     kind = "git_commit"
-    value = "b2c3d35b849fb0f70ec7dff3554651107636da2d"
+    value = "f48013e72544cfe53d3d572bf1fb6828c943ad7b"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "672"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/index.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/manual/projected_q_shells.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "tool"
-    path = "docs/make.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-DEVELOPMENT-GEOMETRY-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-DEVELOPMENT-GEOMETRY-TEST-01"
-lifecycle = "approved"
-scope = "Validate Development Workflows and Supported Geometry: exact footer, fractional shifts, signed rectangle probe transport, bounded parent and retention comparison, and clean examples/build. Hard +65 existing tests. Preserve cutoffs, tolerances and data. No solver, production or consumer work."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted supported-geometry checks and clean examples/build at f48013e7. Existing tests +52/-1, no cutoff or artifact change; exact CI and Docs passed. Grant consumed."
+surfaces = []
 title = "verify runnable docs and compact supported geometry contracts"
 
     [[records.document_refs]]
@@ -278,19 +267,10 @@ title = "verify runnable docs and compact supported geometry contracts"
 
     [[records.evidence_refs]]
     kind = "git_commit"
-    value = "b2c3d35b849fb0f70ec7dff3554651107636da2d"
+    value = "f48013e72544cfe53d3d572bf1fb6828c943ad7b"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "672"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/docs/runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl"
-    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"
