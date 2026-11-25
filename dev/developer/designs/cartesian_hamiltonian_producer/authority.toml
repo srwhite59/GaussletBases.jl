@@ -182,18 +182,19 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "6aa53e2741c008e859f0c4cf6c055a6b4278cea66661441a4a3f27b0bf3e2aa2"
+sha256 = "8cf00174153bf50a0a56688f4d918cc93efd81ce3f01ab56947e6ffba429d8ae"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
 
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-ANGULAR-SITE-LABEL-FN-01"
-lifecycle = "approved"
-scope = "Implement Angular Site Labels and Injected Channels, Pass 667 item 5A. Clarify localized sites, the existing injected-channel transform, legacy overlap diagnostics, contact site maps and fixed-radial labels. Hard +24 source docstrings/+25 readers only. No executable, label, artifact, schema, radial provenance or consumer change."
-surfaces = ["docs", "source"]
+lifecycle = "completed"
+paths = []
+scope = "Record Pass 667 item 5A accepted at c215dcd1: localized site labels, existing signed channel transform, and legacy overlap, contact and export interpretation. Source docstrings +19/-10 and readers +24/-9; runtime, schema and frozen artifacts unchanged. Grant consumed."
+surfaces = []
 title = "distinguish localized angular sites from exact harmonic channels"
 
     [[records.document_refs]]
@@ -203,38 +204,21 @@ title = "distinguish localized angular sites from exact harmonic channels"
 
     [[records.evidence_refs]]
     kind = "git_commit"
-    value = "95b1aefba85c43621307d8065c7b925afa025e33"
+    value = "4e2fcc6ace519af46d0c43b4b4a5d4c210cdd7ea"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "c215dcd1ecaa20ce7b78c073a0f922d382d99449"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "667"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/explanations/angular_research_track.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "docs"
-    path = "docs/src/reference/export.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_sequence_export.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_shell_assembly.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_shell_basis.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-ANGULAR-SITE-LABEL-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-ANGULAR-SITE-LABEL-TEST-01"
-lifecycle = "approved"
-scope = "Validate Angular Site Labels and Injected Channels with ordinary and coiflet Ih_12: distributed Y00 weights and signed reconstruction from actual evaluated sites. Hard +18 in the existing angular fixed-radial sequence test owner only. No new fixture file, permanent assertion weakening, angular campaign, consumer work or radial provenance."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Pass 667 regression at c215dcd1: eight Ih_12 distribution and signed reconstruction checks, unchanged contact and fixed-radial metadata checks, exact source CI and Docs. Existing test +15. Grant consumed."
+surfaces = []
 title = "verify distributed Y00 and the signed channel transform"
 
     [[records.document_refs]]
@@ -243,13 +227,11 @@ title = "verify distributed Y00 and the signed channel transform"
     path = "docs/src/developer/numerical_contracts.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "c215dcd1ecaa20ce7b78c073a0f922d382d99449"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "667"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
-    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"
