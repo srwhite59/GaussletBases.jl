@@ -182,18 +182,19 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "9518d122ecafad539f75524f9317544b41f64cb0c01d2f372313cac86c1ea1c7"
+sha256 = "d783be60635b4ee9187cecfabd1aad95d02635e0ba1935d534e0c78170b65b05"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
 
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-ANGULAR-RADIAL-SOURCE-FN-01"
-lifecycle = "approved"
-scope = "Implement Verified Radial Source for Angular Cartesian Moments, Pass 668 item 5B. Use retained samples; reject explicit mismatches and distinguish unavailable legacy evidence. Hard +50 source/+4 Unreleased. Preserve ordinary legacy operations and existing private polynomial entrance. No carrier, schema, threshold, consumer or release change."
-surfaces = ["docs", "source"]
+lifecycle = "completed"
+paths = []
+scope = "Record Pass 668 item 5B accepted at be4c5f0a: use retained radial samples, distinguish explicit mismatch from unavailable evidence, preserve ordinary legacy operations and the private polynomial entrance. Source +36/-20, Unreleased +3; grant consumed."
+surfaces = []
 title = "use and verify retained radial data for angular Cartesian moments"
 
     [[records.document_refs]]
@@ -203,26 +204,21 @@ title = "use and verify retained radial data for angular Cartesian moments"
 
     [[records.evidence_refs]]
     kind = "git_commit"
-    value = "e2a5634a0269b981ed454d6c7c4de7bb46f169dc"
+    value = "59f0cdf4700c253ca5769c5775a602419c5a0326"
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "be4c5f0a4a1797647e477c3a1bca08760104c9f6"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "668"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "CHANGELOG.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_atomic_benchmark.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-ANGULAR-RADIAL-SOURCE-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-ANGULAR-RADIAL-SOURCE-TEST-01"
-lifecycle = "approved"
-scope = "Validate Verified Radial Source for Angular Cartesian Moments: matched and scaled, changed-rule and sign-gauge controls, distinct missing evidence, legacy unchanged. Hard +35 total in the two existing angular owners, one updated provenance assertion. No physical gate change, new owner, or full angular replay."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Pass 668 match, scaled, changed-grid, signed-gauge and legacy verification controls at be4c5f0a. Existing tests +35/-1, no tolerance changes. Focused local, exact source CI and Docs green. Grant consumed."
+surfaces = []
 title = "radial source identity and legacy operator regressions"
 
     [[records.document_refs]]
@@ -231,17 +227,11 @@ title = "radial source identity and legacy operator regressions"
     path = "docs/src/developer/numerical_contracts.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "be4c5f0a4a1797647e477c3a1bca08760104c9f6"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "668"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/angular/runtests.jl"
-    state = "existing"
-    [[records.paths]]
-    kind = "test"
-    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
-    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"
