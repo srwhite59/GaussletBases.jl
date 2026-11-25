@@ -1,3 +1,26 @@
+@testset "Concurrent angular cache calls" begin
+    function retrieve(k)
+        full = sphere_point_set((15, 24)[k])
+        curated = curated_sphere_point_set((15, 32)[k])
+        rule = cubature_sphere_point_set((:Oh_6, :Ih_12)[k])
+        ordinary = shell_local_angular_profile(full)
+        polar = coiflet_angular_profile(rule)
+        cross = adjacent_shell_local_angular_profile_overlap(ordinary, polar)
+        return (full, curated, rule, ordinary, polar, cross)
+    end
+    tasks = [Threads.@spawn retrieve(k) for k in (1, 2, 1, 2)]
+    results = fetch.(tasks)
+    for k in 1:2
+        @test all(a === b for (a, b) in zip(results[k], results[k + 2]))
+        @test all(a === b for (a, b) in zip(results[k], retrieve(k)))
+        ordinary, polar, cross = results[k][4:6]
+        reverse = adjacent_shell_local_angular_profile_overlap(polar, ordinary)
+        @test reverse !== cross
+        @test reverse.overlap ≈ cross.overlap' atol=1e-11 rtol=0
+    end
+    @test all(a !== b for (a, b) in zip(results[1], results[2]))
+end
+
 @testset "Positive spherical cubature catalog" begin
     names = cubature_sphere_point_set_names()
     @test length(names) == 15

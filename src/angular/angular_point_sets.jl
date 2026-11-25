@@ -368,6 +368,7 @@ _sphere_point_sets_manifest_path() =
 _curated_sphere_point_sets_path() =
     _package_data_path("angular", "curated_sphere_points.toml")
 
+const _ANGULAR_POINT_LOAD_LOCK = ReentrantLock()
 const _SPHERE_POINT_SET_CACHE =
     Ref{Union{Nothing,NamedTuple{(:orders, :sets),Tuple{Vector{Int},Dict{Int,SpherePointSet}}}}}(nothing)
 const _CURATED_SPHERE_POINT_SET_CACHE =
@@ -456,21 +457,17 @@ function _load_curated_sphere_point_sets()
 end
 
 function _sphere_point_set_cache()
-    cache = _SPHERE_POINT_SET_CACHE[]
-    if cache === nothing
-        cache = _load_sphere_point_sets()
-        _SPHERE_POINT_SET_CACHE[] = cache
+    return lock(_ANGULAR_POINT_LOAD_LOCK) do
+        _SPHERE_POINT_SET_CACHE[] === nothing && (_SPHERE_POINT_SET_CACHE[] = _load_sphere_point_sets())
+        _SPHERE_POINT_SET_CACHE[]
     end
-    return cache
 end
 
 function _curated_sphere_point_set_cache()
-    cache = _CURATED_SPHERE_POINT_SET_CACHE[]
-    if cache === nothing
-        cache = _load_curated_sphere_point_sets()
-        _CURATED_SPHERE_POINT_SET_CACHE[] = cache
+    return lock(_ANGULAR_POINT_LOAD_LOCK) do
+        _CURATED_SPHERE_POINT_SET_CACHE[] === nothing && (_CURATED_SPHERE_POINT_SET_CACHE[] = _load_curated_sphere_point_sets())
+        _CURATED_SPHERE_POINT_SET_CACHE[]
     end
-    return cache
 end
 
 """

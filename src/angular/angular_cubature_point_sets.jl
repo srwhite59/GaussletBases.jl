@@ -47,8 +47,10 @@ function _load_cubature_sphere_point_sets(path::AbstractString = _cubature_spher
 end
 
 function _cubature_sphere_point_set_cache()
-    _CUBATURE_SPHERE_CACHE[] === nothing && (_CUBATURE_SPHERE_CACHE[] = _load_cubature_sphere_point_sets())
-    return _CUBATURE_SPHERE_CACHE[]
+    return lock(_ANGULAR_POINT_LOAD_LOCK) do
+        _CUBATURE_SPHERE_CACHE[] === nothing && (_CUBATURE_SPHERE_CACHE[] = _load_cubature_sphere_point_sets())
+        _CUBATURE_SPHERE_CACHE[]
+    end
 end
 
 """

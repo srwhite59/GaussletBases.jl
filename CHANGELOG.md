@@ -3,6 +3,10 @@
 ## Unreleased
 
 ### Fixed
+- Gaussian Coulomb references can run from threaded callers, and concurrent
+  angular calls share synchronized point sets, profiles and overlaps.
+- Residual MWG rejects direct base-space injection rather than applying an
+  unsupported two-index interaction transform.
 - Zero-regularization matrix EGOI no longer amplifies directions below its
   existing numerical-rank cutoff; the positive filter is unchanged.
 - The external Cartesian-GTO reader checks the occupied metric by maximum

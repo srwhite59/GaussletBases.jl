@@ -108,7 +108,7 @@ function coiflet_angular_profile(point_set::SpherePointSet, cubature_weights::Ab
     mode_tag = Symbol("polar_coiflet_lflat_", l_flat, "_wt", Int(whiten_target), "_w_", w_tag)
     key = ShellLocalAngularProfileKey(point_set.provenance.source_tag, _shell_local_point_set_checksum(point_set),
         point_set.order, Float64(beta), resolved_l, Float64(tau), whiten, mode_tag)
-    return get!(_shell_local_angular_profile_cache(), key) do
+    return _cached_shell_local_angular!(_shell_local_angular_profile_cache, key) do
         parent = @timeg "coiflet parent profile" shell_local_angular_profile(point_set; beta = beta, l_inject = resolved_l, tau = tau, whiten = whiten)
         _build_coiflet_profile_from_parent(parent, point_set.coordinates, cubature_weights, l_flat, key; whiten_target = whiten_target)
     end

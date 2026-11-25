@@ -119,6 +119,8 @@ end
     a=R.build_residual_gaussian_basis(3,X,S,labels,centers,owners;residual_injection_cutoff=.01)
     b=R._build_residual_gaussian_basis(finalize,3,X,S,labels,centers,owners;residual_injection_cutoff=.01)
     @test !seen[] && all(getfield(a,k)==getfield(b,k) for k in fieldnames(typeof(a)))
+    @test a.injected_G !== nothing
+    @test_throws r"direct injected-G MWG interaction is unsupported" R.assemble_residual_ida_interaction(nothing,nothing,nothing,a,nothing; expansion=nothing)
     @test_throws ArgumentError R.build_residual_gaussian_basis(3,zeros(3,2),ones(2,2),labels,centers,[1,2])
 end
 

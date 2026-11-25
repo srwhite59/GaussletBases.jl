@@ -149,6 +149,7 @@ function parent_backed_injected_mwg_blocks(
 end
 
 function assemble_residual_ida_interaction(base_V_GG, basis, bundles, residual, augmented_operators; expansion)
+    isnothing(residual.injected_G) || throw(ArgumentError("direct injected-G MWG interaction is unsupported"))
     nG, nR = residual.base_dimension, residual.residual_dimension
     size(base_V_GG) == (nG, nG) || throw(DimensionMismatch("residual MWG base V_GG dimension mismatch"))
     centers, widths = moment_matched_gaussians(augmented_operators, residual)
@@ -156,18 +157,8 @@ function assemble_residual_ida_interaction(base_V_GG, basis, bundles, residual, 
     V_GM = _terminal_mwg_fixed_residual(basis, bundles, pair_terms, expansion.coefficients)
     V_MM = _mwg_residual_residual(pair_terms, expansion.coefficients)
     V = zeros(Float64, nG + nR, nG + nR); residual_range = (nG + 1):(nG + nR)
-    B = residual.injected_G
-    if isnothing(B)
-        V[1:nG, 1:nG] .= base_V_GG
-        V[1:nG, residual_range] .= V_GM
-    else
-        Qp = injection_complement(residual)
-        V_YY = transpose(B) * base_V_GG * B
-        V_YQ = transpose(B) * base_V_GG * Qp
-        V_QQ = transpose(Qp) * base_V_GG * Qp
-        V[1:nG, 1:nG] .= [V_YY V_YQ; transpose(V_YQ) V_QQ]
-        V[1:nG, residual_range] .= vcat(transpose(B) * V_GM, transpose(Qp) * V_GM)
-    end
+    V[1:nG, 1:nG] .= base_V_GG
+    V[1:nG, residual_range] .= V_GM
     V[residual_range, 1:nG] .= transpose(view(V, 1:nG, residual_range))
     V[residual_range, residual_range] .= V_MM
     return V

@@ -744,6 +744,20 @@ end
     end
 end
 
+@testset "Nested Gaussian Coulomb pair calls" begin
+    orbital(z) = CartesianGaussianShellOrbitalRepresentation3D(
+        "s", (0, 0, 0), (0.0, 0.0, z), [1.0], [1.0], :axiswise_normalized_cartesian_gaussian)
+    inputs = [[orbital(0.0), orbital(z)] for z in (0.0, 0.7)]
+    expansion = coulomb_gaussian_expansion(doacc = false)
+    serial = [gaussian_coulomb_pair_matrix(input; expansion) for input in inputs]
+    nested = similar(serial)
+    Threads.@threads :dynamic for i in eachindex(inputs)
+        nested[i] = gaussian_coulomb_pair_matrix(inputs[i]; expansion)
+    end
+    @test nested[1] == serial[1]
+    @test nested[2] == serial[2]
+end
+
 @testset "Ordinary Coulomb expansion and Gaussian factors" begin
     expansion = coulomb_gaussian_expansion()
     sample_points = [1.0e-3, 1.0e-2, 0.1, 1.0, 5.0, 20.0]

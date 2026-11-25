@@ -116,6 +116,7 @@ function evaluate_angular_basis(shell::ShellLocalInjectedAngularBasis, direction
 end
 evaluate_angular_basis(profile::ShellLocalAngularProfile, directions::AbstractMatrix{<:Real}) =
     evaluate_angular_basis(profile.basis, directions)
+const _SHELL_LOCAL_ANGULAR_CACHE_LOCK = ReentrantLock()
 const _SHELL_LOCAL_ANGULAR_PROFILE_CACHE =
     Ref{Union{Nothing,Dict{ShellLocalAngularProfileKey,ShellLocalAngularProfile}}}(nothing)
 const _SHELL_LOCAL_ANGULAR_PROFILE_OVERLAP_CACHE =
@@ -199,6 +200,13 @@ function _shell_local_angular_profile_overlap_cache()
         _SHELL_LOCAL_ANGULAR_PROFILE_OVERLAP_CACHE[] = cache
     end
     return cache
+end
+
+function _cached_shell_local_angular!(build, cache, key)
+    # A coiflet cache miss can build its ordinary parent under the same lock.
+    return lock(_SHELL_LOCAL_ANGULAR_CACHE_LOCK) do
+        get!(build, cache(), key)
+    end
 end
 
 _angular_small_argument_cutoff() = 1.0e-8
@@ -785,8 +793,7 @@ function shell_local_angular_profile(
         tau = tau,
         whiten = whiten,
     )
-    cache = _shell_local_angular_profile_cache()
-    return get!(cache, key) do
+    return _cached_shell_local_angular!(_shell_local_angular_profile_cache, key) do
         _build_shell_local_angular_profile_uncached(
             point_set;
             beta = beta,
@@ -810,9 +817,8 @@ function adjacent_shell_local_angular_profile_overlap(
     source::ShellLocalAngularProfile,
     target::ShellLocalAngularProfile,
 )
-    cache = _shell_local_angular_profile_overlap_cache()
     cache_key = (source.profile_id, target.profile_id)
-    return get!(cache, cache_key) do
+    return _cached_shell_local_angular!(_shell_local_angular_profile_overlap_cache, cache_key) do
         overlap = _shell_local_overlap(source.basis, target.basis)
         singular_values = svdvals(overlap)
         diagnostics = (

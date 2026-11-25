@@ -286,7 +286,7 @@ function _gaussian_coulomb_compact_pair_matrix(
 )
     compact_count = length(compact_coefficients)
     matrix = zeros(Float64, compact_count, compact_count)
-    Base.Threads.@threads :static for column in 1:compact_count
+    Base.Threads.@threads :dynamic for column in 1:compact_count
         column_coefficients = compact_coefficients[column]
         for row in 1:column
             value = 0.0
@@ -351,7 +351,7 @@ function _gaussian_coulomb_expand_compact_pair_matrix(
 )
     pair_count = length(ordered_to_compact)
     matrix = Matrix{Float64}(undef, pair_count, pair_count)
-    Base.Threads.@threads :static for column in 1:pair_count
+    Base.Threads.@threads :dynamic for column in 1:pair_count
         compact_column = ordered_to_compact[column]
         for row in 1:pair_count
             matrix[row, column] = compact_matrix[ordered_to_compact[row], compact_column]
@@ -412,7 +412,7 @@ function _gaussian_coulomb_global_term_kernel(
             axis_kernel_terms,
             coupling_exponent,
         )
-        Base.Threads.@threads :static for column in 1:term_count
+        Base.Threads.@threads :dynamic for column in 1:term_count
             right = descriptor_axis_indices[column]
             for row in 1:column
                 left = descriptor_axis_indices[row]
@@ -498,7 +498,7 @@ function _gaussian_coulomb_axis_term_kernel(
 )
     axis_count = length(axis_terms)
     kernel = zeros(Float64, axis_count, axis_count)
-    Base.Threads.@threads :static for column in 1:axis_count
+    Base.Threads.@threads :dynamic for column in 1:axis_count
         for row in 1:column
             value = _gaussian_coulomb_axis_integral(
                 axis_terms[row],
