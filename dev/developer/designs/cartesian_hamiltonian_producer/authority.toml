@@ -182,11 +182,66 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "8cf00174153bf50a0a56688f4d918cc93efd81ce3f01ab56947e6ffba429d8ae"
+sha256 = "9518d122ecafad539f75524f9317544b41f64cb0c01d2f372313cac86c1ea1c7"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
 
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-ANGULAR-RADIAL-SOURCE-FN-01"
+lifecycle = "approved"
+scope = "Implement Verified Radial Source for Angular Cartesian Moments, Pass 668 item 5B. Use retained samples; reject explicit mismatches and distinguish unavailable legacy evidence. Hard +50 source/+4 Unreleased. Preserve ordinary legacy operations and existing private polynomial entrance. No carrier, schema, threshold, consumer or release change."
+surfaces = ["docs", "source"]
+title = "use and verify retained radial data for angular Cartesian moments"
+
+    [[records.document_refs]]
+    heading = "Verified Radial Source for Angular Cartesian Moments"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "e2a5634a0269b981ed454d6c7c4de7bb46f169dc"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "668"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "CHANGELOG.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/angular/angular_atomic_benchmark.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-ANGULAR-RADIAL-SOURCE-FN-01"]
+grant = "implementation"
+id = "HP-ANGULAR-RADIAL-SOURCE-TEST-01"
+lifecycle = "approved"
+scope = "Validate Verified Radial Source for Angular Cartesian Moments: matched and scaled, changed-rule and sign-gauge controls, distinct missing evidence, legacy unchanged. Hard +35 total in the two existing angular owners, one updated provenance assertion. No physical gate change, new owner, or full angular replay."
+surfaces = ["tests"]
+title = "radial source identity and legacy operator regressions"
+
+    [[records.document_refs]]
+    heading = "Verified Radial Source for Angular Cartesian Moments"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "668"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/angular/runtests.jl"
+    state = "existing"
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
+    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"
