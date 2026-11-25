@@ -1328,9 +1328,31 @@ tol=1e-8 and check false even though the mixed step is small and the actual
 returned projector defect is large. Baseline at that damping reported true
 after two steps with defect 0.06583; normal case has defect 3.96e-11.
 
-Require local IDA, one existing pinned angular small-ED testset only (no
-full angular; justify if >60 s), package/docs/authority/self-test/render
-parity/Documenter/diff, and exact source CI/Docs including existing PQS
-H2+ coverage. Preserve numerical anchors; no threshold relaxation or broad
-physics work. Stop without a source commit for a substantive accuracy,
-cost, scope or budget failure. No consumer, release or later item work.
+Validation amendment `ADVISER-666-COMPACT-1` at `f1272885`, approved by
+Steven after the original pinned angular small-ED gate failed 20/22. An
+independent radial-rule swap reproduced the dense historical and current
+energies; it did not establish the full angular shift. Preserve that failure,
+the full test and both goldens unchanged. No full angular replay, repinning,
+assertion weakening, or physical threshold change. The unresolved legacy
+fixture/full angular shift is a separate decision, not a passing result.
+
+Replace only that task-local acceptance run with one compact scratch
+qualification. Use the same six-function current-panel fixture
+(`_quick_radial_operator_fixture` with medium quadrature, cutoff 12 bohr),
+He/Z=2, radial lmax=2, uniform angular order 10, `l_inject=1` and
+`interaction_lmax=:stored`. Build once; use the same `h`, `V` and closed-shell
+product start for the exact old solver from `f1272885` and the preserved
+draft, with the existing small-ED budgets and `tol=1e-8`. Independently
+reapply the matrix action to both actual returned normalized Ritz vectors;
+report both energies and actual residuals. Require the draft to converge
+with actual residual <=1e-8, and energies within 1e-8 Ha absolute if the old
+actual residual also meets 1e-8. Keep scratch only, at most 60 numerical
+seconds, 2 GiB peak RSS and 64 MiB new outputs; one guarded run, no replay.
+
+Reuse exact-hash passing focused IDA evidence; require package/docs/authority/
+self-test/render parity/Documenter/diff and exact source CI/Docs including
+existing PQS H2+ coverage. All four preserved draft files and both handoffs
+remain byte-identical during the docs-only amendment. No new allowed source,
+test or reader path, no change to the budgets above. Stop without a source
+commit for a substantive accuracy, cost, scope or budget failure. No
+consumer, release or later item work.

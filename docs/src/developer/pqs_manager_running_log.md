@@ -1796,3 +1796,15 @@ existing energy tolerance, then the fresh returned projector; mixed-step
 history is not the certificate. Hard +45 source/+32 existing IDA/+4
 Unreleased. No caller edit, scientific tolerance move, new solver or
 physics campaign. Preserve the pinned small-ED and H2+ gates.
+
+### Pass 666 Compact Angular Validation Amendment
+
+Steven's ADVISER-666-COMPACT-1 resolves the task-local acceptance decision
+at `f1272885`. The original slow pinned angular test is preserved at 20/22;
+the erf/panel swap independently explains the dense mismatch, not the
+full angular shift. Keep both goldens and all permanent assertions. Replace
+only the candidate's slow validation dependency with one same-input compact
+angular comparison, uniform order 10 and stored cap. Measure actual Ritz
+residuals for old and new at unchanged 1e-8 and energy parity if both pass.
+Hard 60 s/2 GiB/64 MiB scratch, exact draft and focused evidence preserved;
+no source/test expansion, full angular replay, repin, or consumer work.

@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `ba23ecf4a5c08871f05a61a12b1b772a2e2090178bebef78a58c2a3b95380db4`.
+> [authority.toml](authority.toml), SHA-256 `2bcf0d4c19f49678bb00b79a1ab6c6fd012aaa408a7e6603e38c9a6521bcb32f`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -6565,7 +6565,7 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 - **Evidence:**
   - `manager_pass`: `666`
 - **Dependencies:** `HP-SOLVER-CONVERGENCE-FN-01`
-- **Scope:** Validate Honest Lanczos and Atomic IDA UHF Convergence, existing IDA owner +32 max: weak direction, exact breakdown, tight budget residual, ordinary/strong damping and fresh projector checks. Existing gates unchanged. No new owner, broad solver campaign or consumer work.
+- **Scope:** Validate Honest Lanczos and Atomic IDA UHF Convergence: existing IDA owner +32 max, exact-hash focused evidence reusable. ADVISER-666-COMPACT-1 replaces the failed task-local angular gate with one bounded same-input scratch check. Existing permanent tests and tolerances unchanged; no new owner, repin, broad replay or consumer work.
 
 ### HP-SOURCE-LAYOUT-ANGULAR-FN-01 - relocate angular source files
 
