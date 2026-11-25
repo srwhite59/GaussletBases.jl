@@ -1711,3 +1711,31 @@ test p axes, trace and positivity in angular_public. Hard +2 source,
 +32 existing test, +3 Unreleased. No field-free operator, radial
 provenance, label, frozen-artifact or consumer change. The Cartesian
 lost-rank transfer review is next, with separate authority required.
+
+### Pass 663 Accepted Angular Directional Second Moments
+
+Accept `70b067239fa3a7c48620b9ca704aedaf8fe25832`. LT1/MT1 advances
+reliable directional observables without changing the field-free Hamiltonian.
+Exact p-axis fractions permute 0.6/0.2/0.2, trace error 1.94e-16, and the
+small exact x/y operators have minima 0.081357 rather than -0.064473.
+Independent diff/baseline review and hosted numerical-step receipts match:
+angular_public 493/493 locally, new block 6/6 on both Julia versions;
+source CI 45552267077 and Docs 45552267069 pass. No full angular replay.
+Deleted/replaced: two incorrect coefficients (+2/-2 source). Simplified:
+same convention, no wrapper. Quarantined: none. Kept: live moment builder
+and unaffected observables; +32 existing-owner test, +2 Unreleased, no new
+file, status or metadata. Both grants consumed. Review prior direct X2/Y2
+observable/field use, not field-free energies by default. No consumer edits,
+release or other item accepted here.
+
+### Pass 664 Cartesian Occupied Transfer Rank Guard Authority
+
+Open only item 2. Independent exact `diag(1,0)` and compact 27-by-30
+mixed-raw projection checks reproduced a lost column becoming a unit
+vector. Both materialized and direct routes reach the same finalizer.
+Reject unresolved rank from the raw Gram before QR; log the raw rank,
+trace and scale in the failure, preserving valid cleanup, success diagnostics
+and raw vector behavior. Hard +42 source/+55 existing tests/+3 Unreleased.
+Use the tiny fixture's actual null space, not a residual label. This is a
+rank-handling test, not a certification of the overlap construction.
+No cross-overlap, raw GTO importer, schema, consumer or item 3 work.

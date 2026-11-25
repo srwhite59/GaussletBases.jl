@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "0d9133ffd435ce8bb1d1e07a0fff7add7cc88f448cfe34313494667281608b66"
+sha256 = "54d2f357a69f829dfcc4c93b3420a0202243bc771d42cb7c9741b1fa76a3570b"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -309,11 +309,12 @@ title = "positive cubature catalog validation"
     value = "aa8e3911009e56412afc841750a7d4daebf0f566"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-ANGULAR-DIRECTIONAL-MOMENTS-FN-01"
-lifecycle = "approved"
-scope = "Implement Angular Directional Second Moments, Pass 663: correct both normalized real Y22 coefficients in _cartesian_quadratic_components (+2/-2). Add at most three Unreleased changelog lines. Preserve other observables, field-free operators, provenance, API and all releases; no consumer or other review item work."
-surfaces = ["docs", "source"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Angular Directional Second Moments at 70b06723: two real Y22 corrections, source +2/-2, Unreleased +2. Grant consumed. No field-free, provenance, consumer or release change."
+surfaces = []
 title = "correct angular directional squared observables"
 
     [[records.document_refs]]
@@ -328,24 +329,19 @@ title = "correct angular directional squared observables"
     kind = "git_commit"
     value = "ebfc029e282e1b8c5f1c3fd24e17674dcbce9a41"
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "70b067239fa3a7c48620b9ca704aedaf8fe25832"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "663"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "CHANGELOG.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/angular/angular_atomic_benchmark.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-ANGULAR-DIRECTIONAL-MOMENTS-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-ANGULAR-DIRECTIONAL-MOMENTS-TEST-01"
-lifecycle = "approved"
-scope = "Validate Angular Directional Second Moments on the existing angular_public owner, hard +32 test lines. Exact p-axis fractions, radial trace and the compact l<=3 positivity discriminant. No new test file, workflow, tolerance relaxation or expensive physical fixture."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted six angular directional checks at 70b06723: exact p axes, unchanged radial trace, compact positivity. Existing test +32; local and hosted owners passed. Grant consumed. No broad angular or consumer rerun."
+surfaces = []
 title = "exact angular directional observable regression"
 
     [[records.document_refs]]
@@ -354,13 +350,11 @@ title = "exact angular directional observable regression"
     path = "docs/src/developer/numerical_contracts.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "70b067239fa3a7c48620b9ca704aedaf8fe25832"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "663"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/driver_public/angular_fixed_radial_sequence_runtests.jl"
-    state = "existing"
 [[records]]
 dependency_ids = []
 grant = "none"
@@ -983,6 +977,57 @@ title = "scheduled internal gate and screening deduplication validation"
     [[records.paths]]
     kind = "test"
     path = "test/docs/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-CARTESIAN-OCC-XFER-FN-01"
+lifecycle = "approved"
+scope = "Implement Cartesian Occupied Transfer Rank Guard, Pass 664. Reject lost numerical rank before existing QR with raw Gram diagnostics; preserve successful cleanup, traces and raw vector transfer. Hard +42 source, +3 Unreleased only. No overlap, importer, API, consumer or release changes."
+surfaces = ["docs", "source"]
+title = "fail closed on lost projected occupied rank"
+
+    [[records.document_refs]]
+    heading = "Cartesian Occupied Transfer Rank Guard"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "70b067239fa3a7c48620b9ca704aedaf8fe25832"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "664"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "CHANGELOG.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/cartesian/cartesian_representation_transfer.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-CARTESIAN-OCC-XFER-FN-01"]
+grant = "implementation"
+id = "HP-CARTESIAN-OCC-XFER-TEST-01"
+lifecycle = "approved"
+scope = "Validate Cartesian Occupied Transfer Rank Guard in the existing Cartesian base owner: exact projector and tiny mixed-raw rank-loss and valid controls, direct and materialized. Hard +55 lines. No new owner, tolerance relaxation or solver/consumer campaign."
+surfaces = ["tests"]
+title = "compact occupied projection rank regressions"
+
+    [[records.document_refs]]
+    heading = "Cartesian Occupied Transfer Rank Guard"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "664"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"
     state = "existing"
 [[records]]
 dependency_ids = ["HP-CGRB-FN-02", "HP-CGRB-NN-FN-01"]

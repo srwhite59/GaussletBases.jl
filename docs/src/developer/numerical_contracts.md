@@ -1181,3 +1181,55 @@ docs/authority/self-test/render parity/Documenter/diff and exact normal
 source CI plus Docs. Stop without source commit if any gate fails or the
 impl/test cap cannot be met. Only item 1 is granted here; later items need
 their own reviewed authority. No consumer edit, export rewrite or rerun.
+
+Accepted at `70b067239fa3a7c48620b9ca704aedaf8fe25832`; both grants are
+consumed. Exact p-axis fractions, radial trace and both small projected
+positivity checks passed. Field-free operators were not changed.
+
+## Cartesian Occupied Transfer Rank Guard
+
+Pass 664, item 2 of GB-REVIEW-REPAIRS-20261124. On the existing working
+basis paths, keep the raw projection `C = S_BA * C_A`. Only when the current
+shared finalizer would QR-clean a multi-column, nearly orthonormal source
+block, check the raw projected Gram `G = C' * C` first. Let the numerical
+floor be `max(size(C)...) * eps(Float64) * max(1, lambda_max(G))`, a
+Float64 dot-product/Gram resolution guard relative to unit source norms,
+not a scientific minimum capture or truncation policy. A nonfinite Gram
+or any eigenvalue at or below the floor must reject the cleanup. For
+lost rank, report raw numerical rank/column count, smallest Gram eigenvalue,
+floor and trace in the error. Do not complete the missing directions or
+return a shortened occupied block. Reuse the Gram for the existing target
+near-orthogonality decision; do not allocate a second copy of the projection.
+
+The cleanup decision tolerance and full-rank signed QR are unchanged.
+Vectors, single-column matrices and non-occupied blocks already passed
+through raw; preserve that behavior. Successful diagnostics keep their
+existing meanings (`target_metric_trace` describes returned coefficients,
+not raw capture after QR). No change to overlap construction, raw external
+GTO import, type/schema, tolerances outside this guard, or representation
+families. Make the distinction explicit in the existing transfer docstring.
+
+Only `src/cartesian/cartesian_representation_transfer.jl`, hard +42 source
+lines including docstrings. Existing `CHANGELOG.md` Unreleased/Fixed +3
+maximum. Only `test/driver_public/cartesian_base_hamiltonian_runtests.jl`,
+hard +55 lines. Exact public projector case `diag(1,0)`: zero vector and
+one-column projection remain zero; `[e1 e2]` is rejected, not completed.
+One full-rank contraction (e.g. `diag(1,0.8)`) preserves QR coefficients
+and diagnostics. Exercise materialized and direct mixed-raw overloads with
+one tiny H `cc-pVTZ` s-only hybrid and its parent representation: `G10`
+count 3, `AsinhMapping(c=.2,s=.5,tail_spacing=2.8)`, two-term expansion
+coefficients [.7,.2], exponents [.3,2.], del=s=c=1 and maxu=2, Z=1.
+Use two resolved right singular vectors and one null vector of the actual
+27-by-30 projector, not a nominal residual label. Check vector raw action,
+rejection of an occupied block with the null direction, and full-rank
+cleanup/direct parity with a resolved direction mixed with the null at
+0.8/0.6. Existing-scale `1e-10` coefficient/orthogonality comparison;
+verify the null block discriminates before QR. This fixture qualifies
+rank handling in both paths, not accuracy of the underlying cross overlap.
+
+Run the focused and existing Cartesian/residual owner checks, package,
+docs/authority/self-test/render parity/Documenter/diff, and exact full
+source CI/Docs. Report raw rank/trace, valid matched controls and cost.
+No new test file, cross-overlap or importer edits, consumer/energy reruns,
+release or other review items. Stop without a source commit if valid
+transfer behavior, focused gate, budgets or exact boundaries cannot be met.

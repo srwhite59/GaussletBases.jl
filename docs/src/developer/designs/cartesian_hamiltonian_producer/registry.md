@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `78edc9b8befb67bce468349df824b7b14211086d2cf2a35b408284ebd8feed05`.
+> [authority.toml](authority.toml), SHA-256 `a6fa0936804af5688a536c8c35662da40306f3450e39cdf208fd92b238d0edb2`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -84,36 +84,35 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-ANGULAR-DIRECTIONAL-MOMENTS-FN-01 - correct angular directional squared observables
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `docs`, `source`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Angular Directional Second Moments`
-- **Owned paths:**
-  - `docs` / `existing`: `CHANGELOG.md`
-  - `source` / `existing`: `src/angular/angular_atomic_benchmark.jl`
+- **Owned paths:** none
 - **Evidence:**
   - `external_path`: `/Users/srw/dmrgtmp/gb_review_repairs_20261124.n7LQhR/gaussletbases_review_2026-11-24.md`
   - `git_commit`: `ebfc029e282e1b8c5f1c3fd24e17674dcbce9a41`
+  - `git_commit`: `70b067239fa3a7c48620b9ca704aedaf8fe25832`
   - `manager_pass`: `663`
 - **Dependencies:** none
-- **Scope:** Implement Angular Directional Second Moments, Pass 663: correct both normalized real Y22 coefficients in \_cartesian\_quadratic\_components (+2/-2). Add at most three Unreleased changelog lines. Preserve other observables, field-free operators, provenance, API and all releases; no consumer or other review item work.
+- **Scope:** Record accepted Angular Directional Second Moments at 70b06723: two real Y22 corrections, source +2/-2, Unreleased +2. Grant consumed. No field-free, provenance, consumer or release change.
 
 ### HP-ANGULAR-DIRECTIONAL-MOMENTS-TEST-01 - exact angular directional observable regression
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Angular Directional Second Moments`
-- **Owned paths:**
-  - `test` / `existing`: `test/driver_public/angular_fixed_radial_sequence_runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
+  - `git_commit`: `70b067239fa3a7c48620b9ca704aedaf8fe25832`
   - `manager_pass`: `663`
 - **Dependencies:** `HP-ANGULAR-DIRECTIONAL-MOMENTS-FN-01`
-- **Scope:** Validate Angular Directional Second Moments on the existing angular\_public owner, hard +32 test lines. Exact p-axis fractions, radial trace and the compact l\<=3 positivity discriminant. No new test file, workflow, tolerance relaxation or expensive physical fixture.
+- **Scope:** Record accepted six angular directional checks at 70b06723: exact p axes, unchanged radial trace, compact positivity. Existing test +32; local and hosted owners passed. Grant consumed. No broad angular or consumer rerun.
 
 ### HP-ANGULAR-ENERGY-BUDGET-FN-01 - opt-in estimated angular correlation allocation
 
@@ -461,6 +460,38 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
   - `manager_pass`: `593`
 - **Dependencies:** `HP-CARTESIAN-INTERNAL-MAINTENANCE-CI-FN-01`, `HP-PQS-ATOMREF-PACKET-TEST-01`, `HP-PQS-PUBLIC-SCREEN-TEST-01`, `HP-PQS-SCREEN-HARTREE-CORR-TEST-01`, `HP-RG-OCC-FIRST-INJECT-TEST-01`
 - **Scope:** Maintain the focused policy checks accepted in commit 9367afd5ac47b81afe4ad8e2170f274fd36f362f for the exact five process paths/order and unchanged timeout, trigger, and permission boundary. The unchanged occupied-first owner passed 64/64; manual run 33801669502 passed all five suites in 10m17s, and CI 33801664774 plus Docs 33801664806 passed. Represented Hartree remains standalone and blocked.
+
+### HP-CARTESIAN-OCC-XFER-FN-01 - fail closed on lost projected occupied rank
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `docs`, `source`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Cartesian Occupied Transfer Rank Guard`
+- **Owned paths:**
+  - `docs` / `existing`: `CHANGELOG.md`
+  - `source` / `existing`: `src/cartesian/cartesian_representation_transfer.jl`
+- **Evidence:**
+  - `git_commit`: `70b067239fa3a7c48620b9ca704aedaf8fe25832`
+  - `manager_pass`: `664`
+- **Dependencies:** none
+- **Scope:** Implement Cartesian Occupied Transfer Rank Guard, Pass 664. Reject lost numerical rank before existing QR with raw Gram diagnostics; preserve successful cleanup, traces and raw vector transfer. Hard +42 source, +3 Unreleased only. No overlap, importer, API, consumer or release changes.
+
+### HP-CARTESIAN-OCC-XFER-TEST-01 - compact occupied projection rank regressions
+
+- **Lifecycle:** `approved`
+- **Grant:** `implementation`
+- **Surfaces:** `tests`
+- **Execution whitelist:** `true`
+- **Documents:**
+  - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Cartesian Occupied Transfer Rank Guard`
+- **Owned paths:**
+  - `test` / `existing`: `test/driver_public/cartesian_base_hamiltonian_runtests.jl`
+- **Evidence:**
+  - `manager_pass`: `664`
+- **Dependencies:** `HP-CARTESIAN-OCC-XFER-FN-01`
+- **Scope:** Validate Cartesian Occupied Transfer Rank Guard in the existing Cartesian base owner: exact projector and tiny mixed-raw rank-loss and valid controls, direct and materialized. Hard +55 lines. No new owner, tolerance relaxation or solver/consumer campaign.
 
 ### HP-CGAI-FN-01 - historical Cartesian Gaussian axis-helper proposal
 
