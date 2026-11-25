@@ -302,6 +302,21 @@ using TOML
         @test_throws ArgumentError cartesian_residual_gto_mwg_system(w,z2,Z2;
             supplement=A,expansion=e,residual_occupation_cutoff=cutoff)
     end
+    probes = deepcopy(A)
+    before = gto_overlap_matrix(data.result, probes)
+    @test before == gto_overlap_matrix(explicit, probes)
+    original = A.orbitals[1]
+    coefficient, exponent = original.coefficients[1], original.exponents[1]
+    original.coefficients[1] = 2coefficient
+    @test gto_overlap_matrix(data.result, probes) == before
+    original.coefficients[1] = coefficient
+    original.exponents[1] = 1.1exponent
+    @test gto_overlap_matrix(data.result, probes) == before
+    original.exponents[1] = exponent
+    A.orbitals[1] = A.orbitals[2]
+    @test gto_overlap_matrix(data.result, probes) == before
+    A.orbitals[1] = original
+
     A=candidates(z); call(zv,Zv,a=A,exp=e)=cartesian_residual_gto_mwg_system(w,zv,Zv;supplement=a,expansion=exp)
     for (zv,Zv) in ((reverse(z),Z),(z,[-1.,1.,1.]),(z,[1.,NaN,1.]),([0.,0.,1.],Z))
         @test_throws ArgumentError call(zv,Zv)

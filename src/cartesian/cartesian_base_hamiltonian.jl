@@ -1653,6 +1653,8 @@ Supplement a finite-collinear working basis with explicit
 positive `Z` define the potential and candidate ownership independently of the
 basis-construction nuclei. Each candidate center must match one supplied nucleus.
 Contracted axiswise-normalized Cartesian Gaussians are supported.
+The result owns a copy of the candidates' orbital data, so later edits to the
+input orbitals do not change its overlaps.
 
 The opaque result supports `result.hamiltonian`, `gto_overlap_matrix(result, probes)`
 and `import_external_gto_orbitals(result, packet)`. Its Hamiltonian is exactly
@@ -1721,6 +1723,9 @@ function _terminal_unscreened_residual_gto_mwg_system(
 )
     C, R = CartesianFinalBasisRealization, CartesianResidualGaussians
     C._r3_validate_pgdg_expansion(bundles, expansion)
+    supplement = CartesianGaussianShellSupplementRepresentation3D(
+        supplement.supplement_kind, deepcopy(supplement.orbitals), basis_metadata(supplement),
+    )
     residual = @timeg "terminal.residual_selection" C.pqs_terminal_residual_gto_augmentation(
         terminal, bundles, supplement, locations; residual_occupation_cutoff = cutoff)
     base = build_bare()

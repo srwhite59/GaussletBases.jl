@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Fixed
+- Terminal supplemented Cartesian Hamiltonians now own their Gaussian orbital
+  data, so later edits to caller inputs cannot change orbital overlaps.
 - Angular Cartesian moments use the Hamiltonian's retained radial samples.
   Explicit basis/grid pairs must match those samples; bundles without retained
   samples no longer produce unverifiable moments.
