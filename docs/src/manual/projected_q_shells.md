@@ -5,6 +5,21 @@ localized gausslet Hamiltonians. New users should still begin with the
 [radial workflow](../tutorials/first_radial_workflow.md); this page is the
 smallest current entrance to the bounded molecular PQS route.
 
+## Geometry and workflow
+
+| Geometry | Basis and operators | Transfer and availability |
+|---|---|---|
+| Origin-centered atom; equal-label/equal-charge z-axis diatomic | Public PQS or White-Lindsey base Hamiltonian; separate Gaussian-supplemented facade uses IDA and MWG | Existing Cartesian GTO overlap/import on a working or supplemented basis; available in v0.2.1 |
+| Ordered finite open collinear nuclei | Public expert PQS working basis and complete IDA operators; Gaussian supplementation uses MWG for residual-containing blocks | Raw GTO overlap/import on the actual basis; collinear entrances and supplemented overload require development `main` |
+| Uniform compact sliced H chain | Separate sliced approximation with one transverse function per slice; compact operators | `sliced_hydrogen_chain` is in v0.2.1; not the collinear PQS working-basis or transfer route |
+| Centered planar H4 rectangle | Private matched PQS/White-Lindsey development fixtures with a shared parent; supplemented IDA/MWG checks | Signed probe projections are tested; no public general planar or arbitrary-position constructor |
+
+Check parent spacing and extent (including diffuse tails), retained-space
+capture and supplement selection, operator approximations (finite Coulomb
+expansion, IDA and MWG), and solver convergence separately. A converged
+solver or a successful finite-basis construction does not check the others.
+These routes do not imply arbitrary rotations of a finite Cartesian grid.
+
 ## PQS and White-Lindsey shells
 
 Both methods start from the same mapped three-dimensional parent basis and the
@@ -81,6 +96,7 @@ remain consumer or external workflows.
 
 ## Expert finite collinear systems
 
+This section requires development `main`, not the v0.2.1 tag.
 `cartesian_collinear_working_basis(z, Z; ...)` accepts strictly ordered z-axis
 positions and positive nuclear charges, subject to the existing mapping's
 validity limits. Electrons remain three-dimensional; boundaries are finite/open.
@@ -100,7 +116,8 @@ operators = cartesian_collinear_operators(working, z, Z; expansion)
 This small construction returns complete `one_body` and `electron_electron_ida`
 matrices plus `nuclear_repulsion`, not a reweightable/artifact Hamiltonian.
 The opaque working handle supports existing GTO overlap and raw orbital import.
-Converge parent padding/spacing and retention independently. Angular reference
+Check parent padding/spacing and retention separately. A scaled-q ladder
+changes both; it is not an independent variation of the two. Angular reference
 count is not a constant source q; outer count applies to both slab-face axes
 and must fit each face. Truncation can introduce transverse asymmetry. These
 controls are a tested fixture, not chemical accuracy or long-chain scaling
@@ -110,8 +127,9 @@ included. The compact sliced-chain approximation remains a separate capability.
 For hydrogen, the scientific-q entrance resolves the standard source recipe:
 
 ```julia
-working = cartesian_collinear_working_basis([-1.8, 0.0, 1.8], ones(3);
-    q=5, expansion=coulomb_gaussian_expansion(doacc=true))
+q_z, q_Z = [-1.8, 0.0, 1.8], ones(3)
+q_expansion = coulomb_gaussian_expansion(doacc=true)
+q_working = cartesian_collinear_working_basis(q_z, q_Z; q=5, expansion=q_expansion)
 ```
 
 Integer `q >= 3` sets both spacings to `1.2/(q-1)` bohr, odd core width to
@@ -131,12 +149,15 @@ the fully explicit expert entrance. Mapping rejection is unchanged.
 
 ### Gaussian-supplemented collinear systems
 
-Use explicit Cartesian Gaussian candidates with the same working basis:
+Continue the q-based example with a validated external orbital `packet`
+whose Gaussian probes are centered on exactly the nuclei in `q_z`, at
+`x = y = 0`. For a bundle on disk, load it with
+`read_external_cartesian_gto_packet("state.toml")`. Use the same working
+basis, nuclei and expansion as above:
 
 ```julia
-packet = read_external_cartesian_gto_packet("state.toml")
-system = cartesian_residual_gto_mwg_system(working, z, Z;
-    supplement=packet.probes, expansion)
+system = cartesian_residual_gto_mwg_system(q_working, q_z, q_Z;
+    supplement=packet.probes, expansion=q_expansion)
 ham = system.hamiltonian
 raw = import_external_gto_orbitals(system, packet)
 ```
@@ -160,6 +181,8 @@ moment-matched Gaussians (MWG), not exact four-index Coulomb integrals. Raw impo
 does not clean up a determinant or repair capture loss. Small primitive tests
 do not establish diffuse-space convergence or H-chain accuracy; converge the
 supplement and parent/retained spaces for scientific calculations.
+The private matched-rectangle fixture uses `1e-6` explicitly, not the
+public collinear default.
 
 For ordinary non-injected terminal bases, selected residual functions are
 formed directly from the parent stencils and contracted Gaussians, including

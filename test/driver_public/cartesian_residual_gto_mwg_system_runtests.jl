@@ -175,6 +175,28 @@ using TOML
             h4_block_audit(s,loc,e,[1,2,3,4,13,14,15,16])
             h4_determinant_audit(s.hamiltonian,repulsion)
         end
+        @testset "Signed rectangle probe transport" begin
+            swapped = GB._matched_h4_terminal_bases(3.2,1.6;ns=3,padding=3.,expansion=e)
+            function probe_gram(bases, family, order, signs)
+                orbitals = [CartesianGaussianShellOrbitalRepresentation3D(label,
+                    map(j -> p[j], order), ntuple(j -> signs[j]*center[order[j]],3),
+                    [.8], [prod(signs[j]^p[order[j]] for j in 1:3)],
+                    :axiswise_normalized_cartesian_gaussian)
+                    for (label,p,center) in (("s",(0,0,0),(-.55,-.4,.15)),("px",(1,0,0),(-.2,-.32,.1)))]
+                A = CartesianGaussianShellSupplementRepresentation3D(:signed_probe,orbitals,(;))
+                X = C._terminal_residual_mixed_overlap(getproperty(bases,family),bases.bundles,A)
+                return X'*X
+            end
+            for family in (:pqs,:wl)
+                G = probe_gram(pair,family,(1,2,3),(1,1,1))
+                swap_error = norm(probe_gram(swapped,family,(2,1,3),(1,1,1))-G,Inf)
+                flip_error = norm(probe_gram(pair,family,(1,2,3),(-1,1,1))-G,Inf)
+                @test abs(G[1,2]) > 1e-10
+                @test swap_error < 1e-12
+                @test flip_error < 1e-12
+                @info "Signed rectangle probe" family signed_overlap=G[1,2] swap_error flip_error
+            end
+        end
     end
 
     function mixed_mwg_oracle(w,centers,widths,e,rindex)
@@ -285,6 +307,34 @@ using TOML
     @test explicit.hamiltonian==data.result.hamiltonian
     @test explicit.residual.T_G==data.result.residual.T_G
     @test explicit.residual.T_A==data.result.residual.T_A
+    @testset "Fractional potential and probe translation on fixed basis" begin
+        zs = z2 .+ .125
+        loc = [(0.,0.,v) for v in zs]
+        shifted_probes = CartesianGaussianShellSupplementRepresentation3D(:shifted,
+            [CartesianGaussianShellOrbitalRepresentation3D(o.label,o.angular_powers,center,
+                o.exponents,o.coefficients,o.primitive_normalization)
+                for (o,center) in zip(A.orbitals,loc)],(;))
+        shifted = cartesian_residual_gto_mwg_system(w,zs,Z2;supplement=shifted_probes,expansion=e)
+        t,b = w.terminal_basis,w.parent_axis_bundles
+        pg = C._r3_validate_pgdg_expansion(b,e)
+        GG = GB._pqs_source_box_route_driver_terminal_products(t,pg).kinetic
+        for (charge,U) in zip(Z2,GB._pqs_source_box_route_driver_terminal_unit_nuclear(t,e,pg,loc))
+            GG .+= charge .* U
+        end
+        orbitals = shifted_probes.orbitals
+        GA = hcat([last(gaoracle(w,o,loc,Z2,e)) for o in orbitals]...)
+        AA = [last(aaoracle(a,b,loc,Z2,e)) for a in orbitals,b in orbitals]
+        r = shifted.residual
+        n,m = r.base_dimension,length(orbitals)
+        T = [Matrix{Float64}(I,n,n) r.T_G; zeros(m,n) r.T_A]
+        err = norm(shifted.hamiltonian.one_body - T'*[GG GA; GA' AA]*T,Inf)
+        change = norm(GG-data.base.one_body,Inf)
+        @test shifted.terminal_basis === t
+        @test err < 1e-10
+        @test change > 1e-10
+        @test shifted.hamiltonian.nuclear_repulsion ≈ data.result.hamiltonian.nuclear_repulsion atol=1e-12 rtol=0
+        @info "Fractional potential/probe translation" err change
+    end
     for cutoff in (1e-10,1e-6)
         selected=cartesian_residual_gto_mwg_system(w,z2,Z2;supplement=A,expansion=e,residual_occupation_cutoff=cutoff)
         expected=C.pqs_terminal_residual_gto_augmentation(w.terminal_basis,w.parent_axis_bundles,A,

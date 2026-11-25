@@ -92,8 +92,9 @@
             mode="release-0.2.0", expected_sha=sha, sha, version="0.2.0")) == "Released API: v0.2.0"
         for (event, ref) in (("push", "refs/heads/main"), ("pull_request", "refs/pull/1/merge"), ("", ""))
             @test _documentation_api_label(_documentation_target(event, ref)) ==
-                "Development API: v0.2.1; published release: v0.2.1"
+                "Development checkout (main); published release: v0.2.1"
         end
+        @test occursin("Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()", docs_site_index)
         @test all(name -> occursin(Regex("(?m)^" * string(name) * "\$"), docs_site_reference_export),
             (:QiuWhiteResidualGaussianOperators, :OneCenterAtomicNestedLayerStructure, :TimedNestedFixedBlockBuild))
         @test contains_all(changelog, "cartesian_residual_gto_mwg_system",

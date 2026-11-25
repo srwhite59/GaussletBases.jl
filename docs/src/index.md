@@ -1,9 +1,17 @@
 # GaussletBases.jl
 
-This reader documentation describes the package v0.2.1 API. Developer
-Notes, private internals, source-layout pointers, and history describe the
-documentation revision linked in the footer, not additional released API.
-Expert/experimental labels distinguish interface support from scientific maturity.
+This is the development documentation for `main`. For the published
+v0.2.1 API, use the [stable documentation](https://srwhite59.github.io/GaussletBases.jl/stable/).
+The footer identifies the checkout revision. Expert/experimental labels
+distinguish interface support from scientific maturity.
+
+Post-v0.2.1 workflows include finite collinear PQS,
+`cubature_sphere_point_set`, `coiflet_angular_profile`,
+`evaluate_angular_basis`, and `atomic_contact_integrals` with its
+materialization and export helpers. The tag already has radius-based `assign_atomic_angular_shell_orders`
+and keyword-driven `build_atomic_shell_local_angular_assembly`. The
+operator-based estimated allocation and positional explicit-profile
+assembly overloads shown in the development docs require `main`.
 
 Gausslets are localized, orthogonal basis functions constructed from short
 linear combinations of Gaussians.
@@ -111,6 +119,6 @@ where they are already scientifically justified.
 From the repository root:
 
 ```bash
-julia --project=docs -e 'using Pkg; Pkg.instantiate()'
+julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
 julia --project=docs docs/make.jl
 ```
