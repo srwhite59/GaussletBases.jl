@@ -48,11 +48,14 @@ end
 """
     ShellLocalAngularProfile
 
-Experimental shell-local angular profile. Its ordered basis places the exact
-injected-Ylm channels before the mixed complement. Use `labels`,
-`gauge_metadata`, `diagnostics`, and `profile_id` to inspect and identify the
-profile; the ID is provenance/integrity information, not a claim of numerical
-equivalence.
+Experimental ordinary or polar coiflet profile with localized working sites.
+The exact harmonic subspace is not a prefix of individual harmonic sites.
+Legacy exact/mixed labels and counts describe a site prefix and its complement.
+In the matching profile gauge, `basis.injected_channels` gives channel order
+and `O = basis.injected_overlap` has entries `O[a,j] = <Y_a|site_j>`.
+Use `O * c_site` to project onto injected channels and `O' * c_channel` to
+represent an injected harmonic combination in the orthonormal working basis.
+The profile ID records provenance, not numerical equivalence.
 """
 struct ShellLocalAngularProfile
     key::ShellLocalAngularProfileKey
@@ -71,6 +74,9 @@ end
 
 Shell-independent source-to-target overlap between two shell-local angular
 profiles, with the associated IDs, labels, exact/mixed counts, and diagnostics.
+The counts refer to site prefixes. The legacy `exact_block_inf_norm` is
+the induced infinity norm of the leading site slice, not an injected-channel
+overlap.
 The final working bases are intended to be orthonormal, so this object supports
 continuation and transfer rather than a generalized-overlap interpretation.
 """
@@ -745,9 +751,9 @@ end
     shell_local_angular_profile(order::Int; beta=2.0, l_inject=:auto, tau=1e-12, whiten=:svd)
     shell_local_angular_profile(point_set::SpherePointSet; beta=2.0, l_inject=:auto, tau=1e-12, whiten=:svd)
 
-Construct the experimental profile for one sphere-point set. The result records
-the exact injected-Ylm block followed by the mixed complement, deterministic
-labels and gauge metadata, diagnostics, and a provenance identity.
+Construct the experimental profile for one sphere-point set. Its deterministic
+labels identify sites, not individual injected harmonics. See
+[`ShellLocalAngularProfile`](@ref) for the signed channel transform.
 """
 function shell_local_angular_profile(
     order::Int;
@@ -798,6 +804,7 @@ end
 Construct the shell-independent overlap from a source angular profile to a
 target profile. Sequence producers retain neighboring overlaps as adjacent
 sidecars and classify complete non-adjacent upper-triangle overlaps separately.
+These are overlaps of localized sites in the two profiles' gauges.
 """
 function adjacent_shell_local_angular_profile_overlap(
     source::ShellLocalAngularProfile,

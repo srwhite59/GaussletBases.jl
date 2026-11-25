@@ -186,7 +186,12 @@ This is a producer-side contract for external continuation studies. It exports:
 - one full non-adjacent upper-triangle family of direct shell-local overlap
   sidecars inside the same sequence
 - stable radial shell ids and shell centers across the sequence
-- stable within-shell labels from cached shell-local angular profiles
+- stable within-shell labels of localized sites from cached angular profiles
+
+Legacy exact/mixed labels do not identify individual harmonics.
+For channel order and the signed `O[a,j] = <Y_a|site_j>` transform, use
+`basis.injected_channels` and `basis.injected_overlap` on the matching
+profile. The transform is not stored in these artifacts.
 
 It does not yet include the later common-target embedding/lift layer, and it
 does not claim compatibility with older dense consumer formats.

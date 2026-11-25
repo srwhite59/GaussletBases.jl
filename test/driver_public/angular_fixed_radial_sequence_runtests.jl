@@ -340,6 +340,21 @@ end
 end
 
 @testset "Atomic fixed-radial angular public sequence" begin
+    rule = cubature_sphere_point_set("Ih_12")
+    ordinary = shell_local_angular_profile(rule.point_set;
+        beta=rule.default_beta, l_inject=rule.default_l_inject)
+    directions = [1.0 0.0 0.0; 0.0 -1.0 0.0; 1/3 2/3 -2/3]
+    for (kind, profile) in ((:ordinary, ordinary), (:coiflet, coiflet_angular_profile(rule)))
+        @test first(profile.basis.injected_channels.channel_data) == YlmChannel(0, 0)
+        row = view(profile.basis.injected_overlap, 1, :)
+        @test length(row) == 12
+        weight_error = maximum(abs, abs2.(row) .- 1/12)
+        signed_error = maximum(abs, evaluate_angular_basis(profile, directions) * row .- inv(sqrt(4pi)))
+        @test weight_error <= 1e-11
+        @test signed_error <= 1e-11
+        @info "Localized Ih_12 site transform" kind weight_error signed_error
+    end
+
     sequence = _paper_style_fixed_radial_angular_sequence_fixture()
     levels = sequence.levels
     overlaps = (

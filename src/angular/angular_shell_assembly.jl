@@ -52,8 +52,9 @@ end
 Exact real-function contact geometry on explicit quadrature, not an IDA interaction.
 Returns `(factors, site_map, diagnostics, provenance)` in the supplied final order.
 The lower entrance uses actual angular bases and contiguous base-site ranges.
+Base site-map labels identify localized functions, not individual harmonics.
 Supplement input `(grid, reduced_values, channels)` supplies final phased reduced
-radial columns and one YlmChannel per appended site, with explicit labels.
+radial columns and one actual YlmChannel per appended function, with explicit labels.
 No function reconstruction, normalization or phase alignment occurs. Volume
 weights are squared signed integrals; zero weights are legal (and diagnostic
 only for supplements). Accuracy and support coverage remain caller obligations.

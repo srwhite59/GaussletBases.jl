@@ -307,11 +307,17 @@ objects and constructors:
 - `write_atomic_fixed_radial_angular_overlap_sidecar_jld2(...)`
 
 This remains experimental producer-side state for external continuation
-studies, not a completed angular application workflow. Each profile orders
-the exact injected-Ylm block before its mixed complement and records
-deterministic labels, gauge metadata, diagnostics, and a provenance identity. Profile,
-level, and sequence IDs are integrity records, not numerical-equivalence
-claims.
+studies. Ordinary and polar coiflet profiles both order localized working sites,
+not individual injected harmonics. The exact harmonic subspace is distributed
+over the sites. Legacy exact/mixed labels and counts describe a site prefix and
+its complement. Profile, level, and sequence IDs are integrity records, not
+numerical-equivalence claims.
+
+Use the matching profile's `basis.injected_channels` for channel order and
+`O = profile.basis.injected_overlap`, with `O[a,j] = <Y_a|site_j>` in its actual
+gauge. `O * c_site` projects onto the injected channels; `O' * c_channel`
+represents a harmonic combination in the orthonormal working basis. Fixed-radial
+artifacts store site labels, not this transform.
 
 Every sequence level shares one radial basis, shell inventory, and shell-center
 set while `N_sph` and the angular profile change. Adjacent sidecars cover
@@ -319,6 +325,8 @@ neighboring levels; direct sidecars cover the complete non-adjacent upper
 triangle. Their profile overlaps are shell-independent continuation/transfer
 data. Because final working bases are intended to be orthonormal, these
 sidecars do not authorize generalized-overlap reinterpretation.
+The legacy `exact_block_inf_norm` refers to the leading site slice of the
+cross overlap, not an overlap of injected channels.
 Restart ladders, common-target lifts, Givens transformations, and campaign
 orchestration remain external.
 
@@ -358,12 +366,14 @@ and its actual angular assembly, use `atomic_contact_integrals(rb, assembly;
 radial_grid=grid, angular_quadrature=(directions=xyz, weights=weights))`.
 The lower entrance accepts actual shells, contiguous site ranges and labels.
 Both entrances retain accessible radial/angular factors for mixed profiles.
+Base site-map labels identify localized angular sites, not individual harmonics.
 
 Optional `supplements=(grid=grid, reduced_values=values, channels=channels)`
 supplies one final phased reduced-radial column and `YlmChannel` per appended
-site, with explicit `supplement_labels`. These are supplied functions, not a
-request to construct, normalize or align residuals. Their volume weights are
-diagnostics and may vanish. Directed `T` changes under individual site signs.
+site, with explicit `supplement_labels`. These channels describe the supplied
+radial times harmonic functions. No residual construction, normalization or
+alignment occurs. Volume weights are diagnostic and may vanish. Directed `T`
+changes under individual site signs.
 
 `materialize_atomic_contact_integrals(result)` derives complete `U`, `T`, `w`;
 `write_atomic_contact_integrals_jld2(path, result)` writes a new companion file.

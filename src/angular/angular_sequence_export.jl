@@ -564,7 +564,8 @@ sequence line.
 
 This writer stores the current level Hamiltonian, interaction, seeds, stable
 radial shell metadata, and stable within-shell labels from the cached angular
-profile. It is the native producer-side level export for this sequence family.
+profile. The labels identify localized sites, not individual harmonics. The
+injected-channel transform is not stored; use the matching in-memory profile.
 """
 function write_atomic_fixed_radial_angular_level_jld2(
     path::AbstractString,
