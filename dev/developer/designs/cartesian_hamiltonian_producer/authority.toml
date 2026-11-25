@@ -182,7 +182,7 @@ path = "docs/src/developer/designs/cartesian_hamiltonian_producer/white_lindsey_
 sha256 = "de4cf30514a4f9f337d719ee4771aeb79b14c307fe52cbe522e8280639014f98"
 [[documents]]
 path = "docs/src/developer/numerical_contracts.md"
-sha256 = "54d2f357a69f829dfcc4c93b3420a0202243bc771d42cb7c9741b1fa76a3570b"
+sha256 = "53bc52dc9b13403201dc4f5e90bf223fbc9a1a3c334a01cf10aa8f4cb843f96d"
 [[documents]]
 path = "docs/src/developer/test_suite_reorganization_plan.md"
 sha256 = "910167c8205e4b242f0b5474df76a3e6fd107c63227aaea09773037c2ff61645"
@@ -980,11 +980,12 @@ title = "scheduled internal gate and screening deduplication validation"
     state = "existing"
 [[records]]
 dependency_ids = []
-grant = "implementation"
+grant = "none"
 id = "HP-CARTESIAN-OCC-XFER-FN-01"
-lifecycle = "approved"
-scope = "Implement Cartesian Occupied Transfer Rank Guard, Pass 664. Reject lost numerical rank before existing QR with raw Gram diagnostics; preserve successful cleanup, traces and raw vector transfer. Hard +42 source, +3 Unreleased only. No overlap, importer, API, consumer or release changes."
-surfaces = ["docs", "source"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted Cartesian Occupied Transfer Rank Guard at 1cfe342a: reject lost raw rank before QR, unchanged valid cleanup and diagnostics. Source +24/-11, Unreleased +2. Grant consumed; no overlap, importer, consumer or release changes."
+surfaces = []
 title = "fail closed on lost projected occupied rank"
 
     [[records.document_refs]]
@@ -994,26 +995,21 @@ title = "fail closed on lost projected occupied rank"
 
     [[records.evidence_refs]]
     kind = "git_commit"
+    value = "1cfe342ad4488045c8a8d1dd3c83728fb7448cd6"
+    [[records.evidence_refs]]
+    kind = "git_commit"
     value = "70b067239fa3a7c48620b9ca704aedaf8fe25832"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "664"
-
-    [[records.paths]]
-    kind = "docs"
-    path = "CHANGELOG.md"
-    state = "existing"
-    [[records.paths]]
-    kind = "source"
-    path = "src/cartesian/cartesian_representation_transfer.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-CARTESIAN-OCC-XFER-FN-01"]
-grant = "implementation"
+grant = "none"
 id = "HP-CARTESIAN-OCC-XFER-TEST-01"
-lifecycle = "approved"
-scope = "Validate Cartesian Occupied Transfer Rank Guard in the existing Cartesian base owner: exact projector and tiny mixed-raw rank-loss and valid controls, direct and materialized. Hard +55 lines. No new owner, tolerance relaxation or solver/consumer campaign."
-surfaces = ["tests"]
+lifecycle = "completed"
+paths = []
+scope = "Record accepted exact-projector and mixed-raw direct/materialized checks at 1cfe342a. Existing owner +47 and 21 new checks pass locally and on the floor. Grant consumed; no overlap certification or solver/consumer campaign."
+surfaces = []
 title = "compact occupied projection rank regressions"
 
     [[records.document_refs]]
@@ -1022,13 +1018,11 @@ title = "compact occupied projection rank regressions"
     path = "docs/src/developer/numerical_contracts.md"
 
     [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1cfe342ad4488045c8a8d1dd3c83728fb7448cd6"
+    [[records.evidence_refs]]
     kind = "manager_pass"
     value = "664"
-
-    [[records.paths]]
-    kind = "test"
-    path = "test/driver_public/cartesian_base_hamiltonian_runtests.jl"
-    state = "existing"
 [[records]]
 dependency_ids = ["HP-CGRB-FN-02", "HP-CGRB-NN-FN-01"]
 evidence_refs = []
@@ -10937,6 +10931,57 @@ title = "sliced hydrogen-chain producer validation"
     [[records.evidence_refs]]
     kind = "manager_pass"
     value = "457"
+
+    [[records.paths]]
+    kind = "test"
+    path = "test/ida/runtests.jl"
+    state = "existing"
+[[records]]
+dependency_ids = []
+grant = "implementation"
+id = "HP-SLICED-NUCLEAR-PHASE-FN-01"
+lifecycle = "approved"
+scope = "Implement Compact Sliced Nuclear Phase, Pass 665: physical separations in near H1 and far prefix sums; keep near terms out of far sums. Hard +28 source, +3 Unreleased. No gate, lattice, Vee, storage, multisliced/PQS, API, consumer or release work."
+surfaces = ["docs", "source"]
+title = "compact sliced physical nuclear phase"
+
+    [[records.document_refs]]
+    heading = "Compact Sliced Nuclear Phase"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "git_commit"
+    value = "1cfe342ad4488045c8a8d1dd3c83728fb7448cd6"
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "665"
+
+    [[records.paths]]
+    kind = "docs"
+    path = "CHANGELOG.md"
+    state = "existing"
+    [[records.paths]]
+    kind = "source"
+    path = "src/ordinary/sliced_hydrogen_chain.jl"
+    state = "existing"
+[[records]]
+dependency_ids = ["HP-SLICED-NUCLEAR-PHASE-FN-01"]
+grant = "implementation"
+id = "HP-SLICED-NUCLEAR-PHASE-TEST-01"
+lifecycle = "approved"
+scope = "Validate Compact Sliced Nuclear Phase in the existing IDA sliced owner (+24 max). Coordinate-aware H2 near/adjacent/far oracle, fractional and nearly aligned phases, unchanged zero-phase controls and tolerances. No new owner, H10 campaign or other review item."
+surfaces = ["tests"]
+title = "compact sliced shifted near and far H1 checks"
+
+    [[records.document_refs]]
+    heading = "Compact Sliced Nuclear Phase"
+    kind = "canonical"
+    path = "docs/src/developer/numerical_contracts.md"
+
+    [[records.evidence_refs]]
+    kind = "manager_pass"
+    value = "665"
 
     [[records.paths]]
     kind = "test"
