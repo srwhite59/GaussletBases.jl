@@ -28,10 +28,10 @@ function _lanczos_ground_state_apply(
     converged = false
     residual = Inf
     iterations = 0
-    best_small_vector = ones(Float64, 1)
     best_value = NaN
     previous = zeros(Float64, n)
     scratch = zeros(Float64, n)
+    lanczos_vector = zeros(Float64, n)
 
     maxsteps = min(maxiter, krylovdim, n)
     for step in 1:maxsteps
@@ -49,14 +49,23 @@ function _lanczos_ground_state_apply(
         end
 
         b = norm(w)
+        breakdown = b <= eps(Float64) * norm(scratch)
         small_eig = eigen(SymTridiagonal(alpha, beta))
         best_value = real(small_eig.values[1])
-        best_small_vector = Vector{Float64}(small_eig.vectors[:, 1])
-        residual = abs(b * best_small_vector[end])
+        small_vector = Vector{Float64}(small_eig.vectors[:, 1])
+        estimate = abs(b * small_vector[end])
 
-        if residual <= tol || step == maxsteps || b <= sqrt(eps(Float64))
-            converged = residual <= tol || b <= sqrt(eps(Float64))
-            break
+        if estimate <= tol || breakdown || step == maxsteps
+            fill!(lanczos_vector, 0.0)
+            for j in eachindex(small_vector)
+                lanczos_vector .+= small_vector[j] .* vectors[j]
+            end
+            lanczos_vector ./= norm(lanczos_vector)
+            apply_hamiltonian!(scratch, lanczos_vector)
+            scratch .-= best_value .* lanczos_vector
+            residual = norm(scratch)
+            converged = isfinite(residual) && residual <= tol
+            (converged || breakdown || step == maxsteps) && break
         end
 
         push!(beta, b)
@@ -64,12 +73,6 @@ function _lanczos_ground_state_apply(
         v = w ./ b
         push!(vectors, copy(v))
     end
-
-    lanczos_vector = zeros(Float64, n)
-    for j in eachindex(best_small_vector)
-        lanczos_vector .+= best_small_vector[j] .* vectors[j]
-    end
-    lanczos_vector ./= norm(lanczos_vector)
 
     return (
         value = best_value,

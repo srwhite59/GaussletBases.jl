@@ -186,7 +186,10 @@ The damping convention is:
 rho_next = (1 - d) rho_new + d rho_old
 ```
 
-so `damping = 0` means a full fixed-point update.
+so `damping = 0` means a full fixed-point update. The `residuals` history
+records the max-entry size of each mixed density step. Convergence requires
+the energy change and the undamped fixed-point defect to meet `tol`, with
+the defect also checked at the returned densities.
 """
 function uhf_scf(
     ops::AtomicIDAOperators;
@@ -231,7 +234,7 @@ function uhf_scf(
         density_alpha = mixed_alpha
         density_beta = mixed_beta
 
-        if residual <= tol && energy_change <= tol
+        if step.residual <= tol && energy_change <= tol
             converged = true
             break
         end
@@ -241,6 +244,10 @@ function uhf_scf(
     final_beta = fock_matrix_beta(ops, density_alpha, density_beta)
     alpha_solution = _diagonalize_fock(final_alpha, nalpha)
     beta_solution = _diagonalize_fock(final_beta, nbeta)
+    converged = converged && max(
+        norm(alpha_solution.density - density_alpha, Inf),
+        norm(beta_solution.density - density_beta, Inf),
+    ) <= tol
     final_energy = uhf_energy(ops, density_alpha, density_beta)
 
     return (

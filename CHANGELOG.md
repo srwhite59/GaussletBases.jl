@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Fixed
+- Lanczos now verifies the returned Ritz residual before reporting convergence.
+  Atomic IDA UHF checks the undamped density defect rather than the damped step size.
 - Compact sliced hydrogen chains now use the physical lattice phase in both
   near and far nuclear one-body terms, without subtracting singular near tails.
 - Cartesian occupied-block transfer rejects rank loss before QR instead of

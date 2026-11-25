@@ -764,6 +764,15 @@ end
     @test norm(scf.density_alpha - scf.density_beta, Inf) ≤ 1.0e-8
     @test scf.energy >= exact_energy - 1.0e-9
     @test scf.energy < -2.7
+
+    fresh = uhf_step(ida, scf.density_alpha, scf.density_beta; nalpha = 1, nbeta = 1)
+    @test fresh.residual <= 1.0e-10
+    @test norm(density_matrix(scf.occupied_coefficients_alpha) - scf.density_alpha, Inf) <= 1.0e-10
+    @test norm(density_matrix(scf.occupied_coefficients_beta) - scf.density_beta, Inf) <= 1.0e-10
+    damped = uhf_scf(ida; nalpha = 1, nbeta = 1, damping = 1 - 1e-9, maxiter = 8, tol = 1e-8)
+    @test !damped.converged && damped.iterations == 8
+    @test last(damped.residuals) <= 1e-8 && damped.energy_change <= 1e-8
+    @test norm(density_matrix(damped.occupied_coefficients_alpha) - damped.density_alpha, Inf) > 1e-2
 end
 
 @testset "Atomic IDA two-electron problem" begin
@@ -822,6 +831,25 @@ end
     @test keys(supplied) == (:value, :vector, :residual, :iterations, :converged)
     @test !maximum_step.converged && maximum_step.iterations == 1
     @test breakdown.converged && breakdown.iterations == 1 && breakdown.residual < eps(Float64)
+
+    weak = [-1.0 5e-9; 5e-9 -2.0]
+    start = [1.0, 0.0]
+    actions = Ref(0)
+    apply_weak! = (out, v) -> begin
+        actions[] += 1
+        mul!(out, weak, v)
+    end
+    stopped = GaussletBases._lanczos_ground_state_apply(apply_weak!, 2; v0 = start, maxiter = 1, tol = 1e-12)
+    @test !stopped.converged && stopped.iterations == 1 && actions[] == 2
+    @test stopped.residual == norm(weak * stopped.vector - stopped.value * stopped.vector) == 5e-9
+    actions[] = 0
+    resolved = GaussletBases._lanczos_ground_state_apply(apply_weak!, 2; v0 = start, maxiter = 2, tol = 1e-12)
+    @test resolved.converged && resolved.iterations == 2 && actions[] == 3
+    @test resolved.value ≈ eigmin(Symmetric(weak)) atol = 1e-12 rtol = 0
+    @test resolved.residual <= 1e-12 && norm(weak * resolved.vector - resolved.value * resolved.vector) <= 1e-12
+    sector = GaussletBases._lanczos_ground_state_apply(
+        (out, v) -> mul!(out, Diagonal([-1.0, -2.0]), v), 2; v0 = start, tol = 1e-12)
+    @test sector.converged && sector.iterations == 1 && sector.value == -1.0 && sector.residual == 0.0
     for kwargs in ((; krylovdim = 1), (; maxiter = 0), (; tol = 0.0))
         @test_throws ArgumentError lanczos_ground_state(problem; kwargs...)
     end
