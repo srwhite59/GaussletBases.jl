@@ -1968,3 +1968,18 @@ centers supplement accepted H4 span/operator evidence; one finite probe
 separates parent and retained-space losses without implying independent ns
 controls. No production, schema, cutoff or release change. Existing owners
 only, hard +65 reader/+3 docs tool/+65 tests.
+
+### Pass 672 Accepted Development Workflows and Supported Geometry
+
+Accept `f48013e72544cfe53d3d572bf1fb6828c943ad7b` (LT2/MT7): corrected
+main versus release guidance and removed the collinear example's mixed
+basis/nuclear inputs. The clean docs bootstrap, actual examples and matched
+supplement smoke passed. No production code deleted, added, or quarantined;
+no new metadata, cutoff or route. Reader +43/-12, docs tool +1/-1, existing
+tests +52/-1. Independent diff, saved evidence and exact CI 45711741985 and
+Docs 45711741883 checked. Fractional shift agrees with the operator oracle
+within 3.18e-12 Ha, and signed rectangle transport within 3e-15. One fixed
+H4 probe separates parent and retention losses at ns=3/5, not energies or
+independent refinement controls. Both grants consumed; this closes the
+November 24 items. The measured historical angular shift is from different
+radial rules; regression provenance awaits a separate decision, not a repin.

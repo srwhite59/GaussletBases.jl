@@ -1695,3 +1695,6 @@ the affected public Cartesian owner, docs/mechanical/authority/self-test/two
 renders and exact normal CI and Docs. Explain longer clean docs/build steps
 before launch. If an existing example or acceptance gate needs another
 source, decision or budget, stop with evidence rather than editing around it.
+
+Accepted at `f48013e72544cfe53d3d572bf1fb6828c943ad7b`. Both Pass 672
+grants are consumed. No implementation authority remains for this assignment.

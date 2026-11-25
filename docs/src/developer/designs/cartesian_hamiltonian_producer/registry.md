@@ -1,7 +1,7 @@
 # Cartesian Hamiltonian Producer Authority Registry
 
 > **Generated authority view. Do not edit.** The record-level source is
-> [authority.toml](authority.toml), SHA-256 `506e5724f68f6debd91200c385d44c05fe6e9abceb33770f6bc8c5f6f0422978`.
+> [authority.toml](authority.toml), SHA-256 `2a0a936376dae7ea3dbab6bcb33f40d340a9a7f7505953e80152c764f51c3b24`.
 
 Tracked producer work is authorized only when a unique record has an
 execution grant and surface, and the requested change stays within its exact
@@ -42,38 +42,33 @@ Lifecycle never grants work by itself. Any missing or conflicting fact fails clo
 
 ### HP-DEVELOPMENT-GEOMETRY-FN-01 - clarify development workflows and supported geometry
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `docs`, `tools`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Development Workflows and Supported Geometry`
-- **Owned paths:**
-  - `docs` / `existing`: `docs/src/index.md`
-  - `docs` / `existing`: `docs/src/manual/projected_q_shells.md`
-  - `tool` / `existing`: `docs/make.jl`
+- **Owned paths:** none
 - **Evidence:**
-  - `git_commit`: `b2c3d35b849fb0f70ec7dff3554651107636da2d`
+  - `git_commit`: `f48013e72544cfe53d3d572bf1fb6828c943ad7b`
   - `manager_pass`: `672`
 - **Dependencies:** none
-- **Scope:** Implement Development Workflows and Supported Geometry: geometry map, main versus v0.2.1, consistent collinear inputs, fresh-checkout bootstrap and non-tag label. Hard +65 reader/+3 docs tool. No production, workflow or release change.
+- **Scope:** Record the accepted development label, documentation bootstrap and collinear recipe at f48013e7; reader +43/-12, docs tool +1/-1, no production or release change. Grant consumed.
 
 ### HP-DEVELOPMENT-GEOMETRY-TEST-01 - verify runnable docs and compact supported geometry contracts
 
-- **Lifecycle:** `approved`
-- **Grant:** `implementation`
-- **Surfaces:** `tests`
-- **Execution whitelist:** `true`
+- **Lifecycle:** `completed`
+- **Grant:** `none`
+- **Surfaces:** none
+- **Execution whitelist:** `false`
 - **Documents:**
   - `canonical` [numerical\_contracts.md](../../numerical_contracts.md); heading `Development Workflows and Supported Geometry`
-- **Owned paths:**
-  - `test` / `existing`: `test/docs/runtests.jl`
-  - `test` / `existing`: `test/driver_public/cartesian_residual_gto_mwg_system_runtests.jl`
+- **Owned paths:** none
 - **Evidence:**
-  - `git_commit`: `b2c3d35b849fb0f70ec7dff3554651107636da2d`
+  - `git_commit`: `f48013e72544cfe53d3d572bf1fb6828c943ad7b`
   - `manager_pass`: `672`
 - **Dependencies:** `HP-DEVELOPMENT-GEOMETRY-FN-01`
-- **Scope:** Validate Development Workflows and Supported Geometry: exact footer, fractional shifts, signed rectangle probe transport, bounded parent and retention comparison, and clean examples/build. Hard +65 existing tests. Preserve cutoffs, tolerances and data. No solver, production or consumer work.
+- **Scope:** Record accepted supported-geometry checks and clean examples/build at f48013e7. Existing tests +52/-1, no cutoff or artifact change; exact CI and Docs passed. Grant consumed.
 
 ### HP-MATRIX-EGOI-XGTO-VALIDATION-FN-01 - repair zero EGOI and external orbital input validation
 
